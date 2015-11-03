@@ -169,6 +169,28 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         self._do_server_reboot(server, "SOFT")
 
+    @atomic.action_timer("nova.show_server")
+    def _show_server(self, server):
+        """Show server details.
+
+        :param server: The server to get details for.
+
+        :returns: Server details
+        """
+        return self.clients("nova").servers.get(server)
+
+    @atomic.action_timer("nova.get_console_output_server")
+    def _get_server_console_output(self, server, length=None):
+        """Get text of a console log output from a server.
+
+        :param server: The server whose console output to retrieve
+        :param length: The number of tail log lines you would like to retrieve.
+
+        :returns: Text console output from server
+        """
+        return self.clients("nova").servers.get_console_output(server,
+                                                               length=length)
+
     @atomic.action_timer("nova.reboot_server")
     def _reboot_server(self, server):
         """Reboot a server with hard reboot.

@@ -285,6 +285,44 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_and_show_server:
+    -
+      args:
+        image:
+          name: {{image_name}}
+        flavor:
+          name: "m1.tiny"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaServers.boot_and_get_console_output:
+    -
+      args:
+        image:
+          name: {{image_name}}
+        flavor:
+          name: "m1.tiny"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.resize_server:
     -
       args:

@@ -489,6 +489,24 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "nova.boot_servers")
 
+    def test__show_server(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._show_server(self.server)
+        self.clients("nova").servers.get.assert_called_once_with(
+            self.server
+        )
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.show_server")
+
+    def test__get_console_server(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._get_server_console_output(self.server)
+        self.clients(
+            "nova").servers.get_console_output.assert_called_once_with(
+            self.server, length=None)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_console_output_server")
+
     def test__associate_floating_ip(self):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._associate_floating_ip(self.server, self.floating_ip)
