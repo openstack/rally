@@ -27,6 +27,19 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario(self.context)
 
+    def test__make_samples(self):
+        self.scenario.generate_random_name = mock.Mock(
+            return_value="fake_resource")
+        result = self.scenario._make_samples(project_id="fake_project_id")
+        expected = [{"counter_name": "cpu_util",
+                     "counter_type": "gauge",
+                     "counter_unit": "%",
+                     "counter_volume": 1,
+                     "resource_id": "fake_resource",
+                     "project_id": "fake_project_id",
+                     }]
+        self.assertEqual(expected, result)
+
     def test__list_alarms_by_id(self):
         self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
                          self.scenario._list_alarms("alarm-id"))

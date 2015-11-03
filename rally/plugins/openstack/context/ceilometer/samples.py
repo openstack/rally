@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from six import moves
+
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -65,27 +67,28 @@ class CeilometerSampleGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Ceilometer`"))
     def setup(self):
-        counter_name = self.config["counter_name"]
-        counter_type = self.config["counter_type"]
-        counter_unit = self.config["counter_unit"]
-        counter_volume = self.config["counter_volume"]
+        new_sample = {
+            "counter_name": self.config["counter_name"],
+            "counter_type": self.config["counter_type"],
+            "counter_unit": self.config["counter_unit"],
+            "counter_volume": self.config["counter_volume"]
+        }
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             self.context["tenants"][tenant_id]["samples"] = []
             self.context["tenants"][tenant_id]["resources"] = []
             scenario = ceilo_utils.CeilometerScenario(
-                context={"user": user, "task": self.context["task"]})
-            for i in range(self.config["resources_per_tenant"]):
-                for j in range(self.config["samples_per_resource"]):
-                    sample = scenario._create_sample(counter_name,
-                                                     counter_type,
-                                                     counter_unit,
-                                                     counter_volume)
+                context={"user": user, "task": self.context["task"]}
+            )
+            for i in moves.xrange(self.config["resources_per_tenant"]):
+                samples_to_create = scenario._make_samples(
+                    count=self.config["samples_per_resource"], **new_sample)
+                samples = scenario._create_samples(samples_to_create)
+                for sample in samples:
                     self.context["tenants"][tenant_id]["samples"].append(
-                        sample[0].to_dict())
-
+                        sample.to_dict())
                 self.context["tenants"][tenant_id]["resources"].append(
-                    sample[0].resource_id)
+                    samples[0].resource_id)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Ceilometer`"))
     def cleanup(self):
