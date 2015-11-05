@@ -261,9 +261,9 @@ class VerifyCommands(object):
 
         self.show(verification_uuid, sort_by, True)
 
-    @cliutils.args("--uuid-1", type=str, dest="uuid1",
+    @cliutils.args("--uuid-1", type=str, required=True, dest="uuid1",
                    help="UUID of the first verification")
-    @cliutils.args("--uuid-2", type=str, dest="uuid2",
+    @cliutils.args("--uuid-2", type=str, required=True, dest="uuid2",
                    help="UUID of the second verification")
     @cliutils.args("--csv", action="store_true", dest="output_csv",
                    help=("Save results in csv format to specified file"))
