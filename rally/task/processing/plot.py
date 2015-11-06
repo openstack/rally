@@ -114,6 +114,6 @@ def plot(tasks_results):
         extended_results.extend(
             objects.Task.extend_results([generic]))
 
-    template = ui_utils.get_template("task/report.mako")
+    template = ui_utils.get_template("task/report.html")
     source, data = _process_tasks(extended_results)
     return template.render(source=json.dumps(source), data=json.dumps(data))

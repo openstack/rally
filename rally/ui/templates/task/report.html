@@ -1,18 +1,17 @@
-## -*- coding: utf-8 -*-
-<%inherit file="/base.mako"/>
+{% extends "/base.html" %}
 
-<%block name="html_attr"> ng-app="TaskApp"</%block>
+{% block html_attr %} ng-app="TaskApp"{% endblock %}
 
-<%block name="title_text">Rally Task Report</%block>
+{% block title_text %}Rally Task Report{% endblock %}
 
-<%block name="libs">
+{% block libs %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css">
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
-</%block>
+{% endblock %}
 
-<%block name="js_before">
+{% block js_before %}
     "use strict";
     if (typeof angular === "object") { angular.module("TaskApp", []).controller(
       "TaskController", ["$scope", "$location", function($scope, $location) {
@@ -292,8 +291,8 @@
       /* Initialization */
 
       angular.element(document).ready(function(){
-        $scope.source = ${source};
-        $scope.scenarios = ${data};
+        $scope.source = {{ source }};
+        $scope.scenarios = {{ data }};
         if (! $scope.scenarios.length) {
           return $scope.showError("No data...")
         }
@@ -367,9 +366,9 @@
         $scope.$digest()
       });
     }])}
-</%block>
+{% endblock %}
 
-<%block name="css">
+{% block css %}
     .aside { margin:0 20px 0 0; display:block; width:255px; float:left }
     .aside > div { margin-bottom: 15px }
     .aside > div div:first-child { border-top-left-radius:4px; border-top-right-radius:4px }
@@ -400,21 +399,22 @@
     .top-margin { margin-top:40px !important }
     .sortable > .arrow { display:inline-block; width:12px; height:inherit; color:#c90 }
     .content-main { margin:0 5px; display:block; float:left }
-</%block>
+{% endblock %}
 
-<%block name="media_queries">
+{% block media_queries %}
     @media only screen and (min-width: 320px)  { .content-wrap { width:900px  } .content-main { width:600px } }
     @media only screen and (min-width: 900px)  { .content-wrap { width:880px  } .content-main { width:590px } }
     @media only screen and (min-width: 1000px) { .content-wrap { width:980px  } .content-main { width:690px } }
     @media only screen and (min-width: 1100px) { .content-wrap { width:1080px } .content-main { width:790px } }
     @media only screen and (min-width: 1200px) { .content-wrap { width:1180px } .content-main { width:890px } }
-</%block>
+{% endblock %}
 
-<%block name="body_attr"> ng-controller="TaskController"</%block>
+{% block body_attr %} ng-controller="TaskController"{% endblock %}
 
-<%block name="header_text">task results</%block>
+{% block header_text %}task results{% endblock %}
 
-<%block name="content">
+{% block content %}
+{% raw %}
     <p id="page-error" class="notify-error" style="display:none"></p>
 
     <div id="content-nav" class="aside" ng-show="scenarios.length" ng-cloack>
@@ -685,12 +685,13 @@
 
     </div>
     <div class="clearfix"></div>
-</%block>
+{% endraw %}
+{% endblock %}
 
-<%block name="js_after">
+{% block js_after %}
     if (! window.angular) {(function(f){
       f(document.getElementById("content-nav"), "none");
       f(document.getElementById("content-main"), "none");
       f(document.getElementById("page-error"), "block").textContent = "Failed to load AngularJS framework"
     })(function(e, s){e.style.display = s; return e})}
-</%block>
+{% endblock %}
