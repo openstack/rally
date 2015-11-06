@@ -194,6 +194,7 @@ class VerifyCommands(object):
 
         if verifications:
             cliutils.print_list(verifications, fields,
+                                normalize_field_names=True,
                                 sortby_index=fields.index("Created at"))
         else:
             print(_("No verification was started yet. "
@@ -268,7 +269,8 @@ class VerifyCommands(object):
         print(_("Total results of verification:\n"))
         total_fields = ["UUID", "Deployment UUID", "Set name", "Tests",
                         "Failures", "Created at", "Status"]
-        cliutils.print_list([verification], fields=total_fields)
+        cliutils.print_list([verification], fields=total_fields,
+                            normalize_field_names=True)
 
         print(_("\nTests:\n"))
         fields = ["name", "time", "status"]

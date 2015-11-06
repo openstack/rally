@@ -29,6 +29,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import load_only as sa_loadonly
 
+from rally.common.db import api as db_api
 from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
 from rally import exceptions
@@ -69,6 +70,37 @@ def _alembic_config():
     path = os.path.join(os.path.dirname(__file__), "alembic.ini")
     config = alembic_config.Config(path)
     return config
+
+
+def fix_deployment(fn):
+    # NOTE(ikhudoshyn): Remove this once new deployment model
+    # get adopted.
+    # New DB schema for Deployment was introduced in
+    # https://github.com/openstack/rally/
+    #        commit/433cf080ea02f448df1ce33c620c8b30910338cd
+    # yet old one is used over the codebase.
+    # This decorator restores attributes that are missing from
+    # the new model.
+    """Restore old deployment model's attributes
+
+    This decorator restores deployment properties "admin" and "users"
+    moved into "credentials" attribute of DB model.
+    """
+
+    def fix(o):
+        if isinstance(o, list):
+            return [fix(deployment) for deployment in o]
+        else:
+            if not o.get("admin"):
+                o["admin"] = o["credentials"][0][1]["admin"]
+            if not o.get("users"):
+                o["users"] = o["credentials"][0][1]["users"]
+            return o
+
+    def wrapper(*args, **kwargs):
+        deployment = fn(*args, **kwargs)
+        return fix(deployment)
+    return wrapper
 
 
 class Connection(object):
@@ -185,28 +217,34 @@ class Connection(object):
             raise exceptions.TaskNotFound(uuid=uuid)
         return task
 
+    @db_api.serialize
     def task_get(self, uuid):
         return self._task_get(uuid)
 
+    @db_api.serialize
     def task_get_detailed(self, uuid):
         return (self.model_query(models.Task).
                 options(sa.orm.joinedload("results")).
                 filter_by(uuid=uuid).first())
 
+    @db_api.serialize
     def task_get_status(self, uuid):
         return self._task_get(uuid, load_only="status").status
 
+    @db_api.serialize
     def task_get_detailed_last(self):
         return (self.model_query(models.Task).
                 options(sa.orm.joinedload("results")).
                 order_by(models.Task.id.desc()).first())
 
+    @db_api.serialize
     def task_create(self, values):
         task = models.Task()
         task.update(values)
         task.save()
         return task
 
+    @db_api.serialize
     def task_update(self, uuid, values):
         session = get_session()
         values.pop("uuid", None)
@@ -231,6 +269,7 @@ class Connection(object):
             raise exceptions.RallyException(msg)
         return query
 
+    @db_api.serialize
     def task_list(self, status=None, deployment=None):
         query = self.model_query(models.Task)
 
@@ -266,12 +305,14 @@ class Connection(object):
                                                            actual=task.status)
                 raise exceptions.TaskNotFound(uuid=uuid)
 
+    @db_api.serialize
     def task_result_create(self, task_uuid, key, data):
         result = models.TaskResult()
         result.update({"task_uuid": task_uuid, "key": key, "data": data})
         result.save()
         return result
 
+    @db_api.serialize
     def task_result_get_all_by_uuid(self, uuid):
         return (self.model_query(models.TaskResult).
                 filter_by(task_uuid=uuid).all())
@@ -289,6 +330,8 @@ class Connection(object):
             raise exceptions.DeploymentNotFound(deployment=deployment)
         return stored_deployment
 
+    @fix_deployment
+    @db_api.serialize
     def deployment_create(self, values):
         deployment = models.Deployment()
         try:
@@ -320,9 +363,13 @@ class Connection(object):
             if not count:
                 raise exceptions.DeploymentNotFound(deployment=uuid)
 
+    @fix_deployment
+    @db_api.serialize
     def deployment_get(self, deployment):
         return self._deployment_get(deployment)
 
+    @fix_deployment
+    @db_api.serialize
     def deployment_update(self, deployment, values):
         session = get_session()
         values.pop("uuid", None)
@@ -340,6 +387,8 @@ class Connection(object):
             dpl.update(values)
         return dpl
 
+    @fix_deployment
+    @db_api.serialize
     def deployment_list(self, status=None, parent_uuid=None, name=None):
         query = (self.model_query(models.Deployment).
                  filter_by(parent_uuid=parent_uuid))
@@ -350,12 +399,14 @@ class Connection(object):
             query = query.filter_by(status=status)
         return query.all()
 
+    @db_api.serialize
     def resource_create(self, values):
         resource = models.Resource()
         resource.update(values)
         resource.save()
         return resource
 
+    @db_api.serialize
     def resource_get_all(self, deployment_uuid, provider_name=None, type=None):
         query = (self.model_query(models.Resource).
                  filter_by(deployment_uuid=deployment_uuid))
@@ -371,13 +422,18 @@ class Connection(object):
         if not count:
             raise exceptions.ResourceNotFound(id=id)
 
+    @db_api.serialize
     def verification_create(self, deployment_uuid):
         verification = models.Verification()
         verification.update({"deployment_uuid": deployment_uuid})
         verification.save()
         return verification
 
+    @db_api.serialize
     def verification_get(self, verification_uuid, session=None):
+        return self._verification_get(verification_uuid, session)
+
+    def _verification_get(self, verification_uuid, session=None):
         verification = (self.model_query(models.Verification, session=session).
                         filter_by(uuid=verification_uuid).first())
         if not verification:
@@ -386,14 +442,16 @@ class Connection(object):
                 verification_uuid)
         return verification
 
+    @db_api.serialize
     def verification_update(self, verification_uuid, values):
         session = get_session()
         with session.begin():
-            verification = self.verification_get(verification_uuid,
-                                                 session=session)
+            verification = self._verification_get(verification_uuid,
+                                                  session=session)
             verification.update(values)
         return verification
 
+    @db_api.serialize
     def verification_list(self, status=None):
         query = self.model_query(models.Verification)
         if status is not None:
@@ -409,6 +467,7 @@ class Connection(object):
                 "Can't find any verification with following UUID '%s'." %
                 verification_uuid)
 
+    @db_api.serialize
     def verification_result_create(self, verification_uuid, data):
         result = models.VerificationResult()
         result.update({"verification_uuid": verification_uuid,
@@ -416,6 +475,7 @@ class Connection(object):
         result.save()
         return result
 
+    @db_api.serialize
     def verification_result_get(self, verification_uuid):
         result = (self.model_query(models.VerificationResult).
                   filter_by(verification_uuid=verification_uuid).first())
@@ -424,6 +484,7 @@ class Connection(object):
                 "No results for following UUID '%s'." % verification_uuid)
         return result
 
+    @db_api.serialize
     def register_worker(self, values):
         try:
             worker = models.Worker()
@@ -435,6 +496,7 @@ class Connection(object):
             raise exceptions.WorkerAlreadyRegistered(
                 worker=values["hostname"])
 
+    @db_api.serialize
     def get_worker(self, hostname):
         try:
             return (self.model_query(models.Worker).

@@ -83,7 +83,7 @@ class Verification(object):
 
     def get_results(self):
         try:
-            results = db.verification_result_get(self.uuid).data
+            results = db.verification_result_get(self.uuid)["data"]
         except exceptions.NotFoundException:
             return None
 

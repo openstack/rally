@@ -14,13 +14,90 @@
 #    under the License.
 
 """Tests for db.api layer."""
+import datetime as dt
 
+import ddt
 from six import moves
 
 from rally.common import db
+from rally.common.db import api as db_api
+import rally.common.db.sqlalchemy.api as s_api
 from rally import consts
 from rally import exceptions
 from tests.unit import test
+
+
+NOW = dt.datetime.now()
+
+
+class FakeSerializable(object):
+    def __init__(self, **kwargs):
+        self.dict = {}
+        self.dict.update(kwargs)
+
+    def _as_dict(self):
+        return self.dict
+
+
+@ddt.ddt
+class SerializeTestCase(test.DBTestCase):
+    def setUp(self):
+        super(SerializeTestCase, self).setUp()
+
+    @ddt.data(
+        {"data": 1, "serialized": 1},
+        {"data": 1.1, "serialized": 1.1},
+        {"data": "a string", "serialized": "a string"},
+        {"data": NOW, "serialized": NOW},
+        {"data": {"k1": 1, "k2": 2}, "serialized": {"k1": 1, "k2": 2}},
+        {"data": [1, "foo"], "serialized": [1, "foo"]},
+        {"data": ["foo", 1, {"a": "b"}], "serialized": ["foo", 1, {"a": "b"}]},
+        {"data": FakeSerializable(a=1), "serialized": {"a": 1}},
+        {"data": [FakeSerializable(a=1),
+                  FakeSerializable(b=FakeSerializable(c=1))],
+         "serialized": [{"a": 1}, {"b": {"c": 1}}]},
+    )
+    @ddt.unpack
+    def test_serialize(self, data, serialized):
+
+        @db_api.serialize
+        def fake_method():
+            return data
+
+        results = fake_method()
+        self.assertEqual(results, serialized)
+
+    def test_serialize_value_error(self):
+
+        @db_api.serialize
+        def fake_method():
+            class Fake(object):
+                pass
+            return Fake()
+
+        self.assertRaises(ValueError, fake_method)
+
+
+class FixDeploymentTestCase(test.DBTestCase):
+    def setUp(self):
+        super(FixDeploymentTestCase, self).setUp()
+
+    def test_fix_deployment(self):
+        deployment = {
+            "credentials": [("bong", {"admin": "foo", "users": "bar"})]}
+
+        expected = {
+            "credentials": [("bong", {"admin": "foo", "users": "bar"})],
+            "admin": "foo",
+            "users": "bar"
+        }
+
+        @s_api.fix_deployment
+        def get_deployment():
+            return deployment
+
+        fixed_deployment = get_deployment()
+        self.assertEqual(fixed_deployment, expected)
 
 
 class TasksTestCase(test.DBTestCase):
@@ -308,12 +385,13 @@ class DeploymentTestCase(test.DBTestCase):
 
     def test_deployment_list_parent(self):
         deploy = db.deployment_create({})
-        subdeploy1 = db.deployment_create({"parent_uuid": deploy.uuid})
-        subdeploy2 = db.deployment_create({"parent_uuid": deploy.uuid})
-        self.assertEqual([deploy.uuid], [d.uuid for d in db.deployment_list()])
-        subdeploys = db.deployment_list(parent_uuid=deploy.uuid)
-        self.assertEqual(set([subdeploy1.uuid, subdeploy2.uuid]),
-                         set([d.uuid for d in subdeploys]))
+        subdeploy1 = db.deployment_create({"parent_uuid": deploy["uuid"]})
+        subdeploy2 = db.deployment_create({"parent_uuid": deploy["uuid"]})
+        self.assertEqual(
+            [deploy["uuid"]], [d["uuid"] for d in db.deployment_list()])
+        subdeploys = db.deployment_list(parent_uuid=deploy["uuid"])
+        self.assertEqual(set([subdeploy1["uuid"], subdeploy2["uuid"]]),
+                         set([d["uuid"] for d in subdeploys]))
 
     def test_deployment_delete(self):
         deploy_one = db.deployment_create({})

@@ -99,6 +99,7 @@ def validate_args(fn, *args, **kwargs):
 
 def print_list(objs, fields, formatters=None, sortby_index=0,
                mixed_case_fields=None, field_labels=None,
+               normalize_field_names=False,
                table_label=None, print_header=True, print_border=True,
                out=sys.stdout):
     """Print a list or objects as a table, one row per object.
@@ -111,10 +112,14 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         have mixed case names (e.g., 'serverId')
     :param field_labels: Labels to use in the heading of the table, default to
         fields.
+    :param normalize_field_names: If True, field names will be transformed,
+        e.g. "Field Name" -> "field_name", otherwise they will be used
+        unchanged.
     :param table_label: Label to use as header for the whole table.
     :param print_header: print table header.
     :param print_border: print table border.
     :param out: stream to write output to.
+
     """
     formatters = formatters or {}
     mixed_case_fields = mixed_case_fields or []
@@ -136,14 +141,20 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         for field in fields:
             if field in formatters:
                 row.append(formatters[field](o))
-            elif type(o) == dict:
-                row.append(o[field])
             else:
-                if field in mixed_case_fields:
-                    field_name = field.replace(" ", "_")
+                if normalize_field_names:
+                    if field in mixed_case_fields:
+                        field_name = field.replace(" ", "_")
+                    else:
+                        field_name = field.lower().replace(" ", "_")
                 else:
-                    field_name = field.lower().replace(" ", "_")
-                data = getattr(o, field_name, "")
+                    field_name = field
+
+                if isinstance(o, dict):
+                    data = o.get(field_name, "")
+                else:
+                    data = getattr(o, field_name, "")
+
                 row.append(data)
         pt.add_row(row)
 
