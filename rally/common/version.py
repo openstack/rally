@@ -24,4 +24,4 @@ version_info = pbr_version.VersionInfo("rally")
 
 
 def version_string():
-    return version_info.version_string()
+    return version_info.semantic_version().debian_string()
