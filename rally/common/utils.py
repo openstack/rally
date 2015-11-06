@@ -372,19 +372,29 @@ def name_matches_pattern(name, fmt, chars):
     return name_re.match(name)
 
 
-def name_matches_object(name, obj):
+def name_matches_object(name, *objects):
     """Determine if a resource name could have been created by an object.
 
-    The object should implement RandomNameGeneratorMixin.
+    The object (or list of objects) should implement
+    RandomNameGeneratorMixin.
+
+    It will often be more efficient to pass a list of classes to
+    name_matches_object() than to perform multiple
+    name_matches_object() calls, since this function will deduplicate
+    identical name generation options.
 
     :param name: The resource name to check against the object's
                  RESOURCE_NAME_FORMAT.
-    :param obj: The class or object to fetch random name generation
-                parameters from.
+    :param *objects: Classes or objects to fetch random name
+                     generation parameters from.
     :returns: bool
     """
-    return name_matches_pattern(name, obj.RESOURCE_NAME_FORMAT,
-                                obj.RESOURCE_NAME_ALLOWED_CHARACTERS)
+    rng_options = set()
+    for obj in objects:
+        rng_options.add((obj.RESOURCE_NAME_FORMAT,
+                         obj.RESOURCE_NAME_ALLOWED_CHARACTERS))
+    return any(name_matches_pattern(name, fmt, chars)
+               for fmt, chars in rng_options)
 
 
 def merge(length, *sources):

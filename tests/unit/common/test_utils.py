@@ -350,17 +350,58 @@ class RandomNameTestCase(test.TestCase):
                 utils.name_matches_pattern(name, fmt, chars),
                 "%s unexpectedly matched resource_name_format" % name)
 
-    @mock.patch("rally.common.utils.name_matches_pattern")
+    @mock.patch("rally.common.utils.name_matches_pattern",
+                return_value=True)
     def test_name_matches_object(self, mock_name_matches_pattern):
         name = "foo"
-        self.assertEqual(
-            utils.name_matches_object(name,
-                                      utils.RandomNameGeneratorMixin),
-            mock_name_matches_pattern.return_value)
+        self.assertTrue(
+            utils.name_matches_object(name, utils.RandomNameGeneratorMixin))
         mock_name_matches_pattern.assert_called_once_with(
             name,
-            utils. RandomNameGeneratorMixin.RESOURCE_NAME_FORMAT,
+            utils.RandomNameGeneratorMixin.RESOURCE_NAME_FORMAT,
             utils.RandomNameGeneratorMixin.RESOURCE_NAME_ALLOWED_CHARACTERS)
+
+    @mock.patch("rally.common.utils.name_matches_pattern",
+                return_value=False)
+    def test_name_matches_object_identical_list(self,
+                                                mock_name_matches_pattern):
+        class One(utils.RandomNameGeneratorMixin):
+            pass
+
+        class Two(utils.RandomNameGeneratorMixin):
+            pass
+
+        name = "foo"
+        self.assertFalse(utils.name_matches_object(name, One, Two))
+        mock_name_matches_pattern.assert_called_once_with(
+            name,
+            One.RESOURCE_NAME_FORMAT,
+            One.RESOURCE_NAME_ALLOWED_CHARACTERS)
+
+    @mock.patch("rally.common.utils.name_matches_pattern",
+                return_value=False)
+    def test_name_matches_object_differing_list(self,
+                                                mock_name_matches_pattern):
+        class One(utils.RandomNameGeneratorMixin):
+            pass
+
+        class Two(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = "foo_XXX_XXX"
+
+        class Three(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_ALLOWED_CHARACTERS = "12345"
+
+        class Four(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = "bar_XXX_XXX"
+            RESOURCE_NAME_ALLOWED_CHARACTERS = "abcdef"
+
+        classes = (One, Two, Three, Four)
+        name = "foo"
+        self.assertFalse(utils.name_matches_object(name, *classes))
+        calls = [mock.call(name, cls.RESOURCE_NAME_FORMAT,
+                           cls.RESOURCE_NAME_ALLOWED_CHARACTERS)
+                 for cls in classes]
+        mock_name_matches_pattern.assert_has_calls(calls, any_order=True)
 
     def test_name_matches_pattern_identity(self):
         generator = utils.RandomNameGeneratorMixin()
