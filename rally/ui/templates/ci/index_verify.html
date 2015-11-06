@@ -4,6 +4,9 @@
 
 {% block css %}
     li { margin:2px 0 }
+{% if verifications|length == 1 %}
+    ol {padding: 0; list-style-type: none;}
+{% endif %}
     a, a:visited { color:#039 }
     code { padding:0 15px; color:#888; display: block }
     .columns li { position:relative }
@@ -36,8 +39,10 @@
     <h3>Table</h3>
     <ul>
         <li>Tempest Management</li>
-        <li>Launch two verifications</li>
+        <li>Launch verification(s)</li>
+    {% if compare %}
         <li>Compare two verification results</li>
+    {% endif %}
         <li>List all verifications</li>
     </ul>
 
@@ -56,65 +61,40 @@
     <a href="{{ showconfig.stdout_file }}">Show tempest config</a>
     <code>$ {{ showconfig.cmd }}</code>
 
-    <br>First verification run
+{% for i in range(verifications|length) %}
+{% if verifications|length > 1 %}
+    <br>Verification # {{ i + 1}}
+{% endif %}
     <ol>
         <li>
-            <span class="{{ first_run.status }}">[{{ first_run.status }}]</span>
-            <a href="{{ first_run.stdout_file }}">Launch of verification</a>
-            <code>$ {{ first_run.cmd }}</code>
+            <span class="{{ verifications[i].status }}">[{{ verifications[i].status }}]</span>
+            <a href="{{ verifications[i].stdout_file }}">Launch of verification</a>
+            <code>$ {{ verifications[i].cmd }}</code>
         </li>
         <li>
-            <span class="{{ first_run.result_in_html.status }}">[{{ first_run.result_in_html.status }}]</span>
-            <a href="{{ first_run.result_in_html.output_file }}">Display raw results in HTML</a> [<a href="{{ first_run.result_in_html.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ first_run.result_in_html.cmd }}</code>
+            <span class="{{ verifications[i].result_in_html.status }}">[{{ verifications[i].result_in_html.status }}]</span>
+            <a href="{{ verifications[i].result_in_html.output_file }}">Display raw results in HTML</a> [<a href="{{ verifications[i].result_in_html.stdout_file }}">Output from CLI</a>]
+            <code>$ {{ verifications[i].result_in_html.cmd }}</code>
         </li>
         <li>
-            <span class="{{ first_run.result_in_json.status }}">[{{ first_run.result_in_json.status }}]</span>
-            <a href="{{ first_run.result_in_json.output_file }}">Display raw results in JSON</a> [<a href="{{ first_run.result_in_json.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ first_run.result_in_json.cmd }}</code>
+            <span class="{{ verifications[i].result_in_json.status }}">[{{ verifications[i].result_in_json.status }}]</span>
+            <a href="{{ verifications[i].result_in_json.output_file }}">Display raw results in JSON</a> [<a href="{{ verifications[i].result_in_json.stdout_file }}">Output from CLI</a>]
+            <code>$ {{ verifications[i].result_in_json.cmd }}</code>
         </li>
         <li>
-            <span class="{{ first_run.show.status }}">[{{ first_run.show.status }}]</span>
-            <a href="{{ first_run.show.output_file }}">Display results table of the verification</a>
-            <code>$ {{ first_run.show.cmd }}</code>
+            <span class="{{ verifications[i].show.status }}">[{{ verifications[i].show.status }}]</span>
+            <a href="{{ verifications[i].show.stdout_file }}">Display results table of the verification</a>
+            <code>$ {{ verifications[i].show.cmd }}</code>
         </li>
         <li>
-            <span class="{{ first_run.show_detailed.status }}">[{{ first_run.show_detailed.status }}]</span>
-            <a href="{{ first_run.show_detailed.output_file }}">Display results table of the verification with detailed errors</a><br />
-            <code>$ {{ first_run.show_detailed.cmd }}</code>
+            <span class="{{ verifications[i].show_detailed.status }}">[{{ verifications[i].show_detailed.status }}]</span>
+            <a href="{{ verifications[i].show_detailed.stdout_file }}">Display results table of the verification with detailed errors</a><br />
+            <code>$ {{ verifications[i].show_detailed.cmd }}</code>
         </li>
     </ol>
+{% endfor %}
 
-    Second verification run
-    {# TODO(andrekurilin): remove this code duplication #}
-    <ol>
-        <li>
-            <span class="{{ second_run.status }}">[{{ second_run.status }}]</span>
-            <a href="{{ second_run.output_file }}">Launch of verification</a>
-            <code>$ {{ second_run.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ second_run.result_in_html.status }}">[{{ second_run.result_in_html.status }}]</span>
-            <a href="{{ second_run.result_in_html.output_file }}">Display raw results in HTML</a> [<a href="{{ second_run.result_in_html.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ second_run.result_in_html.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ second_run.result_in_json.status }}">[{{ second_run.result_in_json.status }}]</span>
-            <a href="{{ second_run.result_in_json.output_file }}">Display raw results in JSON</a> [<a href="{{ second_run.result_in_json.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ second_run.result_in_json.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ second_run.show.status }}">[{{ second_run.show.status }}]</span>
-            <a href="{{ second_run.show.output_file }}">Display results table of the verification</a>
-            <code>$ {{ second_run.show.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ second_run.show_detailed.status }}">[{{ second_run.show_detailed.status }}]</span>
-            <a href="{{ second_run.show_detailed.output_file }}">Display results table of the verification with detailed errors</a><br />
-            <code>$ {{ second_run.show_detailed.cmd }}</code>
-        </li>
-    </ol>
-
+{% if compare %}
     <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
     <a href="{{ compare.html.output_file }}">Compare two verifications and display results in HTML</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
     <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --html</code>
@@ -126,9 +106,10 @@
     <span class="{{ compare.csv.status }}">[{{ compare.csv.status }}]</span>
     <a href="{{ compare.csv.output_file }}">Compare two verifications and display results in CSV</a> [<a href="{{ compare.csv.stdout_file }}">Output from CLI</a>]
     <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --csv</code>
+{% endif %}
 
     <span class="{{ list.status }}">[{{ list.status }}]</span>
-    <a href="{{ list.output_file }}">List of all verifications</a>
+    <a href="{{ list.stdout_file }}">List of all verifications</a>
     <code>$ {{ list.cmd }}</code>
 
     <h2>About Rally</h2>

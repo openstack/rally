@@ -145,7 +145,7 @@ def main():
     call_rally("deployment use --deployment devstack", print_output=True)
     call_rally("deployment check", print_output=True)
 
-    render_vars = {}
+    render_vars = {"verifications": []}
 
     # Verification management stuff
     render_vars["install"] = call_rally("verify install")
@@ -153,17 +153,15 @@ def main():
     render_vars["showconfig"] = call_rally("verify showconfig")
 
     # Launch verification
-    render_vars["first_run"] = launch_verification_once(
-        MODES_PARAMETERS[args.mode])
+    render_vars["verifications"].append(launch_verification_once(
+        MODES_PARAMETERS[args.mode]))
 
     if args.compare:
-        render_vars["second_run"] = launch_verification_once(
-            MODES_PARAMETERS[args.mode])
+        render_vars["verifications"].append(launch_verification_once(
+            MODES_PARAMETERS[args.mode]))
         render_vars["compare"] = do_compare(
-            render_vars["first_run"]["uuid"],
-            render_vars["second_run"]["uuid"])
-    else:
-        raise NotImplementedError("You are unable to disable compare now.")
+            render_vars["verifications"][-2]["uuid"],
+            render_vars["verifications"][-1]["uuid"])
 
     render_vars["list"] = call_rally("verify list")
 
