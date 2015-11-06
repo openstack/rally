@@ -76,7 +76,7 @@ class InvalidBenchmarkConfig(InvalidTaskException):
 
 
 class NotFoundException(RallyException):
-    msg_fmt = _("Not found.")
+    msg_fmt = _("The resource can not be found.")
 
 
 class PluginNotFound(NotFoundException):
