@@ -119,8 +119,7 @@ def do_compare(uuid_1, uuid_2):
 
 
 def render_page(**render_vars):
-    # TODO(andreykurilin): port template to jinja2
-    template = utils.get_template("ci/index_verify.mako")
+    template = utils.get_template("ci/index_verify.html")
     with open(os.path.join(BASE_DIR, "extra/index.html"), "w") as f:
         f.write(template.render(**render_vars))
 
