@@ -12,12 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 import copy
 
 import mock
+import six
 
 from rally.plugins.openstack.context.ceilometer import samples
+from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.ceilometer"
@@ -53,7 +54,16 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                     "counter_unit": "fake-counter-unit",
                     "counter_volume": 100,
                     "resources_per_tenant": resources_per_tenant,
-                    "samples_per_resource": samples_per_resource
+                    "samples_per_resource": samples_per_resource,
+                    "timestamp_interval": 60,
+                    "metadata_list": [
+                        {"status": "active", "name": "fake_resource",
+                         "deleted": "False",
+                         "created_at": "2015-09-04T12:34:19.000000"},
+                        {"status": "not_active", "name": "fake_resource_1",
+                         "deleted": "False",
+                         "created_at": "2015-09-10T06:55:12.000000"}
+                    ]
                 }
             },
             "admin": {
@@ -74,16 +84,23 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                 "counter_unit": "instance",
                 "counter_volume": 1.0,
                 "resources_per_tenant": 5,
-                "samples_per_resource": 5
+                "samples_per_resource": 5,
+                "timestamp_intervals": 60,
+                "metadata_list": [
+                    {"status": "active", "name": "fake_resource",
+                     "deleted": "False",
+                     "created_at": "2015-09-04T12:34:19.000000"},
+                    {"status": "not_active", "name": "fake_resource_1",
+                     "deleted": "False",
+                     "created_at": "2015-09-10T06:55:12.000000"}
+                ]
             }
         }
 
         inst = samples.CeilometerSampleGenerator(context)
         self.assertEqual(inst.config, context["config"]["ceilometer"])
 
-    @mock.patch("%s.samples.ceilo_utils.CeilometerScenario._create_samples"
-                % CTX)
-    def test_setup(self, mock_ceilometer_scenario__create_samples):
+    def test_setup(self):
         tenants_count = 2
         users_per_tenant = 2
         resources_per_tenant = 2
@@ -92,32 +109,47 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         tenants, real_context = self._gen_context(
             tenants_count, users_per_tenant,
             resources_per_tenant, samples_per_resource)
-
+        scenario = ceilo_utils.CeilometerScenario(real_context)
         sample = {
             "counter_name": "fake-counter-name",
             "counter_type": "fake-counter-type",
             "counter_unit": "fake-counter-unit",
             "counter_volume": 100,
             "resource_id": "fake-resource-id",
+            "metadata_list": [
+                {"status": "active", "name": "fake_resource",
+                 "deleted": "False",
+                 "created_at": "2015-09-04T12:34:19.000000"},
+                {"status": "not_active", "name": "fake_resource_1",
+                 "deleted": "False",
+                 "created_at": "2015-09-10T06:55:12.000000"}
+            ]
         }
-
+        scenario.generate_random_name = mock.Mock(
+            return_value="fake_resource-id")
+        kwargs = copy.deepcopy(sample)
+        kwargs.pop("resource_id")
+        samples_to_create = scenario._make_samples(count=samples_per_resource,
+                                                   interval=60, **kwargs)
         new_context = copy.deepcopy(real_context)
         for id_ in tenants.keys():
             new_context["tenants"][id_].setdefault("samples", [])
             new_context["tenants"][id_].setdefault("resources", [])
-            for i in range(resources_per_tenant):
-                for j in range(samples_per_resource):
+            for i in six.moves.xrange(resources_per_tenant):
+                for sample in samples_to_create:
                     new_context["tenants"][id_]["samples"].append(sample)
                 new_context["tenants"][id_]["resources"].append(
                     sample["resource_id"])
-
-        mock_ceilometer_scenario__create_samples.return_value = [
-            mock.MagicMock(to_dict=lambda: sample, **sample)
-            for i in range(samples_per_resource)]
-
-        ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
-        ceilometer_ctx.setup()
-        self.assertEqual(new_context, ceilometer_ctx.context)
+        with mock.patch("%s.samples.ceilo_utils.CeilometerScenario"
+                        "._create_samples" % CTX) as mock_create_samples:
+            mock_create_samples.return_value = []
+            for i, sample in enumerate(samples_to_create):
+                sample_object = mock.MagicMock(resource_id="fake_resource-id")
+                sample_object.to_dict.return_value = sample
+                mock_create_samples.return_value.append(sample_object)
+            ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
+            ceilometer_ctx.setup()
+            self.assertEqual(new_context, ceilometer_ctx.context)
 
     def test_cleanup(self):
         tenants, context = self._gen_context(2, 5, 3, 3)

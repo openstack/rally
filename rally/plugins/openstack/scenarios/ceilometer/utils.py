@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import datetime
+
 import six
 
 from rally.plugins.openstack import scenario
@@ -21,13 +23,15 @@ from rally.task import utils as bench_utils
 class CeilometerScenario(scenario.OpenStackScenario):
     """Base class for Ceilometer scenarios with basic atomic actions."""
 
-    def _make_samples(self, count=1, counter_name="cpu_util",
+    def _make_samples(self, count=1, interval=0, counter_name="cpu_util",
                       counter_type="gauge", counter_unit="%", counter_volume=1,
                       project_id=None, user_id=None, source=None,
-                      timestamp=None, resource_metadata=None):
+                      timestamp=None, metadata_list=None):
         """Prepare and return a list of samples.
 
         :param count: specifies number of samples in array
+        :param interval: specifies interval between timestamps of near-by
+        samples
         :param counter_name: specifies name of the counter
         :param counter_type: specifies type of the counter
         :param counter_unit: specifies unit of the counter
@@ -36,9 +40,10 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :param user_id: specifies user id for samples
         :param source: specifies source for samples
         :param timestamp: specifies timestamp for samples
-        :param resource_metadata: specifies resource metadata
+        :param metadata_list: specifies list of resource metadata
         :returns: list of samples used to create samples
         """
+        samples = []
         sample = {
             "counter_name": counter_name,
             "counter_type": counter_type,
@@ -51,13 +56,25 @@ class CeilometerScenario(scenario.OpenStackScenario):
             "user_id": user_id,
             "source": source,
             "timestamp": timestamp,
-            "resource_metadata": resource_metadata,
         }
         for k, v in six.iteritems(opt_fields):
             if v:
                 sample.update({k: v})
+        now = timestamp or datetime.datetime.utcnow()
+        len_meta = len(metadata_list) if metadata_list else 0
+        for i in six.moves.xrange(count):
+            sample_item = dict(sample)
+            sample_item["timestamp"] = (
+                now - datetime.timedelta(seconds=(interval * i))
+            ).isoformat()
+            if metadata_list:
+                # NOTE(idegtiarov): Adding more then one template of metadata
+                # required it's proportional distribution among whole samples.
+                sample_item["resource_metadata"] = metadata_list[
+                    i * len_meta // count
+                ]
+            samples.append(sample_item)
 
-        samples = [sample] * count
         return samples
 
     def _get_alarm_dict(self, **kwargs):
