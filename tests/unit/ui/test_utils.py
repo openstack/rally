@@ -40,13 +40,13 @@ class ModuleTestCase(test.TestCase):
     @mock.patch("rally.ui.utils.get_mako_template")
     def test_get_template_mako(self, mock_get_mako_template):
         mock_get_mako_template.return_value = "fake_template"
-        template = utils.get_mako_template("template.mako")
+        template = utils.get_template("template.mako")
         self.assertEqual("fake_template", template)
         mock_get_mako_template.assert_called_once_with("template.mako")
 
     @mock.patch("rally.ui.utils.get_jinja_template")
     def test_get_template_jinja(self, mock_get_jinja_template):
         mock_get_jinja_template.return_value = "fake_template"
-        template = utils.get_jinja_template("template.html")
+        template = utils.get_template("template.html")
         self.assertEqual("fake_template", template)
         mock_get_jinja_template.assert_called_once_with("template.html")
