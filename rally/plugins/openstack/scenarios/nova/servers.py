@@ -418,6 +418,63 @@ class NovaServers(utils.NovaScenario,
             self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType,
+               to_flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova", "cinder"]})
+    def boot_server_from_volume_and_resize(
+            self, image, flavor, to_flavor, volume_size, min_sleep=0,
+            max_sleep=0, force_delete=False, confirm=True, do_delete=True,
+            boot_server_kwargs=None, create_volume_kwargs=None):
+        """Boot a server from volume, then resize and delete it.
+
+        The scenario first creates a volume and then a server.
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between volume creation and deletion
+        (of random duration from [min_sleep, max_sleep]).
+
+        This test will confirm the resize by default,
+        or revert the resize if confirm is set to false.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param to_flavor: flavor to be used to resize the booted instance
+        :param volume_size: volume size (in GB)
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param force_delete: True if force_delete should be used
+        :param confirm: True if need to confirm resize else revert resize
+        :param do_delete: True if resources needs to be deleted explicitly
+                        else use rally cleanup to remove resources
+        :param boot_server_kwargs: optional arguments for VM creation
+        :param create_volume_kwargs: optional arguments for volume creation
+        """
+        boot_server_kwargs = boot_server_kwargs or {}
+        create_volume_kwargs = create_volume_kwargs or {}
+
+        if boot_server_kwargs.get("block_device_mapping"):
+            LOG.warning("Using already existing volume is not permitted.")
+
+        volume = self._create_volume(volume_size, imageRef=image,
+                                     **create_volume_kwargs)
+        boot_server_kwargs["block_device_mapping"] = {
+            "vda": "%s:::1" % volume.id}
+
+        server = self._boot_server(image, flavor, **boot_server_kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._resize(server, to_flavor)
+
+        if confirm:
+            self._resize_confirm(server)
+        else:
+            self._resize_revert(server)
+
+        if do_delete:
+            self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
