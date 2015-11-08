@@ -34,7 +34,7 @@ OSCLIENTS_OPTS = [
     cfg.BoolOpt("https_insecure", default=False,
                 help="Use SSL for all OpenStack API interfaces",
                 deprecated_for_removal=True),
-    cfg.StrOpt("https_cacert", default=None,
+    cfg.StrOpt("https_cacert",
                help="Path to CA server certificate for SSL",
                deprecated_for_removal=True)
 ]
