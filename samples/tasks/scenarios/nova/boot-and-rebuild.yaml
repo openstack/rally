@@ -9,7 +9,7 @@ NovaServers.boot_and_rebuild_server:
     to_image:
       name: "^cirros.*uec$"
   runner:
-    type: constant
+    type: "constant"
     times: 5
     concurrency: 2
   context:

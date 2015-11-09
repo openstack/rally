@@ -11,7 +11,7 @@ VMTasks.boot_runcommand_delete_custom_image:
       concurrency: 1
       timeout: 3000
       times: 1
-      type: constant
+      type: "constant"
     context:
       image_command_customizer:
         command:

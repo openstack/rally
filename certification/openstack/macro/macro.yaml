@@ -34,7 +34,7 @@
 {%- endmacro %}
 
 {%- macro constant_runner(concurrency=1, times=1, is_smoke=True) %}
-        type: constant
+        type: "constant"
   {%- if is_smoke %}
         concurrency: 1
         times: 1

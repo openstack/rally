@@ -8,7 +8,7 @@ NovaServers.boot_and_live_migrate_server:
       name: "^cirros.*uec$"
     block_migration: false
   runner:
-    type: constant
+    type: "constant"
     times: 10
     concurrency: 2
   context:
