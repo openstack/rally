@@ -14,6 +14,7 @@
         type: "constant"
         times: 1
         concurrency: 1
+        timeout: 3000
       context:
         users:
           tenants: 1
