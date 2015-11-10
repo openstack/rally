@@ -62,7 +62,9 @@ The information about existing users in your OpenStack cloud should be passed to
         ]
     }
 
-This deployment configuration requires some basic information about the OpenStack cloud like the region name, auth url. admin user credentials, and any amount of users already existing in the system. Rally will use their credentials to generate load in against this deployment as soon as we register it as usual:
+This deployment configuration requires some basic information about the OpenStack cloud like the region name, auth url, admin user credentials, and any amount of regular users already existing in the system. Rally will use the "users" credentials to generate load against this deployment.  Note: DO NOT put any admin credentials in the "users" section of config, as that will give your test the access to "clean up" public glance images from other tenants.  
+
+We register the deployment as usual:
 
 .. code-block:: console
 
