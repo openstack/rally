@@ -167,6 +167,13 @@
             nv.utils.windowResize(chart.update)
           })
         },
+        /* NOTE(amaretskiy): this is actually a result of
+           d3.scale.category20().range(), excluding red color (#d62728)
+           which is reserved for errors */
+        _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+                  "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
+                  "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+                  "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
         pie: function(selector, data){
           var chart = nv.models.pieChart()
             .x(function(d) { return d.key })
@@ -175,10 +182,23 @@
             .labelType("percent")
             .donut(true)
             .donutRatio(0.25)
-            .donutLabelsOutside(true);
-          var data_ = [];
+            .donutLabelsOutside(true)
+            .color(function(d){
+              if (d.data && d.data.color) {
+                return d.data.color
+              }
+            });
+
+          var data_ = [],
+              colors = [],
+              colors_map = {errors: "#d62728"};
           for (var i in data) {
-            data_.push({key:data[i][0], values:data[i][1]})
+            var key = data[i][0];
+            if (! (key in colors_map)) {
+              if (! colors.length) { colors = this._colors.slice() }
+              colors_map[key] = colors.shift()
+            }
+            data_.push({key:key, values:data[i][1], color:colors_map[key]})
           }
           this._render(selector, data_, chart)
         },
@@ -200,7 +220,7 @@
           for (var i in data) {
             var d = {key:data[i][0], values:data[i][1]};
             if (d.key === "failed_duration") {
-              d.color = "#f00"
+              d.color = "#d62728"
             }
             data_.push(d)
           }
