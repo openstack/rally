@@ -1,6 +1,5 @@
 rally-jobs
 tests
-Dockerfile
 contrib
 test-requirements.txt
 tox.ini
