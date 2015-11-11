@@ -25,9 +25,9 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="sahara_data_sources", order=443)
-class SaharaDataSources(context.Context):
-    """Context class for setting up Data Sources for an EDP job."""
+@context.configure(name="sahara_input_data_sources", order=443)
+class SaharaInputDataSources(context.Context):
+    """Context class for setting up Input Data Sources for an EDP job."""
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -39,30 +39,18 @@ class SaharaDataSources(context.Context):
             "input_url": {
                 "type": "string",
             },
-            "output_type": {
-                "enum": ["swift", "hdfs"],
-            },
-            "output_url_prefix": {
-                "type": "string",
-            }
         },
         "additionalProperties": False,
-        "required": ["input_type", "input_url",
-                     "output_type", "output_url_prefix"]
+        "required": ["input_type", "input_url"]
     }
 
     @logging.log_task_wrapper(LOG.info,
-                              _("Enter context: `Sahara Data Sources`"))
+                              _("Enter context: `Sahara Input Data Sources`"))
     def setup(self):
-        self.context["sahara_output_conf"] = {
-            "output_type": self.config["output_type"],
-            "output_url_prefix": self.config["output_url_prefix"]
-        }
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             clients = osclients.Clients(user["endpoint"])
             sahara = clients.sahara()
-
             self.setup_inputs(sahara, tenant_id, self.config["input_type"],
                               self.config["input_url"])
 
@@ -79,7 +67,8 @@ class SaharaDataSources(context.Context):
 
         self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Input Data"
+                                          "Sources`"))
     def cleanup(self):
         resources = ["job_executions", "jobs", "data_sources"]
 

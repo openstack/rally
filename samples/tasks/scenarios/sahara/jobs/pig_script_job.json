@@ -35,10 +35,12 @@
                         }
                     ]
                 },
-                "sahara_data_sources": {
-                    "input_type": "hdfs",
+                "sahara_input_data_sources": {
+                  "input_type": "hdfs",
+                  "input_url": "/"
+                },
+                "sahara_output_data_sources": {
                     "output_type": "hdfs",
-                    "input_url": "/",
                     "output_url_prefix": "/out_"
                 },
                 "sahara_cluster": {
