@@ -33,10 +33,10 @@ class TaskSampleTestCase(test.TestCase):
         os.pardir, os.pardir, os.pardir,
         "samples", "tasks")
 
-    @mock.patch("rally.task.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self,
-                             mock_benchmark_engine__validate_config_semantic):
+                             mock_task_engine__validate_config_semantic):
         scenarios = set()
 
         for dirname, dirnames, filenames in os.walk(self.samples_path):
@@ -52,7 +52,7 @@ class TaskSampleTestCase(test.TestCase):
                     try:
                         task_config = yaml.safe_load(api.Task.render_template
                                                      (task_file.read()))
-                        eng = engine.BenchmarkEngine(task_config,
+                        eng = engine.TaskEngine(task_config,
                                                      mock.MagicMock())
                         eng.validate()
                     except Exception:

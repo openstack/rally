@@ -60,12 +60,12 @@ class TaskAPITestCase(test.TestCase):
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
                                                   admin=mock.MagicMock(),
                                                   users=[]))
-    @mock.patch("rally.api.engine.BenchmarkEngine")
+    @mock.patch("rally.api.engine.TaskEngine")
     def test_validate(
-            self, mock_benchmark_engine, mock_deployment_get, mock_task):
+            self, mock_task_engine, mock_deployment_get, mock_task):
         api.Task.validate(mock_deployment_get.return_value["uuid"], "config")
 
-        mock_benchmark_engine.assert_has_calls([
+        mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
                       admin=mock_deployment_get.return_value["admin"],
                       users=[]),
@@ -83,12 +83,12 @@ class TaskAPITestCase(test.TestCase):
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
                                                   admin=mock.MagicMock(),
                                                   users=[]))
-    @mock.patch("rally.api.engine.BenchmarkEngine")
-    def test_validate_engine_exception(self, mock_benchmark_engine,
+    @mock.patch("rally.api.engine.TaskEngine")
+    def test_validate_engine_exception(self, mock_task_engine,
                                        mock_deployment, mock_task):
 
         excpt = exceptions.InvalidTaskException()
-        mock_benchmark_engine.return_value.validate.side_effect = excpt
+        mock_task_engine.return_value.validate.side_effect = excpt
         self.assertRaises(exceptions.InvalidTaskException, api.Task.validate,
                           mock_deployment.return_value["uuid"], "config")
 
@@ -163,12 +163,12 @@ class TaskAPITestCase(test.TestCase):
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
                                                   admin=mock.MagicMock(),
                                                   users=[]))
-    @mock.patch("rally.api.engine.BenchmarkEngine")
-    def test_start(self, mock_benchmark_engine, mock_deployment_get,
+    @mock.patch("rally.api.engine.TaskEngine")
+    def test_start(self, mock_task_engine, mock_deployment_get,
                    mock_task):
         api.Task.start(mock_deployment_get.return_value["uuid"], "config")
 
-        mock_benchmark_engine.assert_has_calls([
+        mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
                       admin=mock_deployment_get.return_value["admin"],
                       users=[], abort_on_sla_failure=False),
@@ -196,11 +196,11 @@ class TaskAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
-    @mock.patch("rally.api.engine.BenchmarkEngine")
-    def test_start_exception(self, mock_benchmark_engine, mock_deployment_get,
+    @mock.patch("rally.api.engine.TaskEngine")
+    def test_start_exception(self, mock_task_engine, mock_deployment_get,
                              mock_task):
         mock_task.return_value.is_temporary = False
-        mock_benchmark_engine.return_value.run.side_effect = TypeError
+        mock_task_engine.return_value.run.side_effect = TypeError
         self.assertRaises(TypeError, api.Task.start, "deployment_uuid",
                           "config")
         mock_deployment_get().update_status.assert_called_once_with(

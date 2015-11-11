@@ -28,10 +28,10 @@ class RallyJobsTestCase(test.TestCase):
     rally_jobs_path = os.path.join(
         os.path.dirname(__file__), "..", "..", "..", "rally-jobs")
 
-    @mock.patch("rally.task.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(
-            self, mock_benchmark_engine__validate_config_semantic):
+            self, mock_task_engine__validate_config_semantic):
         discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
         for filename in ["rally.yaml", "rally-neutron.yaml",
@@ -55,7 +55,7 @@ class RallyJobsTestCase(test.TestCase):
                     task = api.Task.render_template(task_file.read(), **args)
                     task = yaml.safe_load(task)
 
-                    eng = engine.BenchmarkEngine(task, mock.MagicMock())
+                    eng = engine.TaskEngine(task, mock.MagicMock())
                     eng.validate()
                 except Exception:
                     print(traceback.format_exc())

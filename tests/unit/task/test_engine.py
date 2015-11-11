@@ -32,14 +32,14 @@ class TestException(exceptions.RallyException):
     msg_fmt = "TestException"
 
 
-class BenchmarkEngineTestCase(test.TestCase):
+class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.TaskConfig")
     def test_init(self, mock_task_config):
         config = mock.MagicMock()
         task = mock.MagicMock()
         mock_task_config.return_value = fake_task_instance = mock.MagicMock()
-        eng = engine.BenchmarkEngine(config, task)
+        eng = engine.TaskEngine(config, task)
         mock_task_config.assert_has_calls([mock.call(config)])
         self.assertEqual(eng.config, fake_task_instance)
         self.assertEqual(eng.task, task)
@@ -48,7 +48,7 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("jsonschema.validate")
     def test_validate(self, mock_validate, mock_task_config):
         mock_task_config.return_value = config = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
         mock_validate = mock.MagicMock()
 
         eng._validate_config_scenarios_name = mock_validate.names
@@ -70,13 +70,13 @@ class BenchmarkEngineTestCase(test.TestCase):
         }
         task = mock.MagicMock()
         self.assertRaises(exceptions.InvalidTaskException,
-                          engine.BenchmarkEngine, config, task)
+                          engine.TaskEngine, config, task)
         self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_scenarios_name(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task)
         eng._validate_config_scenarios_name = mock.MagicMock(
             side_effect=exceptions.NotFoundScenarios)
 
@@ -86,10 +86,10 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_syntax(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task)
         eng._validate_config_scenarios_name = mock.MagicMock()
         eng._validate_config_syntax = mock.MagicMock(
-            side_effect=exceptions.InvalidBenchmarkConfig)
+            side_effect=exceptions.InvalidTaskConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
@@ -97,11 +97,11 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_semantic(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task)
         eng._validate_config_scenarios_name = mock.MagicMock()
         eng._validate_config_syntax = mock.MagicMock()
         eng._validate_config_semantic = mock.MagicMock(
-            side_effect=exceptions.InvalidBenchmarkConfig)
+            side_effect=exceptions.InvalidTaskConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
@@ -124,7 +124,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.MagicMock(get_name=lambda: "b"),
             mock.MagicMock(get_name=lambda: "a")
         ]
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_scenarios_name(mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskConfig")
@@ -141,7 +141,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         ]
         mock_task_instance.subtasks = [mock_subtask]
         mock_scenario.list_benchmark_scenarios.return_value = ["exist", "aaa"]
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
 
         self.assertRaises(exceptions.NotFoundScenarios,
                           eng._validate_config_scenarios_name,
@@ -162,7 +162,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             {"name": "scb", "runner": "b"}
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_syntax(mock_task_instance)
         mock_scenario_runner_validate.assert_has_calls(
             [mock.call({}), mock.call("b")], any_order=True)
@@ -183,11 +183,11 @@ class BenchmarkEngineTestCase(test.TestCase):
             {"name": "scb", "runner": "b"}
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
 
         mock_scenario_runner.validate = mock.MagicMock(
             side_effect=jsonschema.ValidationError("a"))
-        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+        self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_syntax, mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskConfig")
@@ -203,11 +203,11 @@ class BenchmarkEngineTestCase(test.TestCase):
             {"name": "scb", "runner": "b"}
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
 
         mock_context_manager.validate = mock.MagicMock(
             side_effect=jsonschema.ValidationError("a"))
-        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+        self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_syntax, mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskConfig")
@@ -215,7 +215,7 @@ class BenchmarkEngineTestCase(test.TestCase):
     def test__validate_config_semantic_helper(self, mock_scenario_validate,
                                               mock_task_config):
         deployment = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_semantic_helper("admin", "user", "name", "pos",
                                              deployment, {"args": "args"})
         mock_scenario_validate.assert_called_once_with(
@@ -227,9 +227,9 @@ class BenchmarkEngineTestCase(test.TestCase):
                 side_effect=exceptions.InvalidScenarioArgument)
     def test__validate_config_semanitc_helper_invalid_arg(
             self, mock_scenario_validate, mock_task_config):
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
 
-        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+        self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
@@ -241,8 +241,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         context = {"a": 10}
         users = [mock.MagicMock(), mock.MagicMock()]
 
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock(),
-                                     users=users)
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                users=users)
 
         result = eng._get_user_ctx_for_validation(context)
 
@@ -254,7 +254,7 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.osclients.Clients")
     @mock.patch("rally.task.engine.users_ctx")
-    @mock.patch("rally.task.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic_helper")
     @mock.patch("rally.task.engine.objects.Deployment.get",
                 return_value="FakeDeployment")
@@ -279,7 +279,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         mock_task_instance.subtasks = [mock_subtask1, mock_subtask2]
         fake_task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(mock_task_instance, fake_task)
+        eng = engine.TaskEngine(mock_task_instance, fake_task)
 
         eng.admin = "admin"
 
@@ -320,7 +320,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         task = mock.MagicMock()
         mock_task_get_status.return_value = consts.TaskStatus.ABORTING
-        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task)
         eng.run()
         task.update_status.assert_has_calls([
             mock.call(consts.TaskStatus.RUNNING),
@@ -346,13 +346,13 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.scenarios = [
-            {"name": "a.benchmark", "context": {"context_a": {"a": 1}}},
-            {"name": "b.benchmark", "context": {"context_b": {"b": 2}}}
+            {"name": "a.task", "context": {"context_a": {"a": 1}}},
+            {"name": "b.task", "context": {"context_b": {"b": 2}}}
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
         mock_task_config.return_value = mock_task_instance
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
         eng.run()
 
         self.assertEqual(2, mock_log.exception.call_count)
@@ -371,15 +371,15 @@ class BenchmarkEngineTestCase(test.TestCase):
                                                                        False,
                                                                        True]
         config = {
-            "a.benchmark": [{"runner": {"type": "a", "b": 1}}],
-            "b.benchmark": [{"runner": {"type": "a", "b": 1}}],
-            "c.benchmark": [{"runner": {"type": "a", "b": 1}}]
+            "a.task": [{"runner": {"type": "a", "b": 1}}],
+            "b.task": [{"runner": {"type": "a", "b": 1}}],
+            "c.task": [{"runner": {"type": "a", "b": 1}}]
         }
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
         mock_scenario_runner.get.return_value = fake_runner_cls
-        eng = engine.BenchmarkEngine(config, task)
+        eng = engine.TaskEngine(config, task)
 
         eng.run()
 
@@ -399,16 +399,16 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock_result_consumer, mock_task_get_status):
         task = mock.MagicMock()
         config = {
-            "a.benchmark": [{"runner": {"type": "a", "b": 1}}],
-            "b.benchmark": [{"runner": {"type": "a", "b": 1}}],
-            "c.benchmark": [{"runner": {"type": "a", "b": 1}}]
+            "a.task": [{"runner": {"type": "a", "b": 1}}],
+            "b.task": [{"runner": {"type": "a", "b": 1}}],
+            "c.task": [{"runner": {"type": "a", "b": 1}}]
         }
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
         mock_task_get_status.return_value = consts.TaskStatus.SOFT_ABORTING
         mock_scenario_runner.get.return_value = fake_runner_cls
-        eng = engine.BenchmarkEngine(config, task)
+        eng = engine.TaskEngine(config, task)
         eng.run()
         self.assertEqual(mock.call(consts.TaskStatus.ABORTED),
                          task.update_status.mock_calls[-1])
@@ -419,13 +419,13 @@ class BenchmarkEngineTestCase(test.TestCase):
         default_context = {"a": 1, "b": 2}
         mock_scenario_get.return_value._meta_get.return_value = default_context
         task = mock.MagicMock()
-        name = "a.benchmark"
+        name = "a.task"
         context = {"b": 3, "c": 4}
         endpoint = mock.MagicMock()
         config = {
-            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+            "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
-        eng = engine.BenchmarkEngine(config, task)
+        eng = engine.TaskEngine(config, task)
         result = eng._prepare_context(context, name, endpoint)
         expected_context = copy.deepcopy(default_context)
         expected_context.setdefault("users", {})
@@ -448,14 +448,14 @@ class BenchmarkEngineTestCase(test.TestCase):
                                                   mock_task_config):
         mock_scenario_get.return_value._meta_get.return_value = {}
         task = mock.MagicMock()
-        name = "a.benchmark"
+        name = "a.task"
         context = {"b": 3, "c": 4}
         endpoint = mock.MagicMock()
         config = {
-            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+            "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
         existing_users = [mock.MagicMock()]
-        eng = engine.BenchmarkEngine(config, task, users=existing_users)
+        eng = engine.TaskEngine(config, task, users=existing_users)
         result = eng._prepare_context(context, name, endpoint)
         expected_context = {"existing_users": existing_users}
         expected_context.update(context)
@@ -540,7 +540,7 @@ class ResultConsumerTestCase(test.TestCase):
 
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
 
-        eng = engine.BenchmarkEngine({}, task)
+        eng = engine.TaskEngine({}, task)
         eng.duration = 123
         eng.full_duration = 456
 
@@ -597,12 +597,12 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
     @mock.patch("rally.common.objects.Task.get_status")
-    @mock.patch("rally.task.engine.BenchmarkEngine._prepare_context")
+    @mock.patch("rally.task.engine.TaskEngine._prepare_context")
     @mock.patch("rally.task.engine.time.sleep")
-    @mock.patch("rally.task.engine.BenchmarkEngine._get_runner")
+    @mock.patch("rally.task.engine.TaskEngine._get_runner")
     def test_wait_and_abort_on_abort(
-            self, mock_benchmark_engine__get_runner,
-            mock_sleep, mock_benchmark_engine__prepare_context,
+            self, mock_task_engine__get_runner,
+            mock_sleep, mock_task_engine__prepare_context,
             mock_task_get_status, mock_event, mock_thread):
         runner = mock.MagicMock()
         key = mock.MagicMock()
@@ -624,12 +624,12 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
     @mock.patch("rally.common.objects.Task.get_status")
-    @mock.patch("rally.task.engine.BenchmarkEngine._prepare_context")
+    @mock.patch("rally.task.engine.TaskEngine._prepare_context")
     @mock.patch("rally.task.engine.time.sleep")
-    @mock.patch("rally.task.engine.BenchmarkEngine._get_runner")
+    @mock.patch("rally.task.engine.TaskEngine._get_runner")
     def test_wait_and_abort_on_no_abort(
-            self, mock_benchmark_engine__get_runner, mock_sleep,
-            mock_benchmark_engine__prepare_context, mock_task_get_status,
+            self, mock_task_engine__get_runner, mock_sleep,
+            mock_task_engine__prepare_context, mock_task_get_status,
             mock_event, mock_thread):
         runner = mock.MagicMock()
         key = mock.MagicMock()
@@ -693,23 +693,23 @@ class TaskTestCase(test.TestCase):
     def test_make_subtasks_v1(self, mock_task_config__validate_json,
                               mock_task_config__get_version, mock_sub_task):
         mock_task_config__get_version.return_value = 1
-        config = {"a.benchmark": [{"s": 1}, {"s": 2}],
-                  "b.benchmark": [{"s": 3}]}
+        config = {"a.task": [{"s": 1}, {"s": 2}],
+                  "b.task": [{"s": 3}]}
         self.assertEqual(3, len(engine.TaskConfig(config).subtasks))
         mock_sub_task.assert_has_calls([
             mock.call({
-                "title": "a.benchmark",
-                "scenarios": [{"s": 1, "name": "a.benchmark"}]
+                "title": "a.task",
+                "scenarios": [{"s": 1, "name": "a.task"}]
             }),
             mock.call({
-                "title": "a.benchmark",
-                "scenarios": [{"s": 2, "name": "a.benchmark"}]
+                "title": "a.task",
+                "scenarios": [{"s": 2, "name": "a.task"}]
             }),
             mock.call({
-                "title": "b.benchmark",
-                "scenarios": [{"s": 3, "name": "b.benchmark"}]
+                "title": "b.task",
+                "scenarios": [{"s": 3, "name": "b.task"}]
             })
-        ])
+        ], any_order=True)
 
     @mock.patch("rally.task.engine.SubTask")
     @mock.patch("rally.task.engine.TaskConfig._get_version")

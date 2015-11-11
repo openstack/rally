@@ -138,12 +138,12 @@ class ResultConsumer(object):
             time.sleep(2.0)
 
 
-class BenchmarkEngine(object):
-    """The Benchmark engine class is used to execute benchmark scenarios.
+class TaskEngine(object):
+    """The Task engine class is used to execute benchmark scenarios.
 
-    An instance of this class is initialized by the API with the benchmarks
+    An instance of this class is initialized by the API with the task
     configuration and then is used to validate and execute all specified
-    in config benchmarks.
+    in config subtasks.
 
     .. note::
 
@@ -155,14 +155,14 @@ class BenchmarkEngine(object):
             users = ....  # contains a list of dicts of representations of
                           # objects.Endpoint with OpenStack users credentials.
 
-            engine = BenchmarkEngine(config, task, admin=admin, users=users)
+            engine = TaskEngine(config, task, admin=admin, users=users)
             engine.validate()   # to test config
             engine.run()        # to run config
     """
 
     def __init__(self, config, task, admin=None, users=None,
                  abort_on_sla_failure=False):
-        """BenchmarkEngine constructor.
+        """TaskEngine constructor.
 
         :param config: Dict with configuration of specified benchmark scenarios
         :param task: Instance of Task,
@@ -215,7 +215,7 @@ class BenchmarkEngine(object):
                     sla.SLA.validate(scenario_obj.get("sla", {}))
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
-                    raise exceptions.InvalidBenchmarkConfig(
+                    raise exceptions.InvalidTaskConfig(
                         name=scenario_obj["name"],
                         pos=pos, config=scenario_obj,
                         reason=six.text_type(e)
@@ -229,7 +229,7 @@ class BenchmarkEngine(object):
         except exceptions.InvalidScenarioArgument as e:
             kw = {"name": name, "pos": pos,
                   "config": kwargs, "reason": six.text_type(e)}
-            raise exceptions.InvalidBenchmarkConfig(**kw)
+            raise exceptions.InvalidTaskConfig(**kw)
 
     def _get_user_ctx_for_validation(self, ctx):
         if self.existing_users:

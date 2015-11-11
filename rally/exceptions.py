@@ -68,10 +68,10 @@ class NotFoundScenarios(InvalidTaskException):
     msg_fmt = _("There are no benchmark scenarios with names: `%(names)s`.")
 
 
-class InvalidBenchmarkConfig(InvalidTaskException):
+class InvalidTaskConfig(InvalidTaskException):
     msg_fmt = _("Input task is invalid!\n\n"
-                "Benchmark %(name)s[%(pos)s] has wrong configuration"
-                "\nBenchmark configuration:\n%(config)s\n"
+                "Subtask %(name)s[%(pos)s] has wrong configuration"
+                "\Subtask configuration:\n%(config)s\n"
                 "\nReason:\n %(reason)s")
 
 
