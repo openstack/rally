@@ -105,9 +105,8 @@ class RAMInt(object):
     share integer among processes and threads.
     """
 
-    def __init__(self):
-        self.__lock = multiprocessing.Lock()
-        self.__int = multiprocessing.Value("I", 0)
+    def __init__(self, base_value=0):
+        self.__int = multiprocessing.Value("I", base_value)
 
     def __int__(self):
         return self.__int.value
@@ -119,7 +118,7 @@ class RAMInt(object):
         return self
 
     def __next__(self):
-        with self.__lock:
+        with self.__int._lock:
             value = self.__int.value
             self.__int.value += 1
             if self.__int.value > value:
@@ -130,7 +129,7 @@ class RAMInt(object):
         return self.__next__()
 
     def reset(self):
-        with self.__lock:
+        with self.__int._lock:
             self.__int.value = 0
 
 
