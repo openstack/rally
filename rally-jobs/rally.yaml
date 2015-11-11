@@ -717,25 +717,45 @@
         failure_rate:
           max: 0
 
-  CeilometerStats.create_meter_and_get_stats:
+  CeilometerStats.get_stats:
    -
-      args:
-        user_id: "user-id"
-        resource_id: "resource-id"
-        counter_volume: 1.0
-        counter_unit: ""
-        counter_type: "cumulative"
-      runner:
-        type: "constant"
-        times: 20
-        concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
+     runner:
+        type: constant
+        times: 10
+        concurrency: 2
+     context:
+       users:
+         tenants: 2
+         users_per_tenant: 2
+       ceilometer:
+         counter_name: "benchmark_meter"
+         counter_type: "gauge"
+         counter_unit: "%"
+         counter_volume: 100
+         resources_per_tenant: 100
+         samples_per_resource: 100
+         timestamp_interval: 10
+         metadata_list:
+           -
+             status: "active"
+             name: "rally benchmark on"
+             deleted: "false"
+           -
+             status: "terminated"
+             name: "rally benchmark off"
+             deleted: "true"
+     args:
+       meter_name: "benchmark_meter"
+       filter_by_user_id: true
+       filter_by_project_id: true
+       filter_by_resource_id: true
+       metadata_query:
+         status: "terminated"
+       period: 300
+       groupby: "resource_id"
+     sla:
+       failure_rate:
+         max: 0
 
   CeilometerQueries.create_and_query_alarms:
     -
