@@ -78,10 +78,13 @@ class VerifyCommands(object):
                    required=False,
                    help="How many processes to use to run Tempest tests. "
                         "The default value (0) auto-detects your CPU count")
+    @cliutils.args("--failing", dest="failing", required=False,
+                   help="Re-run the tests that failed in the last execution",
+                   action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, deployment=None, set_name="", regex=None,
               tests_file=None, tempest_config=None, xfails_file=None,
-              do_use=True, system_wide=False, concur=0):
+              do_use=True, system_wide=False, concur=0, failing=False):
         """Start verification (run Tempest tests).
 
         :param deployment: UUID or name of a deployment
@@ -98,7 +101,9 @@ class VerifyCommands(object):
                             env when running the tests
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
+        :param failing: Re-run tests that failed during the last execution
         """
+
         msg = _("Arguments '%s' and '%s' are not compatible. "
                 "You can use only one of the mentioned arguments.")
         if regex and set_name:
@@ -111,7 +116,7 @@ class VerifyCommands(object):
             print(msg % ("tests_file", "regex"))
             return 1
 
-        if not (regex or set_name or tests_file):
+        if not (regex or set_name or tests_file or failing):
             set_name = "full"
 
         if set_name and set_name not in AVAILABLE_SETS:
@@ -122,6 +127,14 @@ class VerifyCommands(object):
 
         if tests_file and not os.path.exists(tests_file):
             print(_("File '%s' not found.") % tests_file)
+            return 1
+
+        if failing and set_name:
+            print(msg % ("failing", "set"))
+            return 1
+
+        if failing and tests_file:
+            print(msg % ("failing", "tests_file"))
             return 1
 
         expected_failures = None
@@ -136,7 +149,8 @@ class VerifyCommands(object):
         verification = api.Verification.verify(
             deployment, set_name=set_name, regex=regex, tests_file=tests_file,
             tempest_config=tempest_config, expected_failures=expected_failures,
-            system_wide=system_wide, concur=concur)
+            system_wide=system_wide, concur=concur, failing=failing)
+
         if do_use:
             self.use(verification["uuid"])
 

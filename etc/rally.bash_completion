@@ -56,7 +56,7 @@ _rally()
     OPTS["verify_results"]="--uuid --html --json --output-file"
     OPTS["verify_show"]="--uuid --sort-by --detailed"
     OPTS["verify_showconfig"]="--deployment"
-    OPTS["verify_start"]="--deployment --set --regex --tests-file --tempest-config --xfails-file --no-use --system-wide --concurrency"
+    OPTS["verify_start"]="--deployment --set --regex --tests-file --tempest-config --xfails-file --no-use --system-wide --concurrency --failing"
     OPTS["verify_uninstall"]="--deployment"
     OPTS["verify_use"]="--uuid"
 
