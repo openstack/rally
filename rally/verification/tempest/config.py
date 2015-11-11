@@ -291,9 +291,14 @@ class TempestResourcesContext(object):
         _write_config(self.conf_path, self.conf)
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._cleanup_roles()
-        self._cleanup_resource("image", self._created_images)
-        self._cleanup_resource("flavor", self._created_flavors)
+        # Tempest tests may take more than 1 hour and we should remove all
+        # cached clients sessions to avoid tokens expiration when deleting
+        # Tempest resources.
+        self.clients.clear()
+
+        self._cleanup_tempest_roles()
+        self._cleanup_images()
+        self._cleanup_flavors()
         if "neutron" in self.available_services:
             self._cleanup_network_resources()
 
@@ -366,19 +371,25 @@ class TempestResourcesContext(object):
 
         return net
 
-    def _cleanup_roles(self):
+    def _cleanup_tempest_roles(self):
+        keystoneclient = self.clients.keystone()
         for role in self._created_roles:
             LOG.debug("Deleting role '%s'" % role.name)
-            role.delete()
+            keystoneclient.roles.delete(role.id)
 
-    def _cleanup_resource(self, resource_type, created_resources):
-        for res in created_resources:
-            LOG.debug("Deleting %s '%s'" % (resource_type, res.name))
-            if res.id == self.conf.get("compute", "%s_ref" % resource_type):
-                self.conf.set("compute", "%s_ref" % resource_type, "")
-            else:
-                self.conf.set("compute", "%s_ref_alt" % resource_type, "")
-            res.delete()
+    def _cleanup_images(self):
+        glanceclient = self.clients.glance()
+        for image in self._created_images:
+            LOG.debug("Deleting image '%s'" % image.name)
+            glanceclient.images.delete(image.id)
+            self._remove_opt_value_from_config(image.id)
+
+    def _cleanup_flavors(self):
+        novaclient = self.clients.nova()
+        for flavor in self._created_flavors:
+            LOG.debug("Deleting flavor '%s'" % flavor.name)
+            novaclient.flavors.delete(flavor.id)
+            self._remove_opt_value_from_config(flavor.id)
 
     def _cleanup_network_resources(self):
         neutron_wrapper = network.NeutronWrapper(self.clients, task=None)
