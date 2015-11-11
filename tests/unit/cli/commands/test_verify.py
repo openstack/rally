@@ -220,21 +220,20 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.common.objects.Verification")
-    @mock.patch("rally.verification.tempest.json2html.HtmlOutput")
+    @mock.patch("rally.verification.tempest.json2html.generate_report")
     def test_results_with_output_html_and_output_file(
-            self, mock_html_output, mock_verification, mock_open):
+            self, mock_generate_report, mock_verification, mock_open):
 
         verification_uuid = "7140dd59-3a7b-41fd-a3ef-5e3e615d7dfa"
-        mock_create = mock.Mock(return_value="html_report")
-        mock_html_output.return_value = mock.Mock(create_report=mock_create)
         self.verify.results(verification_uuid, output_html=True,
                             output_json=False, output_file="results")
 
         mock_verification.get.assert_called_once_with(verification_uuid)
-        mock_html_output.assert_called_once_with(
+        mock_generate_report.assert_called_once_with(
             mock_verification.get.return_value.get_results.return_value)
         mock_open.assert_called_once_with("results", "wb")
-        mock_open.side_effect().write.assert_called_once_with("html_report")
+        mock_open.side_effect().write.assert_called_once_with(
+            mock_generate_report.return_value)
 
     @mock.patch("rally.common.objects.Verification")
     @mock.patch("json.dumps")

@@ -188,7 +188,7 @@ class VerifyCommands(object):
         if output_json + output_html > 1:
             print("Please specify only one output format.")
         elif output_html:
-            result = json2html.HtmlOutput(results).create_report()
+            result = json2html.generate_report(results)
         else:
             result = json.dumps(results, sort_keys=True, indent=4)
 

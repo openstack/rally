@@ -20,30 +20,29 @@ BASE = "rally.verification.tempest"
 
 class HtmlOutputTestCase(test.TestCase):
 
-    results = {
-        "time": 22,
-        "tests": 4,
-        "success": 1,
-        "skipped": 1,
-        "failures": 1,
-        "expected_failures": 0,
-        "unexpected_success": 0,
-        "test_cases": {
-            "tp": {"name": "tp",
-                   "status": "success",
-                   "time": 2},
-            "ts": {"name": "ts",
-                   "status": "skip",
-                   "reason": "ts_skip",
-                   "time": 4},
-            "tf": {"name": "tf",
-                   "status": "fail",
-                   "time": 6,
-                   "traceback": "fail_log"}}}
+    @mock.patch(BASE + ".json2html.ui_utils.get_template")
+    def test_generate_report(self, mock_get_template):
+        results = {
+            "time": 22,
+            "tests": 4,
+            "success": 1,
+            "skipped": 1,
+            "failures": 1,
+            "expected_failures": 0,
+            "unexpected_success": 0,
+            "test_cases": {
+                "tp": {"name": "tp",
+                       "status": "success",
+                       "time": 2},
+                "ts": {"name": "ts",
+                       "status": "skip",
+                       "reason": "ts_skip",
+                       "time": 4},
+                "tf": {"name": "tf",
+                       "status": "fail",
+                       "time": 6,
+                       "traceback": "fail_log"}}}
 
-    def test__generate_report(self):
-
-        obj = json2html.HtmlOutput(self.results)
         expected_report = {
             "failures": 1,
             "success": 1,
@@ -68,19 +67,45 @@ class HtmlOutputTestCase(test.TestCase):
                        "status": "skip",
                        "time": 4}]}
 
-        report = obj._generate_report()
-        self.assertEqual(expected_report, report)
+        json2html.generate_report(results)
 
-    @mock.patch(BASE + ".json2html.ui_utils.get_template")
-    @mock.patch(BASE + ".json2html.HtmlOutput._generate_report",
-                return_value="report_data")
-    def test_create_report(
-            self, mock_html_output__generate_report, mock_get_template):
-        obj = json2html.HtmlOutput(self.results)
-        mock_get_template.return_value.render.return_value = "html_report"
-
-        html_report = obj.create_report()
-        self.assertEqual(html_report, "html_report")
         mock_get_template.assert_called_once_with("verification/report.mako")
         mock_get_template.return_value.render.assert_called_once_with(
-            report="report_data")
+            report=expected_report)
+
+    @mock.patch(BASE + ".json2html.ui_utils.get_template")
+    def test_convert_bug_id_in_reason_into_bug_link(self, mock_get_template):
+        results = {
+            "failures": 0,
+            "success": 0,
+            "skipped": 1,
+            "expected_failures": 0,
+            "unexpected_success": 0,
+            "tests": 1,
+            "time": 0,
+            "test_cases": {"one_test": {
+                "status": "skip",
+                "name": "one_test",
+                "reason": "Skipped until Bug: 666666 is resolved.",
+                "time": "time"}}}
+
+        expected_report = {
+            "failures": 0,
+            "success": 0,
+            "skipped": 1,
+            "expected_failures": 0,
+            "unexpected_success": 0,
+            "total": 1,
+            "time": 0,
+            "tests": [{
+                "id": 0,
+                "status": "skip",
+                "name": "one_test",
+                "output": "Skipped until Bug: <a href='https://launchpad.net/"
+                          "bugs/666666'>666666</a> is resolved.",
+                "time": "time"}]}
+
+        json2html.generate_report(results)
+        mock_get_template.assert_called_once_with("verification/report.mako")
+        mock_get_template.return_value.render.assert_called_once_with(
+            report=expected_report)
