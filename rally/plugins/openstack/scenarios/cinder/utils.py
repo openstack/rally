@@ -20,6 +20,7 @@ from oslo_config import cfg
 
 from rally import exceptions
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.wrappers import cinder as cinder_wrapper
 from rally.task import atomic
 from rally.task import utils as bench_utils
 
@@ -127,13 +128,12 @@ class CinderScenario(scenario.OpenStackScenario):
         :param kwargs: Other optional parameters to initialize the volume
         :returns: Created volume object
         """
-        kwargs["display_name"] = kwargs.get("display_name",
-                                            self.generate_random_name())
-
         if isinstance(size, dict):
             size = random.randint(size["min"], size["max"])
 
-        volume = self.clients("cinder").volumes.create(size, **kwargs)
+        client = cinder_wrapper.wrap(self._clients.cinder)
+        volume = client.create_volume(size, **kwargs)
+
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
@@ -157,8 +157,8 @@ class CinderScenario(scenario.OpenStackScenario):
         :param volume: volume object
         :param update_volume_args: dict, contains values to be updated.
         """
-        update_volume_args["display_name"] = self.generate_random_name()
-        self.clients("cinder").volumes.update(volume, **update_volume_args)
+        client = cinder_wrapper.wrap(self._clients.cinder)
+        client.update_volume(volume, **update_volume_args)
 
     @atomic.action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
@@ -256,11 +256,11 @@ class CinderScenario(scenario.OpenStackScenario):
         :param kwargs: Other optional parameters to initialize the volume
         :returns: Created snapshot object
         """
-        kwargs["display_name"] = kwargs.get("display_name",
-                                            self.generate_random_name())
         kwargs["force"] = force
-        snapshot = self.clients("cinder").volume_snapshots.create(volume_id,
-                                                                  **kwargs)
+
+        client = cinder_wrapper.wrap(self._clients.cinder)
+        snapshot = client.create_snapshot(volume_id, **kwargs)
+
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
         snapshot = bench_utils.wait_for(
             snapshot,
