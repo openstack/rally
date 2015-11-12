@@ -18,6 +18,13 @@ from rally import consts
 from rally import exceptions
 
 
+_MAP_OLD_TO_NEW_STATUSES = {
+    "OK": "success",
+    "FAIL": "fail",
+    "SKIP": "skip"
+}
+
+
 class Verification(object):
     """Represents results of verification."""
 
@@ -57,7 +64,13 @@ class Verification(object):
 
     def finish_verification(self, total, test_cases):
         # update verification db object
-        self._update(status=consts.TaskStatus.FINISHED, **total)
+        self._update(status=consts.TaskStatus.FINISHED,
+                     tests=total["tests"],
+                     # Expected failures are still failures, so we should
+                     # merge them together in main info of Verification
+                     # (see db model for Verification for more details)
+                     failures=(total["failures"] + total["expected_failures"]),
+                     time=total["time"])
 
         # create db object for results
         data = total.copy()
@@ -66,6 +79,24 @@ class Verification(object):
 
     def get_results(self):
         try:
-            return db.verification_result_get(self.uuid)
+            results = db.verification_result_get(self.uuid).data
         except exceptions.NotFoundException:
             return None
+
+        if "errors" in results:
+            # NOTE(andreykurilin): there is no "error" status in verification
+            # and this key presents only in old format, so it can be used as
+            # an identifier for old format.
+            for test in results["test_cases"].keys():
+                old_status = results["test_cases"][test]["status"]
+                new_status = _MAP_OLD_TO_NEW_STATUSES.get(old_status,
+                                                          old_status.lower())
+                results["test_cases"][test]["status"] = new_status
+
+                if "failure" in results["test_cases"][test]:
+                    results["test_cases"][test]["traceback"] = results[
+                        "test_cases"][test]["failure"]["log"]
+                    results["test_cases"][test].pop("failure")
+            results["unexpected_success"] = 0
+            results["expected_failures"] = 0
+        return results

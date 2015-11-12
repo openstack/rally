@@ -19,24 +19,21 @@ def get_fake_test_case():
         "total": {
             "failures": 1,
             "tests": 2,
-            "errors": 0,
+            "expected_failures": 0,
             "time": 1.412},
         "test_cases": {
             "fake.failed.TestCase.with_StringException[gate,negative]": {
                 "name":
                     "fake.failed.TestCase.with_StringException[gate,negative]",
-                "failure": {
-                    "type": "testtools.testresult.real._StringException",
-                    "log":
-                        ("_StringException: Empty attachments:\nOops...There "
-                         "was supposed to be fake traceback, but it is not.\n")
-                },
+                "traceback": ("_StringException: Empty attachments:\nOops..."
+                              "There was supposed to be fake traceback, but it"
+                              " is not.\n"),
                 "time": 0.706,
-                "status": "FAIL"},
+                "status": "fail"},
             "fake.successful.TestCase.fake_test[gate,negative]": {
                 "name": "fake.successful.TestCase.fake_test[gate,negative]",
                 "time": 0.706,
-                "status": "OK"
+                "status": "success"
             }
         }
     }

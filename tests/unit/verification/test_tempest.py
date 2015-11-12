@@ -18,10 +18,8 @@ import os
 import subprocess
 
 import mock
-from oslo_serialization import jsonutils
 
 from rally import exceptions
-from rally.verification.tempest import subunit2json
 from rally.verification.tempest import tempest
 from tests.unit import test
 
@@ -154,29 +152,31 @@ class TempestUtilsTestCase(BaseTestCase):
             "%s testr init" % self.verifier.venv_wrapper, shell=True,
             cwd=self.verifier.path())
 
-    @mock.patch.object(subunit2json, "main")
+    @mock.patch("%s.tempest.subunit_v2.parse_results_file" % TEMPEST_PATH)
     @mock.patch("os.path.isfile", return_value=False)
     def test__save_results_without_log_file(
-            self, mock_isfile, mock_main):
+            self, mock_isfile, mock_parse_results_file):
 
         self.verifier._save_results()
         mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
-        self.assertEqual(0, mock_main.call_count)
+        self.assertEqual(0, mock_parse_results_file.call_count)
 
+    @mock.patch("%s.tempest.subunit_v2.parse_results_file" % TEMPEST_PATH)
     @mock.patch("os.path.isfile", return_value=True)
-    def test__save_results_with_log_file(self, mock_isfile):
-        with mock.patch.object(subunit2json, "main") as mock_main:
-            data = {"total": True, "test_cases": True}
-            mock_main.return_value = jsonutils.dumps(data)
-            self.verifier.log_file_raw = os.path.join(
-                os.path.dirname(__file__), "subunit.stream")
-            self.verifier._save_results()
-            mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
-            mock_main.assert_called_once_with(
-                self.verifier.log_file_raw)
+    def test__save_results_with_log_file(self, mock_isfile,
+                                         mock_parse_results_file):
+        results = mock.MagicMock(total="some", tests=["some_test_1"])
+        mock_parse_results_file.return_value = results
+        self.verifier.log_file_raw = os.path.join(
+            os.path.dirname(__file__), "subunit.stream")
+        self.verifier._save_results()
+        mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
+        mock_parse_results_file.assert_called_once_with(
+            self.verifier.log_file_raw)
 
-            verification = self.verifier.verification
-            verification.finish_verification.assert_called_once_with(**data)
+        verification = self.verifier.verification
+        verification.finish_verification.assert_called_once_with(
+            total="some", test_cases=["some_test_1"])
 
 
 class TempestInstallAndUninstallTestCase(BaseTestCase):
@@ -335,7 +335,7 @@ class TempestVerifyTestCase(BaseTestCase):
                 "tempest_path": self.verifier.path()})
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
-                return_value=(None, None))
+                return_value=None)
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
     @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
@@ -366,7 +366,7 @@ class TempestVerifyTestCase(BaseTestCase):
         mock_tempest_parse_results.assert_called_once_with(None)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
-                return_value=(None, None))
+                return_value=None)
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
     @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
@@ -394,7 +394,7 @@ class TempestVerifyTestCase(BaseTestCase):
         mock_tempest_parse_results.assert_called_once_with(None)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
-                return_value=(None, None))
+                return_value=None)
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
     @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
@@ -424,7 +424,7 @@ class TempestVerifyTestCase(BaseTestCase):
         self.verifier.verification.set_failed.assert_called_once_with()
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
-                return_value=(None, None))
+                return_value=None)
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
     @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
