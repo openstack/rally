@@ -232,7 +232,7 @@ class Task(object):
         deployment = objects.Deployment.get(deployment)
         task = task_instance or objects.Task(
             deployment_uuid=deployment["uuid"], temporary=True)
-        benchmark_engine = engine.BenchmarkEngine(
+        benchmark_engine = engine.TaskEngine(
             config, task, admin=deployment["admin"], users=deployment["users"])
 
         benchmark_engine.validate()
@@ -260,7 +260,7 @@ class Task(object):
 
         LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
                                                          deployment["uuid"]))
-        benchmark_engine = engine.BenchmarkEngine(
+        benchmark_engine = engine.TaskEngine(
             config, task, admin=deployment["admin"], users=deployment["users"],
             abort_on_sla_failure=abort_on_sla_failure)
 
