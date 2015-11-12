@@ -571,7 +571,7 @@ class TaskCommands(object):
     @cliutils.args("--junit", dest="out_format",
                    action="store_const", const="junit",
                    help="Generate the report in the JUnit format.")
-    @envutils.default_from_global("tasks", envutils.ENV_TASK, "--uuid")
+    @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
     @cliutils.suppress_warnings
     def report(self, tasks=None, out=None, open_it=False, out_format="html"):
         """Generate report file for specified task.
