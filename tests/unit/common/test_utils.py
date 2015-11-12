@@ -190,61 +190,29 @@ class TenantIteratorTestCase(test.TestCase):
 
 class RAMIntTestCase(test.TestCase):
 
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test__init__(self, mock_multiprocessing):
-        utils.RAMInt()
-        mock_multiprocessing.Lock.assert_called_once_with()
-        mock_multiprocessing.Value.assert_called_once_with("I", 0)
+    def test__int__(self):
+        self.assertEqual(0, int(utils.RAMInt()))
+        self.assertEqual(10, int(utils.RAMInt(10)))
 
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test__int__(self, mock_multiprocessing):
-        mock_multiprocessing.Value.return_value = mock.Mock(value=42)
-        self.assertEqual(int(utils.RAMInt()), 42)
+    def test__str__(self):
+        self.assertEqual("0", str(utils.RAMInt()))
+        self.assertEqual("20", str(utils.RAMInt(20)))
 
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test__str__(self, mock_multiprocessing):
-        mock_multiprocessing.Value.return_value = mock.Mock(value=42)
-        self.assertEqual(str(utils.RAMInt()), "42")
+    def test__next__(self):
+        ri = utils.RAMInt()
+        for i in range(0, 3):
+            self.assertEqual(i, next(ri))
 
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test__iter__(self, mock_multiprocessing):
-        ram_int = utils.RAMInt()
-        self.assertEqual(iter(ram_int), ram_int)
+    def test_next(self):
+        ri = utils.RAMInt()
+        for i in range(0, 3):
+            self.assertEqual(i, ri.next())
 
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test__next__(self, mock_multiprocessing):
-        class MemInt(int):
-            THRESHOLD = 5
-
-            def __iadd__(self, i):
-                return MemInt((int(self) + i) % self.THRESHOLD)
-
-        mock_lock = mock.MagicMock()
-        mock_multiprocessing.Lock.return_value = mock_lock
-        mock_multiprocessing.Value.return_value = mock.Mock(value=MemInt(0))
-
-        ram_int = utils.RAMInt()
-        self.assertEqual(int(ram_int), 0)
-        for i in range(MemInt.THRESHOLD - 1):
-            self.assertEqual(ram_int.__next__(), i)
-        self.assertRaises(StopIteration, ram_int.__next__)
-        self.assertEqual(mock_lock.__enter__.mock_calls,
-                         [mock.call()] * MemInt.THRESHOLD)
-        self.assertEqual(len(mock_lock.__exit__.mock_calls), MemInt.THRESHOLD)
-
-    @mock.patch("rally.common.utils.RAMInt.__next__",
-                return_value="next_value")
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test_next(self, mock_multiprocessing, mock_ram_int___next__):
-        self.assertEqual(next(utils.RAMInt()), "next_value")
-        mock_ram_int___next__.assert_called_once_with()
-
-    @mock.patch("rally.common.utils.multiprocessing")
-    def test_reset(self, mock_multiprocessing):
-        ram_int = utils.RAMInt()
-        self.assertRaises(TypeError, int, ram_int)
-        ram_int.reset()
-        self.assertEqual(int(ram_int), 0)
+    def test_reset(self):
+        ri = utils.RAMInt()
+        ri.next()
+        ri.reset()
+        self.assertEqual(0, int(ri))
 
 
 class GenerateRandomTestCase(test.TestCase):
