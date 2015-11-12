@@ -948,7 +948,6 @@
         failure_rate:
           max: 0
 
-
   SwiftObjects.create_container_and_object_then_list_objects:
     -
       args:
@@ -1034,6 +1033,46 @@
         users:
           tenants: 3
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  SwiftObjects.list_and_download_objects_in_containers:
+    -
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
+        swift_objects:
+          containers_per_tenant: 1
+          objects_per_container: 5
+          object_size: 10240
+      sla:
+        failure_rate:
+          max: 0
+
+  SwiftObjects.list_objects_in_containers:
+    -
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
+        swift_objects:
+          containers_per_tenant: 1
+          objects_per_container: 10
+          object_size: 1024
       sla:
         failure_rate:
           max: 0
