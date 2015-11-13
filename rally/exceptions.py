@@ -76,7 +76,7 @@ class InvalidTaskConfig(InvalidTaskException):
 
 
 class NotFoundException(RallyException):
-    msg_fmt = _("The resource can not be found.")
+    msg_fmt = _("The resource can not be found: %(message)s")
 
 
 class PluginNotFound(NotFoundException):
