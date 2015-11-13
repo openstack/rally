@@ -307,36 +307,30 @@ class TempestResourcesContext(object):
 
     def _create_image(self):
         glanceclient = self.clients.glance()
-        image_name = "rally-verify-cirros-img-%s" % uuid.uuid4()
-        LOG.debug("Creating image '%s'" % image_name)
-        try:
-            image = glanceclient.images.create(
-                name=image_name,
-                disk_format="qcow2",
-                container_format="bare",
-                is_public=True)
-            self._created_images.append(image)
-            image.update(data=open(
-                os.path.join(_create_or_get_data_dir(), IMAGE_NAME), "rb"))
-        except Exception as exc:
-            msg = _("Image could not be created. "
-                    "Reason: %s") % (str(exc) or "unknown")
-            raise exceptions.TempestResourceCreationFailure(msg)
+        params = {
+            "name": "rally-verify-img-%s" % uuid.uuid4(),
+            "disk_format": "qcow2",
+            "container_format": "bare",
+            "is_public": True
+        }
+        LOG.debug("Creating image '%s'" % params["name"])
+        image = glanceclient.images.create(**params)
+        self._created_images.append(image)
+        image.update(data=open(
+            os.path.join(_create_or_get_data_dir(), IMAGE_NAME), "rb"))
 
         return image
 
     def _create_flavor(self, flv_ram):
         novaclient = self.clients.nova()
-        flavor_name = "m1.rally-verify-flv-%s" % uuid.uuid4()
-        LOG.debug("Creating flavor '%s'" % flavor_name)
-        try:
-            flavor = novaclient.flavors.create(
-                flavor_name, ram=flv_ram, vcpus=1, disk=0)
-        except Exception as exc:
-            msg = _("Flavor could not be created. "
-                    "Reason: %s") % (str(exc) or "unknown")
-            raise exceptions.TempestResourceCreationFailure(msg)
-
+        params = {
+            "name": "m1.rally-verify-flv-%s" % uuid.uuid4(),
+            "ram": flv_ram,
+            "vcpus": 1,
+            "disk": 0
+        }
+        LOG.debug("Creating flavor '%s'" % params["name"])
+        flavor = novaclient.flavors.create(**params)
         self._created_flavors.append(flavor)
 
         return flavor

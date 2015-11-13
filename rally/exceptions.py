@@ -235,7 +235,3 @@ class MultipleMatchesFound(RallyException):
 
 class TempestConfigCreationFailure(RallyException):
     msg_fmt = _("Unable to create Tempest config file: %(message)s")
-
-
-class TempestResourceCreationFailure(RallyException):
-    msg_fmt = _("Unable to create resource needed for Tempest: %(message)s")
