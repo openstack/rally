@@ -83,15 +83,15 @@ class NeutronNetworks(utils.NeutronScenario):
         The scenario creates a network, a given number of subnets and then
         lists subnets.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        self._create_network_and_subnets(network_create_args or {},
-                                         subnet_create_args or {},
-                                         subnets_per_network,
-                                         subnet_cidr_start)
+        network = self._get_or_create_network(network_create_args)
+        self._create_subnets(network, subnet_create_args, subnet_cidr_start,
+                             subnets_per_network)
         self._list_subnets()
 
     @validation.number("subnets_per_network", minval=1, integer_only=True)
@@ -111,16 +111,15 @@ class NeutronNetworks(utils.NeutronScenario):
         "neutron subnet-update" command performance.
 
         :param subnet_update_args: dict, PUT /v2.0/subnets update options
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        network, subnets = self._create_network_and_subnets(
-            network_create_args or {},
-            subnet_create_args or {},
-            subnets_per_network,
-            subnet_cidr_start)
+        network = self._get_or_create_network(network_create_args)
+        subnets = self._create_subnets(network, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network)
 
         for subnet in subnets:
             self._update_subnet(subnet, subnet_update_args)
@@ -138,16 +137,15 @@ class NeutronNetworks(utils.NeutronScenario):
         The scenario creates a network, a given number of subnets and then
         deletes subnets.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        network, subnets = self._create_network_and_subnets(
-            network_create_args or {},
-            subnet_create_args or {},
-            subnets_per_network,
-            subnet_cidr_start)
+        network = self._get_or_create_network(network_create_args)
+        subnets = self._create_subnets(network, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network)
 
         for subnet in subnets:
             self._delete_subnet(subnet)
@@ -167,24 +165,16 @@ class NeutronNetworks(utils.NeutronScenario):
         Create a network, a given number of subnets and routers
         and then list all routers.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         :param router_create_args: dict, POST /v2.0/routers request options
         """
-        network, subnets = self._create_network_and_subnets(
-            network_create_args or {},
-            subnet_create_args or {},
-            subnets_per_network,
-            subnet_cidr_start)
-
-        for subnet in subnets:
-            router = self._create_router(router_create_args or {})
-            self.clients("neutron").add_interface_router(
-                router["router"]["id"],
-                {"subnet_id": subnet["subnet"]["id"]})
-
+        self._create_network_structure(network_create_args, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network,
+                                       router_create_args)
         self._list_routers()
 
     @validation.number("subnets_per_network", minval=1, integer_only=True)
@@ -204,23 +194,18 @@ class NeutronNetworks(utils.NeutronScenario):
         and then updating all routers.
 
         :param router_update_args: dict, PUT /v2.0/routers update options
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         :param router_create_args: dict, POST /v2.0/routers request options
         """
-        network, subnets = self._create_network_and_subnets(
-            network_create_args or {},
-            subnet_create_args or {},
-            subnets_per_network,
-            subnet_cidr_start)
+        network, subnets, routers = self._create_network_structure(
+            network_create_args, subnet_create_args, subnet_cidr_start,
+            subnets_per_network, router_create_args)
 
-        for subnet in subnets:
-            router = self._create_router(router_create_args or {})
-            self.clients("neutron").add_interface_router(
-                router["router"]["id"],
-                {"subnet_id": subnet["subnet"]["id"]})
+        for router in routers:
             self._update_router(router, router_update_args)
 
     @validation.required_parameters("subnets_per_network")
@@ -237,32 +222,21 @@ class NeutronNetworks(utils.NeutronScenario):
         Create a network, a given number of subnets and routers
         and then delete all routers.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param subnet_create_args: dict, POST /v2.0/subnets request options
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         :param router_create_args: dict, POST /v2.0/routers request options
         """
-        network, subnets = self._create_network_and_subnets(
-            network_create_args or {},
-            subnet_create_args or {},
-            subnets_per_network,
-            subnet_cidr_start)
-
-        routers = []
-        for subnet in subnets:
-            router = self._create_router(router_create_args or {})
-            self.clients("neutron").add_interface_router(
-                router["router"]["id"],
-                {"subnet_id": subnet["subnet"]["id"]})
-            routers.append(router)
+        network, subnets, routers = self._create_network_structure(
+            network_create_args, subnet_create_args, subnet_cidr_start,
+            subnets_per_network, router_create_args)
 
         for e in range(subnets_per_network):
             router = routers[e]
             subnet = subnets[e]
-            self.clients("neutron").remove_interface_router(
-                router["router"]["id"],
-                {"subnet_id": subnet["subnet"]["id"]})
+            self._remove_interface_router(subnet["subnet"], router["router"])
             self._delete_router(router)
 
     @validation.number("ports_per_network", minval=1, integer_only=True)
@@ -275,11 +249,12 @@ class NeutronNetworks(utils.NeutronScenario):
                               ports_per_network=None):
         """Create and a given number of ports and list all ports.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param port_create_args: dict, POST /v2.0/ports request options
         :param ports_per_network: int, number of ports for one network
         """
-        network = self._create_network(network_create_args or {})
+        network = self._get_or_create_network(network_create_args)
         for i in range(ports_per_network):
             self._create_port(network, port_create_args or {})
 
@@ -300,13 +275,14 @@ class NeutronNetworks(utils.NeutronScenario):
         performance.
 
         :param port_update_args: dict, PUT /v2.0/ports update request options
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param port_create_args: dict, POST /v2.0/ports request options
         :param ports_per_network: int, number of ports for one network
         """
-        network = self._create_network(network_create_args or {})
+        network = self._get_or_create_network(network_create_args)
         for i in range(ports_per_network):
-            port = self._create_port(network, port_create_args or {})
+            port = self._create_port(network, port_create_args)
             self._update_port(port, port_update_args)
 
     @validation.required_parameters("ports_per_network")
@@ -321,13 +297,14 @@ class NeutronNetworks(utils.NeutronScenario):
         Measure the "neutron port-create" and "neutron port-delete" commands
         performance.
 
-        :param network_create_args: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options. Deprecated.
         :param port_create_args: dict, POST /v2.0/ports request options
         :param ports_per_network: int, number of ports for one network
         """
-        network = self._create_network(network_create_args or {})
+        network = self._get_or_create_network(network_create_args)
         for i in range(ports_per_network):
-            port = self._create_port(network, port_create_args or {})
+            port = self._create_port(network, port_create_args)
             self._delete_port(port)
 
     @validation.required_services(consts.Service.NEUTRON)

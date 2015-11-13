@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import exceptions
@@ -263,6 +265,67 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_port(port["port"]["id"])
 
+    @logging.log_deprecated_args(_("network_create_args is deprecated; "
+                                   "use the network context instead"),
+                                 "0.1.0", "network_create_args")
+    def _get_or_create_network(self, network_create_args=None):
+        """Get a network from context, or create a new one.
+
+        This lets users either create networks with the 'network'
+        context, provide existing networks with the 'existing_network'
+        context, or let the scenario create a default network for
+        them. Running this without one of the network contexts is
+        deprecated.
+
+        :param network_create_args: Deprecated way to provide network
+                                    creation args; use the network
+                                    context instead.
+        :returns: Network dict
+        """
+        if "networks" not in self.context["tenant"]:
+            LOG.warning(_("Running this scenario without either the 'network' "
+                          "or 'existing_network' context is deprecated"))
+        elif network_create_args is None:
+            return random.choice(self.context["tenant"]["networks"])
+
+        return self._create_network(network_create_args or {})
+
+    def _get_or_create_subnets(self, network,
+                               subnet_create_args=None,
+                               subnet_cidr_start=None,
+                               subnets_per_network=1):
+        """Get subnets from a network, or create new subnets.
+
+        Existing subnets are preferred to creating new ones.
+
+        :param network: network to create subnets in
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        :returns: List of subnet dicts
+        """
+        if len(network.get("subnets", [])):
+            return network["subnets"]
+        else:
+            return self._create_subnets(network, subnet_create_args,
+                                        subnet_cidr_start, subnets_per_network)
+
+    def _create_subnets(self, network,
+                        subnet_create_args=None,
+                        subnet_cidr_start=None,
+                        subnets_per_network=1):
+        """Create <count> new subnets in the given network.
+
+        :param network: network to create subnets in
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        :returns: List of subnet dicts
+        """
+        return [self._create_subnet(network, subnet_create_args or {},
+                                    subnet_cidr_start)
+                for i in range(subnets_per_network)]
+
     def _create_network_and_subnets(self,
                                     network_create_args=None,
                                     subnet_create_args=None,
@@ -276,14 +339,38 @@ class NeutronScenario(scenario.OpenStackScenario):
         :parm subnet_cidr_start: str, start value for subnets CIDR
         :returns: tuple of result network and subnets list
         """
-        subnets = []
         network = self._create_network(network_create_args or {})
-
-        for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnet_create_args or {},
-                                         subnet_cidr_start)
-            subnets.append(subnet)
+        subnets = self._create_subnets(network, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network)
         return network, subnets
+
+    def _create_network_structure(self, network_create_args=None,
+                                  subnet_create_args=None,
+                                  subnet_cidr_start=None,
+                                  subnets_per_network=None,
+                                  router_create_args=None):
+        """Create a network and a given number of subnets and routers.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        :param router_create_args: dict, POST /v2.0/routers request options
+        :returns: tuple of (network, subnets, routers)
+        """
+        network = self._get_or_create_network(network_create_args)
+        subnets = self._get_or_create_subnets(network, subnet_create_args,
+                                              subnet_cidr_start,
+                                              subnets_per_network)
+
+        routers = []
+        for subnet in subnets:
+            router = self._create_router(router_create_args or {})
+            self._add_interface_router(subnet["subnet"],
+                                       router["router"])
+            routers.append(router)
+
+        return (network, subnets, routers)
 
     @atomic.action_timer("neutron.add_interface_router")
     def _add_interface_router(self, subnet, router):
