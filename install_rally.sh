@@ -34,7 +34,7 @@ PYTHON=${PYTHON2:-$PYTHON3}
 BASE_PIP_URL=${BASE_PIP_URL:-"https://pypi.python.org/simple"}
 VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
 
-RALLY_GIT_URL="https://github.com/openstack/rally"
+RALLY_GIT_URL="https://git.openstack.org/openstack/rally"
 RALLY_GIT_BRANCH="master"
 RALLY_CONFIGURATION_DIR=/etc/rally
 RALLY_DATABASE_DIR=/var/lib/rally/database
@@ -164,7 +164,7 @@ $GREEN  -d, --target DIRECTORY$NO_COLOR Install Rally virtual environment into D
 $GREEN  --url                 $NO_COLOR Git repository public URL to download Rally from.
                          This is useful when you have only installation script and want to install Rally
                          from custom repository.
-                         (Default: https://github.com/openstack/rally).
+                         (Default: ${RALLY_GIT_URL}).
                          (Ignored when you are already in git repository).
 $GREEN  --branch              $NO_COLOR Git branch name name or git tag (Rally release) to install.
                          (Default: latest - master).
