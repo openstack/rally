@@ -21,9 +21,10 @@ from tests.unit import test
 class EndpointTestCase(test.TestCase):
 
     def test_to_dict(self):
-        endpoint = objects.Endpoint("foo_url", "foo_user", "foo_password",
-                                    tenant_name="foo_tenant",
-                                    permission=consts.EndpointPermission.ADMIN)
+        endpoint = objects.Credential(
+            "foo_url", "foo_user", "foo_password",
+            tenant_name="foo_tenant",
+            permission=consts.EndpointPermission.ADMIN)
         self.assertEqual(endpoint.to_dict(),
                          {"auth_url": "foo_url",
                           "username": "foo_user",
@@ -40,9 +41,10 @@ class EndpointTestCase(test.TestCase):
                           "admin_domain_name": "Default"})
 
     def test_to_dict_with_include_permission(self):
-        endpoint = objects.Endpoint("foo_url", "foo_user", "foo_password",
-                                    tenant_name="foo_tenant",
-                                    permission=consts.EndpointPermission.ADMIN)
+        endpoint = objects.Credential(
+            "foo_url", "foo_user", "foo_password",
+            tenant_name="foo_tenant",
+            permission=consts.EndpointPermission.ADMIN)
         self.assertEqual(endpoint.to_dict(include_permission=True),
                          {"auth_url": "foo_url",
                           "username": "foo_user",
@@ -60,10 +62,11 @@ class EndpointTestCase(test.TestCase):
                           "admin_domain_name": "Default"})
 
     def test_to_dict_with_kwarg_endpoint(self):
-        endpoint = objects.Endpoint("foo_url", "foo_user", "foo_password",
-                                    tenant_name="foo_tenant",
-                                    permission=consts.EndpointPermission.ADMIN,
-                                    endpoint="foo_endpoint")
+        endpoint = objects.Credential(
+            "foo_url", "foo_user", "foo_password",
+            tenant_name="foo_tenant",
+            permission=consts.EndpointPermission.ADMIN,
+            endpoint="foo_endpoint")
         self.assertEqual(endpoint.to_dict(),
                          {"auth_url": "foo_url",
                           "username": "foo_user",

@@ -117,7 +117,7 @@ class ExistingCloud(engine.Engine):
     }
 
     def _create_endpoint(self, common, user, permission):
-        return objects.Endpoint(
+        return objects.Credential(
             common["auth_url"], user["username"], user["password"],
             tenant_name=user.get("project_name", user.get("tenant_name")),
             permission=permission,

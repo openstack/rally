@@ -119,7 +119,7 @@ class Deployment(object):
         :returns: Service list
         """
         # TODO(kun): put this work into objects.Deployment
-        clients = osclients.Clients(objects.Endpoint(**deployment["admin"]))
+        clients = osclients.Clients(objects.Credential(**deployment["admin"]))
         return clients.services()
 
 

@@ -14,6 +14,7 @@
 #    under the License.
 """Contains the Rally objects."""
 
+from rally.common.objects.credential import Credential  # noqa
 from rally.common.objects.deploy import Deployment  # noqa
 from rally.common.objects.endpoint import Endpoint  # noqa
 from rally.common.objects.task import Task  # noqa

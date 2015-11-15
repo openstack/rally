@@ -480,7 +480,7 @@ def required_services(config, clients, deployment, *required_services):
 
     if consts.Service.NOVA_NET in required_services:
         nova = osclients.Clients(
-            objects.Endpoint(**deployment["admin"])).nova()
+            objects.Credential(**deployment["admin"])).nova()
         for service in nova.services.list():
             if (service.binary == consts.Service.NOVA_NET and
                     service.status == "enabled"):
@@ -520,7 +520,7 @@ def required_cinder_services(config, clients, deployment, service_name):
     """
 
     admin_client = osclients.Clients(
-        objects.Endpoint(**deployment["admin"])).cinder()
+        objects.Credential(**deployment["admin"])).cinder()
 
     for service in admin_client.services.list():
         if (service.binary == six.text_type(service_name) and
@@ -540,7 +540,7 @@ def required_clients(config, clients, deployment, *components, **kwargs):
                      admin - bool, whether to use admin clients
     """
     if kwargs.get("admin", False):
-        clients = osclients.Clients(objects.Endpoint(**deployment["admin"]))
+        clients = osclients.Clients(objects.Credential(**deployment["admin"]))
 
     for client_component in components:
         try:

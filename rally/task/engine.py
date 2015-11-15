@@ -149,11 +149,11 @@ class TaskEngine(object):
 
         Typical usage:
             ...
-            admin = ....  # contains dict representations of objects.Endpoint
+            admin = ....  # contains dict representations of objects.Credential
                           # with OpenStack admin credentials
 
             users = ....  # contains a list of dicts of representations of
-                          # objects.Endpoint with OpenStack users credentials.
+                          # objects.Credential with OpenStack users credentials
 
             engine = TaskEngine(config, task, admin=admin, users=users)
             engine.validate()   # to test config
@@ -180,7 +180,7 @@ class TaskEngine(object):
             raise exceptions.InvalidTaskException(str(e))
 
         self.task = task
-        self.admin = admin and objects.Endpoint(**admin) or None
+        self.admin = admin and objects.Credential(**admin) or None
         self.existing_users = users or []
         self.abort_on_sla_failure = abort_on_sla_failure
 

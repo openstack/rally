@@ -312,9 +312,9 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         wrapped_keystone = mock.MagicMock()
         mock_keystone.wrap.return_value = wrapped_keystone
 
-        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
-                                    https_insecure=True,
-                                    https_cacert="cacert")
+        endpoint = objects.Credential("foo_url", "foo", "foo_pass",
+                                      https_insecure=True,
+                                      https_cacert="cacert")
         tmp_context = dict(self.context)
         tmp_context["config"]["users"] = {"tenants": 1,
                                           "users_per_tenant": 2,
@@ -362,8 +362,9 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_contains_correct_endpoint_type(self, mock_keystone):
-        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
-                                    endpoint_type=consts.EndpointType.INTERNAL)
+        endpoint = objects.Credential(
+            "foo_url", "foo", "foo_pass",
+            endpoint_type=consts.EndpointType.INTERNAL)
         config = {
             "config": {
                 "users": {
@@ -384,7 +385,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_contains_default_endpoint_type(self, mock_keystone):
-        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass")
+        endpoint = objects.Credential("foo_url", "foo", "foo_pass")
         config = {
             "config": {
                 "users": {

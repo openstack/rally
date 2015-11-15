@@ -84,7 +84,7 @@ class TempestConfig(object):
         self.deployment = deployment
 
         self.endpoint = db.deployment_get(deployment)["admin"]
-        self.clients = osclients.Clients(objects.Endpoint(**self.endpoint))
+        self.clients = osclients.Clients(objects.Credential(**self.endpoint))
         self.keystone = self.clients.verified_keystone()
         self.available_services = self.clients.services().values()
 
@@ -260,7 +260,7 @@ class TempestResourcesContext(object):
 
     def __init__(self, deployment, conf_path):
         endpoint = db.deployment_get(deployment)["admin"]
-        self.clients = osclients.Clients(objects.Endpoint(**endpoint))
+        self.clients = osclients.Clients(objects.Credential(**endpoint))
         self.available_services = self.clients.services().values()
 
         self.conf_path = conf_path

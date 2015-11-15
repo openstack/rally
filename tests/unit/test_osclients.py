@@ -133,8 +133,8 @@ class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.endpoint = objects.Endpoint("http://auth_url", "use", "pass",
-                                         "tenant")
+        self.endpoint = objects.Credential("http://auth_url", "use", "pass",
+                                           "tenant")
         self.clients = osclients.Clients(self.endpoint, {})
 
         self.fake_keystone = fakes.FakeKeystoneClient()

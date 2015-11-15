@@ -242,7 +242,8 @@ class DeploymentCommands(object):
             services = api.Deployment.service_list(deployment)
             users = deployment["users"]
             for endpoint_dict in users:
-                osclients.Clients(objects.Endpoint(**endpoint_dict)).keystone()
+                osclients.Clients(
+                    objects.Credential(**endpoint_dict)).keystone()
 
         except keystone_exceptions.ConnectionRefused:
             print(_("Unable to connect %s.") % deployment["admin"]["auth_url"])

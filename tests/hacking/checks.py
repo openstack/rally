@@ -275,6 +275,9 @@ def check_no_direct_rally_objects_import(logical_line, filename):
     if filename == "./rally/common/objects/__init__.py":
         return
 
+    if filename == "./rally/common/objects/endpoint.py":
+        return
+
     if (logical_line.startswith("from rally.common.objects")
        or logical_line.startswith("import rally.common.objects.")):
         yield (0, "N340: Import objects module:"

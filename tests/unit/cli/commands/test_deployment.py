@@ -329,9 +329,9 @@ class DeploymentCommandsTestCase(test.TestCase):
                               mock_keystone_create_client,
                               mock_clients_verified_keystone):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
-                                           "admin",
-                                           "adminpass").to_dict()
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
         mock_deployment_get.return_value = {"admin": sample_endpoint,
                                             "users": [sample_endpoint]}
         self.deployment.check(deployment_id)
@@ -342,9 +342,9 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_check_raise(self, mock_deployment_get,
                                     mock_clients_verified_keystone):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
-                                           "admin",
-                                           "adminpass").to_dict()
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
         sample_endpoint["not-exist-key"] = "error"
         mock_deployment_get.return_value = {"admin": sample_endpoint}
         mock_clients_verified_keystone.services.list.return_value = []
@@ -365,9 +365,9 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_check_connect_failed(self, mock_deployment_get,
                                              mock_clients_services):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
-                                           "admin",
-                                           "adminpass").to_dict()
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
         mock_deployment_get.return_value = {"admin": sample_endpoint}
         refused = keystone_exceptions.ConnectionRefused()
         mock_clients_services.side_effect = refused

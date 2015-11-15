@@ -136,9 +136,10 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def __init__(self, deployment, config):
         super(OpenStackProvider, self).__init__(deployment, config)
-        user_endpoint = objects.Endpoint(config["auth_url"], config["user"],
-                                         config["password"], config["tenant"],
-                                         region_name=config.get("region"))
+        user_endpoint = objects.Credential(
+            config["auth_url"], config["user"],
+            config["password"], config["tenant"],
+            region_name=config.get("region"))
         clients = osclients.Clients(user_endpoint)
         self.nova = clients.nova()
         try:
