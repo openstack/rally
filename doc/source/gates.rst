@@ -21,7 +21,7 @@ Rally OS Gates
 Gate jobs
 ---------
 
-The **Openstack CI system** uses the so-called **"Gate jobs"** to control merges of patched submitted for review on Gerrit. These **Gate jobs** usually just launch a set of tests -- unit, functional, integration, style -- that check that the proposed patch does not break the software and can be merged into the target branch, thus providing additional guarantees for the stability of the software.
+The **OpenStack CI system** uses the so-called **"Gate jobs"** to control merges of patched submitted for review on Gerrit. These **Gate jobs** usually just launch a set of tests -- unit, functional, integration, style -- that check that the proposed patch does not break the software and can be merged into the target branch, thus providing additional guarantees for the stability of the software.
 
 
 Create a custom Rally Gate job
