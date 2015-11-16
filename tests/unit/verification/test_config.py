@@ -15,6 +15,7 @@
 
 import os
 
+import ddt
 import mock
 from oslo_config import cfg
 import requests
@@ -28,140 +29,131 @@ from tests.unit import test
 CONF = cfg.CONF
 
 
+CREDS = {
+    "admin": {
+        "username": "admin",
+        "tenant_name": "admin",
+        "password": "admin-12345",
+        "auth_url": "http://test/v2.0/",
+        "permission": "admin",
+        "admin_domain_name": "Default",
+        "https_insecure": False,
+        "https_cacert": "/path/to/cacert/file"
+    }
+}
+
+
+@ddt.ddt
 class TempestConfigTestCase(test.TestCase):
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    @mock.patch("rally.osclients.Clients.services",
-                return_value={"test_service_type": "test_service"})
-    @mock.patch("rally.osclients.Clients.verified_keystone")
-    @mock.patch("rally.verification.tempest.config.os.path.isfile",
-                return_value=True)
-    def setUp(self, mock_isfile, mock_clients_verified_keystone,
-              mock_clients_services, mock_deployment_get):
+    def setUp(self):
         super(TempestConfigTestCase, self).setUp()
 
-        self.endpoint = {
-            "username": "test",
-            "tenant_name": "test",
-            "password": "test",
-            "auth_url": "http://test/v2.0/",
-            "permission": "admin",
-            "admin_domain_name": "Default",
-            "https_insecure": False,
-            "https_cacert": "/path/to/cacert/file"
-        }
-        mock_deployment_get.return_value = {"admin": self.endpoint}
+        mock_deployment_get = mock.patch(
+            "rally.common.objects.deploy.db.deployment_get",
+            return_value=CREDS)
+        mock_clients = mock.patch("rally.osclients.Clients")
+        mock_isfile = mock.patch("os.path.isfile", return_value=True)
 
-        self.deployment = "fake_deployment"
-        self.conf_generator = config.TempestConfig(self.deployment)
-        self.conf_generator.clients.services = mock_clients_services
+        mock_deployment_get.start()
+        mock_clients.start()
+        self.mock_isfile = mock_isfile.start()
 
-        keystone_patcher = mock.patch(
-            "rally.osclients.Keystone._create_keystone_client")
-        keystone_patcher.start()
-        self.addCleanup(keystone_patcher.stop)
+        self.tempest_conf = config.TempestConfig("fake_deployment")
 
-    @mock.patch("rally.verification.tempest.config.requests")
-    @mock.patch("rally.verification.tempest.config.os.rename")
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
-                create=True)
-    def test__download_cirros_image_success(self, mock_open, mock_rename,
-                                            mock_requests):
-        mock_result = mock.MagicMock()
-        mock_result.status_code = 200
-        mock_requests.get.return_value = mock_result
-        self.conf_generator._download_cirros_image()
-        mock_requests.get.assert_called_once_with(CONF.image.cirros_img_url,
-                                                  stream=True)
+    @mock.patch("os.rename")
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
+    def test__download_cirros_image_success(self, mock_get,
+                                            mock_open, mock_rename):
+        self.mock_isfile.return_value = False
+        self.tempest_conf._download_cirros_image()
+        mock_get.assert_called_once_with(
+            CONF.image.cirros_img_url, stream=True)
 
-    @mock.patch("rally.verification.tempest.config.requests.get")
+    @mock.patch("requests.get")
+    @ddt.data(404, 500)
+    def test__download_cirros_image_failure(self, status_code, mock_get):
+        self.mock_isfile.return_value = False
+        mock_get.return_value = mock.MagicMock(status_code=status_code)
+        self.assertRaises(exceptions.TempestConfigCreationFailure,
+                          self.tempest_conf._download_cirros_image)
+
+    @mock.patch("requests.get", side_effect=requests.ConnectionError())
     def test__download_cirros_image_connection_error(self, mock_requests_get):
-        mock_requests_get.side_effect = requests.ConnectionError()
+        self.mock_isfile.return_value = False
         self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.conf_generator._download_cirros_image)
-
-    @mock.patch("rally.verification.tempest.config.requests")
-    def test__download_cirros_image_notfound(self, mock_requests):
-        mock_result = mock.MagicMock()
-        mock_result.status_code = 404
-        mock_requests.get.return_value = mock_result
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.conf_generator._download_cirros_image)
-
-    @mock.patch("rally.verification.tempest.config.requests")
-    def test__download_cirros_image_code_not_200_and_404(self, mock_requests):
-        mock_result = mock.MagicMock()
-        mock_result.status_code = 500
-        mock_requests.get.return_value = mock_result
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.conf_generator._download_cirros_image)
+                          self.tempest_conf._download_cirros_image)
 
     def test__get_service_url(self):
-        service = "test_service"
-        service_type = "test_service_type"
-        url = "test_url"
-        # Mocked at setUp
-        self.conf_generator.keystone.auth_ref = {
+        self.tempest_conf.keystone.auth_ref = {
             "serviceCatalog": [
                 {
-                    "name": service,
-                    "type": service_type,
-                    "endpoints": [{"publicURL": url}]
+                    "name": "test_service",
+                    "type": "test_service_type",
+                    "endpoints": [{"publicURL": "test_url"}]
                 }
             ]
         }
-        self.assertEqual(self.conf_generator._get_service_url(service), url)
+        self.tempest_conf.clients.services.return_value = {
+            "test_service_type": "test_service"}
+        self.assertEqual(
+            self.tempest_conf._get_service_url("test_service"), "test_url")
 
-    @mock.patch("rally.verification.tempest."
-                "config.TempestConfig._get_service_url")
-    def test__configure_boto(self, mock_tempest_config__get_service_url):
-        url = "test_url"
-        mock_tempest_config__get_service_url.return_value = url
-        s3_materials_path = os.path.join(
-            self.conf_generator.data_dir, "s3materials")
-        self.conf_generator._configure_boto()
-        expected = (("ec2_url", url),
-                    ("s3_url", url),
+    @mock.patch("rally.verification.tempest.config."
+                "TempestConfig._get_service_url", return_value="test_url")
+    def test__configure_boto(self, mock__get_service_url):
+        self.tempest_conf._configure_boto()
+
+        expected = (("ec2_url", "test_url"),
+                    ("s3_url", "test_url"),
                     ("http_socket_timeout", "30"),
-                    ("s3_materials_path", s3_materials_path))
-        result = self.conf_generator.conf.items("boto")
-        self.assertIn(sorted(expected)[0], sorted(result))
+                    ("s3_materials_path", os.path.join(
+                        self.tempest_conf.data_dir, "s3materials")))
+        result = self.tempest_conf.conf.items("boto")
+        for item in expected:
+            self.assertIn(item, result)
 
     def test__configure_default(self):
-        self.conf_generator._configure_default()
-        expected = (("debug", "True"), ("log_file", "tempest.log"),
+        self.tempest_conf._configure_default()
+
+        expected = (("debug", "True"),
+                    ("log_file", "tempest.log"),
                     ("use_stderr", "False"))
-        results = self.conf_generator.conf.items("DEFAULT")
+        results = self.tempest_conf.conf.items("DEFAULT")
         self.assertEqual(sorted(expected), sorted(results))
 
     def test__configure_dashboard(self):
-        self.conf_generator._configure_dashboard()
-        url = "http://%s/" % parse.urlparse(self.endpoint["auth_url"]).hostname
-        expected = (("dashboard_url", url),)
-        result = self.conf_generator.conf.items("dashboard")
-        self.assertIn(sorted(expected)[0], sorted(result))
+        self.tempest_conf._configure_dashboard()
+        url = "http://%s/" % parse.urlparse(
+            CREDS["admin"]["auth_url"]).hostname
+        self.assertEqual(
+            self.tempest_conf.conf.get("dashboard", "dashboard_url"), url)
 
     def test__configure_identity(self):
-        self.conf_generator._configure_identity()
+        self.tempest_conf._configure_identity()
+
         expected = (
-            ("username", self.endpoint["username"]),
-            ("password", self.endpoint["password"]),
-            ("tenant_name", self.endpoint["tenant_name"]),
-            ("admin_username", self.endpoint["username"]),
-            ("admin_password", self.endpoint["password"]),
-            ("admin_tenant_name", self.endpoint["username"]),
-            ("admin_domain_name", self.endpoint["admin_domain_name"]),
-            ("uri", self.endpoint["auth_url"]),
-            ("uri_v3", self.endpoint["auth_url"].replace("/v2.0/", "/v3")),
+            ("username", CREDS["admin"]["username"]),
+            ("password", CREDS["admin"]["password"]),
+            ("tenant_name", CREDS["admin"]["tenant_name"]),
+            ("admin_username", CREDS["admin"]["username"]),
+            ("admin_password", CREDS["admin"]["password"]),
+            ("admin_tenant_name", CREDS["admin"]["username"]),
+            ("admin_domain_name", CREDS["admin"]["admin_domain_name"]),
+            ("uri", CREDS["admin"]["auth_url"]),
+            ("uri_v3", CREDS["admin"]["auth_url"].replace("/v2.0/", "/v3")),
             ("disable_ssl_certificate_validation",
-             self.endpoint["https_insecure"]),
-            ("ca_certificates_file", self.endpoint["https_cacert"]))
-        result = self.conf_generator.conf.items("identity")
-        self.assertIn(sorted(expected)[0], sorted(result))
+             str(CREDS["admin"]["https_insecure"])),
+            ("ca_certificates_file", CREDS["admin"]["https_cacert"]))
+        result = self.tempest_conf.conf.items("identity")
+        for item in expected:
+            self.assertIn(item, result)
 
     def test__configure_network_if_neutron(self):
-        mock_neutronclient = mock.MagicMock()
-        mock_neutronclient.list_networks.return_value = {
+        self.tempest_conf.available_services = ["neutron"]
+        client = self.tempest_conf.clients.neutron()
+        client.list_networks.return_value = {
             "networks": [
                 {
                     "status": "ACTIVE",
@@ -170,140 +162,126 @@ class TempestConfigTestCase(test.TestCase):
                 }
             ]
         }
-        mock_neutron = mock.MagicMock()
-        mock_neutron.client.Client.return_value = mock_neutronclient
-        with mock.patch.dict("sys.modules", {"neutronclient.neutron":
-                                             mock_neutron}):
-            self.conf_generator.available_services = ["neutron"]
-            self.conf_generator._configure_network()
-            expected = (("public_network_id", "test_id"),)
-            result = self.conf_generator.conf.items("network")
-            self.assertIn(sorted(expected)[0], sorted(result))
+
+        self.tempest_conf._configure_network()
+        self.assertEqual(
+            self.tempest_conf.conf.get("network",
+                                       "public_network_id"), "test_id")
 
     def test__configure_network_if_nova(self):
-        self.conf_generator.available_services = ["nova"]
-        mock_novaclient = mock.MagicMock()
-        mock_network = mock.MagicMock()
-        mock_network.human_id = "fake-network"
-        mock_novaclient.networks.list.return_value = [mock_network]
-        mock_nova = mock.MagicMock()
-        mock_nova.client.Client.return_value = mock_novaclient
-        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
-            self.conf_generator._configure_network()
-            self.assertEqual("fake-network",
-                             self.conf_generator.conf.get(
-                                 "compute", "fixed_network_name"))
-            self.assertEqual("fake-network",
-                             self.conf_generator.conf.get(
-                                 "compute", "network_for_ssh"))
+        self.tempest_conf.available_services = ["nova"]
+        client = self.tempest_conf.clients.nova()
+        client.networks.list.return_value = [
+            mock.MagicMock(human_id="fake-network")]
+
+        self.tempest_conf._configure_network()
+
+        expected = (("network_for_ssh", "fake-network"),
+                    ("fixed_network_name", "fake-network"))
+        result = self.tempest_conf.conf.items("compute")
+        for item in expected:
+            self.assertIn(item, result)
 
     def test__configure_network_feature_enabled(self):
-        mock_neutronclient = mock.MagicMock()
-        mock_neutronclient.list_ext.return_value = {
+        self.tempest_conf.available_services = ["neutron"]
+        client = self.tempest_conf.clients.neutron()
+        client.list_ext.return_value = {
             "extensions": [
                 {"alias": "dvr"},
                 {"alias": "extra_dhcp_opt"},
                 {"alias": "extraroute"}
             ]
         }
-        mock_neutron = mock.MagicMock()
-        mock_neutron.client.Client.return_value = mock_neutronclient
-        with mock.patch.dict("sys.modules",
-                             {"neutronclient.neutron": mock_neutron}):
-            self.conf_generator.available_services = ["neutron"]
-            self.conf_generator._configure_network_feature_enabled()
-            expected = (("api_extensions", "dvr,extra_dhcp_opt,extraroute"),)
-            result = self.conf_generator.conf.items("network-feature-enabled")
-            self.assertIn(sorted(expected)[0], sorted(result))
 
-    @mock.patch("rally.verification.tempest.config.os.path.exists",
-                return_value=False)
-    @mock.patch("rally.verification.tempest.config.os.makedirs")
-    def test__configure_oslo_concurrency(self, mock_makedirs, mock_exists):
-        self.conf_generator._configure_oslo_concurrency()
+        self.tempest_conf._configure_network_feature_enabled()
+        self.assertEqual(self.tempest_conf.conf.get(
+            "network-feature-enabled", "api_extensions"),
+            "dvr,extra_dhcp_opt,extraroute")
+
+    @mock.patch("os.makedirs")
+    @mock.patch("os.path.exists", return_value=False)
+    def test__configure_oslo_concurrency(self, mock_exists, mock_makedirs):
+        self.tempest_conf._configure_oslo_concurrency()
+
         lock_path = os.path.join(
-            self.conf_generator.data_dir, "lock_files_%s" % self.deployment)
-        mock_makedirs.assert_called_once_with(lock_path)
-        expected = (("lock_path", lock_path),)
-        result = self.conf_generator.conf.items("oslo_concurrency")
-        self.assertIn(sorted(expected)[0], sorted(result))
+            self.tempest_conf.data_dir, "lock_files_fake_deployment")
+        mock_makedirs.assert_called_with(lock_path)
+        self.assertEqual(
+            self.tempest_conf.conf.get(
+                "oslo_concurrency", "lock_path"), lock_path)
 
     def test__configure_object_storage(self):
-        self.conf_generator._configure_object_storage()
+        self.tempest_conf._configure_object_storage()
+
         expected = (
             ("operator_role", CONF.role.swift_operator_role),
             ("reseller_admin_role", CONF.role.swift_reseller_admin_role))
-        result = self.conf_generator.conf.items("object-storage")
-        self.assertIn(sorted(expected)[0], sorted(result))
-
-    def test__configure_scenario(self):
-        self.conf_generator._configure_scenario()
-        expected = (
-            ("img_dir", self.conf_generator.data_dir),
-            ("img_file", config.IMAGE_NAME))
-        result = self.conf_generator.conf.items("scenario")
-        self.assertIn(sorted(expected)[0], sorted(result))
-
-    @mock.patch("rally.verification.tempest.config.requests")
-    def test__configure_service_available(self, mock_requests):
-        mock_result = mock.MagicMock()
-        mock_result.status_code = 404
-        mock_requests.get.return_value = mock_result
-        available_services = ("nova", "cinder", "glance", "sahara")
-        self.conf_generator.available_services = available_services
-        self.conf_generator._configure_service_available()
-        expected_horizon_url = "http://test"
-        expected_timeout = CONF.openstack_client_http_timeout
-        mock_requests.get.assert_called_once_with(
-            expected_horizon_url,
-            timeout=expected_timeout)
-        expected = (("neutron", "False"), ("heat", "False"),
-                    ("ceilometer", "False"), ("swift", "False"),
-                    ("cinder", "True"), ("nova", "True"),
-                    ("glance", "True"), ("horizon", "False"),
-                    ("sahara", "True"))
-        result = self.conf_generator.conf.items("service_available")
-        self.assertIn(sorted(expected)[0], sorted(result))
-
-    @mock.patch("rally.verification.tempest.config.requests")
-    def test__configure_service_available_horizon(self, mock_requests):
-        mock_result = mock.MagicMock()
-        mock_result.status_code = 200
-        mock_requests.get.return_value = mock_result
-        self.conf_generator._configure_service_available()
-        self.assertEqual(
-            self.conf_generator.conf.get(
-                "service_available", "horizon"), "True")
-
-    @mock.patch("rally.verification.tempest.config.requests.get")
-    def test__configure_service_not_available_horizon(self, mock_get):
-        mock_get.side_effect = requests.Timeout()
-        self.conf_generator._configure_service_available()
-        self.assertEqual(
-            self.conf_generator.conf.get(
-                "service_available", "horizon"), "False")
-
-    def test__configure_validation_if_neutron(self):
-        # if neutron is available
-        self.conf_generator.available_services = ["neutron"]
-        self.conf_generator._configure_validation()
-        self.assertEqual("floating",
-                         self.conf_generator.conf.get("validation",
-                                                      "connect_method"))
-
-    def test__configure_validation_if_novanetwork(self):
-        self.conf_generator._configure_validation()
-        self.assertEqual("fixed",
-                         self.conf_generator.conf.get("validation",
-                                                      "connect_method"))
+        result = self.tempest_conf.conf.items("object-storage")
+        for item in expected:
+            self.assertIn(item, result)
 
     def test__configure_orchestration(self):
-        self.conf_generator._configure_orchestration()
+        self.tempest_conf._configure_orchestration()
+
         expected = (
             ("stack_owner_role", CONF.role.heat_stack_owner_role),
             ("stack_user_role", CONF.role.heat_stack_user_role))
-        result = self.conf_generator.conf.items("orchestration")
-        self.assertIn(sorted(expected)[0], sorted(result))
+        result = self.tempest_conf.conf.items("orchestration")
+        for item in expected:
+            self.assertIn(item, result)
+
+    def test__configure_scenario(self):
+        self.tempest_conf._configure_scenario()
+
+        expected = (("img_dir", self.tempest_conf.data_dir),
+                    ("img_file", config.IMAGE_NAME))
+        result = self.tempest_conf.conf.items("scenario")
+        for item in expected:
+            self.assertIn(item, result)
+
+    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
+    def test__configure_service_available(self, mock_get):
+        available_services = ("nova", "cinder", "glance", "sahara")
+        self.tempest_conf.available_services = available_services
+        self.tempest_conf._configure_service_available()
+
+        expected_horizon_url = "http://test"
+        expected_timeout = CONF.openstack_client_http_timeout
+        mock_get.assert_called_once_with(expected_horizon_url,
+                                         timeout=expected_timeout)
+        expected = (
+            ("neutron", "False"), ("heat", "False"), ("nova", "True"),
+            ("swift", "False"), ("cinder", "True"), ("sahara", "True"),
+            ("glance", "True"), ("horizon", "True"), ("ceilometer", "False"))
+        result = self.tempest_conf.conf.items("service_available")
+        for item in expected:
+            self.assertIn(item, result)
+
+    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=404))
+    def test__configure_service_available_horizon_not_available(
+            self, mock_get):
+        self.tempest_conf._configure_service_available()
+        self.assertEqual(
+            self.tempest_conf.conf.get(
+                "service_available", "horizon"), "False")
+
+    @mock.patch("requests.get", side_effect=requests.Timeout())
+    def test__configure_service_available_horizon_request_timeout(
+            self, mock_get):
+        self.tempest_conf._configure_service_available()
+        self.assertEqual(
+            self.tempest_conf.conf.get(
+                "service_available", "horizon"), "False")
+
+    @ddt.data({}, {"service": "neutron", "connect_method": "floating"})
+    @ddt.unpack
+    def test__configure_validation(self, service="nova",
+                                   connect_method="fixed"):
+        self.tempest_conf.available_services = [service]
+        self.tempest_conf._configure_validation()
+        self.assertEqual(connect_method,
+                         self.tempest_conf.conf.get("validation",
+                                                    "connect_method"))
 
     @mock.patch("rally.verification.tempest.config._write_config")
     @mock.patch("inspect.getmembers")
@@ -312,15 +290,15 @@ class TempestConfigTestCase(test.TestCase):
         mock_inspect_getmembers.return_value = [("_configure_something",
                                                  configure_something_method)]
 
-        self.conf_generator.generate("/path/to/fake/conf")
+        self.tempest_conf.generate("/path/to/fake/conf")
         self.assertEqual(configure_something_method.call_count, 1)
         self.assertEqual(mock__write_config.call_count, 1)
 
-    @mock.patch("six.moves.builtins.open",
-                side_effect=mock.mock_open(), create=True)
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
     def test__write_config(self, mock_open):
         conf_path = "/path/to/fake/conf"
         conf_data = mock.Mock()
+
         config._write_config(conf_path, conf_data)
         mock_open.assert_called_once_with(conf_path, "w+")
         conf_data.write.assert_called_once_with(mock_open.side_effect())
