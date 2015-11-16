@@ -438,13 +438,21 @@
   CeilometerMeters.list_meters:
     -
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
+         type: constant
+         times: 10
+         concurrency: 2
       context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
+         users:
+           tenants: 1
+           users_per_tenant: 1
+         ceilometer:
+           counter_name: "benchmark_meter"
+           counter_type: "gauge"
+           counter_unit: "%"
+           counter_volume: 100
+           resources_per_tenant: 1
+           samples_per_resource: 1
+           timestamp_interval: 1
       sla:
         failure_rate:
           max: 0
@@ -452,13 +460,21 @@
   CeilometerResource.list_resources:
     -
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
+         type: constant
+         times: 10
+         concurrency: 2
       context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
+         users:
+           tenants: 1
+           users_per_tenant: 1
+         ceilometer:
+           counter_name: "benchmark_meter"
+           counter_type: "gauge"
+           counter_unit: "%"
+           counter_volume: 100
+           resources_per_tenant: 1
+           samples_per_resource: 1
+           timestamp_interval: 1
       sla:
         failure_rate:
           max: 0

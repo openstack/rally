@@ -1,8 +1,8 @@
 ---
-    CeilometerMeters.list_matched_meters:
-     -
+    CeilometerResource.list_resources:
+      -
        runner:
-         type: constant
+         type: "constant"
          times: 10
          concurrency: 1
        context:
@@ -28,8 +28,5 @@
                deleted: "true"
        args:
          limit: 50
-         filter_by_user_id: true
-         filter_by_project_id: true
-         filter_by_resource_id: true
          metadata_query:
            status: "terminated"
