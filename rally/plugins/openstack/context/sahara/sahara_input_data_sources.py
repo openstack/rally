@@ -13,14 +13,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import requests
+from six.moves.urllib import parse
+
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
-from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
+from rally.plugins.openstack.context.cleanup import resources as res_cleanup
+from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
+
 
 LOG = logging.getLogger(__name__)
 
@@ -39,6 +44,22 @@ class SaharaInputDataSources(context.Context):
             "input_url": {
                 "type": "string",
             },
+            "swift_files": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "download_url": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["name", "download_url"]
+                }
+            }
         },
         "additionalProperties": False,
         "required": ["input_type", "input_url"]
@@ -47,19 +68,25 @@ class SaharaInputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Enter context: `Sahara Input Data Sources`"))
     def setup(self):
+        self.context["swift_objects"] = []
+        self.context["container_name"] = None
+
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             clients = osclients.Clients(user["endpoint"])
-            sahara = clients.sahara()
-            self.setup_inputs(sahara, tenant_id, self.config["input_type"],
-                              self.config["input_url"])
+            if self.config["input_type"] == "swift":
+                self.setup_inputs_swift(clients, tenant_id,
+                                        self.config["input_url"],
+                                        self.config["swift_files"],
+                                        user["endpoint"].username,
+                                        user["endpoint"].password)
+            else:
+                self.setup_inputs(clients, tenant_id,
+                                  self.config["input_type"],
+                                  self.config["input_url"])
 
-    def setup_inputs(self, sahara, tenant_id, input_type, input_url):
-        if input_type == "swift":
-            raise exceptions.RallyException(
-                _("Swift Data Sources are not implemented yet"))
-        # Todo(nkonovalov): Add swift credentials parameters and data upload
-        input_ds = sahara.data_sources.create(
+    def setup_inputs(self, clients, tenant_id, input_type, input_url):
+        input_ds = clients.sahara().data_sources.create(
             name=self.generate_random_name(),
             description="",
             data_source_type=input_type,
@@ -67,10 +94,35 @@ class SaharaInputDataSources(context.Context):
 
         self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
 
+    def setup_inputs_swift(self, clients, tenant_id, input_url,
+                           swift_files, username, password):
+        swift_scenario = swift_utils.SwiftScenario(clients=clients,
+                                                   context=self.context)
+        container_name = "rally_" + parse.urlparse(input_url).netloc.rstrip(
+            ".sahara")
+        self.context["container_name"] = (
+            swift_scenario._create_container(container_name=container_name))
+        for swift_file in swift_files:
+            content = requests.get(swift_file["download_url"]).content
+            self.context["swift_objects"].append(
+                swift_scenario._upload_object(
+                    self.context["container_name"], content,
+                    object_name=swift_file["name"]))
+            input_ds_swift = clients.sahara().data_sources.create(
+                name=self.generate_random_name(), description="",
+                data_source_type="swift", url=input_url,
+                credential_user=username, credential_pass=password)
+
+            self.context["tenants"][tenant_id]["sahara_input"] = (
+                input_ds_swift.id)
+
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Input Data"
                                           "Sources`"))
     def cleanup(self):
-        resources = ["job_executions", "jobs", "data_sources"]
+        resources = ["data_sources"]
+        for swift_object in self.context["swift_objects"]:
+            res_cleanup.SwiftObject(resource=swift_object[1])
+        res_cleanup.SwiftContainer(resource=self.context["container_name"])
 
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(
