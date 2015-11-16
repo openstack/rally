@@ -425,21 +425,37 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual("id1", network.id)
         self.assertEqual("id1", self.context._created_networks[0].id)
 
-    def test__cleanup_roles(self):
-        self.context._created_roles = [mock.MagicMock(), mock.MagicMock()]
+    def test__cleanup_tempest_roles(self):
+        self.context._created_roles = [fakes.FakeRole(), fakes.FakeRole()]
 
-        self.context._cleanup_roles()
-        for role in self.context._created_roles:
-            self.assertEqual(role.delete.call_count, 1)
+        self.context._cleanup_tempest_roles()
+        client = self.context.clients.keystone()
+        self.assertEqual(client.roles.delete.call_count, 2)
 
-    def test__cleanup_resource(self):
-        created_flavors = [mock.MagicMock(id="id1"), mock.MagicMock(id="id2")]
+    def test__cleanup_images(self):
+        self.context._created_images = [fakes.FakeImage(id="id1"),
+                                        fakes.FakeImage(id="id2")]
+
+        self.context.conf.set("compute", "image_ref", "id1")
+        self.context.conf.set("compute", "image_ref_alt", "id2")
+
+        self.context._cleanup_images()
+        client = self.context.clients.glance()
+        self.assertEqual(client.images.delete.call_count, 2)
+
+        self.assertEqual("", self.context.conf.get("compute", "image_ref"))
+        self.assertEqual("", self.context.conf.get("compute", "image_ref_alt"))
+
+    def test__cleanup_flavors(self):
+        self.context._created_flavors = [fakes.FakeFlavor(id="id1"),
+                                         fakes.FakeFlavor(id="id2")]
+
         self.context.conf.set("compute", "flavor_ref", "id1")
         self.context.conf.set("compute", "flavor_ref_alt", "id2")
 
-        self.context._cleanup_resource("flavor", created_flavors)
-        for flavor in self.context._created_flavors:
-            self.assertEqual(flavor.delete.call_count, 1)
+        self.context._cleanup_flavors()
+        client = self.context.clients.nova()
+        self.assertEqual(client.flavors.delete.call_count, 2)
 
         self.assertEqual("", self.context.conf.get("compute", "flavor_ref"))
         self.assertEqual("", self.context.conf.get("compute",
