@@ -28,6 +28,7 @@ from rally.common import log as logging
 from rally.common import objects
 from rally import exceptions
 from rally import osclients
+from rally.plugins.openstack.wrappers import network
 
 LOG = logging.getLogger(__name__)
 
@@ -85,7 +86,6 @@ class TempestConfig(object):
         self.endpoint = db.deployment_get(deployment)["admin"]
         self.clients = osclients.Clients(objects.Endpoint(**self.endpoint))
         self.keystone = self.clients.verified_keystone()
-
         self.available_services = self.clients.services().values()
 
         self.data_dir = _create_or_get_data_dir()
@@ -256,22 +256,37 @@ class TempestResourcesContext(object):
     def __init__(self, deployment, conf_path):
         endpoint = db.deployment_get(deployment)["admin"]
         self.clients = osclients.Clients(objects.Endpoint(**endpoint))
-        self.keystone = self.clients.verified_keystone()
+        self.available_services = self.clients.services().values()
 
         self.conf_path = conf_path
         self.conf = configparser.ConfigParser()
         self.conf.read(conf_path)
 
-    def __enter__(self):
         self._created_roles = []
         self._created_images = []
         self._created_flavors = []
+        self._created_networks = []
 
+    def __enter__(self):
         self._create_tempest_roles()
         self._configure_option("image_ref", self._create_image)
         self._configure_option("image_ref_alt", self._create_image)
         self._configure_option("flavor_ref", self._create_flavor, 64)
         self._configure_option("flavor_ref_alt", self._create_flavor, 128)
+        if "neutron" in self.available_services:
+            neutronclient = self.clients.neutron()
+            if neutronclient.list_networks(shared=True)["networks"]:
+                # If the OpenStack cloud has some shared networks, we will
+                # create our own shared network and specify its name in the
+                # Tempest config file. Such approach will allow us to avoid
+                # failures of Tempest tests with error "Multiple possible
+                # networks found". Otherwise the default behavior defined in
+                # Tempest will be used and Tempest itself will manage network
+                # resources.
+                LOG.debug("Shared networks found. "
+                          "'fixed_network_name' option should be configured")
+                self._configure_option("fixed_network_name",
+                                       self._create_network_resources)
 
         _write_config(self.conf_path, self.conf)
 
@@ -279,27 +294,33 @@ class TempestResourcesContext(object):
         self._cleanup_roles()
         self._cleanup_resource("image", self._created_images)
         self._cleanup_resource("flavor", self._created_flavors)
+        if "neutron" in self.available_services:
+            self._cleanup_network_resources()
+
+        _write_config(self.conf_path, self.conf)
 
     def _create_tempest_roles(self):
+        keystoneclient = self.clients.verified_keystone()
         roles = [CONF.role.swift_operator_role,
                  CONF.role.swift_reseller_admin_role,
                  CONF.role.heat_stack_owner_role,
                  CONF.role.heat_stack_user_role]
-        existing_roles = set(role.name for role in self.keystone.roles.list())
+        existing_roles = set(role.name for role in keystoneclient.roles.list())
 
         for role in roles:
             if role not in existing_roles:
                 LOG.debug("Creating role '%s'" % role)
-                self._created_roles.append(self.keystone.roles.create(role))
+                self._created_roles.append(keystoneclient.roles.create(role))
 
     def _configure_option(self, option, create_method, *args, **kwargs):
         option_value = self.conf.get("compute", option)
         if not option_value:
             LOG.debug("Option '%s' is not configured" % option)
             resource = create_method(*args, **kwargs)
-            self.conf.set("compute", option, resource.id)
+            res_id = resource["name"] if "network" in option else resource.id
+            self.conf.set("compute", option, res_id)
             LOG.debug("Option '{opt}' is configured. {opt} = {resource_id}"
-                      .format(opt=option, resource_id=resource.id))
+                      .format(opt=option, resource_id=res_id))
         else:
             LOG.debug("Option '{opt}' was configured manually "
                       "in Tempest config file. {opt} = {opt_val}"
@@ -335,6 +356,16 @@ class TempestResourcesContext(object):
 
         return flavor
 
+    def _create_network_resources(self):
+        neutron_wrapper = network.NeutronWrapper(self.clients, task=None)
+        LOG.debug("Creating network resources: network, subnet, router")
+        net = neutron_wrapper.create_network(
+            self.clients.keystone().tenant_id, subnets_num=1,
+            add_router=True, network_create_args={"shared": True})
+        self._created_networks.append(net)
+
+        return net
+
     def _cleanup_roles(self):
         for role in self._created_roles:
             LOG.debug("Deleting role '%s'" % role.name)
@@ -349,4 +380,15 @@ class TempestResourcesContext(object):
                 self.conf.set("compute", "%s_ref_alt" % resource_type, "")
             res.delete()
 
-        _write_config(self.conf_path, self.conf)
+    def _cleanup_network_resources(self):
+        neutron_wrapper = network.NeutronWrapper(self.clients, task=None)
+        for net in self._created_networks:
+            LOG.debug("Deleting network resources: router, subnet, network")
+            neutron_wrapper.delete_network(net)
+            self._remove_opt_value_from_config(net["name"])
+
+    def _remove_opt_value_from_config(self, opt_value):
+        for option, value in self.conf.items("compute"):
+            if opt_value == value:
+                LOG.debug("Removing '%s' from Tempest config file" % opt_value)
+                self.conf.set("compute", option, "")
