@@ -130,5 +130,5 @@ Where can I discuss and propose changes?
 - Our IRC channel: **#openstack-rally** on **irc.freenode.net**;
 - Weekly Rally team meeting (in IRC): **#openstack-meeting** on **irc.freenode.net**, held on Mondays at 14:00 UTC;
 - Weekly release meeting (in IRC): **#openstack-rally** on **irc.freenode.net**, held on Mondays at 13:00 UTC;
-- Openstack mailing list: **openstack-dev@lists.openstack.org** (see `subscription and usage instructions <http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev>`_);
+- OpenStack mailing list: **openstack-dev@lists.openstack.org** (see `subscription and usage instructions <http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev>`_);
 - `Rally team on Launchpad <https://launchpad.net/rally>`_: Answers/Bugs/Blueprints.

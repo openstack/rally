@@ -15,14 +15,14 @@ Move all plugins under rally/plugins to simplify Rally code base
 Problem description
 ===================
 
-Rally code is coupled with Rally engine and infra as well as Openstack specific
+Rally code is coupled with Rally engine and infra as well as OpenStack specific
 code. This makes contribution harder as new-comers need to understand Rally
 code as well as many different plugins. It also makes reviewing much harder.
 
 Proposed change
 ===============
 
-Moving all plugins under a single directory, with "Openstack" as its
+Moving all plugins under a single directory, with "OpenStack" as its
 sub-directory would make everything simpler.
 
 Alternatives

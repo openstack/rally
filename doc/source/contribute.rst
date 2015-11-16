@@ -31,7 +31,7 @@ If you are going to contribute to Rally, you will probably need to grasp a bette
 How to contribute
 -----------------
 
-1. You need a `Launchpad <https://launchpad.net/>`_ account and need to be joined to the `Openstack team <https://launchpad.net/openstack>`_. You can also join the `Rally team <https://launchpad.net/rally>`_ if you want to. Make sure Launchpad has your SSH key, Gerrit (the code review system) uses this.
+1. You need a `Launchpad <https://launchpad.net/>`_ account and need to be joined to the `OpenStack team <https://launchpad.net/openstack>`_. You can also join the `Rally team <https://launchpad.net/rally>`_ if you want to. Make sure Launchpad has your SSH key, Gerrit (the code review system) uses this.
 
 2. Sign the CLA as outlined in the `account setup <http://docs.openstack.org/infra/manual/developers.html#development-workflow>`_ section of the developer guide.
 
