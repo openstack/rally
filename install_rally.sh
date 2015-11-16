@@ -19,7 +19,7 @@ running_as_root() {
 
 VERBOSE=""
 ASKCONFIRMATION=1
-OVERWRITEDIR="ask"
+RECREATEDEST="ask"
 USEVIRTUALENV="yes"
 
 # ansi colors for formatting heredoc
@@ -169,7 +169,11 @@ $GREEN  --url                 $NO_COLOR Git repository public URL to download Ra
 $GREEN  --branch              $NO_COLOR Git branch name name or git tag (Rally release) to install.
                          (Default: latest - master).
                          (Ignored when you are already in git repository).
-$GREEN  -f, --overwrite       $NO_COLOR Remove target directory if it already exist.
+$GREEN  -f, --overwrite       $NO_COLOR Deprecated. Use -r instead.
+$GREEN  -r, --recreate        $NO_COLOR Remove target directory if it already exist.
+                         If neither '-r' nor '-R' is set default behaviour is to ask.
+$GREEN  -R, --no-recreate     $NO_COLOR Do not reemove target directory if it already exist.
+                         If neither '-r' nor '-R' is set default behaviour is to ask.
 $GREEN  -y, --yes             $NO_COLOR Do not ask for confirmation: assume a 'yes' reply
                          to every question.
 $GREEN  -D, --dbtype TYPE     $NO_COLOR Select the database type. TYPE can be one of
@@ -462,10 +466,21 @@ setup_rally_configuration () {
     rally-manage db recreate
 }
 
+rally_venv () {
+    echo "Installing Rally virtualenv in directory '$VENVDIR' ..."
+    CURRENT_ACTION="creating-venv"
+    if ! install_virtualenv "$VENVDIR"; then
+        die $EX_PROTOCOL "Unable to create a new virtualenv in '$VENVDIR': 'virtualenv.py' script exited with code $rc." <<__EOF__
+The script was unable to create a valid virtual environment.
+__EOF__
+    fi
+    CURRENT_ACTION="venv-created"
+    rc=0
+}
 
 ### Main program ###
-short_opts='d:vsyfhD:p:'
-long_opts='target:,verbose,overwrite,system,yes,dbtype:,python:,db-user:,db-password:,db-host:,db-name:,help,url:,branch:,develop,no-color'
+short_opts='d:vsyfrRhD:p:'
+long_opts='target:,verbose,overwrite,recreate,no-recreate,system,yes,dbtype:,python:,db-user:,db-password:,db-host:,db-name:,help,url:,branch:,develop,no-color'
 
 set +e
 if [ "x$(getopt -T)" = 'x' ]; then
@@ -505,7 +520,13 @@ do
             USEVIRTUALENV="no"
             ;;
         -f|--overwrite)
-            OVERWRITEDIR=yes
+            RECREATEDEST=yes
+            ;;
+        -r|--recreate)
+            RECREATEDEST=yes
+            ;;
+        -R|--no-recreate)
+            RECREATEDEST=no
             ;;
         -y|--yes)
             ASKCONFIRMATION=0
@@ -629,11 +650,12 @@ fi
 install_required_sw
 require_python
 
+
 # Install virtualenv, if required
 if [ "$USEVIRTUALENV" = 'yes' ]; then
     if [ -d "$VENVDIR" ]
     then
-        if [ $OVERWRITEDIR = 'ask' ]; then
+        if [ $RECREATEDEST = 'ask' ]; then
             echo "Destination directory '$VENVDIR' already exists."
             echo "I can wipe it out in order to make a new installation,"
             echo "but this means any files in that directory, and the ones"
@@ -643,44 +665,28 @@ if [ "$USEVIRTUALENV" = 'yes' ]; then
             if ! ask_yn "Do you want to wipe the installation directory '$VENVDIR'?"
             then
                 echo "*Not* overwriting destination directory '$VENVDIR'."
-                OVERWRITEDIR=no
+                RECREATEDEST=no
             else
-                echo "Removing directory $VENVDIR as requested."
-                rm $VERBOSE -rf "$VENVDIR"
+                RECREATEDEST=yes
+
             fi
-        elif [ $OVERWRITEDIR = 'no' ]
+        fi
+
+        if [ $RECREATEDEST = 'yes' ];
         then
-            die $EX_CANTCREAT "Unable to create virtualenv in '$VENVDIR': directory already exists." <<__EOF__
-    The script was unable to create a virtual environment in "$VENVDIR"
-    because the directory already exists.
-
-    In order to proceed, you must take one of the following action:
-
-    * delete the directory, or
-
-    * run this script again adding '--overwrite' option, which will
-      overwrite the $VENVDIR directory, or
-
-    * specify a different path by running this script again adding the
-      option: "--target" followed by a non-existent directory.
-__EOF__
-        elif [ $OVERWRITEDIR = 'yes' ]; then
             echo "Removing directory $VENVDIR as requested."
             rm $VERBOSE -rf "$VENVDIR"
+            rally_venv
+        elif [ $RECREATEDEST = 'no' ];
+        then
+            echo "Using existing virtualenv at $VENVDIR..."
+            . "$VENVDIR"/bin/activate
         else
-            abort 66 "Internal error: unexpected value '$OVERWRITEDIR' for OVERWRITEDIR."
+            abort 66 "Internal error: unexpected value '$RECREATEDEST' for RECREATEDEST."
         fi
+    else
+        rally_venv
     fi
-
-    echo "Installing Rally virtualenv in directory '$VENVDIR' ..."
-    CURRENT_ACTION="creating-venv"
-    if ! install_virtualenv "$VENVDIR"; then
-        die $EX_PROTOCOL "Unable to create a new virtualenv in '$VENVDIR': 'virtualenv.py' script exited with code $rc." <<__EOF__
-The script was unable to create a valid virtual environment.
-__EOF__
-    fi
-    CURRENT_ACTION="venv-created"
-    rc=0
 fi
 
 # Install rally
@@ -725,7 +731,7 @@ else
     # Check if source directory is present
     if [ -d "$SOURCEDIR" ]
     then
-        if [ $OVERWRITEDIR != 'yes' ]
+        if [ $RECREATEDEST != 'yes' ]
         then
             echo "Source directory '$SOURCEDIR' already exists."
             echo "I can wipe it out in order to make a new installation,"
