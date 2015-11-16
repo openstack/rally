@@ -98,7 +98,7 @@
         </tr>
         % if 'output' in test:
         <tr class="test-details-row">
-          <td colspan="6"><div class="test-details">${test['output'] | h}</div>
+          <td colspan="6"><div class="test-details">${test['output'] | n}</div>
         </tr>
         % endif
       % endfor

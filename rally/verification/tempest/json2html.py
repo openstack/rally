@@ -10,46 +10,50 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import re
+
+from jinja2 import utils
+
 from rally.ui import utils as ui_utils
 
+SKIP_RE = re.compile("Skipped until Bug: ?(?P<bug_number>\d+) is resolved.")
+LAUNCHPAD_BUG_LINK = "<a href='https://launchpad.net/bugs/{0}'>{0}</a>"
 
-class HtmlOutput(object):
-    """Output test results in HTML."""
 
-    def __init__(self, results):
-        self.results = results
-
-    def _generate_report(self):
-        tests = []
-        for i, name in enumerate(sorted(self.results["test_cases"])):
-            test = self.results["test_cases"][name]
-            if "tags" in test:
-                name = "%(name)s [%(tags)s]" % {
-                    "name": name, "tags": ", ".join(test["tags"])}
-
-            if "traceback" in test:
-                output = test["traceback"]
-            elif "reason" in test:
-                output = test["reason"]
+def generate_report(results):
+    """Generates HTML report from test results in JSON format."""
+    tests = []
+    for i, name in enumerate(sorted(results["test_cases"])):
+        test = results["test_cases"][name]
+        if "tags" in test:
+            name = "%(name)s [%(tags)s]" % {"name": name,
+                                            "tags": ", ".join(test["tags"])}
+        if "traceback" in test:
+            output = utils.escape(test["traceback"])
+        elif "reason" in test:
+            matcher = SKIP_RE.match(test["reason"])
+            if matcher:
+                href = LAUNCHPAD_BUG_LINK.format(matcher.group("bug_number"))
+                output = re.sub(matcher.group("bug_number"), href,
+                                test["reason"])
             else:
-                output = ""
+                output = utils.escape(test["reason"])
+        else:
+            output = ""
 
-            tests.append({"id": i,
-                          "time": test["time"],
-                          "name": name,
-                          "output": output,
-                          "status": test["status"]})
+        tests.append({"id": i,
+                      "time": test["time"],
+                      "name": name,
+                      "output": output,
+                      "status": test["status"]})
 
-        return {
-            "tests": tests,
-            "total": self.results["tests"],
-            "time": self.results["time"],
-            "success": self.results["success"],
-            "failures": self.results["failures"],
-            "skipped": self.results["skipped"],
-            "expected_failures": self.results["expected_failures"],
-            "unexpected_success": self.results["unexpected_success"]}
-
-    def create_report(self):
-        template = ui_utils.get_template("verification/report.mako")
-        return template.render(report=self._generate_report())
+    template = ui_utils.get_template("verification/report.mako")
+    return template.render(report={
+        "tests": tests,
+        "total": results["tests"],
+        "time": results["time"],
+        "success": results["success"],
+        "failures": results["failures"],
+        "skipped": results["skipped"],
+        "expected_failures": results["expected_failures"],
+        "unexpected_success": results["unexpected_success"]})
