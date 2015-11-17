@@ -23,6 +23,7 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.context.cleanup import resources as res_cleanup
+from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
 
@@ -68,8 +69,9 @@ class SaharaInputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Enter context: `Sahara Input Data Sources`"))
     def setup(self):
-        self.context["swift_objects"] = []
-        self.context["container_name"] = None
+        utils.init_sahara_context(self)
+        self.context["sahara"]["swift_objects"] = []
+        self.context["sahara"]["container_name"] = None
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -92,7 +94,7 @@ class SaharaInputDataSources(context.Context):
             data_source_type=input_type,
             url=input_url)
 
-        self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
+        self.context["tenants"][tenant_id]["sahara"]["input"] = input_ds.id
 
     def setup_inputs_swift(self, clients, tenant_id, input_url,
                            swift_files, username, password):
@@ -100,29 +102,30 @@ class SaharaInputDataSources(context.Context):
                                                    context=self.context)
         container_name = "rally_" + parse.urlparse(input_url).netloc.rstrip(
             ".sahara")
-        self.context["container_name"] = (
+        self.context["sahara"]["container_name"] = (
             swift_scenario._create_container(container_name=container_name))
         for swift_file in swift_files:
             content = requests.get(swift_file["download_url"]).content
-            self.context["swift_objects"].append(
+            self.context["sahara"]["swift_objects"].append(
                 swift_scenario._upload_object(
-                    self.context["container_name"], content,
+                    self.context["sahara"]["container_name"], content,
                     object_name=swift_file["name"]))
             input_ds_swift = clients.sahara().data_sources.create(
                 name=self.generate_random_name(), description="",
                 data_source_type="swift", url=input_url,
                 credential_user=username, credential_pass=password)
 
-            self.context["tenants"][tenant_id]["sahara_input"] = (
+            self.context["tenants"][tenant_id]["sahara"]["input"] = (
                 input_ds_swift.id)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Input Data"
                                           "Sources`"))
     def cleanup(self):
         resources = ["data_sources"]
-        for swift_object in self.context["swift_objects"]:
+        for swift_object in self.context["sahara"]["swift_objects"]:
             res_cleanup.SwiftObject(resource=swift_object[1])
-        res_cleanup.SwiftContainer(resource=self.context["container_name"])
+        res_cleanup.SwiftContainer(
+            resource=self.context["sahara"]["container_name"])
 
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(

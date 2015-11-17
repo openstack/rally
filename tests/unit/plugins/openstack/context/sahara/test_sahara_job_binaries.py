@@ -90,13 +90,13 @@ class SaharaJobBinariesTestCase(test.ScenarioTestCase):
         for i in range(self.tenants_num):
             download_calls.append(mock.call(
                 sahara=mock_sahara,
-                lib_type="sahara_mains",
+                lib_type="mains",
                 name="test.jar",
                 download_url="http://example.com/test.jar",
                 tenant_id=str(i)))
             download_calls.append(mock.call(
                 sahara=mock_sahara,
-                lib_type="sahara_libs",
+                lib_type="libs",
                 name="test.jar",
                 download_url="http://example.com/test.jar",
                 tenant_id=str(i)))
@@ -122,17 +122,18 @@ class SaharaJobBinariesTestCase(test.ScenarioTestCase):
             mock.MagicMock(id=42))
 
         sahara_ctx = sahara_job_binaries.SaharaJobBinaries(self.context)
-        sahara_ctx.context["tenants"]["0"]["sahara_mains"] = []
-        sahara_ctx.context["tenants"]["0"]["sahara_libs"] = []
+
+        sahara_ctx.context["tenants"]["0"]["sahara"] = {"mains": []}
+        sahara_ctx.context["tenants"]["0"]["sahara"]["libs"] = []
 
         sahara_ctx.download_and_save_lib(sahara=mock_sahara,
-                                         lib_type="sahara_mains",
+                                         lib_type="mains",
                                          name="test_binary",
                                          download_url="http://somewhere",
                                          tenant_id="0")
 
         sahara_ctx.download_and_save_lib(sahara=mock_sahara,
-                                         lib_type="sahara_libs",
+                                         lib_type="libs",
                                          name="test_binary_2",
                                          download_url="http://somewhere",
                                          tenant_id="0")

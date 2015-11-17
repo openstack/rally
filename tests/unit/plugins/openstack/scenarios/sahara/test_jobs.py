@@ -41,11 +41,13 @@ class SaharaJobTestCase(test.ScenarioTestCase):
 
         self.context.update({
             "tenant": {
-                "sahara_image": "test_image",
-                "sahara_mains": ["main_42"],
-                "sahara_libs": ["lib_42"],
-                "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"
+                "sahara": {
+                    "image": "test_image",
+                    "mains": ["main_42"],
+                    "libs": ["lib_42"],
+                    "cluster": "cl_42",
+                    "input": "in_42"
+                }
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
@@ -83,11 +85,13 @@ class SaharaJobTestCase(test.ScenarioTestCase):
 
         self.context.update({
             "tenant": {
-                "sahara_image": "test_image",
-                "sahara_mains": ["main_42"],
-                "sahara_libs": ["lib_42"],
-                "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"
+                "sahara": {
+                    "image": "test_image",
+                    "mains": ["main_42"],
+                    "libs": ["lib_42"],
+                    "cluster": "cl_42",
+                    "input": "in_42"
+                }
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
@@ -122,11 +126,13 @@ class SaharaJobTestCase(test.ScenarioTestCase):
 
         self.context.update({
             "tenant": {
-                "sahara_image": "test_image",
-                "sahara_mains": ["main_42"],
-                "sahara_libs": ["lib_42"],
-                "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"
+                "sahara": {
+                    "image": "test_image",
+                    "mains": ["main_42"],
+                    "libs": ["lib_42"],
+                    "cluster": "cl_42",
+                    "input": "in_42"
+                }
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
@@ -181,11 +187,13 @@ class SaharaJobTestCase(test.ScenarioTestCase):
 
         self.context.update({
             "tenant": {
-                "sahara_image": "test_image",
-                "sahara_mains": ["main_42"],
-                "sahara_libs": ["lib_42"],
-                "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"
+                "sahara": {
+                    "image": "test_image",
+                    "mains": ["main_42"],
+                    "libs": ["lib_42"],
+                    "cluster": "cl_42",
+                    "input": "in_42"
+                }
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)

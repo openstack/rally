@@ -20,6 +20,7 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.context.cleanup import resources as res_cleanup
+from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
 
@@ -49,6 +50,7 @@ class SaharaOutputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Enter context: `Sahara Output Data Sources`"))
     def setup(self):
+        utils.init_sahara_context(self)
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
@@ -60,7 +62,7 @@ class SaharaOutputDataSources(context.Context):
                                                   context=self.context)
                 container_name = rutils.generate_random_name(
                     prefix=self.config["output_url_prefix"])
-                self.context["tenants"][tenant_id]["sahara_container"] = {
+                self.context["tenants"][tenant_id]["sahara"]["container"] = {
                     "name": swift._create_container(
                         container_name=container_name),
                     "output_swift_objects": []
@@ -80,7 +82,7 @@ class SaharaOutputDataSources(context.Context):
             data_source_type="hdfs",
             url=output_url)
 
-        self.context["tenants"][tenant_id]["sahara_output"] = output_ds.id
+        self.context["tenants"][tenant_id]["sahara"]["output"] = output_ds.id
 
     def setup_outputs_swift(self, swift, sahara, tenant_id, container_name,
                             username, password):
@@ -92,7 +94,7 @@ class SaharaOutputDataSources(context.Context):
             credential_user=username,
             credential_pass=password)
 
-        self.context["tenants"][tenant_id]["sahara_output"] = (
+        self.context["tenants"][tenant_id]["sahara"]["output"] = (
             output_ds_swift.id
         )
 
@@ -101,16 +103,15 @@ class SaharaOutputDataSources(context.Context):
     def cleanup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            if self.context["tenants"][tenant_id].get("sahara_container",
-                                                      {}).get(
-                                                          "name") is not None:
+            if self.context["tenants"][tenant_id].get(
+                    "sahara", {}).get("container", {}).get("name") is not None:
                 for swift_object in (
-                    self.context["tenants"][tenant_id]["sahara_container"][
+                    self.context["tenants"][tenant_id]["sahara"]["container"][
                         "output_swift_objects"]):
                     res_cleanup.SwiftObject(swift_object[1])
             res_cleanup.SwiftContainer(
-                self.context["tenants"][tenant_id].get("sahara_container",
-                                                       {}).get("name"))
+                self.context["tenants"][tenant_id].get(
+                    "sahara", {}).get("container", {}).get("name"))
         resources = ["data_sources"]
         resource_manager.cleanup(
             names=["sahara.%s" % res for res in resources],

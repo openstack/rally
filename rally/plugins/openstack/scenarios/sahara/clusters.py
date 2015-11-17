@@ -79,7 +79,7 @@ class SaharaClusters(utils.SaharaScenario):
                              do not assign floating ips to workers.
         """
 
-        image_id = self.context["tenant"]["sahara_image"]
+        image_id = self.context["tenant"]["sahara"]["image"]
 
         LOG.debug("Using Image: %s" % image_id)
 
@@ -160,7 +160,7 @@ class SaharaClusters(utils.SaharaScenario):
                              do not assign floating ips to workers.
         """
 
-        image_id = self.context["tenant"]["sahara_image"]
+        image_id = self.context["tenant"]["sahara"]["image"]
 
         LOG.debug("Using Image: %s" % image_id)
 
