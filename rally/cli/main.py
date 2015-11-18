@@ -42,4 +42,4 @@ def main():
     return cliutils.run(sys.argv, categories)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -35,8 +35,8 @@ class DBCommands(object):
 
 def main():
     categories = {"db": DBCommands}
-    cliutils.run(sys.argv, categories)
+    return cliutils.run(sys.argv, categories)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
