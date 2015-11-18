@@ -17,6 +17,10 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
+from rally import osclients
+from rally.plugins.openstack.context.cleanup import manager as resource_manager
+from rally.plugins.openstack.context.cleanup import resources as res_cleanup
+from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
 
 
@@ -47,13 +51,67 @@ class SaharaOutputDataSources(context.Context):
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            self.context["tenants"][tenant_id]["sahara_output_conf"] = {
-                "output_type": self.config["output_type"],
-                "output_url_prefix": self.config["output_url_prefix"]}
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Output Data"
-                                          "Sources`"))
+            clients = osclients.Clients(user["endpoint"])
+            sahara = clients.sahara()
+
+            if self.config["output_type"] == "swift":
+                swift = swift_utils.SwiftScenario(clients=clients,
+                                                  context=self.context)
+                container_name = rutils.generate_random_name(
+                    prefix=self.config["output_url_prefix"])
+                self.context["tenants"][tenant_id]["sahara_container"] = {
+                    "name": swift._create_container(
+                        container_name=container_name),
+                    "output_swift_objects": []
+                }
+                self.setup_outputs_swift(swift, sahara, tenant_id,
+                                         container_name,
+                                         user["endpoint"].username,
+                                         user["endpoint"].password)
+            else:
+                self.setup_outputs_hdfs(sahara, tenant_id,
+                                        self.config["output_url_prefix"])
+
+    def setup_outputs_hdfs(self, sahara, tenant_id, output_url):
+        output_ds = sahara.data_sources.create(
+            name=self.generate_random_name(),
+            description="",
+            data_source_type="hdfs",
+            url=output_url)
+
+        self.context["tenants"][tenant_id]["sahara_output"] = output_ds.id
+
+    def setup_outputs_swift(self, swift, sahara, tenant_id, container_name,
+                            username, password):
+        output_ds_swift = sahara.data_sources.create(
+            name=self.generate_random_name(),
+            description="",
+            data_source_type="swift",
+            url="swift://" + container_name + ".sahara/",
+            credential_user=username,
+            credential_pass=password)
+
+        self.context["tenants"][tenant_id]["sahara_output"] = (
+            output_ds_swift.id
+        )
+
+    @logging.log_task_wrapper(LOG.info,
+                              _("Exit context: `Sahara Output Data Sources`"))
     def cleanup(self):
-        # TODO(esikachev): Cleanup must iterate by output_url_prefix of
-        # resources from setup() and delete them
-        pass
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            if self.context["tenants"][tenant_id].get("sahara_container",
+                                                      {}).get(
+                                                          "name") is not None:
+                for swift_object in (
+                    self.context["tenants"][tenant_id]["sahara_container"][
+                        "output_swift_objects"]):
+                    res_cleanup.SwiftObject(swift_object[1])
+            res_cleanup.SwiftContainer(
+                self.context["tenants"][tenant_id].get("sahara_container",
+                                                       {}).get("name"))
+        resources = ["data_sources"]
+        resource_manager.cleanup(
+            names=["sahara.%s" % res for res in resources],
+            users=self.context.get("users", []))
