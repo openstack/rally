@@ -43,7 +43,7 @@ class BigJSONEncodedDict(JSONEncodedDict):
     """Represents an immutable structure as a json-encoded string.
 
        MySql can store only 64kb in Text type, and for example in psql or
-       sqlite we are able to store more then 1GB. In some cases, like storing
+       sqlite we are able to store more than 1GB. In some cases, like storing
        results of task 64kb is not enough. So this type uses for MySql
        LONGTEXT that allows us to store 4GiB.
     """

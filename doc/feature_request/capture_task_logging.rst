@@ -13,7 +13,7 @@ well as test results.
 Problem description
 -------------------
 
-In case of errors it is quite hard to debug what happend.
+In case of errors it is quite hard to debug what happened.
 
 
 Possible solution

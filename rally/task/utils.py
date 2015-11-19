@@ -308,7 +308,7 @@ class ActionBuilder(object):
 
     [{"action": times}, {"action": times}...]
 
-    Here 'action' is a string which indicates a action to perform and
+    Here 'action' is a string which indicates an action to perform and
     'times' is a non-zero positive integer which specifies how many
     times to run the action in sequence.
 

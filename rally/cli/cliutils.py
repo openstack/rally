@@ -557,7 +557,7 @@ def run(argv, categories):
         if logging.is_debug():
             LOG.exception(e)
         print(e)
-        print("Looks like Rally can't connect to it's DB.")
+        print("Looks like Rally can't connect to its DB.")
         print("Make a sure that connection string in rally.conf is proper:")
         print(CONF.database.connection)
         return 1

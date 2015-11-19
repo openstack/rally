@@ -57,7 +57,7 @@ class SaharaClusters(utils.SaharaScenario):
         :param floating_ip_pool: floating ip pool name from which Floating
                                  IPs will be allocated. Sahara will determine
                                  automatically how to treat this depending on
-                                 it's own configurations. Defaults to None
+                                 its own configurations. Defaults to None
                                  because in some cases Sahara may work w/o
                                  Floating IPs.
         :param volumes_per_node: number of Cinder volumes that will be
@@ -135,7 +135,7 @@ class SaharaClusters(utils.SaharaScenario):
         :param floating_ip_pool: floating ip pool name from which Floating
                                  IPs will be allocated. Sahara will determine
                                  automatically how to treat this depending on
-                                 it's own configurations. Defaults to None
+                                 its own configurations. Defaults to None
                                  because in some cases Sahara may work w/o
                                  Floating IPs.
         :param neutron_net_id: id of a Neutron network that will be used

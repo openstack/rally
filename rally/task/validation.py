@@ -89,7 +89,7 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
     :param param_name: Name of parameter to validate
     :param minval: Lower endpoint of valid interval
     :param maxval: Upper endpoint of valid interval
-    :param nullable: Allow parameter not specified, or paramater=None
+    :param nullable: Allow parameter not specified, or parameter=None
     :param integer_only: Only accept integers
     """
 

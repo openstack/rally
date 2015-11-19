@@ -75,7 +75,7 @@ def from_func(plugin_baseclass=None):
     assert my_plugin_like_func.get_all() == []
 
 
-    As a result adding plugin behavior for benchmark scenarios fully unifies
+    As a result, adding plugin behavior for benchmark scenarios fully unifies
     work with benchmark scenarios and other kinds of plugins.
 
     :param plugin_baseclass: if specified, subclass of this class will be used
@@ -166,7 +166,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
 
     @classmethod
     def get(cls, name, namespace=None):
-        """Return plugin by it's name from specified namespace.
+        """Return plugin by its name from specified namespace.
 
         This method iterates over all subclasses of cls and returns plugin
         by name from specified namespace.

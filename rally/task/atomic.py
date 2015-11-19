@@ -33,7 +33,7 @@ class ActionTimer(utils.Timer):
     """A class to measure the duration of atomic operations
 
     This would simplify the way measure atomic operation duration
-    in certain cases. For example if we want to get the duration
+    in certain cases. For example, if we want to get the duration
     for each operation which runs in an iteration
     for i in range(repetitions):
         with atomic.ActionTimer(instance_of_action_timer, "name_of_action"):

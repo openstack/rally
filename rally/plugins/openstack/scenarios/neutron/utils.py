@@ -53,7 +53,7 @@ class NeutronScenario(scenario.OpenStackScenario):
 
         :param resource: A neutron resource object dict describing the
                          resource that the name is being set for. In
-                         particular, this must have have a single key
+                         particular, this must have a single key
                          that is the resource type, and a single value
                          that is itself a dict including the "id" key.
         :param kwargs: The keyword arg dict that the user supplied,

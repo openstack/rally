@@ -326,7 +326,7 @@ class NovaServers(utils.NovaScenario,
 
         A rescue will be issued on the given server upon which time
         this method will wait for the server to become 'RESCUE'.
-        Once the server is RESCUE a unrescue will be issued and
+        Once the server is RESCUE an unrescue will be issued and
         this method will wait for the server to become 'ACTIVE'
         again.
 

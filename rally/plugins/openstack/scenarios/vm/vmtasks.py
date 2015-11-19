@@ -126,7 +126,7 @@ class VMTasks(vm_utils.VMScenario):
                     "interpreter": ["NAME=Earth", "/bin/sh"]
                 }
 
-                # Run an inline script sending it to a uploaded remote
+                # Run an inline script sending it to an uploaded remote
                 # interpreter
                 command = {
                     "script_inline": "echo \"Hello, ${NAME:-World}\"",
