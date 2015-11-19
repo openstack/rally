@@ -91,7 +91,8 @@ class SaharaCluster(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
-        self.context["sahara_clusters"] = {}
+        utils.init_sahara_context(self)
+        self.context["sahara"]["clusters"] = {}
 
         wait_dict = {}
 
@@ -129,7 +130,8 @@ class SaharaCluster(context.Context):
                 wait_active=False
             )
 
-            self.context["tenants"][tenant_id]["sahara_cluster"] = cluster.id
+            self.context["tenants"][tenant_id]["sahara"]["cluster"] = (
+                cluster.id)
 
             # Need to save the client instance to poll for active status
             wait_dict[cluster] = scenario.clients("sahara")

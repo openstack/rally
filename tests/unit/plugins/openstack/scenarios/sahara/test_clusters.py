@@ -34,7 +34,9 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
 
         clusters_scenario.context = {
             "tenant": {
-                "sahara_image": "test_image"
+                "sahara": {
+                    "image": "test_image",
+                }
             }
         }
         clusters_scenario.create_and_delete_cluster(
@@ -76,7 +78,9 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
 
         clusters_scenario.context = {
             "tenant": {
-                "sahara_image": "test_image"
+                "sahara": {
+                    "image": "test_image",
+                }
             }
         }
 

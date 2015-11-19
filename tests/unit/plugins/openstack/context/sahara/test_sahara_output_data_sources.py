@@ -70,7 +70,7 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
 
     def check_setup(self):
         context = sahara_output_data_sources.SaharaOutputDataSources.context[
-            "sahara_output_conf"]
+            "sahara"]["output_conf"]
         self.assertIsNotNone(context.get("output_type"))
         self.assertIsNotNone(context.get("output_url_prefix"))
 

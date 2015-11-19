@@ -22,6 +22,7 @@ from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
+from rally.plugins.openstack.scenarios.sahara import utils
 from rally.task import context
 
 
@@ -79,20 +80,20 @@ class SaharaJobBinaries(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Enter context: `Sahara Job Binaries`"))
     def setup(self):
-
+        utils.init_sahara_context(self)
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
             clients = osclients.Clients(user["endpoint"])
             sahara = clients.sahara()
 
-            self.context["tenants"][tenant_id]["sahara_mains"] = []
-            self.context["tenants"][tenant_id]["sahara_libs"] = []
+            self.context["tenants"][tenant_id]["sahara"]["mains"] = []
+            self.context["tenants"][tenant_id]["sahara"]["libs"] = []
 
             for main in self.config.get("mains", []):
                 self.download_and_save_lib(
                     sahara=sahara,
-                    lib_type="sahara_mains",
+                    lib_type="mains",
                     name=main["name"],
                     download_url=main["download_url"],
                     tenant_id=tenant_id)
@@ -100,7 +101,7 @@ class SaharaJobBinaries(context.Context):
             for lib in self.config.get("libs", []):
                 self.download_and_save_lib(
                     sahara=sahara,
-                    lib_type="sahara_libs",
+                    lib_type="libs",
                     name=lib["name"],
                     download_url=lib["download_url"],
                     tenant_id=tenant_id)
@@ -116,7 +117,7 @@ class SaharaJobBinaries(context.Context):
             data_source_type=input_type,
             url=input_url)
 
-        self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
+        self.context["tenants"][tenant_id]["sahara"]["input"] = input_ds.id
 
     def download_and_save_lib(self, sahara, lib_type, name, download_url,
                               tenant_id):
@@ -136,7 +137,8 @@ class SaharaJobBinaries(context.Context):
                                                 description="",
                                                 extra={})
 
-        self.context["tenants"][tenant_id][lib_type].append(job_binary.id)
+        self.context["tenants"][tenant_id]["sahara"][lib_type].append(
+            job_binary.id)
 
     @logging.log_task_wrapper(LOG.info,
                               _("Exit context: `Sahara Job Binaries`"))

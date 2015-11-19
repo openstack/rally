@@ -437,9 +437,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 return_value="42")
     def test_create_output_ds(self, mock_generate_random_name):
         self.context.update({
-            "sahara_output_conf": {
-                "output_type": "hdfs",
-                "output_url_prefix": "hdfs://test_out/"
+            "sahara": {
+                "output_conf": {
+                    "output_type": "hdfs",
+                    "output_url_prefix": "hdfs://test_out/"
+                }
             }
         })
 
@@ -457,9 +459,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 return_value="42")
     def test_create_output_ds_swift(self, mock_generate_random_name):
         self.context.update({
-            "sahara_output_conf": {
-                "output_type": "swift",
-                "output_url_prefix": "swift://test_out/"
+            "sahara": {
+                "output_conf": {
+                    "output_type": "swift",
+                    "output_url_prefix": "swift://test_out/"
+                }
             }
         })
 

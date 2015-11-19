@@ -38,7 +38,8 @@ class SaharaImageTestCase(test.ScenarioTestCase):
         self.users_key = []
 
         for i in range(self.tenants_num):
-            self.tenants[str(i)] = {"id": str(i), "name": str(i)}
+            self.tenants[str(i)] = {"id": str(i), "name": str(i),
+                                    "sahara_image": "42"}
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
@@ -79,7 +80,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
             },
             "admin": {"endpoint": mock.MagicMock()},
             "users": self.users_key,
-            "tenants": self.tenants
+            "tenants": self.tenants,
         })
         return self.context
 
@@ -140,7 +141,8 @@ class SaharaImageTestCase(test.ScenarioTestCase):
 
         sahara_ctx.setup()
         for tenant_id in sahara_ctx.context["tenants"]:
-            image_id = sahara_ctx.context["tenants"][tenant_id]["sahara_image"]
+            image_id = (
+                sahara_ctx.context["tenants"][tenant_id]["sahara"]["image"])
             self.assertEqual("some_id", image_id)
 
         self.assertEqual(False, mock_glance_scenario__create_image.called)

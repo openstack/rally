@@ -21,6 +21,7 @@ from saharaclient.api import base as sahara_base
 
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -453,8 +454,8 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         :returns: The created Data Source
         """
-        ds_type = self.context["sahara_output_conf"]["output_type"]
-        url_prefix = self.context["sahara_output_conf"]["output_url_prefix"]
+        ds_type = self.context["sahara"]["output_conf"]["output_type"]
+        url_prefix = self.context["sahara"]["output_conf"]["output_url_prefix"]
 
         if ds_type == "swift":
             raise exceptions.RallyException(
@@ -554,3 +555,12 @@ class SaharaScenario(scenario.OpenStackScenario):
         LOG.debug("Using neutron router %s." % net["router_id"])
 
         return neutron_net_id
+
+
+def init_sahara_context(context_instance):
+    context_instance.context["sahara"] = context_instance.context.get("sahara",
+                                                                      {})
+    for user, tenant_id in rutils.iterate_per_tenants(
+            context_instance.context["users"]):
+        context_instance.context["tenants"][tenant_id]["sahara"] = (
+            context_instance.context["tenants"][tenant_id].get("sahara", {}))
