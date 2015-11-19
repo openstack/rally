@@ -50,8 +50,8 @@ class TestCase(base.BaseTestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    def assertSequenceEqual(self, iterable_1, iterable_2):
-        self.assertEqual(tuple(iterable_1), tuple(iterable_2))
+    def assertSequenceEqual(self, iterable_1, iterable_2, msg=None):
+        self.assertEqual(tuple(iterable_1), tuple(iterable_2), msg)
 
 
 class DBTestCase(TestCase):

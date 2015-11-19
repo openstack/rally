@@ -282,13 +282,12 @@ class NeutronScenario(scenario.OpenStackScenario):
                                     context instead.
         :returns: Network dict
         """
-        if "networks" not in self.context["tenant"]:
+        if "networks" in self.context["tenant"]:
+            return random.choice(self.context["tenant"]["networks"])
+        else:
             LOG.warning(_("Running this scenario without either the 'network' "
                           "or 'existing_network' context is deprecated"))
-        elif network_create_args is None:
-            return random.choice(self.context["tenant"]["networks"])
-
-        return self._create_network(network_create_args or {})
+            return self._create_network(network_create_args or {})
 
     def _get_or_create_subnets(self, network,
                                subnet_create_args=None,
@@ -304,8 +303,9 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param subnets_per_network: int, number of subnets for one network
         :returns: List of subnet dicts
         """
-        if len(network.get("subnets", [])):
-            return network["subnets"]
+        subnets = network.get("subnets")
+        if subnets:
+            return subnets
         else:
             return self._create_subnets(network, subnet_create_args,
                                         subnet_cidr_start, subnets_per_network)
