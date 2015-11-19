@@ -804,7 +804,7 @@
         image:
           name: {{image_name}}
         floating_network: "public"
-        use_floatingip: true
+        use_floating_ip: true
         command:
           script_inline: |
             time_seconds(){ (time -p $1 ) 2>&1 |awk '/real/{print $2}'; }
@@ -840,7 +840,7 @@
           name: {{image_name}}
         volume_args:
             size: 2
-        use_floatingip: true
+        use_floating_ip: true
         command:
           script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
@@ -863,7 +863,7 @@
           name: "m1.tiny"
         image:
           name: {{image_name}}
-        use_floatingip: false
+        use_floating_ip: false
         command:
           script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
