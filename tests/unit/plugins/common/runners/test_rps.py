@@ -101,12 +101,17 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                             (), mock_event, info)
 
         self.assertEqual(times, mock_log.debug.call_count)
-        self.assertEqual(times, mock_thread.call_count)
-        self.assertEqual(times, mock_thread_instance.start.call_count)
-        self.assertEqual(times, mock_thread_instance.join.call_count)
-        self.assertEqual(times - 1, mock_time.sleep.call_count)
-        self.assertEqual(times, mock_thread_instance.isAlive.call_count)
+        self.assertEqual(times + 1, mock_thread.call_count)
+        self.assertEqual(times + 1, mock_thread_instance.start.call_count)
+        self.assertEqual(times + 1, mock_thread_instance.join.call_count)
+        # NOTE(rvasilets): `times` + 1 here because `times` the number of
+        # scenario repetition and one more need on "initialization" stage
+        # of the thread stuff.
+
+        self.assertEqual(1, mock_time.sleep.call_count)
+        self.assertEqual(2, mock_thread_instance.isAlive.call_count)
         self.assertEqual(times * 4 - 1, mock_time.time.count)
+
         self.assertEqual(times, mock_runner._get_scenario_context.call_count)
 
         for i in range(times):

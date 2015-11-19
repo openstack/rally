@@ -19,24 +19,24 @@ from tests.unit import test
 
 class DummyTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
-    def test_dummy(self, mock_sleep):
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.utils."
+                "interruptable_sleep")
+    def test_dummy(self, mock_interruptable_sleep):
         scenario = dummy.Dummy(test.get_test_context())
         scenario.sleep_between = mock.MagicMock()
-        scenario.dummy()
-        self.assertFalse(mock_sleep.sleep.called)
 
         scenario.dummy(sleep=10)
-        mock_sleep.assert_called_once_with(10)
+        mock_interruptable_sleep.assert_called_once_with(10)
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
-    def test_dummy_exception(self, mock_sleep):
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.utils."
+                "interruptable_sleep")
+    def test_dummy_exception(self, mock_interruptable_sleep):
         scenario = dummy.Dummy(test.get_test_context())
 
         size_of_message = 5
         self.assertRaises(dummy.DummyScenarioException,
                           scenario.dummy_exception, size_of_message, sleep=10)
-        mock_sleep.assert_called_once_with(10)
+        mock_interruptable_sleep.assert_called_once_with(10)
 
     def test_dummy_exception_probability(self):
         scenario = dummy.Dummy(test.get_test_context())

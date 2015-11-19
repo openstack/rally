@@ -72,9 +72,12 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                                  context, "Dummy", "dummy", (), mock_event,
                                  info)
 
-        self.assertEqual(times, mock_thread.call_count)
-        self.assertEqual(times, mock_thread_instance.start.call_count)
-        self.assertEqual(times, mock_thread_instance.join.call_count)
+        self.assertEqual(times + 1, mock_thread.call_count)
+        self.assertEqual(times + 1, mock_thread_instance.start.call_count)
+        self.assertEqual(times + 1, mock_thread_instance.join.call_count)
+        # NOTE(rvasilets): `times` + 1 here because `times` the number of
+        # scenario repetition and one more need on "initialization" stage
+        # of the thread stuff.
         self.assertEqual(times, mock_runner._get_scenario_context.call_count)
 
         for i in range(times):

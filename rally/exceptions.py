@@ -79,6 +79,10 @@ class NotFoundException(RallyException):
     msg_fmt = _("The resource can not be found: %(message)s")
 
 
+class ThreadTimeoutException(RallyException):
+    msg_fmt = _("Iteration interrupted due to timeout.")
+
+
 class PluginNotFound(NotFoundException):
     msg_fmt = _("There is no plugin with name: %(name)s in "
                 "%(namespace)s namespace.")

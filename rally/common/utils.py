@@ -14,6 +14,8 @@
 #    under the License.
 
 import bisect
+import collections
+import ctypes
 import heapq
 import inspect
 import multiprocessing
@@ -452,4 +454,80 @@ def merge(length, *sources):
                 yield out_chunk
                 out_chunk = []
         else:
+            return
+
+
+def interruptable_sleep(sleep_time, atomic_delay=0.1):
+    """Return after sleep_time seconds.
+
+    Divide sleep_time by atomic_delay, and call time.sleep N times.
+    This should give a chance to interrupt current thread.
+
+    :param sleep_time: idle time of method (in seconds).
+    :param atomic_delay: parameter with wich  time.sleep would be called
+                         int(sleep_time / atomic_delay) times.
+    """
+    if atomic_delay <= 0:
+        raise ValueError("atomic_delay should be > 0")
+
+    if sleep_time >= 0:
+        if sleep_time < 1:
+            return time.sleep(sleep_time)
+
+        for x in moves.xrange(int(sleep_time / atomic_delay)):
+            time.sleep(atomic_delay)
+
+        left = sleep_time - (int(sleep_time / atomic_delay)) * atomic_delay
+        if left:
+            time.sleep(left)
+    else:
+        raise ValueError("sleep_time should be >= 0")
+
+
+def terminate_thread(thread_ident, exc_type=exceptions.ThreadTimeoutException):
+    """Terminate a python thread.
+
+    Use PyThreadState_SetAsyncExc to terminate thread.
+
+    :param thread_ident: threading.Thread.ident value
+    :param exc_type: an Exception type to be raised
+    """
+
+    ctypes.pythonapi.PyThreadState_SetAsyncExc(
+        ctypes.c_long(thread_ident), ctypes.py_object(exc_type))
+
+
+def timeout_thread(queue):
+    """Terminate threads by timeout.
+
+    Function need to be run in separate thread. Its designed to terminate
+    threads which are running longer then timeout.
+
+    Parent thread will put tuples (thread_ident, deadline) in the queue,
+    where `thread_ident` is Thread.ident value of thread to watch, and
+    `deadline` is timestamp when thread should be terminated. Also tuple
+    (None, None) should be put when all threads are exited and no more
+    threads to watch.
+
+    :param queue: Queue object to communicate with parent thread.
+    """
+
+    all_threads = collections.deque()
+    while True:
+        if len(all_threads) == 0:
+            timeout = None
+        else:
+            thread_ident, deadline = all_threads[0]
+            timeout = deadline - time.time()
+        try:
+            next_thread = queue.get(timeout=timeout)
+            all_threads.append(next_thread)
+        except (moves.queue.Empty, ValueError):
+            # NOTE(rvasilets) Empty means that timeout was occurred.
+            # ValueError means that timeout lower then 0.
+            LOG.info("Thread %s is timed out. Terminating." % thread_ident)
+            terminate_thread(thread_ident)
+            all_threads.popleft()
+
+        if next_thread == (None, None,):
             return

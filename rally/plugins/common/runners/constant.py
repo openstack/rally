@@ -18,6 +18,8 @@ import multiprocessing
 import threading
 import time
 
+from six.moves import queue as Queue
+
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
@@ -27,8 +29,8 @@ from rally.task import utils as butils
 LOG = logging.getLogger(__name__)
 
 
-def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
-                    cls, method_name, args, aborted, info):
+def _worker_process(queue, iteration_gen, timeout, concurrency, times,
+                    context, cls, method_name, args, aborted, info):
     """Start the scenario within threads.
 
     Spawn threads to support scenario execution for a fixed number of times.
@@ -59,6 +61,14 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
                             timeout=timeout, cls=cls, method_name=method_name,
                             args=args)
 
+    if timeout:
+        timeout_queue = Queue.Queue()
+        collector_thr_by_timeout = threading.Thread(
+            target=utils.timeout_thread,
+            args=(timeout_queue, )
+        )
+        collector_thr_by_timeout.start()
+
     iteration = next(iteration_gen)
     while iteration < times and not aborted.is_set():
         scenario_context = runner._get_scenario_context(context)
@@ -67,7 +77,10 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
 
         thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
+
         thread.start()
+        if timeout:
+            timeout_queue.put((thread.ident, time.time() + timeout))
         pool.append((thread, time.time()))
         alive_threads_in_pool += 1
 
@@ -97,6 +110,10 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
     # Wait until all threads are done
     while pool:
         pool.popleft()[0].join()
+
+    if timeout:
+        timeout_queue.put((None, None,))
+        collector_thr_by_timeout.join()
 
 
 @runner.configure(name="constant")

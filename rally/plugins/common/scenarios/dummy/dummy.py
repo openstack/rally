@@ -11,9 +11,9 @@
 #    under the License.
 
 import random
-import time
 
 from rally.common.i18n import _
+from rally.common import utils
 from rally import exceptions
 from rally.task import atomic
 from rally.task import scenario
@@ -37,13 +37,12 @@ class Dummy(scenario.Scenario):
 
         :param sleep: idle time of method (in seconds).
         """
-        if sleep:
-            time.sleep(sleep)
+        utils.interruptable_sleep(sleep)
 
     @validation.number("size_of_message",
                        minval=1, integer_only=True, nullable=True)
     @scenario.configure()
-    def dummy_exception(self, size_of_message=1, sleep=0):
+    def dummy_exception(self, size_of_message=1, sleep=0, message=""):
         """Throw an exception.
 
         Dummy.dummy_exception can be used for test if exceptions are processed
@@ -52,12 +51,13 @@ class Dummy(scenario.Scenario):
 
         :param size_of_message: int size of the exception message
         :param sleep: idle time of method (in seconds).
+        :param message: message of the exception
         :raises DummyScenarioException: raise exception for test
         """
-        if sleep:
-            time.sleep(sleep)
+        utils.interruptable_sleep(sleep)
 
-        raise DummyScenarioException("M" * size_of_message)
+        message = message or "M" * size_of_message
+        raise DummyScenarioException(message)
 
     @validation.number("exception_probability",
                        minval=0, maxval=1, integer_only=False, nullable=True)
