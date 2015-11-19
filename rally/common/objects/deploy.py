@@ -36,6 +36,10 @@ class Deployment(object):
         return Deployment(db.deployment_get(deploy))
 
     @staticmethod
+    def list(status=None, parent_uuid=None, name=None):
+        return db.deployment_list(status, parent_uuid, name)
+
+    @staticmethod
     def delete_by_uuid(uuid):
         db.deployment_delete(uuid)
 

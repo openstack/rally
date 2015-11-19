@@ -19,9 +19,11 @@ import os
 
 import ddt
 import jsonschema
+from keystoneclient import exceptions as keystone_exceptions
 import mock
 
 from rally import api
+from rally.common import objects
 from rally import consts
 from rally import exceptions
 from tests.unit import fakes
@@ -348,6 +350,43 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         ret = api.Deployment.get(deployment_id)
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
+
+    @mock.patch("rally.common.objects.Deployment.list")
+    def test_list(self, mock_deployment_list):
+        mock_deployment_list.return_value = self.deployment
+        ret = api.Deployment.list()
+        for key in self.deployment:
+            self.assertEqual(ret[key], self.deployment[key])
+
+    @mock.patch("rally.osclients.Keystone.create_client")
+    def test_deployment_check(self, mock_keystone_create_client):
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
+        deployment = {"admin": sample_endpoint,
+                      "users": [sample_endpoint]}
+        api.Deployment.check(deployment)
+        mock_keystone_create_client.assert_called_with()
+
+    def test_deployment_check_raise(self):
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
+        sample_endpoint["not-exist-key"] = "error"
+        deployment = {"admin": sample_endpoint}
+        self.assertRaises(TypeError, api.Deployment.check, deployment)
+
+    @mock.patch("rally.osclients.Clients.services")
+    def test_deployment_check_connect_failed(self, mock_clients_services):
+        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                             "admin",
+                                             "adminpass").to_dict()
+        deployment = {"admin": sample_endpoint}
+        refused = keystone_exceptions.ConnectionRefused()
+        mock_clients_services.side_effect = refused
+        self.assertRaises(
+            keystone_exceptions.ConnectionRefused,
+            api.Deployment.check, deployment)
 
 
 class VerificationAPITestCase(BaseDeploymentTestCase):
