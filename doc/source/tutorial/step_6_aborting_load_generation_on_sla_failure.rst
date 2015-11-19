@@ -114,6 +114,6 @@ Let’s run it!
 .. image:: ../images/Report-Abort-on-SLA-task-2.png
     :align: center
 
-This time load stopped after 1410 iterations versus 2495 which is much better. The interesting thing on this chart is that first occurence of “> 10 second” authentication happened on 950 iteration. The reasonable question: “Why Rally run 500 more authentication requests then?”. This appears from the math: During the execution of **bad** authentication (10 seconds) Rally performed about 50 request/sec * 10 sec = 500 new requests as a result we run 1400 iterations instead of 950.
+This time load stopped after 1410 iterations versus 2495 which is much better. The interesting thing on this chart is that first occurrence of “> 10 second” authentication happened on 950 iteration. The reasonable question: “Why Rally run 500 more authentication requests then?”. This appears from the math: During the execution of **bad** authentication (10 seconds) Rally performed about 50 request/sec * 10 sec = 500 new requests as a result we run 1400 iterations instead of 950.
 
 (based on: http://boris-42.me/rally-tricks-stop-load-before-your-openstack-goes-wrong/)

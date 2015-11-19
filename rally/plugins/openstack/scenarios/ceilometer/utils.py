@@ -70,7 +70,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                 now - datetime.timedelta(seconds=(interval * i))
             ).isoformat()
             if metadata_list:
-                # NOTE(idegtiarov): Adding more then one template of metadata
+                # NOTE(idegtiarov): Adding more than one template of metadata
                 # required it's proportional distribution among whole samples.
                 sample_item["resource_metadata"] = metadata_list[
                     i * len_meta // count

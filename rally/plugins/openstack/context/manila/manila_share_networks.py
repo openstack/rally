@@ -54,7 +54,7 @@ class ManilaShareNetworks(context.Context):
             # ]
             # Also, make sure that all 'existing users' in appropriate
             # registered deployment have share networks if its usage is
-            # enbaled, else Rally will randomly take users that does not
+            # enabled, else Rally will randomly take users that does not
             # satisfy criteria.
             "share_networks": {"type": "object"},
         },

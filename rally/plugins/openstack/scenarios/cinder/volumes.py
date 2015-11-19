@@ -311,7 +311,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
 
         """Create volume, snapshot and attach/detach volume.
 
-        This scenario is based off of the standalone qaStressTest.py
+        This scenario is based on the standalone qaStressTest.py
         (https://github.com/WaltHP/cinder-stress).
 
         :param volume_type: Whether or not to specify volume type when creating

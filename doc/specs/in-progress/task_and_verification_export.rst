@@ -33,7 +33,7 @@ TestLodge etc, which objective is to manage, organize and track all testing
 efforts.
 
 Most of the systems provide an API for importing test data. The systems also
-posess data model somewhat similar to Rally's one.
+possess data model somewhat similar to Rally's one.
 It usually includes (among others) models for project, test suite test case,
 test plan and test execution results.
 

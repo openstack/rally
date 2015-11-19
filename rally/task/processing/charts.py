@@ -46,7 +46,7 @@ class Chart(object):
         """Add iteration data.
 
         This method must be called for each iteration.
-        If overriden, this method must use streaming data processing,
+        If overridden, this method must use streaming data processing,
         so chart instance could process unlimited number of iterations,
         with low memory usage.
         """
