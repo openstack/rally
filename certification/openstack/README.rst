@@ -38,5 +38,5 @@ File task_arguments.yaml contains all task options:
 | controllers_amount     | Amount of OpenStack API nodes (controllers)        |
 +------------------------+----------------------------------------------------+
 
-All options have default values, hoverer user should change them to reflect
+All options have default values, however, user should change them to reflect
 configuration and size of tested OpenStack cloud.
