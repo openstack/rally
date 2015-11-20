@@ -50,6 +50,7 @@
       <li><a href="console.html" class="rich check-gz">Benchmarking logs</a> <code>console.html</code>
       <li><a href="logs/">Logs of all services</a> <code>logs/</code>
       <li><a href="rally-plot/">Rally files</a> <code>rally-plot/</code>
+      <li><a href="rally-plot/resources_diff.txt.gz">Changes in resources</a> <code>rally-plot/resources_diff.txt</code>
     </ul>
 
     <h2>Job results, in different formats</h2>

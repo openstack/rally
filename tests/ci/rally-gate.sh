@@ -60,6 +60,9 @@ rally show networks
 rally show secgroups
 rally show keypairs
 
+python $BASE/new/rally/tests/ci/osresources.py\
+    --dump-list resources_at_start.txt
+
 rally -v --rally-debug task start --task $TASK $TASK_ARGS
 
 mkdir -p rally-plot/extra
@@ -75,3 +78,8 @@ gzip -9 rally-plot/detailed_with_iterations.txt
 rally task report --out rally-plot/results.html
 gzip -9 rally-plot/results.html
 rally task sla_check | tee rally-plot/sla.txt
+
+python $BASE/new/rally/tests/ci/osresources.py\
+    --compare-with-list resources_at_start.txt\
+        | gzip > rally-plot/resources_diff.txt.gz
+cp resources_at_start.txt rally-plot/
