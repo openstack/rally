@@ -60,6 +60,11 @@ class VerificationTestCase(test.TestCase):
         objects.Verification.get(self.db_obj["id"])
         mock_verification_get.assert_called_once_with(self.db_obj["id"])
 
+    @mock.patch("rally.common.objects.verification.db.verification_list")
+    def test_list(self, mock_verification_list):
+        objects.Verification.list()
+        mock_verification_list.assert_called_once_with(None)
+
     @mock.patch("rally.common.objects.verification.db.verification_delete")
     @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_create_and_delete(self, mock_verification_create,

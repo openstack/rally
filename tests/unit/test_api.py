@@ -484,3 +484,15 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         api.Verification.show_config_info(self.deployment_uuid)
         self.tempest.generate_config_file.assert_called_once_with()
         mock_open.assert_called_once_with("/path/to/fake/conf", "rb")
+
+    @mock.patch("rally.common.objects.Verification.list")
+    def test_delete(self, mock_verification_list):
+        retval = api.Verification.list()
+        self.assertEqual(mock_verification_list.return_value, retval)
+        mock_verification_list.assert_called_once_with(None)
+
+    @mock.patch("rally.common.objects.Verification.get")
+    def test_get(self, mock_verification_get):
+        retval = api.Verification.get("fake_id")
+        self.assertEqual(mock_verification_get.return_value, retval)
+        mock_verification_get.assert_called_once_with("fake_id")

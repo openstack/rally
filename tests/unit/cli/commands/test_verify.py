@@ -18,10 +18,8 @@ import os.path
 import tempfile
 
 import mock
-import six
 
 from rally.cli.commands import verify
-from rally.common import objects
 from rally import consts
 from rally import exceptions
 from tests.unit import test
@@ -134,27 +132,28 @@ class VerifyCommandsTestCase(test.TestCase):
             deployment_id, set_name, log_file)
 
     @mock.patch("rally.cli.cliutils.print_list")
-    @mock.patch("rally.common.db.verification_list")
-    def test_list(self, mock_common_db_verification_list, mock_print_list):
+    @mock.patch("rally.api.Verification.list")
+    def test_list(self, mock_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
                   "Created at", "Duration", "Status"]
         verifications = [{"created_at": date.datetime.now(),
                           "updated_at": date.datetime.now()}]
-        mock_common_db_verification_list.return_value = verifications
+        mock_verification_list.return_value = verifications
         self.verify.list()
 
         for row in verifications:
             self.assertEqual(row["updated_at"] - row["created_at"],
                              row["duration"])
 
-        mock_common_db_verification_list.assert_called_once_with()
+        mock_verification_list.assert_called_once_with()
         mock_print_list.assert_called_once_with(verifications, fields,
                                                 sortby_index=fields.index(
                                                     "Created at"))
 
     @mock.patch("rally.cli.cliutils.print_list")
-    @mock.patch("rally.common.objects.Verification")
-    def test_show(self, mock_verification, mock_print_list):
+    @mock.patch("rally.common.utils.Struct")
+    @mock.patch("rally.api.Verification")
+    def test_show(self, mock_verification, mock_struct, mock_print_list):
         verification = mock_verification.get.return_value
 
         tests = {"test_cases": {"test_a": {"name": "test_a", "time": 20,
@@ -169,16 +168,16 @@ class VerifyCommandsTestCase(test.TestCase):
                         "Failures", "Created at", "Status"]
         fields = ["name", "time", "status"]
         verification.get_results.return_value = tests
-        values = [objects.Verification(t)
-                  for t in six.itervalues(tests["test_cases"])]
+        values = [mock_struct(), mock_struct(), mock_struct()]
+
         self.verify.show(verification_id)
+
         self.assertEqual([mock.call([verification], fields=total_fields),
-                          mock.call(values, fields, sortby_index=0)],
+                         mock.call(values, fields, sortby_index=0)],
                          mock_print_list.call_args_list)
         mock_verification.get.assert_called_once_with(verification_id)
-        verification.get_results.assert_called_once_with()
 
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     @mock.patch("json.dumps")
     def test_results(self, mock_json_dumps, mock_verification):
         mock_verification.get.return_value.get_results.return_value = {}
@@ -189,7 +188,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification.get.assert_called_once_with(verification_uuid)
         mock_json_dumps.assert_called_once_with({}, sort_keys=True, indent=4)
 
-    @mock.patch("rally.common.objects.Verification.get")
+    @mock.patch("rally.api.Verification.get")
     def test_results_verification_not_found(
             self, mock_verification_get):
         verification_uuid = "9044ced5-9c84-4666-8a8f-4b73a2b62acb"
@@ -204,7 +203,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     def test_results_with_output_json_and_output_file(
             self, mock_verification, mock_open):
         mock_verification.get.return_value.get_results.return_value = {}
@@ -219,7 +218,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     @mock.patch("rally.verification.tempest.json2html.generate_report")
     def test_results_with_output_html_and_output_file(
             self, mock_generate_report, mock_verification, mock_open):
@@ -235,7 +234,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.side_effect().write.assert_called_once_with(
             mock_generate_report.return_value)
 
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     @mock.patch("json.dumps")
     def test_compare(self, mock_json_dumps, mock_verification):
         mock_verification.get.return_value.get_results.return_value = {
@@ -252,7 +251,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_json_dumps.assert_called_once_with(fake_data, sort_keys=True,
                                                 indent=4)
 
-    @mock.patch("rally.common.objects.Verification.get",
+    @mock.patch("rally.api.Verification.get",
                 side_effect=exceptions.NotFoundException())
     def test_compare_verification_not_found(self, mock_verification_get):
         uuid1 = "f7dc82da-31a6-4d40-bbf8-6d366d58960f"
@@ -266,7 +265,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     def test_compare_with_output_csv_and_output_file(
             self, mock_verification, mock_open):
         mock_verification.get.return_value.get_results.return_value = {
@@ -287,7 +286,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     def test_compare_with_output_json_and_output_file(
             self, mock_verification, mock_open):
         mock_verification.get.return_value.get_results.return_value = {
@@ -308,7 +307,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.common.objects.Verification")
+    @mock.patch("rally.api.Verification")
     @mock.patch("rally.verification.tempest.compare2html.create_report",
                 return_value="")
     def test_compare_with_output_html_and_output_file(
@@ -334,7 +333,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.side_effect().write.assert_called_once_with("")
 
     @mock.patch("rally.common.fileutils._rewrite_env_file")
-    @mock.patch("rally.common.objects.Verification.get")
+    @mock.patch("rally.api.Verification.get")
     def test_use(self, mock_verification_get, mock__rewrite_env_file):
         verification_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
         self.verify.use(verification_id)
@@ -342,7 +341,7 @@ class VerifyCommandsTestCase(test.TestCase):
             os.path.expanduser("~/.rally/globals"),
             ["RALLY_VERIFICATION=%s\n" % verification_id])
 
-    @mock.patch("rally.common.objects.Verification.get")
+    @mock.patch("rally.api.Verification.get")
     def test_use_not_found(self, mock_verification_get):
         verification_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
         mock_verification_get.side_effect = exceptions.NotFoundException(

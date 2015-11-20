@@ -24,10 +24,9 @@ import six
 from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import db
 from rally.common import fileutils
 from rally.common.i18n import _
-from rally.common import objects
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.verification.tempest import diff
@@ -145,7 +144,7 @@ class VerifyCommands(object):
 
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
                   "Created at", "Duration", "Status"]
-        verifications = db.verification_list()
+        verifications = api.Verification.list()
 
         for el in verifications:
             el["duration"] = el["updated_at"] - el["created_at"]
@@ -179,7 +178,7 @@ class VerifyCommands(object):
         """
 
         try:
-            results = objects.Verification.get(verification_uuid).get_results()
+            results = api.Verification.get(verification_uuid).get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
@@ -218,7 +217,7 @@ class VerifyCommands(object):
             return 1
 
         try:
-            verification = objects.Verification.get(verification_uuid)
+            verification = api.Verification.get(verification_uuid)
             tests = verification.get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
@@ -232,8 +231,8 @@ class VerifyCommands(object):
         print ("\nTests:\n")
         fields = ["name", "time", "status"]
 
-        values = [objects.Verification(test)
-                  for test in six.itervalues(tests["test_cases"])]
+        results = tests["test_cases"]
+        values = [utils.Struct(**results[test_name]) for test_name in results]
         cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
@@ -292,8 +291,8 @@ class VerifyCommands(object):
         """
 
         try:
-            res_1 = objects.Verification.get(uuid1).get_results()["test_cases"]
-            res_2 = objects.Verification.get(uuid2).get_results()["test_cases"]
+            res_1 = api.Verification.get(uuid1).get_results()["test_cases"]
+            res_2 = api.Verification.get(uuid2).get_results()["test_cases"]
             _diff = diff.Diff(res_1, res_2, threshold)
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
@@ -329,7 +328,7 @@ class VerifyCommands(object):
         :param verification: a UUID of verification
         """
         print("Verification UUID: %s" % verification)
-        objects.Verification.get(verification)
+        api.Verification.get(verification)
         fileutils.update_globals_file("RALLY_VERIFICATION", verification)
 
     @cliutils.args("--deployment", dest="deployment", type=str,

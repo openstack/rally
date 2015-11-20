@@ -44,6 +44,10 @@ class Verification(object):
     def get(cls, uuid):
         return cls(db.verification_get(uuid))
 
+    @classmethod
+    def list(cls, status=None):
+        return db.verification_list(status)
+
     def delete(self):
         db.verification_delete(self.db_object["uuid"])
 
