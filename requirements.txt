@@ -9,7 +9,7 @@ iso8601>=0.1.9
 Jinja2>=2.8 # BSD License (3 clause)
 jsonschema!=2.5.0,<3.0.0,>=2.0.0
 netaddr!=0.7.16,>=0.7.12
-oslo.config>=2.6.0 # Apache-2.0
+oslo.config>=2.7.0 # Apache-2.0
 oslo.db>=3.2.0 # Apache-2.0
 oslo.i18n>=1.5.0 # Apache-2.0
 oslo.log>=1.12.0 # Apache-2.0
@@ -31,7 +31,7 @@ python-ceilometerclient>=2.0.0
 python-ironicclient>=0.8.0
 python-saharaclient>=0.10.0
 python-troveclient>=1.2.0
-python-zaqarclient>=0.1.1
+python-zaqarclient>=0.3.0
 python-swiftclient>=2.2.0
 python-subunit>=0.0.18
 requests!=2.8.0,>=2.5.2
