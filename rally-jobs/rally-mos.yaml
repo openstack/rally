@@ -255,7 +255,7 @@
         image:
           name: "TestVM|cirros.*uec"
         floating_network: "net04_ext"
-        use_floatingip: true
+        use_floating_ip: true
         command:
           script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"

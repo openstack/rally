@@ -11,7 +11,7 @@
             size: 2
         fixed_network: "private"
         floating_network: "public"
-        use_floatingip: true
+        use_floating_ip: true
         force_delete: false
         script: "samples/tasks/support/instance_dd_test.sh"
         interpreter: "/bin/sh"
