@@ -346,7 +346,8 @@ class VerifyCommands(object):
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
-        :param override: Whether or not override existing Tempest config file
+        :param override: Whether or not to override existing Tempest
+                         config file
         """
         api.Verification.configure_tempest(deployment, tempest_config,
                                            override)

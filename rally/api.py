@@ -450,7 +450,8 @@ class Verification(object):
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
-        :param override: Whether or not override existing Tempest config file
+        :param override: Whether or not to override existing Tempest
+                         config file
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = cls._create_verifier(deployment_uuid,

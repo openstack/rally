@@ -223,7 +223,8 @@ class Tempest(object):
     def generate_config_file(self, override=False):
         """Generate configuration file of Tempest for current deployment.
 
-        :param override: Whether or not override existing Tempest config file
+        :param override: Whether or not to override existing Tempest
+                         config file
         """
         if not self.is_configured() or override:
             if not override:
