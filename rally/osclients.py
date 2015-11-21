@@ -30,13 +30,7 @@ CONF = cfg.CONF
 
 OSCLIENTS_OPTS = [
     cfg.FloatOpt("openstack_client_http_timeout", default=180.0,
-                 help="HTTP timeout for any of OpenStack service in seconds"),
-    cfg.BoolOpt("https_insecure", default=False,
-                help="Use SSL for all OpenStack API interfaces",
-                deprecated_for_removal=True),
-    cfg.StrOpt("https_cacert",
-               help="Path to CA server certificate for SSL",
-               deprecated_for_removal=True)
+                 help="HTTP timeout for any of OpenStack service in seconds")
 ]
 CONF.register_opts(OSCLIENTS_OPTS)
 
@@ -630,12 +624,6 @@ class Clients(object):
     def __init__(self, endpoint, api_info=None):
         self.endpoint = endpoint
         self.api_info = api_info or {}
-        # NOTE(kun) Apply insecure/cacert settings from rally.conf if those are
-        # not set in deployment config. Remove it when invalid.
-        if self.endpoint.insecure is None:
-            self.endpoint.insecure = CONF.https_insecure
-        if self.endpoint.cacert is None:
-            self.endpoint.cacert = CONF.https_cacert
         self.cache = {}
 
     def __getattr__(self, client_name):
