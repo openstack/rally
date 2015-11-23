@@ -106,11 +106,8 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
             names=["sahara.data_sources"],
             users=self.context["users"])
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="rally")
     @mock.patch("%s.sahara_output_data_sources.osclients" % CTX)
-    def test_setup_inputs_swift(self, mock_osclients,
-                                mock_generate_random_name):
+    def test_setup_inputs_swift(self, mock_osclients):
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
 
         self.context.update({
@@ -132,15 +129,15 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
 
         sahara_ctx = sahara_output_data_sources.SaharaOutputDataSources(
             self.context)
-        sahara_ctx.generate_random_name = mock.Mock()
+        sahara_ctx.generate_random_name = mock.Mock(return_value="random_name")
 
         output_ds_crete_calls = []
         for i in range(self.tenants_num):
             output_ds_crete_calls.append(mock.call(
-                name=sahara_ctx.generate_random_name.return_value,
+                name="random_name",
                 description="",
                 data_source_type="swift",
-                url="swift://rally.sahara/",
+                url="swift://random_name.sahara/",
                 credential_user="user",
                 credential_pass="passwd"
             ))
