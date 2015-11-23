@@ -77,16 +77,21 @@ class PlotTestCase(test.TestCase):
         tasks_results = [{"key": {"name": i, "kw": "kw_" + i}}
                          for i in ("a", "b", "c", "b")]
         mock__process_scenario.side_effect = lambda a, b: (
-            {"cls": "%s_cls" % a["key"]["name"], "name": str(b)})
+            {"cls": "%s_cls" % a["key"]["name"],
+             "name": str(b),
+             "met": "dummy",
+             "pos": str(b)})
         source, tasks = plot._process_tasks(tasks_results)
         self.assertEqual(source, "json_data")
         mock_json_dumps.assert_called_once_with(
             {"a": ["kw_a"], "b": ["kw_b", "kw_b"], "c": ["kw_c"]},
             sort_keys=True, indent=2)
         self.assertEqual(
-            sorted(tasks, key=lambda x: x["cls"] + x["name"]),
-            [{"cls": "a_cls", "name": "0"}, {"cls": "b_cls", "name": "0"},
-             {"cls": "b_cls", "name": "1"}, {"cls": "c_cls", "name": "0"}])
+            tasks,
+            [{"cls": "a_cls", "met": "dummy", "name": "0", "pos": "0"},
+             {"cls": "b_cls", "met": "dummy", "name": "0", "pos": "0"},
+             {"cls": "b_cls", "met": "dummy", "name": "1", "pos": "1"},
+             {"cls": "c_cls", "met": "dummy", "name": "0", "pos": "0"}])
 
     @mock.patch(PLOT + "_process_tasks")
     @mock.patch(PLOT + "objects")
