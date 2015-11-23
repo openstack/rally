@@ -103,8 +103,7 @@ class Tempest(object):
         # will suppress git output
         with open(os.devnull, "w") as devnull:
             return os.path.isdir(directory) and not subprocess.call(
-                "git status", shell=True,
-                stdout=devnull, stderr=subprocess.STDOUT,
+                ["git", "status"], stdout=devnull, stderr=subprocess.STDOUT,
                 cwd=os.path.abspath(directory))
 
     @staticmethod
@@ -171,8 +170,8 @@ class Tempest(object):
 
     @staticmethod
     def _get_remote_origin(directory):
-        out = check_output("git config --get remote.origin.url",
-                           shell=True, cwd=os.path.abspath(directory))
+        out = check_output(["git", "config", "--get", "remote.origin.url"],
+                           cwd=os.path.abspath(directory))
         return out.strip()
 
     def _install_venv(self):
@@ -198,8 +197,8 @@ class Tempest(object):
             else:
                 python_interpreter = sys.executable
             try:
-                check_output("%s ./tools/install_venv.py" % python_interpreter,
-                             shell=True, cwd=self.path())
+                check_output([python_interpreter, "./tools/install_venv.py"],
+                             cwd=self.path())
                 # NOTE(kun): Using develop mode installation is for run
                 #            multiple tempest instance. However, dependency
                 #            from tempest(os-testr) has issues here, before
@@ -207,11 +206,11 @@ class Tempest(object):
                 #            merged, we have to install dependency manually and
                 #            run setup.py with -N(install package without
                 #            dependency)
-                check_output("%s pip install -r requirements.txt "
-                             "-r test-requirements.txt" %
-                             self.venv_wrapper, shell=True, cwd=self.path())
-                check_output("%s python setup.py develop -N" %
-                             self.venv_wrapper, shell=True, cwd=self.path())
+                check_output([self.venv_wrapper, "pip", "install", "-r",
+                              "requirements.txt", "-r",
+                              "test-requirements.txt"], cwd=self.path())
+                check_output([self.venv_wrapper, "pip", "install",
+                              "-e", "./"], cwd=self.path())
             except subprocess.CalledProcessError:
                 if os.path.exists(self.path(".venv")):
                     shutil.rmtree(self.path(".venv"))
@@ -240,8 +239,8 @@ class Tempest(object):
         if not os.path.isdir(self.path(".testrepository")):
             LOG.debug("Test Repository initialization.")
             try:
-                check_output("%s testr init" % self.venv_wrapper,
-                             shell=True, cwd=self.path())
+                check_output([self.venv_wrapper, "testr", "init"],
+                             cwd=self.path())
             except subprocess.CalledProcessError:
                 if os.path.exists(self.path(".testrepository")):
                     shutil.rmtree(self.path(".testrepository"))
@@ -270,9 +269,8 @@ class Tempest(object):
 
                 if not os.path.exists(self.path()):
                     shutil.copytree(self.base_repo, self.path())
-                    subprocess.check_call("git checkout master; "
-                                          "git pull", shell=True,
-                                          cwd=self.path("tempest"))
+                    for cmd in ["git", "checkout", "master"], ["git", "pull"]:
+                        subprocess.check_call(cmd, cwd=self.path("tempest"))
                 if not self._system_wide_install:
                     self._install_venv()
                 self._initialize_testr()
@@ -357,11 +355,9 @@ class Tempest(object):
     def discover_tests(self, pattern=""):
         """Return a set of discovered tests which match given pattern."""
 
-        cmd = "%(venv)s testr list-tests %(pattern)s" % {
-            "venv": self.venv_wrapper,
-            "pattern": pattern}
+        cmd = [self.venv_wrapper, "testr", "list-tests", pattern]
         raw_results = subprocess.Popen(
-            cmd, shell=True, cwd=self.path(), env=self.env,
+            cmd, cwd=self.path(), env=self.env,
             stdout=subprocess.PIPE).communicate()[0]
 
         tests = set()

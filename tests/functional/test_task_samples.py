@@ -60,8 +60,8 @@ class TestTaskSamples(unittest.TestCase):
         matcher = re.compile("\.json$")
 
         if not os.path.exists(utils.DEPLOYMENT_FILE):
-            subprocess.call("rally deployment config > %s" %
-                            utils.DEPLOYMENT_FILE, shell=True)
+            subprocess.call(["rally", "deployment", "config"],
+                            stdout=open(utils.DEPLOYMENT_FILE, "w"))
 
         for dirname, dirnames, filenames in os.walk(samples_path):
             # NOTE(rvasilets): Skip by suggest of boris-42 because in

@@ -49,16 +49,18 @@ class VirshProviderTestCase(test.TestCase):
         script_path = ("%s/virsh/get_domain_ip.sh" %
                        os.path.split(virsh.__file__)[0])
         mock_subprocess.assert_has_calls([
-            mock.call.check_call("virt-clone --connect=qemu+ssh://user@host/"
-                                 "system -o prefix -n name --auto-clone",
-                                 shell=True),
-            mock.call.check_call("virsh --connect=qemu+ssh://user@host/system "
-                                 "start name", shell=True),
-            mock.call.check_call("scp -o StrictHostKeyChecking=no  %s u"
-                                 "ser@host:~/get_domain_ip.sh" % script_path,
-                                 shell=True),
-            mock.call.check_output("ssh -o StrictHostKeyChecking=no user@host "
-                                   "./get_domain_ip.sh name", shell=True),
+            mock.call.check_call(
+                ["virt-clone", "--connect=qemu+ssh://user@host/system",
+                 "-o", "prefix", "-n", "name", "--auto-clone"]),
+            mock.call.check_call(
+                ["virsh", "--connect=qemu+ssh://user@host/system",
+                 "start", "name"]),
+            mock.call.check_call(
+                ["scp", "-o StrictHostKeyChecking=no", script_path,
+                 "user@host:~/get_domain_ip.sh"]),
+            mock.call.check_output(["ssh", "-o StrictHostKeyChecking=no",
+                                    "user@host", "./get_domain_ip.sh",
+                                    "name"]),
         ])
         mock_ip_address.assert_called_once_with("10.0.0.1")
         self.assertEqual(server.host, "10.0.0.2")
@@ -78,8 +80,9 @@ class VirshProviderTestCase(test.TestCase):
         mock_ip_address.side_effect = netaddr.core.AddrFormatError
         server = self.provider.create_vm("name")
         mock_subprocess.assert_has_calls(3 * [
-            mock.call.check_output("ssh -o StrictHostKeyChecking=no user@host "
-                                   "./get_domain_ip.sh name", shell=True),
+            mock.call.check_output(["ssh", "-o StrictHostKeyChecking=no",
+                                    "user@host", "./get_domain_ip.sh",
+                                    "name"]),
         ])
         self.assertEqual(server.host, "None")
 
@@ -87,11 +90,12 @@ class VirshProviderTestCase(test.TestCase):
     def test_destroy_vm(self, mock_subprocess):
         self.provider.destroy_vm("uuid")
         mock_subprocess.assert_has_calls([
-            mock.call.check_call("virsh --connect=qemu+ssh://user@host/system "
-                                 "destroy uuid", shell=True),
-            mock.call.check_call("virsh --connect=qemu+ssh://user@host/system "
-                                 "undefine uuid --remove-all-storage",
-                                 shell=True),
+            mock.call.check_call(
+                ["virsh", "--connect=qemu+ssh://user@host/system",
+                 "destroy", "uuid"]),
+            mock.call.check_call(
+                ["virsh", "--connect=qemu+ssh://user@host/system",
+                 "undefine", "uuid", "--remove-all-storage"]),
         ])
 
     @mock.patch("rally.deployment.serverprovider.providers.virsh.uuid")
