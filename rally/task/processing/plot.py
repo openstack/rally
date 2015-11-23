@@ -90,7 +90,8 @@ def _process_tasks(tasks_results):
         tasks.append(_process_scenario(scenario, position[name]))
 
     source = json.dumps(source_dict, indent=2, sort_keys=True)
-    return source, sorted(tasks, key=lambda r: r["cls"] + r["name"])
+    return source, sorted(tasks, key=lambda r: (r["cls"], r["met"],
+                                                int(r["pos"])))
 
 
 def plot(tasks_results):
