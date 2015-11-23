@@ -24,7 +24,7 @@ class Endpoint(object):
                  domain_name=None, endpoint=None,
                  user_domain_name="Default", admin_domain_name="Default",
                  project_domain_name="Default",
-                 https_insecure=None, https_cacert=None):
+                 https_insecure=False, https_cacert=None):
         self.auth_url = auth_url
         self.username = username
         self.password = password

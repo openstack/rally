@@ -123,16 +123,6 @@
 # value)
 #openstack_client_http_timeout = 180.0
 
-# Use SSL for all OpenStack API interfaces (boolean value)
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
-#https_insecure = false
-
-# Path to CA server certificate for SSL (string value)
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
-#https_cacert = <None>
-
 
 [benchmark]
 

@@ -165,6 +165,11 @@ class TempestConfig(object):
         self.conf.set(section_name, "admin_domain_name",
                       self.endpoint["admin_domain_name"])
 
+        self.conf.set(section_name, "disable_ssl_certificate_validation",
+                      str(self.endpoint["https_insecure"]))
+        self.conf.set(section_name, "ca_certificates_file",
+                      self.endpoint["https_cacert"])
+
     # The compute section is configured in context class for Tempest resources.
     # Options which are configured there: 'image_ref', 'image_ref_alt',
     # 'flavor_ref', 'flavor_ref_alt'.

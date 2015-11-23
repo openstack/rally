@@ -46,7 +46,9 @@ class TempestConfigTestCase(test.TestCase):
             "password": "test",
             "auth_url": "http://test/v2.0/",
             "permission": "admin",
-            "admin_domain_name": "Default"
+            "admin_domain_name": "Default",
+            "https_insecure": False,
+            "https_cacert": "/path/to/cacert/file"
         }
         mock_deployment_get.return_value = {"admin": self.endpoint}
 
@@ -150,7 +152,10 @@ class TempestConfigTestCase(test.TestCase):
             ("admin_tenant_name", self.endpoint["username"]),
             ("admin_domain_name", self.endpoint["admin_domain_name"]),
             ("uri", self.endpoint["auth_url"]),
-            ("uri_v3", self.endpoint["auth_url"].replace("/v2.0/", "/v3")))
+            ("uri_v3", self.endpoint["auth_url"].replace("/v2.0/", "/v3")),
+            ("disable_ssl_certificate_validation",
+             self.endpoint["https_insecure"]),
+            ("ca_certificates_file", self.endpoint["https_cacert"]))
         result = self.conf_generator.conf.items("identity")
         self.assertIn(sorted(expected)[0], sorted(result))
 
