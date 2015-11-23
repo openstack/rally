@@ -164,6 +164,8 @@ class Glance(ResourceManager):
 
 class Heat(ResourceManager):
 
+    REQUIRED_SERVICE = consts.Service.HEAT
+
     def list_resource_types(self):
         return self.client.resource_types.list()
 
