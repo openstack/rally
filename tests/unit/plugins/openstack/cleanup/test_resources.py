@@ -17,39 +17,11 @@ from boto import exception as boto_exception
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 
-from rally.common.plugin import discover
 from rally.common import utils
-from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.cleanup import resources
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.cleanup.resources"
-
-
-class AllResourceManagerTestCase(test.TestCase):
-
-    def test_res_manager_special_field(self):
-
-        for res_mgr in discover.itersubclasses(base.ResourceManager):
-            manager_name = "%s.%s" % (res_mgr.__module__, res_mgr.__name__)
-
-            fields = filter(lambda x: not x.startswith("__"), dir(res_mgr))
-
-            available_opts = set([
-                "_admin_required", "_perform_for_admin_only",
-                "_tenant_resource", "_service", "_resource", "_order",
-                "_max_attempts", "_timeout", "_interval", "_threads",
-                "_manager", "id", "is_deleted", "delete", "list",
-                "supports_extension"
-            ])
-
-            extra_opts = set(fields) - available_opts
-
-            self.assertFalse(
-                extra_opts,
-                ("ResourceManager %(name)s contains extra fields: %(opts)s."
-                 " Remove them to pass this test")
-                % {"name": manager_name, "opts": ", ".join(extra_opts)})
 
 
 class SynchronizedDeletionTestCase(test.TestCase):

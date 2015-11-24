@@ -221,3 +221,67 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
             return_recordsets_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.list_recordsets")
+
+    @ddt.data(
+        {},
+        {"data": "127.0.0.1"})
+    def test_create_recordset(self, recordset_data):
+        scenario = utils.DesignateScenario()
+
+        random_name = "foo"
+        zone_name = "zone.name."
+        random_recordset_name = "%s.%s" % (random_name, zone_name)
+
+        scenario = utils.DesignateScenario(context=self.context)
+        scenario.generate_random_name = mock.Mock(return_value=random_name)
+
+        zone = {"name": zone_name, "id": "123"}
+
+        # Create with randoms (name and type)
+        scenario._create_recordset(zone)
+
+        self.client.recordsets.create.assert_called_once_with(
+            zone["id"],
+            name=random_recordset_name,
+            type_="A",
+            records=["10.0.0.1"])
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.create_recordset")
+
+        self.client.recordsets.create.reset_mock()
+
+        # Specify name
+        recordset = {"name": "www.zone.name.", "type_": "ASD"}
+        scenario._create_recordset(zone, recordset)
+        self.client.recordsets.create.assert_called_once_with(
+            zone["id"],
+            name="www.zone.name.",
+            type_="ASD",
+            records=["10.0.0.1"])
+
+        self.client.recordsets.create.reset_mock()
+
+        # Specify type without underscore
+        scenario._create_recordset(zone, {"type": "A"})
+        self.client.recordsets.create.assert_called_once_with(
+            zone["id"],
+            name="foo.zone.name.",
+            type_="A",
+            records=["10.0.0.1"])
+
+    def test_delete_recordset(self):
+        scenario = utils.DesignateScenario(context=self.context)
+
+        zone_id = mock.Mock()
+        recordset_id = mock.Mock()
+        scenario._delete_recordset(zone_id, recordset_id)
+        self.client.recordsets.delete.assert_called_once_with(
+            zone_id, recordset_id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.delete_recordset")
+
+        self.client.recordsets.delete.reset_mock()
+        scenario._delete_recordset(zone_id, recordset_id, atomic_action=False)
+        self.client.recordsets.delete.assert_called_once_with(
+            zone_id, recordset_id)

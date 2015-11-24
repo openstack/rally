@@ -24,7 +24,6 @@ DESIGNATE_BASIC = ("rally.plugins.openstack.scenarios.designate.basic"
 
 
 class DesignateBasicTestCase(test.ScenarioTestCase):
-
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
     def test_create_and_list_domains(self, mock_designate_basic__create_domain,
@@ -214,3 +213,53 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
         # Default options
         scenario.list_recordsets("123")
         mock_designate_basic__list_recordsets.assert_called_once_with("123")
+
+    @mock.patch(DESIGNATE_BASIC + "._delete_recordset")
+    @mock.patch(DESIGNATE_BASIC + "._create_recordset")
+    def test_create_and_delete_recordsets(
+            self, mock_designate_basic__create_recordset,
+            mock_designate_basic__delete_recordset):
+        zone = {"id": "1234"}
+        self.context.update({
+            "tenant": {
+                "zones": [zone]
+            }
+        })
+
+        scenario = basic.DesignateBasic(self.context)
+        mock_designate_basic__create_recordset.return_value = {"id": "321"}
+        recordsets_per_zone = 5
+
+        scenario.create_and_delete_recordsets(
+            recordsets_per_zone=recordsets_per_zone)
+        self.assertEqual(
+            mock_designate_basic__create_recordset.mock_calls,
+            [mock.call(zone, atomic_action=False)]
+            * recordsets_per_zone)
+        self.assertEqual(
+            mock_designate_basic__delete_recordset.mock_calls,
+            [mock.call(zone["id"], "321", atomic_action=False)]
+            * recordsets_per_zone)
+
+    @mock.patch(DESIGNATE_BASIC + "._list_recordsets")
+    @mock.patch(DESIGNATE_BASIC + "._create_recordset")
+    def test_create_and_list_recordsets(
+            self, mock_designate_basic__create_recordset,
+            mock_designate_basic__list_recordsets):
+        zone = {"id": "1234"}
+        self.context.update({
+            "tenant": {
+                "zones": [zone]
+            }
+        })
+        scenario = basic.DesignateBasic(self.context)
+        recordsets_per_zone = 5
+
+        scenario.create_and_list_recordsets(
+            recordsets_per_zone=recordsets_per_zone)
+        self.assertEqual(
+            mock_designate_basic__create_recordset.mock_calls,
+            [mock.call(zone, atomic_action=False)]
+            * recordsets_per_zone)
+        mock_designate_basic__list_recordsets.assert_called_once_with(
+            zone["id"])
