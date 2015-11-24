@@ -462,14 +462,27 @@ class ZaqarQueues(SynchronizedDeletion, base.ResourceManager):
 _designate_order = get_order(900)
 
 
-@base.resource("designate", "domains", order=next(_designate_order))
-class Designate(SynchronizedDeletion, base.ResourceManager):
+class DesignateResource(SynchronizedDeletion, base.ResourceManager):
+    def _manager(self):
+        # NOTE: service name contains version, so we should split them
+        service_name, version = self._service.split("_v")
+        return getattr(getattr(self.user, service_name)(version),
+                       self._resource)
+
+
+@base.resource("designate_v1", "domains", order=next(_designate_order))
+class DesignateDomain(DesignateResource):
     pass
 
 
-@base.resource("designate", "servers", order=next(_designate_order),
+@base.resource("designate_v2", "zones", order=next(_designate_order))
+class DesignateZones(DesignateResource):
+    pass
+
+
+@base.resource("designate_v1", "servers", order=next(_designate_order),
                admin_required=True, perform_for_admin_only=True)
-class DesignateServer(SynchronizedDeletion, base.ResourceManager):
+class DesignateServer(DesignateResource):
     pass
 
 

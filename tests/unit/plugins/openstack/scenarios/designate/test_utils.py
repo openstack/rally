@@ -29,7 +29,10 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(DesignateScenarioTestCase, self).setUp()
         self.domain = mock.Mock()
+        self.zone = mock.Mock()
         self.server = mock.Mock()
+
+        self.client = self.clients("designate", version="2")
 
     @ddt.data(
         {},
@@ -147,3 +150,63 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
             "foo_id")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.delete_server")
+
+    # NOTE: API V2
+    @ddt.data(
+        {},
+        {"email": "root@zone.name"},
+        {"name": "example.name."},
+        {
+            "email": "root@zone.name",
+            "name": "example.name."
+        })
+    def test_create_zone(self, zone_data):
+        scenario = utils.DesignateScenario()
+
+        random_name = "foo"
+
+        scenario = utils.DesignateScenario(context=self.context)
+        scenario.generate_random_name = mock.Mock(return_value=random_name)
+        self.client.zones.create.return_value = self.zone
+
+        expected = {
+            "email": "root@random.name",
+            "name": "%s.name." % random_name,
+            "type_": "PRIMARY"
+        }
+        expected.update(zone_data)
+
+        # Check that the defaults / randoms are used if nothing is specified
+        zone = scenario._create_zone(**zone_data)
+        self.client.zones.create.assert_called_once_with(
+            description=None,
+            ttl=None,
+            **expected)
+        self.assertEqual(self.zone, zone)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.create_zone")
+
+    def test_list_zones(self):
+        scenario = utils.DesignateScenario(context=self.context)
+        return_zones_list = scenario._list_zones()
+        self.assertEqual(self.client.zones.list.return_value,
+                         return_zones_list)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.list_zones")
+
+    def test_delete_zone(self):
+        scenario = utils.DesignateScenario(context=self.context)
+
+        zone = scenario._create_zone()
+        scenario._delete_zone(zone["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.delete_zone")
+
+    def test_list_recordsets(self):
+        scenario = utils.DesignateScenario(context=self.context)
+        return_recordsets_list = scenario._list_recordsets("123")
+        self.assertEqual(
+            self.client.recordsets.list.return_value,
+            return_recordsets_list)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.list_recordsets")
