@@ -23,7 +23,7 @@ from rally.task import validation
 class SaharaNodeGroupTemplates(utils.SaharaScenario):
     """Benchmark scenarios for Sahara node group templates."""
 
-    @types.set(flavor=types.FlavorResourceType)
+    @types.convert(flavor={"type": "nova_flavor"})
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
@@ -58,7 +58,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
                                                 hadoop_version=hadoop_version)
         self._list_node_group_templates()
 
-    @types.set(flavor=types.FlavorResourceType)
+    @types.convert(flavor={"type": "nova_flavor"})
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)

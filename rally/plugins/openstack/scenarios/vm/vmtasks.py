@@ -36,8 +36,8 @@ class VMTasks(vm_utils.VMScenario):
     def __init__(self, *args, **kwargs):
         super(VMTasks, self).__init__(*args, **kwargs)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.valid_command("command")
     @validation.number("port", minval=1, maxval=65535, nullable=True,
@@ -192,8 +192,8 @@ class VMTasks(vm_utils.VMScenario):
 
         return {"data": data, "errors": err}
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.number("port", minval=1, maxval=65535, nullable=True,
                        integer_only=True)
     @validation.valid_command("command")

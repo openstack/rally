@@ -33,7 +33,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
                     glance_utils.GlanceScenario):
     """Benchmark scenarios for Cinder Volumes."""
 
-    @types.set(image=types.ImageResourceType)
+    @types.convert(image={"type": "glance_image"})
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -80,7 +80,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
 
         self._list_volumes(detailed)
 
-    @types.set(image=types.ImageResourceType)
+    @types.convert(image={"type": "glance_image"})
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -102,7 +102,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
         volume = self._create_volume(size, **create_volume_kwargs)
         self._update_volume(volume, **update_volume_kwargs)
 
-    @types.set(image=types.ImageResourceType)
+    @types.convert(image={"type": "glance_image"})
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -135,7 +135,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_volume(volume)
 
-    @types.set(image=types.ImageResourceType)
+    @types.convert(image={"type": "glance_image"})
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -272,8 +272,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_snapshot(snapshot)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)

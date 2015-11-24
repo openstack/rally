@@ -26,11 +26,11 @@ LOG = logging.getLogger(__name__)
 class SaharaClusters(utils.SaharaScenario):
     """Benchmark scenarios for Sahara clusters."""
 
-    @types.set(flavor=types.FlavorResourceType,
-               master_flavor=types.FlavorResourceType,
-               worker_flavor=types.FlavorResourceType,
-               neutron_net=types.NeutronNetworkResourceType,
-               floating_ip_pool=types.NeutronNetworkResourceType)
+    @types.convert(flavor={"type": "nova_flavor"},
+                   master_flavor={"type": "nova_flavor"},
+                   worker_flavor={"type": "nova_flavor"},
+                   neutron_net={"type": "neutron_network"},
+                   floating_ip_pool={"type": "neutron_network"})
     @validation.flavor_exists("master_flavor")
     @validation.flavor_exists("worker_flavor")
     @validation.required_contexts("users", "sahara_image")
@@ -113,9 +113,9 @@ class SaharaClusters(utils.SaharaScenario):
 
         self._delete_cluster(cluster)
 
-    @types.set(flavor=types.FlavorResourceType,
-               master_flavor=types.FlavorResourceType,
-               worker_flavor=types.FlavorResourceType)
+    @types.convert(flavor={"type": "nova_flavor"},
+                   master_flavor={"type": "nova_flavor"},
+                   worker_flavor={"type": "nova_flavor"})
     @validation.flavor_exists("master_flavor")
     @validation.flavor_exists("worker_flavor")
     @validation.required_services(consts.Service.SAHARA)

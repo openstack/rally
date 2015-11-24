@@ -37,8 +37,8 @@ class EC2Servers(utils.EC2Scenario):
         """
         self._list_servers()
 
-    @types.set(image=types.EC2ImageResourceType,
-               flavor=types.EC2FlavorResourceType)
+    @types.convert(image={"type": "ec2_image"},
+                   flavor={"type": "ec2_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.EC2)
     @validation.required_openstack(users=True)
