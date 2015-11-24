@@ -196,8 +196,8 @@ class TaskEngine(object):
 
         specified = set()
         for subtask in config.subtasks:
-            for s in subtask.scenarios:
-                specified.add(s["name"])
+            for s in subtask.workloads:
+                specified.add(s.name)
 
         if not specified.issubset(available):
             names = ", ".join(specified - available)
@@ -206,29 +206,27 @@ class TaskEngine(object):
     @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
-            for pos, scenario_obj in enumerate(subtask.scenarios):
+            for pos, workload in enumerate(subtask.workloads):
                 try:
-                    runner.ScenarioRunner.validate(
-                        scenario_obj.get("runner", {}))
+                    runner.ScenarioRunner.validate(workload.runner)
                     context.ContextManager.validate(
-                        scenario_obj.get("context", {}), non_hidden=True)
-                    sla.SLA.validate(scenario_obj.get("sla", {}))
+                        workload.context, non_hidden=True)
+                    sla.SLA.validate(workload.sla)
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
-                    raise exceptions.InvalidTaskConfig(
-                        name=scenario_obj["name"],
-                        pos=pos, config=scenario_obj,
-                        reason=six.text_type(e)
-                    )
 
-    def _validate_config_semantic_helper(self, admin, user, name, pos,
-                                         deployment, kwargs):
+                    kw = workload.make_exception_args(
+                        pos, six.text_type(e))
+                    raise exceptions.InvalidTaskConfig(**kw)
+
+    def _validate_config_semantic_helper(self, admin, user, workload, pos,
+                                         deployment):
         try:
             scenario.Scenario.validate(
-                name, kwargs, admin=admin, users=[user], deployment=deployment)
+                workload.name, workload.to_dict(),
+                admin=admin, users=[user], deployment=deployment)
         except exceptions.InvalidScenarioArgument as e:
-            kw = {"name": name, "pos": pos,
-                  "config": kwargs, "reason": six.text_type(e)}
+            kw = workload.make_exception_args(pos, six.text_type(e))
             raise exceptions.InvalidTaskConfig(**kw)
 
     def _get_user_ctx_for_validation(self, ctx):
@@ -260,10 +258,10 @@ class TaskEngine(object):
             for u in ctx_conf["users"]:
                 user = osclients.Clients(u["endpoint"])
                 for subtask in config.subtasks:
-                    for pos, scenario_obj in enumerate(subtask.scenarios):
+                    for pos, workload in enumerate(subtask.workloads):
                         self._validate_config_semantic_helper(
-                            admin, user, scenario_obj["name"],
-                            pos, deployment, scenario_obj)
+                            admin, user, workload,
+                            pos, deployment)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):
@@ -279,8 +277,8 @@ class TaskEngine(object):
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
-        conf = config.get("runner", {"type": "serial"})
-        return runner.ScenarioRunner.get(conf["type"])(self.task, conf)
+        config = config or {"type": "serial"}
+        return runner.ScenarioRunner.get(config["type"])(self.task, config)
 
     def _prepare_context(self, ctx, name, credential):
         scenario_context = copy.deepcopy(
@@ -312,7 +310,7 @@ class TaskEngine(object):
         self.task.update_status(consts.TaskStatus.RUNNING)
 
         for subtask in self.config.subtasks:
-            for pos, scenario_obj in enumerate(subtask.scenarios):
+            for pos, workload in enumerate(subtask.workloads):
 
                 if ResultConsumer.is_task_in_aborting_status(
                         self.task["uuid"]):
@@ -320,19 +318,18 @@ class TaskEngine(object):
                     self.task.update_status(consts.TaskStatus.ABORTED)
                     return
 
-                name = scenario_obj["name"]
-                key = {"name": name, "pos": pos, "kw": scenario_obj}
+                key = workload.make_key(pos)
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
-                runner_obj = self._get_runner(scenario_obj)
+                runner_obj = self._get_runner(workload.runner)
                 context_obj = self._prepare_context(
-                    scenario_obj.get("context", {}), name, self.admin)
+                    workload.context, workload.name, self.admin)
                 try:
                     with ResultConsumer(key, self.task, runner_obj,
                                         self.abort_on_sla_failure):
                         with context.ContextManager(context_obj):
-                            runner_obj.run(name, context_obj,
-                                           scenario_obj.get("args", {}))
+                            runner_obj.run(workload.name, context_obj,
+                                           workload.args)
                 except Exception as e:
                     LOG.exception(e)
 
@@ -397,7 +394,7 @@ class TaskConfig(object):
                         },
 
                         "run_in_parallel": {"type": "boolean"},
-                        "scenarios": {
+                        "workloads": {
                             "type": "array",
                             "minItems": 1,
                             "maxItems": 1,
@@ -424,7 +421,7 @@ class TaskConfig(object):
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["title", "scenarios"]
+                    "required": ["title", "workloads"]
                 }
             }
         },
@@ -474,12 +471,12 @@ class TaskConfig(object):
             return [SubTask(s) for s in config["subtasks"]]
         elif self.version == 1:
             subtasks = []
-            for name, v1_scenarios in six.iteritems(config):
-                for v1_scenario in v1_scenarios:
-                    v2_scenario = copy.deepcopy(v1_scenario)
-                    v2_scenario["name"] = name
+            for name, v1_workloads in six.iteritems(config):
+                for v1_workload in v1_workloads:
+                    v2_workload = copy.deepcopy(v1_workload)
+                    v2_workload["name"] = name
                     subtasks.append(
-                        SubTask({"title": name, "scenarios": [v2_scenario]}))
+                        SubTask({"title": name, "workloads": [v2_workload]}))
             return subtasks
 
 
@@ -496,5 +493,59 @@ class SubTask(object):
         self.tags = config.get("tags", [])
         self.group = config.get("group")
         self.description = config.get("description")
-        self.scenarios = config["scenarios"]
+        self.workloads = [Workload(wconf)
+                          for wconf
+                          in config["workloads"]]
         self.context = config.get("context", {})
+
+
+class Workload(object):
+    """Workload -- workload configuration in SubTask.
+
+    """
+    def __init__(self, config):
+        self.name = config["name"]
+        self.runner = config.get("runner", {})
+        self.sla = config.get("sla", {})
+        self.context = config.get("context", {})
+        self.args = config.get("args", {})
+
+    def to_dict(self):
+        workload = {"runner": self.runner}
+
+        for prop in "sla", "args", "context":
+            value = getattr(self, prop)
+            if value:
+                workload[prop] = value
+
+        return workload
+
+    def to_task(self):
+        """Make task configuration for the workload.
+
+        This method returns a dict representing full configuration
+        of the task containing a single subtask with this single
+        workload.
+
+        :return: dict containing full task configuration
+        """
+        # NOTE(ikhudoshyn): Result of this method will be used
+        # to store full task configuration in DB so that
+        # subtask configuration in reports would be given
+        # in the same format as it was provided by user.
+        # Temporarily it returns to_dict() in order not
+        # to break existing reports. It should be
+        # properly implemented in a patch that will update reports.
+        # return {self.name: [self.to_dict()]}
+        return self.to_dict()
+
+    def make_key(self, pos):
+        return {"name": self.name,
+                "pos": pos,
+                "kw": self.to_task()}
+
+    def make_exception_args(self, pos, reason):
+        return {"name": self.name,
+                "pos": pos,
+                "config": self.to_dict(),
+                "reason": reason}
