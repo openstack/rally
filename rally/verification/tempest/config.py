@@ -158,6 +158,9 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "admin_tenant_name",
                       self.endpoint["tenant_name"])
 
+        self.conf.set(section_name, "region",
+                      self.endpoint["region_name"])
+
         self.conf.set(section_name, "uri", self.endpoint["auth_url"])
         v2_url_trailer = parse.urlparse(self.endpoint["auth_url"]).path
         self.conf.set(section_name, "uri_v3",

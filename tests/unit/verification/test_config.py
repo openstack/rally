@@ -36,6 +36,7 @@ CREDS = {
         "password": "admin-12345",
         "auth_url": "http://test/v2.0/",
         "permission": "admin",
+        "region_name": "test",
         "admin_domain_name": "Default",
         "https_insecure": False,
         "https_cacert": "/path/to/cacert/file"
@@ -141,6 +142,7 @@ class TempestConfigTestCase(test.TestCase):
             ("admin_password", CREDS["admin"]["password"]),
             ("admin_tenant_name", CREDS["admin"]["username"]),
             ("admin_domain_name", CREDS["admin"]["admin_domain_name"]),
+            ("region", CREDS["admin"]["region_name"]),
             ("uri", CREDS["admin"]["auth_url"]),
             ("uri_v3", CREDS["admin"]["auth_url"].replace("/v2.0/", "/v3")),
             ("disable_ssl_certificate_validation",
