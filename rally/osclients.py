@@ -634,7 +634,7 @@ class Clients(object):
     @classmethod
     def create_from_env(cls):
         return cls(
-            objects.Endpoint(
+            objects.Credential(
                 os.environ["OS_AUTH_URL"],
                 os.environ["OS_USERNAME"],
                 os.environ["OS_PASSWORD"],

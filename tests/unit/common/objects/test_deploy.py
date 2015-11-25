@@ -121,13 +121,13 @@ class DeploymentTestCase(test.TestCase):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         endpoints = {
-            "admin": objects.Endpoint("url", "user", "pwd", "tenant",
-                                      consts.EndpointPermission.ADMIN),
+            "admin": objects.Credential("url", "user", "pwd", "tenant",
+                                        consts.EndpointPermission.ADMIN),
             "users": [
-                objects.Endpoint("url1", "user1", "pwd1", "tenant1",
-                                 consts.EndpointPermission.USER),
-                objects.Endpoint("url2", "user2", "pwd2", "tenant2",
-                                 consts.EndpointPermission.USER),
+                objects.Credential("url1", "user1", "pwd1", "tenant1",
+                                   consts.EndpointPermission.USER),
+                objects.Credential("url2", "user2", "pwd2", "tenant2",
+                                   consts.EndpointPermission.USER),
             ]
         }
 

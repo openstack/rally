@@ -197,7 +197,7 @@ class FuelEngine(engine.Engine):
         ip = cluster.get_endpoint_ip()
         attrs = cluster.get_attributes()["editable"]["access"]
 
-        admin_endpoint = objects.Endpoint(
+        admin_endpoint = objects.Credential(
             "http://%s:5000/v2.0/" % ip,
             attrs["user"]["value"],
             attrs["password"]["value"],

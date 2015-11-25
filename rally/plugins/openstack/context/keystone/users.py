@@ -216,7 +216,7 @@ class UserGenerator(UserContextMixin, context.Context):
             user = client.create_user(username, password,
                                       "%s@email.me" % username,
                                       tenant_id, user_dom)
-            user_endpoint = objects.Endpoint(
+            user_endpoint = objects.Credential(
                 client.auth_url, user.name, password,
                 self.context["tenants"][tenant_id]["name"],
                 consts.EndpointPermission.USER, client.region_name,

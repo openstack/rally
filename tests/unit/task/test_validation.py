@@ -604,8 +604,8 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"a": 1, "c": 3}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.common.objects.Endpoint")
-    def test_required_service(self, mock_endpoint):
+    @mock.patch("rally.common.objects.Credential")
+    def test_required_service(self, mock_credential):
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,
                                            consts.Service.NOVA,
@@ -621,8 +621,8 @@ class ValidatorsTestCase(test.TestCase):
             nova_client = clients_cls.return_value.nova.return_value
             nova_client.services.list.return_value = [fake_service]
             result = validator({}, clients, {"admin": {"info": "admin"}})
-            clients_cls.assert_called_once_with(mock_endpoint.return_value)
-            mock_endpoint.assert_called_once_with(info="admin")
+            clients_cls.assert_called_once_with(mock_credential.return_value)
+            mock_credential.assert_called_once_with(info="admin")
         self.assertTrue(result.is_valid, result.msg)
 
         validator = self._unwrap_validator(validation.required_services,
@@ -768,10 +768,10 @@ class ValidatorsTestCase(test.TestCase):
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
         mock_osclients.Clients.return_value = clients
-        mock_objects.Endpoint.return_value = "foo_endpoint"
+        mock_objects.Credential.return_value = "foo_endpoint"
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertTrue(result.is_valid, result.msg)
-        mock_objects.Endpoint.assert_called_once_with(foo="bar")
+        mock_objects.Credential.assert_called_once_with(foo="bar")
         mock_osclients.Clients.assert_called_once_with("foo_endpoint")
         clients.nova.side_effect = ImportError
         result = validator({}, clients, {"admin": {"foo": "bar"}})

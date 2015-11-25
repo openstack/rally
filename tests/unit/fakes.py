@@ -1468,7 +1468,7 @@ class FakeClients(object):
         self._murano = None
         self._monasca = None
         self._ec2 = None
-        self._endpoint = endpoint_ or objects.Endpoint(
+        self._endpoint = endpoint_ or objects.Credential(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
             "fake_password",
@@ -1649,11 +1649,11 @@ class FakeUserContext(FakeContext):
 
     admin = {
         "id": "adminuuid",
-        "endpoint": objects.Endpoint("aurl", "aname", "apwd", "atenant")
+        "endpoint": objects.Credential("aurl", "aname", "apwd", "atenant")
     }
     user = {
         "id": "uuid",
-        "endpoint": objects.Endpoint("url", "name", "pwd", "tenant"),
+        "endpoint": objects.Credential("url", "name", "pwd", "tenant"),
         "tenant_id": "uuid"
     }
     tenants = {"uuid": {"name": "tenant"}}

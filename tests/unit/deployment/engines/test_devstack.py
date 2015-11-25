@@ -74,22 +74,22 @@ class DevstackEngineTestCase(test.TestCase):
     @mock.patch("rally.deployment.engines.devstack.get_updated_server")
     @mock.patch("rally.deployment.engines.devstack.get_script")
     @mock.patch("rally.deployment.serverprovider.provider.Server")
-    @mock.patch("rally.deployment.engines.devstack.objects.Endpoint")
-    def test_deploy(self, mock_endpoint, mock_server, mock_get_script,
+    @mock.patch("rally.deployment.engines.devstack.objects.Credential")
+    def test_deploy(self, mock_credential, mock_server, mock_get_script,
                     mock_get_updated_server, mock_engine_get_provider):
         mock_engine_get_provider.return_value = fake_provider = (
             mock.Mock()
         )
         server = mock.Mock(host="host")
-        mock_endpoint.return_value = "fake_endpoint"
+        mock_credential.return_value = "fake_credential"
         mock_get_updated_server.return_value = ds_server = mock.Mock()
         mock_get_script.return_value = "fake_script"
         server.get_credentials.return_value = "fake_credentials"
         fake_provider.create_servers.return_value = [server]
         with mock.patch.object(self.engine, "deployment") as mock_deployment:
-            endpoints = self.engine.deploy()
-        self.assertEqual({"admin": "fake_endpoint"}, endpoints)
-        mock_endpoint.assert_called_once_with(
+            credentials = self.engine.deploy()
+        self.assertEqual({"admin": "fake_credential"}, credentials)
+        mock_credential.assert_called_once_with(
             "http://host:5000/v2.0/", "admin", "secret", "admin", "admin")
         mock_deployment.add_resource.assert_called_once_with(
             info="fake_credentials",
