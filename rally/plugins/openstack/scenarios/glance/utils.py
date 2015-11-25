@@ -93,7 +93,7 @@ class GlanceScenario(scenario.OpenStackScenario):
 
             image = utils.wait_for(
                 image,
-                is_ready=utils.resource_is("active"),
+                ready_statuses=["active"],
                 update_resource=utils.get_from_manager(),
                 timeout=CONF.benchmark.glance_image_create_timeout,
                 check_interval=CONF.benchmark.

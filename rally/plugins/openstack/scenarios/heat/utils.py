@@ -147,7 +147,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         stack = utils.wait_for(
             stack,
-            is_ready=utils.resource_is("CREATE_COMPLETE"),
+            ready_statuses=["CREATE_COMPLETE"],
             update_resource=utils.get_from_manager(["CREATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)
@@ -181,7 +181,7 @@ class HeatScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.heat_stack_update_prepoll_delay)
         stack = utils.wait_for(
             stack,
-            is_ready=utils.resource_is("UPDATE_COMPLETE"),
+            ready_statuses=["UPDATE_COMPLETE"],
             update_resource=utils.get_from_manager(["UPDATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_update_timeout,
             check_interval=CONF.benchmark.heat_stack_update_poll_interval)
@@ -198,7 +198,7 @@ class HeatScenario(scenario.OpenStackScenario):
         self.clients("heat").actions.check(stack.id)
         utils.wait_for(
             stack,
-            is_ready=utils.resource_is("CHECK_COMPLETE"),
+            ready_statuses=["CHECK_COMPLETE"],
             update_resource=utils.get_from_manager(["CHECK_FAILED"]),
             timeout=CONF.benchmark.heat_stack_check_timeout,
             check_interval=CONF.benchmark.heat_stack_check_poll_interval)
@@ -230,7 +230,7 @@ class HeatScenario(scenario.OpenStackScenario):
         self.clients("heat").actions.suspend(stack.id)
         utils.wait_for(
             stack,
-            is_ready=utils.resource_is("SUSPEND_COMPLETE"),
+            ready_statuses=["SUSPEND_COMPLETE"],
             update_resource=utils.get_from_manager(
                 ["SUSPEND_FAILED"]),
             timeout=CONF.benchmark.heat_stack_suspend_timeout,
@@ -246,7 +246,7 @@ class HeatScenario(scenario.OpenStackScenario):
         self.clients("heat").actions.resume(stack.id)
         utils.wait_for(
             stack,
-            is_ready=utils.resource_is("RESUME_COMPLETE"),
+            ready_statuses=["RESUME_COMPLETE"],
             update_resource=utils.get_from_manager(
                 ["RESUME_FAILED"]),
             timeout=CONF.benchmark.heat_stack_resume_timeout,
@@ -263,7 +263,7 @@ class HeatScenario(scenario.OpenStackScenario):
             stack.id)
         utils.wait_for(
             stack,
-            is_ready=utils.resource_is("SNAPSHOT_COMPLETE"),
+            ready_statuses=["SNAPSHOT_COMPLETE"],
             update_resource=utils.get_from_manager(
                 ["SNAPSHOT_FAILED"]),
             timeout=CONF.benchmark.heat_stack_snapshot_timeout,
@@ -280,7 +280,7 @@ class HeatScenario(scenario.OpenStackScenario):
         self.clients("heat").stacks.restore(stack.id, snapshot_id)
         utils.wait_for(
             stack,
-            is_ready=utils.resource_is("RESTORE_COMPLETE"),
+            ready_statuses=["RESTORE_COMPLETE"],
             update_resource=utils.get_from_manager(
                 ["RESTORE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_restore_timeout,

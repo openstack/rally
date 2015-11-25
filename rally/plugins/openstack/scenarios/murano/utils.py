@@ -117,7 +117,8 @@ class MuranoScenario(scenario.OpenStackScenario):
 
         config = CONF.benchmark
         utils.wait_for(
-            environment, is_ready=utils.resource_is("READY"),
+            environment,
+            ready_statuses=["READY"],
             update_resource=utils.get_from_manager(["DEPLOY FAILURE"]),
             timeout=config.murano_deploy_environment_timeout,
             check_interval=config.murano_deploy_environment_check_interval

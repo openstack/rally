@@ -53,10 +53,9 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
 
         self.mock_wait_for.mock.assert_called_once_with(
             fake_share,
-            is_ready=self.mock_resource_is.mock.return_value,
+            ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=300, check_interval=3)
-        self.mock_resource_is.mock.assert_called_once_with("available")
         self.mock_get_from_manager.mock.assert_called_once_with()
 
     @mock.patch(BM_UTILS + "wait_for_status")

@@ -53,20 +53,19 @@ class EC2ScenarioTestCase(test.ScenarioTestCase):
         expected = [
             mock.call(
                 self.server1,
-                is_ready=self.mock_resource_is.mock.return_value,
+                ready_statuses=["RUNNING"],
                 update_resource=ec2_scenario._update_resource,
                 check_interval=CONF.benchmark.ec2_server_boot_poll_interval,
                 timeout=CONF.benchmark.ec2_server_boot_timeout
             ),
             mock.call(
                 self.server2,
-                is_ready=self.mock_resource_is.mock.return_value,
+                ready_statuses=["RUNNING"],
                 update_resource=ec2_scenario._update_resource,
                 check_interval=CONF.benchmark.ec2_server_boot_poll_interval,
                 timeout=CONF.benchmark.ec2_server_boot_timeout
             )
         ]
         self.mock_wait_for.mock.assert_has_calls(expected)
-        self.mock_resource_is.mock.assert_has_calls([mock.call("RUNNING")])
         self._test_atomic_action_timer(ec2_scenario.atomic_actions(),
                                        "ec2.boot_servers")

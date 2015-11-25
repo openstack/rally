@@ -79,7 +79,7 @@ class EC2Scenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.ec2_server_boot_prepoll_delay)
         servers = [utils.wait_for(
             server,
-            is_ready=utils.resource_is("RUNNING"),
+            ready_statuses=["RUNNING"],
             update_resource=self._update_resource,
             timeout=CONF.benchmark.ec2_server_boot_timeout,
             check_interval=CONF.benchmark.ec2_server_boot_poll_interval
