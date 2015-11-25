@@ -248,10 +248,10 @@ class TaskCommandsTestCase(test.TestCase):
     def test_status(self):
         test_uuid = "a3e7cefb-bec2-4802-89f6-410cc31f71af"
         value = {"task_id": "task", "status": "status"}
-        with mock.patch("rally.cli.commands.task.db") as mock_db:
-            mock_db.task_get = mock.MagicMock(return_value=value)
+        with mock.patch("rally.cli.commands.task.api.Task") as mock_task:
+            mock_task.get = mock.MagicMock(return_value=value)
             self.task.status(test_uuid)
-            mock_db.task_get.assert_called_once_with(test_uuid)
+            mock_task.get.assert_called_once_with(test_uuid)
 
     @mock.patch("rally.cli.commands.task.envutils.get_global")
     def test_status_no_task_id(self, mock_get_global):
@@ -259,8 +259,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.status, None)
 
-    @mock.patch("rally.cli.commands.task.db")
-    def test_detailed(self, mock_db):
+    @mock.patch("rally.cli.commands.task.api.Task")
+    def test_detailed(self, mock_task):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
         value = {
             "id": "task",
@@ -327,15 +327,15 @@ class TaskCommandsTestCase(test.TestCase):
                 }
             ]
         }
-        mock_db.task_get_detailed = mock.MagicMock(return_value=value)
+        mock_task.get_detailed = mock.MagicMock(return_value=value)
         self.task.detailed(test_uuid)
-        mock_db.task_get_detailed.assert_called_once_with(test_uuid)
+        mock_task.get_detailed.assert_called_once_with(test_uuid)
 
         self.task.detailed(test_uuid, iterations_data=True)
 
-    @mock.patch("rally.cli.commands.task.db")
+    @mock.patch("rally.cli.commands.task.api.Task")
     @mock.patch("rally.cli.commands.task.logging")
-    def test_detailed_task_failed(self, mock_logging, mock_db):
+    def test_detailed_task_failed(self, mock_logging, mock_task):
         value = {
             "id": "task",
             "uuid": "task_uuid",
@@ -343,7 +343,7 @@ class TaskCommandsTestCase(test.TestCase):
             "results": [],
             "verification_log": "['1', '2', '3']"
         }
-        mock_db.task_get_detailed = mock.MagicMock(return_value=value)
+        mock_task.get_detailed = mock.MagicMock(return_value=value)
 
         mock_logging.is_debug.return_value = False
         self.task.detailed("task_uuid")
@@ -357,15 +357,15 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.detailed, None)
 
-    @mock.patch("rally.cli.commands.task.db")
-    def test_detailed_wrong_id(self, mock_db):
+    @mock.patch("rally.cli.commands.task.api.Task")
+    def test_detailed_wrong_id(self, mock_task):
         test_uuid = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
-        mock_db.task_get_detailed = mock.MagicMock(return_value=None)
+        mock_task.get_detailed = mock.MagicMock(return_value=None)
         self.task.detailed(test_uuid)
-        mock_db.task_get_detailed.assert_called_once_with(test_uuid)
+        mock_task.get_detailed.assert_called_once_with(test_uuid)
 
     @mock.patch("json.dumps")
-    @mock.patch("rally.cli.commands.task.objects.Task.get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_results(self, mock_task_get, mock_json_dumps):
         task_id = "foo_task_id"
         data = [
@@ -390,7 +390,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_task_get.assert_called_once_with(task_id)
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
-    @mock.patch("rally.cli.commands.task.objects.Task.get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_results_no_data(self, mock_task_get, mock_stdout):
         task_id = "foo_task_id"
         mock_results = mock.Mock(return_value=[])
@@ -412,7 +412,7 @@ class TaskCommandsTestCase(test.TestCase):
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
-    @mock.patch("rally.cli.commands.task.objects.Task.get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_report_one_uuid(self, mock_task_get, mock_webbrowser,
                              mock_plot, mock_open, mock_realpath,
                              mock_validate):
@@ -477,7 +477,7 @@ class TaskCommandsTestCase(test.TestCase):
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
-    @mock.patch("rally.cli.commands.task.objects.Task.get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_report_bunch_uuids(self, mock_task_get, mock_webbrowser,
                                 mock_plot, mock_open, mock_realpath,
                                 mock_validate):
@@ -604,7 +604,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
                 return_value="123456789")
-    @mock.patch("rally.cli.commands.task.objects.Task.list",
+    @mock.patch("rally.cli.commands.task.api.Task.list",
                 return_value=[fakes.FakeTask(uuid="a",
                                              created_at=date.datetime.now(),
                                              updated_at=date.datetime.now(),
@@ -628,7 +628,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
                 return_value="123456789")
-    @mock.patch("rally.cli.commands.task.objects.Task.list",
+    @mock.patch("rally.cli.commands.task.api.Task.list",
                 return_value=[fakes.FakeTask(uuid="a",
                                              created_at=date.datetime.now(),
                                              updated_at=date.datetime.now(),
@@ -649,7 +649,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertEqual(1, self.task.list(deployment="fake",
                                            status="wrong non existing status"))
 
-    @mock.patch("rally.cli.commands.task.objects.Task.list", return_value=[])
+    @mock.patch("rally.cli.commands.task.api.Task.list", return_value=[])
     def test_list_no_results(self, mock_task_list):
         self.assertIsNone(
             self.task.list(deployment="fake", all_deployments=True))
@@ -685,7 +685,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertTrue(mock_api.Task.delete.mock_calls == expected_calls)
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
-    @mock.patch("rally.cli.commands.task.objects.Task.get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_sla_check(self, mock_task_get, mock_print_list):
         data = [{"key": {"name": "fake_name",
                          "pos": "fake_pos",
@@ -746,7 +746,7 @@ class TaskCommandsTestCase(test.TestCase):
             "deployment", mock__load_task.return_value, None)
 
     @mock.patch("rally.common.fileutils._rewrite_env_file")
-    @mock.patch("rally.cli.commands.task.db.task_get", return_value=True)
+    @mock.patch("rally.cli.commands.task.api.Task.get", return_value=True)
     def test_use(self, mock_task_get, mock__rewrite_env_file):
         task_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
         self.task.use(task_id)
@@ -754,7 +754,7 @@ class TaskCommandsTestCase(test.TestCase):
             os.path.expanduser("~/.rally/globals"),
             ["RALLY_TASK=%s\n" % task_id])
 
-    @mock.patch("rally.cli.commands.task.db.task_get")
+    @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_use_not_found(self, mock_task_get):
         task_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
         mock_task_get.side_effect = exceptions.TaskNotFound(uuid=task_id)
