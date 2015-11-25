@@ -131,7 +131,7 @@ class CinderScenario(scenario.OpenStackScenario):
         if isinstance(size, dict):
             size = random.randint(size["min"], size["max"])
 
-        client = cinder_wrapper.wrap(self._clients.cinder)
+        client = cinder_wrapper.wrap(self._clients.cinder, self)
         volume = client.create_volume(size, **kwargs)
 
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
@@ -157,7 +157,7 @@ class CinderScenario(scenario.OpenStackScenario):
         :param volume: volume object
         :param update_volume_args: dict, contains values to be updated.
         """
-        client = cinder_wrapper.wrap(self._clients.cinder)
+        client = cinder_wrapper.wrap(self._clients.cinder, self)
         client.update_volume(volume, **update_volume_args)
 
     @atomic.action_timer("cinder.delete_volume")
@@ -258,7 +258,7 @@ class CinderScenario(scenario.OpenStackScenario):
         """
         kwargs["force"] = force
 
-        client = cinder_wrapper.wrap(self._clients.cinder)
+        client = cinder_wrapper.wrap(self._clients.cinder, self)
         snapshot = client.create_snapshot(volume_id, **kwargs)
 
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)

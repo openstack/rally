@@ -16,7 +16,6 @@
 import abc
 
 from rally.common import log as logging
-from rally.common import utils
 from rally import exceptions
 
 import six
@@ -26,7 +25,8 @@ LOG = logging.getLogger(__name__)
 
 @six.add_metaclass(abc.ABCMeta)
 class CinderWrapper(object):
-    def __init__(self, client):
+    def __init__(self, client, owner):
+        self.owner = owner
         self.client = client
 
     @abc.abstractmethod
@@ -47,21 +47,18 @@ class CinderV1Wrapper(CinderWrapper):
         super(CinderV1Wrapper, self).__init__(*args, **kwargs)
 
     def create_volume(self, size, **kwargs):
-        kwargs["display_name"] = kwargs.get("display_name",
-                                            utils.generate_random_name())
+        kwargs["display_name"] = self.owner.generate_random_name()
         volume = self.client.volumes.create(size, **kwargs)
         return volume
 
     def update_volume(self, volume, **update_args):
-        update_args["display_name"] = (
-            update_args.get("display_name", utils.generate_random_name()))
+        update_args["display_name"] = self.owner.generate_random_name()
         update_args["display_description"] = (
             update_args.get("display_description"))
         self.client.volumes.update(volume, **update_args)
 
     def create_snapshot(self, volume_id, **kwargs):
-        kwargs["display_name"] = kwargs.get("display_name",
-                                            utils.generate_random_name())
+        kwargs["display_name"] = self.owner.generate_random_name()
         snapshot = self.client.volume_snapshots.create(volume_id, **kwargs)
         return snapshot
 
@@ -71,30 +68,29 @@ class CinderV2Wrapper(CinderWrapper):
         super(CinderV2Wrapper, self).__init__(*args, **kwargs)
 
     def create_volume(self, size, **kwargs):
-        kwargs["name"] = kwargs.get("name", utils.generate_random_name())
+        kwargs["name"] = self.owner.generate_random_name()
 
         volume = self.client.volumes.create(size, **kwargs)
         return volume
 
     def update_volume(self, volume, **update_args):
-        update_args["name"] = update_args.get("name",
-                                              utils.generate_random_name())
+        update_args["name"] = self.owner.generate_random_name()
         update_args["description"] = update_args.get("description")
         self.client.volumes.update(volume, **update_args)
 
     def create_snapshot(self, volume_id, **kwargs):
-        kwargs["name"] = kwargs.get("name", utils.generate_random_name())
+        kwargs["name"] = self.owner.generate_random_name()
         snapshot = self.client.volume_snapshots.create(volume_id, **kwargs)
         return snapshot
 
 
-def wrap(client):
+def wrap(client, owner):
     """Returns cinderclient wrapper based on cinder client version."""
     version = client.choose_version()
     if version == "1":
-        return CinderV1Wrapper(client())
+        return CinderV1Wrapper(client(), owner)
     elif version == "2":
-        return CinderV2Wrapper(client())
+        return CinderV2Wrapper(client(), owner)
     else:
         msg = "This version of API %s could not be identified." % version
         LOG.warning(msg)

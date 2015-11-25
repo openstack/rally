@@ -66,13 +66,26 @@ class NetworkWrapper(object):
     START_CIDR = "10.2.0.0/24"
     SERVICE_IMPL = None
 
-    def __init__(self, clients, task, config=None):
+    def __init__(self, clients, owner, config=None):
+        """Returns available network wrapper instance.
+
+        :param clients: rally.osclients.Clients instance
+        :param owner: The object that owns resources created by this
+                      wrapper instance. It will be used to generate
+                      random names, so must implement
+                      rally.common.utils.RandomNameGeneratorMixin
+        :param config: The configuration of the network
+                       wrapper. Currently only one config option is
+                       recognized, 'start_cidr', and only for Nova
+                       network.
+        :returns: NetworkWrapper subclass instance
+        """
         if hasattr(clients, self.SERVICE_IMPL):
             self.client = getattr(clients, self.SERVICE_IMPL)()
         else:
             self.client = clients(self.SERVICE_IMPL)
         self.config = config or {}
-        self.task = task
+        self.owner = owner
         self.start_cidr = self.config.get("start_cidr", self.START_CIDR)
 
     @abc.abstractmethod
@@ -141,7 +154,7 @@ class NovaNetworkWrapper(NetworkWrapper):
         :returns: dict, network data
         """
         cidr = self._generate_cidr()
-        label = utils.generate_random_name("rally_net_")
+        label = self.owner.generate_random_name()
         network_create_args = kwargs.get("network_create_args", {})
         network = self.client.networks.create(
             project_id=tenant_id, cidr=cidr, label=label,
@@ -249,8 +262,7 @@ class NeutronWrapper(NetworkWrapper):
         :param **kwargs: POST /v2.0/routers request options
         :returns: neutron router dict
         """
-        if "name" not in kwargs:
-            kwargs["name"] = utils.generate_random_name("rally_router_")
+        kwargs["name"] = self.owner.generate_random_name()
 
         if external and "external_gateway_info" not in kwargs:
             for net in self.external_networks:
@@ -269,7 +281,7 @@ class NeutronWrapper(NetworkWrapper):
         pool_args = {
             "pool": {
                 "tenant_id": tenant_id,
-                "name": utils.generate_random_name("rally_pool_"),
+                "name": self.owner.generate_random_name(),
                 "subnet_id": subnet_id,
                 "lb_method": kwargs.get("lb_method", self.LB_METHOD),
                 "protocol": kwargs.get("protocol", self.LB_PROTOCOL)
@@ -301,8 +313,7 @@ class NeutronWrapper(NetworkWrapper):
         network_args = {"network": kwargs.get("network_create_args", {})}
         network_args["network"].update({
             "tenant_id": tenant_id,
-            "name": utils.generate_random_name("rally_net_")
-        })
+            "name": self.owner.generate_random_name()})
         network = self.client.create_network(network_args)["network"]
 
         router = None
@@ -316,7 +327,7 @@ class NeutronWrapper(NetworkWrapper):
                 "subnet": {
                     "tenant_id": tenant_id,
                     "network_id": network["id"],
-                    "name": utils.generate_random_name("rally_subnet_"),
+                    "name": self.owner.generate_random_name(),
                     "ip_version": self.SUBNET_IP_VERSION,
                     "cidr": self._generate_cidr(),
                     "enable_dhcp": True,
@@ -383,8 +394,7 @@ class NeutronWrapper(NetworkWrapper):
         :returns: neutron port dict
         """
         kwargs["network_id"] = network_id
-        if "name" not in kwargs:
-            kwargs["name"] = utils.generate_random_name("rally_port_")
+        kwargs["name"] = self.owner.generate_random_name()
         return self.client.create_port({"port": kwargs})["port"]
 
     def create_floating_ip(self, ext_network=None,
@@ -447,11 +457,17 @@ class NeutronWrapper(NetworkWrapper):
         return False, _("Neutron driver does not support %s") % (extension)
 
 
-def wrap(clients, task, config=None):
+def wrap(clients, owner, config=None):
     """Returns available network wrapper instance.
 
     :param clients: rally.osclients.Clients instance
-    :param config: task config dict
+    :param owner: The object that owns resources created by this
+                  wrapper instance. It will be used to generate random
+                  names, so must implement
+                  rally.common.utils.RandomNameGeneratorMixin
+    :param config: The configuration of the network wrapper. Currently
+                   only one config option is recognized, 'start_cidr',
+                   and only for Nova network.
     :returns: NetworkWrapper subclass instance
     """
     if hasattr(clients, "services"):
@@ -460,5 +476,5 @@ def wrap(clients, task, config=None):
         services = clients("services")
 
     if consts.Service.NEUTRON in services.values():
-        return NeutronWrapper(clients, task, config)
-    return NovaNetworkWrapper(clients, task, config)
+        return NeutronWrapper(clients, owner, config=config)
+    return NovaNetworkWrapper(clients, owner, config=config)

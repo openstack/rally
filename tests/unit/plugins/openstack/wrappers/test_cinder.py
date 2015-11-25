@@ -23,9 +23,10 @@ from tests.unit import test
 class CinderWrapperTestBase(object):
     def test_wrap(self):
         client = mock.MagicMock()
+        owner = mock.Mock()
         client.version = "dummy"
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          cinder_wrapper.wrap, client)
+                          cinder_wrapper.wrap, client, owner)
 
 
 class CinderV1WrapperTestCase(test.TestCase, CinderWrapperTestBase):
@@ -33,24 +34,29 @@ class CinderV1WrapperTestCase(test.TestCase, CinderWrapperTestBase):
         super(CinderV1WrapperTestCase, self).setUp()
         self.client = mock.MagicMock()
         self.client.choose_version.return_value = "1"
-        self.wrapped_client = cinder_wrapper.wrap(self.client)
+        self.owner = mock.Mock()
+        self.wrapped_client = cinder_wrapper.wrap(self.client, self.owner)
 
     def test_create_volume(self):
         self.wrapped_client.create_volume(1, display_name="fake_vol")
         self.client.return_value.volumes.create.assert_called_once_with(
-            1, display_name="fake_vol")
+            1, display_name=self.owner.generate_random_name.return_value)
 
     def test_update_volume(self):
         self.wrapped_client.update_volume("fake_id", display_name="fake_vol",
                                           display_description="_updated")
         self.client.return_value.volumes.update.assert_called_once_with(
-            "fake_id", display_name="fake_vol", display_description="_updated")
+            "fake_id",
+            display_name=self.owner.generate_random_name.return_value,
+            display_description="_updated")
 
     def test_create_snapshot(self):
         self.wrapped_client.create_snapshot("fake_id",
                                             display_name="fake_snap")
         (self.client.return_value.volume_snapshots.create.
-         assert_called_once_with("fake_id", display_name="fake_snap"))
+         assert_called_once_with(
+             "fake_id",
+             display_name=self.owner.generate_random_name.return_value))
 
 
 class CinderV2WrapperTestCase(test.TestCase, CinderWrapperTestBase):
@@ -58,20 +64,24 @@ class CinderV2WrapperTestCase(test.TestCase, CinderWrapperTestBase):
         super(CinderV2WrapperTestCase, self).setUp()
         self.client = mock.MagicMock()
         self.client.choose_version.return_value = "2"
-        self.wrapped_client = cinder_wrapper.wrap(self.client)
+        self.owner = mock.Mock()
+        self.wrapped_client = cinder_wrapper.wrap(self.client, self.owner)
 
     def test_create_volume(self):
         self.wrapped_client.create_volume(1, name="fake_vol")
         self.client.return_value.volumes.create.assert_called_once_with(
-            1, name="fake_vol")
+            1, name=self.owner.generate_random_name.return_value)
 
     def test_create_snapshot(self):
         self.wrapped_client.create_snapshot("fake_id", name="fake_snap")
         (self.client.return_value.volume_snapshots.create.
-         assert_called_once_with("fake_id", name="fake_snap"))
+         assert_called_once_with(
+             "fake_id",
+             name=self.owner.generate_random_name.return_value))
 
     def test_update_volume(self):
         self.wrapped_client.update_volume("fake_id", name="fake_vol",
                                           description="_updated")
         self.client.return_value.volumes.update.assert_called_once_with(
-            "fake_id", name="fake_vol", description="_updated")
+            "fake_id", name=self.owner.generate_random_name.return_value,
+            description="_updated")

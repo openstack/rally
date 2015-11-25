@@ -26,6 +26,7 @@ from rally.common import db
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
+from rally.common import utils
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.wrappers import network
@@ -77,7 +78,7 @@ def _write_config(conf_path, conf_data):
         conf_data.write(conf_file)
 
 
-class TempestConfig(object):
+class TempestConfig(utils.RandomNameGeneratorMixin):
     """Class to generate Tempest configuration file."""
 
     def __init__(self, deployment):
@@ -367,7 +368,7 @@ class TempestResourcesContext(object):
         return flavor
 
     def _create_network_resources(self):
-        neutron_wrapper = network.NeutronWrapper(self.clients, task=None)
+        neutron_wrapper = network.NeutronWrapper(self.clients, self)
         LOG.debug("Creating network resources: network, subnet, router")
         net = neutron_wrapper.create_network(
             self.clients.keystone().tenant_id, subnets_num=1,
@@ -397,7 +398,7 @@ class TempestResourcesContext(object):
             self._remove_opt_value_from_config(flavor.id)
 
     def _cleanup_network_resources(self):
-        neutron_wrapper = network.NeutronWrapper(self.clients, task=None)
+        neutron_wrapper = network.NeutronWrapper(self.clients, self)
         for net in self._created_networks:
             LOG.debug("Deleting network resources: router, subnet, network")
             neutron_wrapper.delete_network(net)
