@@ -297,6 +297,14 @@ class TempestConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("validation",
                                                       "connect_method"))
 
+    def test__configure_orchestration(self):
+        self.conf_generator._configure_orchestration()
+        expected = (
+            ("stack_owner_role", CONF.role.heat_stack_owner_role),
+            ("stack_user_role", CONF.role.heat_stack_user_role))
+        result = self.conf_generator.conf.items("orchestration")
+        self.assertIn(sorted(expected)[0], sorted(result))
+
     @mock.patch("rally.verification.tempest.config._write_config")
     @mock.patch("inspect.getmembers")
     def test_generate(self, mock_inspect_getmembers, mock__write_config):
