@@ -70,12 +70,6 @@ class SubunitV2StreamResult(object):
 
     def __init__(self):
         self._tests = {}
-        self._total_counts = {
-            "fail": 0,
-            "skip": 0,
-            "success": 0,
-            "uxsuccess": 0,
-            "xfail": 0}
         self._timestaps = {}
         # NOTE(andreykurilin): _first_timestamp and _last_timestamp vars are
         #   designed to calculate total time of tests executions
@@ -125,11 +119,11 @@ class SubunitV2StreamResult(object):
         return {"tests": len(self.tests),
                 "time": total_seconds(
                     self._last_timestamp - self._first_timestamp),
-                "failures": self._total_counts["fail"],
-                "skipped": self._total_counts["skip"],
-                "success": self._total_counts["success"],
-                "unexpected_success": self._total_counts["uxsuccess"],
-                "expected_failures": self._total_counts["xfail"]}
+                "failures": len(self.filter_tests("fail")),
+                "skipped": len(self.filter_tests("skip")),
+                "success": len(self.filter_tests("success")),
+                "unexpected_success": len(self.filter_tests("uxsuccess")),
+                "expected_failures": len(self.filter_tests("xfail"))}
 
     @preparse_input_args
     def status(self, test_id=None, test_status=None, tags=None,
@@ -151,7 +145,6 @@ class SubunitV2StreamResult(object):
                 self._tests[test_id]["time"] = total_seconds(
                     timestamp - self._timestaps[test_id])
                 self._tests[test_id]["status"] = test_status
-                self._total_counts[test_status] += 1
             else:
                 if file_name in ["traceback", "reason"]:
                     if file_name not in self._tests[test_id]:
