@@ -66,8 +66,8 @@ def configure(name, default_version=None, default_service_type=None,
 
 
 class OSClient(plugin.Plugin):
-    def __init__(self, endpoint, api_info, cache_obj):
-        self.endpoint = endpoint
+    def __init__(self, credential, api_info, cache_obj):
+        self.credential = credential
         self.api_info = api_info
         self.cache = cache_obj
 
@@ -139,7 +139,7 @@ class OSClient(plugin.Plugin):
 
     def keystone(self, *args, **kwargs):
         """Make a call to keystone client."""
-        keystone = OSClient.get("keystone")(self.endpoint, self.api_info,
+        keystone = OSClient.get("keystone")(self.credential, self.api_info,
                                             self.cache)
         return keystone(*args, **kwargs)
 
@@ -153,15 +153,15 @@ class OSClient(plugin.Plugin):
         if auth is None:
             auth = token_endpoint.Token(endpoint, kc.auth_token)
 
-        return ks_session.Session(auth=auth, verify=self.endpoint.insecure,
+        return ks_session.Session(auth=auth, verify=self.credential.insecure,
                                   timeout=CONF.openstack_client_http_timeout)
 
     def _get_endpoint(self, service_type=None):
         kc = self.keystone()
         api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         return api_url
 
     def _get_auth_info(self, user_key="username",
@@ -170,12 +170,12 @@ class OSClient(plugin.Plugin):
                        project_name_key="project_id"
                        ):
         kw = {
-            user_key: self.endpoint.username,
-            password_key: self.endpoint.password,
-            auth_url_key: self.endpoint.auth_url
+            user_key: self.credential.username,
+            password_key: self.credential.password,
+            auth_url_key: self.credential.auth_url
         }
         if project_name_key:
-            kw.update({project_name_key: self.endpoint.tenant_name})
+            kw.update({project_name_key: self.credential.tenant_name})
         return kw
 
     @abc.abstractmethod
@@ -221,9 +221,10 @@ class Keystone(OSClient):
         """Return keystone client."""
         new_kw = {
             "timeout": CONF.openstack_client_http_timeout,
-            "insecure": self.endpoint.insecure, "cacert": self.endpoint.cacert
+            "insecure": self.credential.insecure,
+            "cacert": self.credential.cacert
         }
-        kw = self.endpoint.to_dict()
+        kw = self.credential.to_dict()
         kw.update(new_kw)
         client = self._create_keystone_client(kw)
         if client.auth_ref is None:
@@ -250,14 +251,14 @@ class Nova(OSClient):
         kc = self.keystone()
         compute_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = nova.Client(self.choose_version(version),
                              auth_token=kc.auth_token,
                              http_log_debug=logging.is_debug(),
                              timeout=CONF.openstack_client_http_timeout,
-                             insecure=self.endpoint.insecure,
-                             cacert=self.endpoint.cacert,
+                             insecure=self.credential.insecure,
+                             cacert=self.credential.cacert,
                              **self._get_auth_info(password_key="api_key"))
         client.set_management_url(compute_api_url)
         return client
@@ -272,14 +273,14 @@ class Neutron(OSClient):
         kc = self.keystone()
         network_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = neutron.Client(self.choose_version(version),
                                 token=kc.auth_token,
                                 endpoint_url=network_api_url,
                                 timeout=CONF.openstack_client_http_timeout,
-                                insecure=self.endpoint.insecure,
-                                ca_cert=self.endpoint.cacert,
+                                insecure=self.credential.insecure,
+                                ca_cert=self.credential.cacert,
                                 **self._get_auth_info(
                                     project_name_key="tenant_name")
                                 )
@@ -295,14 +296,14 @@ class Glance(OSClient):
         kc = self.keystone()
         image_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = glance.Client(self.choose_version(version),
                                endpoint=image_api_url,
                                token=kc.auth_token,
                                timeout=CONF.openstack_client_http_timeout,
-                               insecure=self.endpoint.insecure,
-                               cacert=self.endpoint.cacert)
+                               insecure=self.credential.insecure,
+                               cacert=self.credential.cacert)
         return client
 
 
@@ -315,14 +316,14 @@ class Heat(OSClient):
         kc = self.keystone()
         orchestration_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = heat.Client(self.choose_version(version),
                              endpoint=orchestration_api_url,
                              token=kc.auth_token,
                              timeout=CONF.openstack_client_http_timeout,
-                             insecure=self.endpoint.insecure,
-                             cacert=self.endpoint.cacert,
+                             insecure=self.credential.insecure,
+                             cacert=self.credential.cacert,
                              **self._get_auth_info(project_name_key=None))
         return client
 
@@ -336,14 +337,14 @@ class Cinder(OSClient):
         client = cinder.Client(self.choose_version(version),
                                http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
-                               insecure=self.endpoint.insecure,
-                               cacert=self.endpoint.cacert,
+                               insecure=self.credential.insecure,
+                               cacert=self.credential.cacert,
                                **self._get_auth_info(password_key="api_key"))
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client.client.management_url = volume_api_url
         client.client.auth_token = kc.auth_token
         return client
@@ -357,18 +358,18 @@ class Manila(OSClient):
         from manilaclient import client as manila
         manila_client = manila.Client(
             self.choose_version(version),
-            region_name=self.endpoint.region_name,
+            region_name=self.credential.region_name,
             http_log_debug=logging.is_debug(),
             timeout=CONF.openstack_client_http_timeout,
-            insecure=self.endpoint.insecure,
-            cacert=self.endpoint.cacert,
+            insecure=self.credential.insecure,
+            cacert=self.credential.cacert,
             **self._get_auth_info(password_key="api_key",
                                   project_name_key="project_name"))
         kc = self.keystone()
         manila_client.client.management_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         manila_client.client.auth_token = kc.auth_token
         return manila_client
 
@@ -382,8 +383,8 @@ class Ceilometer(OSClient):
         kc = self.keystone()
         metering_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         auth_token = kc.auth_token
         if not hasattr(auth_token, "__call__"):
             # python-ceilometerclient requires auth_token to be a callable
@@ -394,8 +395,8 @@ class Ceilometer(OSClient):
             os_endpoint=metering_api_url,
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
-            insecure=self.endpoint.insecure,
-            cacert=self.endpoint.cacert,
+            insecure=self.credential.insecure,
+            cacert=self.credential.cacert,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
@@ -410,14 +411,14 @@ class Ironic(OSClient):
         kc = self.keystone()
         baremetal_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = ironic.get_client(self.choose_version(version),
                                    os_auth_token=kc.auth_token,
                                    ironic_url=baremetal_api_url,
                                    timeout=CONF.openstack_client_http_timeout,
-                                   insecure=self.endpoint.insecure,
-                                   cacert=self.endpoint.cacert)
+                                   insecure=self.credential.insecure,
+                                   cacert=self.credential.cacert)
         return client
 
 
@@ -460,15 +461,15 @@ class Zaqar(OSClient):
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         conf = {"auth_opts": {"backend": "keystone", "options": {
-            "os_username": self.endpoint.username,
-            "os_password": self.endpoint.password,
-            "os_project_name": self.endpoint.tenant_name,
+            "os_username": self.credential.username,
+            "os_password": self.credential.password,
+            "os_project_name": self.credential.tenant_name,
             "os_project_id": kc.auth_tenant_id,
-            "os_auth_url": self.endpoint.auth_url,
-            "insecure": self.endpoint.insecure,
+            "os_auth_url": self.credential.auth_url,
+            "insecure": self.credential.insecure,
         }}}
         client = zaqar.Client(url=messaging_api_url,
                               version=self.choose_version(version),
@@ -486,8 +487,8 @@ class Murano(OSClient):
         kc = self.keystone()
         murano_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name
         )
 
         client = murano.Client(self.choose_version(version),
@@ -519,10 +520,10 @@ class Trove(OSClient):
         """Returns trove client."""
         from troveclient import client as trove
         client = trove.Client(self.choose_version(version),
-                              region_name=self.endpoint.region_name,
+                              region_name=self.credential.region_name,
                               timeout=CONF.openstack_client_http_timeout,
-                              insecure=self.endpoint.insecure,
-                              cacert=self.endpoint.cacert,
+                              insecure=self.credential.insecure,
+                              cacert=self.credential.cacert,
                               **self._get_auth_info(password_key="api_key")
                               )
         return client
@@ -537,8 +538,8 @@ class Mistral(OSClient):
 
         mistral_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
 
         client = client.client(
             mistral_url=mistral_url,
@@ -555,13 +556,13 @@ class Swift(OSClient):
         kc = self.keystone()
         object_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = swift.Connection(retries=1,
                                   preauthurl=object_api_url,
                                   preauthtoken=kc.auth_token,
-                                  insecure=self.endpoint.insecure,
-                                  cacert=self.endpoint.cacert,
+                                  insecure=self.credential.insecure,
+                                  cacert=self.credential.cacert,
                                   **self._get_auth_info(
                                       user_key="user",
                                       password_key="key",
@@ -585,13 +586,13 @@ class EC2(OSClient):
                                        tenant_id=kc.auth_tenant_id)
         ec2_api_url = kc.service_catalog.url_for(
             service_type=consts.ServiceType.EC2,
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         client = boto.connect_ec2_endpoint(
             url=ec2_api_url,
             aws_access_key_id=ec2_credential.access,
             aws_secret_access_key=ec2_credential.secret,
-            is_secure=self.endpoint.insecure)
+            is_secure=self.credential.insecure)
         return client
 
 
@@ -604,16 +605,16 @@ class Monasca(OSClient):
         kc = self.keystone()
         monitoring_api_url = kc.service_catalog.url_for(
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
+            endpoint_type=self.credential.endpoint_type,
+            region_name=self.credential.region_name)
         auth_token = kc.auth_token
         client = monasca.Client(
             self.choose_version(version),
             monitoring_api_url,
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
-            insecure=self.endpoint.insecure,
-            cacert=self.endpoint.cacert,
+            insecure=self.credential.insecure,
+            cacert=self.credential.cacert,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
@@ -621,14 +622,14 @@ class Monasca(OSClient):
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 
-    def __init__(self, endpoint, api_info=None):
-        self.endpoint = endpoint
+    def __init__(self, credential, api_info=None):
+        self.credential = credential
         self.api_info = api_info or {}
         self.cache = {}
 
     def __getattr__(self, client_name):
         """Lazy load of clients."""
-        return OSClient.get(client_name)(self.endpoint, self.api_info,
+        return OSClient.get(client_name)(self.credential, self.api_info,
                                          self.cache)
 
     @classmethod
@@ -658,12 +659,12 @@ class Clients(object):
             if "admin" not in [role.lower() for role in
                                client.auth_ref.role_names]:
                 raise exceptions.InvalidAdminException(
-                    username=self.endpoint.username)
+                    username=self.credential.username)
         except keystone_exceptions.Unauthorized:
             raise exceptions.InvalidEndpointsException()
         except keystone_exceptions.AuthorizationFailure:
             raise exceptions.HostUnreachableException(
-                url=self.endpoint.auth_url)
+                url=self.credential.auth_url)
         return client
 
     def services(self):

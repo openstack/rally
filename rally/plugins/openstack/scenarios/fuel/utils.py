@@ -108,12 +108,12 @@ class FuelClient(object):
 class Fuel(osclients.OSClient):
     """FuelClient factory for osclients.Clients."""
     def create_client(self, *args, **kwargs):
-        auth_url = six.moves.urllib.parse.urlparse(self.endpoint.auth_url)
+        auth_url = six.moves.urllib.parse.urlparse(self.credential.auth_url)
         return FuelClient(version=self.choose_version(),
                           server_address=auth_url.hostname,
                           server_port=8000,
-                          username=self.endpoint.username,
-                          password=self.endpoint.password)
+                          username=self.credential.username,
+                          password=self.credential.password)
 
 
 class FuelScenario(scenario.OpenStackScenario):
