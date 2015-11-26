@@ -247,6 +247,12 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         else:
             self.conf.set(section_name, "connect_method", "fixed")
 
+    def _configure_orchestration(self, section_name="orchestration"):
+        self.conf.set(section_name, "stack_owner_role",
+                      CONF.role.heat_stack_owner_role)
+        self.conf.set(section_name, "stack_user_role",
+                      CONF.role.heat_stack_user_role)
+
     def generate(self, conf_path=None):
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name.startswith("_configure_"):
