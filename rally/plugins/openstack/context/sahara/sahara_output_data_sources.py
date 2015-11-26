@@ -60,8 +60,7 @@ class SaharaOutputDataSources(context.Context):
             if self.config["output_type"] == "swift":
                 swift = swift_utils.SwiftScenario(clients=clients,
                                                   context=self.context)
-                container_name = rutils.generate_random_name(
-                    prefix=self.config["output_url_prefix"])
+                container_name = self.generate_random_name()
                 self.context["tenants"][tenant_id]["sahara"]["container"] = {
                     "name": swift._create_container(
                         container_name=container_name),
