@@ -50,15 +50,11 @@ class TempestConfigTestCase(test.TestCase):
     def setUp(self):
         super(TempestConfigTestCase, self).setUp()
 
-        mock_deployment_get = mock.patch(
-            "rally.common.objects.deploy.db.deployment_get",
-            return_value=CREDS)
-        mock_clients = mock.patch("rally.osclients.Clients")
-        mock_isfile = mock.patch("os.path.isfile", return_value=True)
-
-        mock_deployment_get.start()
-        mock_clients.start()
-        self.mock_isfile = mock_isfile.start()
+        mock.patch("rally.common.objects.deploy.db.deployment_get",
+                   return_value=CREDS).start()
+        mock.patch("rally.osclients.Clients").start()
+        self.mock_isfile = mock.patch("os.path.isfile",
+                                      return_value=True).start()
 
         self.tempest_conf = config.TempestConfig("fake_deployment")
 
@@ -308,33 +304,16 @@ class TempestConfigTestCase(test.TestCase):
 
 class TempestResourcesContextTestCase(test.TestCase):
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_get")
-    @mock.patch("rally.osclients.Clients.services",
-                return_value={"test_service_type": "test_service"})
-    @mock.patch("rally.osclients.Clients.verified_keystone")
-    def setUp(self, mock_clients_verified_keystone,
-              mock_clients_services, mock_deployment_get):
+    def setUp(self):
         super(TempestResourcesContextTestCase, self).setUp()
 
-        endpoint = {
-            "username": "test",
-            "tenant_name": "test",
-            "password": "test",
-            "auth_url": "http://test/v2.0/",
-            "permission": "admin",
-            "admin_domain_name": "Default"
-        }
-        mock_deployment_get.return_value = {"admin": endpoint}
+        mock.patch("rally.common.objects.deploy.db.deployment_get",
+                   return_value=CREDS).start()
+        mock.patch("rally.osclients.Clients").start()
 
         self.context = config.TempestResourcesContext("fake_deployment",
                                                       "/fake/path/to/config")
-        self.context.clients = mock.MagicMock()
         self.context.conf.add_section("compute")
-
-        keystone_patcher = mock.patch(
-            "rally.osclients.Keystone._create_keystone_client")
-        keystone_patcher.start()
-        self.addCleanup(keystone_patcher.stop)
 
     @mock.patch("rally.plugins.openstack.wrappers."
                 "network.NeutronWrapper.create_network")
