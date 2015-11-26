@@ -189,10 +189,14 @@ class MuranoScenario(scenario.OpenStackScenario):
 
     def _zip_package(self, package_path):
         """Call _prepare_package method that returns path to zip archive."""
-        return MuranoPackageManager()._prepare_package(package_path)
+        return MuranoPackageManager(self.task)._prepare_package(package_path)
 
 
-class MuranoPackageManager(object):
+class MuranoPackageManager(common_utils.RandomNameGeneratorMixin):
+    RESOURCE_NAME_FORMAT = "app.rally_XXXXXXXX_XXXXXXXX"
+
+    def __init__(self, task):
+        self.task = task
 
     @staticmethod
     def _read_from_file(filename):
@@ -228,7 +232,7 @@ class MuranoPackageManager(object):
         :param app_dir: path to directory with Murano application context
         """
 
-        new_fullname = common_utils.generate_random_name("app.")
+        new_fullname = self.generate_random_name()
 
         manifest_file = os.path.join(app_dir, "manifest.yaml")
         manifest = self._read_from_file(manifest_file)

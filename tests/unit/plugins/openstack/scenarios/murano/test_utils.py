@@ -106,7 +106,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
                 side_effect=mock.mock_open(read_data="Key: value"),
                 create=True)
     def test_read_from_file(self, mock_open):
-        utility = utils.MuranoPackageManager()
+        utility = utils.MuranoPackageManager({"uuid": "fake_task_id"})
         data = utility._read_from_file("filename")
         expected_data = {"Key": "value"}
         self.assertEqual(expected_data, data)
@@ -120,7 +120,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
                     "Classes": {"app.name_abc": "app_class.yaml"}}
         mock_murano_package_manager__read_from_file.side_effect = (
             [manifest])
-        utility = utils.MuranoPackageManager()
+        utility = utils.MuranoPackageManager({"uuid": "fake_task_id"})
         utility._change_app_fullname("tmp/tmpfile/")
         mock_murano_package_manager__read_from_file.assert_has_calls(
             [mock.call("tmp/tmpfile/manifest.yaml")]
@@ -140,7 +140,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
             mock_murano_package_manager__change_app_fullname,
             mock_shutil_copytree, mock_tempfile_mkdtemp,
             mock_zipfile_is_zipfile):
-        utility = utils.MuranoPackageManager()
+        utility = utils.MuranoPackageManager({"uuid": "fake_task_id"})
         package_path = "tmp/tmpfile"
 
         mock_zipfile_is_zipfile.return_value = False
@@ -161,7 +161,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("zipfile.is_zipfile")
     def test_prepare_zip_if_zip(self, mock_zipfile_is_zipfile):
-        utility = utils.MuranoPackageManager()
+        utility = utils.MuranoPackageManager({"uuid": "fake_task_id"})
         package_path = "tmp/tmpfile.zip"
         mock_zipfile_is_zipfile.return_value = True
         zip_file = utility._prepare_package(package_path)

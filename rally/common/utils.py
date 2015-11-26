@@ -220,25 +220,6 @@ def iterate_per_tenants(users):
             processed_tenants.add(user["tenant_id"])
             yield (user, user["tenant_id"])
 
-# NOTE(andreykurilin): Actually, this variable should be named as
-# "_ASCII_LETTERS_AND_DIGITS", but since world is not ideal, name of variable
-# can be non-ideal too.
-_DIGITS_AND_ASCII_LETTERS = string.ascii_letters + string.digits
-
-
-def generate_random_name(prefix="", length=16,
-                         choice=_DIGITS_AND_ASCII_LETTERS):
-    """Generates pseudo random name.
-
-    :param prefix: str, custom prefix for random name
-    :param length: int, length of random name
-    :param choice: str, chars for random choice
-    :returns: str, pseudo random name
-    """
-
-    rand_part = "".join(random.choice(choice) for i in range(length))
-    return prefix + rand_part
-
 
 _resource_name_placeholder_re = re.compile(
     "^(?P<prefix>.*?)(?P<task>X{3,})(?P<sep>[^X]+?)(?P<rand>X{3,})"
@@ -372,10 +353,9 @@ def name_matches_pattern(name, fmt, chars):
 
 
 def name_matches_object(name, *objects):
-    """Determine if a resource name could have been created by an object.
+    """Determine if a resource name could have been created by given objects.
 
-    The object (or list of objects) should implement
-    RandomNameGeneratorMixin.
+    The object(s) should implement RandomNameGeneratorMixin.
 
     It will often be more efficient to pass a list of classes to
     name_matches_object() than to perform multiple
