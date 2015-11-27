@@ -15,14 +15,20 @@ import copy
 import jsonschema
 import mock
 
+from rally.common import utils
 from rally import exceptions
 from rally.plugins.openstack.context.keystone import api_versions
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context.keystone.api_versions"
-
 
 class OpenStackServicesTestCase(test.TestCase):
+
+    def setUp(self):
+        super(OpenStackServicesTestCase, self).setUp()
+        self.mock_clients = mock.patch("rally.osclients.Clients").start()
+        self.mock_kc = self.mock_clients.return_value.keystone.return_value
+        self.mock_kc.service_catalog.get_endpoints.return_value = []
+        self.mock_kc.services.list.return_value = []
 
     def test_validate_correct_config(self):
         api_versions.OpenStackAPIVersions.validate({
@@ -73,37 +79,49 @@ class OpenStackServicesTestCase(test.TestCase):
             {"nova": {"version": 666}},
             "Unsupported version should be caught.")
 
-    @mock.patch("%s.osclients.Clients.services" % CTX, return_value={})
-    def test_setup_with_wrong_service_name(self, mock_clients_services):
+    def test_setup_with_wrong_service_name(self):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "service_name"}}},
-            "admin": {"endpoint": mock.MagicMock()}}
+            "admin": {"endpoint": mock.MagicMock()},
+            "users": [{"endpoint": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
-        mock_clients_services.assert_called_once_with()
+        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.mock_kc.services.list.assert_called_once_with()
 
-    @mock.patch("%s.osclients.Clients.services" % CTX, return_value={})
-    def test_setup_with_wrong_service_type(self, mock_clients_services):
+    def test_setup_with_wrong_service_name_and_without_admin(self):
+        context = {
+            "config": {api_versions.OpenStackAPIVersions.get_name(): {
+                "nova": {"service_name": "service_name"}}},
+            "users": [{"endpoint": mock.MagicMock()}]}
+        ctx = api_versions.OpenStackAPIVersions(context)
+        self.assertRaises(exceptions.BenchmarkSetupFailure, ctx.setup)
+        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.assertFalse(self.mock_kc.services.list.called)
+
+    def test_setup_with_wrong_service_type(self):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_type": "service_type"}}},
-            "admin": {"endpoint": mock.MagicMock()}}
+            "users": [{"endpoint": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
-        mock_clients_services.assert_called_once_with()
+        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
 
-    @mock.patch("%s.osclients.Clients.services" % CTX)
-    def test_setup_with_service_name(self, mock_clients_services):
-        mock_clients_services.return_value = {"computev21": "NovaV21"}
+    def test_setup_with_service_name(self):
+        self.mock_kc.services.list.return_value = [
+            utils.Struct(type="computev21", name="NovaV21")]
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "NovaV21"}}},
-            "admin": {"endpoint": mock.MagicMock()}}
+            "admin": {"endpoint": mock.MagicMock()},
+            "users": [{"endpoint": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(copy.deepcopy(context))
 
         ctx.setup()
 
-        mock_clients_services.assert_called_once_with()
+        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.mock_kc.services.list.assert_called_once_with()
 
         self.assertEqual("computev21", ctx.config["nova"]["service_type"])
