@@ -48,6 +48,7 @@ function _create_deployment_config() {
 {
     "type": "ExistingCloud",
     "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+    "region_name": "$REGION_NAME",
     "admin": {
         "username": "admin",
         "password": "$ADMIN_PASSWORD",
