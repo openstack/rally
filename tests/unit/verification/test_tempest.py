@@ -61,6 +61,7 @@ class TempestUtilsTestCase(BaseTestCase):
         self.assertFalse(self.verifier.is_installed())
 
         self.assertEqual([mock.call(self.verifier.path(".venv")),
+                          mock.call(self.verifier.path(".testrepository")),
                           mock.call(self.verifier.path(".venv"))],
                          mock_exists.call_args_list)
 

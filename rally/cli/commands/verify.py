@@ -57,7 +57,11 @@ class VerifyCommands(object):
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
     @cliutils.args("--system-wide-install", dest="system_wide_install",
-                   help="Use virtualenv else run tests in local environment",
+                   help="Don't create a virtual env when installing Tempest; "
+                        "use the local env instead of the Tempest virtual env "
+                        "when running the tests. Take notice that all Tempest "
+                        "requirements have to be already installed in "
+                        "the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
@@ -71,8 +75,10 @@ class VerifyCommands(object):
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
         :param do_use: Use new task as default for future operations
-        :param system_wide_install: Use virtualenv else run tests in
-                                    local environment
+        :param system_wide_install: Whether or not to create a virtual env
+                                    when installing Tempest; whether or not to
+                                    use the local env instead of the Tempest
+                                    virtual env when running the tests
         """
 
         if regex and set_name:
@@ -354,15 +360,21 @@ class VerifyCommands(object):
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of a deployment")
     @cliutils.args("--source", type=str, dest="source", required=False,
-                   help="Path/URL to repo to pull Tempest from")
+                   help="Path/URL to repo to clone Tempest from")
+    @cliutils.args("--no-tempest-venv", dest="no_tempest_venv",
+                   help="Don't create a virtual env for Tempest. Take notice "
+                        "that all Tempest requirements have to be already "
+                        "installed in the local env!",
+                   required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def install(self, deployment=None, source=None):
+    def install(self, deployment=None, source=None, no_tempest_venv=False):
         """Install Tempest.
 
         :param deployment: UUID or name of a deployment
-        :param source: Path/URL to repo to pull Tempest from
+        :param source: Path/URL to repo to clone Tempest from
+        :param no_tempest_venv: Whether or not to create a Tempest virtual env
         """
-        api.Verification.install_tempest(deployment, source)
+        api.Verification.install_tempest(deployment, source, no_tempest_venv)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of a deployment")
@@ -379,18 +391,25 @@ class VerifyCommands(object):
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False,
                    help="User specified Tempest config file location")
-    @cliutils.args("--source", type=str, dest="source",
-                   required=False, help="New path/URL to repo to pull Tempest "
-                                        "from. Use old source as default")
+    @cliutils.args("--source", type=str, dest="source", required=False,
+                   help="Path/URL to repo to clone Tempest from")
+    @cliutils.args("--no-tempest-venv", dest="no_tempest_venv",
+                   help="Don't create a virtual env for Tempest. Take notice "
+                        "that all Tempest requirements have to be already "
+                        "installed in the local env!",
+                   required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def reinstall(self, deployment=None, tempest_config=None, source=None):
-        """Uninstall Tempest and then reinstall from new source.
+    def reinstall(self, deployment=None,
+                  tempest_config=None, source=None, no_tempest_venv=False):
+        """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
-        :param source: New path/URL to repo to pull Tempest from
+        :param source: Path/URL to repo to clone Tempest from
+        :param no_tempest_venv: Whether or not to create a Tempest virtual env
         """
-        api.Verification.reinstall_tempest(deployment, tempest_config, source)
+        api.Verification.reinstall_tempest(deployment, tempest_config,
+                                           source, no_tempest_venv)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of a deployment")

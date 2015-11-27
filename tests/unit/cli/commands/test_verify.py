@@ -388,7 +388,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_uuid = "d26ebebc-3a5f-4d0d-9021-0c883bd560f5"
         self.verify.install(deployment_uuid)
         mock_verification_install_tempest.assert_called_once_with(
-            deployment_uuid, None)
+            deployment_uuid, None, False)
 
     @mock.patch("rally.api.Verification.install_tempest")
     def test_install_with_source_specified(
@@ -397,7 +397,7 @@ class VerifyCommandsTestCase(test.TestCase):
         source = "/tmp/tempest"
         self.verify.install(deployment_uuid, source)
         mock_verification_install_tempest.assert_called_once_with(
-            deployment_uuid, source)
+            deployment_uuid, source, False)
 
     @mock.patch("rally.api.Verification.uninstall_tempest")
     def test_uninstall(self, mock_verification_uninstall_tempest):
@@ -411,7 +411,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_uuid = "05e0879b-9150-4e42-b6a0-3c6e48197cc1"
         self.verify.reinstall(deployment_uuid)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, None, None)
+            deployment_uuid, None, None, False)
 
     @mock.patch("rally.api.Verification.reinstall_tempest")
     def test_reinstall_with_config_specified(
@@ -420,7 +420,7 @@ class VerifyCommandsTestCase(test.TestCase):
         tempest_conf = "/tmp/tempest.conf"
         self.verify.reinstall(deployment_uuid, tempest_config=tempest_conf)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, tempest_conf, None)
+            deployment_uuid, tempest_conf, None, False)
 
     @mock.patch("rally.api.Verification.reinstall_tempest")
     def test_reinstall_with_source_specified(
@@ -429,7 +429,7 @@ class VerifyCommandsTestCase(test.TestCase):
         source = "/tmp/tempest"
         self.verify.reinstall(deployment_uuid, source=source)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, None, source)
+            deployment_uuid, None, source, False)
 
     @mock.patch("rally.api.Verification.reinstall_tempest")
     def test_reinstall_with_config_and_source_specified(
@@ -439,7 +439,7 @@ class VerifyCommandsTestCase(test.TestCase):
         source = "/tmp/tempest"
         self.verify.reinstall(deployment_uuid, tempest_conf, source)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, tempest_conf, source)
+            deployment_uuid, tempest_conf, source, False)
 
     @mock.patch("rally.api.Verification.show_config_info")
     def test_showconfig(self, mock_verification_show_config_info):
