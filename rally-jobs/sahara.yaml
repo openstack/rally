@@ -3,6 +3,7 @@
   SaharaNodeGroupTemplates.create_and_list_node_group_templates:
     -
       args:
+        hadoop_version: "{{sahara_hadoop_version}}"
         flavor:
          name: "m1.small"
       runner:
@@ -23,6 +24,7 @@
   SaharaNodeGroupTemplates.create_delete_node_group_templates:
     -
       args:
+        hadoop_version: "{{sahara_hadoop_version}}"
         flavor:
          name: "m1.small"
       runner:
