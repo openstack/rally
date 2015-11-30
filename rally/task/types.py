@@ -40,6 +40,60 @@ def set(**kwargs):
     return wrapper
 
 
+def _get_preprocessor_loader(plugin_name):
+    """Get a class that loads a preprocessor class.
+
+    This returns a class with a single class method, ``transform``,
+    which, when called, finds a plugin and defers to its ``transform``
+    class method. This is necessary because ``convert()`` is called as
+    a decorator at import time, but we cannot be confident that the
+    ResourceType plugins may not be loaded yet. (In fact, since
+    ``convert()`` is used to decorate plugins, we can be confident
+    that not all plugins are loaded when it is called.)
+
+    This permits us to defer plugin searching until the moment when
+    ``preprocess()`` calls the various preprocessors, at which point
+    we can be certain that all plugins have been loaded and finding
+    them by name will work.
+    """
+    # NOTE(stpierre): This technically doesn't work, because
+    # ResourceType subclasses aren't plugins (yet)
+    def transform(cls, *args, **kwargs):
+        plug = ResourceType.get(plugin_name)
+        return plug.transform(*args, **kwargs)
+
+    return type("PluginLoader_%s" % plugin_name,
+                (object,),
+                {"transform": classmethod(transform)})
+
+
+def convert(**kwargs):
+    """Decorator to define resource transformation(s) on scenario parameters.
+
+    This will eventually replace set(). For the time being, set()
+    should be preferred.
+
+    The ``kwargs`` passed as arguments are used to map a key in the
+    scenario config to the resource type plugin used to perform a
+    transformation on the value of the key. For instance:
+
+        @types.convert(image={"type": "glance_image"})
+
+    This would convert the ``image`` key in the scenario configuration
+    to a Glance image by using the ``glance_image`` resource
+    plugin. Currently ``type`` is the only recognized key, but others
+    may be added in the future.
+    """
+    preprocessors = dict([(k, _get_preprocessor_loader(v["type"]))
+                          for k, v in kwargs.items()])
+
+    def wrapper(func):
+        func._meta_setdefault("preprocessors", {})
+        func._meta_get("preprocessors").update(preprocessors)
+        return func
+    return wrapper
+
+
 def preprocess(name, context, args):
     """Run preprocessor on scenario arguments.
 
