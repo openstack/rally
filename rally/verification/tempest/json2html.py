@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
 import re
 
 from jinja2 import utils
@@ -51,7 +52,9 @@ def generate_report(results):
     return template.render(report={
         "tests": tests,
         "total": results["tests"],
-        "time": results["time"],
+        "time": "{0} ({1} s)".format(
+            datetime.timedelta(seconds=round(
+                float(results["time"]))), results["time"]),
         "success": results["success"],
         "failures": results["failures"],
         "skipped": results["skipped"],

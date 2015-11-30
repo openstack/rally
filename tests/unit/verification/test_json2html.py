@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+
 import mock
 
 from rally.verification.tempest import json2html
@@ -23,7 +25,7 @@ class HtmlOutputTestCase(test.TestCase):
     @mock.patch(BASE + ".json2html.ui_utils.get_template")
     def test_generate_report(self, mock_get_template):
         results = {
-            "time": 22,
+            "time": 22.75,
             "tests": 4,
             "success": 1,
             "skipped": 1,
@@ -50,7 +52,8 @@ class HtmlOutputTestCase(test.TestCase):
             "expected_failures": 0,
             "unexpected_success": 0,
             "total": 4,
-            "time": 22,
+            "time": "{0} ({1} s)".format(
+                datetime.timedelta(seconds=23), 22.75),
             "tests": [{"name": "tf",
                        "id": 0,
                        "output": "fail_log",
@@ -96,7 +99,7 @@ class HtmlOutputTestCase(test.TestCase):
             "expected_failures": 0,
             "unexpected_success": 0,
             "total": 1,
-            "time": 0,
+            "time": "{0} ({1} s)".format(datetime.timedelta(seconds=0), 0),
             "tests": [{
                 "id": 0,
                 "status": "skip",
