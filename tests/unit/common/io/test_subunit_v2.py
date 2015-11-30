@@ -106,3 +106,9 @@ RuntimeError: broken setUp method
         some_mock.reset_mock()
         some_a("", "tearDown (some_test[tag1,tag2])")
         some_mock.assert_called_once_with("some_test", ["tag1", "tag2"])
+
+    def test_no_status_called(self):
+        self.assertEqual({"tests": 0, "time": 0, "failures": 0, "skipped": 0,
+                          "success": 0, "unexpected_success": 0,
+                          "expected_failures": 0},
+                         subunit_v2.SubunitV2StreamResult().total)

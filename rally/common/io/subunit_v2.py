@@ -116,9 +116,12 @@ class SubunitV2StreamResult(object):
 
     @property
     def total(self):
+        total_time = 0
+        if self._first_timestamp:
+            total_time = total_seconds(
+                self._last_timestamp - self._first_timestamp)
         return {"tests": len(self.tests),
-                "time": total_seconds(
-                    self._last_timestamp - self._first_timestamp),
+                "time": total_time,
                 "failures": len(self.filter_tests("fail")),
                 "skipped": len(self.filter_tests("skip")),
                 "success": len(self.filter_tests("success")),
@@ -129,7 +132,6 @@ class SubunitV2StreamResult(object):
     def status(self, test_id=None, test_status=None, tags=None,
                file_name=None, file_bytes=None, mime_type=None,
                timestamp=None, charset=None):
-
         if test_status == "exists":
             self._tests[test_id] = {"status": "init",
                                     "name": test_id,
@@ -138,8 +140,6 @@ class SubunitV2StreamResult(object):
                 self._tests[test_id]["tags"] = tags
         elif test_id in self._tests:
             if test_status == "inprogress":
-                if not self._first_timestamp:
-                    self._first_timestamp = timestamp
                 self._timestamps[test_id] = timestamp
             elif test_status:
                 self._tests[test_id]["time"] = total_seconds(
@@ -161,6 +161,8 @@ class SubunitV2StreamResult(object):
                     self._unknown_entities[test_id][file_name] += file_bytes
 
         if timestamp:
+            if not self._first_timestamp:
+                self._first_timestamp = timestamp
             self._last_timestamp = timestamp
 
     def filter_tests(self, status):
