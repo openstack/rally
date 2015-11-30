@@ -107,15 +107,13 @@ class TempestUtilsTestCase(BaseTestCase):
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
         mock_check_output.assert_has_calls([
-            mock.call("python ./tools/install_venv.py", shell=True,
-                      cwd=self.verifier.path()),
-            mock.call("%s pip install -r requirements.txt "
-                      "-r test-requirements.txt" %
-                      self.verifier.venv_wrapper, shell=True,
-                      cwd=self.verifier.path()),
-            mock.call("%s python setup.py develop -N" %
-                      self.verifier.venv_wrapper, shell=True,
-                      cwd=self.verifier.path())])
+            mock.call(["python", "./tools/install_venv.py"], cwd="/tmp"),
+            mock.call(["/tmp/tools/with_venv.sh", "pip", "install", "-r",
+                       "requirements.txt", "-r", "test-requirements.txt"],
+                      cwd="/tmp"),
+            mock.call(["/tmp/tools/with_venv.sh", "pip", "install",
+                       "-e", "./"], cwd="/tmp"),
+        ])
 
     @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
     @mock.patch("%s.tempest.costilius.get_interpreter" % TEMPEST_PATH,
@@ -149,7 +147,7 @@ class TempestUtilsTestCase(BaseTestCase):
         mock_isdir.assert_called_once_with(
             self.verifier.path(".testrepository"))
         mock_check_output.assert_called_once_with(
-            "%s testr init" % self.verifier.venv_wrapper, shell=True,
+            [self.verifier.venv_wrapper, "testr", "init"],
             cwd=self.verifier.path())
 
     @mock.patch("%s.tempest.subunit_v2.parse_results_file" % TEMPEST_PATH)
@@ -250,10 +248,12 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         mock_copytree.assert_called_once_with(
             self.verifier.base_repo,
             self.verifier.path())
-        mock_check_call.assert_called_once_with(
-            "git checkout master; git pull",
-            cwd=self.verifier.path("tempest"),
-            shell=True)
+        cwd = self.verifier.path("tempest")
+        expected = [
+            mock.call(["git", "checkout", "master"], cwd=cwd),
+            mock.call(["git", "pull"], cwd=cwd),
+        ]
+        self.assertEqual(expected, mock_check_call.mock_calls)
         mock_tempest__install_venv.assert_called_once_with()
         mock_tempest__initialize_testr.assert_called_once_with()
 
@@ -287,10 +287,6 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         mock_copytree.assert_called_once_with(
             self.verifier.base_repo,
             self.verifier.path())
-        mock_check_call.assert_called_once_with(
-            "git checkout master; git pull",
-            cwd=self.verifier.path("tempest"),
-            shell=True)
         self.assertFalse(mock_tempest__install_venv.called)
         self.assertFalse(mock_tempest__initialize_testr.called)
         mock_tempest_uninstall.assert_called_once_with()

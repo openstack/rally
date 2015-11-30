@@ -74,8 +74,8 @@ class Rally(object):
 
     def __init__(self, fake=False, force_new_db=False):
         if not os.path.exists(DEPLOYMENT_FILE):
-            subprocess.call("rally deployment config > %s" % DEPLOYMENT_FILE,
-                            shell=True)
+            subprocess.call(["rally", "deployment", "config"],
+                            stdout=open(DEPLOYMENT_FILE, "w"))
 
         # NOTE(sskripnick): we should change home dir to avoid races
         # and do not touch any user files in ~/.rally

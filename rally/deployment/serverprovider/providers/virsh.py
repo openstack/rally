@@ -74,15 +74,12 @@ class VirshProvider(provider.ProviderFactory):
         """Clone prebuilt VM template and start it."""
 
         virt_url = self._get_virt_connection_url(self.config["connection"])
-        cmd = "virt-clone --connect=%(url)s -o %(t)s -n %(n)s --auto-clone" % {
-            "t": self.config["template_name"],
-            "n": vm_name,
-            "url": virt_url
-        }
-        subprocess.check_call(cmd, shell=True)
-
-        cmd = "virsh --connect=%s start %s" % (virt_url, vm_name)
-        subprocess.check_call(cmd, shell=True)
+        cmd = ["virt-clone", "--connect=%s" % virt_url,
+               "-o", self.config["template_name"],
+               "-n", vm_name, "--auto-clone"]
+        subprocess.check_call(cmd)
+        cmd = ["virsh", "--connect=%s" % virt_url, "start", vm_name]
+        subprocess.check_call(cmd)
         self.resources.create({"name": vm_name})
 
         return provider.Server(
@@ -102,12 +99,12 @@ class VirshProvider(provider.ProviderFactory):
         print("Destroy VM %s" % vm_name)
         vconnection = self._get_virt_connection_url(self.config["connection"])
 
-        cmd = "virsh --connect=%s destroy %s" % (vconnection, vm_name)
-        subprocess.check_call(cmd, shell=True)
+        cmd = ["virsh", "--connect=%s" % vconnection, "destroy", vm_name]
+        subprocess.check_call(cmd)
 
-        cmd = "virsh --connect=%s undefine %s --remove-all-storage" % (
-            vconnection, vm_name)
-        subprocess.check_call(cmd, shell=True)
+        cmd = ["virsh", "--connect=%s" % vconnection, "undefine", vm_name,
+               "--remove-all-storage"]
+        subprocess.check_call(cmd)
         return True
 
     @staticmethod
@@ -119,22 +116,16 @@ class VirshProvider(provider.ProviderFactory):
         ssh_opt = "-o StrictHostKeyChecking=no"
         script_path = os.path.dirname(__file__) + "/virsh/get_domain_ip.sh"
 
-        cmd = "scp %(opts)s  %(name)s %(host)s:~/get_domain_ip.sh" % {
-            "opts": ssh_opt,
-            "name": script_path,
-            "host": self.config["connection"]
-        }
-        subprocess.check_call(cmd, shell=True)
+        cmd = ["scp", ssh_opt, script_path,
+               "%s:~/get_domain_ip.sh" % self.config["connection"]]
+        subprocess.check_call(cmd)
 
         tries = 0
         ip = None
         while tries < 3 and not ip:
-            cmd = "ssh %(opts)s %(host)s ./get_domain_ip.sh %(name)s" % {
-                "opts": ssh_opt,
-                "host": self.config["connection"],
-                "name": vm_name
-            }
-            out = subprocess.check_output(cmd, shell=True)
+            cmd = ["ssh", ssh_opt, self.config["connection"],
+                   "./get_domain_ip.sh", vm_name]
+            out = subprocess.check_output(cmd)
             try:
                 ip = netaddr.IPAddress(out)
             except netaddr.core.AddrFormatError:
