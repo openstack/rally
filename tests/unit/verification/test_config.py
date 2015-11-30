@@ -281,9 +281,12 @@ class TempestConfigTestCase(test.TestCase):
                                    connect_method="fixed"):
         self.tempest_conf.available_services = [service]
         self.tempest_conf._configure_validation()
-        self.assertEqual(connect_method,
-                         self.tempest_conf.conf.get("validation",
-                                                    "connect_method"))
+
+        expected = (("run_validation", "True"),
+                    ("connect_method", connect_method))
+        result = self.tempest_conf.conf.items("validation")
+        for item in expected:
+            self.assertIn(item, result)
 
     @mock.patch("rally.verification.tempest.config._write_config")
     @mock.patch("inspect.getmembers")
