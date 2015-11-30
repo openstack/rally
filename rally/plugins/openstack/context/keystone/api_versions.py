@@ -54,34 +54,34 @@ class OpenStackAPIVersions(context.Context):
     def setup(self):
         # FIXME(andreykurilin): move all checks to validate method.
 
-        # do not use admin, if we have users...
-        user = random.choice(self.context.get("users",
-                                              [self.context["admin"]]))
-        clients = osclients.Clients(user["endpoint"])
-        services = clients.services()
+        # use admin only when `service_name` is presented
+        admin_clients = osclients.Clients(
+            self.context.get("admin", {}).get("endpoint"))
+        clients = osclients.Clients(random.choice(
+            self.context["users"])["endpoint"])
+        services = clients.keystone().service_catalog.get_endpoints()
+        services_from_admin = None
         for client_name, conf in six.iteritems(self.config):
             if "service_type" in conf and conf["service_type"] not in services:
                 raise exceptions.ValidationError(_(
                     "There is no service with '%s' type in your environment.")
                     % conf["service_type"])
             elif "service_name" in conf:
-                if conf["service_name"] not in services.values():
+                if not self.context.get("admin", {}).get("endpoint"):
+                    raise exceptions.BenchmarkSetupFailure(_(
+                        "Setting 'service_name' is allowed only for 'admin' "
+                        "user."))
+                if not services_from_admin:
+                    services_from_admin = dict(
+                        [(s.name, s.type)
+                         for s in admin_clients.keystone().services.list()])
+                if conf["service_name"] not in services_from_admin:
                     raise exceptions.ValidationError(
                         _("There is no '%s' service in your environment") %
                         conf["service_name"])
 
-                service_types = [
-                    key for key in services
-                    if services[key] == conf["service_name"]]
-
-                if len(service_types) > 1:
-                    # NOTE(andreykurilin): does it possible??
-                    raise exceptions.ValidationError(
-                        _("There are several services with name '%s'. Try to "
-                          "specify service_type property instead.") %
-                        conf["service_name"])
                 self.context["config"]["api_versions"][client_name][
-                    "service_type"] = service_types[0]
+                    "service_type"] = services_from_admin[conf["service_name"]]
 
     def cleanup(self):
         # nothing to do here

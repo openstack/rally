@@ -487,11 +487,17 @@ def required_services(config, clients, deployment, *required_services):
                 available_services.append(consts.Service.NOVA_NET)
 
     for service in required_services:
-        if service not in consts.Service:
-            return ValidationResult(False, _("Unknown service: %s") % service)
-        if service not in available_services:
+        # NOTE(andreykurilin): validator should ignore services configured via
+        # context(a proper validation should be in context)
+        service_config = config.get("context", {}).get(
+            "api_versions", {}).get(service, {})
+        if (service not in available_services and
+                not ("service_type" in service_config or
+                     "service_name" in service_config)):
             return ValidationResult(
-                False, _("Service is not available: %s") % service)
+                False, _("'{0}' service is not available. Hint: If '{0}' "
+                         "service has non-default service_type, try to setup "
+                         "it via 'api_versions' context.").format(service))
 
 
 @validator
