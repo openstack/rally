@@ -284,10 +284,12 @@ class TempestResourcesContext(object):
 
     def __enter__(self):
         self._create_tempest_roles()
-        self._configure_option("image_ref", self._create_image)
-        self._configure_option("image_ref_alt", self._create_image)
-        self._configure_option("flavor_ref", self._create_flavor, 64)
-        self._configure_option("flavor_ref_alt", self._create_flavor, 128)
+        self._configure_option("compute", "image_ref", self._create_image)
+        self._configure_option("compute", "image_ref_alt", self._create_image)
+        self._configure_option("compute",
+                               "flavor_ref", self._create_flavor, 64)
+        self._configure_option("compute",
+                               "flavor_ref_alt", self._create_flavor, 128)
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
             if neutronclient.list_networks(shared=True)["networks"]:
@@ -300,8 +302,11 @@ class TempestResourcesContext(object):
                 # resources.
                 LOG.debug("Shared networks found. "
                           "'fixed_network_name' option should be configured")
-                self._configure_option("fixed_network_name",
+                self._configure_option("compute", "fixed_network_name",
                                        self._create_network_resources)
+        if "heat" in self.available_services:
+            self._configure_option("orchestration", "instance_type",
+                                   self._create_flavor, 64)
 
         _write_config(self.conf_path, self.conf)
 
@@ -332,15 +337,18 @@ class TempestResourcesContext(object):
                 LOG.debug("Creating role '%s'" % role)
                 self._created_roles.append(keystoneclient.roles.create(role))
 
-    def _configure_option(self, option, create_method, *args, **kwargs):
-        option_value = self.conf.get("compute", option)
+    def _configure_option(self, section, option,
+                          create_method, *args, **kwargs):
+        option_value = self.conf.get(section, option)
         if not option_value:
-            LOG.debug("Option '%s' is not configured" % option)
+            LOG.debug("Option '%s' from '%s' section "
+                      "is not configured" % (option, section))
             resource = create_method(*args, **kwargs)
-            res_id = resource["name"] if "network" in option else resource.id
-            self.conf.set("compute", option, res_id)
-            LOG.debug("Option '{opt}' is configured. {opt} = {resource_id}"
-                      .format(opt=option, resource_id=res_id))
+            value = resource["name"] if "network" in option else resource.id
+            LOG.debug("Setting value '%s' for option '%s'" % (value, option))
+            self.conf.set(section, option, value)
+            LOG.debug("Option '{opt}' is configured. "
+                      "{opt} = {value}".format(opt=option, value=value))
         else:
             LOG.debug("Option '{opt}' was configured manually "
                       "in Tempest config file. {opt} = {opt_val}"
@@ -397,24 +405,26 @@ class TempestResourcesContext(object):
         for image in self._created_images:
             LOG.debug("Deleting image '%s'" % image.name)
             glanceclient.images.delete(image.id)
-            self._remove_opt_value_from_config(image.id)
+            self._remove_opt_value_from_config("compute", image.id)
 
     def _cleanup_flavors(self):
         novaclient = self.clients.nova()
         for flavor in self._created_flavors:
             LOG.debug("Deleting flavor '%s'" % flavor.name)
             novaclient.flavors.delete(flavor.id)
-            self._remove_opt_value_from_config(flavor.id)
+            self._remove_opt_value_from_config("compute", flavor.id)
+            self._remove_opt_value_from_config("orchestration", flavor.id)
 
     def _cleanup_network_resources(self):
         neutron_wrapper = network.NeutronWrapper(self.clients, self)
         for net in self._created_networks:
             LOG.debug("Deleting network resources: router, subnet, network")
             neutron_wrapper.delete_network(net)
-            self._remove_opt_value_from_config(net["name"])
+            self._remove_opt_value_from_config("compute", net["name"])
 
-    def _remove_opt_value_from_config(self, opt_value):
-        for option, value in self.conf.items("compute"):
+    def _remove_opt_value_from_config(self, section, opt_value):
+        for option, value in self.conf.items(section):
             if opt_value == value:
-                LOG.debug("Removing '%s' from Tempest config file" % opt_value)
-                self.conf.set("compute", option, "")
+                LOG.debug("Removing value '%s' for option '%s' "
+                          "from Tempest config file" % (opt_value, option))
+                self.conf.set(section, option, "")

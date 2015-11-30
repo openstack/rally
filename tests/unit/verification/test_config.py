@@ -314,19 +314,21 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.context = config.TempestResourcesContext("fake_deployment",
                                                       "/fake/path/to/config")
         self.context.conf.add_section("compute")
+        self.context.conf.add_section("orchestration")
 
     @mock.patch("rally.plugins.openstack.wrappers."
                 "network.NeutronWrapper.create_network")
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
     def test_options_configured_manually(
             self, mock_open, mock_neutron_wrapper_create_network):
-        self.context.available_services = ["glance", "nova", "neutron"]
+        self.context.available_services = ["glance", "heat", "nova", "neutron"]
 
         self.context.conf.set("compute", "image_ref", "id1")
         self.context.conf.set("compute", "image_ref_alt", "id2")
         self.context.conf.set("compute", "flavor_ref", "id3")
         self.context.conf.set("compute", "flavor_ref_alt", "id4")
         self.context.conf.set("compute", "fixed_network_name", "name1")
+        self.context.conf.set("orchestration", "instance_type", "id5")
 
         self.context.__enter__()
 
@@ -363,7 +365,8 @@ class TempestResourcesContextTestCase(test.TestCase):
         create_method.side_effect = [fakes.FakeFlavor(id="id1")]
 
         self.context.conf.set("compute", "flavor_ref", "")
-        self.context._configure_option("flavor_ref", create_method, 64)
+        self.context._configure_option("compute",
+                                       "flavor_ref", create_method, 64)
         self.assertEqual(create_method.call_count, 1)
 
         result = self.context.conf.get("compute", "flavor_ref")
@@ -420,18 +423,22 @@ class TempestResourcesContextTestCase(test.TestCase):
 
     def test__cleanup_flavors(self):
         self.context._created_flavors = [fakes.FakeFlavor(id="id1"),
-                                         fakes.FakeFlavor(id="id2")]
+                                         fakes.FakeFlavor(id="id2"),
+                                         fakes.FakeFlavor(id="id3")]
 
         self.context.conf.set("compute", "flavor_ref", "id1")
         self.context.conf.set("compute", "flavor_ref_alt", "id2")
+        self.context.conf.set("orchestration", "instance_type", "id3")
 
         self.context._cleanup_flavors()
         client = self.context.clients.nova()
-        self.assertEqual(client.flavors.delete.call_count, 2)
+        self.assertEqual(client.flavors.delete.call_count, 3)
 
         self.assertEqual("", self.context.conf.get("compute", "flavor_ref"))
         self.assertEqual("", self.context.conf.get("compute",
                                                    "flavor_ref_alt"))
+        self.assertEqual("", self.context.conf.get("orchestration",
+                                                   "instance_type"))
 
     @mock.patch("rally.plugins.openstack.wrappers."
                 "network.NeutronWrapper.delete_network")
