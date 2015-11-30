@@ -28,10 +28,10 @@ LOG = logging.getLogger(__name__)
 @context.configure(name="keypair", order=310)
 class Keypair(context.Context):
 
-    def _generate_keypair(self, endpoint):
+    def _generate_keypair(self, credential):
         keypair_name = self.generate_random_name()
 
-        nova_client = osclients.Clients(endpoint).nova()
+        nova_client = osclients.Clients(credential).nova()
 
         # NOTE(hughsaunders): If keypair exists, it must be deleted as we can't
         # retrieve the private key

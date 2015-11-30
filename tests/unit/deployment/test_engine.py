@@ -100,10 +100,10 @@ class EngineTestCase(test.TestCase):
                          mock_fake_deployment_set_completed):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
-        endpoint = engine.make_deploy()
-        self.assertEqual(engine, endpoint)
-        self.assertTrue(endpoint.deployed)
-        self.assertFalse(endpoint.cleanuped)
+        credential = engine.make_deploy()
+        self.assertEqual(engine, credential)
+        self.assertTrue(credential.deployed)
+        self.assertFalse(credential.cleanuped)
         mock_fake_deployment_set_completed.assert_called_once_with()
         mock_fake_deployment_set_started.assert_called_once_with()
 

@@ -46,7 +46,7 @@ class MultihostEngine(engine.Engine):
         }
 
     If {controller_ip} is specified in configuration values, it will be
-    replaced with controller address taken from endpoint returned by
+    replaced with controller address taken from credential returned by
     controller engine:
 
         ...
@@ -68,8 +68,8 @@ class MultihostEngine(engine.Engine):
                                         parent_uuid=self.deployment["uuid"])
         deployer = engine.Engine.get_engine(config["type"], deployment)
         with deployer:
-            endpoints = deployer.make_deploy()
-        return deployer, endpoints
+            credentials = deployer.make_deploy()
+        return deployer, credentials
 
     def _update_controller_ip(self, obj):
         if isinstance(obj, dict):
@@ -85,15 +85,15 @@ class MultihostEngine(engine.Engine):
 
     def deploy(self):
         self.deployment.update_status(consts._DeployStatus.DEPLOY_SUBDEPLOY)
-        self.controller, self.endpoints = self._deploy_node(
+        self.controller, self.credentials = self._deploy_node(
             self.config["controller"])
-        endpoint = self.endpoints[0]
-        self.controller_ip = parse.urlparse(endpoint.auth_url).hostname
+        credential = self.credentials[0]
+        self.controller_ip = parse.urlparse(credential.auth_url).hostname
 
         for node_config in self.config["nodes"]:
             self._update_controller_ip(node_config)
             self.nodes.append(self._deploy_node(node_config)[0])
-        return self.endpoints
+        return self.credentials
 
     def cleanup(self):
         subdeploys = db.deployment_list(parent_uuid=self.deployment["uuid"])

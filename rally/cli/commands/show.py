@@ -39,12 +39,12 @@ class ShowCommands(object):
                  "user": credentials["username"],
                  "tenant": credentials["tenant_name"]})
 
-    def _get_endpoints(self, deployment):
+    def _get_credentials(self, deployment):
         deployment = db.deployment_get(deployment)
         admin = deployment.get("admin")
-        endpoints = [admin] if admin else []
+        credentials = [admin] if admin else []
 
-        return endpoints + deployment.get("users", [])
+        return credentials + deployment.get("users", [])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
@@ -63,11 +63,11 @@ class ShowCommands(object):
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
 
-        for endpoint_dict in self._get_endpoints(deployment):
-            self._print_header("Images", endpoint_dict)
+        for credential_dict in self._get_credentials(deployment):
+            self._print_header("Images", credential_dict)
             table_rows = []
 
-            clients = osclients.Clients(objects.Credential(**endpoint_dict))
+            clients = osclients.Clients(objects.Credential(**credential_dict))
             glance_client = clients.glance()
             for image in glance_client.images.list():
                 data = [image.id, image.name, image.size]
@@ -94,10 +94,10 @@ class ShowCommands(object):
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
 
-        for endpoint_dict in self._get_endpoints(deployment):
-            self._print_header("Flavors", endpoint_dict)
+        for credential_dict in self._get_credentials(deployment):
+            self._print_header("Flavors", credential_dict)
             table_rows = []
-            clients = osclients.Clients(objects.Credential(**endpoint_dict))
+            clients = osclients.Clients(objects.Credential(**credential_dict))
             nova_client = clients.nova()
             for flavor in nova_client.flavors.list():
                 data = [flavor.id, flavor.name, flavor.vcpus,
@@ -119,10 +119,10 @@ class ShowCommands(object):
         headers = ["ID", "Label", "CIDR"]
         mixed_case_fields = ["ID", "Label", "CIDR"]
 
-        for endpoint_dict in self._get_endpoints(deployment):
-            self._print_header("Networks", endpoint_dict)
+        for credential_dict in self._get_credentials(deployment):
+            self._print_header("Networks", credential_dict)
             table_rows = []
-            clients = osclients.Clients(objects.Credential(**endpoint_dict))
+            clients = osclients.Clients(objects.Credential(**credential_dict))
             nova_client = clients.nova()
             for network in nova_client.networks.list():
                 data = [network.id, network.label, network.cidr]
@@ -141,10 +141,10 @@ class ShowCommands(object):
 
         headers = ["ID", "Name", "Description"]
         mixed_case_fields = ["ID", "Name", "Description"]
-        for endpoint_dict in self._get_endpoints(deployment):
-            self._print_header("Security groups", endpoint_dict)
+        for credential_dict in self._get_credentials(deployment):
+            self._print_header("Security groups", credential_dict)
             table_rows = []
-            clients = osclients.Clients(objects.Credential(**endpoint_dict))
+            clients = osclients.Clients(objects.Credential(**credential_dict))
             nova_client = clients.nova()
             for secgroup in nova_client.security_groups.list():
                 data = [secgroup.id, secgroup.name,
@@ -166,10 +166,10 @@ class ShowCommands(object):
         headers = ["Name", "Fingerprint"]
         mixed_case_fields = ["Name", "Fingerprint"]
 
-        for endpoint_dict in self._get_endpoints(deployment):
-            self._print_header("Keypairs", endpoint_dict)
+        for credential_dict in self._get_credentials(deployment):
+            self._print_header("Keypairs", credential_dict)
             table_rows = []
-            clients = osclients.Clients(objects.Credential(**endpoint_dict))
+            clients = osclients.Clients(objects.Credential(**credential_dict))
             nova_client = clients.nova()
             for keypair in nova_client.keypairs.list():
                 data = [keypair.name, keypair.fingerprint]

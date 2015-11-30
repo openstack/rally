@@ -49,8 +49,8 @@ class ExistingUsers(users.UserContextMixin, context.Context):
         self.context["tenants"] = {}
 
         for user in self.config:
-            user_endpoint = objects.Credential(**user)
-            user_kclient = osclients.Clients(user_endpoint).keystone()
+            user_credential = objects.Credential(**user)
+            user_kclient = osclients.Clients(user_credential).keystone()
 
             if user_kclient.tenant_id not in self.context["tenants"]:
                 self.context["tenants"][user_kclient.tenant_id] = {
@@ -59,7 +59,7 @@ class ExistingUsers(users.UserContextMixin, context.Context):
                 }
 
             self.context["users"].append({
-                "endpoint": user_endpoint,
+                "endpoint": user_credential,
                 "id": user_kclient.user_id,
                 "tenant_id": user_kclient.tenant_id
             })

@@ -262,19 +262,19 @@ class BaseDeploymentTestCase(test.TestCase):
         super(BaseDeploymentTestCase, self).setUp()
         self.deployment_config = FAKE_DEPLOYMENT_CONFIG
         self.deployment_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
-        admin_endpoint = FAKE_DEPLOYMENT_CONFIG.copy()
-        admin_endpoint.pop("type")
-        admin_endpoint["endpoint"] = None
-        admin_endpoint.update(admin_endpoint.pop("admin"))
-        admin_endpoint["permission"] = consts.EndpointPermission.ADMIN
-        admin_endpoint["https_insecure"] = False
-        admin_endpoint["https_cacert"] = None
-        self.endpoints = {"admin": admin_endpoint, "users": []}
+        admin_credential = FAKE_DEPLOYMENT_CONFIG.copy()
+        admin_credential.pop("type")
+        admin_credential["endpoint"] = None
+        admin_credential.update(admin_credential.pop("admin"))
+        admin_credential["permission"] = consts.EndpointPermission.ADMIN
+        admin_credential["https_insecure"] = False
+        admin_credential["https_cacert"] = None
+        self.credentials = {"admin": admin_credential, "users": []}
         self.deployment = {
             "uuid": self.deployment_uuid,
             "name": "fake_name",
             "config": self.deployment_config,
-            "admin": self.endpoints["admin"],
+            "admin": self.credentials["admin"],
             "users": []
         }
 
@@ -294,7 +294,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         })
         mock_engine_validate.assert_called_with()
         mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid, self.endpoints)
+            mock.call(self.deployment_uuid, self.credentials)
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -340,7 +340,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         api.Deployment.recreate(self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid, self.endpoints)
+            mock.call(self.deployment_uuid, self.credentials)
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")

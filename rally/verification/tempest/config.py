@@ -84,8 +84,8 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
     def __init__(self, deployment):
         self.deployment = deployment
 
-        self.endpoint = db.deployment_get(deployment)["admin"]
-        self.clients = osclients.Clients(objects.Credential(**self.endpoint))
+        self.credential = db.deployment_get(deployment)["admin"]
+        self.clients = osclients.Clients(objects.Credential(**self.credential))
         self.keystone = self.clients.verified_keystone()
         self.available_services = self.clients.services().values()
 
@@ -142,37 +142,39 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         pass
 
     def _configure_dashboard(self, section_name="dashboard"):
-        url = "http://%s/" % parse.urlparse(self.endpoint["auth_url"]).hostname
+        url = "http://%s/" % parse.urlparse(
+            self.credential["auth_url"]).hostname
         self.conf.set(section_name, "dashboard_url", url)
 
     def _configure_identity(self, section_name="identity"):
-        self.conf.set(section_name, "username", self.endpoint["username"])
-        self.conf.set(section_name, "password", self.endpoint["password"])
+        self.conf.set(section_name, "username", self.credential["username"])
+        self.conf.set(section_name, "password", self.credential["password"])
         self.conf.set(section_name, "tenant_name",
-                      self.endpoint["tenant_name"])
+                      self.credential["tenant_name"])
 
         self.conf.set(section_name, "admin_username",
-                      self.endpoint["username"])
+                      self.credential["username"])
         self.conf.set(section_name, "admin_password",
-                      self.endpoint["password"])
+                      self.credential["password"])
         self.conf.set(section_name, "admin_tenant_name",
-                      self.endpoint["tenant_name"])
+                      self.credential["tenant_name"])
 
         self.conf.set(section_name, "region",
-                      self.endpoint["region_name"])
+                      self.credential["region_name"])
 
-        self.conf.set(section_name, "uri", self.endpoint["auth_url"])
-        v2_url_trailer = parse.urlparse(self.endpoint["auth_url"]).path
+        self.conf.set(section_name, "uri", self.credential["auth_url"])
+        v2_url_trailer = parse.urlparse(self.credential["auth_url"]).path
         self.conf.set(section_name, "uri_v3",
-                      self.endpoint["auth_url"].replace(v2_url_trailer, "/v3"))
+                      self.credential["auth_url"].replace(
+                          v2_url_trailer, "/v3"))
 
         self.conf.set(section_name, "admin_domain_name",
-                      self.endpoint["admin_domain_name"])
+                      self.credential["admin_domain_name"])
 
         self.conf.set(section_name, "disable_ssl_certificate_validation",
-                      str(self.endpoint["https_insecure"]))
+                      str(self.credential["https_insecure"]))
         self.conf.set(section_name, "ca_certificates_file",
-                      self.endpoint["https_cacert"])
+                      self.credential["https_cacert"])
 
     # The compute section is configured in context class for Tempest resources.
     # Options which are configured there: 'image_ref', 'image_ref_alt',
@@ -230,7 +232,7 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             self.conf.set(section_name, service,
                           str(service in self.available_services))
         horizon_url = ("http://" +
-                       parse.urlparse(self.endpoint["auth_url"]).hostname)
+                       parse.urlparse(self.credential["auth_url"]).hostname)
         try:
             horizon_req = requests.get(
                 horizon_url,
@@ -269,8 +271,8 @@ class TempestResourcesContext(object):
     """Context class to create/delete resources needed for Tempest."""
 
     def __init__(self, deployment, conf_path):
-        endpoint = db.deployment_get(deployment)["admin"]
-        self.clients = osclients.Clients(objects.Credential(**endpoint))
+        credential = db.deployment_get(deployment)["admin"]
+        self.clients = osclients.Clients(objects.Credential(**credential))
         self.available_services = self.clients.services().values()
 
         self.conf_path = conf_path

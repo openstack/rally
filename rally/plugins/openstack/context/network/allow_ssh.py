@@ -26,18 +26,18 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-def _prepare_open_secgroup(endpoint, secgroup_name):
+def _prepare_open_secgroup(credential, secgroup_name):
     """Generate secgroup allowing all tcp/udp/icmp access.
 
     In order to run tests on instances it is necessary to have SSH access.
     This function generates a secgroup which allows all tcp/udp/icmp access.
 
-    :param endpoint: clients endpoint
+    :param credential: clients credential
     :param secgroup_name: security group name
 
     :returns: dict with security group details
     """
-    nova = osclients.Clients(endpoint).nova()
+    nova = osclients.Clients(credential).nova()
 
     if secgroup_name not in [sg.name for sg in nova.security_groups.list()]:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"

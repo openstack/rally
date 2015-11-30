@@ -22,7 +22,7 @@ from rally.deployment import engine
 class ExistingCloud(engine.Engine):
     """Just use an existing OpenStack deployment without deploying anything.
 
-    To use ExistingCloud, you should put endpoint information to the config:
+    To use ExistingCloud, you should put credential information to the config:
 
         {
             "type": "ExistingCloud",
@@ -116,7 +116,7 @@ class ExistingCloud(engine.Engine):
         ]
     }
 
-    def _create_endpoint(self, common, user, permission):
+    def _create_credential(self, common, user, permission):
         return objects.Credential(
             common["auth_url"], user["username"], user["password"],
             tenant_name=user.get("project_name", user.get("tenant_name")),
@@ -136,12 +136,12 @@ class ExistingCloud(engine.Engine):
     def deploy(self):
         permissions = consts.EndpointPermission
 
-        users = [self._create_endpoint(self.config, user, permissions.USER)
+        users = [self._create_credential(self.config, user, permissions.USER)
                  for user in self.config.get("users", [])]
 
-        admin = self._create_endpoint(self.config,
-                                      self.config.get("admin"),
-                                      permissions.ADMIN)
+        admin = self._create_credential(self.config,
+                                        self.config.get("admin"),
+                                        permissions.ADMIN)
 
         return {"admin": admin, "users": users}
 

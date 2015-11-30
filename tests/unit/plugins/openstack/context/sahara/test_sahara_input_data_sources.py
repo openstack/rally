@@ -25,7 +25,7 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(SaharaInputDataSourcesTestCase, self).setUp()
-        endpoint = objects.Endpoint("foo_url", "user", "passwd")
+        credential = objects.Endpoint("foo_url", "user", "passwd")
         self.tenants_num = 2
         self.users_per_tenant = 2
         self.users = self.tenants_num * self.users_per_tenant
@@ -40,7 +40,7 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": endpoint})
+                                       "endpoint": credential})
 
         self.user_key = [{"id": i, "tenant_id": j, "endpoint": "endpoint"}
                          for j in range(self.tenants_num)
