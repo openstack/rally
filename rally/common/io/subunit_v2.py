@@ -70,7 +70,7 @@ class SubunitV2StreamResult(object):
 
     def __init__(self):
         self._tests = {}
-        self._timestaps = {}
+        self._timestamps = {}
         # NOTE(andreykurilin): _first_timestamp and _last_timestamp vars are
         #   designed to calculate total time of tests executions
         self._first_timestamp = None
@@ -140,10 +140,10 @@ class SubunitV2StreamResult(object):
             if test_status == "inprogress":
                 if not self._first_timestamp:
                     self._first_timestamp = timestamp
-                self._timestaps[test_id] = timestamp
+                self._timestamps[test_id] = timestamp
             elif test_status:
                 self._tests[test_id]["time"] = total_seconds(
-                    timestamp - self._timestaps[test_id])
+                    timestamp - self._timestamps[test_id])
                 self._tests[test_id]["status"] = test_status
             else:
                 if file_name in ["traceback", "reason"]:
