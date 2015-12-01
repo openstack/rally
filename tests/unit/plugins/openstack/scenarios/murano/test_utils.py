@@ -93,12 +93,11 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         self.mock_wait_for.mock.assert_called_once_with(
             environment,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            is_ready=self.mock_resource_is.mock.return_value,
+            ready_statuses=["READY"],
             check_interval=config.murano_deploy_environment_check_interval,
             timeout=config.murano_deploy_environment_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with(
             ["DEPLOY FAILURE"])
-        self.mock_resource_is.mock.assert_called_once_with("READY")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.deploy_environment")
 

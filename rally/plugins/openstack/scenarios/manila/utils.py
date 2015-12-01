@@ -91,7 +91,7 @@ class ManilaScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.manila_share_create_prepoll_delay)
         share = utils.wait_for(
             share,
-            is_ready=utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_create_timeout,
             check_interval=CONF.benchmark.manila_share_create_poll_interval,

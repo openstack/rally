@@ -249,7 +249,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         self.clients("ceilometer").alarms.set_state(alarm.alarm_id, state)
         return bench_utils.wait_for(alarm,
-                                    is_ready=bench_utils.resource_is(state),
+                                    ready_statuses=[state],
                                     update_resource=bench_utils
                                     .get_from_manager(),
                                     timeout=timeout, check_interval=1)

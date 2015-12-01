@@ -139,7 +139,7 @@ class CinderScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
         volume = bench_utils.wait_for(
             volume,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
@@ -198,7 +198,7 @@ class CinderScenario(scenario.OpenStackScenario):
         volume.extend(volume, new_size)
         volume = bench_utils.wait_for(
             volume,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
@@ -226,7 +226,7 @@ class CinderScenario(scenario.OpenStackScenario):
         # we need to wait until it will be available.
         volume = bench_utils.wait_for(
             volume,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
@@ -235,7 +235,7 @@ class CinderScenario(scenario.OpenStackScenario):
         image = self.clients("glance").images.get(image_id)
         image = bench_utils.wait_for(
             image,
-            is_ready=bench_utils.resource_is("active"),
+            ready_statuses=["active"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.glance_image_create_timeout,
             check_interval=CONF.benchmark.glance_image_create_poll_interval
@@ -264,7 +264,7 @@ class CinderScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
         snapshot = bench_utils.wait_for(
             snapshot,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
@@ -299,7 +299,7 @@ class CinderScenario(scenario.OpenStackScenario):
         backup = self.clients("cinder").backups.create(volume_id, **kwargs)
         return bench_utils.wait_for(
             backup,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
@@ -334,7 +334,7 @@ class CinderScenario(scenario.OpenStackScenario):
         restored_volume = self.clients("cinder").volumes.get(restore.volume_id)
         return bench_utils.wait_for(
             restored_volume,
-            is_ready=bench_utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval

@@ -141,7 +141,7 @@ class NovaScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
         server = utils.wait_for(
             server,
-            is_ready=utils.resource_is("ACTIVE"),
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_boot_timeout,
             check_interval=CONF.benchmark.nova_server_boot_poll_interval
@@ -152,7 +152,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.reboot(reboot_type=reboottype)
         time.sleep(CONF.benchmark.nova_server_reboot_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_reboot_timeout,
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
@@ -214,7 +215,7 @@ class NovaScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.nova_server_rebuild_prepoll_delay)
         utils.wait_for(
             server,
-            is_ready=utils.resource_is("ACTIVE"),
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_rebuild_timeout,
             check_interval=CONF.benchmark.nova_server_rebuild_poll_interval
@@ -231,7 +232,8 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.start()
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_start_timeout,
             check_interval=CONF.benchmark.nova_server_start_poll_interval
@@ -248,7 +250,8 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.stop()
         utils.wait_for(
-            server, is_ready=utils.resource_is("SHUTOFF"),
+            server,
+            ready_statuses=["SHUTOFF"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_stop_timeout,
             check_interval=CONF.benchmark.nova_server_stop_poll_interval
@@ -266,7 +269,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.rescue()
         time.sleep(CONF.benchmark.nova_server_rescue_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("RESCUE"),
+            server,
+            ready_statuses=["RESCUE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_rescue_timeout,
             check_interval=CONF.benchmark.nova_server_rescue_poll_interval
@@ -283,7 +287,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.unrescue()
         time.sleep(CONF.benchmark.nova_server_unrescue_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unrescue_timeout,
             check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
@@ -301,7 +306,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.suspend()
         time.sleep(CONF.benchmark.nova_server_suspend_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("SUSPENDED"),
+            server,
+            ready_statuses=["SUSPENDED"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_suspend_timeout,
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
@@ -319,7 +325,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.resume()
         time.sleep(CONF.benchmark.nova_server_resume_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resume_timeout,
             check_interval=CONF.benchmark.nova_server_resume_poll_interval
@@ -337,7 +344,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.pause()
         time.sleep(CONF.benchmark.nova_server_pause_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("PAUSED"),
+            server,
+            ready_statuses=["PAUSED"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_pause_timeout,
             check_interval=CONF.benchmark.nova_server_pause_poll_interval
@@ -355,7 +363,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.unpause()
         time.sleep(CONF.benchmark.nova_server_unpause_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unpause_timeout,
             check_interval=CONF.benchmark.nova_server_unpause_poll_interval
@@ -373,7 +382,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.shelve()
         time.sleep(CONF.benchmark.nova_server_shelve_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("SHELVED_OFFLOADED"),
+            server,
+            ready_statuses=["SHELVED_OFFLOADED"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_shelve_timeout,
             check_interval=CONF.benchmark.nova_server_shelve_poll_interval
@@ -390,7 +400,8 @@ class NovaScenario(scenario.OpenStackScenario):
         server.unshelve()
         time.sleep(CONF.benchmark.nova_server_unshelve_prepoll_delay)
         utils.wait_for(
-            server, is_ready=utils.resource_is("ACTIVE"),
+            server,
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unshelve_timeout,
             check_interval=CONF.benchmark.nova_server_unshelve_poll_interval
@@ -481,7 +492,7 @@ class NovaScenario(scenario.OpenStackScenario):
         check_interval = CONF.benchmark.nova_server_image_create_poll_interval
         image = utils.wait_for(
             image,
-            is_ready=utils.resource_is("ACTIVE"),
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_create_timeout,
             check_interval=check_interval
@@ -560,7 +571,7 @@ class NovaScenario(scenario.OpenStackScenario):
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
         servers = [utils.wait_for(
             server,
-            is_ready=utils.resource_is("ACTIVE"),
+            ready_statuses=["ACTIVE"],
             update_resource=utils.
             get_from_manager(),
             timeout=CONF.benchmark.nova_server_boot_timeout,
@@ -628,7 +639,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server.resize(flavor)
         utils.wait_for(
             server,
-            is_ready=utils.resource_is("VERIFY_RESIZE"),
+            ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_timeout,
             check_interval=CONF.benchmark.nova_server_resize_poll_interval
@@ -639,7 +650,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server.confirm_resize()
         utils.wait_for(
             server,
-            is_ready=utils.resource_is(status),
+            ready_statuses=[status],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_confirm_timeout,
             check_interval=(
@@ -651,7 +662,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server.revert_resize()
         utils.wait_for(
             server,
-            is_ready=utils.resource_is(status),
+            ready_statuses=["status"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
@@ -667,7 +678,7 @@ class NovaScenario(scenario.OpenStackScenario):
                                                           device)
         utils.wait_for(
             volume,
-            is_ready=utils.resource_is("in-use"),
+            ready_statuses=["in-use"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
@@ -682,7 +693,7 @@ class NovaScenario(scenario.OpenStackScenario):
                                                           volume_id)
         utils.wait_for(
             volume,
-            is_ready=utils.resource_is("available"),
+            ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_detach_volume_timeout,
             check_interval=CONF.benchmark.nova_detach_volume_poll_interval
@@ -708,7 +719,7 @@ class NovaScenario(scenario.OpenStackScenario):
                                   disk_over_commit=disk_over_commit)
         utils.wait_for(
             server,
-            is_ready=utils.resource_is("ACTIVE"),
+            ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_live_migrate_timeout,
             check_interval=(
@@ -758,7 +769,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server_admin.migrate()
         utils.wait_for(
             server,
-            is_ready=utils.resource_is("VERIFY_RESIZE"),
+            ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_migrate_timeout,
             check_interval=(

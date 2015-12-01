@@ -227,7 +227,7 @@ class OpenStackProvider(provider.ProviderFactory):
             self.resources.create({"id": server.id}, type=SERVER_TYPE)
 
         kwargs = {
-            "is_ready": utils.resource_is("ACTIVE"),
+            "ready_statuses": ["ACTIVE"],
             "update_resource": utils.get_from_manager(),
             "timeout": 120,
             "check_interval": 5
