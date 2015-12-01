@@ -26,9 +26,10 @@ class SerialScenarioRunnerTestCase(test.TestCase):
     def test__run_scenario(self, mock__run_scenario_once):
         times = 5
         result = {"duration": 10, "idle_duration": 0, "error": [],
-                  "scenario_output": {}, "atomic_actions": {}}
+                  "scenario_output": {}, "atomic_actions": {},
+                  "timestamp": 1}
         mock__run_scenario_once.return_value = result
-        expected_results = [result for i in range(times)]
+        expected_results = [[result] for i in range(times)]
 
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": times})

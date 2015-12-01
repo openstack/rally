@@ -140,8 +140,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         self.assertEqual(len(runner_obj.result_queue), config["times"])
 
-        for result in runner_obj.result_queue:
-            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+        for result_batch in runner_obj.result_queue:
+            for result in result_batch:
+                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_exception(self, mock_sleep):
@@ -151,8 +152,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
                                  fakes.FakeContext({}).context, {})
         self.assertEqual(len(runner_obj.result_queue), config["times"])
-        for result in runner_obj.result_queue:
-            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+        for result_batch in runner_obj.result_queue:
+            for result in result_batch:
+                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_aborted(self, mock_sleep):

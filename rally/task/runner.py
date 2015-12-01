@@ -163,7 +163,7 @@ class ScenarioRunner(plugin.Plugin):
 
     CONFIG_SCHEMA = {}
 
-    def __init__(self, task, config):
+    def __init__(self, task, config, batch_size=0):
         """Runner constructor.
 
         It sets task and config to local variables. Also initialize
@@ -177,6 +177,8 @@ class ScenarioRunner(plugin.Plugin):
         self.result_queue = collections.deque()
         self.aborted = multiprocessing.Event()
         self.run_duration = 0
+        self.batch_size = batch_size
+        self.result_batch = []
 
     @staticmethod
     def validate(config):
@@ -253,16 +255,32 @@ class ScenarioRunner(plugin.Plugin):
 
             while not result_queue.empty():
                 self._send_result(result_queue.get())
+
+        self._flush_results()
         result_queue.close()
 
+    def _flush_results(self):
+        if self.result_batch:
+            sorted_batch = sorted(self.result_batch)
+            self.result_queue.append(sorted_batch)
+            self.result_batch = []
+
     def _send_result(self, result):
-        """Send partial result to consumer.
+        """Store partial result to send it to consumer later.
 
         :param result: Result dict to be sent. It should match the
                        ScenarioRunnerResult schema, otherwise
                        ValidationError is raised.
         """
-        self.result_queue.append(ScenarioRunnerResult(result))
+
+        r = ScenarioRunnerResult(result)
+        self.result_batch.append(r)
+
+        if len(self.result_batch) >= self.batch_size:
+            sorted_batch = sorted(self.result_batch,
+                                  key=lambda r: r["timestamp"])
+            self.result_queue.append(sorted_batch)
+            self.result_batch = []
 
     def _log_debug_info(self, **info):
         """Log runner parameters for debugging.

@@ -75,12 +75,13 @@ class ResultConsumer(object):
     def _consume_results(self):
         while True:
             if self.runner.result_queue:
-                result = self.runner.result_queue.popleft()
-                self.results.append(result)
-                success = self.sla_checker.add_iteration(result)
-                if self.abort_on_sla_failure and not success:
-                    self.sla_checker.set_aborted_on_sla()
-                    self.runner.abort()
+                results = self.runner.result_queue.popleft()
+                self.results.extend(results)
+                for r in results:
+                    success = self.sla_checker.add_iteration(r)
+                    if self.abort_on_sla_failure and not success:
+                        self.sla_checker.set_aborted_on_sla()
+                        self.runner.abort()
             elif self.is_done.isSet():
                 break
             else:
