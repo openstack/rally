@@ -472,3 +472,11 @@ class Verification(object):
         with open(verifier.config_file, "rb") as conf:
             return {"conf_data": conf.read(),
                     "conf_path": verifier.config_file}
+
+    @staticmethod
+    def list(status=None):
+        return objects.Verification.list(status)
+
+    @staticmethod
+    def get(verification_uuid):
+        return objects.Verification.get(verification_uuid)
