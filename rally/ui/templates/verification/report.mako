@@ -42,7 +42,7 @@
     @media only screen and (min-width: 1200px) { .content-wrap { width:auto  } .test-details { width:94%   } }
 </%block>
 
-<%block name="header_text">tempest report</%block>
+<%block name="header_text">Tempest Report</%block>
 
 <%block name="content">
     <p id="page-error" class="notify-error" style="display:none">Failed to load jQuery</p>
@@ -51,7 +51,7 @@
       <thead>
         <tr>
           <th>Total
-          <th>Total time
+          <th>Total Time
           <th>Success
           <th>Fails
           <th>Unexpected Success
@@ -86,7 +86,7 @@
         <tr>
           <th>Status
           <th>Time
-          <th colspan="5">Test Group/Test case
+          <th colspan="5">Test Case
         <tr>
       </thead>
       <tbody>
