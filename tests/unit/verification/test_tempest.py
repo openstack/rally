@@ -323,8 +323,7 @@ class TempestVerifyTestCase(BaseTestCase):
         return (
             "%(venv)s testr run --parallel --subunit %(testr_arg)s"
             " | tee %(tempest_path)s/subunit.stream"
-            " | %(venv)s subunit-2to1"
-            " | %(venv)s %(tempest_path)s/tools/colorizer.py" % {
+            " | %(venv)s subunit-trace -f -n" % {
                 "venv": self.verifier.venv_wrapper,
                 "testr_arg": ("tempest.api." if is_set
                               else "--load-list ") + testr_arg,

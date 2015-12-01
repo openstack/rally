@@ -42,11 +42,9 @@ class TempestScenarioTestCase(test.TestCase):
     def get_tests_launcher_cmd(self, tests):
         return ("%(venv)s testr run --parallel --subunit %(tests)s "
                 "| tee /dev/null "
-                "| %(venv)s subunit-2to1 "
-                "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
+                "| %(venv)s subunit-trace -f -n" %
                 {
                     "venv": self.verifier.venv_wrapper,
-                    "tempest_path": self.verifier.path(),
                     "tests": " ".join(tests)
                 })
 
