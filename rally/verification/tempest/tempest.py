@@ -336,12 +336,10 @@ class Tempest(object):
         test_cmd = (
             "%(venv)s testr run --parallel --subunit %(arg)s "
             "| tee %(log_file)s "
-            "| %(venv)s subunit-2to1 "
-            "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
+            "| %(venv)s subunit-trace -f -n" %
             {
                 "venv": self.venv_wrapper,
                 "arg": testr_arg,
-                "tempest_path": self.path(),
                 "log_file": log_file or self.log_file_raw
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
