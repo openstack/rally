@@ -478,7 +478,7 @@ class Zaqar(OSClient):
 
 
 @configure("murano", default_version="1",
-           default_service_type="application_catalog",
+           default_service_type="application-catalog",
            supported_versions=["1"])
 class Murano(OSClient):
     def create_client(self, version=None, service_type=None):

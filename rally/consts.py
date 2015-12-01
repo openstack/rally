@@ -132,7 +132,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     DATA_PROCESSING_MOS = "data_processing"
     OBJECT_STORE = "object-store"
     WORKFLOW_EXECUTION = "workflowv2"
-    APPLICATION_CATALOG = "application_catalog"
+    APPLICATION_CATALOG = "application-catalog"
     BARE_METAL = "baremetal"
 
     def __init__(self):

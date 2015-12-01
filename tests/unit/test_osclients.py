@@ -626,7 +626,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.murano()
             self.assertEqual(fake_murano, client)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type="application_catalog",
+                service_type="application-catalog",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name
             )
