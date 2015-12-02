@@ -150,6 +150,18 @@ class TempestUtilsTestCase(BaseTestCase):
             [self.verifier.venv_wrapper, "testr", "init"],
             cwd=self.verifier.path())
 
+    @mock.patch("os.path.isdir", return_value=False)
+    @mock.patch(TEMPEST_PATH + ".tempest.check_output")
+    def test__initialize_testr_when_initialisation_failed(
+            self, mock_check_output, mock_isdir):
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
+        self.assertRaises(tempest.TempestSetupFailure,
+                          self.verifier._initialize_testr)
+
+        mock_check_output.side_effect = OSError()
+        self.assertRaises(tempest.TempestSetupFailure,
+                          self.verifier._initialize_testr)
+
     @mock.patch("%s.tempest.subunit_v2.parse_results_file" % TEMPEST_PATH)
     @mock.patch("os.path.isfile", return_value=False)
     def test__save_results_without_log_file(

@@ -37,7 +37,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TempestSetupFailure(exceptions.RallyException):
-    msg_fmt = _("Unable to setup tempest: '%(message)s'.")
+    msg_fmt = _("Unable to setup Tempest: %(message)s")
 
 
 def check_output(*args, **kwargs):
@@ -45,8 +45,8 @@ def check_output(*args, **kwargs):
     try:
         output = costilius.sp_check_output(*args, **kwargs)
     except subprocess.CalledProcessError as e:
-        LOG.debug("failed cmd: '%s'" % e.cmd)
-        LOG.debug("error output: '%s'" % encodeutils.safe_decode(e.output))
+        LOG.error("Failed cmd: '%s'" % e.cmd)
+        LOG.error("Error output: '%s'" % encodeutils.safe_decode(e.output))
         raise
 
     LOG.debug("subprocess output: '%s'" % encodeutils.safe_decode(output))
@@ -237,14 +237,16 @@ class Tempest(object):
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):
-            LOG.debug("Test Repository initialization.")
+            LOG.debug("Initialization of 'testr'.")
+            cmd = ["testr", "init"]
+            if self.venv_wrapper:
+                cmd.insert(0, self.venv_wrapper)
             try:
-                check_output([self.venv_wrapper, "testr", "init"],
-                             cwd=self.path())
-            except subprocess.CalledProcessError:
+                check_output(cmd, cwd=self.path())
+            except (subprocess.CalledProcessError, OSError):
                 if os.path.exists(self.path(".testrepository")):
                     shutil.rmtree(self.path(".testrepository"))
-                raise TempestSetupFailure(_("failed to initialize testr"))
+                raise TempestSetupFailure(_("Failed to initialize 'testr'"))
 
     def is_installed(self):
         return os.path.exists(self.path(".venv"))
