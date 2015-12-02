@@ -494,18 +494,32 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.install.assert_called_once_with()
         mock_move.assert_called_once_with(tmp_file, fake_conf)
 
+    @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_configure_tempest(self, mock_tempest, mock_deployment_get):
+    def test_configure_tempest_when_tempest_tree_exists(
+            self, mock_tempest, mock_deployment_get, mock_exists):
         mock_tempest.return_value = self.tempest
         api.Verification.configure_tempest(self.deployment_uuid)
         self.tempest.generate_config_file.assert_called_once_with(False)
 
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("os.path.exists", return_value=False)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_show_config_info_when_tempest_configured(
-            self, mock_tempest, mock_deployment_get, mock_open):
+    def test_configure_tempest_when_no_tempest_tree_exists(
+            self, mock_tempest, mock_deployment_get, mock_exists):
+        mock_tempest.return_value = self.tempest
+        self.assertRaises(exceptions.NotFoundException,
+                          api.Verification.configure_tempest,
+                          self.deployment_uuid)
+        self.assertEqual(0, self.tempest.generate_config_file.call_count)
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_show_config_info_when_tempest_tree_and_config_exist(
+            self, mock_tempest, mock_deployment_get, mock_exists, mock_open):
         self.tempest.is_configured.return_value = True
         self.tempest.config_file = "/path/to/fake/conf"
         mock_tempest.return_value = self.tempest
@@ -513,16 +527,29 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         mock_open.assert_called_once_with("/path/to/fake/conf", "rb")
 
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_show_config_info_when_tempest_not_configured(
-            self, mock_tempest, mock_deployment_get, mock_open):
+    def test_show_config_info_when_tempest_tree_exists_and_config_doesnt(
+            self, mock_tempest, mock_deployment_get, mock_exists, mock_open):
         self.tempest.is_configured.return_value = False
         self.tempest.config_file = "/path/to/fake/conf"
         mock_tempest.return_value = self.tempest
         api.Verification.show_config_info(self.deployment_uuid)
         self.tempest.generate_config_file.assert_called_once_with()
         mock_open.assert_called_once_with("/path/to/fake/conf", "rb")
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_show_config_info_when_no_tempest_tree_exists(
+            self, mock_tempest, mock_deployment_get, mock_exists, mock_open):
+        mock_tempest.return_value = self.tempest
+        self.assertRaises(exceptions.NotFoundException,
+                          api.Verification.show_config_info,
+                          self.deployment_uuid)
+        self.assertEqual(0, mock_open.call_count)
 
     @mock.patch("rally.common.objects.Verification.list")
     def test_delete(self, mock_verification_list):

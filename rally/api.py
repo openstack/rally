@@ -374,35 +374,11 @@ class Verification(object):
         """
 
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-
         verification = objects.Verification(deployment_uuid=deployment_uuid)
-        verifier = cls._create_verifier(deployment_uuid, verification,
-                                        tempest_config, system_wide_install)
-        LOG.info("Starting verification of deployment: %s" % deployment_uuid)
-
-        verification.set_running()
-        verifier.verify(set_name=set_name, regex=regex,
-                        tests_file=tests_file)
-
-        return verification
-
-    @staticmethod
-    def _create_verifier(deployment_uuid, verification=None,
-                         tempest_config=None, system_wide_install=False):
-        """Create a Tempest object.
-
-        :param deployment_uuid: UUID or name of a deployment
-        :param verification: Verification object
-        :param tempest_config: User specified Tempest config file location
-        :param system_wide_install: Whether or not to create a virtual env
-                                    when installing Tempest; whether or not to
-                                    use the local env instead of the Tempest
-                                    virtual env when running the tests
-        :returns: Tempest object
-        """
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
                                    tempest_config=tempest_config,
                                    system_wide_install=system_wide_install)
+
         if not verifier.is_installed():
             LOG.info(_("Tempest is not installed "
                        "for the specified deployment."))
@@ -410,7 +386,12 @@ class Verification(object):
                        "for deployment: %s") % deployment_uuid)
             verifier.install()
 
-        return verifier
+        LOG.info("Starting verification of deployment: %s" % deployment_uuid)
+        verification.set_running()
+        verifier.verify(set_name=set_name, regex=regex,
+                        tests_file=tests_file)
+
+        return verification
 
     @classmethod
     def import_results(cls, deployment, set_name="", log_file=None):
@@ -485,6 +466,15 @@ class Verification(object):
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)
 
+    @staticmethod
+    def _check_tempest_tree_existence(verifier):
+        if not os.path.exists(verifier.path()):
+            msg = _("Tempest tree for "
+                    "deployment '%s' not found! ") % verifier.deployment
+            LOG.error(
+                msg + _("Use `rally verify install` for Tempest installation"))
+            raise exceptions.NotFoundException(message=msg)
+
     @classmethod
     def configure_tempest(cls, deployment, tempest_config=None,
                           override=False):
@@ -496,8 +486,11 @@ class Verification(object):
                          config file
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        verifier = cls._create_verifier(deployment_uuid,
-                                        tempest_config=tempest_config)
+        verifier = tempest.Tempest(deployment_uuid,
+                                   tempest_config=tempest_config)
+
+        cls._check_tempest_tree_existence(verifier)
+
         verifier.generate_config_file(override)
 
     @classmethod
@@ -507,7 +500,10 @@ class Verification(object):
         :param deployment: UUID or name of a deployment
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        verifier = cls._create_verifier(deployment_uuid)
+        verifier = tempest.Tempest(deployment_uuid)
+
+        cls._check_tempest_tree_existence(verifier)
+
         if not verifier.is_configured():
             verifier.generate_config_file()
 
