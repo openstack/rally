@@ -357,7 +357,7 @@ class TempestResourcesContext(object):
     def _create_image(self):
         glanceclient = self.clients.glance()
         params = {
-            "name": "rally-verify-img-%s" % uuid.uuid4(),
+            "name": "rally-verify-cirros-img-%s" % uuid.uuid4(),
             "disk_format": "qcow2",
             "container_format": "bare",
             "is_public": True
