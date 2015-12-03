@@ -328,11 +328,11 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_check(self, mock_deployment_get,
                               mock_deployment_check, mock_print_list):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                             "admin",
-                                             "adminpass").to_dict()
-        deployment = {"admin": sample_endpoint,
-                      "users": [sample_endpoint]}
+        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                               "admin",
+                                               "adminpass").to_dict()
+        deployment = {"admin": sample_credential,
+                      "users": [sample_credential]}
         mock_deployment_get.return_value = deployment
         mock_deployment_check.return_value = {}
 
@@ -355,11 +355,11 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_check_raise(self, mock_deployment_get,
                                     mock_deployment_check):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_endpoint = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                             "admin",
-                                             "adminpass").to_dict()
-        sample_endpoint["not-exist-key"] = "error"
-        mock_deployment_get.return_value = {"admin": sample_endpoint}
+        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
+                                               "admin",
+                                               "adminpass").to_dict()
+        sample_credential["not-exist-key"] = "error"
+        mock_deployment_get.return_value = {"admin": sample_credential}
         refused = keystone_exceptions.ConnectionRefused()
         mock_deployment_check.side_effect = refused
         self.assertEqual(self.deployment.check(deployment_id), 1)

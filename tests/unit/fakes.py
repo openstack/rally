@@ -920,7 +920,7 @@ class FakeObjectManager(FakeManager):
 
 
 class FakeServiceCatalog(object):
-    def get_endpoints(self):
+    def get_credentials(self):
         return {"image": [{"publicURL": "http://fake.to"}],
                 "metering": [{"publicURL": "http://fake.to"}],
                 "monitoring": [{"publicURL": "http://fake.to"}]}
@@ -1451,7 +1451,7 @@ class FakeEC2Client(object):
 
 class FakeClients(object):
 
-    def __init__(self, endpoint_=None):
+    def __init__(self, credential_=None):
         self._nova = None
         self._glance = None
         self._keystone = None
@@ -1468,7 +1468,7 @@ class FakeClients(object):
         self._murano = None
         self._monasca = None
         self._ec2 = None
-        self._endpoint = endpoint_ or objects.Credential(
+        self._credential = credential_ or objects.Credential(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
             "fake_password",

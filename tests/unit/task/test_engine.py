@@ -421,18 +421,18 @@ class TaskEngineTestCase(test.TestCase):
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
-        endpoint = mock.MagicMock()
+        credential = mock.MagicMock()
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
         eng = engine.TaskEngine(config, task)
-        result = eng._prepare_context(context, name, endpoint)
+        result = eng._prepare_context(context, name, credential)
         expected_context = copy.deepcopy(default_context)
         expected_context.setdefault("users", {})
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"endpoint": endpoint},
+            "admin": {"endpoint": credential},
             "scenario_name": name,
             "config": expected_context
         }
@@ -450,18 +450,18 @@ class TaskEngineTestCase(test.TestCase):
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
-        endpoint = mock.MagicMock()
+        credential = mock.MagicMock()
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
         existing_users = [mock.MagicMock()]
         eng = engine.TaskEngine(config, task, users=existing_users)
-        result = eng._prepare_context(context, name, endpoint)
+        result = eng._prepare_context(context, name, credential)
         expected_context = {"existing_users": existing_users}
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"endpoint": endpoint},
+            "admin": {"endpoint": credential},
             "scenario_name": name,
             "config": expected_context
         }

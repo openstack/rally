@@ -65,8 +65,8 @@ class Deployment(object):
             raise
 
         with deployer:
-            endpoints = deployer.make_deploy()
-            deployment.update_endpoints(endpoints)
+            credentials = deployer.make_deploy()
+            deployment.update_credentials(credentials)
             return deployment
 
     @classmethod
@@ -99,8 +99,8 @@ class Deployment(object):
             deployment["config"]["type"], deployment)
         with deployer:
             deployer.make_cleanup()
-            endpoints = deployer.make_deploy()
-            deployment.update_endpoints(endpoints)
+            credentials = deployer.make_deploy()
+            deployment.update_credentials(credentials)
 
     @classmethod
     def get(cls, deployment):

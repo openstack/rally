@@ -197,13 +197,13 @@ class FuelEngine(engine.Engine):
         ip = cluster.get_endpoint_ip()
         attrs = cluster.get_attributes()["editable"]["access"]
 
-        admin_endpoint = objects.Credential(
+        admin_credential = objects.Credential(
             "http://%s:5000/v2.0/" % ip,
             attrs["user"]["value"],
             attrs["password"]["value"],
             attrs["tenant"]["value"],
             consts.EndpointPermission.ADMIN)
-        return {"admin": admin_endpoint}
+        return {"admin": admin_credential}
 
     def cleanup(self):
         resources = self.deployment.get_resources(provider_name="FuelEngine",

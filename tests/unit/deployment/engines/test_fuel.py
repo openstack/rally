@@ -106,15 +106,16 @@ class FuelEngineTestCase(test.TestCase):
         engine._get_nodes = mock.Mock(side_effect=[1, 2, 3, 4])
         engine._get_release_id = mock.Mock()
 
-        endpoint = engine.deploy()
-        self.assertEqual(["admin"], list(endpoint))
-        endpoint = endpoint["admin"]
+        credential = engine.deploy()
+        self.assertEqual(["admin"], list(credential))
+        credential = credential["admin"]
 
-        self.assertEqual("user", endpoint.username)
-        self.assertEqual("pw", endpoint.password)
-        self.assertEqual("tn", endpoint.tenant_name)
-        self.assertEqual("http://2.3.4.5:5000/v2.0/", endpoint.auth_url)
-        self.assertEqual(consts.EndpointPermission.ADMIN, endpoint.permission)
+        self.assertEqual("user", credential.username)
+        self.assertEqual("pw", credential.password)
+        self.assertEqual("tn", credential.tenant_name)
+        self.assertEqual("http://2.3.4.5:5000/v2.0/", credential.auth_url)
+        self.assertEqual(consts.EndpointPermission.ADMIN,
+                         credential.permission)
 
         expected_cluster_calls = [
             mock.call.set_nodes(1, ["controller"]),

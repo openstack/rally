@@ -206,8 +206,8 @@ class CloudResources(object):
     """
 
     def __init__(self, **kwargs):
-        endpoint = osclients.objects.Endpoint(**kwargs)
-        self.clients = osclients.Clients(endpoint)
+        credential = osclients.objects.Endpoint(**kwargs)
+        self.clients = osclients.Clients(credential)
 
     def _deduplicate(self, lst):
         """Change list duplicates to make all items unique.

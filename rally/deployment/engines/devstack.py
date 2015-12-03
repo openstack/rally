@@ -123,12 +123,11 @@ class DevstackEngine(engine.Engine):
                                     stdin=local_conf)
             devstack_server.ssh.run("~/devstack/stack.sh")
 
-        admin_endpoint = objects.Credential("http://%s:5000/v2.0/" %
-                                            self.servers[0].host, "admin",
-                                            self.local_conf["ADMIN_PASSWORD"],
-                                            "admin",
-                                            consts.EndpointPermission.ADMIN)
-        return {"admin": admin_endpoint}
+        admin_credential = objects.Credential(
+            "http://%s:5000/v2.0/" % self.servers[0].host, "admin",
+            self.local_conf["ADMIN_PASSWORD"], "admin",
+            consts.EndpointPermission.ADMIN)
+        return {"admin": admin_credential}
 
     def cleanup(self):
         for resource in self.deployment.get_resources(type="credentials"):

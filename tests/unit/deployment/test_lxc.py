@@ -145,9 +145,9 @@ class LxcEngineTestCase(test.TestCase):
         fake_deployment.add_resource = add_resource
 
         with mock.patch.object(self.engine, "deployment", fake_deployment):
-            endpoint = self.engine.deploy()
+            credential = self.engine.deploy()
 
-        self.assertIsInstance(endpoint["admin"], objects.Credential)
+        self.assertIsInstance(credential["admin"], objects.Credential)
         lxc_host_calls = [
             mock.call(fake_servers[0], {"network": "10.128.128.0/28",
                                         "tunnel_to": ["1.1.1.1", "2.2.2.2"]}),

@@ -152,7 +152,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
         mock_iterate_per_tenants.assert_called_once_with(
             user_generator.context["users"])
-        expected = [mock.call(user_generator.endpoint)] + [
+        expected = [mock.call(user_generator.credential)] + [
             mock.call(u["endpoint"])
             for u, t in mock_iterate_per_tenants.return_value]
         self.osclients.Clients.assert_has_calls(expected, any_order=True)
@@ -312,16 +312,16 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         wrapped_keystone = mock.MagicMock()
         mock_keystone.wrap.return_value = wrapped_keystone
 
-        endpoint = objects.Credential("foo_url", "foo", "foo_pass",
-                                      https_insecure=True,
-                                      https_cacert="cacert")
+        credential = objects.Credential("foo_url", "foo", "foo_pass",
+                                        https_insecure=True,
+                                        https_cacert="cacert")
         tmp_context = dict(self.context)
         tmp_context["config"]["users"] = {"tenants": 1,
                                           "users_per_tenant": 2,
                                           "resource_management_workers": 1}
-        tmp_context["admin"]["endpoint"] = endpoint
+        tmp_context["admin"]["endpoint"] = credential
 
-        endpoint_dict = endpoint.to_dict(False)
+        credential_dict = credential.to_dict(False)
         user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
         wrapped_keystone.create_user.side_effect = user_list
@@ -340,16 +340,16 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),
                                  set(user.keys()))
 
-                user_endpoint_dict = user["endpoint"].to_dict(False)
+                user_credential_dict = user["endpoint"].to_dict(False)
 
                 excluded_keys = ["auth_url", "username", "password",
                                  "tenant_name", "region_name",
                                  "project_domain_name",
                                  "admin_domain_name",
                                  "user_domain_name"]
-                for key in (set(endpoint_dict.keys()) - set(excluded_keys)):
-                    self.assertEqual(endpoint_dict[key],
-                                     user_endpoint_dict[key])
+                for key in (set(credential_dict.keys()) - set(excluded_keys)):
+                    self.assertEqual(credential_dict[key],
+                                     user_credential_dict[key])
 
             tenants_ids = []
             for t in ctx.context["tenants"].keys():
@@ -362,7 +362,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_contains_correct_endpoint_type(self, mock_keystone):
-        endpoint = objects.Credential(
+        credential = objects.Credential(
             "foo_url", "foo", "foo_pass",
             endpoint_type=consts.EndpointType.INTERNAL)
         config = {
@@ -373,7 +373,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"endpoint": endpoint},
+            "admin": {"endpoint": credential},
             "task": {"uuid": "task_id"}
         }
 
@@ -385,7 +385,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_contains_default_endpoint_type(self, mock_keystone):
-        endpoint = objects.Credential("foo_url", "foo", "foo_pass")
+        credential = objects.Credential("foo_url", "foo", "foo_pass")
         config = {
             "config": {
                 "users": {
@@ -394,7 +394,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"endpoint": endpoint},
+            "admin": {"endpoint": credential},
             "task": {"uuid": "task_id"}
         }
 

@@ -661,7 +661,7 @@ class ValidatorsTestCase(test.TestCase):
                                            admin=True)
 
         # admin presented in deployment
-        fake_deployment = {"admin": "admin_endpoint", "users": []}
+        fake_deployment = {"admin": "admin_credential", "users": []}
         self.assertTrue(validator(None, None, fake_deployment).is_valid)
 
         # admin not presented in deployment
@@ -673,7 +673,7 @@ class ValidatorsTestCase(test.TestCase):
                                            users=True)
 
         # users presented in deployment
-        fake_deployment = {"admin": None, "users": ["u_endpoint"]}
+        fake_deployment = {"admin": None, "users": ["u_credential"]}
         self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and users presented in deployment
@@ -768,11 +768,11 @@ class ValidatorsTestCase(test.TestCase):
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
         mock_osclients.Clients.return_value = clients
-        mock_objects.Credential.return_value = "foo_endpoint"
+        mock_objects.Credential.return_value = "foo_credential"
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertTrue(result.is_valid, result.msg)
         mock_objects.Credential.assert_called_once_with(foo="bar")
-        mock_osclients.Clients.assert_called_once_with("foo_endpoint")
+        mock_osclients.Clients.assert_called_once_with("foo_credential")
         clients.nova.side_effect = ImportError
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertFalse(result.is_valid, result.msg)
@@ -808,7 +808,7 @@ class ValidatorsTestCase(test.TestCase):
             cinder_client.services = services
             c.return_value = cinder_client
 
-            deployment = {"admin": {"auth_url": "fake_endpoint",
+            deployment = {"admin": {"auth_url": "fake_credential",
                                     "username": "username",
                                     "password": "password"}}
             result = validator({}, None, deployment)

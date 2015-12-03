@@ -115,11 +115,11 @@ class UserGenerator(UserContextMixin, context.Context):
 
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
-        self.endpoint = self.context["admin"]["endpoint"]
+        self.credential = self.context["admin"]["endpoint"]
 
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
-        clients = osclients.Clients(self.endpoint)
+        clients = osclients.Clients(self.credential)
 
         if consts.Service.NEUTRON not in clients.services().values():
             return
@@ -143,7 +143,7 @@ class UserGenerator(UserContextMixin, context.Context):
         # NOTE(rmk): Ugly hack to deal with the fact that Nova Network
         # networks can only be disassociated in an admin context. Discussed
         # with boris-42 before taking this approach [LP-Bug #1350517].
-        clients = osclients.Clients(self.endpoint)
+        clients = osclients.Clients(self.credential)
         if consts.Service.NOVA not in clients.services().values():
             return
 
@@ -175,7 +175,7 @@ class UserGenerator(UserContextMixin, context.Context):
         def consume(cache, args):
             domain, task_id, i = args
             if "client" not in cache:
-                clients = osclients.Clients(self.endpoint)
+                clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
             tenant = cache["client"].create_project(
                 self.generate_random_name(), domain)
@@ -209,22 +209,22 @@ class UserGenerator(UserContextMixin, context.Context):
         def consume(cache, args):
             username, password, project_dom, user_dom, tenant_id = args
             if "client" not in cache:
-                clients = osclients.Clients(self.endpoint)
+                clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
             client = cache["client"]
             user = client.create_user(username, password,
                                       "%s@email.me" % username,
                                       tenant_id, user_dom)
-            user_endpoint = objects.Credential(
+            user_credential = objects.Credential(
                 client.auth_url, user.name, password,
                 self.context["tenants"][tenant_id]["name"],
                 consts.EndpointPermission.USER, client.region_name,
                 project_domain_name=project_dom, user_domain_name=user_dom,
-                endpoint_type=self.endpoint.endpoint_type,
-                https_insecure=self.endpoint.insecure,
-                https_cacert=self.endpoint.cacert)
+                endpoint_type=self.credential.endpoint_type,
+                https_insecure=self.credential.insecure,
+                https_cacert=self.credential.cacert)
             users.append({"id": user.id,
-                          "endpoint": user_endpoint,
+                          "endpoint": user_credential,
                           "tenant_id": tenant_id})
 
         # NOTE(msdubov): consume() will fill the users list in the closure.
@@ -242,7 +242,7 @@ class UserGenerator(UserContextMixin, context.Context):
 
         def consume(cache, tenant_id):
             if "client" not in cache:
-                clients = osclients.Clients(self.endpoint)
+                clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
             cache["client"].delete_project(tenant_id)
 
@@ -258,7 +258,7 @@ class UserGenerator(UserContextMixin, context.Context):
 
         def consume(cache, user_id):
             if "client" not in cache:
-                clients = osclients.Clients(self.endpoint)
+                clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
             cache["client"].delete_user(user_id)
 

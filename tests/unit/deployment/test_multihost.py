@@ -55,20 +55,20 @@ class MultihostEngineTestCase(test.TestCase):
     @mock.patch(MOD + "objects.Deployment")
     @mock.patch(MOD + "engine.Engine")
     def test__deploy_node(self, mock_engine, mock_deployment):
-        fake_endpoint = mock.Mock()
+        fake_credential = mock.Mock()
         fake_deployment = mock.Mock()
         fake_engine = mock.Mock()
         fake_engine.__enter__ = mock.Mock()
         fake_engine.__exit__ = mock.Mock()
-        fake_engine.make_deploy = mock.Mock(return_value=fake_endpoint)
+        fake_engine.make_deploy = mock.Mock(return_value=fake_credential)
 
         mock_deployment.return_value = fake_deployment
         mock_engine.get_engine = mock.Mock(return_value=fake_engine)
 
-        engine, endpoint = self.engine._deploy_node(self.config["nodes"][0])
+        engine, credential = self.engine._deploy_node(self.config["nodes"][0])
 
         self.assertEqual(fake_engine, engine)
-        self.assertEqual(fake_endpoint, endpoint)
+        self.assertEqual(fake_credential, credential)
 
         mock_deployment.assert_called_once_with(
             config=self.config["nodes"][0],
@@ -85,14 +85,14 @@ class MultihostEngineTestCase(test.TestCase):
     @mock.patch(MOD + "MultihostEngine._deploy_node")
     @mock.patch(MOD + "MultihostEngine._update_controller_ip")
     def test_deploy(self, mock__update_controller_ip, mock__deploy_node):
-        fake_endpoints = [mock.Mock()]
-        fake_endpoints[0].auth_url = "http://h1.net"
-        mock__deploy_node.return_value = [mock.Mock(), fake_endpoints]
+        fake_credentials = [mock.Mock()]
+        fake_credentials[0].auth_url = "http://h1.net"
+        mock__deploy_node.return_value = [mock.Mock(), fake_credentials]
 
-        endpoints = self.engine.deploy()
+        credentials = self.engine.deploy()
 
         self.assertEqual(self.engine.controller_ip, "h1.net")
-        self.assertEqual(fake_endpoints, endpoints)
+        self.assertEqual(fake_credentials, credentials)
         expected = [
             mock.call(self.config["nodes"][0]),
             mock.call(self.config["nodes"][1]),

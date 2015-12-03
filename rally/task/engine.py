@@ -282,7 +282,7 @@ class TaskEngine(object):
         conf = config.get("runner", {"type": "serial"})
         return runner.ScenarioRunner.get(conf["type"])(self.task, conf)
 
-    def _prepare_context(self, ctx, name, endpoint):
+    def _prepare_context(self, ctx, name, credential):
         scenario_context = copy.deepcopy(
             scenario.Scenario.get(name)._meta_get("default_context"))
         if self.existing_users and "users" not in ctx:
@@ -293,7 +293,7 @@ class TaskEngine(object):
         scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
-            "admin": {"endpoint": endpoint},
+            "admin": {"endpoint": credential},
             "scenario_name": name,
             "config": scenario_context
         }

@@ -59,12 +59,12 @@ class ExistingServers(provider.ProviderFactory):
 
     def create_servers(self):
         servers = []
-        for endpoint in self.credentials:
-            servers.append(provider.Server(host=endpoint["host"],
-                                           user=endpoint["user"],
-                                           key=endpoint.get("key"),
-                                           password=endpoint.get("password"),
-                                           port=endpoint.get("port", 22)))
+        for credential in self.credentials:
+            servers.append(provider.Server(host=credential["host"],
+                                           user=credential["user"],
+                                           key=credential.get("key"),
+                                           password=credential.get("password"),
+                                           port=credential.get("port", 22)))
         return servers
 
     def destroy_servers(self):

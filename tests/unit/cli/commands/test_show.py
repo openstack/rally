@@ -25,13 +25,13 @@ class ShowCommandsTestCase(test.TestCase):
     def setUp(self):
         super(ShowCommandsTestCase, self).setUp()
         self.show = show.ShowCommands()
-        self.admin_endpoint = {
+        self.admin_credential = {
             "username": "admin",
             "password": "admin",
             "tenant_name": "admin",
             "auth_url": "http://fake.auth.url"
         }
-        self.user_endpoints = {
+        self.user_credentials = {
             "username": "user1",
             "password": "user2",
             "tenant_name": "user3",
@@ -57,8 +57,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_image.size = 1
         mock_glance_create_client.return_value = self.fake_glance_client
         mock_deployment_get.return_value = {
-            "admin": self.admin_endpoint,
-            "users": [self.user_endpoints, self.user_endpoints]
+            "admin": self.admin_credential,
+            "users": [self.user_credentials, self.user_credentials]
         }
 
         self.show.images(self.fake_deployment_id)
@@ -97,8 +97,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_flavor.ram, fake_flavor.swap, fake_flavor.disk = 1024, 128, 10
         mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
-            "admin": self.admin_endpoint,
-            "users": [self.user_endpoints, self.user_endpoints]
+            "admin": self.admin_credential,
+            "users": [self.user_credentials, self.user_credentials]
         }
         self.show.flavors(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
@@ -137,8 +137,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_network.cidr = "10.0.0.0/24"
         mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
-            "admin": self.admin_endpoint,
-            "users": [self.user_endpoints, self.user_endpoints]
+            "admin": self.admin_credential,
+            "users": [self.user_credentials, self.user_credentials]
         }
         self.show.networks(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
@@ -174,8 +174,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_secgroup2.id = 1
         mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
-            "admin": self.admin_endpoint,
-            "users": [self.user_endpoints]
+            "admin": self.admin_credential,
+            "users": [self.user_credentials]
         }
         self.show.secgroups(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
@@ -207,8 +207,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_keypair.fingerprint = "84:87:58"
         mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
-            "admin": self.admin_endpoint,
-            "users": [self.user_endpoints, self.user_endpoints]
+            "admin": self.admin_credential,
+            "users": [self.user_credentials, self.user_credentials]
         }
         self.show.keypairs(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)

@@ -198,7 +198,7 @@ class DeploymentCommands(object):
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def show(self, deployment=None):
-        """Show the endpoints of the deployment.
+        """Show the credentials of the deployment.
 
         :param deployment: a UUID or name of the deployment
         """
@@ -210,9 +210,9 @@ class DeploymentCommands(object):
         deployment = api.Deployment.get(deployment)
         users = deployment["users"]
         admin = deployment["admin"]
-        endpoints = users + [admin] if admin else users
+        credentials = users + [admin] if admin else users
 
-        for ep in endpoints:
+        for ep in credentials:
             data = ["***" if m == "password" else ep.get(m, "")
                     for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
@@ -255,26 +255,26 @@ class DeploymentCommands(object):
               " services are available:"))
         cliutils.print_list(table_rows, headers)
 
-    def _update_openrc_deployment_file(self, deployment, endpoint):
+    def _update_openrc_deployment_file(self, deployment, credential):
         openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
         with open(openrc_path, "w+") as env_file:
             env_file.write("export OS_AUTH_URL=%(auth_url)s\n"
                            "export OS_USERNAME=%(username)s\n"
                            "export OS_PASSWORD=%(password)s\n"
                            "export OS_TENANT_NAME=%(tenant_name)s\n"
-                           % endpoint)
-            if endpoint.get("region_name"):
+                           % credential)
+            if credential.get("region_name"):
                 env_file.write("export OS_REGION_NAME=%s\n" %
-                               endpoint["region_name"])
-            if endpoint.get("endpoint"):
+                               credential["region_name"])
+            if credential.get("endpoint"):
                 env_file.write("export OS_ENDPOINT=%s\n" %
-                               endpoint["endpoint"])
-            if re.match(r"^/v3/?$",
-                        parse.urlparse(endpoint["auth_url"]).path) is not None:
+                               credential["endpoint"])
+            if re.match(r"^/v3/?$", parse.urlparse(
+                    credential["auth_url"]).path) is not None:
                 env_file.write("export OS_USER_DOMAIN_NAME=%s\n"
                                "export OS_PROJECT_DOMAIN_NAME=%s\n" %
-                               (endpoint["user_domain_name"],
-                                endpoint["project_domain_name"]))
+                               (credential["user_domain_name"],
+                                credential["project_domain_name"]))
         expanded_path = os.path.expanduser("~/.rally/openrc")
         if os.path.exists(expanded_path):
             os.remove(expanded_path)

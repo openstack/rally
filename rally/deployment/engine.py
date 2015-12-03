@@ -55,11 +55,11 @@ class Engine(plugin.Plugin):
             # do something
 
         def deploy(self):
-            # Make a deployment and return OpenStack endpoints.
-            # The endpoints may have either admin or ordinary users
+            # Make a deployment and return OpenStack credentials.
+            # The credentials may have either admin or ordinary users
             # permissions (depending on how the deploy engine has been
             # initialized).
-            return [endpoint_1, endpoint_2, ...]
+            return [credential_1, credential_2, ...]
 
         def cleanup(self):
             # Destroy OpenStack deployment and free resource
@@ -105,7 +105,7 @@ class Engine(plugin.Plugin):
 
     @abc.abstractmethod
     def deploy(self):
-        """Deploy OpenStack cloud and return endpoints."""
+        """Deploy OpenStack cloud and return credentials."""
 
     @abc.abstractmethod
     def cleanup(self):
@@ -114,9 +114,9 @@ class Engine(plugin.Plugin):
     @logging.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
     def make_deploy(self):
         self.deployment.set_started()
-        endpoints = self.deploy()
+        credentials = self.deploy()
         self.deployment.set_completed()
-        return endpoints
+        return credentials
 
     @logging.log_deploy_wrapper(LOG.info, _("Destroy cloud and free "
                                 "allocated resources."))

@@ -36,8 +36,8 @@ class SeekAndDestroy(object):
         all resources created by Rally.
 
         :param manager_cls: subclass of base.ResourceManager
-        :param admin: admin endpoint like in context["admin"]
-        :param users: users endpoints like in context["users"]
+        :param admin: admin credential like in context["admin"]
+        :param users: users credentials like in context["users"]
         """
         self.manager_cls = manager_cls
         self.admin = admin
@@ -271,7 +271,7 @@ def cleanup(names=None, admin_required=None, admin=None, users=None):
                   {
                     "id": <uuid1>,
                     "tenant_id": <uuid2>,
-                    "endpoint": <rally.common.objects.Credential>
+                    "credential": <rally.common.objects.Credential>
 
                   }
     """

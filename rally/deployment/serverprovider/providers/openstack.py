@@ -136,11 +136,11 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def __init__(self, deployment, config):
         super(OpenStackProvider, self).__init__(deployment, config)
-        user_endpoint = objects.Credential(
+        user_credential = objects.Credential(
             config["auth_url"], config["user"],
             config["password"], config["tenant"],
             region_name=config.get("region"))
-        clients = osclients.Clients(user_endpoint)
+        clients = osclients.Clients(user_credential)
         self.nova = clients.nova()
         try:
             self.glance = clients.glance()

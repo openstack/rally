@@ -117,10 +117,10 @@ class DeploymentTestCase(test.TestCase):
         )
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    def test_update_endpoints(self, mock_deployment_update):
+    def test_update_credentials(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
-        endpoints = {
+        credentials = {
             "admin": objects.Credential("url", "user", "pwd", "tenant",
                                         consts.EndpointPermission.ADMIN),
             "users": [
@@ -132,21 +132,21 @@ class DeploymentTestCase(test.TestCase):
         }
 
         expected_users = [u.to_dict(include_permission=True)
-                          for u in endpoints["users"]]
+                          for u in credentials["users"]]
 
-        deploy.update_endpoints(endpoints)
+        deploy.update_credentials(credentials)
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"],
             {
-                "admin": endpoints["admin"].to_dict(include_permission=True),
+                "admin": credentials["admin"].to_dict(include_permission=True),
                 "users": expected_users
             })
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    def test_update_empty_endpoints(self, mock_deployment_update):
+    def test_update_empty_credentials(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
-        deploy.update_endpoints({})
+        deploy.update_credentials({})
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"], {"admin": {}, "users": []})
 
