@@ -424,20 +424,6 @@
         failure_rate:
           max: 0
 
-  HttpRequests.check_request:
-    -
-      args:
-        url: "http://www.example.com"
-        method: "GET"
-        status_code: 200
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
   NovaSecGroup.create_and_delete_secgroups:
     -
       args:
