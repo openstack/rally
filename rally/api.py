@@ -125,6 +125,20 @@ class Deployment(object):
 
 class Task(object):
 
+    TASK_RESULT_SCHEMA = objects.task.TASK_RESULT_SCHEMA
+
+    @staticmethod
+    def list(**filters):
+        return objects.Task.list(**filters)
+
+    @staticmethod
+    def get(task_id):
+        return objects.Task.get(task_id)
+
+    @staticmethod
+    def get_detailed(task_id):
+        return objects.Task.get_detailed(task_id)
+
     @classmethod
     def render_template(cls, task_template, template_dir="./", **kwargs):
         """Render jinja2 task template to Rally input task.

@@ -29,12 +29,10 @@ import yaml
 from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import db
 from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import junit
 from rally.common import log as logging
-from rally.common import objects
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
@@ -271,7 +269,7 @@ class TaskCommands(object):
         Returns current status of task
         """
 
-        task = db.task_get(task_id)
+        task = api.Task.get(task_id)
         print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
@@ -451,7 +449,7 @@ class TaskCommands(object):
             print(_("* To get raw JSON output of task results, run:"))
             print("\trally task results %s\n" % task["uuid"])
 
-        task = db.task_get_detailed(task_id)
+        task = api.Task.get_detailed(task_id)
 
         if task is None:
             print("The task %s can not be found" % task_id)
@@ -484,7 +482,7 @@ class TaskCommands(object):
                     "sla": x["data"]["sla"],
                     "load_duration": x["data"]["load_duration"],
                     "full_duration": x["data"]["full_duration"]}
-                   for x in objects.Task.get(task_id).get_results()]
+                   for x in api.Task.get(task_id).get_results()]
 
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
@@ -536,7 +534,7 @@ class TaskCommands(object):
         if not all_deployments:
             filters.setdefault("deployment", deployment)
 
-        task_list = [task.to_dict() for task in objects.Task.list(**filters)]
+        task_list = [task.to_dict() for task in api.Task.list(**filters)]
 
         for x in task_list:
             x["duration"] = x["updated_at"] - x["created_at"]
@@ -602,7 +600,7 @@ class TaskCommands(object):
                         try:
                             jsonschema.validate(
                                 result,
-                                objects.task.TASK_RESULT_SCHEMA)
+                                api.Task.TASK_RESULT_SCHEMA)
                         except jsonschema.ValidationError as e:
                             print(_("ERROR: Invalid task result format in %s")
                                   % task_file_or_uuid, file=sys.stderr)
@@ -616,7 +614,7 @@ class TaskCommands(object):
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
-                    objects.Task.get(task_file_or_uuid).get_results())
+                    api.Task.get(task_file_or_uuid).get_results())
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
@@ -697,7 +695,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = objects.Task.get(task_id).get_results()
+        results = api.Task.get(task_id).get_results()
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"
@@ -727,5 +725,5 @@ class TaskCommands(object):
         :param task: Task uuid.
         """
         print("Using task: %s" % task)
-        db.task_get(task)
+        api.Task.get(task)
         fileutils.update_globals_file("RALLY_TASK", task)

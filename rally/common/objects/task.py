@@ -246,6 +246,10 @@ class Task(object):
         return db_task
 
     @staticmethod
+    def get_detailed(task_id):
+        return db.api.task_get_detailed(task_id)
+
+    @staticmethod
     def get(uuid):
         return Task(db.task_get(uuid))
 
