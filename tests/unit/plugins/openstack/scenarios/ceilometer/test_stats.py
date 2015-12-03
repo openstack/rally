@@ -19,12 +19,27 @@ from tests.unit import test
 
 
 class CeilometerStatsTestCase(test.ScenarioTestCase):
-    def test_create_meter_and_get_stats(self):
-        fake_meter = mock.MagicMock()
-        kwargs = mock.MagicMock()
+
+    def test_get_stats(self):
         scenario = stats.CeilometerStats(self.context)
-        scenario._create_meter = mock.MagicMock(return_value=fake_meter)
         scenario._get_stats = mock.MagicMock()
-        scenario.create_meter_and_get_stats(**kwargs)
-        scenario._create_meter.assert_called_once_with(**kwargs)
-        scenario._get_stats.assert_called_once_with(fake_meter.counter_name)
+        context = {"user": {"tenant_id": "fake", "id": "fake_id"},
+                   "tenant": {"id": "fake_id",
+                              "resources": ["fake_resource"]}}
+        metadata_query = {"a": "test"}
+        period = 10
+        groupby = "user_id"
+        aggregates = "sum"
+        scenario.context = context
+        scenario.get_stats("fake_meter", True, True, True, metadata_query,
+                           period, groupby, aggregates)
+        scenario._get_stats.assert_called_once_with(
+            "fake_meter",
+            [{"field": "user_id", "value": "fake_id", "op": "eq"},
+             {"field": "project_id", "value": "fake_id", "op": "eq"},
+             {"field": "resource_id", "value": "fake_resource", "op": "eq"},
+             {"field": "metadata.a", "value": "test", "op": "eq"}],
+            10,
+            "user_id",
+            "sum"
+        )

@@ -250,7 +250,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             self.scenario._get_stats("fake-meter"),
             self.clients("ceilometer").statistics.list.return_value)
         self.clients("ceilometer").statistics.list.assert_called_once_with(
-            "fake-meter")
+            "fake-meter", q=None, period=None, groupby=None, aggregates=None)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.get_stats")
 

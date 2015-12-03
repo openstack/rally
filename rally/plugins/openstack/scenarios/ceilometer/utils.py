@@ -322,12 +322,23 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.clients("ceilometer").resources.get(resource_id)
 
     @atomic.action_timer("ceilometer.get_stats")
-    def _get_stats(self, meter_name):
+    def _get_stats(self, meter_name, query=None, period=None, groupby=None,
+                   aggregates=None):
         """Get stats for a specific meter.
 
         :param meter_name: Name of ceilometer meter
+        :param query: list of queries
+        :param period: the length of the time range covered by these stats
+        :param groupby: the fields used to group the samples
+        :param aggregates: function for samples aggregation
+
+        :returns: list of statistics data
         """
-        return self.clients("ceilometer").statistics.list(meter_name)
+        return self.clients("ceilometer").statistics.list(meter_name, q=query,
+                                                          period=period,
+                                                          groupby=groupby,
+                                                          aggregates=aggregates
+                                                          )
 
     @atomic.action_timer("ceilometer.create_meter")
     def _create_meter(self, **kwargs):
