@@ -1,5 +1,5 @@
 ---
-    CeilometerSamples.list_samples:
+    CeilometerSamples.list_matched_samples:
      -
        runner:
          type: "constant"
@@ -28,5 +28,8 @@
                 created_at: "2015-09-10T06:55:12.000000"
        args:
          limit: 50
+         filter_by_user_id: true
+         filter_by_project_id: true
+         filter_by_resource_id: true
          metadata_query:
            status: "not_active"

@@ -303,13 +303,18 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.admin_clients("ceilometer").trait_descriptions.list(
             event_type)
 
-    @atomic.action_timer("ceilometer.list_samples")
-    def _list_samples(self):
+    def _list_samples(self, query=None, limit=None):
         """List all Samples.
 
-        :returns: list of all samples
+        :param query: optional param that specify query
+        :param limit: optional param for maximum number of samples returned
+        :returns: list of samples
         """
-        return self.clients("ceilometer").samples.list()
+        key = self._make_profiler_key("ceilometer.list_samples", query,
+                                      limit)
+        with atomic.ActionTimer(self, key):
+            return self.clients("ceilometer").samples.list(q=query,
+                                                           limit=limit)
 
     @atomic.action_timer("ceilometer.get_resource")
     def _get_resource(self, resource_id):

@@ -19,8 +19,48 @@ from tests.unit import test
 
 
 class CeilometerSamplesTestCase(test.ScenarioTestCase):
-    def test_list_samples(self):
+
+    def test_all_list_samples(self):
+        scenario = samples.CeilometerSamples(self.context)
+        scenario.list_matched_samples = mock.MagicMock()
+        metadata_query = {"a": "test"}
+        limit = 10
+        scenario.list_samples(metadata_query, limit)
+        scenario.list_matched_samples.assert_any_call(limit=10)
+        scenario.list_matched_samples.assert_any_call(
+            metadata_query=metadata_query)
+        scenario.list_matched_samples.assert_any_call(
+            filter_by_resource_id=True)
+        scenario.list_matched_samples.assert_any_call(
+            filter_by_user_id=True)
+        scenario.list_matched_samples.assert_any_call(
+            filter_by_project_id=True)
+
+    def test_list_samples_without_limit_and_metadata(self):
+        scenario = samples.CeilometerSamples(self.context)
+        scenario.list_matched_samples = mock.MagicMock()
+        scenario.list_samples()
+        expected_call_args_list = [
+            mock.call(filter_by_project_id=True),
+            mock.call(filter_by_user_id=True),
+            mock.call(filter_by_resource_id=True)
+        ]
+        self.assertSequenceEqual(expected_call_args_list,
+                                 scenario.list_matched_samples.call_args_list)
+
+    def test_list_matched_samples(self):
         scenario = samples.CeilometerSamples(self.context)
         scenario._list_samples = mock.MagicMock()
-        scenario.list_samples()
-        scenario._list_samples.assert_called_once_with()
+        context = {"user": {"tenant_id": "fake", "id": "fake_id"},
+                   "tenant": {"id": "fake_id",
+                              "resources": ["fake_resource"]}}
+        scenario.context = context
+        metadata_query = {"a": "test"}
+        limit = 10
+        scenario.list_matched_samples(True, True, True, metadata_query, limit)
+        scenario._list_samples.assert_called_once_with(
+            [{"field": "user_id", "value": "fake_id", "op": "eq"},
+             {"field": "project_id", "value": "fake_id", "op": "eq"},
+             {"field": "resource_id", "value": "fake_resource", "op": "eq"},
+             {"field": "metadata.a", "value": "test", "op": "eq"}],
+            10)

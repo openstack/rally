@@ -24,9 +24,37 @@ class CeilometerSamples(ceiloutils.CeilometerScenario):
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @scenario.configure()
-    def list_samples(self):
-        """Fetch all samples.
+    def list_matched_samples(self, filter_by_resource_id=False,
+                             filter_by_project_id=False,
+                             filter_by_user_id=False,
+                             metadata_query=None, limit=None):
+        """Get list of samples that matched fields from context and args.
 
-        This scenario fetches list of all samples.
+        :param filter_by_user_id: flag for query by user_id
+        :param filter_by_project_id: flag for query by project_id
+        :param filter_by_resource_id: flag for query by resource_id
+        :param metadata_query: dict with metadata fields and values for query
+        :param limit: count of samples in response
         """
-        self._list_samples()
+        query = self._make_general_query(filter_by_project_id,
+                                         filter_by_user_id,
+                                         filter_by_resource_id,
+                                         metadata_query)
+        self._list_samples(query, limit)
+
+    @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
+    @scenario.configure()
+    def list_samples(self, metadata_query=None, limit=None):
+        """Fetch all available queries for list sample request.
+
+        :param metadata_query: dict with metadata fields and values for query
+        :param limit: count of samples in response
+        """
+        self.list_matched_samples(filter_by_project_id=True)
+        self.list_matched_samples(filter_by_user_id=True)
+        self.list_matched_samples(filter_by_resource_id=True)
+        if metadata_query:
+            self.list_matched_samples(metadata_query=metadata_query)
+        if limit:
+            self.list_matched_samples(limit=limit)

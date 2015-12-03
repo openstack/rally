@@ -221,9 +221,21 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(
             self.scenario._list_samples(),
             self.clients("ceilometer").samples.list.return_value)
-        self.clients("ceilometer").samples.list.assert_called_once_with()
+        self.clients("ceilometer").samples.list.assert_called_once_with(
+            q=None, limit=None)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_samples")
+
+    def test__list_samples_with_query(self):
+        self.assertEqual(
+            self.scenario._list_samples(query=[{"field": "user_id",
+                                                "volume": "fake_id"}],
+                                        limit=10),
+            self.clients("ceilometer").samples.list.return_value)
+        self.clients("ceilometer").samples.list.assert_called_once_with(
+            q=[{"field": "user_id", "volume": "fake_id"}], limit=10)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_samples:limit&user_id")
 
     def test__get_resource(self):
         self.assertEqual(self.scenario._get_resource("fake-resource-id"),
