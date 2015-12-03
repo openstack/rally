@@ -122,6 +122,27 @@ class Deployment(object):
         clients = osclients.Clients(objects.Credential(**deployment["admin"]))
         return clients.services()
 
+    @staticmethod
+    def list(status=None, parent_uuid=None, name=None):
+        """Get the deployments list.
+
+        :returns: Deployment list
+        """
+        return objects.Deployment.list(status, parent_uuid, name)
+
+    @classmethod
+    def check(cls, deployment):
+        """Check keystone authentication and list all available services.
+
+        :returns: Service list
+        """
+        services = cls.service_list(deployment)
+        users = deployment["users"]
+        for endpoint_dict in users:
+            osclients.Clients(objects.Credential(**endpoint_dict)).keystone()
+
+        return services
+
 
 class Task(object):
 

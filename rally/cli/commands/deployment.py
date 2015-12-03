@@ -30,13 +30,10 @@ import yaml
 from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import db
 from rally.common import fileutils
 from rally.common.i18n import _
-from rally.common import objects
 from rally.common import utils
 from rally import exceptions
-from rally import osclients
 from rally import plugins
 
 
@@ -166,7 +163,7 @@ class DeploymentCommands(object):
 
         headers = ["uuid", "created_at", "name", "status", "active"]
         current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
-        deployment_list = deployment_list or db.deployment_list()
+        deployment_list = deployment_list or api.Deployment.list()
 
         table_rows = []
         if deployment_list:
@@ -193,7 +190,7 @@ class DeploymentCommands(object):
 
         :param deployment: a UUID or name of the deployment
         """
-        deploy = db.deployment_get(deployment)
+        deploy = api.Deployment.get(deployment)
         result = deploy["config"]
         print(json.dumps(result, sort_keys=True, indent=4))
 
@@ -210,9 +207,9 @@ class DeploymentCommands(object):
                    "region_name", "endpoint_type"]
         table_rows = []
 
-        deployment = db.deployment_get(deployment)
-        users = deployment.get("users", [])
-        admin = deployment.get("admin")
+        deployment = api.Deployment.get(deployment)
+        users = deployment["users"]
+        admin = deployment["admin"]
         endpoints = users + [admin] if admin else users
 
         for ep in endpoints:
@@ -239,12 +236,7 @@ class DeploymentCommands(object):
             return(1)
 
         try:
-            services = api.Deployment.service_list(deployment)
-            users = deployment["users"]
-            for endpoint_dict in users:
-                osclients.Clients(
-                    objects.Credential(**endpoint_dict)).keystone()
-
+            services = api.Deployment.check(deployment)
         except keystone_exceptions.ConnectionRefused:
             print(_("Unable to connect %s.") % deployment["admin"]["auth_url"])
             return(1)
@@ -296,13 +288,14 @@ class DeploymentCommands(object):
         :param deployment: UUID or name of a deployment
         """
         try:
-            deployment = db.deployment_get(deployment)
+            deployment = api.Deployment.get(deployment)
             print("Using deployment: %s" % deployment["uuid"])
+
             fileutils.update_globals_file("RALLY_DEPLOYMENT",
                                           deployment["uuid"])
             self._update_openrc_deployment_file(
-                deployment["uuid"], deployment.get("admin") or
-                deployment.get("users")[0])
+                deployment["uuid"],
+                deployment["admin"] or deployment["users"][0])
             print ("~/.rally/openrc was updated\n\nHINTS:\n"
                    "* To get your cloud resources, run:\n\t"
                    "rally show [flavors|images|keypairs|networks|secgroups]\n"
