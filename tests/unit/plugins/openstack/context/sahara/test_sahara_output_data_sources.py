@@ -46,9 +46,9 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": fake_dict})
+                                       "credential": fake_dict})
 
-        self.user_key = [{"id": i, "tenant_id": j, "endpoint": "endpoint"}
+        self.user_key = [{"id": i, "tenant_id": j, "credential": "credential"}
                          for j in range(self.tenants_num)
                          for i in range(self.users_per_tenant)]
         self.context.update({
@@ -62,7 +62,7 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
                     "output_url_prefix": "hdfs://test_host/",
                 },
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants,
@@ -121,7 +121,7 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
                     "output_url_prefix": "rally",
                 },
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants

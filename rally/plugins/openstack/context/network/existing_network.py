@@ -43,7 +43,8 @@ class ExistingNetwork(context.Context):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context.get("users", [])):
             net_wrapper = network_wrapper.wrap(
-                osclients.Clients(user["endpoint"]), self, config=self.config)
+                osclients.Clients(user["credential"]), self,
+                config=self.config)
             self.context["tenants"][tenant_id]["networks"] = (
                 net_wrapper.list_networks())
 

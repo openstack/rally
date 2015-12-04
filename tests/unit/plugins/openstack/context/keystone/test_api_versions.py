@@ -83,8 +83,8 @@ class OpenStackServicesTestCase(test.TestCase):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "service_name"}}},
-            "admin": {"endpoint": mock.MagicMock()},
-            "users": [{"endpoint": mock.MagicMock()}]}
+            "admin": {"credential": mock.MagicMock()},
+            "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
         self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
@@ -94,7 +94,7 @@ class OpenStackServicesTestCase(test.TestCase):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "service_name"}}},
-            "users": [{"endpoint": mock.MagicMock()}]}
+            "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.BenchmarkSetupFailure, ctx.setup)
         self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
@@ -104,7 +104,7 @@ class OpenStackServicesTestCase(test.TestCase):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_type": "service_type"}}},
-            "users": [{"endpoint": mock.MagicMock()}]}
+            "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
         self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
@@ -115,8 +115,8 @@ class OpenStackServicesTestCase(test.TestCase):
         context = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "NovaV21"}}},
-            "admin": {"endpoint": mock.MagicMock()},
-            "users": [{"endpoint": mock.MagicMock()}]}
+            "admin": {"credential": mock.MagicMock()},
+            "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(copy.deepcopy(context))
 
         ctx.setup()

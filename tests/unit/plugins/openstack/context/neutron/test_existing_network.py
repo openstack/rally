@@ -31,10 +31,10 @@ class ExistingNetworkTestCase(test.TestCase):
             "users": [
                 {"id": 1,
                  "tenant_id": "tenant1",
-                 "endpoint": mock.Mock()},
+                 "credential": mock.Mock()},
                 {"id": 2,
                  "tenant_id": "tenant2",
-                 "endpoint": mock.Mock()},
+                 "credential": mock.Mock()},
             ],
             "tenants": {
                 "tenant1": {},
@@ -62,7 +62,7 @@ class ExistingNetworkTestCase(test.TestCase):
         context.setup()
 
         mock_clients.assert_has_calls([
-            mock.call(u["endpoint"]) for u in self.context["users"]])
+            mock.call(u["credential"]) for u in self.context["users"]])
         mock_network_wrap.assert_has_calls([
             mock.call(mock_clients.return_value, context, config=self.config),
             mock.call(mock_clients.return_value, context, config=self.config)])

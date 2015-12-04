@@ -93,7 +93,7 @@ class AllowSSH(context.Context):
                          self.context.get("users")[0])
 
         net_wrapper = network.wrap(
-            osclients.Clients(admin_or_user["endpoint"]),
+            osclients.Clients(admin_or_user["credential"]),
             self, config=self.config)
         use_sg, msg = net_wrapper.supports_extension("security-group")
         if not use_sg:
@@ -102,7 +102,7 @@ class AllowSSH(context.Context):
 
         secgroup_name = self.generate_random_name()
         for user in self.context["users"]:
-            user["secgroup"] = _prepare_open_secgroup(user["endpoint"],
+            user["secgroup"] = _prepare_open_secgroup(user["credential"],
                                                       secgroup_name)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
@@ -112,6 +112,6 @@ class AllowSSH(context.Context):
             with logging.ExceptionLogger(
                     LOG, _("Unable to delete secgroup: %s.") %
                     user["secgroup"]["name"]):
-                clients = osclients.Clients(user["endpoint"])
+                clients = osclients.Clients(user["credential"])
                 clients.nova().security_groups.get(
                     user["secgroup"]["id"]).delete()

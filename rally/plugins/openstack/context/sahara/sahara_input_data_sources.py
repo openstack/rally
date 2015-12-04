@@ -75,13 +75,13 @@ class SaharaInputDataSources(context.Context):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            clients = osclients.Clients(user["endpoint"])
+            clients = osclients.Clients(user["credential"])
             if self.config["input_type"] == "swift":
                 self.setup_inputs_swift(clients, tenant_id,
                                         self.config["input_url"],
                                         self.config["swift_files"],
-                                        user["endpoint"].username,
-                                        user["endpoint"].password)
+                                        user["credential"].username,
+                                        user["credential"].password)
             else:
                 self.setup_inputs(clients, tenant_id,
                                   self.config["input_type"],

@@ -33,11 +33,11 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.assertEqual(self.context, scenario.context)
 
     def test_init_admin_context(self):
-        self.context["admin"] = {"endpoint": mock.Mock()}
+        self.context["admin"] = {"credential": mock.Mock()}
         scenario = base_scenario.OpenStackScenario(self.context)
         self.assertEqual(self.context, scenario.context)
         self.osclients.mock.assert_called_once_with(
-            self.context["admin"]["endpoint"], {})
+            self.context["admin"]["credential"], {})
 
         self.assertRaises(
             ValueError, base_scenario.OpenStackScenario,
@@ -51,11 +51,11 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.assertEqual("foobar", scenario._admin_clients)
 
     def test_init_user_context(self):
-        self.context["user"] = {"endpoint": mock.Mock()}
+        self.context["user"] = {"credential": mock.Mock()}
         scenario = base_scenario.OpenStackScenario(self.context)
         self.assertEqual(self.context, scenario.context)
         self.osclients.mock.assert_called_once_with(
-            self.context["user"]["endpoint"], {})
+            self.context["user"]["credential"], {})
 
         self.assertRaises(
             ValueError, base_scenario.OpenStackScenario,

@@ -41,8 +41,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
-                {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
+                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
+                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
             ]
         })
 
@@ -72,7 +72,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t1_name",
                     "containers": [
                         {"user": {"id": "u1", "tenant_id": "t1",
-                                  "endpoint": "e1"},
+                                  "credential": "c1"},
                          "container": "c1",
                          "objects": ["o1", "o2", "o3"]}
                     ]
@@ -81,7 +81,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t2_name",
                     "containers": [
                         {"user": {"id": "u2", "tenant_id": "t2",
-                                  "endpoint": "e2"},
+                                  "credential": "c2"},
                          "container": "c2",
                          "objects": ["o4", "o5", "o6"]}
                     ]
@@ -122,8 +122,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
-                {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
+                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
+                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
             ]
         })
         mock_swift = mock_clients.return_value.swift.return_value
@@ -143,8 +143,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
-                {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
+                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
+                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
             ]
         })
         mock_swift = mock_clients.return_value.swift.return_value
@@ -163,7 +163,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t1_name",
                     "containers": [
                         {"user": {"id": "u1", "tenant_id": "t1",
-                                  "endpoint": "e1"},
+                                  "credential": "c1"},
                          "container": "coooon",
                          "objects": []}] * 3
                 }
@@ -184,7 +184,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t1_name",
                     "containers": [
                         {"user": {"id": "u1", "tenant_id": "t1",
-                                  "endpoint": "e1"},
+                                  "credential": "c1"},
                          "container": "c1",
                          "objects": ["oooo"] * 3}
                     ]

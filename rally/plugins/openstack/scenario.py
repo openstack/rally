@@ -37,10 +37,10 @@ class OpenStackScenario(scenario.Scenario):
                             "service_type")}
             if "admin" in context:
                 self._admin_clients = osclients.Clients(
-                    context["admin"]["endpoint"], api_info)
+                    context["admin"]["credential"], api_info)
             if "user" in context:
-                self._clients = osclients.Clients(context["user"]["endpoint"],
-                                                  api_info)
+                self._clients = osclients.Clients(
+                    context["user"]["credential"], api_info)
 
         if admin_clients:
             if hasattr(self, "_admin_clients"):

@@ -30,7 +30,7 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         context.update({
             "user": {
                 "id": "fake_user_id",
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "tenant": {"id": "fake_tenant_id"}
         })

@@ -35,7 +35,7 @@ class UserContextMixinTestCase(test.TestCase):
             tenants[str(i)] = {"name": str(i)}
             for j in range(3):
                 users_.append({"id": "%s_%s" % (i, j),
-                              "tenant_id": str(i), "endpoint": "endpoint"})
+                              "tenant_id": str(i), "credential": "credential"})
 
         context = {
             "admin": mock.MagicMock(),
@@ -79,7 +79,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                     "resource_management_workers": self.threads,
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "users": [],
             "task": {"uuid": "task_id"}
         })
@@ -153,7 +153,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         mock_iterate_per_tenants.assert_called_once_with(
             user_generator.context["users"])
         expected = [mock.call(user_generator.credential)] + [
-            mock.call(u["endpoint"])
+            mock.call(u["credential"])
             for u, t in mock_iterate_per_tenants.return_value]
         self.osclients.Clients.assert_has_calls(expected, any_order=True)
 
@@ -240,7 +240,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         self.assertEqual(4, len(users_))
         for user in users_:
             self.assertIn("id", user)
-            self.assertIn("endpoint", user)
+            self.assertIn("credential", user)
 
     @mock.patch("%s.keystone" % CTX)
     def test__delete_tenants(self, mock_keystone):
@@ -319,7 +319,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         tmp_context["config"]["users"] = {"tenants": 1,
                                           "users_per_tenant": 2,
                                           "resource_management_workers": 1}
-        tmp_context["admin"]["endpoint"] = credential
+        tmp_context["admin"]["credential"] = credential
 
         credential_dict = credential.to_dict(False)
         user_list = [mock.MagicMock(id="id_%d" % i)
@@ -337,10 +337,10 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                               ctx.config["project_domain"]))
 
             for user in ctx.context["users"]:
-                self.assertEqual(set(["id", "endpoint", "tenant_id"]),
+                self.assertEqual(set(["id", "credential", "tenant_id"]),
                                  set(user.keys()))
 
-                user_credential_dict = user["endpoint"].to_dict(False)
+                user_credential_dict = user["credential"].to_dict(False)
 
                 excluded_keys = ["auth_url", "username", "password",
                                  "tenant_name", "region_name",
@@ -373,7 +373,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"endpoint": credential},
+            "admin": {"credential": credential},
             "task": {"uuid": "task_id"}
         }
 
@@ -381,7 +381,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         users_ = user_generator._create_users()
 
         for user in users_:
-            self.assertEqual("internal", user["endpoint"].endpoint_type)
+            self.assertEqual("internal", user["credential"].endpoint_type)
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_contains_default_endpoint_type(self, mock_keystone):
@@ -394,7 +394,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"endpoint": credential},
+            "admin": {"credential": credential},
             "task": {"uuid": "task_id"}
         }
 
@@ -402,4 +402,4 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         users_ = user_generator._create_users()
 
         for user in users_:
-            self.assertEqual("public", user["endpoint"].endpoint_type)
+            self.assertEqual("public", user["credential"].endpoint_type)

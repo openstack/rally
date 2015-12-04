@@ -77,7 +77,7 @@ class ServerGenerator(context.Context):
         auto_nic = self.config["auto_assign_nic"]
         servers_per_tenant = self.config["servers_per_tenant"]
 
-        clients = osclients.Clients(self.context["users"][0]["endpoint"])
+        clients = osclients.Clients(self.context["users"][0]["credential"])
         image_id = types.ImageResourceType.transform(clients=clients,
                                                      resource_config=image)
         flavor_id = types.FlavorResourceType.transform(clients=clients,

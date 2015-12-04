@@ -67,7 +67,7 @@ class EC2ServerGenerator(context.Context):
         image = self.config["image"]
         flavor = self.config["flavor"]
 
-        clients = osclients.Clients(self.context["users"][0]["endpoint"])
+        clients = osclients.Clients(self.context["users"][0]["credential"])
         image_id = types.EC2ImageResourceType.transform(clients=clients,
                                                         resource_config=image)
 
@@ -75,7 +75,7 @@ class EC2ServerGenerator(context.Context):
                 self.context["users"]):
             LOG.debug("Booting servers for tenant %s "
                       % (user["tenant_id"]))
-            user_clients = osclients.Clients(user["endpoint"])
+            user_clients = osclients.Clients(user["credential"])
             ec2_scenario = ec2_utils.EC2Scenario(clients=user_clients)
 
             LOG.debug(

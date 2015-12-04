@@ -48,7 +48,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
                 }
             },
             "admin": {
-                "endpoint": "endpoint",
+                "credential": "credential",
             },
             "users": [
                 {"tenant_id": "tenant_id0"},
@@ -87,7 +87,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         generator_ctx._customize_image = mock.MagicMock()
 
         user = {
-            "endpoint": "endpoint",
+            "credential": "credential",
             "keypair": {"name": "keypair_name"},
             "secgroup": {"name": "secgroup_name"}
         }
@@ -149,7 +149,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
             side_effect=ValueError())
 
         user = {
-            "endpoint": "endpoint",
+            "credential": "credential",
             "keypair": {"name": "keypair_name"},
             "secgroup": {"name": "secgroup_name"}
         }
@@ -175,7 +175,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         generator_ctx.make_image_public(custom_image=custom_image)
 
         mock_clients.assert_called_once_with(
-            self.context["admin"]["endpoint"])
+            self.context["admin"]["credential"])
 
         fc.glance.assert_called_once_with()
         fc.glance.return_value.images.get.assert_called_once_with("image")
@@ -191,7 +191,8 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         generator_ctx = TestImageGenerator(self.context)
 
-        user = {"endpoint": "endpoint", "keypair": {"name": "keypair_name"}}
+        user = {"credential": "credential",
+                "keypair": {"name": "keypair_name"}}
         custom_image = {"id": "image"}
 
         generator_ctx.delete_one_image(user, custom_image)

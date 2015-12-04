@@ -38,9 +38,9 @@ class SaharaJobBinariesTestCase(test.ScenarioTestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": "endpoint"})
+                                       "credential": "credential"})
 
-        self.user_key = [{"id": i, "tenant_id": j, "endpoint": "endpoint"}
+        self.user_key = [{"id": i, "tenant_id": j, "credential": "credential"}
                          for j in range(self.tenants_num)
                          for i in range(self.users_per_tenant)]
 
@@ -65,7 +65,7 @@ class SaharaJobBinariesTestCase(test.ScenarioTestCase):
                     ]
                 },
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants

@@ -49,7 +49,7 @@ class Keypair(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
     def setup(self):
         for user in self.context["users"]:
-            user["keypair"] = self._generate_keypair(user["endpoint"])
+            user["keypair"] = self._generate_keypair(user["credential"])
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):

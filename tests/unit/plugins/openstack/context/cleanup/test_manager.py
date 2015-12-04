@@ -31,7 +31,7 @@ class SeekAndDestroyTestCase(test.TestCase):
     def test__get_cached_client(self, mock_clients):
         self.assertIsNone(manager.SeekAndDestroy._get_cached_client(None))
 
-        users = [{"endpoint": "a"}, {"endpoint": "b"}]
+        users = [{"credential": "a"}, {"credential": "b"}]
         cache = {}
 
         self.assertEqual(

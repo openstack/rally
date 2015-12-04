@@ -47,7 +47,7 @@ class ExistingUserTestCase(test.TestCase):
         self.assertEqual(
             {
                 "id": user1.user_id,
-                "endpoint": mock_credential.return_value,
+                "credential": mock_credential.return_value,
                 "tenant_id": user1.tenant_id
             },
             context["users"][0]

@@ -43,19 +43,19 @@ class MuranoGeneratorTestCase(test.TestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "task": mock.MagicMock(),
             "users": [
                 {
                     "id": "user_0",
                     "tenant_id": "tenant_0",
-                    "endpoint": "endpoint"
+                    "credential": "credential"
                 },
                 {
                     "id": "user_1",
                     "tenant_id": "tenant_1",
-                    "endpoint": "endpoint"
+                    "credential": "credential"
                 }
             ],
             "tenants": {

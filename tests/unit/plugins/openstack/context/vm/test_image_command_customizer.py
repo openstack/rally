@@ -46,7 +46,7 @@ class ImageCommandCustomizerContextVMTestCase(test.TestCase):
                 }
             },
             "admin": {
-                "endpoint": "endpoint",
+                "credential": "credential",
             }
         }
 

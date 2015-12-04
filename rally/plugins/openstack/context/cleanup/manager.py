@@ -51,9 +51,9 @@ class SeekAndDestroy(object):
             return None
 
         if not isinstance(cache, dict):
-            return osclients.Clients(user["endpoint"])
+            return osclients.Clients(user["credential"])
 
-        key = user["endpoint"]
+        key = user["credential"]
         if key not in cache:
             cache[key] = osclients.Clients(key)
 

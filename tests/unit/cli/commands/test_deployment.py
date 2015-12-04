@@ -304,7 +304,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                          mock__update_openrc_deployment_file):
         fake_deployment = fakes.FakeDeployment(
             uuid="fake_uuid",
-            admin="fake_endpoints")
+            admin="fake_credentials")
         mock_api_deployment.list.return_value = [fake_deployment]
         mock_api_deployment.get.return_value = fake_deployment
         status = self.deployment.use(deployment="fake_name")
@@ -313,7 +313,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_DEPLOYMENT, "fake_uuid")
         mock__update_openrc_deployment_file.assert_called_once_with(
-            "fake_uuid", "fake_endpoints")
+            "fake_uuid", "fake_credentials")
 
     @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
     def test_deployment_not_found(self, mock_deployment_get):

@@ -36,9 +36,9 @@ class QuotasTestCase(test.TestCase):
             "config": {
             },
             "tenants": {
-                "t1": {"endpoint": mock.MagicMock()},
-                "t2": {"endpoint": mock.MagicMock()}},
-            "admin": {"endpoint": mock.MagicMock()},
+                "t1": {"credential": mock.MagicMock()},
+                "t2": {"credential": mock.MagicMock()}},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock()
         }
 

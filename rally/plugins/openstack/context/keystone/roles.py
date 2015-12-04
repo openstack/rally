@@ -39,7 +39,7 @@ class RoleGenerator(context.Context):
 
     def __init__(self, ctx):
         super(RoleGenerator, self).__init__(ctx)
-        self.credential = self.context["admin"]["endpoint"]
+        self.credential = self.context["admin"]["credential"]
 
     def _add_role(self, admin_credential, context_role):
         """Add role to users.

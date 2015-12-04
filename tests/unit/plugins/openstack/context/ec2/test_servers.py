@@ -36,7 +36,7 @@ class EC2ServerGeneratorTestCase(test.TestCase):
         for tenant_id in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": tenant_id,
-                              "endpoint": "endpoint"})
+                              "credential": "credential"})
         return tenants, users
 
     def _get_context(self, users, tenants):
@@ -52,7 +52,7 @@ class EC2ServerGeneratorTestCase(test.TestCase):
                     "flavor": {"name": "foo_flavor"}
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants

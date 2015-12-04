@@ -26,7 +26,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(VMTasksTestCase, self).setUp()
         self.context.update({"user": {"keypair": {"name": "keypair_name"},
-                                      "endpoint": mock.MagicMock()}})
+                                      "credential": mock.MagicMock()}})
         self.scenario = vmtasks.VMTasks(context=self.context)
         self.ip = {"id": "foo_id", "ip": "foo_ip", "is_floating": True}
         self.scenario._boot_server_with_fip = mock.Mock(
@@ -121,7 +121,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
         context = {
             "user": {
                 "tenant_id": "tenant_id",
-                "endpoint": mock.Mock()
+                "credential": mock.Mock()
             },
             "tenant": {
                 "custom_image": {"id": "image_id"}

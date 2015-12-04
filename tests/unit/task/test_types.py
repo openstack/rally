@@ -343,7 +343,7 @@ class PreprocessTestCase(test.TestCase):
         context = {
             "a": 1,
             "b": 2,
-            "admin": {"endpoint": mock.MagicMock()}
+            "admin": {"credential": mock.MagicMock()}
         }
         args = {"a": 10, "b": 20}
 
@@ -362,7 +362,7 @@ class PreprocessTestCase(test.TestCase):
         mock_scenario_get.return_value._meta_get.assert_called_once_with(
             "preprocessors", default={})
         mock_osclients.Clients.assert_called_once_with(
-            context["admin"]["endpoint"])
+            context["admin"]["credential"])
         self.assertEqual({"a": 20, "b": 20}, result)
 
 

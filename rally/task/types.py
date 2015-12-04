@@ -44,7 +44,8 @@ def preprocess(name, context, args):
     """Run preprocessor on scenario arguments.
 
     :param name: Plugin name
-    :param context: dictionary object that must have admin and endpoint entries
+    :param context: dictionary object that must have admin and credential
+                    entries
     :param args: args section of benchmark specification in rally task file
 
     :returns processed_args: dictionary object with additional client
@@ -53,7 +54,7 @@ def preprocess(name, context, args):
     """
     preprocessors = scenario.Scenario.get(name)._meta_get("preprocessors",
                                                           default={})
-    clients = osclients.Clients(context["admin"]["endpoint"])
+    clients = osclients.Clients(context["admin"]["credential"])
     processed_args = copy.deepcopy(args)
 
     for src, preprocessor in preprocessors.items():

@@ -115,7 +115,7 @@ class UserGenerator(UserContextMixin, context.Context):
 
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
-        self.credential = self.context["admin"]["endpoint"]
+        self.credential = self.context["admin"]["credential"]
 
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
@@ -134,7 +134,7 @@ class UserGenerator(UserContextMixin, context.Context):
                 self.context["users"]):
             with logging.ExceptionLogger(
                     LOG, _("Unable to delete default security group")):
-                uclients = osclients.Clients(user["endpoint"])
+                uclients = osclients.Clients(user["credential"])
                 sg = uclients.nova().security_groups.find(name="default")
                 clients.neutron().delete_security_group(sg.id)
 
@@ -224,7 +224,7 @@ class UserGenerator(UserContextMixin, context.Context):
                 https_insecure=self.credential.insecure,
                 https_cacert=self.credential.cacert)
             users.append({"id": user.id,
-                          "endpoint": user_credential,
+                          "credential": user_credential,
                           "tenant_id": tenant_id})
 
         # NOTE(msdubov): consume() will fill the users list in the closure.

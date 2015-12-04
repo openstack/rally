@@ -145,7 +145,7 @@ class BaseCustomImageGenerator(context.Context):
     def create_one_image(self, user, **kwargs):
         """Create one image for the user."""
 
-        clients = osclients.Clients(user["endpoint"])
+        clients = osclients.Clients(user["credential"])
 
         image_id = types.ImageResourceType.transform(
             clients=clients, resource_config=self.config["image"])
@@ -179,7 +179,7 @@ class BaseCustomImageGenerator(context.Context):
     def make_image_public(self, custom_image):
         """Make the image available publicly."""
 
-        admin_clients = osclients.Clients(self.context["admin"]["endpoint"])
+        admin_clients = osclients.Clients(self.context["admin"]["credential"])
 
         LOG.debug("Making image %r public", custom_image["id"])
         admin_clients.glance().images.get(
@@ -213,7 +213,7 @@ class BaseCustomImageGenerator(context.Context):
     def delete_one_image(self, user, custom_image):
         """Delete the image created for the user and tenant."""
 
-        clients = osclients.Clients(user["endpoint"])
+        clients = osclients.Clients(user["credential"])
 
         nova_scenario = nova_utils.NovaScenario(
             context=self.context, clients=clients)

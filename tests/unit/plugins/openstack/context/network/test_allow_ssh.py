@@ -35,20 +35,20 @@ class AllowSSHContextTestCase(test.TestCase):
             "users": [
                 {
                     "tenant_id": "uuid1",
-                    "endpoint": "endpoint",
+                    "credential": "credential",
                     "secgroup": {"id": "secgroup_id", "name": "secgroup"}
                 }
             ] * self.users,
-            "admin": {"tenant_id": "uuid2", "endpoint": "admin_endpoint"},
+            "admin": {"tenant_id": "uuid2", "credential": "admin_credential"},
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
         })
         self.ctx_without_secgroup = test.get_test_context()
         self.ctx_without_secgroup.update({
             "users": [{"tenant_id": "uuid1",
-                       "endpoint": "endpoint"},
+                       "credential": "credential"},
                       {"tenant_id": "uuid1",
-                       "endpoint": "endpoint"}],
-            "admin": {"tenant_id": "uuid2", "endpoint": "admin_endpoint"},
+                       "credential": "credential"}],
+            "admin": {"tenant_id": "uuid2", "credential": "admin_credential"},
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
         })
 
@@ -60,7 +60,8 @@ class AllowSSHContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_clients.return_value = mock_cl
 
-        ret = allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
+        ret = allow_ssh._prepare_open_secgroup("credential",
+                                               self.secgroup_name)
         self.assertEqual(self.secgroup_name, ret["name"])
 
         self.assertEqual(2, len(fake_nova.security_groups.list()))
@@ -69,7 +70,7 @@ class AllowSSHContextTestCase(test.TestCase):
             [sg.name for sg in fake_nova.security_groups.list()])
 
         # run prep again, check that another security group is not created
-        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
         self.assertEqual(2, len(fake_nova.security_groups.list()))
 
     @mock.patch("%s.osclients.Clients" % CTX)
@@ -82,14 +83,14 @@ class AllowSSHContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_clients.return_value = mock_cl
 
-        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
 
         self.assertEqual(2, len(fake_nova.security_groups.list()))
         rally_open = fake_nova.security_groups.find(self.secgroup_name)
         self.assertEqual(3, len(rally_open.rules))
 
         # run prep again, check that extra rules are not created
-        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
         rally_open = fake_nova.security_groups.find(self.secgroup_name)
         self.assertEqual(3, len(rally_open.rules))
 
@@ -115,8 +116,8 @@ class AllowSSHContextTestCase(test.TestCase):
 
         self.assertEqual(
             [
-                mock.call("admin_endpoint"),
-                mock.call("endpoint"),
+                mock.call("admin_credential"),
+                mock.call("credential"),
                 mock.call().nova(),
                 mock.call().nova().security_groups.get("secgroup_id"),
                 mock.call().nova().security_groups.get().delete()
@@ -140,7 +141,7 @@ class AllowSSHContextTestCase(test.TestCase):
         secgrp_ctx.setup()
         self.assertEqual(self.ctx_without_secgroup, secgrp_ctx.context)
 
-        mock_clients.assert_called_once_with("admin_endpoint")
+        mock_clients.assert_called_once_with("admin_credential")
 
         mock_network_wrap.assert_called_once_with(
             mock_clients.return_value, secgrp_ctx, config={})
