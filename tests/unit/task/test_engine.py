@@ -113,9 +113,9 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "a"},
-            {"name": "b"}
+        mock_subtask.workloads = [
+            engine.Workload({"name": "a"}),
+            engine.Workload({"name": "b"})
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
@@ -134,10 +134,10 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "exist"},
-            {"name": "nonexist1"},
-            {"name": "nonexist2"}
+        mock_subtask.workloads = [
+            engine.Workload({"name": "exist"}),
+            engine.Workload({"name": "nonexist1"}),
+            engine.Workload({"name": "nonexist2"})
         ]
         mock_task_instance.subtasks = [mock_subtask]
         mock_scenario.list_benchmark_scenarios.return_value = ["exist", "aaa"]
@@ -157,9 +157,9 @@ class TaskEngineTestCase(test.TestCase):
     ):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "sca", "context": "a"},
-            {"name": "scb", "runner": "b"}
+        mock_subtask.workloads = [
+            engine.Workload({"name": "sca", "context": "a"}),
+            engine.Workload({"name": "sca", "runner": "b"})
         ]
         mock_task_instance.subtasks = [mock_subtask]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
@@ -178,9 +178,9 @@ class TaskEngineTestCase(test.TestCase):
             mock_scenario_runner, mock_task_config):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "sca", "context": "a"},
-            {"name": "scb", "runner": "b"}
+        mock_subtask.workloads = [
+            engine.Workload({"name": "sca", "context": "a"}),
+            engine.Workload({"name": "sca", "runner": "b"})
         ]
         mock_task_instance.subtasks = [mock_subtask]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
@@ -198,9 +198,9 @@ class TaskEngineTestCase(test.TestCase):
             mock_task_config):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "sca", "context": "a"},
-            {"name": "scb", "runner": "b"}
+        mock_subtask.workloads = [
+            engine.Workload({"name": "sca", "context": "a"}),
+            engine.Workload({"name": "sca", "runner": "b"})
         ]
         mock_task_instance.subtasks = [mock_subtask]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
@@ -216,10 +216,13 @@ class TaskEngineTestCase(test.TestCase):
                                               mock_task_config):
         deployment = mock.MagicMock()
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
-        eng._validate_config_semantic_helper("admin", "user", "name", "pos",
-                                             deployment, {"args": "args"})
+        workload = engine.Workload(
+            {"name": "name", "runner": "runner", "args": "args"})
+        eng._validate_config_semantic_helper("admin", "user", workload,
+                                             "pos", deployment)
         mock_scenario_validate.assert_called_once_with(
-            "name", {"args": "args"}, admin="admin", users=["user"],
+            "name", {"runner": "runner", "args": "args"},
+            admin="admin", users=["user"],
             deployment=deployment)
 
     @mock.patch("rally.task.engine.TaskConfig")
@@ -229,9 +232,10 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_scenario_validate, mock_task_config):
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
 
+        workload = engine.Workload({"name": "name"})
         self.assertRaises(exceptions.InvalidTaskConfig,
-                          eng._validate_config_semantic_helper, "a", "u", "n",
-                          "p", mock.MagicMock(), {})
+                          eng._validate_config_semantic_helper, "a", "u",
+                          workload, "p", mock.MagicMock())
 
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.existing_users.ExistingUsers")
@@ -267,15 +271,13 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance = mock.MagicMock()
         mock_subtask1 = mock.MagicMock()
-        mock_subtask1.scenarios = [
-            {"name": "a", "kw": 0},
-            {"name": "a", "kw": 1}
-        ]
+        wconf1 = engine.Workload({"name": "a", "runner": "ra"})
+        wconf2 = engine.Workload({"name": "a", "runner": "rb"})
+        mock_subtask1.workloads = [wconf1, wconf2]
 
         mock_subtask2 = mock.MagicMock()
-        mock_subtask2.scenarios = [
-            {"name": "b", "kw": 0},
-        ]
+        wconf3 = engine.Workload({"name": "b", "runner": "ra"})
+        mock_subtask2.workloads = [wconf3]
 
         mock_task_instance.subtasks = [mock_subtask1, mock_subtask2]
         fake_task = mock.MagicMock()
@@ -296,12 +298,9 @@ class TaskEngineTestCase(test.TestCase):
         admin = user = mock_clients.return_value
         fake_deployment = mock_deployment_get.return_value
         expected_calls = [
-            mock.call(admin, user, "a", 0, fake_deployment,
-                      {"name": "a", "kw": 0}),
-            mock.call(admin, user, "a", 1, fake_deployment,
-                      {"name": "a", "kw": 1}),
-            mock.call(admin, user, "b", 0, fake_deployment,
-                      {"name": "b", "kw": 0})
+            mock.call(admin, user, wconf1, 0, fake_deployment),
+            mock.call(admin, user, wconf2, 1, fake_deployment),
+            mock.call(admin, user, wconf3, 0, fake_deployment)
         ]
         mock__validate_config_semantic_helper.assert_has_calls(
             expected_calls, any_order=True)
@@ -345,9 +344,11 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
-        mock_subtask.scenarios = [
-            {"name": "a.task", "context": {"context_a": {"a": 1}}},
-            {"name": "b.task", "context": {"context_b": {"b": 2}}}
+        mock_subtask.workloads = [
+            engine.Workload(
+                {"name": "a.task", "context": {"context_a": {"a": 1}}}),
+            engine.Workload(
+                {"name": "b.task", "context": {"context_b": {"b": 2}}})
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
@@ -699,15 +700,15 @@ class TaskTestCase(test.TestCase):
         mock_sub_task.assert_has_calls([
             mock.call({
                 "title": "a.task",
-                "scenarios": [{"s": 1, "name": "a.task"}]
+                "workloads": [{"s": 1, "name": "a.task"}]
             }),
             mock.call({
                 "title": "a.task",
-                "scenarios": [{"s": 2, "name": "a.task"}]
+                "workloads": [{"s": 2, "name": "a.task"}]
             }),
             mock.call({
                 "title": "b.task",
-                "scenarios": [{"s": 3, "name": "b.task"}]
+                "workloads": [{"s": 3, "name": "b.task"}]
             })
         ], any_order=True)
 
@@ -724,3 +725,67 @@ class TaskTestCase(test.TestCase):
         mock_sub_task.assert_has_calls([
             mock.call(subtask_conf1),
             mock.call(subtask_conf2)])
+
+
+class WorkloadTestCase(test.TestCase):
+
+    def setUp(self):
+        super(WorkloadTestCase, self).setUp()
+
+        self.wconf = engine.Workload({
+            "name": "n",
+            "runner": "r",
+            "context": "c",
+            "sla": "s",
+            "args": "a"
+        })
+
+    def test_to_dict(self):
+        expected_dict = {
+            "runner": "r",
+            "context": "c",
+            "sla": "s",
+            "args": "a"
+        }
+
+        self.assertEqual(expected_dict, self.wconf.to_dict())
+
+    def test_to_task(self):
+        expected_dict = {
+            "runner": "r",
+            "context": "c",
+            "sla": "s",
+            "args": "a"
+        }
+
+        self.assertEqual(expected_dict, self.wconf.to_task())
+
+    def test_make_key(self):
+        expected_key = {
+            "name": "n",
+            "pos": "p",
+            "kw": {
+                "runner": "r",
+                "context": "c",
+                "sla": "s",
+                "args": "a"
+            }
+        }
+
+        self.assertEqual(expected_key, self.wconf.make_key("p"))
+
+    def test_make_exception_args(self):
+        expected_args = {
+            "name": "n",
+            "pos": "p",
+            "reason": "r",
+            "config": {
+                "runner": "r",
+                "context": "c",
+                "sla": "s",
+                "args": "a"
+            }
+        }
+
+        self.assertEqual(expected_args,
+                         self.wconf.make_exception_args("p", "r"))

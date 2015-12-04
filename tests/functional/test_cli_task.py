@@ -55,7 +55,7 @@ class TaskTestCase(unittest.TestCase):
                     "description": "The first subtask in dummy task",
                     "tags": ["dummy", "functional_test"],
                     "run_in_parallel": False,
-                    "scenarios": [{
+                    "workloads": [{
                         "name": "Dummy.dummy",
                         "args": {
                             "sleep": 0
@@ -79,7 +79,7 @@ class TaskTestCase(unittest.TestCase):
                     "description": "The second subtask in dummy task",
                     "tags": ["dummy", "functional_test"],
                     "run_in_parallel": False,
-                    "scenarios": [{
+                    "workloads": [{
                         "name": "Dummy.dummy",
                         "args": {
                             "sleep": 1
