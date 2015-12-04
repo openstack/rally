@@ -26,7 +26,7 @@ class QuotasTestCase(test.ScenarioTestCase):
         self.context.update({
             "user": {
                 "tenant_id": "fake",
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "tenant": {"id": "fake"}
         })

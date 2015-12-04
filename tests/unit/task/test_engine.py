@@ -287,7 +287,7 @@ class TaskEngineTestCase(test.TestCase):
 
         expected_calls = [
             mock.call("admin"),
-            mock.call(fakes.FakeUserContext.user["endpoint"])
+            mock.call(fakes.FakeUserContext.user["credential"])
         ]
         mock_clients.assert_has_calls(expected_calls)
 
@@ -432,7 +432,7 @@ class TaskEngineTestCase(test.TestCase):
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"endpoint": credential},
+            "admin": {"credential": credential},
             "scenario_name": name,
             "config": expected_context
         }
@@ -461,7 +461,7 @@ class TaskEngineTestCase(test.TestCase):
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"endpoint": credential},
+            "admin": {"credential": credential},
             "scenario_name": name,
             "config": expected_context
         }

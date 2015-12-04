@@ -48,8 +48,8 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
                 "tenant_2_id": {"id": "tenant_2_id", "name": "tenant_2_name"},
             },
             "users": [
-                {"tenant_id": "tenant_1_id", "endpoint": {"e1": "foo"}},
-                {"tenant_id": "tenant_2_id", "endpoint": {"e2": "bar"}},
+                {"tenant_id": "tenant_1_id", "credential": {"c1": "foo"}},
+                {"tenant_id": "tenant_2_id", "credential": {"c2": "bar"}},
             ],
         }
         self.existing_sns = [

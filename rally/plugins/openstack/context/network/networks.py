@@ -66,7 +66,7 @@ class Network(context.Context):
         #               sockets are left open. This problem is eliminated by
         #               creating a connection in setup and cleanup separately.
         net_wrapper = network_wrapper.wrap(
-            osclients.Clients(self.context["admin"]["endpoint"]),
+            osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
         for user, tenant_id in (utils.iterate_per_tenants(
                 self.context.get("users", []))):
@@ -84,7 +84,7 @@ class Network(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `network`"))
     def cleanup(self):
         net_wrapper = network_wrapper.wrap(
-            osclients.Clients(self.context["admin"]["endpoint"]),
+            osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):

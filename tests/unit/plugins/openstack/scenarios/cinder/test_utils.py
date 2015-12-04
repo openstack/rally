@@ -35,7 +35,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self.addCleanup(self.mock_wrap.stop)
         self.scenario = utils.CinderScenario(
             self.context,
-            clients=osclients.Clients(fakes.FakeUserContext.user["endpoint"]))
+            clients=osclients.Clients(
+                fakes.FakeUserContext.user["credential"]))
 
     def test__list_volumes(self):
         return_volumes_list = self.scenario._list_volumes()

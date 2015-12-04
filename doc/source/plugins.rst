@@ -181,7 +181,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
             """This method is called before the task start"""
             try:
                 # use rally.osclients to get necessary client instance
-                nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
+                nova = osclients.Clients(self.context["admin"]["credential"]).nova()
                 # and than do what you need with this client
                 self.context["flavor"] = nova.flavors.create(
                     # context settings are stored in self.config
@@ -200,7 +200,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
         def cleanup(self):
             """This method is called after the task finish"""
             try:
-                nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
+                nova = osclients.Clients(self.context["admin"]["credential"]).nova()
                 nova.flavors.delete(self.context["flavor"]["id"])
                 LOG.debug("Flavor '%s' deleted" % self.context["flavor"]["id"])
             except Exception as e:

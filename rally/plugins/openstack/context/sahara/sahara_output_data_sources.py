@@ -54,7 +54,7 @@ class SaharaOutputDataSources(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
-            clients = osclients.Clients(user["endpoint"])
+            clients = osclients.Clients(user["credential"])
             sahara = clients.sahara()
 
             if self.config["output_type"] == "swift":
@@ -68,8 +68,8 @@ class SaharaOutputDataSources(context.Context):
                 }
                 self.setup_outputs_swift(swift, sahara, tenant_id,
                                          container_name,
-                                         user["endpoint"].username,
-                                         user["endpoint"].password)
+                                         user["credential"].username,
+                                         user["credential"].password)
             else:
                 self.setup_outputs_hdfs(sahara, tenant_id,
                                         self.config["output_url_prefix"])

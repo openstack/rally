@@ -58,7 +58,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": mock.MagicMock()})
+                              "credential": mock.MagicMock()})
 
         self.context.update({
             "config": {
@@ -73,7 +73,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants
@@ -101,7 +101,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": "endpoint"})
+                              "credential": "credential"})
             tenants[id_].setdefault("volumes", [])
             for j in range(volumes_per_tenant):
                 tenants[id_]["volumes"].append({"id": "uuid"})
@@ -119,7 +119,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants

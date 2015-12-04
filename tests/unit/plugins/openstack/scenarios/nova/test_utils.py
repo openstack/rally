@@ -48,7 +48,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def _context_with_secgroup(self, secgroup):
         retval = {"user": {"secgroup": secgroup,
-                           "endpoint": mock.MagicMock()}}
+                           "credential": mock.MagicMock()}}
         retval.update(self.context)
         return retval
 
@@ -97,7 +97,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
         if context is None:
             context = self.context
-        context.setdefault("user", {}).setdefault("endpoint", mock.MagicMock())
+        context.setdefault("user", {}).setdefault("credential",
+                                                  mock.MagicMock())
         context.setdefault("config", {})
 
         nova_scenario = utils.NovaScenario(context=context)

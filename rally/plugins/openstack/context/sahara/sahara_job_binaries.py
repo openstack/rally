@@ -84,7 +84,7 @@ class SaharaJobBinaries(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
-            clients = osclients.Clients(user["endpoint"])
+            clients = osclients.Clients(user["credential"])
             sahara = clients.sahara()
 
             self.context["tenants"][tenant_id]["sahara"]["mains"] = []

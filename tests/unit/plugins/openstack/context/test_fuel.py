@@ -30,7 +30,7 @@ class FuelEnvGeneratorTestCase(test.TestCase):
         context = {}
         context["config"] = {"fuel_environments": {"environments": 1}}
         context["task"] = {"uuid": "some_uuid"}
-        context["admin"] = {"endpoint": "some_endpoint"}
+        context["admin"] = {"credential": "some_credential"}
 
         env_ctx = fuel.FuelEnvGenerator(context)
         env_ctx.setup()
@@ -47,7 +47,7 @@ class FuelEnvGeneratorTestCase(test.TestCase):
         context = {}
         context["config"] = {"fuel_environments": {"environments": 5}}
         context["task"] = {"uuid": "some_uuid"}
-        context["admin"] = {"endpoint": "some_endpoint"}
+        context["admin"] = {"credential": "some_credential"}
 
         env_ctx = fuel.FuelEnvGenerator(context)
         self.assertRaises(exceptions.ContextSetupFailure, env_ctx.setup)

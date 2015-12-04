@@ -175,7 +175,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         context_obj = {
             "task": runner_obj.task,
             "scenario_name": scenario_name,
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "config": {
                 "cleanup": ["nova", "cinder"], "some_ctx": 2, "users": {}
             }

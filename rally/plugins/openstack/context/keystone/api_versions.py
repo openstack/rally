@@ -56,9 +56,9 @@ class OpenStackAPIVersions(context.Context):
 
         # use admin only when `service_name` is presented
         admin_clients = osclients.Clients(
-            self.context.get("admin", {}).get("endpoint"))
+            self.context.get("admin", {}).get("credential"))
         clients = osclients.Clients(random.choice(
-            self.context["users"])["endpoint"])
+            self.context["users"])["credential"])
         services = clients.keystone().service_catalog.get_endpoints()
         services_from_admin = None
         for client_name, conf in six.iteritems(self.config):
@@ -67,7 +67,7 @@ class OpenStackAPIVersions(context.Context):
                     "There is no service with '%s' type in your environment.")
                     % conf["service_type"])
             elif "service_name" in conf:
-                if not self.context.get("admin", {}).get("endpoint"):
+                if not self.context.get("admin", {}).get("credential"):
                     raise exceptions.BenchmarkSetupFailure(_(
                         "Setting 'service_name' is allowed only for 'admin' "
                         "user."))

@@ -32,8 +32,8 @@ class SwiftObjectMixinTestCase(test.TestCase):
                 "1002": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "1001", "endpoint": "e1"},
-                {"id": "u2", "tenant_id": "1002", "endpoint": "e2"}
+                {"id": "u1", "tenant_id": "1001", "credential": "c1"},
+                {"id": "u2", "tenant_id": "1002", "credential": "c2"}
             ]
         })
 
@@ -51,7 +51,8 @@ class SwiftObjectMixinTestCase(test.TestCase):
             self.assertEqual(containers_per_tenant, len(containers))
             for container in containers:
                 self.assertEqual("u%d" % index, container["user"]["id"])
-                self.assertEqual("e%d" % index, container["user"]["endpoint"])
+                self.assertEqual("c%d" % index,
+                                 container["user"]["credential"])
                 self.assertEqual(0, len(container["objects"]))
 
     @mock.patch("rally.osclients.Clients")
@@ -67,7 +68,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "endpoint": "e1"},
+                            "credential": "c0"},
                          "container": "c1",
                          "objects": []}
                     ]
@@ -77,7 +78,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "endpoint": "e2"},
+                            "credential": "c2"},
                          "container": "c2",
                          "objects": []}
                     ]
@@ -113,7 +114,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "endpoint": "e1"},
+                            "credential": "c1"},
                          "container": "c1",
                          "objects": []}
                     ]
@@ -123,7 +124,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "endpoint": "e2"},
+                            "credential": "c2"},
                          "container": "c2",
                          "objects": []}
                     ]
@@ -153,7 +154,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "endpoint": "e1"},
+                            "credential": "c1"},
                          "container": "c1",
                          "objects": ["o1", "o2", "o3"]}
                     ]
@@ -163,7 +164,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "endpoint": "e2"},
+                            "credential": "c2"},
                          "container": "c2",
                          "objects": ["o4", "o5", "o6"]}
                     ]

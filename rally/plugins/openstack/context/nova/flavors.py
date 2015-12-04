@@ -75,7 +75,7 @@ class FlavorsGenerator(context.Context):
         """Create list of flavors."""
         self.context["flavors"] = {}
 
-        clients = osclients.Clients(self.context["admin"]["endpoint"])
+        clients = osclients.Clients(self.context["admin"]["credential"])
         for flavor_config in self.config:
 
             extra_specs = flavor_config.get("extra_specs")
@@ -99,7 +99,7 @@ class FlavorsGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
     def cleanup(self):
         """Delete created flavors."""
-        clients = osclients.Clients(self.context["admin"]["endpoint"])
+        clients = osclients.Clients(self.context["admin"]["credential"])
         for flavor in self.context["flavors"].values():
             with logging.ExceptionLogger(
                     LOG, _("Can't delete flavor %s") % flavor["id"]):

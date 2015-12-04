@@ -56,7 +56,7 @@ class TestStackGenerator(test.ScenarioTestCase):
         for ten_id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": ten_id,
-                              "endpoint": mock.MagicMock()})
+                              "credential": mock.MagicMock()})
 
         self.context.update({
             "config": {

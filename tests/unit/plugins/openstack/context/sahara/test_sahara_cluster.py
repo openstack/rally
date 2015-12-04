@@ -43,7 +43,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": mock.MagicMock()})
+                                       "credential": mock.MagicMock()})
 
         CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
 
@@ -60,7 +60,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                     "hadoop_version": "test_version"
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "users": self.users_key,
             "tenants": self.tenants
         })

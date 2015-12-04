@@ -32,7 +32,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         context = test.get_test_context()
         context.update({
             "user": {"tenant_id": "fake",
-                     "endpoint": mock.MagicMock()},
+                     "credential": mock.MagicMock()},
             "tenant": {"id": "fake", "name": "fake",
                        "volumes": [{"id": "uuid"}],
                        "servers": [1]}})

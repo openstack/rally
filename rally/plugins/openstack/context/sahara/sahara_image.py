@@ -88,7 +88,7 @@ class SaharaImage(context.Context):
         if image_uuid:
             # Using the first user to check the existing image.
             user = self.context["users"][0]
-            clients = osclients.Clients(user["endpoint"])
+            clients = osclients.Clients(user["credential"])
 
             image = clients.glance().images.get(image_uuid)
 

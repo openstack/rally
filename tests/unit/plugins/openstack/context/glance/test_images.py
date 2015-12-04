@@ -57,7 +57,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": mock.MagicMock()})
+                              "credential": mock.MagicMock()})
 
         self.context.update({
             "config": {
@@ -77,7 +77,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants
@@ -105,7 +105,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": "endpoint"})
+                              "credential": "credential"})
             tenants[id_].setdefault("images", [])
             for j in range(images_per_tenant):
                 tenants[id_]["images"].append("uuid")
@@ -128,7 +128,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants

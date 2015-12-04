@@ -135,7 +135,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     def test_list_share_servers(self, search_opts):
         scenario = shares.ManilaShares(self.context)
-        scenario.context = {"admin": {"endpoint": "fake_endpoint"}}
+        scenario.context = {"admin": {"credential": "fake_credential"}}
         scenario._list_share_servers = mock.MagicMock()
 
         scenario.list_share_servers(search_opts=search_opts)

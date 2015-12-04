@@ -74,7 +74,7 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": mock.MagicMock()})
+                              "credential": mock.MagicMock()})
 
         self.context.update({
             "config": {
@@ -95,7 +95,7 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
                 },
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants
@@ -135,7 +135,7 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": "endpoint"})
+                              "credential": "credential"})
             tenants[id_].setdefault("servers", [])
             for j in range(servers_per_tenant):
                 tenants[id_]["servers"].append("uuid")
@@ -158,7 +158,7 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
                 },
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants

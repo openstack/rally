@@ -92,7 +92,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         fake_ram_int = iter(range(10))
 
-        context = {"users": [{"tenant_id": "t1", "endpoint": "e1",
+        context = {"users": [{"tenant_id": "t1", "credential": "c1",
                               "id": "uuid1"}]}
         info = {"processes_to_start": 1, "processes_counter": 1}
 

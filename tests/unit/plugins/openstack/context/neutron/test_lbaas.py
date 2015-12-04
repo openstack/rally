@@ -27,7 +27,7 @@ class LbaasTestCase(test.TestCase):
                                     "tenant_id": "bar_tenant",
                                     "subnets": ["bar_subnet"]}]}
         return {"task": {"uuid": "foo_task"},
-                "admin": {"endpoint": "foo_admin"},
+                "admin": {"credential": "foo_admin"},
                 "users": [{"id": "foo_user", "tenant_id": "foo_tenant"},
                           {"id": "bar_user", "tenant_id": "bar_tenant"}],
                 "config": {"lbaas": kwargs},

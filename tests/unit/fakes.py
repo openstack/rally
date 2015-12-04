@@ -1649,11 +1649,11 @@ class FakeUserContext(FakeContext):
 
     admin = {
         "id": "adminuuid",
-        "endpoint": objects.Credential("aurl", "aname", "apwd", "atenant")
+        "credential": objects.Credential("aurl", "aname", "apwd", "atenant")
     }
     user = {
         "id": "uuid",
-        "endpoint": objects.Credential("url", "name", "pwd", "tenant"),
+        "credential": objects.Credential("url", "name", "pwd", "tenant"),
         "tenant_id": "uuid"
     }
     tenants = {"uuid": {"name": "tenant"}}

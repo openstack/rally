@@ -43,7 +43,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
                 }]
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "task": mock.MagicMock(),
         }
@@ -62,7 +62,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
         self.assertEqual(flavors_ctx.context["flavors"],
                          {"flavor_name": {"flavor_key": "flavor_value"}})
 
-        mock_clients.assert_called_with(self.context["admin"]["endpoint"])
+        mock_clients.assert_called_with(self.context["admin"]["credential"])
 
         mock_create.assert_called_with(
             name="flavor_name", ram=2048, vcpus=3,
@@ -88,7 +88,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
         # Assertions
         self.assertEqual(new_context, flavors_ctx.context)
 
-        mock_clients.assert_called_with(self.context["admin"]["endpoint"])
+        mock_clients.assert_called_with(self.context["admin"]["credential"])
 
         mock_flavor_create.assert_called_once_with(
             name="flavor_name", ram=2048, vcpus=3,
@@ -105,7 +105,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "task": mock.MagicMock(),
         }
@@ -115,7 +115,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
         flavors_ctx.cleanup()
 
         # Assertions
-        mock_clients.assert_called_with(real_context["admin"]["endpoint"])
+        mock_clients.assert_called_with(real_context["admin"]["credential"])
 
         mock_flavors_delete = mock_clients().nova().flavors.delete
         mock_flavors_delete.assert_called_with("flavor_name")

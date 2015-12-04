@@ -41,7 +41,7 @@ class RoleGeneratorTestCase(test.TestCase):
                     "test_role2"
                 ]
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock()
         }
 

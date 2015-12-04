@@ -26,7 +26,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
             "user": {
                 "id": "fake_user",
                 "tenant_id": "fake_tenant",
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "tenant": {"id": "fake_tenant",
                        "networks": [{"id": "fake_net",

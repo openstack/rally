@@ -59,7 +59,7 @@ class ExistingUsers(users.UserContextMixin, context.Context):
                 }
 
             self.context["users"].append({
-                "endpoint": user_credential,
+                "credential": user_credential,
                 "id": user_kclient.user_id,
                 "tenant_id": user_kclient.tenant_id
             })

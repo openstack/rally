@@ -39,7 +39,7 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": mock.MagicMock()})
+                              "credential": mock.MagicMock()})
         context = test.get_test_context()
         context.update({
             "config": {
@@ -67,7 +67,7 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                 }
             },
             "admin": {
-                "endpoint": mock.MagicMock()
+                "credential": mock.MagicMock()
             },
             "users": users,
             "tenants": tenants

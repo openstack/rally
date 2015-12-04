@@ -244,7 +244,7 @@ class TaskEngine(object):
     def _validate_config_semantic(self, config):
         self._check_cloud()
 
-        ctx_conf = {"task": self.task, "admin": {"endpoint": self.admin}}
+        ctx_conf = {"task": self.task, "admin": {"credential": self.admin}}
         deployment = objects.Deployment.get(self.task["deployment_uuid"])
 
         # TODO(boris-42): It's quite hard at the moment to validate case
@@ -255,10 +255,10 @@ class TaskEngine(object):
         with self._get_user_ctx_for_validation(ctx_conf) as ctx:
             ctx.setup()
             admin = osclients.Clients(self.admin)
-            user = osclients.Clients(ctx_conf["users"][0]["endpoint"])
+            user = osclients.Clients(ctx_conf["users"][0]["credential"])
 
             for u in ctx_conf["users"]:
-                user = osclients.Clients(u["endpoint"])
+                user = osclients.Clients(u["credential"])
                 for subtask in config.subtasks:
                     for pos, scenario_obj in enumerate(subtask.scenarios):
                         self._validate_config_semantic_helper(
@@ -293,7 +293,7 @@ class TaskEngine(object):
         scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
-            "admin": {"endpoint": credential},
+            "admin": {"credential": credential},
             "scenario_name": name,
             "config": scenario_context
         }

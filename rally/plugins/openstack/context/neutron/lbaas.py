@@ -52,7 +52,7 @@ class Lbaas(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Enter context: `lbaas`"))
     def setup(self):
         net_wrapper = network_wrapper.wrap(
-            osclients.Clients(self.context["admin"]["endpoint"]),
+            osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
 
         use_lb, msg = net_wrapper.supports_extension("lbaas")
@@ -79,7 +79,7 @@ class Lbaas(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `lbaas`"))
     def cleanup(self):
         net_wrapper = network_wrapper.wrap(
-            osclients.Clients(self.context["admin"]["endpoint"]),
+            osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):

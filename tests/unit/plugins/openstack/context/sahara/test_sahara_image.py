@@ -43,7 +43,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": mock.MagicMock()})
+                                       "credential": mock.MagicMock()})
 
     @property
     def url_image_context(self):
@@ -60,7 +60,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                     "username": "test_user"
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "users": self.users_key,
             "tenants": self.tenants
         })
@@ -78,7 +78,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                     "image_uuid": "some_id"
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"credential": mock.MagicMock()},
             "users": self.users_key,
             "tenants": self.tenants,
         })

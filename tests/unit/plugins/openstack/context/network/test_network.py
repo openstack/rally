@@ -25,7 +25,7 @@ NET = "rally.plugins.openstack.wrappers.network."
 class NetworkTestCase(test.TestCase):
     def get_context(self, **kwargs):
         return {"task": {"uuid": "foo_task"},
-                "admin": {"endpoint": "foo_admin"},
+                "admin": {"credential": "foo_admin"},
                 "config": {"network": kwargs},
                 "users": [{"id": "foo_user", "tenant_id": "foo_tenant"},
                           {"id": "bar_user", "tenant_id": "bar_tenant"}],

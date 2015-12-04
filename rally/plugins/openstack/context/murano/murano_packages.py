@@ -64,7 +64,7 @@ class PackageGenerator(context.Context):
 
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
-            clients = osclients.Clients(user["endpoint"])
+            clients = osclients.Clients(user["credential"])
             self.context["tenants"][tenant_id]["packages"] = []
             if is_config_app_dir:
                 self.context["tenants"][tenant_id]["murano_ctx"] = zip_name
