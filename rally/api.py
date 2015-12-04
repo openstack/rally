@@ -366,9 +366,11 @@ class Verification(object):
         :param set_name: Valid name of tempest test set.
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
-        :param tempest_config: User specified Tempest config file
-        :param system_wide_install: Use virtualenv else run tests in local
-                                    environment
+        :param tempest_config: User specified Tempest config file location
+        :param system_wide_install: Whether or not to create a virtual env
+                                    when installing Tempest; whether or not to
+                                    use the local env instead of the Tempest
+                                    virtual env when running the tests
         :returns: Verification object
         """
 
@@ -392,9 +394,11 @@ class Verification(object):
 
         :param deployment_uuid: UUID or name of a deployment
         :param verification: Verification object
-        :param tempest_config: User specified Tempest config file
-        :param system_wide_install: Use virtualenv else run tests in local
-                                    environment
+        :param tempest_config: User specified Tempest config file location
+        :param system_wide_install: Whether or not to create a virtual env
+                                    when installing Tempest; whether or not to
+                                    use the local env instead of the Tempest
+                                    virtual env when running the tests
         :returns: Tempest object
         """
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
@@ -433,34 +437,37 @@ class Verification(object):
         return deployment, verification
 
     @classmethod
-    def install_tempest(cls, deployment, source=None):
+    def install_tempest(cls, deployment, source=None, no_tempest_venv=False):
         """Install Tempest.
 
-        :param deployment: UUID or name of the deployment
-        :param source: Source to fetch Tempest from
+        :param deployment: UUID or name of a deployment
+        :param source: Path/URL to repo to clone Tempest from
+        :param no_tempest_venv: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        verifier = tempest.Tempest(deployment_uuid, source=source)
+        verifier = tempest.Tempest(deployment_uuid, source=source,
+                                   system_wide_install=no_tempest_venv)
         verifier.install()
 
     @classmethod
     def uninstall_tempest(cls, deployment):
         """Remove deployment's local Tempest installation.
 
-        :param deployment: UUID or name of the deployment
+        :param deployment: UUID or name of a deployment
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
         verifier.uninstall()
 
     @classmethod
-    def reinstall_tempest(cls, deployment, tempest_config=None, source=None):
-        """Uninstall Tempest and then reinstall from new source.
+    def reinstall_tempest(cls, deployment, tempest_config=None,
+                          source=None, no_tempest_venv=False):
+        """Uninstall Tempest and install again.
 
-        :param deployment: UUID or name of the deployment
-        :param tempest_config: Tempest config file. Use previous file as
-        default
-        :param source: Source to fetch Tempest from. Use old source as default
+        :param deployment: UUID or name of a deployment
+        :param tempest_config: User specified Tempest config file location
+        :param source: Path/URL to repo to clone Tempest from
+        :param no_tempest_venv: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
@@ -473,7 +480,8 @@ class Verification(object):
         source = source or verifier.tempest_source
         verifier.uninstall()
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   tempest_config=tempest_config)
+                                   tempest_config=tempest_config,
+                                   system_wide_install=no_tempest_venv)
         verifier.install()
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)

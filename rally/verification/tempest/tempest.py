@@ -249,7 +249,11 @@ class Tempest(object):
                 raise TempestSetupFailure(_("Failed to initialize 'testr'"))
 
     def is_installed(self):
-        return os.path.exists(self.path(".venv"))
+        if self._system_wide_install:
+            return os.path.exists(self.path(".testrepository"))
+
+        return os.path.exists(self.path(".venv")) and os.path.exists(
+            self.path(".testrepository"))
 
     def _clone(self):
         LOG.info(_("Please, wait while Tempest is being cloned."))
@@ -266,10 +270,9 @@ class Tempest(object):
         """Creates local Tempest repo and virtualenv for deployment."""
         if not self.is_installed():
             try:
-                if not self._is_git_repo(self.base_repo):
-                    self._clone()
-
                 if not os.path.exists(self.path()):
+                    if not self._is_git_repo(self.base_repo):
+                        self._clone()
                     shutil.copytree(self.base_repo, self.path())
                     for cmd in ["git", "checkout", "master"], ["git", "pull"]:
                         subprocess.check_call(cmd, cwd=self.path("tempest"))
