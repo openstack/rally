@@ -14,12 +14,14 @@
 #    under the License.
 
 
+import ddt
 import jsonschema
 
 from rally.plugins.common.sla import max_average_duration
 from tests.unit import test
 
 
+@ddt.ddt
 class MaxAverageDurationTestCase(test.TestCase):
     def test_config_schema(self):
         properties = {
@@ -51,3 +53,28 @@ class MaxAverageDurationTestCase(test.TestCase):
         self.assertTrue(sla.add_iteration({"duration": 5.0}))   # avg = 3.667
         self.assertFalse(sla.add_iteration({"duration": 7.0}))  # avg = 4.5
         self.assertTrue(sla.add_iteration({"duration": 1.0}))   # avg = 3.8
+
+    @ddt.data([[1.0, 2.0, 1.5, 4.3],
+               [2.1, 3.4, 1.2, 6.3, 7.2, 7.0, 1.],
+               [1.1, 1.1, 2.2, 2.2, 3.3, 4.3]])
+    def test_merge(self, durations):
+
+        single_sla = max_average_duration.MaxAverageDuration(4.0)
+
+        for dd in durations:
+            for d in dd:
+                single_sla.add_iteration({"duration": d})
+
+        slas = [max_average_duration.MaxAverageDuration(4.0)
+                for _ in durations]
+
+        for idx, sla in enumerate(slas):
+            for duration in durations[idx]:
+                sla.add_iteration({"duration": duration})
+
+        merged_sla = slas[0]
+        for sla in slas[1:]:
+            merged_sla.merge(sla)
+
+        self.assertEqual(single_sla.success, merged_sla.success)
+        self.assertEqual(single_sla.avg, merged_sla.avg)

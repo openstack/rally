@@ -42,6 +42,12 @@ class MaxAverageDuration(sla.SLA):
         self.success = self.avg <= self.criterion_value
         return self.success
 
+    def merge(self, other):
+        self.avg_comp.merge(other.avg_comp)
+        self.avg = self.avg_comp.result()
+        self.success = self.avg <= self.criterion_value
+        return self.success
+
     def details(self):
         return (_("Average duration of one iteration %.2fs <= %.2fs - %s") %
                 (self.avg, self.criterion_value, self.status()))

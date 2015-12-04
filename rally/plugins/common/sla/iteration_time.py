@@ -39,6 +39,12 @@ class IterationTime(sla.SLA):
         self.success = self.max_iteration_time <= self.criterion_value
         return self.success
 
+    def merge(self, other):
+        if other.max_iteration_time > self.max_iteration_time:
+            self.max_iteration_time = other.max_iteration_time
+        self.success = self.max_iteration_time <= self.criterion_value
+        return self.success
+
     def details(self):
         return (_("Maximum seconds per iteration %.2fs <= %.2fs - %s") %
                 (self.max_iteration_time, self.criterion_value, self.status()))

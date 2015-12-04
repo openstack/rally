@@ -56,6 +56,14 @@ class Outliers(sla.SLA):
         self.std_comp = streaming_algorithms.StdDevComputation()
 
     def add_iteration(self, iteration):
+        # NOTE(ikhudoshyn): This method can not be implemented properly.
+        # After adding a new iteration, both mean and standard deviation
+        # may change. Hence threshold will change as well. In this case we
+        # should again compare durations of all accounted iterations
+        # to the threshold. Unfortunately we can not do it since
+        # we do not store durations.
+        # Implementation provided here only gives rough approximation
+        # of outliers number.
         if not iteration.get("error"):
             duration = iteration["duration"]
             self.iterations += 1
@@ -72,6 +80,28 @@ class Outliers(sla.SLA):
                 mean = self.mean_comp.result()
                 std = self.std_comp.result()
                 self.threshold = mean + self.sigmas * std
+
+        self.success = self.outliers <= self.max_outliers
+        return self.success
+
+    def merge(self, other):
+        # NOTE(ikhudoshyn): This method can not be implemented properly.
+        # After merge, both mean and standard deviation may change.
+        # Hence threshold will change as well. In this case we
+        # should again compare durations of all accounted iterations
+        # to the threshold. Unfortunately we can not do it since
+        # we do not store durations.
+        # Implementation provided here only gives rough approximation
+        # of outliers number.
+        self.iterations += other.iterations
+        self.outliers += other.outliers
+        self.mean_comp.merge(other.mean_comp)
+        self.std_comp.merge(other.std_comp)
+
+        if self.iterations >= 2:
+            mean = self.mean_comp.result()
+            std = self.std_comp.result()
+            self.threshold = mean + self.sigmas * std
 
         self.success = self.outliers <= self.max_outliers
         return self.success

@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ddt
-
 import math
+
+import ddt
+import six
 
 from rally.common import streaming_algorithms as algo
 from rally import exceptions
@@ -40,6 +41,27 @@ class MeanComputationTestCase(test.TestCase):
             mean_computation.add(value)
         excepted_mean = float(sum(stream)) / len(stream)
         self.assertEqual(excepted_mean, mean_computation.result())
+
+    def test_merge(self):
+        single_mean = algo.MeanComputation()
+
+        for val in six.moves.range(100):
+            single_mean.add(val)
+
+        means = [algo.MeanComputation()
+                 for _ in six.moves.range(10)]
+
+        for idx, mean in enumerate(means):
+            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+                mean.add(val)
+
+        merged_mean = means[0]
+        for mean in means[1:]:
+            merged_mean.merge(mean)
+
+        self.assertEqual(single_mean.count, merged_mean.count)
+        self.assertEqual(single_mean.total, merged_mean.total)
+        self.assertEqual(single_mean.result(), merged_mean.result())
 
 
 class StdDevComputationTestCase(test.TestCase):
@@ -69,6 +91,28 @@ class StdDevComputationTestCase(test.TestCase):
                                  (len(stream) - 1))
         self.assertEqual(excepted_std, std_computation.result())
 
+    def test_merge(self):
+        single_std = algo.StdDevComputation()
+
+        for val in six.moves.range(100):
+            single_std.add(val)
+
+        stds = [algo.StdDevComputation()
+                for _ in six.moves.range(10)]
+
+        for idx, std in enumerate(stds):
+            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+                std.add(val)
+
+        merged_std = stds[0]
+        for std in stds[1:]:
+            merged_std.merge(std)
+
+        self.assertEqual(single_std.count, merged_std.count)
+        self.assertEqual(single_std.mean, merged_std.mean)
+        self.assertEqual(single_std.dev_sum, merged_std.dev_sum)
+        self.assertEqual(single_std.result(), merged_std.result())
+
 
 class MinComputationTestCase(test.TestCase):
 
@@ -88,6 +132,26 @@ class MinComputationTestCase(test.TestCase):
         self.assertRaises(TypeError, comp.result, 1)
         self.assertRaises(ValueError, comp.result)
 
+    def test_merge(self):
+        single_min_algo = algo.MinComputation()
+
+        for val in six.moves.range(100):
+            single_min_algo.add(val)
+
+        algos = [algo.MinComputation()
+                 for _ in six.moves.range(10)]
+
+        for idx, min_algo in enumerate(algos):
+            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+                min_algo.add(val)
+
+        merged_min_algo = algos[0]
+        for min_algo in algos[1:]:
+            merged_min_algo.merge(min_algo)
+
+        self.assertEqual(single_min_algo._value, merged_min_algo._value)
+        self.assertEqual(single_min_algo.result(), merged_min_algo.result())
+
 
 class MaxComputationTestCase(test.TestCase):
 
@@ -106,6 +170,26 @@ class MaxComputationTestCase(test.TestCase):
         comp = algo.MaxComputation()
         self.assertRaises(TypeError, comp.result, 1)
         self.assertRaises(ValueError, comp.result)
+
+    def test_merge(self):
+        single_max_algo = algo.MaxComputation()
+
+        for val in six.moves.range(100):
+            single_max_algo.add(val)
+
+        algos = [algo.MaxComputation()
+                 for _ in six.moves.range(10)]
+
+        for idx, max_algo in enumerate(algos):
+            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+                max_algo.add(val)
+
+        merged_max_algo = algos[0]
+        for max_algo in algos[1:]:
+            merged_max_algo.merge(max_algo)
+
+        self.assertEqual(single_max_algo._value, merged_max_algo._value)
+        self.assertEqual(single_max_algo.result(), merged_max_algo.result())
 
 
 @ddt.ddt
@@ -171,3 +255,23 @@ class IncrementComputationTestCase(test.TestCase):
             self.assertEqual(i - 1, comp.result())
             comp.add(42)
             self.assertEqual(i, comp.result())
+
+    def test_merge(self):
+        single_inc = algo.IncrementComputation()
+
+        for val in six.moves.range(100):
+            single_inc.add(val)
+
+        incs = [algo.IncrementComputation()
+                for _ in six.moves.range(10)]
+
+        for idx, inc in enumerate(incs):
+            for val in six.moves.range(idx * 10, (idx + 1) * 10):
+                inc.add(val)
+
+        merged_inc = incs[0]
+        for inc in incs[1:]:
+            merged_inc.merge(inc)
+
+        self.assertEqual(single_inc._count, merged_inc._count)
+        self.assertEqual(single_inc.result(), merged_inc.result())

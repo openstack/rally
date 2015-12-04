@@ -52,6 +52,14 @@ class FailureRate(sla.SLA):
         self.success = self.min_percent <= self.error_rate <= self.max_percent
         return self.success
 
+    def merge(self, other):
+        self.total += other.total
+        self.errors += other.errors
+        if self.total:
+            self.error_rate = self.errors * 100.0 / self.total
+        self.success = self.min_percent <= self.error_rate <= self.max_percent
+        return self.success
+
     def details(self):
         return (_("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s") %
                 (self.min_percent, self.error_rate, self.max_percent,

@@ -57,6 +57,30 @@ class SLAChecker(object):
         """
         return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
 
+    def merge(self, other):
+        self._validate_config(other)
+        self._validate_sla_types(other)
+
+        return all([self_sla.merge(other_sla)
+                    for self_sla, other_sla
+                    in six.moves.zip(
+                        self.sla_criteria, other.sla_criteria)])
+
+    def _validate_sla_types(self, other):
+        for self_sla, other_sla in six.moves.zip_longest(
+                self.sla_criteria, other.sla_criteria):
+            self_sla.validate_type(other_sla)
+
+    def _validate_config(self, other):
+        self_config = self.config.get("sla", {})
+        other_config = other.config.get("sla", {})
+        if self_config != other_config:
+            message = _(
+                "Error merging SLACheckers with configs %s, %s. "
+                "Only SLACheckers with the same config could be merged."
+            ) % (self_config, other_config)
+            raise TypeError(message)
+
     def results(self):
         results = [sla.result() for sla in self.sla_criteria]
         if self.aborted_on_sla:
@@ -132,3 +156,44 @@ class SLA(plugin.Plugin):
     def status(self):
         """Return "Passed" or "Failed" depending on the current SLA status."""
         return "Passed" if self.success else "Failed"
+
+    @abc.abstractmethod
+    def merge(self, other):
+        """Merge aggregated data from another SLA instance into self.
+
+        Process the results of several iterations aggregated in another
+        instance of SLA together with ones stored in self so that the
+        code
+
+            sla1 = SLA()
+            sla1.add_iteration(a)
+            sla1.add_iteration(b)
+
+            sla2 = SLA()
+            sla2.add_iteration(c)
+            sla2.add_iteration(d)
+
+            sla1.merge(sla2)
+
+        is equivalent to
+
+            sla1 = SLA()
+            sla1.add_iteration(a)
+            sla1.add_iteration(b)
+            sla1.add_iteration(c)
+            sla1.add_iteration(d)
+
+        The call to merge() will return True if the SLA check
+        passed, and False otherwise.
+
+        :param other: another SLA object
+        :returns: True if the SLA check passed, False otherwise
+        """
+
+    def validate_type(self, other):
+        if type(self) != type(other):
+            message = _(
+                "Error merging SLAs of types %s, %s. "
+                "Only SLAs of the same type could be merged."
+            ) % (type(self), type(other))
+            raise TypeError(message)

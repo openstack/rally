@@ -14,6 +14,7 @@
 #    under the License.
 
 
+import ddt
 import jsonschema
 
 from rally.plugins.common.sla import failure_rate
@@ -37,6 +38,7 @@ class SLAPluginTestCase(test.TestCase):
                           {"test_criterion": 42.0})
 
 
+@ddt.ddt
 class FailureRateTestCase(test.TestCase):
 
     def test_config_schema(self):
@@ -107,3 +109,28 @@ class FailureRateTestCase(test.TestCase):
         self.assertTrue(sla.add_iteration({"error": []}))
         self.assertTrue(sla.add_iteration({"error": ["error"]}))   # 33%
         self.assertFalse(sla.add_iteration({"error": ["error"]}))  # 40%
+
+    @ddt.data([[0, 1, 0, 0],
+               [0, 1, 1, 1, 0, 0, 0, 0],
+               [0, 0, 1, 0, 0, 1]])
+    def test_merge(self, errors):
+
+        single_sla = failure_rate.FailureRate({"max": 25})
+
+        for ee in errors:
+            for e in ee:
+                single_sla.add_iteration({"error": ["error"] if e else []})
+
+        slas = [failure_rate.FailureRate({"max": 25}) for _ in errors]
+
+        for idx, sla in enumerate(slas):
+            for e in errors[idx]:
+                sla.add_iteration({"error": ["error"] if e else []})
+
+        merged_sla = slas[0]
+        for sla in slas[1:]:
+            merged_sla.merge(sla)
+
+        self.assertEqual(single_sla.success, merged_sla.success)
+        self.assertEqual(single_sla.errors, merged_sla.errors)
+        self.assertEqual(single_sla.total, merged_sla.total)

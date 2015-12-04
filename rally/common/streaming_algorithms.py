@@ -32,6 +32,10 @@ class StreamingAlgorithm(object):
         """Process a single value from the input stream."""
 
     @abc.abstractmethod
+    def merge(self, other):
+        """Merge results processed by another instance."""
+
+    @abc.abstractmethod
     def result(self):
         """Return the result based on the values processed so far."""
 
@@ -52,6 +56,10 @@ class MeanComputation(StreamingAlgorithm):
     def add(self, value):
         self.count += 1
         self.total += value
+
+    def merge(self, other):
+        self.count += other.count
+        self.total += other.total
 
     def result(self):
         if self.count == 0:
@@ -81,6 +89,23 @@ class StdDevComputation(StreamingAlgorithm):
         self.mean = self.mean_computation.result()
         self.dev_sum = self.dev_sum + (value - mean_prev) * (value - self.mean)
 
+    def merge(self, other):
+        dev_sum1 = self.dev_sum
+        count1 = self.count
+        mean1 = self.mean
+
+        dev_sum2 = other.dev_sum
+        count2 = other.count
+        mean2 = other.mean
+
+        self.mean_computation.merge(other.mean_computation)
+        self.mean = self.mean_computation.result()
+        self.count += other.count
+
+        self.dev_sum = (dev_sum1 + count1 * mean1 ** 2 +
+                        dev_sum2 + count2 * mean2 ** 2 -
+                        self.count * self.mean ** 2)
+
     def result(self):
         if self.count < 2:
             message = _("Unable to calculate the standard deviation: "
@@ -101,6 +126,10 @@ class MinComputation(StreamingAlgorithm):
         if self._value is None or value < self._value:
             self._value = value
 
+    def merge(self, other):
+        if other._value is not None:
+            self.add(other._value)
+
     def result(self):
         if self._value is None:
             raise ValueError("No values have been processed")
@@ -118,6 +147,10 @@ class MaxComputation(StreamingAlgorithm):
 
         if self._value is None or value > self._value:
             self._value = value
+
+    def merge(self, other):
+        if other._value is not None:
+            self.add(other._value)
 
     def result(self):
         if self._value is None:
@@ -143,6 +176,10 @@ class PercentileComputation(StreamingAlgorithm):
     def add(self, value):
         self._graph_zipper.add_point(value)
 
+    def merge(self, other):
+        # TODO(ikhudoshyn): Implement me
+        raise NotImplementedError()
+
     def result(self):
         results = list(
             map(lambda x: x[1], self._graph_zipper.get_zipped_graph()))
@@ -159,6 +196,9 @@ class IncrementComputation(StreamingAlgorithm):
 
     def add(self, *args):
         self._count += 1
+
+    def merge(self, other):
+        self._count += other._count
 
     def result(self):
         return self._count
