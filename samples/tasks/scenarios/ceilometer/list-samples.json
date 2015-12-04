@@ -26,7 +26,8 @@
                         {"status": "not_active", "name": "fake_resource_1",
                          "deleted": "False",
                          "created_at": "2015-09-10T06:55:12.000000"}
-                    ]
+                    ],
+                    "batch_size": 5
                 }
             },
             "args":{

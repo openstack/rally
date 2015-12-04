@@ -30,21 +30,43 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario(self.context)
 
-    def test__make_samples(self):
+    def test__make_samples_no_batch_size(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="fake_resource")
         test_timestamp = datetime.datetime(2015, 10, 20, 14, 18, 40)
-        result = self.scenario._make_samples(count=2, interval=60,
-                                             timestamp=test_timestamp)
+        result = list(self.scenario._make_samples(count=2, interval=60,
+                                                  timestamp=test_timestamp))
+        self.assertEqual(1, len(result))
         expected = {"counter_name": "cpu_util",
                     "counter_type": "gauge",
                     "counter_unit": "%",
                     "counter_volume": 1,
                     "resource_id": "fake_resource",
                     "timestamp": test_timestamp.isoformat()}
-        self.assertEqual(expected, result[0])
-        samples_int = (parser.parse(result[0]["timestamp"]) -
-                       parser.parse(result[1]["timestamp"])).seconds
+        self.assertEqual(expected, result[0][0])
+        samples_int = (parser.parse(result[0][0]["timestamp"]) -
+                       parser.parse(result[0][1]["timestamp"])).seconds
+        self.assertEqual(60, samples_int)
+
+    def test__make_samples_batch_size(self):
+        self.scenario.generate_random_name = mock.Mock(
+            return_value="fake_resource")
+        test_timestamp = datetime.datetime(2015, 10, 20, 14, 18, 40)
+        result = list(self.scenario._make_samples(count=4, interval=60,
+                                                  batch_size=2,
+                                                  timestamp=test_timestamp))
+        self.assertEqual(2, len(result))
+        expected = {"counter_name": "cpu_util",
+                    "counter_type": "gauge",
+                    "counter_unit": "%",
+                    "counter_volume": 1,
+                    "resource_id": "fake_resource",
+                    "timestamp": test_timestamp.isoformat()}
+        self.assertEqual(expected, result[0][0])
+        samples_int = (parser.parse(result[0][-1]["timestamp"]) -
+                       parser.parse(result[1][0]["timestamp"])).seconds
+        # NOTE(idegtiarov): here we check that interval between last sample in
+        # first batch and first sample in second batch is equal 60 sec.
         self.assertEqual(60, samples_int)
 
     def test__make_timestamp_query(self):
