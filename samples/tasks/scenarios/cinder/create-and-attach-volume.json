@@ -1,4 +1,5 @@
 {% set flavor_name = flavor_name or "m1.tiny" %}
+{% set availability_zone = availability_zone or "nova" %}
 {
     "CinderVolumes.create_and_attach_volume": [
         {
@@ -9,6 +10,9 @@
                 },
                 "flavor": {
                     "name": "{{flavor_name}}"
+                },
+                "create_volume_params": {
+                    "availability_zone": "{{availability_zone}}"
                 }
             },
             "runner": {
@@ -34,6 +38,9 @@
                 },
                 "image": {
                     "name": "^cirros.*uec$"
+                },
+                "create_volume_params": {
+                    "availability_zone": "{{availability_zone}}"
                 }
             },
             "runner": {
