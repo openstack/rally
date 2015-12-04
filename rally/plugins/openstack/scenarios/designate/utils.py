@@ -115,3 +115,64 @@ class DesignateScenario(scenario.OpenStackScenario):
         :param server_id: unicode server ID
         """
         self.admin_clients("designate").servers.delete(server_id)
+
+    # NOTE: API V2
+    @atomic.action_timer("designate.create_zone")
+    def _create_zone(self, name=None, type_=None, email=None, description=None,
+                     ttl=None):
+        """Create zone.
+
+        :param name: Zone name
+        :param type_: Zone type, PRIMARY or SECONDARY
+        :param email: Zone owner email
+        :param description: Zone description
+        :param ttl: Zone ttl - Time to live in seconds
+        :returns: designate zone dict
+        """
+        type_ = type_ or "PRIMARY"
+
+        if type_ == "PRIMARY":
+            email = email or "root@random.name"
+            # Name is only useful to be random for PRIMARY
+            name = name or "%s.name." % self.generate_random_name()
+
+        return self.clients("designate", version="2").zones.create(
+            name=name,
+            type_=type_,
+            email=email,
+            description=description,
+            ttl=ttl
+        )
+
+    @atomic.action_timer("designate.list_zones")
+    def _list_zones(self, criterion=None, marker=None, limit=None):
+        """Return user zone list.
+
+        :param criterion: API Criterion to filter by
+        :param marker: UUID marker of the item to start the page from
+        :param limit: How many items to return in the page.
+        : returns: list of designate zones
+        """
+        return self.clients("designate", version="2").zones.list()
+
+    @atomic.action_timer("designate.delete_zone")
+    def _delete_zone(self, zone_id):
+        """Delete designate zone.
+
+        :param zone_id: Zone ID
+        """
+        self.clients("designate", version="2").zones.delete(zone_id)
+
+    @atomic.action_timer("designate.list_recordsets")
+    def _list_recordsets(self, zone_id, criterion=None, marker=None,
+                         limit=None):
+        """List zone recordsets.
+
+        :param zone_id: Zone ID
+        :param criterion: API Criterion to filter by
+        :param marker: UUID marker of the item to start the page from
+        :param limit: How many items to return in the page.
+        :returns: zone recordsets list
+        """
+        return self.clients("designate", version="2").recordsets.list(
+            zone_id, criterion=criterion, marker=marker, limit=limit)

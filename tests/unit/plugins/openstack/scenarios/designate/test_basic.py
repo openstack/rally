@@ -155,3 +155,47 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
         # Default options
         scenario.list_servers()
         mock_designate_basic__list_servers.assert_called_once_with()
+
+    # NOTE: API V2
+    @mock.patch(DESIGNATE_BASIC + "._list_zones")
+    @mock.patch(DESIGNATE_BASIC + "._create_zone")
+    def test_create_and_list_zones(self, mock_designate_basic__create_zone,
+                                   mock_designate_basic__list_zones):
+        scenario = basic.DesignateBasic(self.context)
+
+        # Default options
+        scenario.create_and_list_zones()
+        mock_designate_basic__create_zone.assert_called_once_with()
+        mock_designate_basic__list_zones.assert_called_once_with()
+
+    @mock.patch(DESIGNATE_BASIC + "._delete_zone")
+    @mock.patch(DESIGNATE_BASIC + "._create_zone")
+    def test_create_and_delete_zone(
+            self, mock_designate_basic__create_zone,
+            mock_designate_basic__delete_zone):
+
+        scenario = basic.DesignateBasic(self.context)
+
+        mock_designate_basic__create_zone.return_value = {"id": "123"}
+
+        # Default options
+        scenario.create_and_delete_zone()
+
+        mock_designate_basic__create_zone.assert_called_once_with()
+        mock_designate_basic__delete_zone.assert_called_once_with("123")
+
+    @mock.patch(DESIGNATE_BASIC + "._list_zones")
+    def test_list_zones(self, mock_designate_basic__list_zones):
+        scenario = basic.DesignateBasic(self.context)
+
+        # Default options
+        scenario.list_zones()
+        mock_designate_basic__list_zones.assert_called_once_with()
+
+    @mock.patch(DESIGNATE_BASIC + "._list_recordsets")
+    def test_list_recordsets(self, mock_designate_basic__list_recordsets):
+        scenario = basic.DesignateBasic(self.context)
+
+        # Default options
+        scenario.list_recordsets("123")
+        mock_designate_basic__list_recordsets.assert_called_once_with("123")
