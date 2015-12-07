@@ -39,7 +39,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
 
         for i in range(self.tenants_num):
             self.tenants[str(i)] = {"id": str(i), "name": str(i),
-                                    "sahara_image": "42"}
+                                    "sahara": {"image": "42"}}
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
@@ -80,7 +80,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 workers_count=2,
-                image_id=self.context["tenants"][i]["sahara_image"],
+                image_id=self.context["tenants"][i]["sahara"]["image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,
                 volumes_size=1,
@@ -118,7 +118,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 workers_count=2,
-                image_id=self.context["tenants"][i]["sahara_image"],
+                image_id=self.context["tenants"][i]["sahara"]["image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,
                 volumes_size=1,
