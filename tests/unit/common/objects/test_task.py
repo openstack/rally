@@ -193,7 +193,7 @@ class TaskTestCase(test.TestCase):
                  "atomic": {"keystone.create_user": {"max_duration": 19,
                                                      "min_duration": 10}},
              "iterations_count": 10, "iterations_failed": 0,
-             "max_duration": 14, "min_duration": 5, "output_names": [],
+             "max_duration": 14, "min_duration": 5,
              "tstamp_start": 2, "full_duration": 40, "load_duration": 32}}]
 
         # serializable is default

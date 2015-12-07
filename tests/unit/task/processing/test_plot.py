@@ -43,7 +43,7 @@ class PlotTestCase(test.TestCase):
         iterations = [
             {"timestamp": i + 2, "error": [],
              "duration": i + 5, "idle_duration": i,
-             "scenario_output": {"errors": "", "data": {}},
+             "output": {"additive": [], "complete": []},
              "atomic_actions": {"foo_action": i + 10}} for i in range(10)]
         data = {"iterations": iterations, "sla": [],
                 "key": {"kw": {"runner": {"type": "constant"}},
@@ -71,7 +71,9 @@ class PlotTestCase(test.TestCase):
                                "pie": [("success", 10), ("errors", 0)]},
                 "iterations_count": 10, "errors": [],
                 "load_profile": "load_profile",
-                "output": "output_stacked", "output_errors": [],
+                "additive_output": [],
+                "complete_output": [[], [], [], [], [], [], [], [], [], []],
+                "output_errors": [],
                 "sla": [], "sla_success": True, "table": "main_stats"})
 
     @mock.patch(PLOT + "_process_scenario")

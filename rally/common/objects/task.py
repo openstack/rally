@@ -23,6 +23,75 @@ from rally import consts
 from rally import exceptions
 
 
+OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "additive": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "chart": {"type": "string"},
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": [{"type": "string"},
+                                      {"type": "number"}],
+                            "additionalItems": False}}},
+                "required": ["title", "description", "chart", "items"],
+                "additionalProperties": False
+            }
+        },
+        "complete": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "widget": {"type": "string"},
+                    "data": {"anyOf": [
+                        {"type": "array",
+                         "items": {
+                             "type": "array",
+                             "items": [
+                                 {"type": "string"},
+                                 {"anyOf": [
+                                     {"type": "array",
+                                      "items": {"type": "array",
+                                                "items": [{"type": "number"},
+                                                          {"type": "number"}]
+                                                }},
+                                     {"type": "number"}]}]}},
+                        {"type": "object",
+                         "properties": {
+                             "cols": {"type": "array",
+                                      "items": {"type": "string"}},
+                             "rows": {
+                                 "type": "array",
+                                 "items": {
+                                     "type": "array",
+                                     "items": {"anyOf": [{"type": "string"},
+                                                         {"type": "number"}]}}
+                             }
+                         },
+                         "required": ["cols", "rows"],
+                         "additionalProperties": False}
+                    ]}
+                },
+                "required": ["title", "description", "widget", "data"],
+                "additionalProperties": False
+            }
+        }
+    },
+    "required": ["additive", "complete"],
+    "additionalProperties": False
+}
+
+
 TASK_RESULT_SCHEMA = {
     "type": "object",
     "$schema": consts.JSON_SCHEMA,
@@ -76,6 +145,8 @@ TASK_RESULT_SCHEMA = {
                     "idle_duration": {
                         "type": "number"
                     },
+                    # NOTE(amaretskiy): "scenario_output" is deprecated
+                    #                   in favor of "output"
                     "scenario_output": {
                         "type": "object",
                         "properties": {
@@ -88,9 +159,10 @@ TASK_RESULT_SCHEMA = {
                         },
                         "required": ["data", "errors"]
                     },
+                    "output": OUTPUT_SCHEMA
                 },
                 "required": ["atomic_actions", "duration", "error",
-                             "idle_duration", "scenario_output"]
+                             "idle_duration"]
             },
             "minItems": 1
         },
@@ -163,17 +235,10 @@ TASK_EXTENDED_RESULT_SCHEMA = {
                     "idle_duration": {
                         "type": "number"
                     },
-                    "scenario_output": {
-                        "type": "object",
-                        "properties": {
-                            "data": {"type": "object"},
-                            "errors": {"type": "string"},
-                        },
-                        "required": ["data", "errors"]
-                    },
+                    "output": OUTPUT_SCHEMA
                 },
                 "required": ["atomic_actions", "duration", "error",
-                             "idle_duration", "scenario_output"]
+                             "idle_duration", "output"]
             },
             "minItems": 1
         },
@@ -193,7 +258,6 @@ TASK_EXTENDED_RESULT_SCHEMA = {
             "type": "object",
             "properties": {
                 "atomic": {"type": "object"},
-                "output_names": {"type": "array"},
                 "iterations_count": {"type": "integer"},
                 "iterations_failed": {"type": "integer"},
                 "min_duration": {"type": "number"},
@@ -315,7 +379,6 @@ class Task(object):
                       atomic - dict where key is one of atomic action names
                                and value is dict {min_duration: number,
                                                   max_duration: number}
-                      output_names - list of str output values names (if any)
                       iterations_count - int number of iterations
                       iterations_failed - int number of iterations with errors
                       min_duration - float minimum iteration duration
@@ -332,7 +395,6 @@ class Task(object):
             max_duration = 0
             iterations_failed = 0
             atomic = costilius.OrderedDict()
-            output_names = set()
 
             for itr in scenario["data"]["raw"]:
                 for atomic_name, duration in itr["atomic_actions"].items():
@@ -345,10 +407,22 @@ class Task(object):
                     elif duration > atomic[atomic_name]["max_duration"]:
                         atomic[atomic_name]["max_duration"] = duration
 
-                output_names.update(itr["scenario_output"]["data"].keys())
-
                 if not tstamp_start or itr["timestamp"] < tstamp_start:
                     tstamp_start = itr["timestamp"]
+
+                if "output" not in itr:
+                    itr["output"] = {"additive": [], "complete": []}
+
+                    # NOTE(amaretskiy): Deprecated "scenario_output"
+                    #     is supported for backward compatibility
+                    if ("scenario_output" in itr
+                            and itr["scenario_output"]["data"]):
+                        itr["output"]["additive"].append(
+                            {"items": itr["scenario_output"]["data"].items(),
+                             "title": "Scenario output",
+                             "description": "",
+                             "chart": "OutputStackedAreaChart"})
+                        del itr["scenario_output"]
 
                 if itr["error"]:
                     iterations_failed += 1
@@ -370,7 +444,6 @@ class Task(object):
 
             scenario["info"] = {
                 "atomic": atomic,
-                "output_names": list(output_names),
                 "iterations_count": len(scenario["data"]["raw"]),
                 "iterations_failed": iterations_failed,
                 "min_duration": min_duration,

@@ -122,7 +122,7 @@
         },{
           id: "output",
           name: "Output",
-          visible: function(){ return !! $scope.scenario.output.length }
+          visible: function(){ return !! $scope.scenario.additive_output.length }
         },{
           id: "failures",
           name: "Failures",
@@ -307,8 +307,8 @@
       }
 
       $scope.renderOutput = function() {
-        if ($scope.scenario) {
-          Charts.stack("#output-stack", $scope.scenario.output, {})
+        if ($scope.scenario && $scope.scenario.additive_output.length) {
+          Charts.stack("#output-stack", $scope.scenario.additive_output[0].data, {})
         }
       }
 

@@ -38,7 +38,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         expected = {
             "duration": 100,
             "idle_duration": 0,
-            "scenario_output": {"errors": "", "data": {}},
+            "output": {"additive": [], "complete": []},
             "atomic_actions": {},
             "error": mock_format_exc.return_value
         }
@@ -85,7 +85,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
-            "scenario_output": {"errors": "", "data": {}},
+            "output": {"additive": [], "complete": []},
             "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
@@ -100,8 +100,11 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
-            "scenario_output": fakes.FakeScenario(
-                test.get_test_context()).with_output(),
+            "output": {"additive": [{"chart": "OutputStackedAreaChart",
+                                     "items": [["a", 1]],
+                                     "title": "Scenario output",
+                                     "description": ""}],
+                       "complete": []},
             "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
@@ -116,7 +119,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "duration": fakes.FakeTimer().duration(),
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
-            "scenario_output": {"errors": "", "data": {}},
+            "output": {"additive": [], "complete": []},
             "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
@@ -131,20 +134,18 @@ class ScenarioRunnerResultTestCase(test.TestCase):
             {
                 "duration": 1.0,
                 "idle_duration": 1.0,
-                "scenario_output": {
-                    "data": {"test": 1.0},
-                    "errors": "test error string 1"
-                },
+                "output": {"additive": [], "complete": []},
                 "atomic_actions": {"test1": 1.0},
                 "error": []
             },
             {
                 "duration": 2.0,
                 "idle_duration": 2.0,
-                "scenario_output": {
-                    "data": {"test": 2.0},
-                    "errors": "test error string 2"
-                },
+                "output": {"additive": [{"chart": "OutputStackedAreaChart",
+                                         "items": [["a", 1]],
+                                         "title": "Scenario output",
+                                         "description": ""}],
+                           "complete": []},
                 "atomic_actions": {"test2": 2.0},
                 "error": ["a", "b", "c"]
             }
