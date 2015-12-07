@@ -14,7 +14,6 @@
 
 import abc
 import bisect
-import copy
 import math
 
 import six
@@ -269,66 +268,99 @@ class AtomicHistogramChart(HistogramChart):
         return list(iteration["atomic_actions"].items())
 
 
-class MainStatsTable(Chart):
+@six.add_metaclass(abc.ABCMeta)
+class Table(Chart):
+    """Base class for tables.
 
-    def _init_row(self, name, iterations_count):
+    Each Table subclass represents HTML table which can be easily rendered in
+    report. Subclasses are responsible for setting up both columns and rows:
+    columns are set simply by COLUMNS property (list of str columns names)
+    and rows must be initialized in _data property, with the following format:
+        self._data = {name: [streaming_ins, postprocess_func or None], ...}
+          where:
+            name - str name of table row parameter
+            streaming_ins - instance of streaming algorithm
+            postprocess_func - optional function that processes final result,
+                               None means usage of default self._round()
+        This can be done in __init__() or even in add_iteration().
+    """
 
-        def round_3(stream, no_result):
-            if no_result:
-                return "n/a"
-            return round(stream.result(), 3)
+    @abc.abstractproperty
+    def COLUMNS(self):
+        """List of columns names."""
 
-        return [
-            ("Action", name),
-            ("Min (sec)", streaming.MinComputation(), round_3),
-            ("Median (sec)",
-             streaming.PercentileComputation(0.5, iterations_count), round_3),
-            ("90%ile (sec)",
-             streaming.PercentileComputation(0.9, iterations_count), round_3),
-            ("95%ile (sec)",
-             streaming.PercentileComputation(0.95, iterations_count), round_3),
-            ("Max (sec)", streaming.MaxComputation(), round_3),
-            ("Avg (sec)", streaming.MeanComputation(), round_3),
-            ("Success", streaming.MeanComputation(),
-             lambda stream, no_result:
-             "%.1f%%" % (stream.result() * 100) if not no_result else "n/a"),
-            ("Count", streaming.IncrementComputation(),
-             lambda x, no_result: x.result())
-        ]
+    def _round(self, ins, has_result):
+        """This is a default post-process function for table cell value.
 
-    def __init__(self, benchmark_info, zipped_size=1000):
-        self.rows = list(benchmark_info["atomic"].keys())
-        self.rows.append("total")
-        self.rows_index = dict((name, i) for i, name in enumerate(self.rows))
-        self.table = [self._init_row(name, benchmark_info["iterations_count"])
-                      for name in self.rows]
+        :param ins: streaming_algorithms.StreamingAlgorithm subclass instance
+        :param has_result: bool, whether current row is effective
+        :returns: rounded float
+        :returns: str "n/a"
+        """
+        return round(ins.result(), 3) if has_result else "n/a"
 
-    def add_iteration(self, iteration):
-        data = copy.copy(iteration["atomic_actions"])
-        data["total"] = iteration["duration"]
+    def _row_has_results(self, values):
+        """Determine whether row can be assumed as having values.
 
-        for name, value in data.items():
-            index = self.rows_index[name]
-            self.table[index][-1][1].add(None)
-            if iteration["error"]:
-                self.table[index][-2][1].add(0)
-            else:
-                self.table[index][-2][1].add(1)
-                for elem in self.table[index][1:-2]:
-                    elem[1].add(value)
+        :param values: row values list
+                       [(StreamingAlgorithm, function or None), ...]
+        :returns: bool
+        """
+        for ins, fn in values:
+            if isinstance(ins, streaming.MinComputation):
+                return bool(ins.result())
+        return True
+
+    def get_rows(self):
+        """Collect rows values finally, after all data is processed.
+
+        :returns: [str_name, (float or str), (float or str), ...]
+        """
+        rows = []
+        for name, values in self._data.items():
+            row = [name]
+            has_result = self._row_has_results(values)
+            for ins, fn in values:
+                fn = fn or self._round
+                row.append(fn(ins, has_result))
+            rows.append(row)
+        return rows
 
     def render(self):
-        rows = []
+        return {"cols": self.COLUMNS, "rows": self.get_rows()}
 
-        for i in range(len(self.table)):
-            row = [self.table[i][0][1]]
-            # no results if all iterations failed
-            no_result = not self.table[i][-2][1].result()
-            row.extend(x[2](x[1], no_result) for x in self.table[i][1:])
-            rows.append(row)
 
-        return {"cols": list(map(lambda x: x[0], self.table[0])),
-                "rows": rows}
+class MainStatsTable(Table):
+
+    COLUMNS = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
+               "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
+
+    def __init__(self, *args, **kwargs):
+        super(MainStatsTable, self).__init__(*args, **kwargs)
+        iters_num = self._benchmark_info["iterations_count"]
+        for name in (list(self._benchmark_info["atomic"].keys()) + ["total"]):
+            self._data[name] = [
+                [streaming.MinComputation(), None],
+                [streaming.PercentileComputation(0.5, iters_num), None],
+                [streaming.PercentileComputation(0.9, iters_num), None],
+                [streaming.PercentileComputation(0.95, iters_num), None],
+                [streaming.MaxComputation(), None],
+                [streaming.MeanComputation(), None],
+                [streaming.MeanComputation(),
+                 lambda st, has_result: ("%.1f%%" % (st.result() * 100)
+                                         if has_result else "n/a")],
+                [streaming.IncrementComputation(),
+                 lambda st, has_result: st.result()]]
 
     def _map_iteration_values(self, iteration):
-        pass
+        return dict(iteration["atomic_actions"], total=iteration["duration"])
+
+    def add_iteration(self, iteration):
+        for name, value in self._map_iteration_values(iteration).items():
+            self._data[name][-1][0].add()
+            if iteration["error"]:
+                self._data[name][-2][0].add(0)
+            else:
+                self._data[name][-2][0].add(1)
+                for idx, dummy in enumerate(self._data[name][:-2]):
+                    self._data[name][idx][0].add(value)

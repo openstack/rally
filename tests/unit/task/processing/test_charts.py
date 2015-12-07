@@ -323,6 +323,64 @@ class AtomicHistogramChartTestCase(test.TestCase):
         self.assertEqual(expected, chart.render())
 
 
+class TableTestCase(test.TestCase):
+
+    class Table(charts.Table):
+        COLUMNS = ["Name", "Min", "Max", "Max rounded by 2"]
+
+        def __init__(self, *args, **kwargs):
+            super(TableTestCase.Table, self).__init__(*args, **kwargs)
+            for name in "foo", "bar":
+                self._data[name] = [
+                    [charts.streaming.MinComputation(), None],
+                    [charts.streaming.MaxComputation(), None],
+                    [charts.streaming.MaxComputation(),
+                     lambda st, has_result: round(st.result(), 2)
+                     if has_result else "n/a"]]
+
+        def _map_iteration_values(self, iteration):
+            return iteration
+
+        def add_iteration(self, iteration):
+            for name, value in self._map_iteration_values(iteration).items():
+                for i, dummy in enumerate(self._data[name]):
+                    self._data[name][i][0].add(value)
+
+    def test___init__(self):
+        self.assertRaises(TypeError, charts.Table, {"iterations_count": 42})
+
+    def test__round(self):
+        table = self.Table({"iterations_count": 4})
+        streaming_ins = mock.Mock()
+        streaming_ins.result.return_value = 42.424242
+        self.assertRaises(TypeError, table._round, streaming_ins)
+        self.assertEqual("n/a", table._round(streaming_ins, False))
+        self.assertEqual(round(42.424242, 3),
+                         table._round(streaming_ins, True))
+
+    def test__row_has_results_and_get_rows(self):
+        table = self.Table({"iterations_count": 3})
+        self.assertFalse(table._row_has_results(table._data["foo"]))
+        self.assertFalse(table._row_has_results(table._data["bar"]))
+        self.assertEqual(
+            [["foo", "n/a", "n/a", "n/a"], ["bar", "n/a", "n/a", "n/a"]],
+            table.get_rows())
+        for i in range(3):
+            table.add_iteration({"foo": i + 1.2, "bar": i + 3.456})
+        self.assertTrue(table._row_has_results(table._data["foo"]))
+        self.assertTrue(table._row_has_results(table._data["bar"]))
+        self.assertEqual(
+            [["foo", 1.2, 3.2, 3.2], ["bar", 3.456, 5.456, 5.46]],
+            table.get_rows())
+
+    def test_render(self):
+        table = self.Table({"iterations_count": 42})
+        table.get_rows = lambda: "rows data"
+        self.assertEqual({"cols": ["Name", "Min", "Max", "Max rounded by 2"],
+                          "rows": "rows data"},
+                         table.render())
+
+
 MAIN_STATS_TABLE_COLUMNS = ["Action", "Min (sec)", "Median (sec)",
                             "90%ile (sec)", "95%ile (sec)", "Max (sec)",
                             "Avg (sec)", "Success", "Count"]
