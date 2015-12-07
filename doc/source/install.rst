@@ -162,7 +162,8 @@ be done by the following steps:
    likely to work if your home directory has excessively open
    permissions (e.g., ``0755``), which is not recommended.
 
-You may want to save the last command as an alias:
+All task samples, docs and certification tasks you could find at /opt/rally/.
+Also you may want to save the last command as an alias:
 
 .. code-block:: bash
 
