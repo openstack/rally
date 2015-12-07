@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import log
+from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils
@@ -22,8 +22,8 @@ from rally.task import validation
 class CeilometerStats(utils.CeilometerScenario):
     """Benchmark scenarios for Ceilometer Stats API."""
 
-    @log.log_deprecated("Use 'get_stats' method, now samples are created in "
-                        "context", "0.1.2")
+    @logging.log_deprecated("Use 'get_stats' method, now samples are created"
+                            "in context", "0.1.2")
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @scenario.configure()

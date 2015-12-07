@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.common import log as logging
+from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test

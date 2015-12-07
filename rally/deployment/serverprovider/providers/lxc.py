@@ -22,7 +22,7 @@ import six
 from six import moves
 
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally.deployment.serverprovider import provider
 from rally import exceptions
 

@@ -19,7 +19,7 @@ import time
 
 import requests
 
-from rally.common import log as logging
+from rally.common import logging
 
 LOG = logging.getLogger(__name__)
 

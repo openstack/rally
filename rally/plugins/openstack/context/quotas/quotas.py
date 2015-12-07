@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.quotas import cinder_quotas

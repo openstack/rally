@@ -16,7 +16,7 @@
 import random
 
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper

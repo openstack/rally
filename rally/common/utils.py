@@ -27,7 +27,7 @@ import time
 
 from six import moves
 
-from rally.common import log as logging
+from rally.common import logging
 from rally import exceptions
 
 LOG = logging.getLogger(__name__)

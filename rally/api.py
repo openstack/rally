@@ -24,7 +24,7 @@ import jinja2.meta
 import jsonschema
 
 from rally.common.i18n import _, _LI
-from rally.common import log as logging
+from rally.common import logging
 from rally.common import objects
 from rally import consts
 from rally.deployment import engine as deploy_engine

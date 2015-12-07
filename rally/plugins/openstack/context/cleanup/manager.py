@@ -17,7 +17,7 @@ import time
 
 from rally.common import broker
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally.common.plugin import discover
 from rally.common import utils as rutils
 from rally import osclients

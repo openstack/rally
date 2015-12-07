@@ -138,8 +138,8 @@ def check_import_of_logging(logical_line, filename):
     N310
     """
 
-    excluded_files = ["./rally/common/log.py",
-                      "./tests/unit/test_log.py",
+    excluded_files = ["./rally/common/logging.py",
+                      "./tests/unit/test_logging.py",
                       "./tests/ci/rally_verify.py"]
 
     forbidden_imports = ["from oslo_log",
@@ -150,7 +150,7 @@ def check_import_of_logging(logical_line, filename):
         for forbidden_import in forbidden_imports:
             if logical_line.startswith(forbidden_import):
                 yield (0, "N310 Wrong module for logging is imported. Please "
-                          "use `rally.common.log` instead.")
+                          "use `rally.common.logging` instead.")
 
 
 @skip_ignored_lines
@@ -182,12 +182,12 @@ def no_use_conf_debug_check(logical_line, filename):
 
     N312
     """
-    excluded_files = ["./rally/common/log.py"]
+    excluded_files = ["./rally/common/logging.py"]
 
     point = logical_line.find("CONF.debug")
     if point != -1 and filename not in excluded_files:
         yield(point, "N312 Don't use `CONF.debug`. "
-                     "Function `rally.common.log.is_debug` "
+                     "Function `rally.common.logging.is_debug` "
                      "should be used instead.")
 
 

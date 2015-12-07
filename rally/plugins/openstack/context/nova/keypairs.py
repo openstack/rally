@@ -16,7 +16,7 @@
 import novaclient.exceptions
 
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.task import context

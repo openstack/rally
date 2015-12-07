@@ -14,7 +14,7 @@
 
 import itertools
 
-from rally.common import log
+from rally.common import logging
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import base as cleanup_base
 from rally.plugins.openstack.context.keystone import users
@@ -34,7 +34,7 @@ from rally.verification.tempest import config as tempest_conf
 def list_opts():
     return [
         ("DEFAULT",
-         itertools.chain(log.DEBUG_OPTS,
+         itertools.chain(logging.DEBUG_OPTS,
                          osclients.OSCLIENTS_OPTS)),
         ("benchmark",
          itertools.chain(cinder_utils.CINDER_BENCHMARK_OPTS,

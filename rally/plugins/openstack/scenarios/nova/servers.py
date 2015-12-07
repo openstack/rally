@@ -15,7 +15,7 @@
 
 import jsonschema
 
-from rally.common import log as logging
+from rally.common import logging
 from rally import consts
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack import scenario

@@ -25,7 +25,7 @@ from oslo_utils import encodeutils
 from rally.common import costilius
 from rally.common.i18n import _
 from rally.common.io import subunit_v2
-from rally.common import log as logging
+from rally.common import logging
 from rally import consts
 from rally import exceptions
 from rally.verification.tempest import config

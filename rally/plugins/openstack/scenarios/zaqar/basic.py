@@ -14,7 +14,7 @@
 
 import random
 
-from rally.common import log as logging
+from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
 

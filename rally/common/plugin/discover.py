@@ -21,7 +21,7 @@ from oslo_utils import importutils
 
 import rally
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 
 LOG = logging.getLogger(__name__)
 
