@@ -44,7 +44,7 @@ class RoleGenerator(context.Context):
     def _add_role(self, admin_credential, context_role):
         """Add role to users.
 
-        :param admin_credential: The base url.
+        :param admin_credential: The admin credential.
         :param context_role: name of existing role.
         """
         client = keystone.wrap(osclients.Clients(admin_credential).keystone())
@@ -66,7 +66,7 @@ class RoleGenerator(context.Context):
     def _remove_role(self, admin_credential, role):
         """Remove given role from users.
 
-        :param admin_credential: The base url.
+        :param admin_credential: The admin credential.
         :param role: dictionary with role parameters (id, name).
         """
         client = keystone.wrap(osclients.Clients(admin_credential).keystone())
