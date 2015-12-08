@@ -198,8 +198,13 @@ class SaharaScenario(scenario.OpenStackScenario):
         if volumes_per_node:
             LOG.debug("Adding volumes config to Node Groups")
             for ng in node_groups:
-                ng["volumes_per_node"] = volumes_per_node
-                ng["volumes_size"] = volumes_size
+                ng_name = ng["name"]
+                if "worker" in ng_name or "proxy" in ng_name:
+                    # NOTE: Volume storage is used only by HDFS Datanode
+                    # process which runs on workers and proxies.
+
+                    ng["volumes_per_node"] = volumes_per_node
+                    ng["volumes_size"] = volumes_size
 
         return node_groups
 
