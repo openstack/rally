@@ -29,7 +29,7 @@ def _process_scenario(data, pos):
     atomic_pie = charts.AtomicAvgChart(data["info"])
     atomic_area = charts.AtomicStackedAreaChart(data["info"])
     atomic_hist = charts.AtomicHistogramChart(data["info"])
-    output_area = charts.OutputStackedAreaChart(data["info"])
+    output_area = charts.OutputStackedAreaDeprecatedChart(data["info"])
 
     errors = []
     output_errors = []
