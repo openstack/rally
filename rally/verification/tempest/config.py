@@ -37,7 +37,13 @@ IMAGE_OPTS = [
     cfg.StrOpt("cirros_img_url",
                default="http://download.cirros-cloud.net/"
                        "0.3.4/cirros-0.3.4-x86_64-disk.img",
-               help="CirrOS image URL")
+               help="CirrOS image URL"),
+    cfg.StrOpt("disk_format",
+               default="qcow2",
+               help="Image disk format"),
+    cfg.StrOpt("container_format",
+               default="bare",
+               help="Image container formate")
 ]
 
 ROLE_OPTS = [
@@ -360,8 +366,8 @@ class TempestResourcesContext(object):
         glanceclient = self.clients.glance()
         params = {
             "name": "rally-verify-cirros-img-%s" % uuid.uuid4(),
-            "disk_format": "qcow2",
-            "container_format": "bare",
+            "disk_format": CONF.image.disk_format,
+            "container_format": CONF.image.container_format,
             "is_public": True
         }
         LOG.debug("Creating image '%s'" % params["name"])

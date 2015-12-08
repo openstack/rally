@@ -655,6 +655,12 @@
 # CirrOS image URL (string value)
 #cirros_img_url = http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 
+# Image disk format (string value)
+#disk_format = qcow2
+
+# Image container formate (string value)
+#container_format = bare
+
 
 [role]
 
