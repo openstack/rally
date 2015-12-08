@@ -88,6 +88,22 @@ NODE_PROCESSES = {
                        "HIVE_SERVER2"],
             "worker": ["YARN_NODEMANAGER", "HDFS_DATANODE"]
         }
+    },
+    "spark": {
+        "1.3.1": {
+            "master": ["namenode", "master"],
+            "worker": ["datanode", "slave"]
+        }
+    },
+    "ambari": {
+        "2.3": {
+            "master-edp": ["Hive Metastore", "HiveServer", "Oozie"],
+            "master": ["Ambari", "MapReduce History Server",
+                       "Spark History Server", "NameNode", "ResourceManager",
+                       "SecondaryNameNode", "YARN Timeline Server",
+                       "ZooKeeper"],
+            "worker": ["DataNode", "NodeManager"]
+        }
     }
 }
 
@@ -137,7 +153,20 @@ REPLICATION_CONFIGS = {
             "target": "HDFS",
             "config_name": "dfs_replication"
         }
+    },
+    "spark": {
+        "1.3.1": {
+            "target": "HDFS",
+            "config_name": "dfs_replication"
+        },
+    },
+    "ambari": {
+        "2.3": {
+            "target": "HDFS",
+            "config_name": "dfs_replication"
+        },
     }
+
 }
 
 ANTI_AFFINITY_PROCESSES = {
@@ -156,5 +185,11 @@ ANTI_AFFINITY_PROCESSES = {
     "cdh": {
         "5": ["HDFS_DATANODE"],
         "5.4.0": ["HDFS_DATANODE"]
+    },
+    "spark": {
+        "1.3.1": ["datanode"],
+    },
+    "ambari": {
+        "2.3": ["DataNode"],
     }
 }
