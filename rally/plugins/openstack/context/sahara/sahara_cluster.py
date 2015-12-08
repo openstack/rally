@@ -99,7 +99,7 @@ class SaharaCluster(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
-            image_id = self.context["tenants"][tenant_id]["sahara_image"]
+            image_id = self.context["tenants"][tenant_id]["sahara"]["image"]
 
             floating_ip_pool = self.config.get("floating_ip_pool")
 

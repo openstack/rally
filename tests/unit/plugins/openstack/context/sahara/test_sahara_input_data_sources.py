@@ -36,7 +36,7 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
         for i in range(self.tenants_num):
             self.tenants[str(i)] = {"id": str(i), "name": str(i),
-                                    "sahara_image": "42"}
+                                    "sahara": {"image": "42"}}
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
