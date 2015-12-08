@@ -436,12 +436,17 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         if context is None:
             context = {"tenant": {}}
         scenario = utils.NeutronScenario(context=context)
-        scenario._create_network = mock.Mock()
+        scenario._create_network = mock.Mock(
+            return_value={"network": mock.Mock()})
 
         network = scenario._get_or_create_network(network_create_args)
 
+        # ensure that the return value is the proper type either way
+        self.assertIn("network", network)
+
         if "networks" in context["tenant"]:
-            self.assertEqual(network, context["tenant"]["networks"][0])
+            self.assertEqual(network,
+                             {"network": context["tenant"]["networks"][0]})
             self.assertFalse(scenario._create_network.called)
         else:
             self.assertEqual(network, scenario._create_network.return_value)
