@@ -662,7 +662,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server.revert_resize()
         utils.wait_for(
             server,
-            ready_statuses=["status"],
+            ready_statuses=[status],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(

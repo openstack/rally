@@ -573,9 +573,23 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_confirm")
 
-    def test__resize_revert(self):
+    @ddt.data({},
+              {"status": "SHUTOFF"})
+    @ddt.unpack
+    def test__resize_revert(self, status=None):
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._resize_revert(self.server)
+        if status is None:
+            nova_scenario._resize_revert(self.server)
+            status = "ACTIVE"
+        else:
+            nova_scenario._resize_revert(self.server, status=status)
+        self.mock_wait_for.mock.assert_called_once_with(
+            self.server,
+            ready_statuses=[status],
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            check_interval=CONF.benchmark.
+            nova_server_resize_revert_poll_interval,
+            timeout=CONF.benchmark.nova_server_resize_revert_timeout)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_revert")
 
