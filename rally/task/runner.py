@@ -64,14 +64,24 @@ def _run_scenario_once(args):
             # NOTE(amaretskiy): Output as return value is deprecated
             #     but supported for backward compatibility
             deprecated_output = getattr(scenario_inst, method_name)(**kwargs)
+            warning = ""
             if deprecated_output:
+                warning = ("Returning output data by scenario is deprecated "
+                           "in favor of calling add_output().")
+            if scenario_inst._output != {"complete": [], "additive": []}:
+                output = scenario_inst._output
+                if deprecated_output:
+                    warning += (" Output data both returned and passed to "
+                                "add_output() so returned one is ignored!")
+            elif deprecated_output:
                 output["additive"].append({
                     "title": "Scenario output",
                     "description": "",
                     "chart": "OutputStackedAreaChart",
                     "items": [list(item)
                               for item in deprecated_output["data"].items()]})
-
+            if warning:
+                LOG.warning(warning)
     except Exception as e:
         error = utils.format_exc(e)
         if logging.is_debug():

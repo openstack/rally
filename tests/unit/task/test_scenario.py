@@ -220,3 +220,56 @@ class ScenarioTestCase(test.TestCase):
                 print(traceback.format_exc())
                 self.assertTrue(False,
                                 "Scenario `%s` has wrong context" % scenario)
+
+    def test_add_output(self):
+        scenario_inst = scenario.Scenario()
+        additive1 = {"title": "Additive 1", "chart": "FooChart",
+                     "description": "Foo description",
+                     "items": [["foo", 1], ["bar", 2]]}
+        additive2 = {"title": "Additive 2", "chart": "BarChart",
+                     "description": "Bar description",
+                     "items": [["foo", 42], ["bar", 24]]}
+        complete1 = {"title": "Complete 1", "widget": "FooWidget",
+                     "description": "Complete description",
+                     "data": [["ab", 1], ["cd", 2]]}
+        complete2 = {"title": "Complete 2", "widget": "BarWidget",
+                     "description": "Another complete description",
+                     "data": [["vx", 1], ["yz", 2]]}
+
+        scenario_inst.add_output(additive=additive1)
+        self.assertEqual({"additive": [additive1], "complete": []},
+                         scenario_inst._output)
+
+        scenario_inst.add_output(complete=complete1)
+        self.assertEqual({"additive": [additive1], "complete": [complete1]},
+                         scenario_inst._output)
+
+        scenario_inst.add_output(additive=additive2, complete=complete2)
+        self.assertEqual({"additive": [additive1, additive2],
+                          "complete": [complete1, complete2]},
+                         scenario_inst._output)
+
+    def test_add_output_raises(self):
+        additive = {"title": "Foo title", "chart": "FooChart",
+                    "description": "Foo description",
+                    "items": [["ab", 1], ["cd", 2]]}
+        complete = {"title": "Bar title", "widget": "BarWidget",
+                    "description": "Bar description",
+                    "data": [["ef", 1], ["jh", 2]]}
+        scenario_inst = scenario.Scenario()
+
+        scenario_inst.add_output(additive=additive, complete=complete)
+
+        for key in additive.keys():
+            broken_additive = additive.copy()
+            del broken_additive[key]
+            self.assertRaises(exceptions.RallyException,
+                              scenario_inst.add_output,
+                              additive=broken_additive)
+
+        for key in complete.keys():
+            broken_complete = complete.copy()
+            del broken_complete[key]
+            self.assertRaises(exceptions.RallyException,
+                              scenario_inst.add_output,
+                              complete=broken_complete)

@@ -16,9 +16,11 @@
 
 import random
 
+import jsonschema
 import six
 
 from rally.common import logging
+from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally import consts
@@ -106,6 +108,7 @@ class Scenario(plugin.Plugin,
         self.context = context or {}
         self.task = self.context.get("task", {})
         self._idle_duration = 0
+        self._output = {"additive": [], "complete": []}
 
     @staticmethod
     def _validate_helper(validators, clients, config, deployment):
@@ -164,3 +167,20 @@ class Scenario(plugin.Plugin,
     def idle_duration(self):
         """Returns duration of all sleep_between."""
         return self._idle_duration
+
+    def add_output(self, additive=None, complete=None):
+        """Add iteration values for additive output.
+
+        :param additive: dict with additive output
+        :param complete: dict with complete output
+        :raises RallyException: When additive or complete has wrong format
+        """
+        for key, value in (("additive", additive), ("complete", complete)):
+            if value:
+                try:
+                    jsonschema.validate(
+                        value, task.OUTPUT_SCHEMA["properties"][key]["items"])
+                    self._output[key].append(value)
+                except jsonschema.ValidationError:
+                    raise exceptions.RallyException(
+                        "%s output has wrong format" % key.capitalize())
