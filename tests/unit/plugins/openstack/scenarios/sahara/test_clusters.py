@@ -40,13 +40,59 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
             }
         }
         clusters_scenario.create_and_delete_cluster(
-            flavor="test_flavor",
+            master_flavor="test_flavor_m",
+            worker_flavor="test_flavor_w",
             workers_count=5,
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
         mock__launch_cluster.assert_called_once_with(
-            flavor_id="test_flavor",
+            flavor_id=None,
+            master_flavor_id="test_flavor_m",
+            worker_flavor_id="test_flavor_w",
+            image_id="test_image",
+            workers_count=5,
+            plugin_name="test_plugin",
+            hadoop_version="test_version",
+            floating_ip_pool=None,
+            volumes_per_node=None,
+            volumes_size=None,
+            auto_security_group=None,
+            security_groups=None,
+            node_configs=None,
+            cluster_configs=None,
+            enable_anti_affinity=False,
+            enable_proxy=False)
+
+        mock__delete_cluster.assert_called_once_with(
+            mock__launch_cluster.return_value)
+
+    @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
+    @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
+                return_value=mock.MagicMock(id=42))
+    def test_create_and_delete_cluster_deprecated_flavor(
+            self, mock__launch_cluster, mock__delete_cluster):
+        clusters_scenario = clusters.SaharaClusters(self.context)
+
+        clusters_scenario.context = {
+            "tenant": {
+                "sahara": {
+                    "image": "test_image",
+                }
+            }
+        }
+        clusters_scenario.create_and_delete_cluster(
+            flavor="test_deprecated_arg",
+            master_flavor=None,
+            worker_flavor=None,
+            workers_count=5,
+            plugin_name="test_plugin",
+            hadoop_version="test_version")
+
+        mock__launch_cluster.assert_called_once_with(
+            flavor_id="test_deprecated_arg",
+            master_flavor_id=None,
+            worker_flavor_id=None,
             image_id="test_image",
             workers_count=5,
             plugin_name="test_plugin",
@@ -85,14 +131,17 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
         }
 
         clusters_scenario.create_scale_delete_cluster(
-            flavor="test_flavor",
+            master_flavor="test_flavor_m",
+            worker_flavor="test_flavor_w",
             workers_count=5,
             deltas=[1, -1],
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
         mock__launch_cluster.assert_called_once_with(
-            flavor_id="test_flavor",
+            flavor_id=None,
+            master_flavor_id="test_flavor_m",
+            worker_flavor_id="test_flavor_w",
             image_id="test_image",
             workers_count=5,
             plugin_name="test_plugin",

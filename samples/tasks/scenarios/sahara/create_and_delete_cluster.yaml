@@ -2,8 +2,10 @@
   SaharaClusters.create_and_delete_cluster:
     -
       args:
-        flavor:
-         name: "m1.small"
+        master_flavor:
+         name: "m1.large"
+        worker_flavor:
+         name: "m1.medium"
         workers_count: 3
         plugin_name: "vanilla"
         hadoop_version: "2.3.0"

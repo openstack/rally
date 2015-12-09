@@ -55,7 +55,8 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                     "users_per_tenant": self.users_per_tenant
                 },
                 "sahara_cluster": {
-                    "flavor_id": "test_flavor",
+                    "master_flavor_id": "test_flavor_m",
+                    "worker_flavor_id": "test_flavor_w",
                     "workers_count": 2,
                     "plugin_name": "test_plugin",
                     "hadoop_version": "test_version"
@@ -77,9 +78,11 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
 
         for i in self.tenants:
             launch_cluster_calls.append(mock.call(
+                flavor_id=None,
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
-                flavor_id="test_flavor",
+                master_flavor_id="test_flavor_m",
+                worker_flavor_id="test_flavor_w",
                 workers_count=2,
                 image_id=self.context["tenants"][i]["sahara"]["image"],
                 floating_ip_pool=None,
@@ -115,9 +118,11 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
 
         for i in self.tenants:
             launch_cluster_calls.append(mock.call(
+                flavor_id=None,
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
-                flavor_id="test_flavor",
+                master_flavor_id="test_flavor_m",
+                worker_flavor_id="test_flavor_w",
                 workers_count=2,
                 image_id=self.context["tenants"][i]["sahara"]["image"],
                 floating_ip_pool=None,

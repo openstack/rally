@@ -27,16 +27,22 @@ class SaharaClusters(utils.SaharaScenario):
     """Benchmark scenarios for Sahara clusters."""
 
     @types.set(flavor=types.FlavorResourceType,
+               master_flavor=types.FlavorResourceType,
+               worker_flavor=types.FlavorResourceType,
                neutron_net=types.NeutronNetworkResourceType,
                floating_ip_pool=types.NeutronNetworkResourceType)
-    @validation.flavor_exists("flavor")
+    @validation.flavor_exists("master_flavor")
+    @validation.flavor_exists("worker_flavor")
     @validation.required_contexts("users", "sahara_image")
     @validation.number("workers_count", minval=1, integer_only=True)
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_and_delete_cluster(self, flavor, workers_count, plugin_name,
-                                  hadoop_version, floating_ip_pool=None,
+    def create_and_delete_cluster(self, workers_count, plugin_name,
+                                  hadoop_version,
+                                  master_flavor=None, worker_flavor=None,
+                                  flavor=None,
+                                  floating_ip_pool=None,
                                   volumes_per_node=None,
                                   volumes_size=None, auto_security_group=None,
                                   security_groups=None, node_configs=None,
@@ -49,7 +55,11 @@ class SaharaClusters(utils.SaharaScenario):
         'Active' and deletes it.
 
         :param flavor: Nova flavor that will be for nodes in the
-                       created node groups
+                       created node groups. Deprecated.
+        :param master_flavor: Nova flavor that will be used for the master
+                              instance of the cluster
+        :param worker_flavor: Nova flavor that will be used for the workers of
+                              the cluster
         :param workers_count: number of worker instances in a cluster
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
@@ -85,6 +95,8 @@ class SaharaClusters(utils.SaharaScenario):
 
         cluster = self._launch_cluster(
             flavor_id=flavor,
+            master_flavor_id=master_flavor,
+            worker_flavor_id=worker_flavor,
             image_id=image_id,
             workers_count=workers_count,
             plugin_name=plugin_name,
@@ -101,14 +113,19 @@ class SaharaClusters(utils.SaharaScenario):
 
         self._delete_cluster(cluster)
 
-    @types.set(flavor=types.FlavorResourceType)
-    @validation.flavor_exists("flavor")
+    @types.set(flavor=types.FlavorResourceType,
+               master_flavor=types.FlavorResourceType,
+               worker_flavor=types.FlavorResourceType)
+    @validation.flavor_exists("master_flavor")
+    @validation.flavor_exists("worker_flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
     @validation.number("workers_count", minval=1, integer_only=True)
     @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_scale_delete_cluster(self, flavor, workers_count, plugin_name,
+    def create_scale_delete_cluster(self, master_flavor, worker_flavor,
+                                    workers_count, plugin_name,
                                     hadoop_version, deltas,
+                                    flavor=None,
                                     floating_ip_pool=None,
                                     volumes_per_node=None, volumes_size=None,
                                     auto_security_group=None,
@@ -125,7 +142,11 @@ class SaharaClusters(utils.SaharaScenario):
         add 2 worker nodes to the cluster and the second will remove two.
 
         :param flavor: Nova flavor that will be for nodes in the
-                       created node groups
+                       created node groups. Deprecated.
+        :param master_flavor: Nova flavor that will be used for the master
+                              instance of the cluster
+        :param worker_flavor: Nova flavor that will be used for the workers of
+                              the cluster
         :param workers_count: number of worker instances in a cluster
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
@@ -166,6 +187,8 @@ class SaharaClusters(utils.SaharaScenario):
 
         cluster = self._launch_cluster(
             flavor_id=flavor,
+            master_flavor_id=master_flavor,
+            worker_flavor_id=worker_flavor,
             image_id=image_id,
             workers_count=workers_count,
             plugin_name=plugin_name,

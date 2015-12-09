@@ -4,7 +4,9 @@
   SaharaClusters.create_and_delete_cluster:
     -
       args:
-        flavor:
+        master_flavor:
+         name: "m1.small"
+        worker_flavor:
          name: "m1.small"
         workers_count: 1
         plugin_name: "vanilla"

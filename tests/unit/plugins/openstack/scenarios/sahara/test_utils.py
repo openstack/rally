@@ -168,7 +168,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         node_groups = [
             {
                 "name": "master-ng",
-                "flavor_id": "test_flavor",
+                "flavor_id": "test_flavor_m",
                 "node_processes": ["p1"],
                 "floating_ip_pool": floating_ip_pool_uuid,
                 "count": 1,
@@ -177,7 +177,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
             }, {
                 "name": "worker-ng",
-                "flavor_id": "test_flavor",
+                "flavor_id": "test_flavor_w",
                 "node_processes": ["p2"],
                 "floating_ip_pool": floating_ip_pool_uuid,
                 "volumes_per_node": 5,
@@ -201,7 +201,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         scenario._launch_cluster(
             plugin_name="test_plugin",
             hadoop_version="test_version",
-            flavor_id="test_flavor",
+            master_flavor_id="test_flavor_m",
+            worker_flavor_id="test_flavor_w",
             image_id="test_image",
             floating_ip_pool=floating_ip_pool_uuid,
             volumes_per_node=5,
@@ -271,7 +272,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         node_groups = [
             {
                 "name": "master-ng",
-                "flavor_id": "test_flavor",
+                "flavor_id": "test_flavor_m",
                 "node_processes": ["p1"],
                 "floating_ip_pool": floating_ip_pool_uuid,
                 "count": 1,
@@ -281,7 +282,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "is_proxy_gateway": True
             }, {
                 "name": "worker-ng",
-                "flavor_id": "test_flavor",
+                "flavor_id": "test_flavor_w",
                 "node_processes": ["p2"],
                 "volumes_per_node": 5,
                 "volumes_size": 10,
@@ -291,7 +292,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
             }, {
                 "name": "proxy-ng",
-                "flavor_id": "test_flavor",
+                "flavor_id": "test_flavor_w",
                 "node_processes": ["p2"],
                 "floating_ip_pool": floating_ip_pool_uuid,
                 "volumes_per_node": 5,
@@ -316,7 +317,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         scenario._launch_cluster(
             plugin_name="test_plugin",
             hadoop_version="test_version",
-            flavor_id="test_flavor",
+            master_flavor_id="test_flavor_m",
+            worker_flavor_id="test_flavor_w",
             image_id="test_image",
             floating_ip_pool=floating_ip_pool_uuid,
             volumes_per_node=5,
@@ -380,7 +382,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                           scenario._launch_cluster,
                           plugin_name="test_plugin",
                           hadoop_version="test_version",
-                          flavor_id="test_flavor",
+                          master_flavor_id="test_flavor_m",
+                          worker_flavor_id="test_flavor_w",
                           image_id="test_image",
                           floating_ip_pool="test_pool",
                           volumes_per_node=5,

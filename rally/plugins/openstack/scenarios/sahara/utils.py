@@ -244,10 +244,15 @@ class SaharaScenario(scenario.OpenStackScenario):
         }
         return replication_config
 
+    @logging.log_deprecated_args("`flavor_id` argument is deprecated. Use "
+                                 "`master_flavor_id` and `worker_flavor_id` "
+                                 "parameters.", rally_version="2.0",
+                                 deprecated_args=["flavor_id"])
     @atomic.action_timer("sahara.launch_cluster")
-    def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
-                        image_id, workers_count, floating_ip_pool=None,
-                        volumes_per_node=None,
+    def _launch_cluster(self, plugin_name, hadoop_version, master_flavor_id,
+                        worker_flavor_id, image_id, workers_count,
+                        flavor_id=None,
+                        floating_ip_pool=None, volumes_per_node=None,
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
                         cluster_configs=None, enable_anti_affinity=False,
@@ -261,7 +266,9 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         :param plugin_name: provisioning plugin name
         :param hadoop_version: Hadoop version supported by the plugin
-        :param flavor_id: flavor which will be used to create instances
+        :param master_flavor_id: flavor which will be used to create master
+                                 instance
+        :param worker_flavor_id: flavor which will be used to create workers
         :param image_id: image id that will be used to boot instances
         :param workers_count: number of worker instances. All plugins will
                               also add one Master instance and some plugins
@@ -295,16 +302,22 @@ class SaharaScenario(scenario.OpenStackScenario):
         else:
             proxies_count = 0
 
+        if flavor_id:
+            # Note: the deprecated argument is used. Falling back to single
+            # flavor behavior.
+            master_flavor_id = flavor_id
+            worker_flavor_id = flavor_id
+
         node_groups = [
             {
                 "name": "master-ng",
-                "flavor_id": flavor_id,
+                "flavor_id": master_flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["master"],
                 "count": 1
             }, {
                 "name": "worker-ng",
-                "flavor_id": flavor_id,
+                "flavor_id": worker_flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["worker"],
                 "count": workers_count - proxies_count
@@ -314,7 +327,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         if proxies_count:
             node_groups.append({
                 "name": "proxy-ng",
-                "flavor_id": flavor_id,
+                "flavor_id": worker_flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["worker"],
                 "count": proxies_count
@@ -327,7 +340,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
             node_groups.append({
                 "name": "manager-ng",
-                "flavor_id": flavor_id,
+                "flavor_id": worker_flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["manager"],
                 "count": 1
