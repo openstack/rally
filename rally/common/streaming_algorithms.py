@@ -132,7 +132,8 @@ class MinComputation(StreamingAlgorithm):
 
     def result(self):
         if self._value is None:
-            raise ValueError("No values have been processed")
+            raise exceptions.RallyException(
+                _("No values have been processed"))
         return self._value
 
 
@@ -154,7 +155,8 @@ class MaxComputation(StreamingAlgorithm):
 
     def result(self):
         if self._value is None:
-            raise ValueError("No values have been processed")
+            raise exceptions.RallyException(
+                _("No values have been processed"))
         return self._value
 
 
@@ -184,7 +186,8 @@ class PercentileComputation(StreamingAlgorithm):
         results = list(
             map(lambda x: x[1], self._graph_zipper.get_zipped_graph()))
         if not results:
-            raise ValueError("No values have been processed")
+            raise exceptions.RallyException(
+                _("No values have been processed"))
         return utils.percentile(results, self._percent)
 
 

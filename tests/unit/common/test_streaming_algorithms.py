@@ -130,7 +130,7 @@ class MinComputationTestCase(test.TestCase):
     def test_result_raises(self):
         comp = algo.MinComputation()
         self.assertRaises(TypeError, comp.result, 1)
-        self.assertRaises(ValueError, comp.result)
+        self.assertRaises(exceptions.RallyException, comp.result)
 
     def test_merge(self):
         single_min_algo = algo.MinComputation()
@@ -169,7 +169,7 @@ class MaxComputationTestCase(test.TestCase):
     def test_result_raises(self):
         comp = algo.MaxComputation()
         self.assertRaises(TypeError, comp.result, 1)
-        self.assertRaises(ValueError, comp.result)
+        self.assertRaises(exceptions.RallyException, comp.result)
 
     def test_merge(self):
         single_max_algo = algo.MaxComputation()
@@ -244,7 +244,7 @@ class PercentileComputationTestCase(test.TestCase):
     def test_result_raises(self):
         self.assertRaises(TypeError, algo.PercentileComputation)
         comp = algo.PercentileComputation(0.50, 100)
-        self.assertRaises(ValueError, comp.result)
+        self.assertRaises(exceptions.RallyException, comp.result)
 
 
 class IncrementComputationTestCase(test.TestCase):
