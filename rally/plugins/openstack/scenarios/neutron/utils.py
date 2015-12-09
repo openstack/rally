@@ -283,7 +283,8 @@ class NeutronScenario(scenario.OpenStackScenario):
         :returns: Network dict
         """
         if "networks" in self.context["tenant"]:
-            return random.choice(self.context["tenant"]["networks"])
+            return {"network":
+                    random.choice(self.context["tenant"]["networks"])}
         else:
             LOG.warning(_("Running this scenario without either the 'network' "
                           "or 'existing_network' context is deprecated"))
