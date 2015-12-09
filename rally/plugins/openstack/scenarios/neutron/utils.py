@@ -305,10 +305,13 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         subnets = network.get("subnets")
         if subnets:
-            return subnets
-        else:
-            return self._create_subnets(network, subnet_create_args,
-                                        subnet_cidr_start, subnets_per_network)
+            # NOTE(amaretskiy): I believe this method will be reworked
+            #   or even removed at all since structure of this return
+            #   value is incomplete (subnet ids only) in comparison with
+            #   self._create_subnets() below
+            return [{"subnet": {"id": subnet}} for subnet in subnets]
+        return self._create_subnets(network, subnet_create_args,
+                                    subnet_cidr_start, subnets_per_network)
 
     def _create_subnets(self, network,
                         subnet_create_args=None,

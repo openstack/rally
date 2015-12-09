@@ -30,6 +30,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(NeutronScenarioTestCase, self).setUp()
         self.network = mock.Mock()
+        self.scenario = utils.NeutronScenario(self.context)
 
     def test__get_network_id(self):
         neutron_scenario = utils.NeutronScenario()
@@ -449,38 +450,34 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                 network_create_args or {})
 
     @ddt.data(
-        {},
-        {"subnets": [mock.Mock(), mock.Mock()]},
-        {"subnets": [mock.Mock(), mock.Mock()],
+        {"subnets": ["foo-id", "bar-id"],
+         "expected": [{"subnet": {"id": "foo-id"}},
+                      {"subnet": {"id": "bar-id"}}]},
+        {"subnets": ["foo-id", "bar-id"],
          "subnet_create_args": {"fakearg": "fake"},
          "subnet_cidr_start": "cidr",
-         "subnets_per_network": 5},
-        {"subnet_create_args": {"fakearg": "fake"},
+         "subnets_per_network": 5,
+         "expected": [{"subnet": {"id": "foo-id"}},
+                      {"subnet": {"id": "bar-id"}}]},
+        {"subnets": [],
+         "subnet_create_args": {"fakearg": "fake"},
          "subnet_cidr_start": "cidr",
-         "subnets_per_network": 5})
+         "subnets_per_network": 5,
+         "expected": {
+             "create_subnets": [({"subnets": []}, {"fakearg": "fake"},
+                                 "cidr", 5), {}]}})
     @ddt.unpack
     def test_get_or_create_subnets(self, subnets=None,
                                    subnet_create_args=None,
                                    subnet_cidr_start=None,
-                                   subnets_per_network=1):
-        subnets = subnets or []
-        network = mock.MagicMock(get=mock.Mock(return_value=subnets))
-        scenario = utils.NeutronScenario()
-        scenario._create_subnets = mock.Mock()
-
-        actual = scenario._get_or_create_subnets(network,
-                                                 subnet_create_args,
-                                                 subnet_cidr_start,
-                                                 subnets_per_network)
-
-        if subnets:
-            self.assertItemsEqual(actual, subnets)
-            self.assertFalse(scenario._create_subnets.called)
-        else:
-            self.assertEqual(actual, scenario._create_subnets.return_value)
-            scenario._create_subnets.assert_called_once_with(
-                network, subnet_create_args, subnet_cidr_start,
-                subnets_per_network)
+                                   subnets_per_network=1, expected=None):
+        self.scenario._create_subnets = mock.Mock(
+            side_effect=lambda *args, **kw: {"create_subnets": [args, kw]})
+        result = self.scenario._get_or_create_subnets({"subnets": subnets},
+                                                      subnet_create_args,
+                                                      subnet_cidr_start,
+                                                      subnets_per_network)
+        self.assertEqual(expected, result)
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_subnet",
                 return_value={
