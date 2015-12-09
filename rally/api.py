@@ -282,9 +282,8 @@ class Task(object):
         :param deployment: UUID or name of the deployment
         :param config: a dict with a task configuration
         :param task: Task object. If None, it will be created
-        :param abort_on_sla_failure: if True, the execution of a benchmark
-                                     scenario will stop when any SLA check
-                                     for it fails
+        :param abort_on_sla_failure: If set to True, the task execution will
+                                     stop when any SLA check for it fails
         """
         deployment = objects.Deployment.get(deployment)
         task = task or objects.Task(deployment_uuid=deployment["uuid"])
@@ -311,7 +310,7 @@ class Task(object):
 
         :param task_uuid: The UUID of the task
         :type task_uuid: str
-        :param soft: if set to True, task should be aborted after execution of
+        :param soft: If set to True, task should be aborted after execution of
                      current scenario, otherwise as soon as possible before
                      all the scenario iterations finish [Default: False]
         :type soft: bool
@@ -344,9 +343,9 @@ class Task(object):
     def delete(cls, task_uuid, force=False):
         """Delete the task.
 
-        :param task_uuid: The UUID of the task.
+        :param task_uuid: The UUID of the task
         :param force: If set to True, then delete the task despite to the
-                      status.
+                      status
         :raises TaskInvalidStatus: when the status of the task is not
                                    FINISHED and the force argument
                                    is not True
@@ -362,8 +361,8 @@ class Verification(object):
                tempest_config, system_wide_install=False):
         """Start verifying.
 
-        :param deployment: UUID or name of a deployment.
-        :param set_name: Valid name of tempest test set.
+        :param deployment: UUID or name of a deployment
+        :param set_name: Valid name of tempest test set
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
