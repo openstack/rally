@@ -69,6 +69,8 @@ class DeploymentCommands(object):
             OS_TENANT_NAME
             OS_ENDPOINT
             OS_REGION_NAME
+            OS_CACERT
+            OS_INSECURE
 
         All other deployment engines need more complex configuration data, so
         it should be stored in configuration file.
@@ -103,11 +105,16 @@ class DeploymentCommands(object):
                     "username": os.environ["OS_USERNAME"],
                     "password": os.environ["OS_PASSWORD"],
                     "tenant_name": os.environ["OS_TENANT_NAME"]
-                }
+                },
+                "https_cacert": os.environ.get("OS_CACERT", ""),
+                "https_insecure": False
             }
             region_name = os.environ.get("OS_REGION_NAME")
             if region_name and region_name != "None":
                 config["region_name"] = region_name
+            https_insecure = os.environ.get("OS_INSECURE")
+            if https_insecure and https_insecure.lower() == "true":
+                config["https_insecure"] = True
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
@@ -269,6 +276,9 @@ class DeploymentCommands(object):
             if credential.get("endpoint"):
                 env_file.write("export OS_ENDPOINT=%s\n" %
                                credential["endpoint"])
+            if credential.get("https_cacert"):
+                env_file.write("export OS_CACERT=%s\n" %
+                               credential["https_cacert"])
             if re.match(r"^/v3/?$", parse.urlparse(
                     credential["auth_url"]).path) is not None:
                 env_file.write("export OS_USER_DOMAIN_NAME=%s\n"
