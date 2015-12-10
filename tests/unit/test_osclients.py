@@ -680,3 +680,21 @@ class OSClientsTestCase(test.TestCase):
             if version is not None:
                 key += "%s" % {"version": version}
             self.assertEqual(fake_designate, self.clients.cache[key])
+
+    @mock.patch("rally.osclients.Cue._get_session")
+    def test_cue(self, mock_cue__get_session):
+        fake_cue = fakes.FakeCueClient()
+        mock_cue = mock.MagicMock()
+        mock_cue.client.Client = mock.MagicMock(return_value=fake_cue)
+
+        mock_cue__get_session.return_value = self.fake_keystone.session
+
+        self.assertNotIn("cue", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"cueclient": mock_cue,
+                                             "cueclient.v1": mock_cue}):
+            client = self.clients.cue()
+            self.assertEqual(fake_cue, client)
+            mock_cue.client.Client.assert_called_once_with(
+                interface=consts.EndpointType.PUBLIC,
+                session=self.fake_keystone.session)
+            self.assertEqual(fake_cue, self.clients.cache["cue"])
