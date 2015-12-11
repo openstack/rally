@@ -16,6 +16,7 @@
 import os
 
 import decorator
+from oslo_utils import strutils
 
 from rally.common import fileutils
 from rally.common.i18n import _
@@ -80,3 +81,29 @@ def with_default_deployment(cli_arg_name="uuid"):
 with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
 with_default_verification_id = default_from_global(
     "verification_uuid", ENV_VERIFICATION, "uuid")
+
+
+def get_creds_from_env_vars():
+    required_env_vars = ["OS_AUTH_URL", "OS_USERNAME",
+                         "OS_PASSWORD", "OS_TENANT_NAME"]
+    missing_env_vars = [v for v in required_env_vars if v not in os.environ]
+    if missing_env_vars:
+        msg = ("The following environment variables are "
+               "required but not set: %s" % " ".join(missing_env_vars))
+        raise exceptions.ValidationError(message=msg)
+
+    creds = {
+        "auth_url": os.environ["OS_AUTH_URL"],
+        "admin": {
+            "username": os.environ["OS_USERNAME"],
+            "password": os.environ["OS_PASSWORD"],
+            "tenant_name": os.environ["OS_TENANT_NAME"]
+        },
+        "endpoint": os.environ.get("OS_ENDPOINT"),
+        "region_name": os.environ.get("OS_REGION_NAME", ""),
+        "https_cacert": os.environ.get("OS_CACERT", ""),
+        "https_insecure": strutils.bool_from_string(
+            os.environ.get("OS_INSECURE"))
+    }
+
+    return creds

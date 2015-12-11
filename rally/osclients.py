@@ -14,10 +14,10 @@
 #    under the License.
 
 import abc
-import os
 
 from oslo_config import cfg
 
+from rally.cli import envutils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
@@ -634,17 +634,17 @@ class Clients(object):
 
     @classmethod
     def create_from_env(cls):
-        https_insecure = os.environ.get("OS_INSECURE")
+        creds = envutils.get_creds_from_env_vars()
         return cls(
             objects.Credential(
-                os.environ["OS_AUTH_URL"],
-                os.environ["OS_USERNAME"],
-                os.environ["OS_PASSWORD"],
-                os.environ.get("OS_TENANT_NAME"),
-                region_name=os.environ.get("OS_REGION_NAME"),
-                https_cacert=os.environ.get("OS_CACERT", ""),
-                https_insecure=(True if https_insecure and
-                                https_insecure.lower() == "true" else False)
+                creds["auth_url"],
+                creds["admin"]["username"],
+                creds["admin"]["password"],
+                creds["admin"]["tenant_name"],
+                endpoint=creds["endpoint"],
+                region_name=creds["region_name"],
+                https_cacert=creds["https_cacert"],
+                https_insecure=creds["https_insecure"]
             ))
 
     def clear(self):

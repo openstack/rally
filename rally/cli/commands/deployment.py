@@ -87,34 +87,8 @@ class DeploymentCommands(object):
         """
 
         if fromenv:
-            required_env_vars = ["OS_USERNAME", "OS_PASSWORD", "OS_AUTH_URL",
-                                 "OS_TENANT_NAME"]
-
-            unavailable_vars = [v for v in required_env_vars
-                                if v not in os.environ]
-            if unavailable_vars:
-                print("The following environment variables are required but "
-                      "not set: %s" % " ".join(unavailable_vars))
-                return(1)
-
-            config = {
-                "type": "ExistingCloud",
-                "auth_url": os.environ["OS_AUTH_URL"],
-                "endpoint": os.environ.get("OS_ENDPOINT"),
-                "admin": {
-                    "username": os.environ["OS_USERNAME"],
-                    "password": os.environ["OS_PASSWORD"],
-                    "tenant_name": os.environ["OS_TENANT_NAME"]
-                },
-                "https_cacert": os.environ.get("OS_CACERT", ""),
-                "https_insecure": False
-            }
-            region_name = os.environ.get("OS_REGION_NAME")
-            if region_name and region_name != "None":
-                config["region_name"] = region_name
-            https_insecure = os.environ.get("OS_INSECURE")
-            if https_insecure and https_insecure.lower() == "true":
-                config["https_insecure"] = True
+            config = {"type": "ExistingCloud"}
+            config.update(envutils.get_creds_from_env_vars())
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
