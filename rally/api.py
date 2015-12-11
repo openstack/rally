@@ -358,7 +358,7 @@ class Verification(object):
 
     @classmethod
     def verify(cls, deployment, set_name, regex, tests_file,
-               tempest_config, system_wide_install=False):
+               tempest_config, system_wide_install=False, concur=0):
         """Start verifying.
 
         :param deployment: UUID or name of a deployment
@@ -370,9 +370,10 @@ class Verification(object):
                                     when installing Tempest; whether or not to
                                     use the local env instead of the Tempest
                                     virtual env when running the tests
+        :param concur: How many processes to use to run Tempest tests.
+                       The default value (0) auto-detects CPU count
         :returns: Verification object
         """
-
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verification = objects.Verification(deployment_uuid=deployment_uuid)
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
@@ -389,7 +390,7 @@ class Verification(object):
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
         verification.set_running()
         verifier.verify(set_name=set_name, regex=regex,
-                        tests_file=tests_file)
+                        tests_file=tests_file, concur=concur)
 
         return verification
 
