@@ -634,13 +634,17 @@ class Clients(object):
 
     @classmethod
     def create_from_env(cls):
+        https_insecure = os.environ.get("OS_INSECURE")
         return cls(
             objects.Credential(
                 os.environ["OS_AUTH_URL"],
                 os.environ["OS_USERNAME"],
                 os.environ["OS_PASSWORD"],
                 os.environ.get("OS_TENANT_NAME"),
-                region_name=os.environ.get("OS_REGION_NAME")
+                region_name=os.environ.get("OS_REGION_NAME"),
+                https_cacert=os.environ.get("OS_CACERT", ""),
+                https_insecure=(True if https_insecure and
+                                https_insecure.lower() == "true" else False)
             ))
 
     def clear(self):

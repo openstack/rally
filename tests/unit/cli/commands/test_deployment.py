@@ -50,6 +50,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
                                   "OS_ENDPOINT": "fake_endpoint",
+                                  "OS_INSECURE": "True",
+                                  "OS_CACERT": "fake_cacert",
                                   "RALLY_DEPLOYMENT": "fake_deployment_id"})
     @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
@@ -65,7 +67,9 @@ class DeploymentCommandsTestCase(test.TestCase):
                     "username": "fake_username",
                     "password": "fake_password",
                     "tenant_name": "fake_tenant_name"
-                }
+                },
+                "https_insecure": True,
+                "https_cacert": "fake_cacert"
             },
             "from_env"
         )
