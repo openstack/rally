@@ -207,6 +207,7 @@ class ScenarioRunner(plugin.Plugin):
 
         with rutils.Timer() as timer:
             self._run_scenario(cls, method_name, context, args)
+
         self.run_duration = timer.duration()
         return self.run_duration
 

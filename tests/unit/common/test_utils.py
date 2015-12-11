@@ -5,8 +5,7 @@
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
+#         http://www.apache.org/licenses/LICENSE-2.0#
 #    Unless required by applicable law or agreed to in writing, software
 #    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,10 +15,12 @@
 from __future__ import print_function
 import string
 import sys
+import threading
 import time
 
 import ddt
 import mock
+from six.moves import queue as Queue
 import testtools
 
 from rally.common import utils
@@ -417,3 +418,38 @@ class MergeTestCase(test.TestCase):
 
         out = list(utils.merge(10, *in_iters))
         self.assertEqual(out, expected_output)
+
+
+class TimeoutThreadTestCase(test.TestCase):
+    def test_timeout_thread(self):
+        """Create and kill thread by timeout.
+
+        This single test covers 3 methods: terminate_thread, timeout_thread,
+        and interruptable_sleep.
+
+        This test is more like integrated then unit, but it is much better
+        then unreadable 500 lines of mocking and checking.
+        """
+        queue = Queue.Queue()
+        killer_thread = threading.Thread(
+            target=utils.timeout_thread,
+            args=(queue,),
+        )
+        test_thread = threading.Thread(
+            target=utils.interruptable_sleep,
+            args=(30, 0.01),
+        )
+        test_thread.start()
+        start_time = time.time()
+        queue.put((test_thread.ident, start_time + 1))
+        killer_thread.start()
+        test_thread.join()
+        end_time = time.time()
+        queue.put((None, None))
+        killer_thread.join()
+        time_elapsed = end_time - start_time
+        # NOTE(sskripnick): Killing thread with PyThreadState_SetAsyncExc
+        # works with sinificant delay. Make sure this delay is less
+        # than 10 seconds.
+        self.assertTrue(time_elapsed < 11,
+                        "Thread killed too late (%s seconds)" % time_elapsed)

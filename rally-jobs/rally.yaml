@@ -534,6 +534,30 @@
         type: "constant"
         times: 20
         concurrency: 5
+    -
+      args:
+        sleep: 30
+        message: "This scenario should be terminated by runner timeout."
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+        timeout: 1
+      sla:
+        failure_rate:
+          min: 100
+    -
+      args:
+        sleep: 30
+        message: "This scenario should be terminated by runner timeout."
+      runner:
+        type: "rps"
+        times: 1
+        rps: 1
+        timeout: 1
+      sla:
+        failure_rate:
+          min: 100
 
   Dummy.dummy_exception_probability:
     -

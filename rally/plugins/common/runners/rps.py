@@ -18,6 +18,8 @@ import multiprocessing
 import threading
 import time
 
+from six.moves import queue as Queue
+
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
@@ -60,6 +62,14 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         (sleep * info["processes_counter"]) / info["processes_to_start"])
 
     start = time.time()
+    timeout_queue = Queue.Queue()
+
+    if timeout:
+        collector_thr_by_timeout = threading.Thread(
+            target=utils.timeout_thread,
+            args=(timeout_queue, )
+        )
+        collector_thr_by_timeout.start()
 
     i = 0
     while i < times and not aborted.is_set():
@@ -69,8 +79,11 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         worker_args = (queue, scenario_args)
         thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
+
         i += 1
         thread.start()
+        if timeout:
+            timeout_queue.put((thread.ident, time.time() + timeout))
         pool.append(thread)
 
         time_gap = time.time() - start
@@ -92,6 +105,10 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     while pool:
         thr = pool.popleft()
         thr.join()
+
+    if timeout:
+        timeout_queue.put((None, None,))
+        collector_thr_by_timeout.join()
 
 
 @runner.configure(name="rps")
