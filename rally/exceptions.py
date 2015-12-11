@@ -86,7 +86,9 @@ class PluginNotFound(NotFoundException):
 
 class PluginWithSuchNameExists(RallyException):
     msg_fmt = _("Plugin with such name: %(name)s already exists in "
-                "%(namespace)s namespace")
+                "%(namespace)s namespace. It's module allocates at "
+                "%(existing_path)s. You are trying to add plugin whose module "
+                "allocates at %(new_path)s.")
 
 
 class NoSuchConfigField(NotFoundException):
