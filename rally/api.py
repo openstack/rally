@@ -357,12 +357,12 @@ class Task(object):
 class Verification(object):
 
     @classmethod
-    def verify(cls, deployment, set_name, regex, tests_file,
-               tempest_config, system_wide_install=False, concur=0):
-        """Start verifying.
+    def verify(cls, deployment, set_name="", regex=None, tests_file=None,
+               tempest_config=None, system_wide_install=None, concur=0):
+        """Start verification.
 
         :param deployment: UUID or name of a deployment
-        :param set_name: Valid name of tempest test set
+        :param set_name: Name of a Tempest test set
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
@@ -402,16 +402,14 @@ class Verification(object):
         :param log_file: User specified Tempest log file in subunit format
         :returns: Deployment and verification objects
         """
-
         # TODO(aplanas): Create an external deployment if this is
         # missing, as required in the blueprint [1].
         # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-
         verification = objects.Verification(deployment_uuid=deployment_uuid)
         verifier = tempest.Tempest(deployment_uuid, verification=verification)
-        LOG.info("Importing verification of deployment: %s" % deployment_uuid)
 
+        LOG.info("Importing verification of deployment: %s" % deployment_uuid)
         verification.set_running()
         verifier.import_results(set_name=set_name, log_file=log_file)
 
@@ -514,8 +512,16 @@ class Verification(object):
 
     @staticmethod
     def list(status=None):
+        """List all verifications.
+
+        :param status: Filter verifications by the specified status
+        """
         return objects.Verification.list(status)
 
     @staticmethod
     def get(verification_uuid):
+        """Get verification.
+
+        :param verification_uuid: UUID of a verification
+        """
         return objects.Verification.get(verification_uuid)

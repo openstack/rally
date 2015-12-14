@@ -54,13 +54,10 @@ class VerifyCommandsTestCase(test.TestCase):
             self.flavor1, self.flavor2]
 
         self.verify.start(deployment=deployment_id, do_use=False)
-        default_set_name = "full"
-        default_regex = None
-        default_tests_file = None
 
         mock_verification_verify.assert_called_once_with(
-            deployment_id, default_set_name, default_regex,
-            default_tests_file, None, False, 0)
+            deployment_id, set_name="full", regex=None, tests_file=None,
+            tempest_config=None, system_wide_install=False, concur=0)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -74,13 +71,11 @@ class VerifyCommandsTestCase(test.TestCase):
         tempest_config = tempfile.NamedTemporaryFile()
         self.verify.start(deployment=deployment_id,
                           tempest_config=tempest_config.name, do_use=False)
-        default_set_name = "full"
-        default_regex = None
-        default_tests_file = None
 
         mock_verification_verify.assert_called_once_with(
-            deployment_id, default_set_name, default_regex,
-            default_tests_file, tempest_config.name, False, 0)
+            deployment_id, set_name="full", regex=None, tests_file=None,
+            tempest_config=tempest_config.name, system_wide_install=False,
+            concur=0)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")
@@ -93,7 +88,8 @@ class VerifyCommandsTestCase(test.TestCase):
                           tests_file=tests_file, do_use=False)
 
         mock_verification_verify.assert_called_once_with(
-            deployment_id, "", None, tests_file, None, False, 0)
+            deployment_id, set_name="", regex=None, tests_file=tests_file,
+            tempest_config=None, system_wide_install=False, concur=0)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):
@@ -101,7 +97,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         wrong_set_name = "unexpected_value"
 
-        self.verify.start(deployment_id, wrong_set_name, do_use=False)
+        self.verify.start(deployment_id, set_name=wrong_set_name, do_use=False)
 
         self.assertNotIn(wrong_set_name, consts.TempestTestsSets,
                          consts.TempestTestsAPI)

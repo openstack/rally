@@ -33,21 +33,22 @@ from rally.verification.tempest import diff
 from rally.verification.tempest import json2html
 
 
-class VerifyCommands(object):
-    """Test cloud with Tempest
+AVAILABLE_SETS = list(consts.TempestTestsSets) + list(consts.TempestTestsAPI)
 
-    Set of commands that allow you to perform Tempest tests of
-    OpenStack live cloud.
+
+class VerifyCommands(object):
+    """Verify an OpenStack cloud via Tempest.
+
+    Set of commands that allow you to run Tempest tests.
     """
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   required=False, help="UUID or name of a deployment")
     @cliutils.args("--set", dest="set_name", type=str, required=False,
-                   help="Name of tempest test set. Available sets: %s" % ", ".
-                   join(list(consts.TempestTestsSets) +
-                        list(consts.TempestTestsAPI)))
+                   help="Name of a Tempest test set. "
+                        "Available sets are %s" % ", ".join(AVAILABLE_SETS))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
-                   help="Regular expression of test.")
+                   help="Regular expression of test")
     @cliutils.args("--tests-file", dest="tests_file", type=str,
                    help="Path to a file with a list of Tempest tests",
                    required=False)
@@ -67,13 +68,13 @@ class VerifyCommands(object):
                    help="How many processes to use to run Tempest tests. "
                         "The default value (0) auto-detects your CPU count")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def start(self, set_name="", deployment=None, regex=None,
+    def start(self, deployment=None, set_name="", regex=None,
               tests_file=None, tempest_config=None, do_use=True,
               system_wide_install=False, concur=0):
-        """Start set of tests.
+        """Start verification (run Tempest tests).
 
-        :param set_name: Name of tempest test set
         :param deployment: UUID or name of a deployment
+        :param set_name: Name of a Tempest test set
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
@@ -85,45 +86,43 @@ class VerifyCommands(object):
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
         """
-
+        msg = _("Arguments '%s' and '%s' are not compatible. "
+                "You can use only one of the mentioned arguments.")
         if regex and set_name:
-            raise exceptions.InvalidArgumentsException(
-                "Arguments set_name and regex are not compatible")
-
+            print(msg % ("regex", "set"))
+            return 1
         if tests_file and set_name:
-            raise exceptions.InvalidArgumentsException(
-                "Arguments tests_file and set_name are not compatible")
-
+            print(msg % ("tests_file", "set"))
+            return 1
         if tests_file and regex:
-            raise exceptions.InvalidArgumentsException(
-                "Arguments tests_file and regex are not compatible")
+            print(msg % ("tests_file", "regex"))
+            return 1
 
         if not (regex or set_name or tests_file):
             set_name = "full"
 
-        if set_name and set_name not in (list(consts.TempestTestsSets) +
-                                         list(consts.TempestTestsAPI)):
-            print("Sorry, but there are no desired Tempest test set. Please, "
-                  "choose from: %s" % ", ".join(list(consts.TempestTestsSets) +
-                                                list(consts.TempestTestsAPI)))
-            return (1)
+        if set_name and set_name not in AVAILABLE_SETS:
+            print(_("Tempest test set '%s' not found "
+                    "in available test sets. Available sets are %s.")
+                  % (set_name, ", ".join(AVAILABLE_SETS)))
+            return 1
 
         if tests_file and not os.path.exists(tests_file):
-            print("File '%s' not found" % tests_file)
-            return (1)
+            print(_("File '%s' not found.") % tests_file)
+            return 1
 
-        verification = api.Verification.verify(deployment, set_name, regex,
-                                               tests_file, tempest_config,
-                                               system_wide_install, concur)
+        verification = api.Verification.verify(
+            deployment, set_name=set_name, regex=regex,
+            tests_file=tests_file, tempest_config=tempest_config,
+            system_wide_install=system_wide_install, concur=concur)
         if do_use:
             self.use(verification["uuid"])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   required=False, help="UUID or name of a deployment")
     @cliutils.args("--set", dest="set_name", type=str, required=False,
-                   help="Name of tempest test set. Available sets: %s" % ", ".
-                   join(list(consts.TempestTestsSets) +
-                        list(consts.TempestTestsAPI)))
+                   help="Name of a Tempest test set. "
+                        "Available sets are %s" % ", ".join(AVAILABLE_SETS))
     @cliutils.args("--file", dest="log_file", type=str,
                    required=True,
                    help="User specified Tempest log file location. "
@@ -138,20 +137,18 @@ class VerifyCommands(object):
         """Import Tempest tests results into the Rally database.
 
         :param deployment: UUID or name of a deployment
-        :param set_name: Name of tempest test set
+        :param set_name: Name of a Tempest test set
         :param do_use: Use new task as default for future operations
         :param log_file: User specified Tempest log file in subunit format
         """
-
         deployment, verification = api.Verification.import_results(deployment,
                                                                    set_name,
                                                                    log_file)
-
         if do_use:
             self.use(verification["uuid"])
 
     def list(self):
-        """Display all verifications table, started and finished."""
+        """Display verifications table."""
 
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
                   "Created at", "Duration", "Status"]
@@ -164,30 +161,29 @@ class VerifyCommands(object):
             cliutils.print_list(verifications, fields,
                                 sortby_index=fields.index("Created at"))
         else:
-            print(_("There are no results from verifier. To run a verifier, "
-                    "use:\nrally verify start"))
+            print(_("No verification was started yet. "
+                    "To start verification use:\nrally verify start"))
 
     @cliutils.args("--uuid", type=str, dest="verification_uuid",
-                   help="UUID of the verification")
+                   help="UUID of a verification")
     @cliutils.args("--html", action="store_true", dest="output_html",
-                   help=("Results will be in html format"))
+                   help="Display results in HTML format")
     @cliutils.args("--json", action="store_true", dest="output_json",
-                   help=("Results will be in json format"))
+                   help="Display results in JSON format")
     @cliutils.args("--output-file", type=str, required=False,
                    dest="output_file",
-                   help="If specified, output will be saved to given file")
+                   help="Path to a file to save results")
     @envutils.with_default_verification_id
     @cliutils.suppress_warnings
     def results(self, verification_uuid=None, output_file=None,
                 output_html=None, output_json=None):
-        """Get raw results of the verification.
+        """Display results of a verification.
 
-        :param verification_uuid: Verification UUID
-        :param output_file: If specified, output will be saved to given file
-        :param output_html: The output will be in HTML format
-        :param output_json: The output will be in JSON format (Default)
+        :param verification_uuid: UUID of a verification
+        :param output_file: Path to a file to save results
+        :param output_html: Display results in HTML format
+        :param output_json: Display results in JSON format (Default)
         """
-
         try:
             results = api.Verification.get(verification_uuid).get_results()
         except exceptions.NotFoundException as e:
@@ -196,7 +192,8 @@ class VerifyCommands(object):
 
         result = ""
         if output_json + output_html > 1:
-            print("Please specify only one output format.")
+            print(_("Please specify only one "
+                    "output format: --json or --html."))
         elif output_html:
             result = json2html.generate_report(results)
         else:
@@ -213,18 +210,22 @@ class VerifyCommands(object):
                    required=False,
                    help="UUID of a verification")
     @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
-                   help="Tests can be sorted by 'name' or 'duration'")
+                   help="Sort results by 'name' or 'duration'")
     @cliutils.args("--detailed", dest="detailed", action="store_true",
-                   required=False, help="Prints traceback of failed tests")
+                   required=False,
+                   help="Display detailed errors of failed tests")
     @envutils.with_default_verification_id
     def show(self, verification_uuid=None, sort_by="name", detailed=False):
-        """Display results table of the verification."""
+        """Display results table of a verification.
 
+        :param verification_uuid: UUID of a verification
+        :param sort_by: Sort results by 'name' or 'duration'
+        :param detailed: Display detailed errors of failed tests
+        """
         try:
             sortby_index = ("name", "duration").index(sort_by)
         except ValueError:
-            print("Sorry, but verification results can't be sorted "
-                  "by '%s'." % sort_by)
+            print(_("Verification results can't be sorted by '%s'.") % sort_by)
             return 1
 
         try:
@@ -234,12 +235,12 @@ class VerifyCommands(object):
             print(six.text_type(e))
             return 1
 
-        print ("Total results of verification:\n")
+        print(_("Total results of verification:\n"))
         total_fields = ["UUID", "Deployment UUID", "Set name", "Tests",
                         "Failures", "Created at", "Status"]
         cliutils.print_list([verification], fields=total_fields)
 
-        print ("\nTests:\n")
+        print(_("\nTests:\n"))
         fields = ["name", "time", "status"]
 
         results = tests["test_cases"]
@@ -256,17 +257,19 @@ class VerifyCommands(object):
                     formatted_test = "%(header)s%(log)s\n" % {
                         "header": header,
                         "log": test["traceback"]}
-                    print (formatted_test)
+                    print(formatted_test)
 
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
-                   required=False,
-                   help="UUID of a verification")
+                   required=False, help="UUID of a verification")
     @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
-                   help="Tests can be sorted by 'name' or 'duration'")
+                   help="Sort results by 'name' or 'duration'")
     @envutils.with_default_verification_id
     def detailed(self, verification_uuid=None, sort_by="name"):
-        """Display results table of verification with detailed errors."""
+        """Display results table of a verification with detailed errors.
 
+        :param verification_uuid: UUID of a verification
+        :param sort_by: Sort results by 'name' or 'duration'
+        """
         self.show(verification_uuid, sort_by, True)
 
     @cliutils.args("--uuid-1", type=str, required=True, dest="uuid1",
@@ -274,14 +277,13 @@ class VerifyCommands(object):
     @cliutils.args("--uuid-2", type=str, required=True, dest="uuid2",
                    help="UUID of the second verification")
     @cliutils.args("--csv", action="store_true", dest="output_csv",
-                   help=("Save results in csv format to specified file"))
+                   help="Display results in CSV format")
     @cliutils.args("--html", action="store_true", dest="output_html",
-                   help=("Save results in html format to specified file"))
+                   help="Display results in HTML format")
     @cliutils.args("--json", action="store_true", dest="output_json",
-                   help=("Save results in json format to specified file"))
+                   help="Display results in JSON format")
     @cliutils.args("--output-file", type=str, required=False,
-                   dest="output_file",
-                   help="If specified, output will be saved to given file")
+                   dest="output_file", help="Path to a file to save results")
     @cliutils.args("--threshold", type=int, required=False,
                    dest="threshold", default=0,
                    help="If specified, timing differences must exceed this "
@@ -291,16 +293,14 @@ class VerifyCommands(object):
                 output_json=None, threshold=0):
         """Compare two verification results.
 
-        :param uuid1: First Verification UUID
-        :param uuid2: Second Verification UUID
-        :param output_file: If specified, output will be saved to given file
-        :param output_csv: Save results in csv format to the specified file
-        :param output_html: Save results in html format to the specified file
-        :param output_json: Save results in json format to the specified file
-                            (Default)
+        :param uuid1: UUID of the first verification
+        :param uuid2: UUID of the second verification
+        :param output_file: Path to a file to save results
+        :param output_csv: Display results in CSV format
+        :param output_html: Display results in HTML format
+        :param output_json: Display results in JSON format (Default)
         :param threshold: Timing difference threshold percentage
         """
-
         try:
             res_1 = api.Verification.get(uuid1).get_results()["test_cases"]
             res_2 = api.Verification.get(uuid2).get_results()["test_cases"]
@@ -311,8 +311,8 @@ class VerifyCommands(object):
 
         result = ""
         if output_json + output_html + output_csv > 1:
-            print("Please specify only one output format, either --json, "
-                  "--html or --csv.")
+            print(_("Please specify only one output "
+                    "format: --json, --html or --csv."))
             return 1
         elif output_html:
             result = _diff.to_html()
@@ -332,13 +332,13 @@ class VerifyCommands(object):
             print(result)
 
     @cliutils.args("--verification", type=str, dest="verification",
-                   required=False, help="UUID of the verification")
+                   required=False, help="UUID of a verification")
     def use(self, verification):
         """Set active verification.
 
-        :param verification: a UUID of verification
+        :param verification: UUID of a verification
         """
-        print("Verification UUID: %s" % verification)
+        print(_("Verification UUID: %s") % verification)
         api.Verification.get(verification)
         fileutils.update_globals_file("RALLY_VERIFICATION", verification)
 
@@ -425,5 +425,5 @@ class VerifyCommands(object):
         :param deployment: UUID or name of a deployment
         """
         conf_info = api.Verification.show_config_info(deployment)
-        print("Tempest config file: %s" % conf_info["conf_path"])
+        print(_("Tempest config file: %s") % conf_info["conf_path"])
         print("\n" + conf_info["conf_data"])
