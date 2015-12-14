@@ -33,6 +33,7 @@
         times: {{smoke or 20 }}
         concurrency: {{smoke or 10}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -135,6 +136,7 @@
         times: {{smoke or 15}}
         concurrency: {{smoke or 5}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -158,6 +160,7 @@
         times: {{smoke or 15}}
         concurrency: {{smoke or 5}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -409,6 +412,7 @@
         times: {{smoke or 20}}
         concurrency: {{smoke or 10}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -436,6 +440,7 @@
         times: {{smoke or 15}}
         concurrency: {{smoke or 5}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -464,6 +469,7 @@
         times: {{smoke or 20}}
         concurrency: {{smoke or 10}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -507,6 +513,7 @@
         times: {{smoke or 20}}
         concurrency: {{smoke or 10}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -551,6 +558,7 @@
         times: {{smoke or 15}}
         concurrency: {{smoke or 5}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}
@@ -574,6 +582,7 @@
         times: {{smoke or 8}}
         concurrency: {{smoke or 4}}
       context:
+        network: {}
         users:
           tenants: {{smoke or 3}}
           users_per_tenant: {{smoke or 2}}

@@ -290,30 +290,6 @@ class NeutronScenario(scenario.OpenStackScenario):
                           "or 'existing_network' context is deprecated"))
             return self._create_network(network_create_args or {})
 
-    def _get_or_create_subnets(self, network,
-                               subnet_create_args=None,
-                               subnet_cidr_start=None,
-                               subnets_per_network=1):
-        """Get subnets from a network, or create new subnets.
-
-        Existing subnets are preferred to creating new ones.
-
-        :param network: network to create subnets in
-        :param subnet_create_args: dict, POST /v2.0/subnets request options
-        :param subnet_cidr_start: str, start value for subnets CIDR
-        :param subnets_per_network: int, number of subnets for one network
-        :returns: List of subnet dicts
-        """
-        subnets = network.get("subnets")
-        if subnets:
-            # NOTE(amaretskiy): I believe this method will be reworked
-            #   or even removed at all since structure of this return
-            #   value is incomplete (subnet ids only) in comparison with
-            #   self._create_subnets() below
-            return [{"subnet": {"id": subnet}} for subnet in subnets]
-        return self._create_subnets(network, subnet_create_args,
-                                    subnet_cidr_start, subnets_per_network)
-
     def _create_subnets(self, network,
                         subnet_create_args=None,
                         subnet_cidr_start=None,
@@ -363,9 +339,9 @@ class NeutronScenario(scenario.OpenStackScenario):
         :returns: tuple of (network, subnets, routers)
         """
         network = self._get_or_create_network(network_create_args)
-        subnets = self._get_or_create_subnets(network, subnet_create_args,
-                                              subnet_cidr_start,
-                                              subnets_per_network)
+        subnets = self._create_subnets(network, subnet_create_args,
+                                       subnet_cidr_start,
+                                       subnets_per_network)
 
         routers = []
         for subnet in subnets:
