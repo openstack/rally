@@ -23,46 +23,41 @@
 {% endblock %}
 
 {% block js_before %}
+{% raw %}
     "use strict";
     if (typeof angular === "object") { angular.module("TaskApp", []).controller(
       "TaskController", ["$scope", "$location", function($scope, $location) {
-
+{% endraw %}
+        $scope.source = {{ source }};
+        $scope.scenarios = {{ data }};
+{% raw %}
       $scope.location = {
-        /* This is a junior brother of angular's $location, that allows non-`#'
-           symbol in uri, like `#/path/hash' instead of `#/path#hash' */
-        _splitter: "/",
+        /* #/path/hash/sub/div */
         normalize: function(str) {
           /* Remove unwanted characters from string */
           if (typeof str !== "string") { return "" }
           return str.replace(/[^\w\-\.]/g, "")
         },
-        _parseUri: function(uriStr) {
-          /* :returns: {path:string, hash:string} */
-          var self = this;
-          var obj = {path: "", hash: ""};
-          angular.forEach(uriStr.split(self._splitter), function(v){
-            var s = self.normalize(v);
-            if (! s) { return }
-            if (! this.path) { this.path = s } else if (! this.hash) { this.hash = s }
-          }, obj)
-          return obj
-        },
         uri: function(obj) {
           /* Getter/Setter */
-          if (! obj) { return this._parseUri($location.url()) }
-          if (obj.path && obj.hash) {
-            $location.url(obj.path + this._splitter + obj.hash)
-          } else if (obj.path) {
-            $location.url(obj.path)
-          } else {
-            $location.url("/")
+          if (! obj) {
+            var uri = {path: "", hash: "", sub: "", div: ""};
+            var arr = ["div", "sub", "hash", "path"];
+            angular.forEach($location.url().split("/"), function(value){
+              var v = $scope.location.normalize(value);
+              if (v) { var k = arr.pop(); if (k) { this[k] = v }}
+            }, uri);
+            return uri
           }
+          var arr = [obj.path, obj.hash, obj.sub, obj.div], res = [];
+          for (var i in arr) { if (! arr[i]) { break }; res.push(arr[i]) }
+          return $location.url("/" + res.join("/"))
         },
         path: function(path, hash) {
           /* Getter/Setter */
-          var uri = this.uri();
           if (path === "") { return this.uri({}) }
           path = this.normalize(path);
+          var uri = this.uri();
           if (! path) { return uri.path }
           uri.path = path;
           var _hash = this.normalize(hash);
@@ -71,23 +66,27 @@
         },
         hash: function(hash) {
           /* Getter/Setter */
-          var uri = this.uri();
-          if (! hash) { return uri.hash }
-          return this.uri({path:uri.path, hash:hash})
+          if (hash) { this.uri({path:this.uri().path, hash:hash}) }
+          return this.uri().hash
         }
       }
 
       /* Dispatch */
 
       $scope.route = function(uri) {
-        if (! ($scope.scenarios && $scope.scenarios.length)) {
-          return
-        }
+        if (! $scope.scenarios_map) { return }
         if (uri.path in $scope.scenarios_map) {
           $scope.view = {is_scenario:true};
           $scope.scenario = $scope.scenarios_map[uri.path];
           $scope.nav_idx = $scope.nav_map[uri.path];
-          $scope.showTab(uri.hash);
+          if ($scope.scenario.iterations.histogram.views.length) {
+            $scope.mainHistogram = $scope.scenario.iterations.histogram.views[0]
+          }
+          if ($scope.scenario.atomic.histogram.views.length) {
+            $scope.atomicHistogram = $scope.scenario.atomic.histogram.views[0]
+          }
+          $scope.outputIteration = 0;
+          $scope.showTab(uri);
         } else {
           $scope.scenario = null;
           if (uri.path === "source") {
@@ -102,11 +101,7 @@
         $scope.route($scope.location.uri())
       });
 
-      /* Navigation */
-
-      $scope.showNav  = function(nav_idx) {
-        $scope.nav_idx = nav_idx
-      }
+      $scope.showNav = function(nav_idx) { $scope.nav_idx = nav_idx }
 
       /* Tabs */
 
@@ -121,8 +116,8 @@
           visible: function(){ return !! $scope.scenario.atomic.pie.length }
         },{
           id: "output",
-          name: "Output",
-          visible: function(){ return !! $scope.scenario.additive_output.length }
+          name: "Scenario Data",
+          visible: function(){ return $scope.scenario.output.length }
         },{
           id: "failures",
           name: "Failures",
@@ -137,19 +132,33 @@
       angular.forEach($scope.tabs,
                       function(tab){ this[tab.id] = tab }, $scope.tabs_map);
 
-      $scope.showTab = function(tab_id) {
-        $scope.tab = tab_id in $scope.tabs_map ? tab_id : "overview"
+      $scope.showTab = function(uri) {
+        $scope.tab = uri.hash in $scope.tabs_map ? uri.hash : "overview";
+        if (! $scope.scenario.output) {
+          var has_additive = !! $scope.scenario.additive_output.length;
+          var has_complete = !! ($scope.scenario.complete_output.length
+                                 && $scope.scenario.complete_output[0].length);
+          $scope.scenario.output = {
+            has_additive: has_additive,
+            has_complete: has_complete,
+            length: has_additive + has_complete,
+            active: has_additive ? "additive" : (has_complete ? "complete" : "")
+          }
+        }
+        if (uri.hash === "output") {
+          if (uri.sub && $scope.scenario.output["has_" + uri.sub]) {
+            $scope.scenario.output.active = uri.sub
+          }
+        }
       }
 
       for (var i in $scope.tabs) {
         if ($scope.tabs[i].id === $scope.location.hash()) {
           $scope.tab = $scope.tabs[i].id
         }
-        $scope.tabs[i].isVisible = function(){
+        $scope.tabs[i].isVisible = function() {
           if ($scope.scenario) {
-            if (this.visible()) {
-              return true
-            }
+            if (this.visible()) { return true }
             /* If tab should be hidden but is selected - show another one */
             if (this.id === $scope.location.hash()) {
               for (var i in $scope.tabs) {
@@ -165,149 +174,6 @@
         }
       }
 
-      /* Charts */
-
-      var Charts = {
-        _render: function(selector, data, chart){
-          nv.addGraph(function() {
-            d3.select(selector)
-              .datum(data)
-              .transition()
-              .duration(0)
-              .call(chart);
-            nv.utils.windowResize(chart.update)
-          })
-        },
-        /* NOTE(amaretskiy): this is actually a result of
-           d3.scale.category20().range(), excluding red color (#d62728)
-           which is reserved for errors */
-        _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
-                  "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
-                  "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
-                  "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
-        pie: function(selector, data){
-          var chart = nv.models.pieChart()
-            .x(function(d) { return d.key })
-            .y(function(d) { return d.values })
-            .showLabels(true)
-            .labelType("percent")
-            .donut(true)
-            .donutRatio(0.25)
-            .donutLabelsOutside(true)
-            .color(function(d){
-              if (d.data && d.data.color) {
-                return d.data.color
-              }
-            });
-
-          var data_ = [],
-              colors = [],
-              colors_map = {errors: "#d62728"};
-          for (var i in data) {
-            var key = data[i][0];
-            if (! (key in colors_map)) {
-              if (! colors.length) { colors = this._colors.slice() }
-              colors_map[key] = colors.shift()
-            }
-            data_.push({key:key, values:data[i][1], color:colors_map[key]})
-          }
-          this._render(selector, data_, chart)
-        },
-        stack: function(selector, data, conf){
-          var chart = nv.models.stackedAreaChart()
-            .x(function(d) { return d[0] })
-            .y(function(d) { return d[1] })
-            .clipEdge(true)
-            .showControls(conf.controls)
-            .useInteractiveGuideline(conf.guide);
-          chart.xAxis
-            .axisLabel(conf.xLabel || "")
-            .showMaxMin(false)
-            .tickFormat(d3.format(conf.xFormat || "d"));
-          chart.yAxis
-            .axisLabel(conf.yLabel || "")
-            .tickFormat(d3.format(conf.yFormat || ",.3f"));
-          var data_ = [];
-          for (var i in data) {
-            var d = {key:data[i][0], values:data[i][1]};
-            if (d.key === "failed_duration") {
-              d.color = "#d62728"
-            }
-            data_.push(d)
-          }
-          this._render(selector, data_, chart)
-        },
-        histogram: function(selector, data){
-          var chart = nv.models.multiBarChart()
-            .reduceXTicks(true)
-            .showControls(false)
-            .transitionDuration(0)
-            .groupSpacing(0.05);
-          chart.legend
-            .radioButtonMode(true)
-          chart.xAxis
-            .axisLabel("Duration (seconds)")
-            .tickFormat(d3.format(",.2f"));
-          chart.yAxis
-            .axisLabel("Iterations (frequency)")
-            .tickFormat(d3.format("d"));
-          this._render(selector, data, chart)
-        }
-      };
-
-      $scope.renderTotal = function() {
-        if (! $scope.scenario) {
-          return
-        }
-
-        Charts.stack(
-          "#total-stack", $scope.scenario.iterations.iter,
-          {xLabel: "Iteration sequence number",
-           controls: true,
-           guide: true});
-
-        if ($scope.scenario.load_profile.length) {
-           Charts.stack(
-             "#load-profile-stack",
-             $scope.scenario.load_profile,
-             {xLabel: "Timeline (seconds)",
-              xFormat: ",.2f", yFormat: "d"})
-        }
-
-        Charts.pie("#total-pie", $scope.scenario.iterations.pie);
-
-        if ($scope.scenario.iterations.histogram.data.length) {
-          var idx = this.totalHistogramModel.id;
-          Charts.histogram("#total-histogram",
-                           $scope.scenario.iterations.histogram.data[idx])
-        }
-      }
-
-      $scope.renderDetails = function() {
-        if (! $scope.scenario) {
-          return
-        }
-         Charts.stack(
-           "#atomic-stack",
-           $scope.scenario.atomic.iter,
-           {xLabel: "Iteration sequence number",
-            controls: true,
-            guide: true});
-         if ($scope.scenario.atomic.pie) {
-           Charts.pie("#atomic-pie", $scope.scenario.atomic.pie)
-         }
-        if ($scope.scenario.atomic.histogram.data.length) {
-          var idx = this.atomicHistogramModel.id;
-          Charts.histogram("#atomic-histogram", $scope.scenario.atomic.histogram.data[idx])
-        }
-      }
-
-      $scope.renderOutput = function() {
-        if ($scope.scenario && $scope.scenario.additive_output.length) {
-          Charts.stack("#output-stack", $scope.scenario.additive_output[0].data, {})
-        }
-      }
-
       $scope.showError = function(message) {
           return (function (e) {
             e.style.display = "block";
@@ -318,23 +184,16 @@
       /* Initialization */
 
       angular.element(document).ready(function(){
-        $scope.source = {{ source }};
-        $scope.scenarios = {{ data }};
         if (! $scope.scenarios.length) {
           return $scope.showError("No data...")
         }
-        $scope.totalHistogramModel = {label:'', id:0};
-        $scope.atomicHistogramModel = {label:'', id:0};
 
         /* Compose data mapping */
 
         $scope.nav = [];
         $scope.nav_map = {};
         $scope.scenarios_map = {};
-        var scenario_ref = $scope.location.path();
-        var met = [];
-        var itr = 0;
-        var cls_idx = 0;
+        var met = [], itr = 0, cls_idx = 0;
         var prev_cls, prev_met;
 
         for (var idx in $scope.scenarios) {
@@ -350,21 +209,13 @@
             cls_idx += 1
           }
 
-          if (prev_met !== sc.met) {
-            itr = 1
-          }
-
+          if (prev_met !== sc.met) { itr = 1 };
           sc.ref = $scope.location.normalize(sc.cls+"."+sc.met+(itr > 1 ? "-"+itr : ""));
           $scope.scenarios_map[sc.ref] = sc;
           $scope.nav_map[sc.ref] = cls_idx;
-          var current_ref = $scope.location.path();
-          if (sc.ref === current_ref) {
-            scenario_ref = sc.ref
-          }
-
           met.push({name:sc.name, itr:itr, idx:idx, ref:sc.ref});
           prev_met = sc.met;
-          itr += 1
+          itr += 1;
         }
 
         if (met.length) {
@@ -374,11 +225,161 @@
         /* Start */
 
         var uri = $scope.location.uri();
-        uri.path = scenario_ref;
+        uri.path = $scope.location.path();
         $scope.route(uri);
         $scope.$digest()
       });
-    }])}
+    }])
+    .directive("widget", function($compile) {
+
+      var Chart = {
+        _render: function(node, data, chart){
+          nv.addGraph(function() {
+            d3.select(node).datum(data).transition().duration(0).call(chart);
+            nv.utils.windowResize(chart.update)
+          })
+        },
+        /* NOTE(amaretskiy): this is actually a result of
+           d3.scale.category20().range(), excluding red color (#d62728)
+           which is reserved for errors */
+        _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+                  "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
+                  "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+                  "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
+        _widgets: {
+          Pie: "pie",
+          StackedArea: "stack",
+          Histogram: "histogram"
+        },
+        get_chart: function(widget) {
+          if (widget in this._widgets) {
+            var name = this._widgets[widget];
+            return Chart[name]
+          }
+          return function() { console.log("Error: unexpected widget:", widget) }
+        },
+        pie: function(node, data) {
+          var chart = nv.models.pieChart()
+            .x(function(d) { return d.key })
+            .y(function(d) { return d.values })
+            .showLabels(true)
+            .labelType("percent")
+            .donut(true)
+            .donutRatio(0.25)
+            .donutLabelsOutside(true)
+            .color(function(d){
+              if (d.data && d.data.color) { return d.data.color }
+            });
+
+          var data_ = [], colors = [], colors_map = {errors: "#d62728"};
+          for (var i in data) {
+            var key = data[i][0];
+            if (! (key in colors_map)) {
+              if (! colors.length) { colors = Chart._colors.slice() }
+              colors_map[key] = colors.shift()
+            }
+            data_.push({key:key, values:data[i][1], color:colors_map[key]})
+          }
+          Chart._render(node, data_, chart)
+        },
+        stack: function(node, data, opts) {
+          var chart = nv.models.stackedAreaChart()
+            .x(function(d) { return d[0] })
+            .y(function(d) { return d[1] })
+            .useInteractiveGuideline(opts.guide)
+            .showControls(opts.controls)
+            .clipEdge(true);
+          chart.xAxis
+            .tickFormat(d3.format(opts.xformat || "d"))
+            .axisLabel(opts.xname || "")
+            .showMaxMin(false);
+          chart.yAxis
+            .tickFormat(d3.format(opts.yformat || ",.3f"))
+            .axisLabel(opts.yname || "");
+          var data_ = [];
+          for (var i in data) {
+            var d = {key:data[i][0], values:data[i][1]};
+            if (d.key === "failed_duration") {
+              d.color = "#d62728"
+            }
+            data_.push(d)
+          }
+          Chart._render(node, data_, chart)
+        },
+        histogram: function(node, data) {
+          var chart = nv.models.multiBarChart()
+            .reduceXTicks(true)
+            .showControls(false)
+            .transitionDuration(0)
+            .groupSpacing(0.05);
+          chart
+            .legend.radioButtonMode(true);
+          chart.xAxis
+            .axisLabel("Duration (seconds)")
+            .tickFormat(d3.format(",.2f"));
+          chart.yAxis
+            .axisLabel("Iterations (frequency)")
+            .tickFormat(d3.format("d"));
+          Chart._render(node, data, chart)
+        }
+      };
+
+      return {
+        restrict: "A",
+        scope: { data: "=" },
+        link: function(scope, element, attrs) {
+          scope.$watch("data", function(data) {
+            if (! data) { return console.log("Chart has no data to render!") }
+            if (attrs.widget === "Table") {
+              var ng_class = attrs.lastrowClass ? " ng-class='{"+attrs.lastrowClass+":$last}'" : "";
+              var template = "<table class='striped'><thead>" +
+                "<tr><th ng-repeat='i in data.cols track by $index'>{{i}}<tr>" +
+                "</thead><tbody>" +
+                "<tr" + ng_class + " ng-repeat='row in data.rows track by $index'>" +
+                "<td ng-repeat='i in row track by $index'>{{i}}" +
+                "<tr>" +
+                "</tbody></table>";
+              var el = element.empty().append($compile(template)(scope)).children()[0]
+            } else {
+              /* Hide widget if not enough data */
+              if (attrs.widget === "StackedArea") {
+                if ((! data.length) || (data[0].length < 1) || (data[0][1].length < 2)) {
+                  return element.empty().css({display:"none"})
+                }
+              }
+              else if (attrs.widget === "Pie") {
+                if (! data.length) {
+                  return element.empty().css({display:"none"})
+                }
+              }
+
+              var options = {
+                xname: attrs.nameX || "",
+                yname: attrs.nameY || "",
+                xformat: attrs.formatX || "d",
+                yformat: attrs.formatY || ",.3f",
+                controls: attrs.controls === "true",
+                guide: attrs.guide === "true"
+              };
+              var el = element.addClass("chart").css({display:"block"}).html("<svg></svg>").children()[0];
+              Chart.get_chart(attrs.widget)(el, data, options)
+            }
+
+            if (attrs.description) {
+              var desc_el = angular.element("<div>").addClass(attrs.descriptionClass || "h3").text(attrs.description);
+              angular.element(el).parent().prepend(desc_el)
+            }
+
+            if (attrs.title) {
+              var title_el = angular.element("<div>").addClass(attrs.titleClass || "h2").text(attrs.title);
+              angular.element(el).parent().prepend(title_el)
+            }
+          });
+        }
+      }
+    })
+  }
+{% endraw %}
 {% endblock %}
 
 {% block css %}
@@ -402,14 +403,15 @@
     .failure-mesg { color:#900 }
     .failure-trace { color:#333; white-space:pre; overflow:auto }
 
-    .chart { height:300px }
-    .chart .chart-dropdown { float:right; margin:0 35px 0 }
-    .chart.lesser { padding:0; margin:0; float:left; width:40% }
-    .chart.larger { padding:0; margin:0; float:left; width:59% }
+    .link { color:#428BCA; padding:5px 15px 5px 5px; text-decoration:underline; cursor:pointer }
+    .link.active { color:#333; text-decoration:none }
+
+    .chart { padding:0; margin:0 }
+    .chart svg { height:300px; padding:0; margin:0 }
+    .chart.lower svg { height:180px }
 
     .expandable { cursor:pointer }
     .clearfix { clear:both }
-    .top-margin { margin-top:40px !important }
     .sortable > .arrow { display:inline-block; width:12px; height:inherit; color:#c90 }
     .content-main { margin:0 5px; display:block; float:left }
 {% endblock %}
@@ -488,32 +490,28 @@
                   <b ng-show="ov_srt=='full_duration' && !ov_dir">&#x25b4;</b>
                   <b ng-show="ov_srt=='full_duration' && ov_dir">&#x25be;</b>
                 </span>
-              <th class="sortable"
-                  title="Number of iterations"
+              <th class="sortable" title="Number of iterations"
                   ng-click="ov_srt='iterations_count'; ov_dir=!ov_dir">
                 Iterations
                 <span class="arrow">
                   <b ng-show="ov_srt=='iterations_count' && !ov_dir">&#x25b4;</b>
                   <b ng-show="ov_srt=='iterations_count' && ov_dir">&#x25be;</b>
                 </span>
-              <th class="sortable"
-                  title="Scenario runner type"
+              <th class="sortable" title="Scenario runner type"
                   ng-click="ov_srt='runner'; ov_dir=!ov_dir">
                 Runner
                 <span class="arrow">
                   <b ng-show="ov_srt=='runner' && !ov_dir">&#x25b4;</b>
                   <b ng-show="ov_srt=='runner' && ov_dir">&#x25be;</b>
                 </span>
-              <th class="sortable"
-                  title="Number of errors occurred"
+              <th class="sortable" title="Number of errors occurred"
                   ng-click="ov_srt='errors.length'; ov_dir=!ov_dir">
                 Errors
                 <span class="arrow">
                   <b ng-show="ov_srt=='errors.length' && !ov_dir">&#x25b4;</b>
                   <b ng-show="ov_srt=='errors.length' && ov_dir">&#x25be;</b>
                 </span>
-              <th class="sortable"
-                  title="Whether SLA check is successful"
+              <th class="sortable" title="Whether SLA check is successful"
                   ng-click="ov_srt='sla_success'; ov_dir=!ov_dir">
                 Success (SLA)
                 <span class="arrow">
@@ -558,8 +556,6 @@
         <div ng-include="tab"></div>
 
         <script type="text/ng-template" id="overview">
-          {{renderTotal()}}
-
           <p class="thesis">
             Load duration: <b>{{scenario.load_duration | number:3}} s</b> &nbsp;
             Full duration: <b>{{scenario.full_duration | number:3}} s</b> &nbsp;
@@ -589,72 +585,119 @@
             </table>
           </div>
 
-          <h2>Total durations</h2>
-          <table class="striped">
-            <thead>
-              <tr>
-                <th ng-repeat="i in scenario.table.cols track by $index">{{i}}
-              <tr>
-            </thead>
-            <tbody>
-              <tr ng-class="{richcolor:$last}"
-                  ng-repeat="row in scenario.table.rows track by $index">
-                <td ng-repeat="i in row track by $index">{{i}}
-              <tr>
-            </tbody>
-          </table>
-
-          <div class="chart">
-            <svg id="total-stack"></svg>
+          <div widget="Table"
+               data="scenario.table"
+               lastrow-class="rich"
+               title="Total durations">
           </div>
 
-          <h3>Load Profile</h3>
-          <div class="chart" style="height:180px" ng-show="scenario.load_profile[0][1].length">
-            <svg id="load-profile-stack"></svg>
+          <div widget="StackedArea"
+               data="scenario.iterations.iter"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
           </div>
 
-          <h3>Distribution</h3>
-          <div class="chart lesser top-margin">
-            <svg id="total-pie"></svg>
+          <div widget="StackedArea"
+               data="scenario.load_profile"
+               title="Load Profile"
+               title-class="h3"
+               name-x="Timeline (seconds)"
+               format-x=",.2f"
+               class="lower">
           </div>
 
-          <div class="chart larger top-margin"
-               ng-show="scenario.iterations.histogram.data.length">
-            <svg id="total-histogram"></svg>
-            <select class="chart-dropdown"
-                    ng-model="totalHistogramModel"
-                    ng-options="i.name for i in scenario.iterations.histogram.views track by i.id"></select>
+          <div widget="Pie"
+               data="scenario.iterations.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
           </div>
+
+          <div widget="Histogram"
+               ng-if="scenario.iterations.histogram.data.length"
+               data="scenario.iterations.histogram.data[mainHistogram.id]"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+          </div>
+
+          <select ng-model="mainHistogram"
+                  ng-show="scenario.iterations.histogram.data.length"
+                  ng-options="i.name for i in scenario.iterations.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
         </script>
 
         <script type="text/ng-template" id="details">
-          {{renderDetails()}}
 
-          <h2>Atomic Action Durations</h2>
-          <div class="chart">
-            <svg id="atomic-stack"></svg>
+          <div widget="StackedArea"
+               data="scenario.atomic.iter"
+               title="Atomic Action Durations"
+               name-x="Iteration sequence number"
+               controls="true"
+               guide="true">
           </div>
 
-          <h3>Distribution</h3>
-          <div class="chart lesser top-margin">
-            <svg id="atomic-pie"></svg>
+          <div widget="Pie"
+               data="scenario.atomic.pie"
+               title="Distribution"
+               title-class="h3"
+               style="float:left; width:40%; margin-top:15px">
           </div>
 
-          <div class="chart larger top-margin"
-               ng-show="scenario.atomic.histogram.data.length">
-            <svg id="atomic-histogram"></svg>
-            <select class="chart-dropdown"
-                    ng-model="atomicHistogramModel"
-                    ng-options="i.name for i in scenario.atomic.histogram.views track by i.id"></select>
+          <div widget="Histogram" data="scenario.atomic.histogram.data[atomicHistogram.id]"
+               ng-if="scenario.atomic.histogram.data.length"
+               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
           </div>
+
+          <select ng-show="scenario.atomic.histogram.data.length"
+                  ng-model="atomicHistogram"
+                  ng-options="i.name for i in scenario.atomic.histogram.views track by i.id"
+                  style="float:right; margin:45px 35px 0">
+          </select>
+
+          <div class="clearfix"></div>
+
         </script>
 
         <script type="text/ng-template" id="output">
-          {{renderOutput()}}
 
-          <h2>Scenario output</h2>
-          <div class="chart">
-            <svg id="output-stack"></svg>
+          <div style="padding:10px 0 0">
+            <span class="link"
+                  ng-click="location.hash('output/additive')"
+                  ng-class="{active:scenario.output.active === 'additive'}"
+                  ng-if="scenario.output.has_additive">Aggregated</span>
+            <span class="link"
+                  ng-click="location.hash('output/complete')"
+                  ng-class="{active:scenario.output.active === 'complete'}"
+                  ng-if="scenario.output.has_complete">Per iteration</span>
+          </div>
+
+          <div ng-repeat="chart in scenario.additive_output"
+               ng-if="scenario.output.active === 'additive'">
+            <div widget="{{chart.widget}}"
+                 title="{{chart.title}}"
+                 description="{{chart.description}}"
+                 data="chart.data">
+            </div>
+          </div>
+
+          <div ng-if="scenario.output.active === 'complete'" style="padding:10px 0 0">
+            <select ng-model="outputIteration">
+              <option ng-repeat="i in scenario.complete_output track by $index"
+                      value="{{$index}}">
+                Iteration {{$index}}
+            </select>
+
+            <div ng-repeat="chart in scenario.complete_output[outputIteration]">
+              <div widget="{{chart.widget}}"
+                   title="{{chart.title}}"
+                   description="{{chart.description}}"
+                   data="chart.data">
+              </div>
+            </div>
           </div>
         </script>
 
