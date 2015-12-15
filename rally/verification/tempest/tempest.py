@@ -297,54 +297,48 @@ class Tempest(object):
             shutil.rmtree(self.path())
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
-    def _prepare_and_run(self, set_name, regex, tests_file):
+    def _prepare_and_run(self, set_name, regex, tests_file, concur):
         if not self.is_configured():
             self.generate_config_file()
 
+        testr_args = "--concurrency %d" % concur
+
         if set_name == "full":
-            testr_arg = ""
+            pass
+        elif set_name in consts.TempestTestsAPI:
+            testr_args += " tempest.api.%s" % set_name
+        elif regex:
+            testr_args += " %s" % regex
         else:
-            if set_name in consts.TempestTestsAPI:
-                testr_arg = "tempest.api.%s" % set_name
-            elif tests_file:
-                testr_arg = "--load-list %s" % os.path.abspath(tests_file)
-            else:
-                testr_arg = set_name or regex
+            testr_args += " --load-list %s" % os.path.abspath(tests_file)
 
         self.verification.start_verifying(set_name)
         try:
-            self.run(testr_arg)
+            self.run(testr_args)
         except subprocess.CalledProcessError:
-            LOG.info(_("Test set '%s' has been finished with errors. "
-                       "Check logs for details.") % set_name)
+            LOG.info(_("Test run has been finished with errors. "
+                       "Check logs for details."))
 
-    def run(self, testr_arg=None, log_file=None, tempest_conf=None):
-        """Launch tempest with given arguments
+    def run(self, testr_args="", log_file=None, tempest_conf=None):
+        """Run Tempest.
 
-        :param testr_arg: argument which will be transmitted into testr
-        :type testr_arg: str
-        :param log_file: file name for raw subunit results of tests. If not
-                         specified, value from "self.log_file_raw"
-                         will be chosen.
-        :type log_file: str
-        :param tempest_conf: User specified tempest.conf location
-        :type tempest_conf: str
-
-        :raises subprocess.CalledProcessError: if tests has been finished
-                                               with error.
+        :param testr_args: Arguments which will be passed to testr
+        :param log_file: Path to a file for raw subunit stream logs.
+                         If not specified, the value from "self.log_file_raw"
+                         will be used as the path to the file
+        :param tempest_conf: User specified Tempest config file location
         """
-
         if tempest_conf and os.path.isfile(tempest_conf):
             self.config_file = tempest_conf
         LOG.info(_("Tempest config file: %s") % self.config_file)
 
         test_cmd = (
-            "%(venv)s testr run --parallel --subunit %(arg)s "
+            "%(venv)s testr run --subunit --parallel %(testr_args)s "
             "| tee %(log_file)s "
             "| %(venv)s subunit-trace -f -n" %
             {
                 "venv": self.venv_wrapper,
-                "arg": testr_arg,
+                "testr_args": testr_args,
                 "log_file": log_file or self.log_file_raw
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
@@ -393,8 +387,8 @@ class Tempest(object):
         else:
             self.verification.set_failed()
 
-    def verify(self, set_name, regex, tests_file):
-        self._prepare_and_run(set_name, regex, tests_file)
+    def verify(self, set_name, regex, tests_file, concur):
+        self._prepare_and_run(set_name, regex, tests_file, concur)
         self._save_results()
 
     def import_results(self, set_name, log_file):

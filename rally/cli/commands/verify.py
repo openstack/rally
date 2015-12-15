@@ -63,10 +63,13 @@ class VerifyCommands(object):
                         "requirements have to be already installed in "
                         "the local env!",
                    required=False, action="store_true")
+    @cliutils.args("--concurrency", dest="concur", type=int, required=False,
+                   help="How many processes to use to run Tempest tests. "
+                        "The default value (0) auto-detects your CPU count")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
               tests_file=None, tempest_config=None, do_use=True,
-              system_wide_install=False):
+              system_wide_install=False, concur=0):
         """Start set of tests.
 
         :param set_name: Name of tempest test set
@@ -79,6 +82,8 @@ class VerifyCommands(object):
                                     when installing Tempest; whether or not to
                                     use the local env instead of the Tempest
                                     virtual env when running the tests
+        :param concur: How many processes to use to run Tempest tests.
+                       The default value (0) auto-detects CPU count
         """
 
         if regex and set_name:
@@ -109,7 +114,7 @@ class VerifyCommands(object):
 
         verification = api.Verification.verify(deployment, set_name, regex,
                                                tests_file, tempest_config,
-                                               system_wide_install)
+                                               system_wide_install, concur)
         if do_use:
             self.use(verification["uuid"])
 

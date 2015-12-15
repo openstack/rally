@@ -40,7 +40,7 @@ class TempestScenarioTestCase(test.TestCase):
         self.scenario._add_atomic_actions = mock.MagicMock()
 
     def get_tests_launcher_cmd(self, tests):
-        return ("%(venv)s testr run --parallel --subunit %(tests)s "
+        return ("%(venv)s testr run --subunit --parallel %(tests)s "
                 "| tee /dev/null "
                 "| %(venv)s subunit-trace -f -n" %
                 {
