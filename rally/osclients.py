@@ -619,6 +619,22 @@ class Monasca(OSClient):
         return client
 
 
+@configure("cue", default_version="1", default_service_type="message-broker")
+class Cue(OSClient):
+    def create_client(self, service_type=None):
+        """Return cue client."""
+        from cueclient.v1 import client as cue
+
+        version = self.choose_version()
+        api_url = self._get_endpoint(service_type)
+        api_url += "v%s" % version
+
+        session = self._get_session(endpoint=api_url)
+        endpoint_type = self.credential.endpoint_type,
+
+        return cue.Client(session=session, interface=endpoint_type[0])
+
+
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 

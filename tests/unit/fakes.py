@@ -1449,6 +1449,12 @@ class FakeEC2Client(object):
         pass
 
 
+class FakeCueClient(object):
+
+    def __init__(self):
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, credential_=None):
