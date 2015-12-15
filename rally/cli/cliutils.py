@@ -30,7 +30,7 @@ import six
 import sqlalchemy.exc
 
 from rally.common.i18n import _
-from rally.common import log as logging
+from rally.common import logging
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common import version

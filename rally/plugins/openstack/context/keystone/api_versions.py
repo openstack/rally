@@ -15,7 +15,7 @@ import random
 import six
 
 from rally.common.i18n import _, _LE
-from rally.common import log as logging
+from rally.common import logging
 from rally import consts
 from rally import exceptions
 from rally import osclients

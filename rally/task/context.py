@@ -19,7 +19,7 @@ import copy
 import jsonschema
 import six
 
-from rally.common import log as logging
+from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally import exceptions

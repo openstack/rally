@@ -15,7 +15,7 @@
 
 import abc
 
-from rally.common import log as logging
+from rally.common import logging
 from rally import exceptions
 
 import six

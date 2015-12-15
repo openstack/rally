@@ -18,7 +18,7 @@ import time
 from oslo_config import cfg
 import requests
 
-from rally.common import log as logging
+from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.task import atomic

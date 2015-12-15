@@ -20,7 +20,7 @@ import time
 
 from six.moves import queue as Queue
 
-from rally.common import log as logging
+from rally.common import logging
 from rally.common import utils
 from rally import consts
 from rally.task import runner

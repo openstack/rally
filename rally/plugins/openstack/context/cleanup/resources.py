@@ -17,7 +17,7 @@ from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
 from saharaclient.api import base as saharaclient_base
 
-from rally.common import log as logging
+from rally.common import logging
 from rally.common.plugin import discover
 from rally.common import utils
 from rally.plugins.openstack.context.cleanup import base

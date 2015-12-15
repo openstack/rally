@@ -17,15 +17,15 @@ import logging
 
 import mock
 
-from rally.common import log
+from rally.common import logging as log
 from tests.unit import test
 
 
 class LogTestCase(test.TestCase):
 
-    @mock.patch("rally.common.log.CONF")
-    @mock.patch("rally.common.log.handlers")
-    @mock.patch("rally.common.log.oslogging")
+    @mock.patch("rally.common.logging.CONF")
+    @mock.patch("rally.common.logging.handlers")
+    @mock.patch("rally.common.logging.oslogging")
     def test_setup(self, mock_oslogging, mock_handlers, mock_conf):
 
         proj = "fakep"
@@ -45,11 +45,11 @@ class LogTestCase(test.TestCase):
         mock_oslogging.getLogger(None).logger.setLevel.assert_called_once_with(
             logging.RDEBUG)
 
-    @mock.patch("rally.common.log.logging")
-    @mock.patch("rally.common.log.RallyContextAdapter")
-    @mock.patch("rally.common.log.oslogging")
+    @mock.patch("rally.common.logging.log")
+    @mock.patch("rally.common.logging.RallyContextAdapter")
+    @mock.patch("rally.common.logging.oslogging")
     def test_getLogger(self, mock_oslogging, mock_rally_context_adapter,
-                       mock_logging):
+                       mock_log):
 
         name = "fake"
         vers = "fake"
@@ -59,31 +59,31 @@ class LogTestCase(test.TestCase):
 
         self.assertIn(name, mock_oslogging._loggers)
         mock_rally_context_adapter.assert_called_once_with(
-            mock_logging.getLogger(name),
+            mock_log.getLogger(name),
             {"project": "rally", "version": vers})
         self.assertEqual(mock_oslogging._loggers[name], returned_logger)
 
 
 class LogRallyContaxtAdapter(test.TestCase):
 
-    @mock.patch("rally.common.log.logging")
-    @mock.patch("rally.common.log.oslogging.KeywordArgumentAdapter")
-    def test_debug(self, mock_keyword_argument_adapter, mock_logging):
+    @mock.patch("rally.common.logging.log")
+    @mock.patch("rally.common.logging.oslogging.KeywordArgumentAdapter")
+    def test_debug(self, mock_keyword_argument_adapter, mock_log):
 
-        mock_logging.RDEBUG = 123
+        mock_log.RDEBUG = 123
         fake_msg = "fake message"
         radapter = log.RallyContextAdapter(mock.MagicMock(), "fakep")
         radapter.log = mock.MagicMock()
 
         radapter.debug(fake_msg)
 
-        radapter.log.assert_called_once_with(mock_logging.RDEBUG,
+        radapter.log.assert_called_once_with(mock_log.RDEBUG,
                                              fake_msg)
 
 
 class ExceptionLoggerTestCase(test.TestCase):
 
-    @mock.patch("rally.common.log.is_debug")
+    @mock.patch("rally.common.logging.is_debug")
     def test_context(self, mock_is_debug):
         # Prepare
         mock_is_debug.return_value = True
@@ -147,7 +147,7 @@ class CatcherHandlerTestCase(test.TestCase):
 class LogCatcherUnitTestCase(test.TestCase):
     def setUp(self):
         super(LogCatcherUnitTestCase, self).setUp()
-        patcher = mock.patch("rally.common.log.CatcherHandler")
+        patcher = mock.patch("rally.common.logging.CatcherHandler")
         self.catcher_handler = patcher.start()
         self.catcher_handler.return_value.buffer = [
             mock.Mock(msg="foo"), mock.Mock(msg="bar")]

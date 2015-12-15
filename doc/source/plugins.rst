@@ -138,7 +138,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
 .. code-block:: python
 
     from rally.task import context
-    from rally.common import log as logging
+    from rally.common import logging
     from rally import consts
     from rally import osclients
 

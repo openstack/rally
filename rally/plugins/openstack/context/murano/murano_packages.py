@@ -19,7 +19,7 @@ import zipfile
 from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common.i18n import _LE
-from rally.common import log as logging
+from rally.common import logging
 from rally.common import utils
 from rally import consts
 from rally import exceptions
