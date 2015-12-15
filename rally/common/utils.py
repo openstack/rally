@@ -223,11 +223,6 @@ def iterate_per_tenants(users):
             yield (user, user["tenant_id"])
 
 
-_resource_name_placeholder_re = re.compile(
-    "^(?P<prefix>.*?)(?P<task>X{3,})(?P<sep>[^X]+?)(?P<rand>X{3,})"
-    "(?P<suffix>.*)$")
-
-
 class RandomNameGeneratorMixin(object):
     """Mixin for objects that need to generate random names.
 
@@ -246,6 +241,9 @@ class RandomNameGeneratorMixin(object):
     * ``RESOURCE_NAME_ALLOWED_CHARACTERS``: A string consisting of the
       characters allowed in the random portions of the name.
     """
+    _resource_name_placeholder_re = re.compile(
+        "^(?P<prefix>.*?)(?P<task>X{3,})(?P<sep>[^X]+?)(?P<rand>X{3,})"
+        "(?P<suffix>.*)$")
 
     RESOURCE_NAME_FORMAT = "rally_XXXXXXXX_XXXXXXXX"
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_letters + string.digits
@@ -261,6 +259,39 @@ class RandomNameGeneratorMixin(object):
         """
         return "".join(random.choice(cls.RESOURCE_NAME_ALLOWED_CHARACTERS)
                        for i in range(length))
+
+    @classmethod
+    def _generate_task_id_part(cls, task_id, length):
+        # NOTE(stpierre): the first part of the random name is a
+        # subset of the task ID
+        task_id_part = task_id.replace("-", "")[0:length]
+
+        if len(task_id_part) < length:
+            LOG.debug("Task ID %(task_id)s cannot be included in a random "
+                      "name because it is too short. Format: %(format)s" %
+                      {"task_id": task_id,
+                       "format": cls.RESOURCE_NAME_FORMAT})
+        elif any(char not in cls.RESOURCE_NAME_ALLOWED_CHARACTERS
+                 for char in task_id_part):
+            LOG.debug("Task ID %(task_id)s cannot be included in a random "
+                      "name because it includes disallowed characters. "
+                      "Allowed characters are: %(chars)s" %
+                      {"task_id": task_id,
+                       "chars": cls.RESOURCE_NAME_ALLOWED_CHARACTERS})
+        else:
+            return task_id_part
+
+        # NOTE(stpierre): either the task UUID is shorter than the
+        # task portion; or the portion of the task ID that we
+        # would use contains only characters in
+        # resource_name_allowed_characters.
+        try:
+            # NOTE(stpierre): seed pRNG with task ID so that all random
+            # names with the same task ID have the same task ID part
+            random.seed(task_id)
+            return cls._generate_random_part(length)
+        finally:
+            random.seed()
 
     def generate_random_name(self):
         """Generate pseudo-random resource name for scenarios.
@@ -281,87 +312,54 @@ class RandomNameGeneratorMixin(object):
         elif hasattr(self, "verification"):
             task_id = self.verification["uuid"]
 
-        match = _resource_name_placeholder_re.match(self.RESOURCE_NAME_FORMAT)
+        match = self._resource_name_placeholder_re.match(
+            self.RESOURCE_NAME_FORMAT)
         if match is None:
             raise ValueError("%s is not a valid resource name format" %
                              self.RESOURCE_NAME_FORMAT)
         parts = match.groupdict()
+        return "".join([
+            parts["prefix"],
+            self._generate_task_id_part(task_id, len(parts["task"])),
+            parts["sep"],
+            self._generate_random_part(len(parts["rand"])),
+            parts["suffix"]])
 
-        result = [parts["prefix"]]
+    @classmethod
+    def name_matches_object(cls, name, task_id=None):
+        """Determine if a resource name could have been created by this class.
 
-        # NOTE(stpierre): the first part of the random name is a
-        # subset of the task ID
-        task_id_part = task_id.replace("-", "")[0:len(parts["task"])]
-
-        regen_task_id_part = False
-        if len(task_id_part) < len(parts["task"]):
-            LOG.debug("Task ID %(task_id)s cannot be included in a random "
-                      "name because it is too short. Format: %(format)s" %
-                      {"task_id": task_id,
-                       "format": self.RESOURCE_NAME_FORMAT})
-            regen_task_id_part = True
-        elif any(char not in self.RESOURCE_NAME_ALLOWED_CHARACTERS
-                 for char in task_id_part):
-            LOG.debug("Task ID %(task_id)s cannot be included in a random "
-                      "name because it includes disallowed characters. "
-                      "Allowed characters: %(chars)s" %
-                      {"task_id": task_id,
-                       "chars": self.RESOURCE_NAME_ALLOWED_CHARACTERS})
-            regen_task_id_part = True
-        if regen_task_id_part:
-            # NOTE(stpierre): either the task UUID is shorter than the
-            # task portion; or the portion of the task ID that we
-            # would use contains only characters in
-            # resource_name_allowed_characters.
-            try:
-                # NOTE(stpierre): seed pRNG with task ID so that all random
-                # names with the same task ID have the same task ID part
-                random.seed(task_id)
-                task_id_part = self._generate_random_part(len(parts["task"]))
-            finally:
-                random.seed()
-
-        result.append(task_id_part)
-        result.append(parts["sep"])
-        result.append(self._generate_random_part(len(parts["rand"])))
-        result.append(parts["suffix"])
-
-        return "".join(result)
+        :param name: The resource name to check against this class's
+                     RESOURCE_NAME_FORMAT.
+        :param task_id: The task ID that must match the task portion of
+                        the random name
+        :returns: bool
+        """
+        match = cls._resource_name_placeholder_re.match(
+            cls.RESOURCE_NAME_FORMAT)
+        parts = match.groupdict()
+        subst = {
+            "prefix": re.escape(parts["prefix"]),
+            "sep": re.escape(parts["sep"]),
+            "suffix": re.escape(parts["suffix"]),
+            "chars": re.escape(cls.RESOURCE_NAME_ALLOWED_CHARACTERS),
+            "rand_length": len(parts["rand"])}
+        if task_id:
+            subst["task_id"] = cls._generate_task_id_part(task_id,
+                                                          len(parts["task"]))
+        else:
+            subst["task_id"] = "[%s]{%s}" % (subst["chars"],
+                                             len(parts["task"]))
+        name_re = re.compile(
+            "%(prefix)s%(task_id)s%(sep)s"
+            "[%(chars)s]{%(rand_length)s}%(suffix)s$" % subst)
+        return bool(name_re.match(name))
 
 
-def name_matches_pattern(name, fmt, chars):
-    """Determine if a resource name matches the given format string.
-
-    Returns True if the name could have been generated by the format
-    string, False otherwise.
-
-    :param name: The resource name to check against the format.
-    :param fmt: A mktemp(1)-like format string that the string will be
-                checked against. It must contain two separate segments
-                of at least three 'X's, which have been replaced in
-                the resource name by random strings. See the docstring
-                for generate_random_name(), above, for more details.
-    :param chars: A string consisting of the characters allowed in the
-                  random portions of the name.
-    :returns: bool
-    """
-    match = _resource_name_placeholder_re.match(fmt)
-    parts = match.groupdict()
-    subst = {"prefix": re.escape(parts["prefix"]),
-             "sep": re.escape(parts["sep"]),
-             "suffix": re.escape(parts["suffix"]),
-             "chars": re.escape(chars),
-             "task_length": len(parts["task"]),
-             "rand_length": len(parts["rand"])}
-    name_re = re.compile("%(prefix)s[%(chars)s]{%(task_length)s}%(sep)s"
-                         "[%(chars)s]{%(rand_length)s}%(suffix)s$" % subst)
-    return name_re.match(name)
-
-
-def name_matches_object(name, *objects):
+def name_matches_object(name, *objects, **kwargs):
     """Determine if a resource name could have been created by given objects.
 
-    The object(s) should implement RandomNameGeneratorMixin.
+    The object(s) must implement RandomNameGeneratorMixin.
 
     It will often be more efficient to pass a list of classes to
     name_matches_object() than to perform multiple
@@ -372,14 +370,23 @@ def name_matches_object(name, *objects):
                  RESOURCE_NAME_FORMAT.
     :param *objects: Classes or objects to fetch random name
                      generation parameters from.
+    :param **kwargs: Additional keyword args. Only 'task_id' is
+                     recognized, but the function signature must
+                     accept **kwargs because Python can be wierd about
+                     mixing *-magic and non-magic. The optional
+                     'task_id' kwarg can be used to specify the task
+                     ID that must match the task portion of the random
+                     name.
     :returns: bool
     """
-    rng_options = set()
+    task_id = kwargs.get("task_id")
+    unique_rng_options = {}
     for obj in objects:
-        rng_options.add((obj.RESOURCE_NAME_FORMAT,
-                         obj.RESOURCE_NAME_ALLOWED_CHARACTERS))
-    return any(name_matches_pattern(name, fmt, chars)
-               for fmt, chars in rng_options)
+        key = (obj.RESOURCE_NAME_FORMAT, obj.RESOURCE_NAME_ALLOWED_CHARACTERS)
+        if key not in unique_rng_options:
+            unique_rng_options[key] = obj
+    return any(obj.name_matches_object(name, task_id=task_id)
+               for obj in unique_rng_options.values())
 
 
 def merge(length, *sources):
