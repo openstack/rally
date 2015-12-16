@@ -9,7 +9,7 @@
                             "configs": {
                                 "edp.java.main_class": "org.apache.hadoop.fs.TestDFSIO"
                             },
-                            "args": ["-write", "-nrFiles", "10", "fileSize", "100"]
+                            "args": ["-write", "-nrFiles", "10", "-fileSize", "100"]
                         }
                     }, {
                         "job_type": "Java",
@@ -17,7 +17,7 @@
                             "configs": {
                                 "edp.java.main_class": "org.apache.hadoop.fs.TestDFSIO"
                             },
-                            "args": ["-read", "-nrFiles", "10", "fileSize", "100"]
+                            "args": ["-read", "-nrFiles", "10", "-fileSize", "100"]
                         }
                     }
                 ]
@@ -33,16 +33,16 @@
                     "users_per_tenant": 1
                 },
                 "sahara_image": {
-                    "image_url": "http://sahara-files.mirantis.com/sahara-icehouse-vanilla-1.2.1-ubuntu-13.10.qcow2",
+                    "image_url": "http://sahara-files.mirantis.com/mos70/sahara-kilo-vanilla-2.6.0-ubuntu-14.04.qcow2",
                     "username": "ubuntu",
                     "plugin_name": "vanilla",
-                    "hadoop_version": "1.2.1"
+                    "hadoop_version": "2.6.0"
                 },
                 "sahara_job_binaries": {
                     "libs": [
                         {
                             "name": "tests.jar",
-                            "download_url": "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-test/1.2.1/hadoop-test-1.2.1.jar"
+                            "download_url": "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-hdfs/2.6.0/hadoop-hdfs-2.6.0-tests.jar"
                         }
                     ]
                 },
@@ -50,7 +50,7 @@
                     "flavor_id": "2",
                     "workers_count": 3,
                     "plugin_name": "vanilla",
-                    "hadoop_version": "1.2.1",
+                    "hadoop_version": "2.6.0",
                     "auto_security_group": true
                 },
                 "network": {}
