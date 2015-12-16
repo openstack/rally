@@ -103,3 +103,37 @@ class EnvUtilsTestCase(test.TestCase):
     def test_clear_env(self, mock_update_env_file, mock_path_exists):
         envutils.clear_env()
         self.assertEqual(os.environ, {})
+
+    @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
+                                  "OS_USERNAME": "fake_username",
+                                  "OS_PASSWORD": "fake_password",
+                                  "OS_TENANT_NAME": "fake_tenant_name",
+                                  "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT": "fake_endpoint",
+                                  "OS_INSECURE": "True",
+                                  "OS_CACERT": "fake_cacert"})
+    def test_get_creds_from_env_vars(self):
+        expected_creds = {
+            "auth_url": "fake_auth_url",
+            "admin": {
+                "username": "fake_username",
+                "password": "fake_password",
+                "tenant_name": "fake_tenant_name"
+            },
+            "endpoint": "fake_endpoint",
+            "region_name": "fake_region_name",
+            "https_cacert": "fake_cacert",
+            "https_insecure": True
+        }
+        creds = envutils.get_creds_from_env_vars()
+        self.assertEqual(expected_creds, creds)
+
+    @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
+                                  "OS_PASSWORD": "fake_password",
+                                  "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT": "fake_endpoint",
+                                  "OS_INSECURE": "True",
+                                  "OS_CACERT": "fake_cacert"})
+    def test_get_creds_from_env_vars_when_required_vars_missing(self):
+        self.assertRaises(exceptions.ValidationError,
+                          envutils.get_creds_from_env_vars)
