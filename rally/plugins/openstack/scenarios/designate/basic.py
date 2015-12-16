@@ -72,6 +72,18 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["designate_v1"]})
+    def create_and_update_domain(self):
+        """Create and then update a domain.
+
+        Measure the performance of creating and updating domains
+        with different level of load.
+        """
+        domain = self._create_domain()
+        self._update_domain(domain)
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["designate_v1"]})
     def create_and_delete_records(self, records_per_domain=5):
         """Create and then delete records.
 

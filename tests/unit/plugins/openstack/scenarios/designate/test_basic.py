@@ -52,6 +52,21 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
         mock_designate_basic__create_domain.assert_called_once_with()
         mock_designate_basic__delete_domain.assert_called_once_with("123")
 
+    @mock.patch(DESIGNATE_BASIC + "._update_domain")
+    @mock.patch(DESIGNATE_BASIC + "._create_domain")
+    def test_create_and_update_domain(
+            self, mock_designate_basic__create_domain,
+            mock_designate_basic__update_domain):
+
+        scenario = basic.DesignateBasic(self.context)
+        domain = {
+            "name": "zone.name",
+            "email": "email@zone.name",
+            "id": "123"}
+        mock_designate_basic__create_domain.return_value = domain
+        scenario.create_and_update_domain()
+        mock_designate_basic__update_domain.assert_called_once_with(domain)
+
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
     def test_list_domains(self, mock_designate_basic__list_domains):
         scenario = basic.DesignateBasic(self.context)

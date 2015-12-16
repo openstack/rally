@@ -47,6 +47,17 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         self.clients("designate").domains.delete(domain_id)
 
+    @atomic.action_timer("designate.update_domain")
+    def _update_domain(self, domain):
+        """Update designate domain.
+
+        :param domain: designate domain
+        :returns: designate updated domain dict
+        """
+        domain["description"] = "updated domain"
+        domain["email"] = "updated@random.name"
+        return self.clients("designate").domains.update(domain)
+
     @atomic.optional_action_timer("designate.create_record")
     def _create_record(self, domain, record=None):
         """Create a record in a domain.
