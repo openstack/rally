@@ -27,7 +27,7 @@ from rally import osclients
 
 
 class ShowCommands(object):
-    """Show resources.
+    """[Deprecated since 0.2.0] Show resources.
 
     Set of commands that allow you to view resources, provided by OpenStack
     cloud represented by deployment.
@@ -55,7 +55,6 @@ class ShowCommands(object):
 
         :param deployment: UUID or name of a deployment
         """
-
         headers = ["UUID", "Name", "Size (B)"]
         mixed_case_fields = ["UUID", "Name"]
         float_cols = ["Size (B)"]
