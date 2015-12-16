@@ -72,6 +72,8 @@ class ResourceManager(object):
 
 class Keystone(ResourceManager):
 
+    REQUIRED_SERVICE = consts.Service.KEYSTONE
+
     def list_users(self):
         return self.client.users.list()
 
@@ -83,6 +85,8 @@ class Keystone(ResourceManager):
 
 
 class Nova(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.NOVA
 
     def list_flavors(self):
         return self.client.flavors.list()
@@ -158,6 +162,8 @@ class Neutron(ResourceManager):
 
 class Glance(ResourceManager):
 
+    REQUIRED_SERVICE = consts.Service.GLANCE
+
     def list_images(self):
         return self.client.images.list()
 
@@ -174,6 +180,8 @@ class Heat(ResourceManager):
 
 
 class Cinder(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.CINDER
 
     def list_availability_zones(self):
         return self.client.availability_zones.list()
