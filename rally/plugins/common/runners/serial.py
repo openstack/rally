@@ -72,3 +72,5 @@ class SerialScenarioRunner(runner.ScenarioRunner):
                         runner._get_scenario_context(context), args)
             result = runner._run_scenario_once(run_args)
             self._send_result(result)
+
+        self._flush_results()

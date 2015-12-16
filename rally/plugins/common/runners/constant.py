@@ -295,3 +295,4 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
 
         pool.terminate()
         pool.join()
+        self._flush_results()
