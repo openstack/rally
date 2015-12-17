@@ -303,13 +303,16 @@ class Tempest(object):
 
         testr_args = "--concurrency %d" % concur
 
-        if set_name == "full":
-            pass
-        elif set_name in consts.TempestTestsAPI:
-            testr_args += " tempest.api.%s" % set_name
+        if set_name:
+            if set_name == "full":
+                pass
+            elif set_name in consts.TempestTestsSets:
+                testr_args += " %s" % set_name
+            elif set_name in consts.TempestTestsAPI:
+                testr_args += " tempest.api.%s" % set_name
         elif regex:
             testr_args += " %s" % regex
-        else:
+        elif tests_file:
             testr_args += " --load-list %s" % os.path.abspath(tests_file)
 
         self.verification.start_verifying(set_name)
