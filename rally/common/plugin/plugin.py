@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
+
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import meta
@@ -142,13 +144,17 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
     @classmethod
     def _set_name_and_namespace(cls, name, namespace):
         try:
-            Plugin.get(name, namespace=namespace)
+            existing_plugin = Plugin.get(name, namespace=namespace)
         except exceptions.PluginNotFound:
             cls._meta_set("name", name)
             cls._meta_set("namespace", namespace)
         else:
-            raise exceptions.PluginWithSuchNameExists(name=name,
-                                                      namespace=namespace)
+            raise exceptions.PluginWithSuchNameExists(
+                name=name, namespace=namespace,
+                existing_path=(
+                    sys.modules[existing_plugin.__module__].__file__),
+                new_path=sys.modules[cls.__module__].__file__
+            )
 
     @classmethod
     def _set_deprecated(cls, reason, rally_version):
