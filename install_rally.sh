@@ -706,19 +706,6 @@ then
         echo "Warning! Unable to wipe python compiled files"
     fi
 
-    if [ "$USEVIRTUALENV" = 'yes' ]
-    then
-        if [ "$VENVDIR/src" != "$BASEDIR" ]
-        then
-            SOURCEDIR="$VENVDIR"/src
-            if [ -d $SOURCEDIR ]
-            then
-                rm -rf $SOURCEDIR
-            fi
-            mkdir $SOURCEDIR
-            cp -r . $SOURCEDIR/
-        fi
-    fi
     popd > /dev/null
 else
     if [ "$USEVIRTUALENV" = 'yes' ]
@@ -726,29 +713,6 @@ else
         SOURCEDIR="$VENVDIR"/src
     else
         SOURCEDIR="$ORIG_WD"/rally.git
-    fi
-
-    # Check if source directory is present
-    if [ -d "$SOURCEDIR" ]
-    then
-        if [ $RECREATEDEST != 'yes' ]
-        then
-            echo "Source directory '$SOURCEDIR' already exists."
-            echo "I can wipe it out in order to make a new installation,"
-            echo "but this means any files in that directory, and the ones"
-            echo "underneath it will be deleted."
-            echo
-            if ! ask_yn "Do you want to wipe the source directory '$SOURCEDIR'?"
-            then
-                echo "*Not* overwriting destination directory '$SOURCEDIR'."
-            else
-                rm -rf $SOURCEDIR
-                if [ -d "$SOURCEDIR"/.git ]
-                then
-                    abort $EX_CANTCREAT "Unable to wipe source directory $SOURCEDIR"
-                fi
-            fi
-        fi
     fi
 
     if ! [ -d "$SOURCEDIR"/.git ]
@@ -802,16 +766,11 @@ __EOF__
         SAMPLESDIR=$VENVDIR/samples
         mkdir -p $SAMPLESDIR
         cp -r $SOURCEDIR/samples/* $SAMPLESDIR/
-        if [ "$BASEDR" != "$SOURCEDIR" ]
-        then
-            rm -rf $SOURCEDIR
-            echo "Source directory is removed."
-        else
-            echo "Unabled to remove source directory, becaus this script was started from it."
-        fi
     else
         SAMPLESDIR=$SOURCEDIR/samples
     fi
+    mkdir -p $VENVDIR/etc/bash_completion.d
+    install $SOURCEDIR/etc/rally.bash_completion $VENVDIR/etc/bash_completion.d/
 
     cat <<__EOF__
 $GREEN==============================
@@ -843,14 +802,6 @@ else
         SAMPLESDIR=/usr/share/rally/samples
         mkdir -p $SAMPLESDIR
         cp -r $SOURCEDIR/samples/* $SAMPLESDIR/
-        if [ "$BASEDIR" != "$SOURCEDIR" ]
-        then
-            rm -rf $SOURCEDIR
-            echo "Source directory is removed."
-        else
-            echo "Unabled to remove source directory, because this script was started from it."
-
-        fi
     else
         SAMPLESDIR=$SOURCEDIR/samples
     fi
