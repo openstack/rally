@@ -43,13 +43,13 @@ class DeploymentCommands(object):
     @cliutils.args("--name", type=str, required=True,
                    help="A name of the deployment.")
     @cliutils.args("--fromenv", action="store_true",
-                   help="Read environment variables instead of config file")
+                   help="Read environment variables instead of config file.")
     @cliutils.args("--filename", type=str, required=False,
                    help="A path to the configuration file of the "
                    "deployment.")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don\'t set new deployment as default for"
-                        " future operations")
+                        " future operations.")
     @plugins.ensure_plugins_are_loaded
     def create(self, name, fromenv=False, filename=None, do_use=False):
         """Create new deployment.
@@ -91,7 +91,7 @@ class DeploymentCommands(object):
             config.update(envutils.get_creds_from_env_vars())
         else:
             if not filename:
-                print("Either --filename or --fromenv is required")
+                print("Either --filename or --fromenv is required.")
                 return(1)
             filename = os.path.expanduser(filename)
             with open(filename, "rb") as deploy_file:
@@ -265,7 +265,7 @@ class DeploymentCommands(object):
         os.symlink(openrc_path, expanded_path)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
-                   help="UUID or name of the deployment")
+                   help="UUID or name of the deployment.")
     def use(self, deployment):
         """Set active deployment.
 
