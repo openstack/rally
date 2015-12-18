@@ -404,7 +404,8 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = True
         api.Verification.verify(
-            self.deployment_uuid, "smoke", None, None, None)
+            self.deployment_uuid, set_name="smoke",
+            regex=None, tests_file=None, tempest_config=None)
 
         self.tempest.is_installed.assert_called_once_with()
         self.tempest.verify.assert_called_once_with(
@@ -420,7 +421,8 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = False
         api.Verification.verify(
-            self.deployment_uuid, "smoke", None, None, None)
+            self.deployment_uuid, set_name="smoke",
+            regex=None, tests_file=None, tempest_config=None)
 
         self.tempest.is_installed.assert_called_once_with()
         self.tempest.install.assert_called_once_with()
@@ -438,7 +440,8 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.is_installed.return_value = True
         tests_file = "/path/to/tests/file"
         api.Verification.verify(
-            self.deployment_uuid, "", None, tests_file, None)
+            self.deployment_uuid, set_name="", regex=None,
+            tests_file=tests_file, tempest_config=None)
 
         self.tempest.verify.assert_called_once_with(
             set_name="", regex=None, tests_file=tests_file, concur=0)
