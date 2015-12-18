@@ -135,5 +135,7 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert"})
     def test_get_creds_from_env_vars_when_required_vars_missing(self):
+        if "OS_USERNAME" in os.environ:
+            del os.environ["OS_USERNAME"]
         self.assertRaises(exceptions.ValidationError,
                           envutils.get_creds_from_env_vars)
