@@ -54,11 +54,6 @@ set -o pipefail
 
 rally deployment use --deployment devstack
 rally deployment check
-rally show flavors
-rally show images
-rally show networks
-rally show secgroups
-rally show keypairs
 
 python $BASE/new/rally/tests/ci/osresources.py\
     --dump-list resources_at_start.txt
