@@ -89,7 +89,7 @@
 {%- endmacro %}
 
 {%- macro glance_args(location, container="bare", type="qcow2") %}
-        image_container: {{ container }}
-        image_type: {{ type }}
+        container_format: {{ container }}
+        disk_format: {{ type }}
         image_location: {{ location }}
 {%- endmacro %}
