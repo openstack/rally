@@ -21,7 +21,6 @@ import six
 
 from rally.common import costilius
 from rally.common import streaming_algorithms as streaming
-from rally import exceptions
 from rally.task.processing import utils
 
 
@@ -324,10 +323,7 @@ class MainStatsTable(Chart):
         for i in range(len(self.table)):
             row = [self.table[i][0][1]]
             # no results if all iterations failed
-            try:
-                no_result = self.table[i][-2][1].result() == 0.0
-            except exceptions.RallyException:
-                no_result = True
+            no_result = not self.table[i][-2][1].result()
             row.extend(x[2](x[1], no_result) for x in self.table[i][1:])
             rows.append(row)
 

@@ -19,7 +19,6 @@ import ddt
 import six
 
 from rally.common import streaming_algorithms as algo
-from rally import exceptions
 from tests.unit import test
 
 
@@ -27,7 +26,7 @@ class MeanComputationTestCase(test.TestCase):
 
     def test_empty_stream(self):
         mean_computation = algo.MeanComputation()
-        self.assertRaises(exceptions.RallyException, mean_computation.result)
+        self.assertIsNone(mean_computation.result())
 
     def test_one_value(self):
         mean_computation = algo.MeanComputation()
@@ -68,12 +67,12 @@ class StdDevComputationTestCase(test.TestCase):
 
     def test_empty_stream(self):
         std_computation = algo.StdDevComputation()
-        self.assertRaises(exceptions.RallyException, std_computation.result)
+        self.assertIsNone(std_computation.result())
 
     def test_one_value(self):
         std_computation = algo.StdDevComputation()
         std_computation.add(10.0)
-        self.assertRaises(exceptions.RallyException, std_computation.result)
+        self.assertIsNone(std_computation.result())
 
     def test_two_values(self):
         std_computation = algo.StdDevComputation()
@@ -127,10 +126,10 @@ class MinComputationTestCase(test.TestCase):
         self.assertRaises(TypeError, comp.add, None)
         self.assertRaises(TypeError, comp.add, "str")
 
-    def test_result_raises(self):
+    def test_result_empty(self):
         comp = algo.MinComputation()
         self.assertRaises(TypeError, comp.result, 1)
-        self.assertRaises(exceptions.RallyException, comp.result)
+        self.assertIsNone(comp.result())
 
     def test_merge(self):
         single_min_algo = algo.MinComputation()
@@ -166,10 +165,10 @@ class MaxComputationTestCase(test.TestCase):
         self.assertRaises(TypeError, comp.add, None)
         self.assertRaises(TypeError, comp.add, "str")
 
-    def test_result_raises(self):
+    def test_result_empty(self):
         comp = algo.MaxComputation()
         self.assertRaises(TypeError, comp.result, 1)
-        self.assertRaises(exceptions.RallyException, comp.result)
+        self.assertIsNone(comp.result())
 
     def test_merge(self):
         single_max_algo = algo.MaxComputation()
@@ -241,10 +240,10 @@ class PercentileComputationTestCase(test.TestCase):
         comp = algo.PercentileComputation(0.50, 100)
         self.assertRaises(TypeError, comp.add)
 
-    def test_result_raises(self):
+    def test_result_empty(self):
         self.assertRaises(TypeError, algo.PercentileComputation)
         comp = algo.PercentileComputation(0.50, 100)
-        self.assertRaises(exceptions.RallyException, comp.result)
+        self.assertIsNone(comp.result())
 
 
 class IncrementComputationTestCase(test.TestCase):
