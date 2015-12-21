@@ -15,7 +15,6 @@
 #
 
 from oslo_utils import encodeutils
-import six
 from subunit import v2
 
 
@@ -49,8 +48,7 @@ def preparse_input_args(func):
                 test_id.startswith("tearDown (")):
             test_id = test_id[test_id.find("(") + 1:-1]
         if test_id.find("[") > -1:
-            test_id, tags = test_id.split("[")
-            tags = tags[:-1].split(",")
+            tags = test_id.split("[")[1][:-1].split(",")
         else:
             tags = []
 
@@ -68,8 +66,9 @@ def preparse_input_args(func):
 class SubunitV2StreamResult(object):
     """A test result for reporting the activity of a test run."""
 
-    def __init__(self):
+    def __init__(self, expected_failures=None):
         self._tests = {}
+        self._expected_failures = expected_failures or {}
         self._timestamps = {}
         # NOTE(andreykurilin): _first_timestamp and _last_timestamp vars are
         #   designed to calculate total time of tests executions
@@ -134,7 +133,9 @@ class SubunitV2StreamResult(object):
                timestamp=None, charset=None):
         if test_status == "exists":
             self._tests[test_id] = {"status": "init",
-                                    "name": test_id,
+                                    "name": (test_id.split("[")[0]
+                                             if test_id.find("[") > -1
+                                             else test_id),
                                     "time": 0.0}
             if tags:
                 self._tests[test_id]["tags"] = tags
@@ -144,6 +145,14 @@ class SubunitV2StreamResult(object):
             elif test_status:
                 self._tests[test_id]["time"] = total_seconds(
                     timestamp - self._timestamps[test_id])
+                if test_id in self._expected_failures:
+                    if test_status == "fail":
+                        test_status = "xfail"
+                        if self._expected_failures[test_id]:
+                            self._tests[test_id]["reason"] = (
+                                self._expected_failures[test_id])
+                    elif test_status == "success":
+                        test_status = "uxsuccess"
                 self._tests[test_id]["status"] = test_status
             else:
                 if file_name in ["traceback", "reason"]:
@@ -175,9 +184,9 @@ class SubunitV2StreamResult(object):
         return filtered_tests
 
 
-def parse_results_file(filename):
+def parse_results_file(filename, expected_failures=None):
     with open(filename, "rb") as source:
-        results = SubunitV2StreamResult()
+        results = SubunitV2StreamResult(expected_failures)
         v2.ByteStreamToStreamResult(
-            source=source, non_subunit_name=six.text_type).run(results)
+            source=source, non_subunit_name="non-subunit").run(results)
         return results

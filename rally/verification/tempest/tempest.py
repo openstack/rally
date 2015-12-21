@@ -371,28 +371,29 @@ class Tempest(object):
 
         return tests
 
-    def parse_results(self, log_file=None):
+    def parse_results(self, log_file=None, expected_failures=None):
         """Parse subunit raw log file."""
         log_file_raw = log_file or self.log_file_raw
         if os.path.isfile(log_file_raw):
-            return subunit_v2.parse_results_file(log_file_raw)
+            return subunit_v2.parse_results_file(log_file_raw,
+                                                 expected_failures)
         else:
             LOG.error("JSON-log file not found.")
             return None
 
     @logging.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
-    def _save_results(self, log_file=None):
-        results = self.parse_results(log_file)
+    def _save_results(self, log_file=None, expected_failures=None):
+        results = self.parse_results(log_file, expected_failures)
         if results and self.verification:
             self.verification.finish_verification(total=results.total,
                                                   test_cases=results.tests)
         else:
             self.verification.set_failed()
 
-    def verify(self, set_name, regex, tests_file, concur):
+    def verify(self, set_name, regex, tests_file, expected_failures, concur):
         self._prepare_and_run(set_name, regex, tests_file, concur)
-        self._save_results()
+        self._save_results(expected_failures=expected_failures)
 
     def import_results(self, set_name, log_file):
         if log_file:

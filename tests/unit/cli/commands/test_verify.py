@@ -57,7 +57,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=None, system_wide_install=False, concur=0)
+            tempest_config=None, expected_failures=None,
+            system_wide_install=False, concur=0)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -74,8 +75,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=tempest_config.name, system_wide_install=False,
-            concur=0)
+            tempest_config=tempest_config.name, expected_failures=None,
+            system_wide_install=False, concur=0)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")
@@ -89,7 +90,24 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="", regex=None, tests_file=tests_file,
-            tempest_config=None, system_wide_install=False, concur=0)
+            tempest_config=None, expected_failures=None,
+            system_wide_install=False, concur=0)
+
+    @mock.patch("rally.api.Verification.verify")
+    @mock.patch("six.moves.builtins.open",
+                side_effect=mock.mock_open(read_data="test: reason of fail"))
+    @mock.patch("os.path.exists", return_value=True)
+    def test_start_with_xfails_file_specified(self, mock_exists, mock_open,
+                                              mock_verification_verify):
+        deployment_id = "eba53a0e-e2e6-451c-9a29-bdd2efc245e7"
+        xfails_file = "/path/to/xfails/file"
+        self.verify.start(deployment=deployment_id,
+                          xfails_file=xfails_file, do_use=False)
+
+        mock_verification_verify.assert_called_once_with(
+            deployment_id, set_name="full", regex=None, tests_file=None,
+            tempest_config=None, expected_failures={"test": "reason of fail"},
+            system_wide_install=False, concur=0)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):

@@ -19,6 +19,8 @@ import os
 import subprocess
 import sys
 
+import yaml
+
 from rally.cli import envutils
 from rally.ui import utils
 
@@ -34,6 +36,13 @@ MODES_PARAMETERS = {
 
 BASE_DIR = "rally-verify"
 
+EXPECTED_FAILURES_FILE = "expected_failures.yaml"
+EXPECTED_FAILURES = {
+    "tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON."
+    "test_get_vnc_console[id-c6bc11bf-592e-4015-9319-1c98dc64daf5]":
+    "This test fails because 'novnc' console type is unavailable."
+}
+
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .
 _call_count = 0
@@ -47,10 +56,20 @@ def call_rally(cmd, print_output=False, output_type=None):
     global _call_count
     _call_count += 1
 
-    data = {"cmd": "rally --rally-debug %s " % cmd,
-            "stdout_file": "%(base)s/%(prefix)s_%(cmd)s.txt.gz" % {
-                "base": BASE_DIR, "prefix": _call_count,
-                "cmd": cmd.replace(" ", "_")}}
+    data = {"cmd": "rally --rally-debug %s" % cmd}
+    stdout_file = "{base}/{prefix}_{cmd}.txt.gz"
+
+    if "--xfails-file" in cmd:
+        cmd_items = cmd.split()
+        for num, item in enumerate(cmd_items):
+            if EXPECTED_FAILURES_FILE in item:
+                cmd_items[num] = os.path.basename(item)
+                break
+        cmd = " ".join(cmd_items)
+
+    data.update({"stdout_file": stdout_file.format(base=BASE_DIR,
+                                                   prefix=_call_count,
+                                                   cmd=cmd.replace(" ", "_"))})
 
     if output_type:
         data["output_file"] = data["stdout_file"].replace(
@@ -86,6 +105,14 @@ def call_rally(cmd, print_output=False, output_type=None):
         print(stdout)
 
     return data
+
+
+def create_file_with_xfails():
+    """Create a YAML file with a list of tests that are expected to fail."""
+    with open(os.path.join(BASE_DIR, EXPECTED_FAILURES_FILE), "wb") as f:
+        yaml.dump(EXPECTED_FAILURES, f, default_flow_style=False)
+
+    return os.path.join(os.getcwd(), BASE_DIR, EXPECTED_FAILURES_FILE)
 
 
 def launch_verification_once(launch_parameters):
@@ -152,13 +179,18 @@ def main():
     render_vars["genconfig"] = call_rally("verify genconfig")
     render_vars["showconfig"] = call_rally("verify showconfig")
 
+    # Create a file with a list of tests that are expected to fail
+    xfails_file_path = create_file_with_xfails()
+
     # Launch verification
-    render_vars["verifications"].append(launch_verification_once(
-        MODES_PARAMETERS[args.mode]))
+    launch_params = "%s --xfails-file %s" % (
+        MODES_PARAMETERS[args.mode], xfails_file_path)
+    render_vars["verifications"].append(
+        launch_verification_once(launch_params))
 
     if args.compare:
-        render_vars["verifications"].append(launch_verification_once(
-            MODES_PARAMETERS[args.mode]))
+        render_vars["verifications"].append(
+            launch_verification_once(launch_params))
         render_vars["compare"] = do_compare(
             render_vars["verifications"][-2]["uuid"],
             render_vars["verifications"][-1]["uuid"])
