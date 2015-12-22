@@ -61,6 +61,8 @@ re_str_format = re.compile(r"""
 """, re.X)
 re_raises = re.compile(
     r"\s:raise[^s] *.*$|\s:raises *:.*$|\s:raises *[^:]+$")
+re_import_common_db_or_objects = re.compile(
+    r"^from rally.common import (db|objects)")
 
 
 def skip_ignored_lines(func):
@@ -462,6 +464,20 @@ def check_raises(physical_line, filename):
                        "in docstrings.")
 
 
+@skip_ignored_lines
+def check_import_of_cli(logical_line, filename):
+    """Check imports of CLI module
+
+    N355
+    """
+    ignored_files = ["./rally/cli/manage.py", "./rally/cli/commands/show.py"]
+
+    if filename.startswith("./rally/cli") and filename not in ignored_files:
+        if re_import_common_db_or_objects.search(logical_line):
+            yield (0, "N355 CLI modules do not allow to work with "
+                      "`rally.common.db`` and ``rally.common.objects`.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -479,3 +495,4 @@ def factory(register):
     register(check_dict_formatting_in_string)
     register(check_using_unicode)
     register(check_raises)
+    register(check_import_of_cli)
