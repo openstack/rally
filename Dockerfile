@@ -12,7 +12,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
 
 # create rally user
 RUN useradd -u 65500 -m rally && \
-  ln -s /usr/share/doc/rally /home/rally/rally-docs
+  ln -s /opt/rally/doc /home/rally/rally-docs
 
 # install rally. the COPY command below frequently invalidates
 # subsequent cache
@@ -21,9 +21,9 @@ WORKDIR /tmp/rally
 RUN ./install_rally.sh --system --verbose --yes \
     --db-name /home/rally/.rally.sqlite && \
   pip install -r optional-requirements.txt && \
-  chmod -R u=rwX,go=rX /etc/rally && \
-  mv doc /usr/share/doc/rally && \
-  mv samples ~/ && \
+  mkdir /opt/rally/ && \
+  mv certification/ samples/ doc/ /opt/rally/ && \
+  chmod -R u=rwX,go=rX /opt/rally /etc/rally && \
   rm -rf /tmp/* && \
   apt-get -y remove \
     build-essential \
@@ -34,11 +34,20 @@ RUN ./install_rally.sh --system --verbose --yes \
   apt-get -y autoremove && \
   apt-get clean
 
+RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' \
+            >> /etc/bash.bashrc; echo -e 'Welcome to Rally Docker container!\n\
+    Rally certification tasks, samples and docs are located at /opt/rally/\n\
+    Rally at readthedocs - http://rally.readthedocs.org\n\
+    How to contribute - http://rally.readthedocs.org/en/latest/contribute.html\n\
+    If you have any questions, you can reach the Rally team by:\n\
+      * e-mail - openstack-dev@lists.openstack.org with tag [Rally] in subject\n\
+      * irc - "#openstack-rally" channel at freenode.net' > /etc/motd
+
 VOLUME ["/home/rally"]
 
-WORKDIR /home/rally
+WORKDIR /home/rally/
 USER rally
-ENV HOME /home/rally
+ENV HOME /home/rally/
 CMD ["bash", "--login"]
 
 RUN rally-manage db recreate
