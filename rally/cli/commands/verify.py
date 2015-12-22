@@ -62,20 +62,23 @@ class VerifyCommands(object):
                         "tests that are expected to fail")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
-    @cliutils.args("--system-wide-install", dest="system_wide_install",
+    @cliutils.args("--system-wide", dest="system_wide",
                    help="Don't create a virtual env when installing Tempest; "
                         "use the local env instead of the Tempest virtual env "
                         "when running the tests. Take notice that all Tempest "
                         "requirements have to be already installed in "
                         "the local env!",
                    required=False, action="store_true")
+    @cliutils.deprecated_args("--system-wide-install", dest="system_wide",
+                              help="Use --system-wide instead",
+                              required=False, action="store_true")
     @cliutils.args("--concurrency", dest="concur", type=int, required=False,
                    help="How many processes to use to run Tempest tests. "
                         "The default value (0) auto-detects your CPU count")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, deployment=None, set_name="", regex=None,
               tests_file=None, tempest_config=None, xfails_file=None,
-              do_use=True, system_wide_install=False, concur=0):
+              do_use=True, system_wide=False, concur=0):
         """Start verification (run Tempest tests).
 
         :param deployment: UUID or name of a deployment
@@ -86,10 +89,10 @@ class VerifyCommands(object):
         :param xfails_file: Path to a file in YAML format with a list of
                             Tempest tests that are expected to fail
         :param do_use: Use new task as default for future operations
-        :param system_wide_install: Whether or not to create a virtual env
-                                    when installing Tempest; whether or not to
-                                    use the local env instead of the Tempest
-                                    virtual env when running the tests
+        :param system_wide: Whether or not to create a virtual env when
+                            installing Tempest; whether or not to use
+                            the local env instead of the Tempest virtual
+                            env when running the tests
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
         """
@@ -130,7 +133,7 @@ class VerifyCommands(object):
         verification = api.Verification.verify(
             deployment, set_name=set_name, regex=regex, tests_file=tests_file,
             tempest_config=tempest_config, expected_failures=expected_failures,
-            system_wide_install=system_wide_install, concur=concur)
+            system_wide=system_wide, concur=concur)
         if do_use:
             self.use(verification["uuid"])
 
