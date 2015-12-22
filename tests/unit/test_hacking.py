@@ -328,3 +328,12 @@ class HackingTestCase(test.TestCase):
         checkres = checks.check_raises(
             "text = :raises Exception: if conditions", "fakefile")
         self.assertIsNone(checkres)
+
+    def test_check_import_of_cli(self):
+        checkres = checks.check_import_of_cli(
+            "from rally.common import db", "fakefile")
+        self.assertIsNotNone(checkres)
+
+        checkres = checks.check_import_of_cli(
+            "from rally.common import objects", "fakefile")
+        self.assertIsNotNone(checkres)
