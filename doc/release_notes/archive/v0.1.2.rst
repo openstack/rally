@@ -1,0 +1,206 @@
+============
+Rally v0.1.2
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **208**        |
++------------------+-----------------------+
+| Bug fixes        |        **37**         |
++------------------+-----------------------+
+| Dev cycle        |      **77 days**      |
++------------------+-----------------------+
+| Release date     |  **23/December/2015** |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release, as well as all previous ones, includes a lot of internal and
+external changes. Most important of them are listed below.
+
+.. warning:: Release 0.1.2 is the last release with Python 2.6 support.
+
+
+Deprecations
+~~~~~~~~~~~~
+
+* Class `rally.common.objects.Endpoint` was renamed to `Credentials`. Old
+  class is kept for backward compatibility. Please, stop using the old class
+  in your plugins.
+
+  .. warning:: dict key was changed too in user context from "endpoint" to "credential"
+
+* rally.task.utils: wait_is_ready(), wait_for(), wait_for_delete() deprecated
+  you should use wait_for_status() instead.
+
+
+Rally Verify
+~~~~~~~~~~~~
+
+* Added possibility to run Tempest tests listed in a file(--tests-file argument in ``verify start``)
+
+* Added possibility to upload Tempest subunit stream logs into data base
+
+* Improvements in generating Tempest config file
+
+* Reworked subunit stream parser
+
+* Don't install Tempest when `rally verify [gen/show]config`
+
+* Rally team tries to simplify usage of each our component.
+  Now Rally verification has some kind of a context like in Tasks.
+  Before launching each verification, Rally checks existence of required
+  resources(networks, images, flavours, etc) in Tempest configuration file and
+  pre-creates them. Do not worry, all these resources will not be forgotten
+  and left, Rally will clean them after verification.
+
+
+Rally Task
+~~~~~~~~~~
+
+* Add --html-static argument to ``rally task report`` which allows to
+  generate HTML reports that doesn't require Internet.
+
+* Rally supports different API versions now via api_versions context:
+
+.. code:: none
+
+  CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        api_versions:
+          cinder:
+            version: 2
+            service_name: cinderv2
+
+* Move rally.osclients.Clients to plugin base
+
+  Rally OSclients is plugable now and it is very easy to extend OSClients for
+  your cloud out of Rally tree.
+
+* Add 'merge' functionality to SLA
+
+  All SLA plugins  should implement merge() method now.
+  In future this will be used for distributed load generation.
+  Where SLA results from different runners will be merged together.
+
+* New optional_action_timer decorator
+
+  Allows to make the methods that can be both atomic_action or regular
+  method. Method changes behavior based on value in extra key "atomic_action"
+
+
+Rally Certification
+~~~~~~~~~~~~~~~~~~~
+
+* Fix Glance certification arguments
+
+* Add Neutron Quotas only if Neutron service is available
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Spec consistent-resource-names:
+
+  Resource name is based on Task id now. It is a huge step to persistence
+  and disaster cleanups.
+
+* Add a spec for distributed load generation:
+
+  https://github.com/openstack/rally/blob/master/doc/specs/in-progress/distributed_runner.rst
+
+* Improvements for scenario output format
+
+  https://github.com/openstack/rally/blob/master/doc/specs/in-progress/improve_scenario_output_format.rst
+
+* Task and Verify results export command
+
+  https://github.com/openstack/rally/blob/master/doc/specs/in-progress/task_and_verification_export.rst
+
+
+Plugins
+~~~~~~~
+
+* **Scenarios**:
+
+ * [new] NovaServers.boot_and_get_console_output
+ * [new] NovaServers.boot_and_show_server
+ * [new] NovaServers.boot_server_attach_created_volume_and_resize
+ * [new] NovaServers.boot_server_from_volume_and_resize
+ * [new] NeutronSecurityGroup.create_and_delete_security_groups
+ * [new] NeutronSecurityGroup.create_and_list_security_groups
+ * [new] NeutronSecurityGroup.create_and_update_security_groups
+ * [new] NeutronLoadbalancerV1.create_and_delete_healthmonitors
+ * [new] NeutronLoadbalancerV1.create_and_list_healthmonitors
+ * [new] NeutronLoadbalancerV1.create_and_update_healthmonitors
+ * [new] SwiftObjects.list_and_download_objects_in_containers
+ * [new] SwiftObjects.list_objects_in_containers
+ * [new] FuelNodes.add_and_remove_node
+ * [new] CeilometerMeters.list_matched_meters
+ * [new] CeilometerResource.list_matched_resources
+ * [new] CeilometerSamples.list_matched_samples
+ * [new] CeilometerStats.get_stats
+ * [new] Authenticate.validate_monasca
+ * [new] DesignateBasic.create_and_delete_zone
+ * [new] DesignateBasic.create_and_list_zones
+ * [new] DesignateBasic.list_recordsets
+ * [new] DesignateBasic.list_zones
+ * [fix] CinderVolumes.create_nested_snapshots_and_attach_volume
+    Remove random nested level which produce different amount of atomic
+    actions and bad reports.
+ * Support for Designate V2 api
+ * A lot of improvements in Sahara scenarios
+
+* **Context**:
+
+ * [new] api_versions
+
+   Context allows us to setup client to communicate to specific service.
+
+ * [new] swift_objects
+
+   Context pre creates swift objects for future usage in scenarios
+
+ * [update] sahara_cluster
+
+   It supports proxy server which allows to use single floating IP for
+   whole cluster.
+
+ * [fix] cleanup
+
+   Fix cleanup of networks remove vip before port.
+
+Bug fixes
+~~~~~~~~~
+
+**37 bugs were fixed, the most critical are**:
+
+* Follow symlinks in plugin discovery
+* Use sed without -i option for portability (install_rally.sh)
+* Fixed race in rally.common.broker
+* Fixed incorrect iteration number on "Failures" Tab
+* Fixing issue with create_isolated_networks = False
+* Fix docker build command
+
+Documentation
+~~~~~~~~~~~~~
+
+Fixed some minor typos and inaccuracies.
+
+Thanks
+~~~~~~
+
+We would like to thank Andreas Jaeger for ability to provide Python 2.6 support in this release.
