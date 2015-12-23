@@ -643,7 +643,11 @@ $GREEN
 __EOF__
     fi
     DBAUTH="$DBUSER:$DBPASSWORD@$DBHOST"
-    DBCONNSTRING="$DBTYPE://$DBAUTH/$DBNAME"
+    if [ "$DBTYPE" = 'mysql' ]; then
+        DBCONNSTRING="$DBTYPE+pymysql://$DBAUTH/$DBNAME"
+    else
+        DBCONNSTRING="$DBTYPE://$DBAUTH/$DBNAME"
+    fi
 fi
 
 # check and install prerequisites
