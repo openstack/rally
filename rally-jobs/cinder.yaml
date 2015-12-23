@@ -100,6 +100,33 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        size: 1
+        image:
+          name: "image-context-test"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        roles:
+          - admin
+        images:
+          image_url: "~/.rally/extra/fake-image.img"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 1
+          image_name: "image-context-test"
+          image_args:
+            is_public: True
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumes.create_and_update_volume:
     -
       args:
