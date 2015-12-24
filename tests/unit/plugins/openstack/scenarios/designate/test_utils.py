@@ -69,6 +69,17 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.delete_domain")
 
+    def test_update_domain(self):
+        scenario = utils.DesignateScenario(context=self.context)
+        domain = scenario._create_domain()
+        self.clients("designate").domains.update.return_value = self.domain
+        updated_domain = scenario._update_domain(domain)
+        self.clients("designate").domains.update.assert_called_once_with(
+            domain)
+        self.assertEqual(self.domain, updated_domain)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.update_domain")
+
     @ddt.data(
         {},
         {"data": "127.0.0.1"})
