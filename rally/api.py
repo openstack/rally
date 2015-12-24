@@ -358,7 +358,8 @@ class Verification(object):
 
     @classmethod
     def verify(cls, deployment, set_name="", regex=None, tests_file=None,
-               tempest_config=None, system_wide_install=None, concur=0):
+               tempest_config=None, expected_failures=None,
+               system_wide_install=False, concur=0):
         """Start verification.
 
         :param deployment: UUID or name of a deployment
@@ -366,6 +367,9 @@ class Verification(object):
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
+        :param expected_failures: Dictionary with Tempest tests that are
+                                  expected to fail. Keys are test names;
+                                  values are reasons of test failures
         :param system_wide_install: Whether or not to create a virtual env
                                     when installing Tempest; whether or not to
                                     use the local env instead of the Tempest
@@ -376,7 +380,8 @@ class Verification(object):
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verification = objects.Verification(deployment_uuid=deployment_uuid)
-        verifier = tempest.Tempest(deployment_uuid, verification=verification,
+        verifier = tempest.Tempest(deployment_uuid,
+                                   verification=verification,
                                    tempest_config=tempest_config,
                                    system_wide_install=system_wide_install)
 
@@ -389,8 +394,8 @@ class Verification(object):
 
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
         verification.set_running()
-        verifier.verify(set_name=set_name, regex=regex,
-                        tests_file=tests_file, concur=concur)
+        verifier.verify(set_name=set_name, regex=regex, tests_file=tests_file,
+                        expected_failures=expected_failures, concur=concur)
 
         return verification
 

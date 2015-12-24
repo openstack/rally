@@ -20,6 +20,7 @@ import json
 import os
 
 import six
+import yaml
 
 from rally import api
 from rally.cli import cliutils
@@ -55,6 +56,10 @@ class VerifyCommands(object):
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False,
                    help="User specified Tempest config file location")
+    @cliutils.args("--xfails-file", dest="xfails_file", type=str,
+                   required=False,
+                   help="Path to a file in YAML format with a list of Tempest "
+                        "tests that are expected to fail")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
     @cliutils.args("--system-wide-install", dest="system_wide_install",
@@ -69,8 +74,8 @@ class VerifyCommands(object):
                         "The default value (0) auto-detects your CPU count")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, deployment=None, set_name="", regex=None,
-              tests_file=None, tempest_config=None, do_use=True,
-              system_wide_install=False, concur=0):
+              tests_file=None, tempest_config=None, xfails_file=None,
+              do_use=True, system_wide_install=False, concur=0):
         """Start verification (run Tempest tests).
 
         :param deployment: UUID or name of a deployment
@@ -78,6 +83,8 @@ class VerifyCommands(object):
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
+        :param xfails_file: Path to a file in YAML format with a list of
+                            Tempest tests that are expected to fail
         :param do_use: Use new task as default for future operations
         :param system_wide_install: Whether or not to create a virtual env
                                     when installing Tempest; whether or not to
@@ -111,9 +118,18 @@ class VerifyCommands(object):
             print(_("File '%s' not found.") % tests_file)
             return 1
 
+        expected_failures = None
+        if xfails_file:
+            if os.path.exists(xfails_file):
+                with open(os.path.abspath(xfails_file), "rb") as f:
+                    expected_failures = yaml.load(f)
+            else:
+                print(_("File '%s' not found.") % xfails_file)
+                return 1
+
         verification = api.Verification.verify(
-            deployment, set_name=set_name, regex=regex,
-            tests_file=tests_file, tempest_config=tempest_config,
+            deployment, set_name=set_name, regex=regex, tests_file=tests_file,
+            tempest_config=tempest_config, expected_failures=expected_failures,
             system_wide_install=system_wide_install, concur=concur)
         if do_use:
             self.use(verification["uuid"])

@@ -66,7 +66,7 @@ class HtmlOutputTestCase(test.TestCase):
                        "time": 2},
                       {"name": "ts",
                        "id": 2,
-                       "output": "ts_skip",
+                       "output": "Reason:\n  ts_skip",
                        "status": "skip",
                        "time": 4}]}
 
@@ -104,8 +104,8 @@ class HtmlOutputTestCase(test.TestCase):
                 "id": 0,
                 "status": "skip",
                 "name": "one_test",
-                "output": "Skipped until Bug: <a href='https://launchpad.net/"
-                          "bugs/666666'>666666</a> is resolved.",
+                "output": "Reason:\n  Skipped until Bug: <a href='https://"
+                          "launchpad.net/bugs/666666'>666666</a> is resolved.",
                 "time": "time"}]}
 
         json2html.generate_report(results)

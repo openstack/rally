@@ -26,21 +26,20 @@ def generate_report(results):
     tests = []
     for i, name in enumerate(sorted(results["test_cases"])):
         test = results["test_cases"][name]
-        if "tags" in test:
-            name = "%(name)s [%(tags)s]" % {"name": name,
-                                            "tags": ", ".join(test["tags"])}
-        if "traceback" in test:
-            output = utils.escape(test["traceback"])
-        elif "reason" in test:
+        output = ""
+        if "reason" in test:
+            output += "Reason:\n  "
             matcher = SKIP_RE.match(test["reason"])
             if matcher:
                 href = LAUNCHPAD_BUG_LINK.format(matcher.group("bug_number"))
-                output = re.sub(matcher.group("bug_number"), href,
-                                test["reason"])
+                output += re.sub(matcher.group("bug_number"), href,
+                                 test["reason"])
             else:
-                output = utils.escape(test["reason"])
-        else:
-            output = ""
+                output += utils.escape(test["reason"])
+        if "traceback" in test:
+            if output:
+                output += "\n\n"
+            output += utils.escape(test["traceback"])
 
         tests.append({"id": i,
                       "time": test["time"],
