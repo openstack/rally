@@ -464,7 +464,7 @@ def interruptable_sleep(sleep_time, atomic_delay=0.1):
     This should give a chance to interrupt current thread.
 
     :param sleep_time: idle time of method (in seconds).
-    :param atomic_delay: parameter with wich  time.sleep would be called
+    :param atomic_delay: parameter with which  time.sleep would be called
                          int(sleep_time / atomic_delay) times.
     """
     if atomic_delay <= 0:

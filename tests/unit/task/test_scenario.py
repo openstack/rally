@@ -198,15 +198,17 @@ class ScenarioTestCase(test.TestCase):
         scenario_inst.sleep_between(0.004, 0.004)
         self.assertEqual(scenario_inst.idle_duration(), 0.005)
 
-    @mock.patch("rally.task.scenario.time.sleep")
+    @mock.patch("rally.common.utils.interruptable_sleep")
     @mock.patch("rally.task.scenario.random.uniform")
-    def test_sleep_between_internal(self, mock_uniform, mock_sleep):
+    def test_sleep_between_internal(self, mock_uniform,
+                                    mock_interruptable_sleep):
         scenario_inst = scenario.Scenario()
 
         mock_uniform.return_value = 1.5
         scenario_inst.sleep_between(1, 2)
 
-        mock_sleep.assert_called_once_with(mock_uniform.return_value)
+        mock_interruptable_sleep.assert_called_once_with(
+            mock_uniform.return_value, 0.1)
         self.assertEqual(scenario_inst.idle_duration(),
                          mock_uniform.return_value)
 
