@@ -358,8 +358,8 @@ class Verification(object):
 
     @classmethod
     def verify(cls, deployment, set_name="", regex=None, tests_file=None,
-               tempest_config=None, expected_failures=None,
-               system_wide_install=False, concur=0):
+               tempest_config=None, expected_failures=None, system_wide=False,
+               concur=0):
         """Start verification.
 
         :param deployment: UUID or name of a deployment
@@ -370,10 +370,10 @@ class Verification(object):
         :param expected_failures: Dictionary with Tempest tests that are
                                   expected to fail. Keys are test names;
                                   values are reasons of test failures
-        :param system_wide_install: Whether or not to create a virtual env
-                                    when installing Tempest; whether or not to
-                                    use the local env instead of the Tempest
-                                    virtual env when running the tests
+        :param system_wide: Whether or not to create a virtual env when
+                            installing Tempest; whether or not to use
+                            the local env instead of the Tempest virtual
+                            env when running the tests
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
         :returns: Verification object
@@ -383,7 +383,7 @@ class Verification(object):
         verifier = tempest.Tempest(deployment_uuid,
                                    verification=verification,
                                    tempest_config=tempest_config,
-                                   system_wide_install=system_wide_install)
+                                   system_wide=system_wide)
 
         if not verifier.is_installed():
             LOG.info(_("Tempest is not installed "
@@ -430,7 +430,7 @@ class Verification(object):
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   system_wide_install=no_tempest_venv)
+                                   system_wide=no_tempest_venv)
         verifier.install()
 
     @classmethod
@@ -465,7 +465,7 @@ class Verification(object):
         verifier.uninstall()
         verifier = tempest.Tempest(deployment_uuid, source=source,
                                    tempest_config=tempest_config,
-                                   system_wide_install=no_tempest_venv)
+                                   system_wide=no_tempest_venv)
         verifier.install()
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)

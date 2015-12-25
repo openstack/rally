@@ -57,8 +57,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=None, expected_failures=None,
-            system_wide_install=False, concur=0)
+            tempest_config=None, expected_failures=None, system_wide=False,
+            concur=0)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -76,7 +76,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
             tempest_config=tempest_config.name, expected_failures=None,
-            system_wide_install=False, concur=0)
+            system_wide=False, concur=0)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")
@@ -90,8 +90,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="", regex=None, tests_file=tests_file,
-            tempest_config=None, expected_failures=None,
-            system_wide_install=False, concur=0)
+            tempest_config=None, expected_failures=None, system_wide=False,
+            concur=0)
 
     @mock.patch("rally.api.Verification.verify")
     @mock.patch("six.moves.builtins.open",
@@ -107,7 +107,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
             tempest_config=None, expected_failures={"test": "reason of fail"},
-            system_wide_install=False, concur=0)
+            system_wide=False, concur=0)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):

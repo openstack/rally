@@ -58,8 +58,8 @@ class Tempest(object):
     base_repo_dir = os.path.join(os.path.expanduser("~"),
                                  ".rally/tempest/base")
 
-    def __init__(self, deployment, verification=None, tempest_config=None,
-                 source=None, system_wide_install=False):
+    def __init__(self, deployment, verification=None,
+                 tempest_config=None, source=None, system_wide=False):
         self.tempest_source = source or TEMPEST_SOURCE
         self.deployment = deployment
         self._path = os.path.join(os.path.expanduser("~"),
@@ -70,7 +70,7 @@ class Tempest(object):
         self.verification = verification
         self._env = None
         self._base_repo = None
-        self._system_wide_install = system_wide_install
+        self._system_wide = system_wide
 
     def _generate_env(self):
         env = os.environ.copy()
@@ -82,7 +82,7 @@ class Tempest(object):
 
     @property
     def venv_wrapper(self):
-        if self._system_wide_install:
+        if self._system_wide:
             return ""
         else:
             return self.path("tools/with_venv.sh")
@@ -249,7 +249,7 @@ class Tempest(object):
                 raise TempestSetupFailure(_("Failed to initialize 'testr'"))
 
     def is_installed(self):
-        if self._system_wide_install:
+        if self._system_wide:
             return os.path.exists(self.path(".testrepository"))
 
         return os.path.exists(self.path(".venv")) and os.path.exists(
@@ -276,7 +276,7 @@ class Tempest(object):
                     shutil.copytree(self.base_repo, self.path())
                     for cmd in ["git", "checkout", "master"], ["git", "pull"]:
                         subprocess.check_call(cmd, cwd=self.path("tempest"))
-                if not self._system_wide_install:
+                if not self._system_wide:
                     self._install_venv()
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
