@@ -228,18 +228,19 @@ class HistogramChartTestCase(test.TestCase):
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"foo": x}) for x in ({"bar": 1.2}, {"bar": 2.4},
                                                    {"bar": 4.2})]
-        expected = [[{"disabled": None, "key": "bar",
-                      "values": [{"x": 2.7, "y": 2}, {"x": 4.2, "y": 1}],
-                      "view": "Square Root Choice"},
-                     {"disabled": None, "key": "bar",
-                      "values": [{"x": 2.2, "y": 1}, {"x": 3.2, "y": 1},
-                                 {"x": 4.2, "y": 1}],
-                      "view": "Sturges Formula"},
-                     {"disabled": None,
-                      "key": "bar",
-                      "values": [{"x": 2.2, "y": 1}, {"x": 3.2, "y": 1},
-                                 {"x": 4.2, "y": 1}],
-                      "view": "Rice Rule"}]]
+        expected = {
+            "data": [
+                [{"disabled": None, "key": "bar", "view": "Square Root Choice",
+                  "values": [{"x": 2.7, "y": 2}, {"x": 4.2, "y": 1}]}],
+                [{"disabled": None, "key": "bar", "view": "Sturges Formula",
+                  "values": [{"x": 2.2, "y": 1}, {"x": 3.2, "y": 1},
+                             {"x": 4.2, "y": 1}]}],
+                [{"disabled": None, "key": "bar", "view": "Rice Rule",
+                  "values": [{"x": 2.2, "y": 1}, {"x": 3.2, "y": 1},
+                             {"x": 4.2, "y": 1}]}]],
+            "views": [{"id": 0, "name": "Square Root Choice"},
+                      {"id": 1, "name": "Sturges Formula"},
+                      {"id": 2, "name": "Rice Rule"}]}
         self.assertEqual(expected, chart.render())
 
     @ddt.data(
@@ -278,18 +279,23 @@ class MainHistogramChartTestCase(test.TestCase):
             {"duration": 1.1, "idle_duration": 2.2, "error": None},
             {"error": True},
             {"duration": 1.3, "idle_duration": 3.4, "error": None})]
-        expected = [
-            {"disabled": None, "key": "task", "view": "Square Root Choice",
-             "values": [{"x": 4.5, "y": 3}, {"x": 7.0, "y": 0}]},
-            {"disabled": None, "key": "task", "view": "Sturges Formula",
-             "values": [{"x": 3.666666666666667, "y": 3},
-                        {"x": 5.333333333333334, "y": 0},
-                        {"x": 7.0, "y": 0}]},
-            {"disabled": None, "key": "task", "view": "Rice Rule",
-             "values": [{"x": 3.666666666666667, "y": 3},
-                        {"x": 5.333333333333334, "y": 0},
-                        {"x": 7.0, "y": 0}]}]
-        self.assertEqual([expected], chart.render())
+        expected = {
+            "data": [
+                [{"disabled": None, "key": "task",
+                  "values": [{"x": 4.5, "y": 3}, {"x": 7.0, "y": 0}],
+                  "view": "Square Root Choice"}],
+                [{"disabled": None, "key": "task", "view": "Sturges Formula",
+                  "values": [{"x": 3.666666666666667, "y": 3},
+                             {"x": 5.333333333333334, "y": 0},
+                             {"x": 7.0, "y": 0}]}],
+                [{"disabled": None, "key": "task", "view": "Rice Rule",
+                  "values": [{"x": 3.666666666666667, "y": 3},
+                             {"x": 5.333333333333334, "y": 0},
+                             {"x": 7.0, "y": 0}]}]],
+            "views": [{"id": 0, "name": "Square Root Choice"},
+                      {"id": 1, "name": "Sturges Formula"},
+                      {"id": 2, "name": "Rice Rule"}]}
+        self.assertEqual(expected, chart.render())
 
 
 class AtomicHistogramChartTestCase(test.TestCase):
@@ -303,23 +309,27 @@ class AtomicHistogramChartTestCase(test.TestCase):
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"atomic_actions": a})
          for a in ({"foo": 1.6, "bar": 3.1}, {"foo": 2.8}, {"bar": 5.5})]
-        expected = [
-            [{"disabled": 0, "key": "foo", "view": "Square Root Choice",
-              "values": [{"x": 2.2, "y": 2}, {"x": 2.8, "y": 1}]},
-             {"disabled": 0, "key": "foo", "view": "Sturges Formula",
-              "values": [{"x": 2.0, "y": 2}, {"x": 2.4, "y": 0},
-                         {"x": 2.8, "y": 1}]},
-             {"disabled": 0, "key": "foo", "view": "Rice Rule",
-              "values": [{"x": 2.0, "y": 2}, {"x": 2.4, "y": 0},
-                         {"x": 2.8, "y": 1}]}],
-            [{"disabled": 1, "key": "bar", "view": "Square Root Choice",
-              "values": [{"x": 4.3, "y": 2}, {"x": 5.5, "y": 1}]},
-             {"disabled": 1, "key": "bar", "view": "Sturges Formula",
-              "values": [{"x": 3.9, "y": 2}, {"x": 4.7, "y": 0},
-                         {"x": 5.5, "y": 1}]},
-             {"disabled": 1, "key": "bar", "view": "Rice Rule",
-              "values": [{"x": 3.9, "y": 2}, {"x": 4.7, "y": 0},
-                         {"x": 5.5, "y": 1}]}]]
+        expected = {
+            "data": [
+                [{"disabled": 0, "key": "foo", "view": "Square Root Choice",
+                  "values": [{"x": 2.2, "y": 2}, {"x": 2.8, "y": 1}]},
+                 {"disabled": 1, "key": "bar", "view": "Square Root Choice",
+                  "values": [{"x": 4.3, "y": 2}, {"x": 5.5, "y": 1}]}],
+                [{"disabled": 0, "key": "foo", "view": "Sturges Formula",
+                  "values": [{"x": 2.0, "y": 2}, {"x": 2.4, "y": 0},
+                             {"x": 2.8, "y": 1}]},
+                 {"disabled": 1, "key": "bar", "view": "Sturges Formula",
+                  "values": [{"x": 3.9, "y": 2}, {"x": 4.7, "y": 0},
+                             {"x": 5.5, "y": 1}]}],
+                [{"disabled": 0, "key": "foo", "view": "Rice Rule",
+                  "values": [{"x": 2.0, "y": 2}, {"x": 2.4, "y": 0},
+                             {"x": 2.8, "y": 1}]},
+                 {"disabled": 1, "key": "bar", "view": "Rice Rule",
+                  "values": [{"x": 3.9, "y": 2}, {"x": 4.7, "y": 0},
+                             {"x": 5.5, "y": 1}]}]],
+            "views": [{"id": 0, "name": "Square Root Choice"},
+                      {"id": 1, "name": "Sturges Formula"},
+                      {"id": 2, "name": "Rice Rule"}]}
         self.assertEqual(expected, chart.render())
 
 

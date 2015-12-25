@@ -276,10 +276,10 @@
 
         Charts.pie("#total-pie", $scope.scenario.iterations.pie);
 
-        if ($scope.scenario.iterations.histogram.length) {
-          var idx = this.totalHistogramModel.value;
+        if ($scope.scenario.iterations.histogram.data.length) {
+          var idx = this.totalHistogramModel.id;
           Charts.histogram("#total-histogram",
-                           [$scope.scenario.iterations.histogram[idx]])
+                           $scope.scenario.iterations.histogram.data[idx])
         }
       }
 
@@ -296,13 +296,9 @@
          if ($scope.scenario.atomic.pie) {
            Charts.pie("#atomic-pie", $scope.scenario.atomic.pie)
          }
-        if ($scope.scenario.atomic.histogram.length) {
-          var atomic = [];
-          var idx = this.atomicHistogramModel.value;
-          for (var i in $scope.scenario.atomic.histogram) {
-            atomic[i] = $scope.scenario.atomic.histogram[i][idx]
-          }
-          Charts.histogram("#atomic-histogram", atomic)
+        if ($scope.scenario.atomic.histogram.data.length) {
+          var idx = this.atomicHistogramModel.id;
+          Charts.histogram("#atomic-histogram", $scope.scenario.atomic.histogram.data[idx])
         }
       }
 
@@ -327,9 +323,8 @@
         if (! $scope.scenarios.length) {
           return $scope.showError("No data...")
         }
-        $scope.histogramOptions = [];
-        $scope.totalHistogramModel = {label:'', value:0};
-        $scope.atomicHistogramModel = {label:'', value:0};
+        $scope.totalHistogramModel = {label:'', id:0};
+        $scope.atomicHistogramModel = {label:'', id:0};
 
         /* Compose data mapping */
 
@@ -370,19 +365,6 @@
           met.push({name:sc.name, itr:itr, idx:idx, ref:sc.ref});
           prev_met = sc.met;
           itr += 1
-
-          /* Compose histograms options, from first suitable scenario */
-
-          if (! $scope.histogramOptions.length && sc.iterations.histogram) {
-            for (var i in sc.iterations.histogram) {
-              $scope.histogramOptions.push({
-                label: sc.iterations.histogram[i].view,
-                value: i
-              })
-            }
-            $scope.totalHistogramModel = $scope.histogramOptions[0];
-            $scope.atomicHistogramModel = $scope.histogramOptions[0];
-          }
         }
 
         if (met.length) {
@@ -637,11 +619,11 @@
           </div>
 
           <div class="chart larger top-margin"
-               ng-show="scenario.iterations.histogram.length">
+               ng-show="scenario.iterations.histogram.data.length">
             <svg id="total-histogram"></svg>
             <select class="chart-dropdown"
                     ng-model="totalHistogramModel"
-                    ng-options="i.label for i in histogramOptions"></select>
+                    ng-options="i.name for i in scenario.iterations.histogram.views track by i.id"></select>
           </div>
         </script>
 
@@ -659,11 +641,11 @@
           </div>
 
           <div class="chart larger top-margin"
-               ng-show="scenario.atomic.histogram.length">
+               ng-show="scenario.atomic.histogram.data.length">
             <svg id="atomic-histogram"></svg>
             <select class="chart-dropdown"
                     ng-model="atomicHistogramModel"
-                    ng-options="i.label for i in histogramOptions"></select>
+                    ng-options="i.name for i in scenario.atomic.histogram.views track by i.id"></select>
           </div>
         </script>
 

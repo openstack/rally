@@ -36,8 +36,8 @@ class PlotTestCase(test.TestCase):
                 (mock_charts.OutputStackedAreaDeprecatedChart,
                  "output_stacked"),
                 (mock_charts.LoadProfileChart, "load_profile"),
-                (mock_charts.MainHistogramChart, ["main_histogram"]),
-                (mock_charts.AtomicHistogramChart, ["atomic_histogram"]),
+                (mock_charts.MainHistogramChart, "main_histogram"),
+                (mock_charts.AtomicHistogramChart, "atomic_histogram"),
                 (mock_charts.AtomicAvgChart, "atomic_avg")]:
             setattr(mock_ins.return_value.render, "return_value", ret)
         iterations = [
@@ -64,7 +64,7 @@ class PlotTestCase(test.TestCase):
                     {"Foo.bar": [{"runner": {"type": "constant"}}]},
                     indent=2),
                 "full_duration": 40, "load_duration": 32,
-                "atomic": {"histogram": ["atomic_histogram"],
+                "atomic": {"histogram": "atomic_histogram",
                            "iter": "atomic_stacked", "pie": "atomic_avg"},
                 "iterations": {"histogram": "main_histogram",
                                "iter": "main_stacked",
