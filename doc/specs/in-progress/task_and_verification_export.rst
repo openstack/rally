@@ -91,7 +91,8 @@ Assignee(s)
 -----------
 
 Primary assignee:
-TBD
+
+rvasilets <rvasilets@mirantis.com>
 
 Work Items
 ----------
