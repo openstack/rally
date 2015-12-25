@@ -81,7 +81,7 @@ class ThreadTimeoutException(RallyException):
 
 
 class PluginNotFound(NotFoundException):
-    msg_fmt = _("There is no plugin with name: %(name)s in "
+    msg_fmt = _("There is no plugin with name: `%(name)s` in "
                 "%(namespace)s namespace.")
 
 
@@ -246,3 +246,8 @@ class SSHTimeout(RallyException):
 
 class SSHError(RallyException):
     pass
+
+
+class InvalidConnectionString(RallyException):
+    msg_fmt = _("The connection string is not valid: %(message)s. Please "
+                "check your connection string.")

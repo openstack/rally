@@ -24,6 +24,7 @@ import webbrowser
 import jsonschema
 from oslo_utils import uuidutils
 import six
+from six.moves.urllib import parse as urlparse
 import yaml
 
 from rally import api
@@ -37,11 +38,14 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import plugins
+from rally.task import exporter
 from rally.task.processing import plot
 
 
 class FailedToLoadTask(exceptions.RallyException):
     msg_fmt = _("Failed to load task")
+
+LOG = logging.getLogger(__name__)
 
 
 class TaskCommands(object):
@@ -699,3 +703,49 @@ class TaskCommands(object):
         print("Using task: %s" % task_id)
         api.Task.get(task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
+
+    @cliutils.args("--uuid", dest="uuid", type=str,
+                   required=True,
+                   help="UUID of a the task.")
+    @cliutils.args("--connection", dest="connection_string", type=str,
+                   required=True,
+                   help="Connection url to the task export system.")
+    @plugins.ensure_plugins_are_loaded
+    def export(self, uuid, connection_string):
+        """Export task results to the custom task's exporting system.
+
+        :param uuid: UUID of the task
+        :param connection_string: string used to connect to the system
+        """
+
+        parsed_obj = urlparse.urlparse(connection_string)
+        try:
+            client = exporter.TaskExporter.get(parsed_obj.scheme)(
+                connection_string)
+        except exceptions.InvalidConnectionString as e:
+            if logging.is_debug():
+                LOG.exception(e)
+            print (e)
+            return 1
+        except exceptions.PluginNotFound as e:
+            if logging.is_debug():
+                LOG.exception(e)
+            msg = ("\nPlease check your connection string. The format of "
+                   "`connection` should be plugin-name://"
+                   "<user>:<pwd>@<full_address>:<port>/<path>.<type>")
+            print (str(e) + msg)
+            return 1
+
+        try:
+            client.export(uuid)
+        except (IOError, exceptions.RallyException) as e:
+            if logging.is_debug():
+                LOG.exception(e)
+            print (e)
+            return 1
+        print(_("Task %(uuid)s results was successfully exported to %("
+                "connection)s using %(name)s plugin.") % {
+                    "uuid": uuid,
+                    "connection": connection_string,
+                    "name": parsed_obj.scheme
+        })

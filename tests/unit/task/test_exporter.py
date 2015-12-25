@@ -16,8 +16,11 @@ from rally.task import exporter
 from tests.unit import test
 
 
-@exporter.configure(name="test_exporter")
+@exporter.configure(name="test-exporter")
 class TestExporter(exporter.TaskExporter):
+
+    def validate(self):
+        pass
 
     def export(self, task, connection_string):
         pass
@@ -26,7 +29,7 @@ class TestExporter(exporter.TaskExporter):
 class ExporterTestCase(test.TestCase):
 
     def test_task_export(self):
-        self.assertRaises(TypeError, exporter.TaskExporter)
+        self.assertRaises(TypeError, exporter.TaskExporter, "fake_connection")
 
     def test_task_export_instantiate(self):
-        TestExporter()
+        TestExporter("fake_connection")

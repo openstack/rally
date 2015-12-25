@@ -740,6 +740,59 @@ class TaskTestCase(unittest.TestCase):
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
 
+    def test_export(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 100,
+                        "concurrency": 5
+                    }
+                }
+            ]
+        }
+        config = utils.TaskConfig(cfg)
+        output = rally("task start --task %s" % config.filename)
+        uuid = re.search(
+            r"(?P<uuid>[0-9a-f\-]{36}): started", output).group("uuid")
+        connection = (
+            "file-exporter:///" + rally.gen_report_path(extension="json"))
+        output = rally("task export --uuid %s --connection %s" % (
+            uuid, connection))
+        expected = (
+            "Task %(uuid)s results was successfully exported to %("
+            "connection)s using file-exporter plugin." % {
+                "uuid": uuid,
+                "connection": connection,
+            })
+        self.assertIn(expected, output)
+
+    def test_export_with_wrong_connection(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 100,
+                        "concurrency": 5
+                    }
+                }
+            ]
+        }
+        config = utils.TaskConfig(cfg)
+        output = rally("task start --task %s" % config.filename)
+        uuid = re.search(
+            r"(?P<uuid>[0-9a-f\-]{36}): started", output).group("uuid")
+        connection = (
+            "fake:///" + rally.gen_report_path(extension="json"))
+        self.assertRaises(utils.RallyCliError,
+                          rally,
+                          "task export --uuid %s --connection %s" % (
+                              uuid, connection))
+
 
 class SLATestCase(unittest.TestCase):
 
