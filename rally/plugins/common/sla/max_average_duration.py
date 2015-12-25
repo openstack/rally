@@ -44,7 +44,7 @@ class MaxAverageDuration(sla.SLA):
 
     def merge(self, other):
         self.avg_comp.merge(other.avg_comp)
-        self.avg = self.avg_comp.result()
+        self.avg = self.avg_comp.result() or 0.0
         self.success = self.avg <= self.criterion_value
         return self.success
 
