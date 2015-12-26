@@ -188,7 +188,7 @@ def _id_from_name(resource_config, resources, typename):
 def _name_from_id(resource_config, resources, typename):
     """Return the name of the resource which has the id.
 
-    resource_config has to contain `id`, as it is used to lookup an name.
+    resource_config has to contain `id`, as it is used to lookup a name.
 
     :param resource_config: resource to be transformed
     :param resources: iterable containing all resources
