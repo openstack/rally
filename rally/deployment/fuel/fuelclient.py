@@ -56,8 +56,8 @@ class FuelNode(object):
             "!=": lambda x, y: x != y,
             "<=": lambda x, y: x <= y,
             ">=": lambda x, y: x >= y,
-            "<": lambda x, y: x < y,
-            ">": lambda x, y: x > y,
+            "<":  lambda x, y: x < y,
+            ">":  lambda x, y: x > y,
         }
         self.FACTOR_MAP = {
             "K": 1024,
@@ -152,7 +152,7 @@ class FuelCluster(object):
             task = self.client.get_task(task_id)
             if task["progress"] == 100:
                 return
-            LOG.info("Deployment in progress. %d%% done." % task["progress"])
+            LOG.info("Please wait deployment in progress. %d%% done." % task["progress"])
 
     def get_network(self):
         args = {"cluster_id": self.cluster["id"],
