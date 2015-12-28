@@ -185,7 +185,7 @@ def make_table_header(table_label, table_width,
     :param horizontal_char: character used for horizontal lines.
     :param vertical_char: character used for vertical lines.
 
-    :returns string
+    :returns: string
     """
 
     if len(table_label) >= (table_width - 2):

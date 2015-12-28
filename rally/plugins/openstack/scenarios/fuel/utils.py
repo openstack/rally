@@ -142,9 +142,9 @@ class FuelScenario(scenario.OpenStackScenario):
     def _add_node(self, env_id, node_ids, node_roles=None):
         """Add node to environment
 
-        :param env_id environment id
-        :param node_ids list of node ids
-        :param node_roles list of roles
+        :param env_id: environment id
+        :param node_ids: list of node ids
+        :param node_roles: list of roles
         """
 
         node_roles = node_roles or ["compute"]
