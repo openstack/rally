@@ -15,7 +15,6 @@
 
 
 import random
-import time
 
 import six
 
@@ -142,8 +141,8 @@ class Scenario(plugin.Plugin,
             for user in users:
                 cls._validate_helper(user_validators, user, config, deployment)
 
-    def sleep_between(self, min_sleep, max_sleep):
-        """Performs a time.sleep() call for a random amount of seconds.
+    def sleep_between(self, min_sleep, max_sleep, atomic_delay=0.1):
+        """Call an interruptable_sleep() for a random amount of seconds.
 
         The exact time is chosen uniformly randomly from the interval
         [min_sleep; max_sleep). The method also updates the idle_duration
@@ -151,13 +150,15 @@ class Scenario(plugin.Plugin,
 
         :param min_sleep: Minimum sleep time in seconds (non-negative)
         :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param atomic_delay: parameter with which  time.sleep would be called
+                             int(sleep_time / atomic_delay) times.
         """
         if not 0 <= min_sleep <= max_sleep:
             raise exceptions.InvalidArgumentsException(
                 "0 <= min_sleep <= max_sleep")
 
         sleep_time = random.uniform(min_sleep, max_sleep)
-        time.sleep(sleep_time)
+        utils.interruptable_sleep(sleep_time, atomic_delay)
         self._idle_duration += sleep_time
 
     def idle_duration(self):
