@@ -17,9 +17,9 @@
 
 from __future__ import print_function
 
+from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally.common import db
 from rally.common.i18n import _
 from rally.common import objects
 from rally.common import utils
@@ -39,12 +39,16 @@ class ShowCommands(object):
                  "user": credentials["username"],
                  "tenant": credentials["tenant_name"]})
 
-    def _get_credentials(self, deployment):
-        deployment = db.deployment_get(deployment)
-        admin = deployment.get("admin")
+    @staticmethod
+    def _get_credentials(deployment):
+        deployment = api.Deployment.get(deployment)
+        # NOTE(andreykurilin): it is a bad practise to access to inner db_obj,
+        # but we can do it here, since we are planning to deprecate and remove
+        # this  command at all.
+        admin = deployment.deployment.get("admin")
         credentials = [admin] if admin else []
 
-        return credentials + deployment.get("users", [])
+        return credentials + deployment.deployment.get("users", [])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")

@@ -61,8 +61,8 @@ re_str_format = re.compile(r"""
 """, re.X)
 re_raises = re.compile(
     r"\s:raise[^s] *.*$|\s:raises *:.*$|\s:raises *[^:]+$")
-re_import_common_db_or_objects = re.compile(
-    r"^from rally.common import (db|objects)")
+re_db_import = re.compile(r"^from rally.common import db")
+re_objects_import = re.compile(r"^from rally.common import objects")
 
 
 def skip_ignored_lines(func):
@@ -465,17 +465,31 @@ def check_raises(physical_line, filename):
 
 
 @skip_ignored_lines
-def check_import_of_cli(logical_line, filename):
-    """Check imports of CLI module
+def check_db_imports_in_cli(logical_line, filename):
+    """Ensure that CLI modules do not use ``rally.common.db``
 
-    N355
+    N360
     """
-    ignored_files = ["./rally/cli/manage.py", "./rally/cli/commands/show.py"]
+    if (not filename.startswith("./rally/cli")
+            or filename == "./rally/cli/manage.py"):
+        return
+    if re_db_import.search(logical_line):
+        yield (0, "N360 CLI modules do not allow to work with "
+                  "`rally.common.db``.")
 
-    if filename.startswith("./rally/cli") and filename not in ignored_files:
-        if re_import_common_db_or_objects.search(logical_line):
-            yield (0, "N355 CLI modules do not allow to work with "
-                      "`rally.common.db`` and ``rally.common.objects`.")
+
+@skip_ignored_lines
+def check_objects_imports_in_cli(logical_line, filename):
+    """Ensure that CLI modules do not use ``rally.common.objects``
+
+    N361
+    """
+    if (not filename.startswith("./rally/cli")
+            or filename == "./rally/cli/commands/show.py"):
+        return
+    if re_objects_import.search(logical_line):
+        yield (0, "N360 CLI modules do not allow to work with "
+                  "`rally.common.objects``.")
 
 
 def factory(register):
@@ -495,4 +509,5 @@ def factory(register):
     register(check_dict_formatting_in_string)
     register(check_using_unicode)
     register(check_raises)
-    register(check_import_of_cli)
+    register(check_db_imports_in_cli)
+    register(check_objects_imports_in_cli)
