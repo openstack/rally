@@ -127,6 +127,17 @@ class TempestConfigTestCase(test.TestCase):
         self.assertEqual(
             self.tempest_conf.conf.get("dashboard", "dashboard_url"), url)
 
+    @ddt.data("data_processing", "data-processing")
+    def test__configure_data_processing(self, service_type):
+        self.tempest_conf.available_services = ["sahara"]
+
+        self.tempest_conf.clients.services.return_value = {
+            service_type: "sahara"}
+        self.tempest_conf._configure_data_processing()
+        self.assertEqual(
+            self.tempest_conf.conf.get(
+                "data-processing", "catalog_type"), service_type)
+
     def test__configure_identity(self):
         self.tempest_conf._configure_identity()
 

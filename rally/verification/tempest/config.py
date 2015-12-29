@@ -19,6 +19,7 @@ import uuid
 
 from oslo_config import cfg
 import requests
+import six
 from six.moves import configparser
 from six.moves.urllib import parse
 
@@ -136,6 +137,11 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             if self.clients.services().get(service["type"]) == service_type:
                 return service["endpoints"][0]["publicURL"]
 
+    def _get_service_type_by_service_name(self, service_name):
+        for s_type, s_name in six.iteritems(self.clients.services()):
+            if s_name == service_name:
+                return s_type
+
     def _configure_boto(self, section_name="boto"):
         self.conf.set(section_name, "ec2_url", self._get_service_url("ec2"))
         self.conf.set(section_name, "s3_url", self._get_service_url("s3"))
@@ -151,6 +157,15 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         url = "http://%s/" % parse.urlparse(
             self.credential["auth_url"]).hostname
         self.conf.set(section_name, "dashboard_url", url)
+
+    # Sahara has two service types: 'data_processing' and 'data-processing'.
+    # 'data_processing' is deprecated, but it can be used in previous OpenStack
+    # releases. So we need to configure the 'catalog_type' option to support
+    # environments where 'data_processing' is used as service type for Sahara.
+    def _configure_data_processing(self, section_name="data-processing"):
+        if "sahara" in self.available_services:
+            self.conf.set(section_name, "catalog_type",
+                          self._get_service_type_by_service_name("sahara"))
 
     def _configure_identity(self, section_name="identity"):
         self.conf.set(section_name, "username", self.credential["username"])
