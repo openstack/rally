@@ -30,16 +30,16 @@ class ChartTestCase(test.TestCase):
             return [("foo_" + k, iteration[k]) for k in ["a", "b"]]
 
     @property
-    def bench_info(self):
+    def wload_info(self):
         return {"iterations_count": 42, "atomic": {"a": {}, "b": {}, "c": {}}}
 
     def test___init__(self):
-        self.assertRaises(TypeError, charts.Chart, self.bench_info)
-        chart = self.Chart(self.bench_info)
+        self.assertRaises(TypeError, charts.Chart, self.wload_info)
+        chart = self.Chart(self.wload_info)
         self.assertEqual({}, chart._data)
         self.assertEqual(42, chart.base_size)
         self.assertEqual(1000, chart.zipped_size)
-        chart = self.Chart(self.bench_info, zipped_size=24)
+        chart = self.Chart(self.wload_info, zipped_size=24)
         self.assertEqual({}, chart._data)
         self.assertEqual(42, chart.base_size)
         self.assertEqual(24, chart.zipped_size)
@@ -49,7 +49,7 @@ class ChartTestCase(test.TestCase):
         gzipper_a = mock.Mock(get_zipped_graph=lambda: "a_points")
         gzipper_b = mock.Mock(get_zipped_graph=lambda: "b_points")
         mock_graph_zipper.side_effect = [gzipper_a, gzipper_b]
-        chart = self.Chart(self.bench_info, 24)
+        chart = self.Chart(self.wload_info, 24)
         self.assertEqual([], chart.render())
         [chart.add_iteration(itr) for itr in [{"a": 1, "b": 2},
                                               {"a": 3, "b": 4}]]
@@ -64,7 +64,7 @@ class ChartTestCase(test.TestCase):
                          chart.render())
 
     def test__fix_atomic_actions(self):
-        chart = self.Chart(self.bench_info)
+        chart = self.Chart(self.wload_info)
         self.assertEqual(
             {"atomic_actions": {"a": 5, "b": 6, "c": 0}},
             chart._fix_atomic_actions({"atomic_actions": {"a": 5, "b": 6}}))
@@ -212,9 +212,9 @@ class HistogramChartTestCase(test.TestCase):
 
     class HistogramChart(charts.HistogramChart):
 
-        def __init__(self, benchmark_info):
+        def __init__(self, workload_info):
             super(HistogramChartTestCase.HistogramChart,
-                  self).__init__(benchmark_info)
+                  self).__init__(workload_info)
             self._data["bar"] = {"views": self._init_views(1.2, 4.2),
                                  "disabled": None}
 

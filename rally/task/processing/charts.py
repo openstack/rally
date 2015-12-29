@@ -27,17 +27,17 @@ from rally.task.processing import utils
 class Chart(object):
     """Base class for charts."""
 
-    def __init__(self, benchmark_info, zipped_size=1000):
+    def __init__(self, workload_info, zipped_size=1000):
         """Setup initial values.
 
-        :param benchmark_info: dict, generalized info about iterations.
+        :param workload_info: dict, generalized info about iterations.
                                The most important value is `iterations_count'
                                that should have int value of total data size
         :param zipped_size: int maximum number of points on scale
         """
         self._data = costilius.OrderedDict()  # Container for results
-        self._benchmark_info = benchmark_info
-        self.base_size = benchmark_info.get("iterations_count", 0)
+        self._workload_info = workload_info
+        self.base_size = workload_info.get("iterations_count", 0)
         self.zipped_size = zipped_size
 
     def add_iteration(self, iteration):
@@ -66,7 +66,7 @@ class Chart(object):
         due to failures, this method must be used in all cases
         related to atomic actions processing.
         """
-        for name in self._benchmark_info["atomic"]:
+        for name in self._workload_info["atomic"]:
             iteration["atomic_actions"].setdefault(name, 0)
         return iteration
 
@@ -80,14 +80,14 @@ class MainStackedAreaChart(Chart):
     def _map_iteration_values(self, iteration):
         if iteration["error"]:
             result = [("duration", 0), ("idle_duration", 0)]
-            if self._benchmark_info["iterations_failed"]:
+            if self._workload_info["iterations_failed"]:
                 result.append(
                     ("failed_duration",
                      iteration["duration"] + iteration["idle_duration"]))
         else:
             result = [("duration", iteration["duration"]),
                       ("idle_duration", iteration["idle_duration"])]
-            if self._benchmark_info["iterations_failed"]:
+            if self._workload_info["iterations_failed"]:
                 result.append(("failed_duration", 0))
         return result
 
@@ -97,7 +97,7 @@ class AtomicStackedAreaChart(Chart):
     def _map_iteration_values(self, iteration):
         iteration = self._fix_atomic_actions(iteration)
         atomics = list(iteration["atomic_actions"].items())
-        if self._benchmark_info["iterations_failed"]:
+        if self._workload_info["iterations_failed"]:
             if iteration["error"]:
                 failed_duration = (
                     iteration["duration"] + iteration["idle_duration"]
@@ -112,7 +112,7 @@ class OutputStackedAreaChart(Chart):
 
     def _map_iteration_values(self, iteration):
         return [(name, iteration["scenario_output"]["data"].get(name, 0))
-                for name in self._benchmark_info["output_names"]]
+                for name in self._workload_info["output_names"]]
 
 
 class AvgChart(Chart):
@@ -138,18 +138,18 @@ class AtomicAvgChart(AvgChart):
 class LoadProfileChart(Chart):
     """Chart for parallel durations."""
 
-    def __init__(self, benchmark_info, name="parallel iterations",
+    def __init__(self, workload_info, name="parallel iterations",
                  scale=200):
         """Setup chart with graph name and scale.
 
-        :benchmark_info:  dict, generalized info about iterations
+        :workload_info:  dict, generalized info about iterations
         :param name: str name for X axis
         :param scale: int number of X points
         """
-        super(LoadProfileChart, self).__init__(benchmark_info)
+        super(LoadProfileChart, self).__init__(workload_info)
         self._name = name
-        self._duration = benchmark_info["load_duration"]
-        self._tstamp_start = benchmark_info["tstamp_start"]
+        self._duration = workload_info["load_duration"]
+        self._tstamp_start = workload_info["tstamp_start"]
 
         # NOTE(amaretskiy): Determine a chart `step' - duration between
         #   two X points, rounded with minimal accuracy (digits after point)
@@ -242,10 +242,10 @@ class HistogramChart(Chart):
 
 class MainHistogramChart(HistogramChart):
 
-    def __init__(self, benchmark_info):
-        super(MainHistogramChart, self).__init__(benchmark_info)
-        views = self._init_views(self._benchmark_info["min_duration"],
-                                 self._benchmark_info["max_duration"])
+    def __init__(self, workload_info):
+        super(MainHistogramChart, self).__init__(workload_info)
+        views = self._init_views(self._workload_info["min_duration"],
+                                 self._workload_info["max_duration"])
         self._data["task"] = {"views": views, "disabled": None}
 
     def _map_iteration_values(self, iteration):
@@ -254,9 +254,9 @@ class MainHistogramChart(HistogramChart):
 
 class AtomicHistogramChart(HistogramChart):
 
-    def __init__(self, benchmark_info):
-        super(AtomicHistogramChart, self).__init__(benchmark_info)
-        for i, atomic in enumerate(self._benchmark_info["atomic"].items()):
+    def __init__(self, workload_info):
+        super(AtomicHistogramChart, self).__init__(workload_info)
+        for i, atomic in enumerate(self._workload_info["atomic"].items()):
             name, value = atomic
             self._data[name] = {
                 "views": self._init_views(value["min_duration"],
@@ -337,8 +337,8 @@ class MainStatsTable(Table):
 
     def __init__(self, *args, **kwargs):
         super(MainStatsTable, self).__init__(*args, **kwargs)
-        iters_num = self._benchmark_info["iterations_count"]
-        for name in (list(self._benchmark_info["atomic"].keys()) + ["total"]):
+        iters_num = self._workload_info["iterations_count"]
+        for name in (list(self._workload_info["atomic"].keys()) + ["total"]):
             self._data[name] = [
                 [streaming.MinComputation(), None],
                 [streaming.PercentileComputation(0.5, iters_num), None],
