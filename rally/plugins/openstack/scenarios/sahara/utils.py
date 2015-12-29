@@ -161,8 +161,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             if pools:
                 return random.choice(pools).name
             else:
-                LOG.warn("No Floating Ip Pools found. This may cause "
-                         "instances to be unreachable.")
+                LOG.warning("No Floating Ip Pools found. This may cause "
+                            "instances to be unreachable.")
                 return None
 
     def _setup_floating_ip_pool(self, node_groups, floating_ip_pool,

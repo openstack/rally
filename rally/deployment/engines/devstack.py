@@ -87,8 +87,9 @@ class DevstackEngine(engine.Engine):
         }
 
         if "localrc" in self.config:
-            LOG.warn("'localrc' parameter is deprecated for deployment config "
-                     "since 0.1.2. Please use 'local_conf' instead.")
+            LOG.warning("'localrc' parameter is "
+                        "deprecated for deployment config "
+                        "since 0.1.2. Please use 'local_conf' instead.")
             if "local_conf" not in self.config:
                 self.config["local_conf"] = self.config["localrc"]
 
