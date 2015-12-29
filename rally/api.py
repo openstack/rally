@@ -421,16 +421,16 @@ class Verification(object):
         return deployment, verification
 
     @classmethod
-    def install_tempest(cls, deployment, source=None, no_tempest_venv=False):
+    def install_tempest(cls, deployment, source=None, system_wide=False):
         """Install Tempest.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
-        :param no_tempest_venv: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   system_wide=no_tempest_venv)
+                                   system_wide=system_wide)
         verifier.install()
 
     @classmethod
@@ -445,13 +445,13 @@ class Verification(object):
 
     @classmethod
     def reinstall_tempest(cls, deployment, tempest_config=None,
-                          source=None, no_tempest_venv=False):
+                          source=None, system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
         :param source: Path/URL to repo to clone Tempest from
-        :param no_tempest_venv: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
@@ -465,7 +465,7 @@ class Verification(object):
         verifier.uninstall()
         verifier = tempest.Tempest(deployment_uuid, source=source,
                                    tempest_config=tempest_config,
-                                   system_wide=no_tempest_venv)
+                                   system_wide=system_wide)
         verifier.install()
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)

@@ -399,20 +399,23 @@ class VerifyCommands(object):
                    help="UUID or name of a deployment.")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
-    @cliutils.args("--no-tempest-venv", dest="no_tempest_venv",
+    @cliutils.args("--system-wide", dest="system_wide",
                    help="Don't create a virtual env for Tempest. Take notice "
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
+    @cliutils.deprecated_args("--no-tempest-venv", dest="system_wide",
+                              required=False, action="store_true",
+                              release="0.2.0", alternative="--system-wide")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def install(self, deployment=None, source=None, no_tempest_venv=False):
+    def install(self, deployment=None, source=None, system_wide=False):
         """Install Tempest.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
-        :param no_tempest_venv: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to create a Tempest virtual env
         """
-        api.Verification.install_tempest(deployment, source, no_tempest_venv)
+        api.Verification.install_tempest(deployment, source, system_wide)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -433,23 +436,26 @@ class VerifyCommands(object):
                    help="User specified Tempest config file location")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
-    @cliutils.args("--no-tempest-venv", dest="no_tempest_venv",
+    @cliutils.args("--system-wide", dest="system_wide",
                    help="Don't create a virtual env for Tempest. Take notice "
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
+    @cliutils.deprecated_args("--no-tempest-venv", dest="system_wide",
+                              required=False, action="store_true",
+                              release="0.2.0", alternative="--system-wide")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def reinstall(self, deployment=None,
-                  tempest_config=None, source=None, no_tempest_venv=False):
+                  tempest_config=None, source=None, system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
         :param source: Path/URL to repo to clone Tempest from
-        :param no_tempest_venv: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to create a Tempest virtual env
         """
         api.Verification.reinstall_tempest(deployment, tempest_config,
-                                           source, no_tempest_venv)
+                                           source, system_wide)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
