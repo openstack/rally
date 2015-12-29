@@ -240,6 +240,14 @@ class DeploymentCommands(object):
         print(_("keystone endpoints are valid and following"
               " services are available:"))
         cliutils.print_list(table_rows, headers)
+        if "__unknown__" in services.values():
+            print(_(
+                "NOTE: '__unknown__' service name means that Keystone service "
+                "catalog doesn't return name for this service and Rally can "
+                "not identify service by its type. BUT you still can use "
+                "such services with api_versions context, specifying type of "
+                "service (execute `rally plugin show api_versions` for more "
+                "details)."))
 
     def _update_openrc_deployment_file(self, deployment, credential):
         openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
