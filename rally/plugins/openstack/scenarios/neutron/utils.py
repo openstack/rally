@@ -532,7 +532,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         This atomic function lists all helthmonitors.
 
         :param kwargs: optional parameters
-        :returns neutron lb healthmonitor list
+        :returns: neutron lb healthmonitor list
         """
         return self.clients("neutron").list_health_monitors(**kwargs)
 
@@ -552,7 +552,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param healthmonitor: neutron lb healthmonitor dict
         :param healthmonitor_update_args: POST /lb/healthmonitors
         update options
-        :returns updated neutron lb healthmonitor dict
+        :returns: updated neutron lb healthmonitor dict
         """
         body = {"health_monitor": healthmonitor_update_args}
         return self.clients("neutron").update_health_monitor(

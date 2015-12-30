@@ -257,7 +257,7 @@ class HeatScenario(scenario.OpenStackScenario):
         """Creates a snapshot for given stack.
 
         :param stack: stack that will be used as base for snapshot
-        :returns snapshot created for given stack
+        :returns: snapshot created for given stack
         """
         snapshot = self.clients("heat").stacks.snapshot(
             stack.id)

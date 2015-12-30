@@ -90,7 +90,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :param op: operator for filtering
         :param value: matched value
 
-        :returns dict with field, op and value keys for query
+        :returns: dict with field, op and value keys for query
         """
         return {"field": field, "op": op, "value": value}
 
@@ -105,7 +105,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :param filter_by_resource_id: add a resource id to query
         :param metadata_query: metadata dict that will add to query
 
-        :returns SimpleQuery with specified items
+        :returns: SimpleQuery with specified items
 
         """
         query = []
@@ -135,7 +135,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
 
         :param start_time: start datetime in isoformat
         :param end_time: end datetime in isoformat
-        :returns query with timestamp range
+        :returns: query with timestamp range
         """
         query = []
         if end_time and start_time and end_time < start_time:
@@ -153,7 +153,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :param method: Original profiler tag for method
         :param query: ceilometer query which fields will be added to key
         :param limit: if it exists `limit` will be added to key
-        :returns profiler key that includes method and queried fields
+        :returns: profiler key that includes method and queried fields
         """
         query = query or []
         limit_line = limit and "limit" or ""
