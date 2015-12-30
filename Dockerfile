@@ -22,6 +22,8 @@ RUN ./install_rally.sh --system --verbose --yes \
     --db-name /home/rally/.rally.sqlite && \
   pip install -r optional-requirements.txt && \
   mkdir /opt/rally/ && \
+  # TODO(andreykurilin): build docs to rst before move, since we have several
+  # extensions.
   mv certification/ samples/ doc/ /opt/rally/ && \
   chmod -R u=rwX,go=rX /opt/rally /etc/rally && \
   rm -rf /tmp/* && \

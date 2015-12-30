@@ -47,6 +47,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
+    "ext.cli_reference",
     "ext.plugin_reference"
 ]
 todo_include_todos = True
@@ -161,7 +162,7 @@ html_last_updated_fmt = subprocess.Popen(git_cmd,
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-# html_use_smartypants = True
+html_use_smartypants = False
 
 # Custom sidebar templates, maps document names to template names.
 # html_sidebars = {}
