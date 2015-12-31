@@ -44,20 +44,22 @@ class VerifyCommands(object):
     """
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
-    @cliutils.args("--set", dest="set_name", type=str, required=False,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--set", metavar="<set_name>", dest="set_name", type=str,
+                   required=False,
                    help="Name of a Tempest test set. "
                         "Available sets are %s" % ", ".join(AVAILABLE_SETS))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
                    help="Regular expression of test")
-    @cliutils.args("--tests-file", dest="tests_file", type=str,
-                   help="Path to a file with a list of Tempest tests",
-                   required=False)
+    @cliutils.args("--tests-file", metavar="<path>", dest="tests_file",
+                   type=str, required=False,
+                   help="Path to a file with a list of Tempest tests")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
-                   required=False,
+                   required=False, metavar="<path>",
                    help="User specified Tempest config file location")
     @cliutils.args("--xfails-file", dest="xfails_file", type=str,
-                   required=False,
+                   required=False, metavar="<path>",
                    help="Path to a file in YAML format with a list of Tempest "
                         "tests that are expected to fail")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
@@ -72,7 +74,8 @@ class VerifyCommands(object):
     @cliutils.deprecated_args("--system-wide-install", dest="system_wide",
                               required=False, action="store_true",
                               release="0.1.2", alternative="--system-wide")
-    @cliutils.args("--concurrency", dest="concur", type=int, required=False,
+    @cliutils.args("--concurrency", metavar="N", dest="concur", type=int,
+                   required=False,
                    help="How many processes to use to run Tempest tests. "
                         "The default value (0) auto-detects your CPU count")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -138,12 +141,14 @@ class VerifyCommands(object):
             self.use(verification["uuid"])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
-    @cliutils.args("--set", dest="set_name", type=str, required=False,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--set", metavar="<set_name>", dest="set_name", type=str,
+                   required=False,
                    help="Name of a Tempest test set. "
                         "Available sets are %s" % ", ".join(AVAILABLE_SETS))
     @cliutils.args("--file", dest="log_file", type=str,
-                   required=True,
+                   required=True, metavar="<path>",
                    help="User specified Tempest log file location. "
                         "Note, Tempest log file needs to be in subunit format")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
@@ -190,7 +195,7 @@ class VerifyCommands(object):
     @cliutils.args("--json", action="store_true", dest="output_json",
                    help="Display results in JSON format")
     @cliutils.args("--output-file", type=str, required=False,
-                   dest="output_file",
+                   dest="output_file", metavar="<path>",
                    help="Path to a file to save results")
     @envutils.with_default_verification_id
     @cliutils.suppress_warnings
@@ -228,7 +233,8 @@ class VerifyCommands(object):
     @cliutils.args("--uuid", dest="verification", type=str,
                    required=False,
                    help="UUID of a verification")
-    @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
+    @cliutils.args("--sort-by", metavar="<query>", dest="sort_by", type=str,
+                   required=False,
                    help="Sort results by 'name' or 'duration'")
     @cliutils.args("--detailed", dest="detailed", action="store_true",
                    required=False,
@@ -368,9 +374,10 @@ class VerifyCommands(object):
         fileutils.update_globals_file("RALLY_VERIFICATION", verification)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
-                   required=False,
+                   required=False, metavar="<path>",
                    help="User specified Tempest config file location")
     @cliutils.args("--override", dest="override",
                    help="Override existing Tempest config file",
@@ -387,8 +394,9 @@ class VerifyCommands(object):
         api.Verification.configure_tempest(deployment, tempest_config,
                                            override)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
     @cliutils.args("--no-tempest-venv", dest="no_tempest_venv",
@@ -406,8 +414,9 @@ class VerifyCommands(object):
         """
         api.Verification.install_tempest(deployment, source, no_tempest_venv)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def uninstall(self, deployment=None):
         """Remove deployment's local Tempest installation.
@@ -416,10 +425,11 @@ class VerifyCommands(object):
         """
         api.Verification.uninstall_tempest(deployment)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
-                   required=False,
+                   required=False, metavar="<path>",
                    help="User specified Tempest config file location")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
@@ -441,8 +451,9 @@ class VerifyCommands(object):
         api.Verification.reinstall_tempest(deployment, tempest_config,
                                            source, no_tempest_venv)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def showconfig(self, deployment=None):
         """Show configuration file of Tempest.

@@ -309,6 +309,10 @@ def pretty_float_formatter(field, ndigits=None):
 def args(*args, **kwargs):
     def _decorator(func):
         func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
+        if "metavar" not in kwargs and "action" not in kwargs:
+            # NOTE(andreykurilin): argparse constructs awful metavars...
+            kwargs["metavar"] = "<%s>" % args[0].replace(
+                "--", "").replace("-", "_")
         return func
     return _decorator
 

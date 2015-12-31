@@ -44,7 +44,7 @@ class DeploymentCommands(object):
                    help="A name of the deployment.")
     @cliutils.args("--fromenv", action="store_true",
                    help="Read environment variables instead of config file.")
-    @cliutils.args("--filename", type=str, required=False,
+    @cliutils.args("--filename", type=str, required=False, metavar="<path>",
                    help="A path to the configuration file of the "
                    "deployment.")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
@@ -111,7 +111,8 @@ class DeploymentCommands(object):
             self.use(deployment["uuid"])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def recreate(self, deployment=None):
@@ -125,7 +126,8 @@ class DeploymentCommands(object):
         api.Deployment.recreate(deployment)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def destroy(self, deployment=None):
@@ -160,7 +162,8 @@ class DeploymentCommands(object):
                     "\nrally deployment create"))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     @cliutils.suppress_warnings
     def config(self, deployment=None):
@@ -176,7 +179,8 @@ class DeploymentCommands(object):
         print(json.dumps(result, sort_keys=True, indent=4))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def show(self, deployment=None):
         """Show the credentials of the deployment.
@@ -200,7 +204,8 @@ class DeploymentCommands(object):
         cliutils.print_list(table_rows, headers)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment.")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def check(self, deployment=None):
         """Check keystone authentication and list all available services.
@@ -264,8 +269,9 @@ class DeploymentCommands(object):
             os.remove(expanded_path)
         os.symlink(openrc_path, expanded_path)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   help="UUID or name of the deployment.")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     def use(self, deployment):
         """Set active deployment.
 
