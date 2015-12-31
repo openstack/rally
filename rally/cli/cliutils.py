@@ -326,12 +326,19 @@ def alias(command_name):
 
 def deprecated_args(*args, **kwargs):
     def _decorator(func):
+        if "release" not in kwargs:
+            raise ValueError("'release' is required keyword argument of "
+                             "'deprecated_args' decorator.")
         func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
         func.__dict__.setdefault("deprecated_args", [])
         func.deprecated_args.append(args[0])
-        if "help" in kwargs.keys():
-            warn_message = "DEPRECATED!"
-            kwargs["help"] = " ".join([warn_message, kwargs["help"]])
+
+        help_msg = "[Deprecated since Rally %s] " % kwargs.pop("release")
+        if "alternative" in kwargs:
+            help_msg += "Use '%s' instead. " % kwargs.pop("alternative")
+        if "help" in kwargs:
+            help_msg += kwargs["help"]
+        kwargs["help"] = help_msg
         return func
     return _decorator
 

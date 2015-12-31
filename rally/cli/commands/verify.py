@@ -70,8 +70,8 @@ class VerifyCommands(object):
                         "the local env!",
                    required=False, action="store_true")
     @cliutils.deprecated_args("--system-wide-install", dest="system_wide",
-                              help="Use --system-wide instead",
-                              required=False, action="store_true")
+                              required=False, action="store_true",
+                              release="0.1.2", alternative="--system-wide")
     @cliutils.args("--concurrency", dest="concur", type=int, required=False,
                    help="How many processes to use to run Tempest tests. "
                         "The default value (0) auto-detects your CPU count")
@@ -183,7 +183,7 @@ class VerifyCommands(object):
             print(_("No verification was started yet. "
                     "To start verification use:\nrally verify start"))
 
-    @cliutils.args("--uuid", type=str, dest="verification_uuid",
+    @cliutils.args("--uuid", type=str, dest="verification",
                    help="UUID of a verification")
     @cliutils.args("--html", action="store_true", dest="output_html",
                    help="Display results in HTML format")
@@ -194,17 +194,17 @@ class VerifyCommands(object):
                    help="Path to a file to save results")
     @envutils.with_default_verification_id
     @cliutils.suppress_warnings
-    def results(self, verification_uuid=None, output_file=None,
+    def results(self, verification=None, output_file=None,
                 output_html=None, output_json=None):
         """Display results of a verification.
 
-        :param verification_uuid: UUID of a verification
+        :param verification: UUID of a verification
         :param output_file: Path to a file to save results
         :param output_html: Display results in HTML format
         :param output_json: Display results in JSON format (Default)
         """
         try:
-            results = api.Verification.get(verification_uuid).get_results()
+            results = api.Verification.get(verification).get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
@@ -225,7 +225,7 @@ class VerifyCommands(object):
         else:
             print(result)
 
-    @cliutils.args("--uuid", dest="verification_uuid", type=str,
+    @cliutils.args("--uuid", dest="verification", type=str,
                    required=False,
                    help="UUID of a verification")
     @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
@@ -234,10 +234,10 @@ class VerifyCommands(object):
                    required=False,
                    help="Display detailed errors of failed tests")
     @envutils.with_default_verification_id
-    def show(self, verification_uuid=None, sort_by="name", detailed=False):
+    def show(self, verification=None, sort_by="name", detailed=False):
         """Display results table of a verification.
 
-        :param verification_uuid: UUID of a verification
+        :param verification: UUID of a verification
         :param sort_by: Sort results by 'name' or 'duration'
         :param detailed: Display detailed errors of failed tests
         """
@@ -248,7 +248,7 @@ class VerifyCommands(object):
             return 1
 
         try:
-            verification = api.Verification.get(verification_uuid)
+            verification = api.Verification.get(verification)
             tests = verification.get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
@@ -278,22 +278,22 @@ class VerifyCommands(object):
                         "log": test["traceback"]}
                     print(formatted_test)
 
-    @cliutils.args("--uuid", dest="verification_uuid", type=str,
+    @cliutils.args("--uuid", dest="verification", type=str,
                    required=False, help="UUID of a verification")
     @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
                    help="Sort results by 'name' or 'duration'")
     @envutils.with_default_verification_id
-    def detailed(self, verification_uuid=None, sort_by="name"):
+    def detailed(self, verification=None, sort_by="name"):
         """Display results table of a verification with detailed errors.
 
-        :param verification_uuid: UUID of a verification
+        :param verification: UUID of a verification
         :param sort_by: Sort results by 'name' or 'duration'
         """
-        self.show(verification_uuid, sort_by, True)
+        self.show(verification, sort_by, True)
 
-    @cliutils.args("--uuid-1", type=str, required=True, dest="uuid1",
+    @cliutils.args("--uuid-1", type=str, required=True, dest="verification1",
                    help="UUID of the first verification")
-    @cliutils.args("--uuid-2", type=str, required=True, dest="uuid2",
+    @cliutils.args("--uuid-2", type=str, required=True, dest="verification2",
                    help="UUID of the second verification")
     @cliutils.args("--csv", action="store_true", dest="output_csv",
                    help="Display results in CSV format")
@@ -307,13 +307,13 @@ class VerifyCommands(object):
                    dest="threshold", default=0,
                    help="If specified, timing differences must exceed this "
                    "percentage threshold to be included in output")
-    def compare(self, uuid1=None, uuid2=None,
+    def compare(self, verification1=None, verification2=None,
                 output_file=None, output_csv=None, output_html=None,
                 output_json=None, threshold=0):
         """Compare two verification results.
 
-        :param uuid1: UUID of the first verification
-        :param uuid2: UUID of the second verification
+        :param verification1: UUID of the first verification
+        :param verification2: UUID of the second verification
         :param output_file: Path to a file to save results
         :param output_csv: Display results in CSV format
         :param output_html: Display results in HTML format
@@ -321,8 +321,10 @@ class VerifyCommands(object):
         :param threshold: Timing difference threshold percentage
         """
         try:
-            res_1 = api.Verification.get(uuid1).get_results()["test_cases"]
-            res_2 = api.Verification.get(uuid2).get_results()["test_cases"]
+            res_1 = api.Verification.get(
+                verification1).get_results()["test_cases"]
+            res_2 = api.Verification.get(
+                verification2).get_results()["test_cases"]
             _diff = diff.Diff(res_1, res_2, threshold)
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
@@ -350,8 +352,12 @@ class VerifyCommands(object):
         else:
             print(result)
 
-    @cliutils.args("--verification", type=str, dest="verification",
+    @cliutils.args("--uuid", type=str, dest="verification",
                    required=False, help="UUID of a verification")
+    @cliutils.deprecated_args("--verification", dest="verification",
+                              required=False, type=str,
+                              release="0.2.0",
+                              alternative="--uuid")
     def use(self, verification):
         """Set active verification.
 
