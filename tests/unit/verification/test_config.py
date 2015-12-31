@@ -242,8 +242,10 @@ class TempestConfigTestCase(test.TestCase):
     def test__configure_scenario(self):
         self.tempest_conf._configure_scenario()
 
+        image_name = parse.urlparse(
+            config.CONF.image.cirros_img_url).path.split("/")[-1]
         expected = (("img_dir", self.tempest_conf.data_dir),
-                    ("img_file", config.IMAGE_NAME))
+                    ("img_file", image_name))
         result = self.tempest_conf.conf.items("scenario")
         for item in expected:
             self.assertIn(item, result)
