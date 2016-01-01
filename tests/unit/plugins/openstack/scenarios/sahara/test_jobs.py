@@ -31,8 +31,10 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         super(SaharaJobTestCase, self).setUp()
 
         self.context = test.get_test_context()
-        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
-        CONF.set_override("sahara_job_check_interval", 0, "benchmark")
+        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark",
+                          enforce_type=True)
+        CONF.set_override("sahara_job_check_interval", 0, "benchmark",
+                          enforce_type=True)
 
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     def test_create_launch_job_java(self, mock__run_job_execution):

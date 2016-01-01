@@ -41,8 +41,10 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(SaharaScenarioTestCase, self).setUp()
 
-        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
-        CONF.set_override("sahara_job_check_interval", 0, "benchmark")
+        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark",
+                          enforce_type=True)
+        CONF.set_override("sahara_job_check_interval", 0, "benchmark",
+                          enforce_type=True)
 
     def test_list_node_group_templates(self):
         ngts = []
