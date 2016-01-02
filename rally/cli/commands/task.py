@@ -559,7 +559,7 @@ class TaskCommands(object):
 
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="uuids of tasks or json files with task results")
-    @cliutils.args("--out", type=str, dest="out", required=True,
+    @cliutils.args("--out", type=str, dest="out",
                    help="Path to output file.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    help="Open it in browser.")
@@ -630,14 +630,9 @@ class TaskCommands(object):
                     processed_names[task_result["key"]["name"]] = 0
                 results.append(task_result)
 
-        output_file = os.path.expanduser(out)
-
         if out_format.startswith("html"):
-            with open(output_file, "w+") as f:
-                f.write(plot.plot(results,
-                                  include_libs=(out_format == "html_static")))
-            if open_it:
-                webbrowser.open_new_tab("file://" + os.path.realpath(out))
+            result = plot.plot(results,
+                               include_libs=(out_format == "html_static"))
         elif out_format == "junit":
             test_suite = junit.JUnit("Rally test suite")
             for result in results:
@@ -650,12 +645,20 @@ class TaskCommands(object):
                     outcome = junit.JUnit.SUCCESS
                 test_suite.add_test(result["key"]["name"],
                                     result["full_duration"], outcome, message)
-            with open(output_file, "w+") as f:
-                f.write(test_suite.to_xml())
+            result = test_suite.to_xml()
         else:
-            print(_("Invalid output format: %s") % out_format,
-                  file=sys.stderr)
+            print(_("Invalid output format: %s") % out_format, file=sys.stderr)
             return 1
+
+        if out:
+            output_file = os.path.expanduser(out)
+
+            with open(output_file, "w+") as f:
+                f.write(result)
+            if open_it:
+                webbrowser.open_new_tab("file://" + os.path.realpath(out))
+        else:
+            print(result)
 
     @cliutils.args("--force", action="store_true", help="force delete")
     @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",
