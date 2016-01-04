@@ -68,8 +68,6 @@ CONF = cfg.CONF
 CONF.register_opts(IMAGE_OPTS, "image")
 CONF.register_opts(ROLE_OPTS, "role")
 
-IMAGE_NAME = parse.urlparse(CONF.image.cirros_img_url).path.split("/")[-1]
-
 
 def _create_or_get_data_dir():
     data_dir = os.path.join(
@@ -100,11 +98,13 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
         self.conf = configparser.ConfigParser()
         self.conf.read(os.path.join(os.path.dirname(__file__), "config.ini"))
+        self.image_name = parse.urlparse(
+            CONF.image.cirros_img_url).path.split("/")[-1]
 
         self._download_cirros_image()
 
     def _download_cirros_image(self):
-        img_path = os.path.join(self.data_dir, IMAGE_NAME)
+        img_path = os.path.join(self.data_dir, self.image_name)
         if os.path.isfile(img_path):
             return
 
@@ -242,7 +242,7 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
     def _configure_scenario(self, section_name="scenario"):
         self.conf.set(section_name, "img_dir", self.data_dir)
-        self.conf.set(section_name, "img_file", IMAGE_NAME)
+        self.conf.set(section_name, "img_file", self.image_name)
 
     def _configure_service_available(self, section_name="service_available"):
         services = ["ceilometer", "cinder", "glance",
@@ -299,6 +299,8 @@ class TempestResourcesContext(object):
         self.conf_path = conf_path
         self.conf = configparser.ConfigParser()
         self.conf.read(conf_path)
+        self.image_name = parse.urlparse(
+            CONF.image.cirros_img_url).path.split("/")[-1]
 
         self._created_roles = []
         self._created_images = []
@@ -389,7 +391,7 @@ class TempestResourcesContext(object):
         image = glanceclient.images.create(**params)
         self._created_images.append(image)
         image.update(data=open(
-            os.path.join(_create_or_get_data_dir(), IMAGE_NAME), "rb"))
+            os.path.join(_create_or_get_data_dir(), self.image_name), "rb"))
 
         return image
 
