@@ -80,7 +80,7 @@ def with_default_deployment(cli_arg_name="uuid"):
 
 with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
 with_default_verification_id = default_from_global(
-    "verification_uuid", ENV_VERIFICATION, "uuid")
+    "verification", ENV_VERIFICATION, "uuid")
 
 
 def get_creds_from_env_vars():

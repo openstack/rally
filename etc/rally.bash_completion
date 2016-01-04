@@ -44,7 +44,7 @@ _rally()
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"
     OPTS["task_status"]="--uuid"
-    OPTS["task_use"]="--task"
+    OPTS["task_use"]="--uuid"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["verify_compare"]="--uuid-1 --uuid-2 --csv --html --json --output-file --threshold"
     OPTS["verify_detailed"]="--uuid --sort-by"
@@ -58,7 +58,7 @@ _rally()
     OPTS["verify_showconfig"]="--deployment"
     OPTS["verify_start"]="--deployment --set --regex --tests-file --tempest-config --xfails-file --no-use --system-wide --concurrency"
     OPTS["verify_uninstall"]="--deployment"
-    OPTS["verify_use"]="--verification"
+    OPTS["verify_use"]="--uuid"
 
     for OPT in ${!OPTS[*]} ; do
         CMD=${OPT%%_*}

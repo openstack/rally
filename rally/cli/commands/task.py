@@ -574,7 +574,7 @@ class TaskCommands(object):
     @cliutils.args("--junit", dest="out_format",
                    action="store_const", const="junit",
                    help="Generate the report in the JUnit format.")
-    @envutils.default_from_global("tasks", envutils.ENV_TASK, "uuid")
+    @envutils.default_from_global("tasks", envutils.ENV_TASK, "tasks")
     @cliutils.suppress_warnings
     def report(self, tasks=None, out=None, open_it=False, out_format="html"):
         """Generate report file for specified task.
@@ -720,13 +720,15 @@ class TaskCommands(object):
                                        "status", "detail"))
         return failed_criteria
 
-    @cliutils.args("--task", type=str, dest="task", required=False,
+    @cliutils.args("--uuid", type=str, dest="task_id",
                    help="UUID of the task")
-    def use(self, task):
+    @cliutils.deprecated_args("--task", dest="task_id", type=str,
+                              release="0.2.0", alternative="--uuid")
+    def use(self, task_id):
         """Set active task.
 
-        :param task: Task uuid.
+        :param task_id: Task uuid.
         """
-        print("Using task: %s" % task)
-        api.Task.get(task)
-        fileutils.update_globals_file("RALLY_TASK", task)
+        print("Using task: %s" % task_id)
+        api.Task.get(task_id)
+        fileutils.update_globals_file("RALLY_TASK", task_id)

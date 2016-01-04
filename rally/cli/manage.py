@@ -28,6 +28,7 @@ class DBCommands(object):
     """Commands for DB management."""
 
     def recreate(self):
+        """Drop and create Rally database."""
         db.db_drop()
         db.db_create()
         envutils.clear_env()
