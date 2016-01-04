@@ -1,3 +1,4 @@
+{%- set cirros_image_url = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img" %}
 ---
   KeystoneBasic.create_user:
     -
@@ -770,6 +771,24 @@
           tenants: 1
           users_per_tenant: 2
         images:
+          image_url: "{{ cirros_image_url }}"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        images:
           image_url: "~/.rally/extra/fake-image.img"
           image_type: "qcow2"
           image_container: "bare"
@@ -781,7 +800,7 @@
   GlanceImages.create_and_delete_image:
     -
       args:
-        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+        image_location: "{{ cirros_image_url }}"
         container_format: "bare"
         disk_format: "qcow2"
       runner:
@@ -817,7 +836,7 @@
   GlanceImages.create_image_and_boot_instances:
     -
       args:
-        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+        image_location: "{{ cirros_image_url }}"
         container_format: "bare"
         disk_format: "qcow2"
         flavor:
