@@ -17,6 +17,24 @@ from rally import exceptions
 
 
 class FunctionalMixin(object):
+    """Functional assertions.
+
+    The Rally core team deliberately decided not to use an existing framework
+    for this such a `testtools`.
+
+    Using 'testtools' would introduce the following problems:
+    - Rally production code works with testing tools code that is not designed
+      to be used in production.
+    - Rally code depends on a bunch of new libs introduced by testtools and
+      testtools itself, which means: more code on which Rally is dependent,
+      more time required to install Rally, more disk space required by Rally.
+    - Classes like Scenario & Context are inherited from testtools.TestCase
+      that makes these classes really hard to learn (for instance:
+      running dir(base.Scenario) you cannot see a ton of methods inside it)
+    - It won't be clear for end users what exceptions are raised: unittest
+      exception are going to be raised during production runs instead of
+      Rally assertion exceptions.
+    """
 
     def _concatenate_message(self, default, extended):
         if not extended:
