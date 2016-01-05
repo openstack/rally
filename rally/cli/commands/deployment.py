@@ -41,28 +41,28 @@ class DeploymentCommands(object):
     """Set of commands that allow you to manage deployments."""
 
     @cliutils.args("--name", type=str, required=True,
-                   help="A name of the deployment.")
+                   help="Name of the deployment.")
     @cliutils.args("--fromenv", action="store_true",
                    help="Read environment variables instead of config file.")
     @cliutils.args("--filename", type=str, required=False, metavar="<path>",
-                   help="A path to the configuration file of the "
-                   "deployment.")
+                   help="Path to the configuration file of the deployment.")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
-                   help="Don\'t set new deployment as default for"
+                   help="Don't set new deployment as default for"
                         " future operations.")
     @plugins.ensure_plugins_are_loaded
     def create(self, name, fromenv=False, filename=None, do_use=False):
         """Create new deployment.
 
-        This command will create new deployment record in rally database.
-        In case of ExistingCloud deployment engine it will use cloud,
-        represented in config.
-        In cases when cloud doesn't exists Rally will deploy new one
-        for you with Devstack or Fuel. For this purposes different deployment
-        engines are developed.
+        This command will create a new deployment record in rally
+        database. In the case of ExistingCloud deployment engine it
+        will use the cloud represented in the configuration. If the
+        cloud doesn't exist, Rally can deploy a new one for you with
+        Devstack or Fuel. Different deployment engines exist for these
+        cases.
 
-        If you use ExistingCloud deployment engine you can pass deployment
-        config by environment variables:
+        If you use the ExistingCloud deployment engine you can pass
+        a deployment config by environment variables with ``--fromenv``:
+
             OS_USERNAME
             OS_PASSWORD
             OS_AUTH_URL
@@ -72,18 +72,18 @@ class DeploymentCommands(object):
             OS_CACERT
             OS_INSECURE
 
-        All other deployment engines need more complex configuration data, so
-        it should be stored in configuration file.
+        All other deployment engines need more complex configuration
+        data, so it should be stored in a configuration file.
 
-        You can use physical servers, lxc containers, KVM virtual machines
-        or virtual machines in OpenStack for deploying the cloud in.
-        Except physical servers, Rally can create cluster nodes for you.
-        Interaction with virtualization software, OpenStack
+        You can use physical servers, LXC containers, KVM virtual
+        machines or virtual machines in OpenStack for deploying the
+        cloud. Except physical servers, Rally can create cluster nodes
+        for you. Interaction with virtualization software, OpenStack
         cloud or physical servers is provided by server providers.
 
         :param fromenv: boolean, read environment instead of config file
-        :param filename: a path to the configuration file
-        :param name: a name of the deployment
+        :param filename: path to the configuration file
+        :param name: name of the deployment
         """
 
         if fromenv:
@@ -112,32 +112,33 @@ class DeploymentCommands(object):
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
-                   help="UUID or name of a deployment.")
+                   help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def recreate(self, deployment=None):
         """Destroy and create an existing deployment.
 
-        Unlike 'deployment destroy' command deployment database record will
-        not be deleted, so deployment's UUID stay same.
+        Unlike 'deployment destroy', the deployment database record
+        will not be deleted, so the deployment UUID stays the same.
 
-        :param deployment: a UUID or name of the deployment
+        :param deployment: UUID or name of the deployment
         """
         api.Deployment.recreate(deployment)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
-                   help="UUID or name of a deployment.")
+                   help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def destroy(self, deployment=None):
         """Destroy existing deployment.
 
-        This will delete all containers, virtual machines, OpenStack instances
-        or Fuel clusters created during Rally deployment creation. Also it will
-        remove deployment record from Rally database.
+        This will delete all containers, virtual machines, OpenStack
+        instances or Fuel clusters created during Rally deployment
+        creation. Also it will remove the deployment record from the
+        Rally database.
 
-        :param deployment: a UUID or name of the deployment
+        :param deployment: UUID or name of the deployment
         """
         api.Deployment.destroy(deployment)
 
@@ -163,7 +164,7 @@ class DeploymentCommands(object):
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
-                   help="UUID or name of a deployment.")
+                   help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @cliutils.suppress_warnings
     def config(self, deployment=None):
@@ -172,7 +173,7 @@ class DeploymentCommands(object):
         Output is the configuration of the deployment in a
         pretty-printed JSON format.
 
-        :param deployment: a UUID or name of the deployment
+        :param deployment: UUID or name of the deployment
         """
         deploy = api.Deployment.get(deployment)
         result = deploy["config"]
@@ -180,12 +181,12 @@ class DeploymentCommands(object):
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
-                   help="UUID or name of a deployment.")
+                   help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     def show(self, deployment=None):
         """Show the credentials of the deployment.
 
-        :param deployment: a UUID or name of the deployment
+        :param deployment: UUID or name of the deployment
         """
 
         headers = ["auth_url", "username", "password", "tenant_name",
@@ -205,12 +206,12 @@ class DeploymentCommands(object):
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
-                   help="UUID or name of a deployment.")
+                   help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     def check(self, deployment=None):
         """Check keystone authentication and list all available services.
 
-        :param deployment: a UUID or name of the deployment
+        :param deployment: UUID or name of the deployment
         """
         headers = ["services", "type", "status"]
         table_rows = []
@@ -275,7 +276,7 @@ class DeploymentCommands(object):
     def use(self, deployment):
         """Set active deployment.
 
-        :param deployment: UUID or name of a deployment
+        :param deployment: UUID or name of the deployment
         """
         try:
             deployment = api.Deployment.get(deployment)
