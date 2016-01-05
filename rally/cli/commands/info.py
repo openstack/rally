@@ -20,7 +20,9 @@ from rally.cli.commands import plugin
 
 
 class InfoCommands(object):
-    """[deprecated] Allows you to get quick doc of rally entities."""
+    """[Deprecated since 0.1.1] Allows you to get quick doc of rally entities.
+
+    """
 
     @cliutils.args("--query", dest="query", type=str, help="Search query.")
     def find(self, query):
