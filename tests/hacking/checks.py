@@ -68,11 +68,11 @@ re_objects_import = re.compile(r"^from rally.common import objects")
 def skip_ignored_lines(func):
 
     @functools.wraps(func)
-    def wrapper(logical_line, filename):
-        line = logical_line.strip()
+    def wrapper(logical_line, physical_line, filename):
+        line = physical_line.strip()
         if not line or line.startswith("#") or line.endswith("# noqa"):
             return
-        yield next(func(logical_line, filename))
+        yield next(func(logical_line, physical_line, filename))
 
     return wrapper
 
@@ -88,7 +88,7 @@ def _parse_assert_mock_str(line):
 
 
 @skip_ignored_lines
-def check_assert_methods_from_mock(logical_line, filename):
+def check_assert_methods_from_mock(logical_line, physical_line, filename):
     """Ensure that ``assert_*`` methods from ``mock`` library is used correctly
 
     N301 - base error number
@@ -134,7 +134,7 @@ def check_assert_methods_from_mock(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_import_of_logging(logical_line, filename):
+def check_import_of_logging(logical_line, physical_line, filename):
     """Check correctness import of logging module
 
     N310
@@ -156,7 +156,7 @@ def check_import_of_logging(logical_line, filename):
 
 
 @skip_ignored_lines
-def no_translate_debug_logs(logical_line, filename):
+def no_translate_debug_logs(logical_line, physical_line, filename):
     """Check for "LOG.debug(_("
 
     As per our translation policy,
@@ -174,7 +174,7 @@ def no_translate_debug_logs(logical_line, filename):
 
 
 @skip_ignored_lines
-def no_use_conf_debug_check(logical_line, filename):
+def no_use_conf_debug_check(logical_line, physical_line, filename):
     """Check for "cfg.CONF.debug"
 
     Rally has two DEBUG level:
@@ -194,7 +194,7 @@ def no_use_conf_debug_check(logical_line, filename):
 
 
 @skip_ignored_lines
-def assert_true_instance(logical_line, filename):
+def assert_true_instance(logical_line, physical_line, filename):
     """Check for assertTrue(isinstance(a, b)) sentences
 
     N320
@@ -205,7 +205,7 @@ def assert_true_instance(logical_line, filename):
 
 
 @skip_ignored_lines
-def assert_equal_type(logical_line, filename):
+def assert_equal_type(logical_line, physical_line, filename):
     """Check for assertEqual(type(A), B) sentences
 
     N321
@@ -216,7 +216,7 @@ def assert_equal_type(logical_line, filename):
 
 
 @skip_ignored_lines
-def assert_equal_none(logical_line, filename):
+def assert_equal_none(logical_line, physical_line, filename):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
     N322
@@ -230,7 +230,7 @@ def assert_equal_none(logical_line, filename):
 
 
 @skip_ignored_lines
-def assert_true_or_false_with_in(logical_line, filename):
+def assert_true_or_false_with_in(logical_line, physical_line, filename):
     """Check assertTrue/False(A in/not in B) with collection contents
 
     Check for assertTrue/False(A in B), assertTrue/False(A not in B),
@@ -248,7 +248,7 @@ def assert_true_or_false_with_in(logical_line, filename):
 
 
 @skip_ignored_lines
-def assert_equal_in(logical_line, filename):
+def assert_equal_in(logical_line, physical_line, filename):
     """Check assertEqual(A in/not in B, True/False) with collection contents
 
     Check for assertEqual(A in B, True/False), assertEqual(True/False, A in B),
@@ -266,7 +266,8 @@ def assert_equal_in(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_no_direct_rally_objects_import(logical_line, filename):
+def check_no_direct_rally_objects_import(logical_line, physical_line,
+                                         filename):
     """Check if rally.common.objects are properly imported.
 
     If you import "from rally.common import objects" you are able to use
@@ -288,7 +289,7 @@ def check_no_direct_rally_objects_import(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_no_oslo_deprecated_import(logical_line, filename):
+def check_no_oslo_deprecated_import(logical_line, physical_line, filename):
     """Check if oslo.foo packages are not imported instead of oslo_foo ones.
 
     Libraries from oslo.foo namespace are deprecated because of namespace
@@ -304,7 +305,7 @@ def check_no_oslo_deprecated_import(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_quotes(logical_line, filename):
+def check_quotes(logical_line, physical_line, filename):
     """Check that single quotation marks are not used
 
     N350
@@ -357,7 +358,7 @@ def check_quotes(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_no_constructor_data_struct(logical_line, filename):
+def check_no_constructor_data_struct(logical_line, physical_line, filename):
     """Check that data structs (lists, dicts) are declared using literals
 
     N351
@@ -439,7 +440,7 @@ def check_dict_formatting_in_string(logical_line, tokens):
 
 
 @skip_ignored_lines
-def check_using_unicode(logical_line, filename):
+def check_using_unicode(logical_line, physical_line, filename):
     """Check crosspython unicode usage
 
     N353
@@ -465,7 +466,7 @@ def check_raises(physical_line, filename):
 
 
 @skip_ignored_lines
-def check_db_imports_in_cli(logical_line, filename):
+def check_db_imports_in_cli(logical_line, physical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.db``
 
     N360
@@ -479,7 +480,7 @@ def check_db_imports_in_cli(logical_line, filename):
 
 
 @skip_ignored_lines
-def check_objects_imports_in_cli(logical_line, filename):
+def check_objects_imports_in_cli(logical_line, physical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.objects``
 
     N361

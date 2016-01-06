@@ -12,12 +12,14 @@
 
 import tokenize
 
+import ddt
 import six
 
 from tests.hacking import checks
 from tests.unit import test
 
 
+@ddt.ddt
 class HackingTestCase(test.TestCase):
 
     def test__parse_assert_mock_str(self):
@@ -33,30 +35,35 @@ class HackingTestCase(test.TestCase):
         self.assertIsNone(method)
         self.assertIsNone(obj)
 
-    def test_skip_ignored_lines(self):
+    @ddt.data(
+        {"line": "fdafadfdas  # noqa", "result": []},
+        {"line": "  # fdafadfdas", "result": []},
+        {"line": "  ", "result": []},
+        {"line": "otherstuff", "result": [42]}
+    )
+    @ddt.unpack
+    def test_skip_ignored_lines(self, line, result):
 
         @checks.skip_ignored_lines
-        def any_gen(logical_line, file_name):
+        def any_gen(physical_line, logical_line, file_name):
             yield 42
 
-        self.assertEqual([], list(any_gen("fdafadfdas  # noqa", "f")))
-        self.assertEqual([], list(any_gen("  # fdafadfdas", "f")))
-        self.assertEqual([], list(any_gen("  ", "f")))
-        self.assertEqual(42, next(any_gen("otherstuff", "f")))
+        self.assertEqual(result, list(any_gen(line, line, "f")))
 
     def test_correct_usage_of_assert_from_mock(self):
         correct_method_names = ["assert_any_call", "assert_called_once_with",
                                 "assert_called_with", "assert_has_calls"]
         for name in correct_method_names:
+            line = "some_mock.%s(asd)" % name
             self.assertEqual(0, len(
                 list(checks.check_assert_methods_from_mock(
-                    "some_mock.%s(asd)" % name, "./tests/fake/test"))))
+                    line, line, "./tests/fake/test"))))
 
     def test_wrong_usage_of_broad_assert_from_mock(self):
         fake_method = "rtfm.assert_something()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, "./tests/fake/test"))
+            fake_method, fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N301"))
 
@@ -64,7 +71,7 @@ class HackingTestCase(test.TestCase):
         fake_method = "rtfm.assert_called()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, "./tests/fake/test"))
+            fake_method, fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N302"))
 
@@ -72,17 +79,17 @@ class HackingTestCase(test.TestCase):
         fake_method = "rtfm.assert_called_once()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, "./tests/fake/test"))
+            fake_method, fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N303"))
 
     def _assert_good_samples(self, checker, samples, module_file="f"):
         for s in samples:
-            self.assertEqual([], list(checker(s, module_file)), s)
+            self.assertEqual([], list(checker(s, s, module_file)), s)
 
     def _assert_bad_samples(self, checker, samples, module_file="f"):
         for s in samples:
-            self.assertEqual(1, len(list(checker(s, module_file))), s)
+            self.assertEqual(1, len(list(checker(s, s, module_file))), s)
 
     def test_check_wrong_logging_import(self):
         bad_imports = ["from oslo_log import log",
@@ -92,18 +99,17 @@ class HackingTestCase(test.TestCase):
                         "from rally.common.logging",
                         "import rally.common.logging"]
 
-        for bad_import in bad_imports:
-            checkres = checks.check_import_of_logging(bad_import, "fakefile")
+        for bad in bad_imports:
+            checkres = checks.check_import_of_logging(bad, bad, "fakefile")
             self.assertIsNotNone(next(checkres))
 
-        for bad_import in bad_imports:
+        for bad in bad_imports:
             checkres = checks.check_import_of_logging(
-                bad_import, "./rally/common/logging.py")
+                bad, bad, "./rally/common/logging.py")
             self.assertEqual([], list(checkres))
 
-        for good_import in good_imports:
-            checkres = checks.check_import_of_logging(good_import,
-                                                      "fakefile")
+        for good in good_imports:
+            checkres = checks.check_import_of_logging(good, good, "fakefile")
             self.assertEqual([], list(checkres))
 
     def test_no_translate_debug_logs(self):
@@ -123,31 +129,46 @@ class HackingTestCase(test.TestCase):
         good_samples = ["if logging.is_debug()"]
         self._assert_good_samples(checks.no_use_conf_debug_check, good_samples)
 
-    def test_assert_true_instance(self):
-        self.assertEqual(len(list(checks.assert_true_instance(
-            "self.assertTrue(isinstance(e, "
-            "exception.BuildAbortException))", "f"))), 1)
+    @ddt.data(
+        {
+            "line": "self.assertTrue(isinstance(e, exception.BuildAbortExc))",
+            "result": 1
+        },
+        {
+            "line": "self.assertTrue()",
+            "result": 0
+        }
+    )
+    @ddt.unpack
+    def test_assert_true_instance(self, line, result):
+        self.assertEqual(
+            result, len(list(checks.assert_true_instance(line, line, "f"))))
+
+    @ddt.data(
+        {
+            "line": "self.assertEqual(type(als['QuicAssist']), list)",
+            "result": 1
+        },
+        {
+            "line": "self.assertTrue()",
+            "result": 0
+        }
+    )
+    @ddt.unpack
+    def test_assert_equal_type(self, line, result):
+        self.assertEqual(
+            len(list(checks.assert_equal_type(line, line, "f"))), result)
+
+    @ddt.data(
+        {"line": "self.assertEqual(A, None)", "result": 1},
+        {"line": "self.assertEqual(None, A)", "result": 1},
+        {"line": "self.assertIsNone()", "result": 0}
+    )
+    @ddt.unpack
+    def test_assert_equal_none(self, line, result):
 
         self.assertEqual(
-            0,
-            len(list(checks.assert_true_instance("self.assertTrue()", "f"))))
-
-    def test_assert_equal_type(self):
-        self.assertEqual(len(list(checks.assert_equal_type(
-            "self.assertEqual(type(als['QuicAssist']), list)", "f"))), 1)
-
-        self.assertEqual(
-            len(list(checks.assert_equal_type("self.assertTrue()", "f"))), 0)
-
-    def test_assert_equal_none(self):
-        self.assertEqual(len(list(checks.assert_equal_none(
-            "self.assertEqual(A, None)", "f"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_none(
-            "self.assertEqual(None, A)", "f"))), 1)
-
-        self.assertEqual(
-            len(list(checks.assert_equal_none("self.assertIsNone()", "f"))), 0)
+            len(list(checks.assert_equal_none(line, line, "f"))), result)
 
     def test_assert_true_or_false_with_in_or_not_in(self):
         good_lines = [
@@ -308,15 +329,13 @@ class HackingTestCase(test.TestCase):
                 [],
                 list(checks.check_dict_formatting_in_string(sample, tokens)))
 
-    def test_check_using_unicode(self):
+    @ddt.data(
+        "text = unicode('sometext')",
+        "text = process(unicode('sometext'))"
+    )
+    def test_check_using_unicode(self, line):
 
-        checkres = checks.check_using_unicode("text = unicode('sometext')",
-                                              "fakefile")
-        self.assertIsNotNone(next(checkres))
-        self.assertEqual([], list(checkres))
-
-        checkres = checks.check_using_unicode(
-            "text = process(unicode('sometext'))", "fakefile")
+        checkres = checks.check_using_unicode(line, line, "fakefile")
         self.assertIsNotNone(next(checkres))
         self.assertEqual([], list(checkres))
 
@@ -330,21 +349,21 @@ class HackingTestCase(test.TestCase):
         self.assertIsNone(checkres)
 
     def test_check_db_imports_of_cli(self):
+        line = "from rally.common import db"
+
         next(checks.check_db_imports_in_cli(
-            "from rally.common import db",
-            "./rally/cli/filename"))
+            line, line, "./rally/cli/filename"))
 
         checkres = checks.check_db_imports_in_cli(
-            "from rally.common import db",
-            "./filename")
+            line, line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
 
     def test_check_objects_imports_of_cli(self):
+        line = "from rally.common import objects"
+
         next(checks.check_objects_imports_in_cli(
-            "from rally.common import objects",
-            "./rally/cli/filename"))
+            line, line, "./rally/cli/filename"))
 
         checkres = checks.check_objects_imports_in_cli(
-            "from rally.common import objects",
-            "./filename")
+            line, line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
