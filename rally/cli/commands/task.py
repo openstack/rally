@@ -138,14 +138,15 @@ class TaskCommands(object):
         print(_("Task config is valid :)"))
         return input_task
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of the deployment")
-    @cliutils.args("--task", "--filename",
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--task", "--filename", metavar="<path>",
                    help="Path to the file with full configuration of task")
-    @cliutils.args("--task-args", dest="task_args",
+    @cliutils.args("--task-args", metavar="<json>", dest="task_args",
                    help="Input task args (dict in json). These args are used "
                         "to render input task that is jinja2 template.")
-    @cliutils.args("--task-args-file", dest="task_args_file",
+    @cliutils.args("--task-args-file", metavar="<path>", dest="task_args_file",
                    help="Path to the file with input task args (dict in "
                         "json/yaml). These args are used to render input "
                         "task that is jinja2 template.")
@@ -174,13 +175,15 @@ class TaskCommands(object):
             print(e, file=sys.stderr)
             return(1)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   required=False, help="UUID or name of the deployment")
-    @cliutils.args("--task", "--filename", help="Path to the input task file")
-    @cliutils.args("--task-args", dest="task_args",
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--task", "--filename", metavar="<path>",
+                   help="Path to the input task file")
+    @cliutils.args("--task-args", dest="task_args", metavar="<json>",
                    help="Input task args (dict in json). These args are used "
                         "to render input task that is jinja2 template.")
-    @cliutils.args("--task-args-file", dest="task_args_file",
+    @cliutils.args("--task-args-file", dest="task_args_file", metavar="<path>",
                    help="Path to the file with input task args (dict in "
                         "json/yaml). These args are used to render input "
                         "task that is jinja2 template.")
@@ -514,9 +517,9 @@ class TaskCommands(object):
                 task_id, consts.TaskStatus.FAILED, consts.TaskStatus.FINISHED))
             return(1)
 
-    @cliutils.args("--deployment", type=str, dest="deployment",
-                   help="List tasks from specified deployment."
-                   "By default tasks listed from active deployment.")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @cliutils.args("--all-deployments", action="store_true",
                    dest="all_deployments",
                    help="List tasks from all deployments.")
@@ -581,7 +584,8 @@ class TaskCommands(object):
 
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="uuids of tasks or json files with task results")
-    @cliutils.args("--out", type=str, dest="out",
+    @cliutils.args("--out", metavar="<path>",
+                   type=str, dest="out", required=False,
                    help="Path to output file.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    help="Open it in browser.")

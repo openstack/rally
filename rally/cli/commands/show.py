@@ -51,7 +51,8 @@ class ShowCommands(object):
         return credentials + deployment.deployment.get("users", [])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
     def images(self, deployment=None):
@@ -82,7 +83,8 @@ class ShowCommands(object):
                                 mixed_case_fields=mixed_case_fields)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
     def flavors(self, deployment=None):
@@ -113,7 +115,8 @@ class ShowCommands(object):
                                 mixed_case_fields=mixed_case_fields)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
     def networks(self, deployment=None):
@@ -136,7 +139,8 @@ class ShowCommands(object):
                                 mixed_case_fields=mixed_case_fields)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
     def secgroups(self, deployment=None):
@@ -160,7 +164,8 @@ class ShowCommands(object):
                 mixed_case_fields=mixed_case_fields)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
-                   required=False, help="UUID or name of a deployment")
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
     def keypairs(self, deployment=None):
