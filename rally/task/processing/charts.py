@@ -108,7 +108,9 @@ class AtomicStackedAreaChart(Chart):
         return atomics
 
 
-class OutputStackedAreaChart(Chart):
+# TODO(amaretskiy): remove this class after report switched
+#   to classes based on OutputChart for output data
+class OutputStackedAreaDeprecatedChart(Chart):
 
     def _map_iteration_values(self, iteration):
         return [(name, iteration["scenario_output"]["data"].get(name, 0))
@@ -274,7 +276,7 @@ class Table(Chart):
 
     Each Table subclass represents HTML table which can be easily rendered in
     report. Subclasses are responsible for setting up both columns and rows:
-    columns are set simply by COLUMNS property (list of str columns names)
+    columns are set simply by `columns' property (list of str columns names)
     and rows must be initialized in _data property, with the following format:
         self._data = {name: [streaming_ins, postprocess_func or None], ...}
           where:
@@ -286,7 +288,7 @@ class Table(Chart):
     """
 
     @abc.abstractproperty
-    def COLUMNS(self):
+    def columns(self):
         """List of columns names."""
 
     def _round(self, ins, has_result):
@@ -327,12 +329,12 @@ class Table(Chart):
         return rows
 
     def render(self):
-        return {"cols": self.COLUMNS, "rows": self.get_rows()}
+        return {"cols": self.columns, "rows": self.get_rows()}
 
 
 class MainStatsTable(Table):
 
-    COLUMNS = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
+    columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
                "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
 
     def __init__(self, *args, **kwargs):
@@ -364,3 +366,62 @@ class MainStatsTable(Table):
                 self._data[name][-2][0].add(1)
                 for idx, dummy in enumerate(self._data[name][:-2]):
                     self._data[name][idx][0].add(value)
+
+
+class OutputChart(Chart):
+    """Base class for charts related to scenario output."""
+
+    @abc.abstractproperty
+    def widget(self):
+        """Widget name to display this chart by JavaScript."""
+
+    def __init__(self, workload_info,
+                 zipped_size=1000, title="", description=""):
+        super(OutputChart, self).__init__(workload_info, zipped_size)
+        self.title = title
+        self.description = description
+
+    def _map_iteration_values(self, iteration):
+        return iteration
+
+    def render(self):
+        return {"title": self.title,
+                "description": self.description,
+                "widget": self.widget,
+                "data": super(OutputChart, self).render()}
+
+
+class OutputStackedAreaChart(OutputChart):
+
+    widget = "StackedArea"
+
+
+class OutputAvgChart(OutputChart, AvgChart):
+
+    widget = "Pie"
+
+
+class OutputStatsTable(OutputChart, Table):
+
+    widget = "Table"
+    columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
+               "95%ile (sec)", "Max (sec)", "Avg (sec)", "Count"]
+
+    def add_iteration(self, iteration):
+        for name, value in self._map_iteration_values(iteration):
+            if name not in self._data:
+                iters_num = self._workload_info["iterations_count"]
+                self._data[name] = [
+                    [streaming.MinComputation(), None],
+                    [streaming.PercentileComputation(0.5, iters_num), None],
+                    [streaming.PercentileComputation(0.9, iters_num), None],
+                    [streaming.PercentileComputation(0.95, iters_num), None],
+                    [streaming.MaxComputation(), None],
+                    [streaming.MeanComputation(), None],
+                    [streaming.IncrementComputation(),
+                     lambda v, na: v.result()]]
+
+            self._data[name][-1][0].add(None)
+            self._data[name][-2][0].add(1)
+            for idx, dummy in enumerate(self._data[name][:-1]):
+                self._data[name][idx][0].add(value)

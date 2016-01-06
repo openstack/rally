@@ -134,10 +134,10 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
         self.assertEqual(expected, sorted(chart.render()))
 
 
-class OutputStackedAreaChartTestCase(test.TestCase):
+class OutputStackedAreaDeprecatedChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
-        chart = charts.OutputStackedAreaChart(
+        chart = charts.OutputStackedAreaDeprecatedChart(
             {"iterations_count": 3, "output_names": ["foo", "bar"]}, 10)
         self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration({"scenario_output": {"data": x}})
@@ -326,7 +326,7 @@ class AtomicHistogramChartTestCase(test.TestCase):
 class TableTestCase(test.TestCase):
 
     class Table(charts.Table):
-        COLUMNS = ["Name", "Min", "Max", "Max rounded by 2"]
+        columns = ["Name", "Min", "Max", "Max rounded by 2"]
 
         def __init__(self, *args, **kwargs):
             super(TableTestCase.Table, self).__init__(*args, **kwargs)
@@ -488,3 +488,92 @@ class MainStatsTableTestCase(test.TestCase):
             table.add_iteration(el)
 
         self.assertEqual(expected, table.render())
+
+
+class OutputChartTestCase(test.TestCase):
+
+    class OutputChart(charts.OutputChart):
+        widget = "FooWidget"
+
+    def test___init__(self):
+        self.assertRaises(TypeError,
+                          charts.OutputChart, {"iterations_count": 42})
+
+        chart = self.OutputChart({"iterations_count": 42})
+        self.assertIsInstance(chart, charts.Chart)
+
+    def test__map_iteration_values(self):
+        chart = self.OutputChart({"iterations_count": 42})
+        self.assertEqual("foo data", chart._map_iteration_values("foo data"))
+
+    def test_render(self):
+        chart = self.OutputChart({"iterations_count": 42})
+        self.assertEqual(
+            {"widget": "FooWidget", "data": [],
+             "title": "", "description": ""},
+            chart.render())
+
+        chart = self.OutputChart({"iterations_count": 42},
+                                 title="foo title", description="Test!")
+        self.assertEqual(
+            {"widget": "FooWidget", "data": [],
+             "title": "foo title", "description": "Test!"},
+            chart.render())
+
+
+class OutputStackedAreaChartTestCase(test.TestCase):
+
+    def test___init__(self):
+        self.assertEqual("StackedArea", charts.OutputStackedAreaChart.widget)
+
+        chart = charts.OutputStackedAreaChart({"iterations_count": 42})
+        self.assertIsInstance(chart, charts.OutputChart)
+
+
+class OutputAvgChartTestCase(test.TestCase):
+
+    def test___init__(self):
+        self.assertEqual("Pie", charts.OutputAvgChart.widget)
+
+        chart = charts.OutputAvgChart({"iterations_count": 42})
+        self.assertIsInstance(chart, charts.OutputChart)
+        self.assertIsInstance(chart, charts.AvgChart)
+
+
+@ddt.ddt
+class OutputStatsTableTestCase(test.TestCase):
+
+    def test___init__(self):
+        self.assertEqual("Table", charts.OutputStatsTable.widget)
+        self.assertEqual(
+            ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
+             "95%ile (sec)", "Max (sec)", "Avg (sec)", "Count"],
+            charts.OutputStatsTable.columns)
+
+        table = charts.OutputStatsTable({"iterations_count": 42})
+        self.assertIsInstance(table, charts.Table)
+
+    @ddt.data(
+        {"title": "Foo title",
+         "description": "",
+         "iterations": [],
+         "expected": []},
+        {"title": "Foo title",
+         "description": "Test description!",
+         "iterations": [[("a", 11), ("b", 22)], [("a", 5.6), ("b", 7.8)],
+                        [("a", 42), ("b", 24)]],
+         "expected": [["a", 5.6, 11.0, 35.8, 38.9, 42.0, 10.267, 3],
+                      ["b", 7.8, 22.0, 23.6, 23.8, 24.0, 9.467, 3]]})
+    @ddt.unpack
+    def test_add_iteration_and_render(self, title, description, iterations,
+                                      expected):
+        table = charts.OutputStatsTable({"iterations_count": len(iterations)},
+                                        title=title, description=description)
+        for iteration in iterations:
+            table.add_iteration(iteration)
+        self.assertEqual({"title": title,
+                          "description": description,
+                          "widget": "Table",
+                          "data": {"cols": charts.OutputStatsTable.columns,
+                                   "rows": expected}},
+                         table.render())
