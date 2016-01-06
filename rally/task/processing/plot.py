@@ -29,26 +29,47 @@ def _process_scenario(data, pos):
     atomic_pie = charts.AtomicAvgChart(data["info"])
     atomic_area = charts.AtomicStackedAreaChart(data["info"])
     atomic_hist = charts.AtomicHistogramChart(data["info"])
-    output_area = charts.OutputStackedAreaDeprecatedChart(data["info"])
 
     errors = []
     output_errors = []
+    additive_output_charts = []
+    complete_output = []
     for idx, itr in enumerate(data["iterations"]):
         if itr["error"]:
             typ, msg, trace = itr["error"]
             errors.append({"iteration": idx,
                            "type": typ, "message": msg, "traceback": trace})
 
-        if itr["scenario_output"]["errors"]:
-            output_errors.append((idx, itr["scenario_output"]["errors"]))
+        for i, additive in enumerate(itr["output"]["additive"]):
+            try:
+                additive_output_charts[i].add_iteration(additive["items"])
+            except IndexError:
+                data_ = {}
+                keys = []
+                for key, value in additive["items"]:
+                    if key not in data:
+                        data_[key] = []
+                        keys.append(key)
+                    data_[key].append(value)
+
+                info = data["info"].copy()
+                info["output_names"] = keys
+                chart_cls = getattr(charts, additive["chart"])
+                chart = chart_cls(info, title=additive["title"],
+                                  description=additive["description"])
+                chart.add_iteration(additive["items"])
+                additive_output_charts.append(chart)
+
+        complete_output.append([dict(c) for c in itr["output"]["complete"]])
 
         for chart in (main_area, main_hist, main_stat, load_profile,
-                      atomic_pie, atomic_area, atomic_hist, output_area):
+                      atomic_pie, atomic_area, atomic_hist):
             chart.add_iteration(itr)
 
     kw = data["key"]["kw"]
     cls, method = data["key"]["name"].split(".")
-
+    additive_output = [chart.render() for chart in additive_output_charts]
+    iterations_count = data["info"]["iterations_count"]
     return {
         "cls": cls,
         "met": method,
@@ -67,14 +88,15 @@ def _process_scenario(data, pos):
                    "iter": atomic_area.render(),
                    "pie": atomic_pie.render()},
         "table": main_stat.render(),
-        "output": output_area.render(),
+        "additive_output": additive_output,
+        "complete_output": complete_output,
         "output_errors": output_errors,
         "errors": errors,
         "load_duration": data["info"]["load_duration"],
         "full_duration": data["info"]["full_duration"],
         "sla": data["sla"],
         "sla_success": all([s["success"] for s in data["sla"]]),
-        "iterations_count": data["info"]["iterations_count"],
+        "iterations_count": iterations_count,
     }
 
 

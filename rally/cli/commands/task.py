@@ -393,25 +393,52 @@ class TaskCommands(object):
             raw = result["data"]["raw"]
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
-            for result in raw:
-                data = result["scenario_output"].get("data")
-                if data:
-                    ssrs.append(data)
-            if ssrs:
-                keys = set()
-                for ssr in ssrs:
-                    keys.update(ssr.keys())
-                headers = ["key", "min", "median",
-                           "90%ile", "95%ile", "max",
-                           "avg"]
-                float_cols = ["min", "median", "90%ile",
-                              "95%ile", "max", "avg"]
-                formatters = dict(zip(float_cols,
-                                  [cliutils.pretty_float_formatter(col, 3)
-                                   for col in float_cols]))
-                table_rows = []
-                for key in keys:
-                    values = [float(ssr[key]) for ssr in ssrs if key in ssr]
+            for itr in raw:
+                if "output" not in itr:
+                    itr["output"] = {"additive": [], "complete": []}
+
+                    # NOTE(amaretskiy): "scenario_output" is supported
+                    #   for backward compatibility
+                    if ("scenario_output" in itr
+                            and itr["scenario_output"]["data"]):
+                        itr["output"]["additive"].append(
+                            {"items": itr["scenario_output"]["data"].items(),
+                             "title": "Scenario output",
+                             "description": "",
+                             "chart": "OutputStackedAreaChart"})
+                        del itr["scenario_output"]
+
+                for idx, additive in enumerate(itr["output"]["additive"]):
+                    try:
+                        for key, value in additive["items"]:
+                            ssrs[idx]["data"][key].append(value)
+                    except IndexError:
+                        data = {}
+                        keys = []
+                        for key, value in additive["items"]:
+                            if key not in data:
+                                data[key] = []
+                                keys.append(key)
+                            data[key].append(value)
+                        ssrs.append({"title": additive["title"],
+                                     "keys": keys,
+                                     "data": data})
+            if not ssrs:
+                return
+
+            print("\nScenario Specific Results\n")
+
+            headers = ["key", "min", "median", "90%ile", "95%ile",
+                       "max", "avg"]
+            float_cols = ["min", "median", "90%ile", "95%ile", "max", "avg"]
+            formatters = dict(zip(float_cols,
+                              [cliutils.pretty_float_formatter(col, 3)
+                               for col in float_cols]))
+
+            for ssr in ssrs:
+                rows = []
+                for key in ssr["keys"]:
+                    values = ssr["data"][key]
 
                     if values:
                         row = [str(key),
@@ -423,18 +450,13 @@ class TaskCommands(object):
                                round(utils.mean(values), 3)]
                     else:
                         row = [str(key)] + ["n/a"] * 6
-                    table_rows.append(rutils.Struct(**dict(zip(headers,
-                                                               row))))
-                print("\nScenario Specific Results\n")
-                cliutils.print_list(table_rows,
+                    rows.append(rutils.Struct(**dict(zip(headers, row))))
+
+                cliutils.print_list(rows,
                                     fields=headers,
                                     formatters=formatters,
-                                    table_label="Response Times (sec)")
-
-                for result in raw:
-                    errors = result["scenario_output"].get("errors")
-                    if errors:
-                        print(errors)
+                                    table_label=ssr["title"])
+                print()
 
         def _print_hints(task):
             print()
