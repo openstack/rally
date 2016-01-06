@@ -314,7 +314,9 @@ class TempestResourcesContextTestCase(test.TestCase):
                    return_value=CREDS).start()
         mock.patch("rally.osclients.Clients").start()
 
+        fake_verification = {"uuid": "uuid"}
         self.context = config.TempestResourcesContext("fake_deployment",
+                                                      fake_verification,
                                                       "/fake/path/to/config")
         self.context.conf.add_section("compute")
         self.context.conf.add_section("orchestration")
@@ -392,16 +394,24 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual("id1", flavor.id)
         self.assertEqual("id1", self.context._created_flavors[0].id)
 
-    @mock.patch("rally.plugins.openstack.wrappers."
-                "network.NeutronWrapper.create_network")
-    def test__create_network_resources(
-            self, mock_neutron_wrapper_create_network):
-        mock_neutron_wrapper_create_network.side_effect = [
-            fakes.FakeNetwork(id="id1")]
+    def test__create_network_resources(self):
+        client = self.context.clients.neutron()
+        fake_network = {
+            "id": "nid1",
+            "name": "network",
+            "status": "status"}
+
+        client.create_network.side_effect = [{"network": fake_network}]
+        client.create_router.side_effect = [{"router": {"id": "rid1"}}]
+        client.create_subnet.side_effect = [{"subnet": {"id": "subid1"}}]
 
         network = self.context._create_network_resources()
-        self.assertEqual("id1", network.id)
-        self.assertEqual("id1", self.context._created_networks[0].id)
+        self.assertEqual("nid1", network["id"])
+        self.assertEqual("nid1", self.context._created_networks[0]["id"])
+        self.assertEqual("rid1",
+                         self.context._created_networks[0]["router_id"])
+        self.assertEqual("subid1",
+                         self.context._created_networks[0]["subnets"][0])
 
     def test__cleanup_tempest_roles(self):
         self.context._created_roles = [fakes.FakeRole(), fakes.FakeRole()]

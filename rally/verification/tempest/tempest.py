@@ -347,7 +347,8 @@ class Tempest(object):
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
         # Create all resources needed for Tempest before running tests.
         # Once tests finish, all created resources will be deleted.
-        with config.TempestResourcesContext(self.deployment, self.config_file):
+        with config.TempestResourcesContext(
+                self.deployment, self.verification, self.config_file):
             # Run tests
             subprocess.check_call(test_cmd, cwd=self.path(),
                                   env=self.env, shell=True)
