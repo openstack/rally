@@ -201,6 +201,8 @@ class OpenStackProviderTestCase(test.TestCase):
         fake_keypair = mock.Mock()
         fake_keypair.name = "fake_key_name"
         provider = OSProvider(mock.Mock(), self._get_valid_config())
+        provider.sg = mock.Mock(id="33")
+        provider.config["secgroup_name"] = "some_sg"
         provider.nova = mock.Mock()
         provider.get_image_uuid = mock.Mock(return_value="fake_image_uuid")
         provider.get_userdata = mock.Mock(return_value="fake_userdata")
@@ -215,6 +217,8 @@ class OpenStackProviderTestCase(test.TestCase):
         fake_instance.addresses = {"private": [{"addr": "1.2.3.4"}]}
 
         servers = provider.create_servers()
+        provider.nova.security_groups.create.assert_called_once_with(
+            provider.config["secgroup_name"], provider.config["secgroup_name"])
 
         mock_server.assert_called_once_with(host="1.2.3.4", user="root",
                                             key="fake_path")
@@ -222,7 +226,8 @@ class OpenStackProviderTestCase(test.TestCase):
         fake_server.ssh.wait.assert_called_once_with(interval=5, timeout=120)
         provider.nova.servers.create.assert_called_once_with(
             "rally-dep-1-0", "fake_image_uuid", "22", userdata="fake_userdata",
-            nics="fake_nics", key_name="fake_key_name", config_drive=False)
+            nics="fake_nics", key_name="fake_key_name", config_drive=False,
+            security_groups=[provider.sg.name])
 
     @mock.patch(MOD_NAME + ".osclients")
     def test_get_image_found_by_checksum(self, mock_osclients):
