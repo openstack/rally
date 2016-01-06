@@ -74,7 +74,7 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
             inst.config)
         self.assertIn(
             rally_consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
-        self.assertEqual(False, inst.CONFIG_SCHEMA.get("additionalProperties"))
+        self.assertFalse(inst.CONFIG_SCHEMA.get("additionalProperties"))
         self.assertEqual("object", inst.CONFIG_SCHEMA.get("type"))
         props = inst.CONFIG_SCHEMA.get("properties", {})
         self.assertEqual({"type": "object"}, props.get("share_networks"))

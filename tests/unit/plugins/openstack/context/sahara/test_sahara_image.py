@@ -145,10 +145,10 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                 sahara_ctx.context["tenants"][tenant_id]["sahara"]["image"])
             self.assertEqual("some_id", image_id)
 
-        self.assertEqual(False, mock_glance_scenario__create_image.called)
+        self.assertFalse(mock_glance_scenario__create_image.called)
 
         sahara_ctx.cleanup()
-        self.assertEqual(False, mock_cleanup.called)
+        self.assertFalse(mock_cleanup.called)
 
     @mock.patch("%s.osclients.Glance.create_client" % CTX)
     def test_check_existing_image(self, mock_glance_create_client):
