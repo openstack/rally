@@ -233,9 +233,10 @@ class RandomNameGeneratorMixin(object):
 
     This mixin provides one method,
     ``generate_random_name()``. Classes that include it must provide a
-    ``self.task`` attribute that references a task dict. Classes that
-    use this mixin may set two class variables to alter the behavior
-    of ``generate_random_name()``:
+    ``self.task`` attribute that references a task dict or a
+    ``self.verification`` attribute that references a verification dict.
+    Classes that use this mixin may set two class variables to alter the
+    behavior of ``generate_random_name()``:
 
     * ``RESOURCE_NAME_FORMAT``: A mktemp(1)-like format string that
       will be used to pattern the generated random string. It must
@@ -275,7 +276,10 @@ class RandomNameGeneratorMixin(object):
 
         :returns: str, pseudo-random name
         """
-        task_id = self.task["uuid"]
+        if hasattr(self, "task"):
+            task_id = self.task["uuid"]
+        elif hasattr(self, "verification"):
+            task_id = self.verification["uuid"]
 
         match = _resource_name_placeholder_re.match(self.RESOURCE_NAME_FORMAT)
         if match is None:

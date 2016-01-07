@@ -288,13 +288,17 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             _write_config(conf_path, self.conf)
 
 
-class TempestResourcesContext(object):
+class TempestResourcesContext(utils.RandomNameGeneratorMixin):
     """Context class to create/delete resources needed for Tempest."""
 
-    def __init__(self, deployment, conf_path):
+    RESOURCE_NAME_FORMAT = "rally_verify_XXXXXXXX_XXXXXXXX"
+
+    def __init__(self, deployment, verification, conf_path):
         credential = db.deployment_get(deployment)["admin"]
         self.clients = osclients.Clients(objects.Credential(**credential))
         self.available_services = self.clients.services().values()
+
+        self.verification = verification
 
         self.conf_path = conf_path
         self.conf = configparser.ConfigParser()

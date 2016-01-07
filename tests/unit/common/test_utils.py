@@ -241,6 +241,15 @@ class RandomNameTestCase(test.TestCase):
         mock_choice.side_effect = iter("blarglesdweebled")
         self.assertEqual(generator.generate_random_name(), expected)
 
+        class FakeNameGenerator(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = fmt
+            verification = {"uuid": task_id}
+
+        generator = FakeNameGenerator()
+
+        mock_choice.side_effect = iter("blarglesdweebled")
+        self.assertEqual(generator.generate_random_name(), expected)
+
     def test_generate_random_name_bogus_name_format(self):
         class FakeNameGenerator(utils.RandomNameGeneratorMixin):
             RESOURCE_NAME_FORMAT = "invalid_XXX_format"
