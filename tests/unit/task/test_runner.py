@@ -91,7 +91,29 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
-    def test_run_scenario_once_with_scenario_output(self, mock_timer):
+    def test_run_scenario_once_with_added_scenario_output(self, mock_timer):
+        args = (1, fakes.FakeScenario, "with_add_output", mock.MagicMock(), {})
+        result = runner._run_scenario_once(args)
+
+        expected_result = {
+            "duration": fakes.FakeTimer().duration(),
+            "timestamp": fakes.FakeTimer().timestamp(),
+            "idle_duration": 0,
+            "error": [],
+            "output": {"additive": [{"chart": "Chart",
+                                     "description": "Additive description",
+                                     "items": [["a", 1]],
+                                     "title": "Additive"}],
+                       "complete": [{"data": [["a", [[1, 2], [2, 3]]]],
+                                     "description": "Complete description",
+                                     "title": "Complete",
+                                     "widget": "Widget"}]},
+            "atomic_actions": {}
+        }
+        self.assertEqual(expected_result, result)
+
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    def test_run_scenario_once_with_returned_scenario_output(self, mock_timer):
         args = (1, fakes.FakeScenario, "with_output", mock.MagicMock(), {})
         result = runner._run_scenario_once(args)
 
@@ -101,9 +123,9 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "idle_duration": 0,
             "error": [],
             "output": {"additive": [{"chart": "OutputStackedAreaChart",
+                                     "description": "",
                                      "items": [["a", 1]],
-                                     "title": "Scenario output",
-                                     "description": ""}],
+                                     "title": "Scenario output"}],
                        "complete": []},
             "atomic_actions": {}
         }
