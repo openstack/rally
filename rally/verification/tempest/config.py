@@ -30,6 +30,7 @@ from rally.common import objects
 from rally.common import utils
 from rally import exceptions
 from rally import osclients
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.plugins.openstack.wrappers import network
 
 LOG = logging.getLogger(__name__)
@@ -406,13 +407,13 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                       .format(opt=option, opt_val=option_value))
 
     def _discover_or_create_image(self):
-        glanceclient = self.clients.glance()
+        glance_wrap = glance_wrapper.wrap(self.clients.glance, self)
 
         if CONF.image.name_regex:
             LOG.debug("Trying to discover an image with name matching "
                       "regular expression '%s'. Note that case insensitive "
                       "matching is performed" % CONF.image.name_regex)
-            img_list = [img for img in glanceclient.images.list()
+            img_list = [img for img in self.clients.glance().images.list()
                         if img.status.lower() == "active" and img.name]
             for img in img_list:
                 if re.match(CONF.image.name_regex, img.name, re.IGNORECASE):
@@ -427,13 +428,13 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             "name": self.generate_random_name(),
             "disk_format": CONF.image.disk_format,
             "container_format": CONF.image.container_format,
+            "image_location": os.path.join(_create_or_get_data_dir(),
+                                           self.image_name),
             "is_public": True
         }
         LOG.debug("Creating image '%s'" % params["name"])
-        image = glanceclient.images.create(**params)
+        image = glance_wrap.create_image(**params)
         self._created_images.append(image)
-        image.update(data=open(
-            os.path.join(_create_or_get_data_dir(), self.image_name), "rb"))
 
         return image
 
