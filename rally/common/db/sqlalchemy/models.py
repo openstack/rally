@@ -235,12 +235,6 @@ class Worker(BASE, RallyBase):
     hostname = sa.Column(sa.String(255))
 
 
-def create_db():
-    from rally.common.db.sqlalchemy import api as sa_api
-
-    BASE.metadata.create_all(sa_api.get_engine())
-
-
 # TODO(boris-42): Remove it after oslo.db > 1.4.1 will be released.
 def drop_all_objects(engine):
     """Drop all database objects.

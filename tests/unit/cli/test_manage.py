@@ -36,8 +36,37 @@ class DBCommandsTestCase(test.TestCase):
         super(DBCommandsTestCase, self).setUp()
         self.db_commands = manage.DBCommands()
 
+    @mock.patch("rally.cli.manage.envutils")
     @mock.patch("rally.cli.manage.db")
-    def test_recreate(self, mock_db):
+    def test_recreate(self, mock_db, mock_envutils):
         self.db_commands.recreate()
-        calls = [mock.call.db_drop(), mock.call.db_create()]
+        db_calls = [mock.call.schema_cleanup(),
+                    mock.call.schema_create()]
+        self.assertEqual(db_calls, mock_db.mock_calls)
+        envutils_calls = [mock.call.clear_env()]
+        self.assertEqual(envutils_calls, mock_envutils.mock_calls)
+
+    @mock.patch("rally.cli.manage.db")
+    def test_create(self, mock_db):
+        self.db_commands.create()
+        calls = [mock.call.schema_create()]
         self.assertEqual(calls, mock_db.mock_calls)
+
+    @mock.patch("rally.cli.manage.db")
+    def test_upgrade(self, mock_db):
+        self.db_commands.upgrade()
+        calls = [mock.call.schema_upgrade()]
+        self.assertEqual(calls, mock_db.mock_calls)
+
+    @mock.patch("rally.cli.manage.db")
+    def test_downgrade(self, mock_db):
+        revision = mock.MagicMock()
+        self.db_commands.downgrade(revision)
+        calls = [mock.call.schema_downgrade(revision)]
+        self.assertEqual(calls, mock_db.mock_calls)
+
+    @mock.patch("rally.cli.manage.db")
+    def test_revision(self, mock_db):
+        self.db_commands.revision()
+        calls = [mock.call.schema_revision()]
+        mock_db.assert_has_calls(calls)

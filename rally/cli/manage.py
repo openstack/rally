@@ -28,10 +28,33 @@ class DBCommands(object):
     """Commands for DB management."""
 
     def recreate(self):
-        """Drop and create Rally database."""
-        db.db_drop()
-        db.db_create()
+        """Drop and create Rally database.
+
+        This will delete all existing data.
+        """
+        db.schema_cleanup()
+        db.schema_create()
         envutils.clear_env()
+
+    def create(self):
+        """Create Rally database."""
+        db.schema_create()
+
+    def upgrade(self):
+        """Upgrade Rally database to the latest state."""
+        db.schema_upgrade()
+
+    @cliutils.args("--revision",
+                   help=("Downgrade to specified revision UUID. "
+                         "Current revision of DB could be found by calling "
+                         "'rally-manage db revision'"))
+    def downgrade(self, revision):
+        """Downgrade Rally database."""
+        db.schema_downgrade(revision)
+
+    def revision(self):
+        """Print current Rally database revision UUID."""
+        print(db.schema_revision())
 
 
 def main():
