@@ -57,6 +57,10 @@ class ImageGenerator(context.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "image_args": {
+                "type": "object",
+                "additionalProperties": True
+            }
         },
         "required": ["image_url", "image_type", "image_container",
                      "images_per_tenant"],
@@ -76,6 +80,17 @@ class ImageGenerator(context.Context):
             current_images = []
             glance_scenario = glance_utils.GlanceScenario(
                 {"user": user, "task": self.context["task"]})
+
+            kwargs = self.config.get("image_args", {})
+            if self.config.get("min_ram") is not None:
+                LOG.warning("The 'min_ram' argument is deprecated; specify "
+                            "arbitrary arguments with 'image_args' instead")
+                kwargs["min_ram"] = self.config["min_ram"]
+            if self.config.get("min_disk") is not None:
+                LOG.warning("The 'min_disk' argument is deprecated; specify "
+                            "arbitrary arguments with 'image_args' instead")
+                kwargs["min_disk"] = self.config["min_disk"]
+
             for i in range(images_per_tenant):
                 if image_name and i > 0:
                     cur_name = image_name + str(i)
@@ -86,8 +101,7 @@ class ImageGenerator(context.Context):
 
                 image = glance_scenario._create_image(
                     image_container, image_url, image_type,
-                    name=cur_name, min_ram=self.config.get("min_ram", 0),
-                    min_disk=self.config.get("min_disk", 0))
+                    name=cur_name, **kwargs)
                 current_images.append(image.id)
 
             self.context["tenants"][tenant_id]["images"] = current_images
