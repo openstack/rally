@@ -105,13 +105,14 @@ Here is proposed iterations results structure for output data:
       ...
       "output": {
           "additive": [
-              # Each iteration duplicates "title", "chart" and items keys,
-              # however this seems to be less evil than keeping aggregated
-              # metadata on upper level of task results schema.
+              # Each iteration duplicates "title", "description", "chart" and
+              # items keys, however this seems to be less evil than keeping
+              # aggregated metadata on upper level of task results schema.
               # "chart" is required by HTML report and should be a name of
               # existent Chart subclass that is responsible for processing
               # and displaying the data
               {"title": "How some durations changes during the scenario",
+               "description": "Some details explaind here",
                "chart": "OutputStackedAreaChart",
                "items": [[<str key>, <float value>], ...]  # Additive data
               },
@@ -124,16 +125,16 @@ Here is proposed iterations results structure for output data:
               # displaying data. We do not need to specify "chart" here
               # because this data does not require processing - it is
               # already processed and represents a result of Chart.render()
-              {
-                  "title": "Interesting data from specific iteration",
-                  "widget": "StackedArea",
-                  "data": [
-                      [
-                          <str key>,
-                          [[<float X pos>, <float Y value>], ...]
-                      ],
-                      ...
-                  ]
+              {"title": "Interesting data from specific iteration",
+               "description": "Some details explaind here",
+               "widget": "StackedArea",
+               "data": [
+                   [
+                       <str key>,
+                       [[<float X pos>, <float Y value>], ...]
+                   ],
+                   ...
+               ]
               },
               ...  # More data if required
           ]
@@ -159,6 +160,10 @@ Scenario should be extended with method *add_output()*:
 
  class Scenario(...):
 
+     def __init__(self, context=None):
+         ...
+         self._output = {"additive": [], "complete": []}
+
      ...
 
      def add_output(self, additive=None, complete=None):
@@ -166,13 +171,17 @@ Scenario should be extended with method *add_output()*:
 
          :param additive: dict with additive output
          :param complete: dict with complete output
+         :raises RallyException: When additive or complete has wrong format
          """
-         if not hasattr(self, "_output"):
-             self._output = {"additive": [], "complete": []}
-         if additive:
-             self._output["additive"].append(additive)
-         if complete:
-             self._output["complete"].append(complete)
+         for key, value in (("additive", additive), ("complete", complete)):
+             if value:
+                 try:
+                     jsonschema.validate(
+                         value, task.OUTPUT_SCHEMA["properties"][key]["items"])
+                     self._output[key].append(value)
+                 except jsonschema.ValidationError:
+                     raise exceptions.RallyException(
+                         "%s output has wrong format" % key.capitalize())
 
 
 Here is an example how scenario can save different output:
@@ -185,18 +194,23 @@ Here is an example how scenario can save different output:
          ...
 
          self.add_output(additive={"title": "Foo data",
+                                   "description": "Some words about Foo",
                                    "chart": "OutputStackedAreaChart",
                                    "items": [["foo 1", 12], ["foo 2", 34]]})
          self.add_output(additive={"title": "Bar data",
+                                   "description": "Some words about Bar",
                                    "chart": "OutputAvgChart",
-                                    "items": [["bar 1", 56], ["bar 2", 78]]})
+                                   "items": [["bar 1", 56], ["bar 2", 78]]})
          self.add_output(complete={"title": "Complete data",
+                                   "description": "Some details here",
                                    "widget": "StackedArea",
                                    "data": [["foo key", [ ... ]], ... ]})
          self.add_output(complete={"title": "Another data",
+                                   "description": "Some details here",
                                    "widget": "Pie",
                                    "data": [["bar key", [ ... ]], ... ]})
          self.add_output(complete={"title": "Yet another data",
+                                   "description": "Some details here",
                                    "widget": "Table",
                                    "data": [["spam key", [ ... ]], ... ]})
 
@@ -206,21 +220,21 @@ Displaying scenario output in HTML report
 The following changes are planned for HTML report and charts classes:
 
   * rename tab *Output* to *Scenario Data*
-  * implement two subtabs under *Scenario Data*: *Aggregated* and *Detailed*
+  * implement subtabs under *Scenario Data*: *Aggregated* and *Per iteration*
   * *Aggregated* subtab shows charts with additive data
-  * *Detailed* subtab shows charts with complete data, for each iteration
+  * *Per iteration* subtab shows charts with complete data, for each iteration
   * Both subtabs (as well as parent tab) are shown only if there is
     something to display
-  * add optional *title* argument to Chart.__init__() - this will allow
-    keeping chart title with chart data - this is important for custom charts
-  * add *WIDGET* property to each Chart subclass to bind it to specific chart
-    widget (StackedArea, Pie, Table, Histogram). For example, AvgChart will
-    be bound to "Pie". This will allow defining both how to process and how
+  * add base class OutputChart and generic charts classes for processing
+    output data: OutputStackedAreaChart, OutputAvgChart, OutputStatsTable
+  * add optional *title* and *description* arguments to OutputChart.__init__()
+    so title and description - this is important for custom charts
+  * add *WIDGET* property to each OutputChart subclass to bind it to specific
+    chart widget (StackedArea, Pie, Table). For example, AvgChart will be
+    bound to "Pie". This will allow defining both how to process and how
     to display some data simply by single class name
-  * update return value format of Chart.render() with title and widget:
-    {"title": <str>, "widget": <str>, "data": [...]}
-  * add generic charts classes for processing output data
-    (like OutputAvgChart, OutputStatsTableChart)
+  * update return value format of OutputChart.render() with title and widget:
+    {"title": <str>, "description": <str>, "widget": <str>, "data": [...]}
 
 UI sketch for active "Aggregated" subtab:
 
@@ -229,9 +243,10 @@ UI sketch for active "Aggregated" subtab:
          .---------------.
          | Scenario Data |
      ----'               '-------------------
-       Aggregated   Detailed
-                    --------
+       Aggregated   Per iteration
+                    -------------
        <Custom chart title>
+       <Here is a description text>
         ----------------------------
        |                            |
        | Any available chart widget |
@@ -239,6 +254,7 @@ UI sketch for active "Aggregated" subtab:
         ----------------------------
 
        <Custom chart title>
+       <Here is a description text>
         ----------------------------
        |                            |
        | Any available chart widget |
@@ -247,7 +263,7 @@ UI sketch for active "Aggregated" subtab:
 
        [... more charts]
 
-UI sketch for active "Detailed" subtab, let it be iteration 5
+UI sketch for active "Per iteration" subtab, let it be iteration 5
 selected by dropdown:
 
 .. code-block::
@@ -255,12 +271,13 @@ selected by dropdown:
          .---------------.
          | Scenario Data |
      ----'               '-------------------
-       Aggregated   Detailed
+       Aggregated   Per iteration
        ----------
 
        [iteration 5]
 
        <Custom chart title>
+       <Here is a description text>
         ----------------------------
        |                            |
        | Any available chart widget |
@@ -268,6 +285,7 @@ selected by dropdown:
         ----------------------------
 
        <Custom chart title>
+       <Here is a description text>
         ----------------------------
        |                            |
        | Any available chart widget |
