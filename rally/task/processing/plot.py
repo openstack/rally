@@ -82,7 +82,7 @@ def _process_scenario(data, pos):
             "pie": [("success", (data["info"]["iterations_count"]
                                  - len(errors))),
                     ("errors", len(errors))],
-            "histogram": main_hist.render()[0]},
+            "histogram": main_hist.render()},
         "load_profile": load_profile.render(),
         "atomic": {"histogram": atomic_hist.render(),
                    "iter": atomic_area.render(),

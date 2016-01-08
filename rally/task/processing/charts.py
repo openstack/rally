@@ -235,11 +235,18 @@ class HistogramChart(Chart):
     def render(self):
         data = []
         for name, hist in self._data.items():
-            data.append(
-                [{"key": name, "view": v["view"], "disabled": hist["disabled"],
-                  "values": [{"x": x, "y": y} for x, y in zip(v["x"], v["y"])]}
-                 for v in hist["views"]])
-        return data
+            for idx, v in enumerate(hist["views"]):
+                graph = {"key": name,
+                         "view": v["view"],
+                         "disabled": hist["disabled"],
+                         "values": [{"x": x, "y": y}
+                                    for x, y in zip(v["x"], v["y"])]}
+                try:
+                    data[idx].append(graph)
+                except IndexError:
+                    data.append([graph])
+        return {"data": data, "views": [{"id": i, "name": d[0]["view"]}
+                                        for i, d in enumerate(data)]}
 
 
 class MainHistogramChart(HistogramChart):
