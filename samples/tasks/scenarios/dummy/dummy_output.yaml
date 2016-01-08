@@ -1,0 +1,13 @@
+---
+  Dummy.dummy_output:
+    -
+      args:
+        random_range: 25
+      runner:
+        type: "constant"
+        times: 50
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

@@ -589,6 +589,16 @@
           min: 20
           max: 80
 
+  Dummy.dummy_output:
+    -
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+
   Dummy.dummy_with_scenario_output:
     -
       runner:

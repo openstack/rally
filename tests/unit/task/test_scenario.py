@@ -223,6 +223,9 @@ class ScenarioTestCase(test.TestCase):
 
     def test_add_output(self):
         scenario_inst = scenario.Scenario()
+        self.assertEqual({"additive": [], "complete": []},
+                         scenario_inst._output)
+
         additive1 = {"title": "Additive 1", "chart": "FooChart",
                      "description": "Foo description",
                      "items": [["foo", 1], ["bar", 2]]}
