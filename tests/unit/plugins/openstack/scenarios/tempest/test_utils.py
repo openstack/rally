@@ -27,8 +27,8 @@ class TempestLogWrappersTestCase(test.TestCase):
     def setUp(self):
         super(TempestLogWrappersTestCase, self).setUp()
         verifier = mock.MagicMock()
-        verifier.parse_results.return_value = ({"fake": True},
-                                               {"have_results": True})
+        verifier.parse_results.return_value = mock.MagicMock(
+            total={"time": 0}, tests={})
 
         context = test.get_test_context()
         context.update({"tmp_results_dir": "/tmp/dir", "verifier": verifier})

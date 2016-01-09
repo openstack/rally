@@ -31,8 +31,8 @@ class TempestScenarioTestCase(test.TestCase):
         self.verifier = verifier.Tempest("fake_uuid")
         self.verifier.log_file_raw = "/dev/null"
         self.verifier.parse_results = mock.MagicMock()
-        self.verifier.parse_results.return_value = ({"fake": True},
-                                                    {"have_results": True})
+        self.verifier.parse_results.return_value = mock.MagicMock(
+            tests={}, total={"time": 0})
         self.context = test.get_test_context()
         self.context.update({"verifier": self.verifier,
                              "tmp_results_dir": "/dev"})
