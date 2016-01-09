@@ -15,8 +15,6 @@
 
 from __future__ import print_function
 
-import textwrap
-
 from rally.cli import cliutils
 from rally.common.plugin import plugin
 from rally.common import utils
@@ -65,8 +63,7 @@ class PluginCommands(object):
             print("MODULE\n\t%s" % plugin_info["module"])
             if plugin_info["description"]:
                 print("DESCRIPTION\n\t", end="")
-                print(textwrap.fill(plugin_info["description"],
-                                    subsequent_indent="\t"))
+                print("\n\t".join(plugin_info["description"].split("\n")))
             if plugin_info["parameters"]:
                 print("PARAMETERS")
                 rows = [utils.Struct(name=p["name"],
