@@ -278,7 +278,12 @@ class CinderVolumes(cinder_utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder", "nova"]})
-    def create_and_attach_volume(self, size, image, flavor, **kwargs):
+    @logging.log_deprecated_args(
+        "Use 'create_vm_params' for additional instance parameters.",
+        "0.2.0", ["kwargs"], once=True)
+    def create_and_attach_volume(self, size, image, flavor,
+                                 create_volume_params=None,
+                                 create_vm_params=None, **kwargs):
         """Create a VM and attach a volume to it.
 
         Simple test to create a VM and attach a volume, then
@@ -290,11 +295,22 @@ class CinderVolumes(cinder_utils.CinderScenario,
                          max - maximum size volumes will be created as.
         :param image: Glance image name to use for the VM
         :param flavor: VM flavor name
-        :param kwargs: optional arguments for VM creation
+        :param create_volume_params: optional arguments for volume creation
+        :param create_vm_params: optional arguments for VM creation
+        :param kwargs: (deprecated) optional arguments for VM creation
         """
 
-        server = self._boot_server(image, flavor, **kwargs)
-        volume = self._create_volume(size)
+        create_volume_params = create_volume_params or {}
+
+        if kwargs and create_vm_params:
+            raise ValueError("You can not set both 'kwargs'"
+                             "and 'create_vm_params' attributes."
+                             "Please use 'create_vm_params'.")
+
+        create_vm_params = create_vm_params or kwargs or {}
+
+        server = self._boot_server(image, flavor, **create_vm_params)
+        volume = self._create_volume(size, **create_volume_params)
 
         self._attach_volume(server, volume)
         self._detach_volume(server, volume)

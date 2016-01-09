@@ -196,7 +196,12 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._delete_volume = mock.MagicMock()
 
-        scenario.create_and_attach_volume(10, "img", "0")
+        volume_args = {"some_key": "some_val"}
+        vm_args = {"some_key": "some_val"}
+
+        scenario.create_and_attach_volume(10, "img", "0",
+                                          create_volume_params=volume_args,
+                                          create_vm_params=vm_args)
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
