@@ -134,19 +134,6 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
         self.assertEqual(expected, sorted(chart.render()))
 
 
-class OutputStackedAreaDeprecatedChartTestCase(test.TestCase):
-
-    def test_add_iteration_and_render(self):
-        chart = charts.OutputStackedAreaDeprecatedChart(
-            {"iterations_count": 3, "output_names": ["foo", "bar"]}, 10)
-        self.assertIsInstance(chart, charts.Chart)
-        [chart.add_iteration({"scenario_output": {"data": x}})
-         for x in ({"foo": 1.1, "bar": 1.2}, {"foo": 1.3}, {"bar": 1.4})]
-        expected = [("bar", [[1, 1.2], [2, 0], [3, 1.4]]),
-                    ("foo", [[1, 1.1], [2, 1.3], [3, 0]])]
-        self.assertEqual(expected, sorted(chart.render()))
-
-
 class AvgChartTestCase(test.TestCase):
 
     class AvgChart(charts.AvgChart):

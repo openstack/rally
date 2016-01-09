@@ -108,15 +108,6 @@ class AtomicStackedAreaChart(Chart):
         return atomics
 
 
-# TODO(amaretskiy): remove this class after report switched
-#   to classes based on OutputChart for output data
-class OutputStackedAreaDeprecatedChart(Chart):
-
-    def _map_iteration_values(self, iteration):
-        return [(name, iteration["scenario_output"]["data"].get(name, 0))
-                for name in self._workload_info["output_names"]]
-
-
 class AvgChart(Chart):
     """Base class for charts with average results."""
 
