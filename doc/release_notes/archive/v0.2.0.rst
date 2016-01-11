@@ -1,0 +1,165 @@
+============
+Rally v0.2.0
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **48**         |
++------------------+-----------------------+
+| Bug fixes        |         *6**          |
++------------------+-----------------------+
+| Dev cycle        |       **19 days**     |
++------------------+-----------------------+
+| Release date     |     **1/11/2015**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release, as well as all previous ones, includes a lot of internal and
+external changes. Most important of them are listed below.
+
+.. warning:: Release 0.2.0 doesn't support python 26
+
+
+Deprecations
+~~~~~~~~~~~~
+
+* Option --system-wide-install for ``rally verify start`` was deprecated in
+  favor of --system-wide
+
+* `rally show` commands were deprecated because of 3 reasons:
+   - It blocks us to make Rally generic testing tool
+   - It complicates work on Rally as a Service
+   - You can always use standard OpenStack clients to do the same
+
+Rally Verify
+~~~~~~~~~~~~
+
+* Add "xfail" mechanism for Tempest tests.
+
+  This mechanism allows us to list some tests, that are expected to fail,
+  in a YAML file and these tests will have "xfail" status instead of "fail".
+
+  Use new argument "--xfails-file" of rally verify start command.
+
+
+Rally Task
+~~~~~~~~~~
+
+* --out argument of `rally task report` is optional now
+
+  If you don't specify --out <file> it will just print the resulting report
+
+* Better scenario output support
+
+  As far as you know each scenario plugin are able to return data as a dict.
+  This dict contained set of key-values {<name>: <float>} where each name
+  was line on graph and each number was one of point.  Each scenario run adds
+  a single point for each line on that graph.
+
+  This allows to add extra data to the Rally and see how some values were
+  changed over time. However, in case when Rally was used to execute some other
+  tool and collect it's data this was useless.
+
+  To address this **Scenario.add_output(additive, complete)** was introduced:
+
+  Now it is possible  to generate as many as you need graphs by calling this
+  method multiple times.
+  There are two types of graph additive and complete. **Additive** is the same
+  as legacy concept of output data which is generated from results of all
+  iterations, **complete** are used when you would like to return whole chart
+  from each iteration.
+
+  HTML report has proper sub-tabs *Aggregated* and *Per iteration*
+  inside *Scenario Data* tab.
+
+  Here is a simple example how output can be added in any
+  scenario plugin:
+
+.. code-block::
+
+  # This represents a single X point in result StackedArea.
+  # Values from other X points are taken from other iterations.
+  self.add_output(additive={"title": "How do A and B changes",
+                            "description": ("Trend for A and B "
+                                            "during the scenario run"),
+                            "chart_plugin": "StackedArea",
+                            "data": [["foo", 42], ["bar", 24]]})
+
+  # This is a complete Pie chart that belongs to this concrete iteration
+  self.add_output(
+      complete={"title": "",
+                "description": ("Complete results for Foo and Bar "
+                                "from this iteration"),
+                "chart_plugin": "Pie",
+                "data": [["foo", 42], ["bar", 24]]})
+
+Rally Certification
+~~~~~~~~~~~~~~~~~~~
+
+ None.
+
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+ [Spec][Implemented] improve_scenario_output_format
+
+  https://github.com/openstack/rally/blob/master/doc/specs/implemented/improve_scenario_output_format.rst
+
+
+Plugins
+~~~~~~~
+
+* **Scenarios**:
+
+ * [new] DesignateBasic.create_and_update_domain
+
+ * [improved] CinderVolumes.create_and_attach_volume
+
+    .. warning:: Use "create_vm_params" dict argument instead of **kwargs for instance parameters.
+
+
+* **Context**:
+
+ * [improved] images
+
+   .. warning:: The min_ram and min_disk arguments in favor of image_args,
+    which lets the user specify any image creation keyword arguments they want.
+
+
+Bug fixes
+~~~~~~~~~
+
+**6 bugs were fixed**:
+
+ * #1522935: CinderVolumes.create_and_attach_volume does not accept additional
+   args for create_volume
+
+ * #1530770: "rally verify" fails with error 'TempestResourcesContext' object
+   has no attribute 'generate_random_name'
+
+ * #1530075: cirros_img_url in rally.conf doesn't take effective in
+   verification tempest
+
+ * #1517839: Make CONF.set_override with paramter enforce_type=True by default
+
+ * #1489059: "db type could not be determined" running py34
+
+ * #1262123: Horizon is unreachable outside VM when we are using DevStack +
+   OpenStack
+
+
+Documentation
+~~~~~~~~~~~~~
+
+ None.
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
