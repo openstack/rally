@@ -63,21 +63,21 @@ class DummyTestCase(test.TestCase):
                 scenario.dummy_output(random_range=random_range)
             expected = {
                 "additive": [
-                    {"chart": "OutputStatsTable",
-                     "items": [[s + " stat", exp]
-                               for s in ("foo", "bar", "spam")],
+                    {"chart_plugin": "StatsTable",
+                     "data": [[s + " stat", exp]
+                              for s in ("foo", "bar", "spam")],
                      "title": "Additive Stat Table",
                      "description": desc % "Additive Stat Table"},
-                    {"chart": "OutputStackedAreaChart",
-                     "items": [["foo 1", exp], ["foo 2", exp]],
+                    {"chart_plugin": "StackedArea",
+                     "data": [["foo 1", exp], ["foo 2", exp]],
                      "title": "Additive Foo StackedArea",
                      "description": desc % "Additive Foo StackedArea"},
-                    {"chart": "OutputStackedAreaChart",
-                     "items": [["bar %d" % i, exp] for i in range(1, 7)],
+                    {"chart_plugin": "StackedArea",
+                     "data": [["bar %d" % i, exp] for i in range(1, 7)],
                      "title": "Additive Bar StackedArea (no description)",
                      "description": ""},
-                    {"chart": "OutputAvgChart",
-                     "items": [["spam %d" % i, exp] for i in range(1, 4)],
+                    {"chart_plugin": "Pie",
+                     "data": [["spam %d" % i, exp] for i in range(1, 4)],
                      "title": "Additive Spam Pie",
                      "description": desc % "Additive Spam Pie"}],
                 "complete": [
@@ -86,12 +86,12 @@ class DummyTestCase(test.TestCase):
                               ["gamma", [[i, exp] for i in range(30)]]],
                      "title": "Complete StackedArea",
                      "description": desc % "Complete StackedArea",
-                     "widget": "StackedArea"},
+                     "chart_plugin": "StackedArea"},
                     {"data": [["delta", exp], ["epsilon", exp], ["zeta", exp],
                               ["theta", exp], ["lambda", exp], ["omega", exp]],
                      "title": "Complete Pie (no description)",
                      "description": "",
-                     "widget": "Pie"},
+                     "chart_plugin": "Pie"},
                     {"data": {
                         "cols": ["mu column", "xi column", "pi column",
                                  "tau column", "chi column"],
@@ -100,7 +100,7 @@ class DummyTestCase(test.TestCase):
                             for r in ("iota", "nu", "rho", "phi", "psi")]},
                      "title": "Complete Table",
                      "description": desc % "Complete Table",
-                     "widget": "Table"}]}
+                     "chart_plugin": "Table"}]}
         self.assertEqual(expected, scenario._output)
 
     def test_dummy_dummy_with_scenario_output(self):

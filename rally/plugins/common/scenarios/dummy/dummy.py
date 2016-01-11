@@ -92,31 +92,31 @@ class Dummy(scenario.Scenario):
 
         self.add_output(additive={"title": "Additive Stat Table",
                                   "description": desc % "Additive Stat Table",
-                                  "chart": "OutputStatsTable",
-                                  "items": [rand("foo stat"), rand("bar stat"),
-                                            rand("spam stat")]})
+                                  "chart_plugin": "StatsTable",
+                                  "data": [rand("foo stat"), rand("bar stat"),
+                                           rand("spam stat")]})
 
         self.add_output(additive={"title": "Additive Foo StackedArea",
                                   "description": (
                                       desc % "Additive Foo StackedArea"),
-                                  "chart": "OutputStackedAreaChart",
-                                  "items": [rand("foo 1"), rand("foo 2")]})
+                                  "chart_plugin": "StackedArea",
+                                  "data": [rand("foo 1"), rand("foo 2")]})
 
         self.add_output(additive={"title": ("Additive Bar StackedArea "
                                             "(no description)"),
                                   "description": "",
-                                  "chart": "OutputStackedAreaChart",
-                                  "items": [rand("bar %d" % i)
-                                            for i in range(1, 7)]})
+                                  "chart_plugin": "StackedArea",
+                                  "data": [rand("bar %d" % i)
+                                           for i in range(1, 7)]})
 
         self.add_output(additive={"title": "Additive Spam Pie",
                                   "description": desc % "Additive Spam Pie",
-                                  "chart": "OutputAvgChart",
-                                  "items": [rand("spam %d" % i)
-                                            for i in range(1, 4)]},
+                                  "chart_plugin": "Pie",
+                                  "data": [rand("spam %d" % i)
+                                           for i in range(1, 4)]},
                         complete={"title": "Complete StackedArea",
                                   "description": desc % "Complete StackedArea",
-                                  "widget": "StackedArea",
+                                  "chart_plugin": "StackedArea",
                                   "data": [
                                       [name, [rand(i) for i in range(30)]]
                                       for name in ("alpha", "beta", "gamma")]})
@@ -124,7 +124,7 @@ class Dummy(scenario.Scenario):
         self.add_output(
             complete={"title": "Complete Pie (no description)",
                       "description": "",
-                      "widget": "Pie",
+                      "chart_plugin": "Pie",
                       "data": [rand("delta"), rand("epsilon"), rand("zeta"),
                                rand("theta"), rand("lambda"), rand("omega")]})
 
@@ -134,7 +134,7 @@ class Dummy(scenario.Scenario):
                          for name in ("iota", "nu", "rho", "phi", "psi")]}
         self.add_output(complete={"title": "Complete Table",
                                   "description": desc % "Complete Table",
-                                  "widget": "Table",
+                                  "chart_plugin": "Table",
                                   "data": data})
 
     @scenario.configure()

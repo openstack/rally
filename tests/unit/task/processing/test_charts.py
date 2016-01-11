@@ -17,6 +17,7 @@ import ddt
 import mock
 
 from rally.common import costilius
+from rally.common.plugin import plugin
 from rally.task.processing import charts
 from tests.unit import test
 
@@ -26,6 +27,9 @@ CHARTS = "rally.task.processing.charts."
 class ChartTestCase(test.TestCase):
 
     class Chart(charts.Chart):
+
+        widget = "FooWidget"
+
         def _map_iteration_values(self, iteration):
             return [("foo_" + k, iteration[k]) for k in ["a", "b"]]
 
@@ -36,6 +40,7 @@ class ChartTestCase(test.TestCase):
     def test___init__(self):
         self.assertRaises(TypeError, charts.Chart, self.wload_info)
         chart = self.Chart(self.wload_info)
+        self.assertIsInstance(chart, plugin.Plugin)
         self.assertEqual({}, chart._data)
         self.assertEqual(42, chart.base_size)
         self.assertEqual(1000, chart.zipped_size)
@@ -535,6 +540,22 @@ class OutputAvgChartTestCase(test.TestCase):
         chart = charts.OutputAvgChart({"iterations_count": 42})
         self.assertIsInstance(chart, charts.OutputChart)
         self.assertIsInstance(chart, charts.AvgChart)
+
+
+class OutputTableTestCase(test.TestCase):
+
+    class OutputTable(charts.OutputTable):
+
+        columns = []
+
+        def add_iteration(self, iteration):
+            pass
+
+    def test___init__(self):
+        self.assertEqual("Table", charts.OutputTable.widget)
+        self.assertRaises(TypeError,
+                          charts.OutputTable, {"iterations_count": 42})
+        self.OutputTable({"iterations_count": 42})
 
 
 @ddt.ddt

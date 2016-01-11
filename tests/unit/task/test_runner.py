@@ -100,14 +100,14 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
-            "output": {"additive": [{"chart": "Chart",
+            "output": {"additive": [{"chart_plugin": "FooPlugin",
                                      "description": "Additive description",
-                                     "items": [["a", 1]],
+                                     "data": [["a", 1]],
                                      "title": "Additive"}],
                        "complete": [{"data": [["a", [[1, 2], [2, 3]]]],
                                      "description": "Complete description",
                                      "title": "Complete",
-                                     "widget": "Widget"}]},
+                                     "chart_plugin": "BarPlugin"}]},
             "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
@@ -122,9 +122,9 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
-            "output": {"additive": [{"chart": "OutputStackedAreaChart",
+            "output": {"additive": [{"chart_plugin": "StackedArea",
                                      "description": "",
-                                     "items": [["a", 1]],
+                                     "data": [["a", 1]],
                                      "title": "Scenario output"}],
                        "complete": []},
             "atomic_actions": {}
@@ -163,8 +163,8 @@ class ScenarioRunnerResultTestCase(test.TestCase):
             {
                 "duration": 2.0,
                 "idle_duration": 2.0,
-                "output": {"additive": [{"chart": "OutputStackedAreaChart",
-                                         "items": [["a", 1]],
+                "output": {"additive": [{"chart_plugin": "StackedArea",
+                                         "data": [["a", 1]],
                                          "title": "Scenario output",
                                          "description": ""}],
                            "complete": []},

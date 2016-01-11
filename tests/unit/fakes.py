@@ -1599,12 +1599,14 @@ class FakeScenario(scenario.Scenario):
         return {"data": {"a": 1}, "error": None}
 
     def with_add_output(self):
-        self.add_output(additive={"title": "Additive", "chart": "Chart",
+        self.add_output(additive={"title": "Additive",
                                   "description": "Additive description",
-                                  "items": [["a", 1]]},
-                        complete={"title": "Complete", "widget": "Widget",
+                                  "data": [["a", 1]],
+                                  "chart_plugin": "FooPlugin"},
+                        complete={"title": "Complete",
                                   "description": "Complete description",
-                                  "data": [["a", [[1, 2], [2, 3]]]]})
+                                  "data": [["a", [[1, 2], [2, 3]]]],
+                                  "chart_plugin": "BarPlugin"})
 
     def too_long(self, **kwargs):
         pass

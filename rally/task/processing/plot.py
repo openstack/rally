@@ -17,6 +17,7 @@ import collections
 import json
 
 from rally.common import objects
+from rally.common.plugin import plugin
 from rally.task.processing import charts
 from rally.ui import utils as ui_utils
 
@@ -42,11 +43,11 @@ def _process_scenario(data, pos):
 
         for i, additive in enumerate(itr["output"]["additive"]):
             try:
-                additive_output_charts[i].add_iteration(additive["items"])
+                additive_output_charts[i].add_iteration(additive["data"])
             except IndexError:
                 data_ = {}
                 keys = []
-                for key, value in additive["items"]:
+                for key, value in additive["data"]:
                     if key not in data:
                         data_[key] = []
                         keys.append(key)
@@ -54,13 +55,19 @@ def _process_scenario(data, pos):
 
                 info = data["info"].copy()
                 info["output_names"] = keys
-                chart_cls = getattr(charts, additive["chart"])
+                chart_cls = plugin.Plugin.get(additive["chart_plugin"])
                 chart = chart_cls(info, title=additive["title"],
                                   description=additive["description"])
-                chart.add_iteration(additive["items"])
+                chart.add_iteration(additive["data"])
                 additive_output_charts.append(chart)
 
-        complete_output.append([dict(c) for c in itr["output"]["complete"]])
+        complete_charts = []
+        for complete in itr["output"]["complete"]:
+            complete_chart = dict(complete)
+            chart_cls = plugin.Plugin.get(complete_chart.pop("chart_plugin"))
+            complete_chart["widget"] = chart_cls.widget
+            complete_charts.append(complete_chart)
+        complete_output.append(complete_charts)
 
         for chart in (main_area, main_hist, main_stat, load_profile,
                       atomic_pie, atomic_area, atomic_hist):
