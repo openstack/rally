@@ -226,16 +226,16 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual({"additive": [], "complete": []},
                          scenario_inst._output)
 
-        additive1 = {"title": "Additive 1", "chart": "FooChart",
+        additive1 = {"title": "Additive 1", "chart_plugin": "Plugin1",
                      "description": "Foo description",
-                     "items": [["foo", 1], ["bar", 2]]}
-        additive2 = {"title": "Additive 2", "chart": "BarChart",
+                     "data": [["foo", 1], ["bar", 2]]}
+        additive2 = {"title": "Additive 2", "chart_plugin": "Plugin2",
                      "description": "Bar description",
-                     "items": [["foo", 42], ["bar", 24]]}
-        complete1 = {"title": "Complete 1", "widget": "FooWidget",
+                     "data": [["foo", 42], ["bar", 24]]}
+        complete1 = {"title": "Complete 1", "chart_plugin": "Plugin3",
                      "description": "Complete description",
                      "data": [["ab", 1], ["cd", 2]]}
-        complete2 = {"title": "Complete 2", "widget": "BarWidget",
+        complete2 = {"title": "Complete 2", "chart_plugin": "Plugin4",
                      "description": "Another complete description",
                      "data": [["vx", 1], ["yz", 2]]}
 
@@ -253,10 +253,10 @@ class ScenarioTestCase(test.TestCase):
                          scenario_inst._output)
 
     def test_add_output_raises(self):
-        additive = {"title": "Foo title", "chart": "FooChart",
+        additive = {"title": "Foo title", "chart_plugin": "Plugin1",
                     "description": "Foo description",
-                    "items": [["ab", 1], ["cd", 2]]}
-        complete = {"title": "Bar title", "widget": "BarWidget",
+                    "data": [["ab", 1], ["cd", 2]]}
+        complete = {"title": "Bar title", "chart_plugin": "Plugin2",
                     "description": "Bar description",
                     "data": [["ef", 1], ["jh", 2]]}
         scenario_inst = scenario.Scenario()

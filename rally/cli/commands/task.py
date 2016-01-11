@@ -405,20 +405,20 @@ class TaskCommands(object):
                     if ("scenario_output" in itr
                             and itr["scenario_output"]["data"]):
                         itr["output"]["additive"].append(
-                            {"items": itr["scenario_output"]["data"].items(),
+                            {"data": itr["scenario_output"]["data"].items(),
                              "title": "Scenario output",
                              "description": "",
-                             "chart": "OutputStackedAreaChart"})
+                             "chart_plugin": "StackedArea"})
                         del itr["scenario_output"]
 
                 for idx, additive in enumerate(itr["output"]["additive"]):
                     try:
-                        for key, value in additive["items"]:
+                        for key, value in additive["data"]:
                             ssrs[idx]["data"][key].append(value)
                     except IndexError:
                         data = {}
                         keys = []
-                        for key, value in additive["items"]:
+                        for key, value in additive["data"]:
                             if key not in data:
                                 data[key] = []
                                 keys.append(key)

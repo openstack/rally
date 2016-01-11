@@ -77,9 +77,9 @@ def _run_scenario_once(args):
                 output["additive"].append({
                     "title": "Scenario output",
                     "description": "",
-                    "chart": "OutputStackedAreaChart",
-                    "items": [list(item)
-                              for item in deprecated_output["data"].items()]})
+                    "chart_plugin": "StackedArea",
+                    "data": [list(item)
+                             for item in deprecated_output["data"].items()]})
             if warning:
                 LOG.warning(warning)
     except Exception as e:

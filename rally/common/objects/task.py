@@ -33,15 +33,15 @@ OUTPUT_SCHEMA = {
                 "properties": {
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "chart": {"type": "string"},
-                    "items": {
+                    "chart_plugin": {"type": "string"},
+                    "data": {
                         "type": "array",
                         "items": {
                             "type": "array",
                             "items": [{"type": "string"},
                                       {"type": "number"}],
                             "additionalItems": False}}},
-                "required": ["title", "description", "chart", "items"],
+                "required": ["title", "description", "chart_plugin", "data"],
                 "additionalProperties": False
             }
         },
@@ -52,7 +52,7 @@ OUTPUT_SCHEMA = {
                 "properties": {
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "widget": {"type": "string"},
+                    "chart_plugin": {"type": "string"},
                     "data": {"anyOf": [
                         {"type": "array",
                          "items": {
@@ -82,7 +82,7 @@ OUTPUT_SCHEMA = {
                          "additionalProperties": False}
                     ]}
                 },
-                "required": ["title", "description", "widget", "data"],
+                "required": ["title", "description", "chart_plugin", "data"],
                 "additionalProperties": False
             }
         }

@@ -19,13 +19,19 @@ import math
 import six
 
 from rally.common import costilius
+from rally.common.plugin import plugin
 from rally.common import streaming_algorithms as streaming
 from rally.task.processing import utils
 
 
 @six.add_metaclass(abc.ABCMeta)
-class Chart(object):
+@plugin.configure(name="base_output_chart")
+class Chart(plugin.Plugin):
     """Base class for charts."""
+
+    @abc.abstractproperty
+    def widget(self):
+        """Widget name to display this chart by JavaScript."""
 
     def __init__(self, workload_info, zipped_size=1000):
         """Setup initial values.
@@ -77,6 +83,8 @@ class Chart(object):
 
 class MainStackedAreaChart(Chart):
 
+    widget = "StackedArea"
+
     def _map_iteration_values(self, iteration):
         if iteration["error"]:
             result = [("duration", 0), ("idle_duration", 0)]
@@ -94,6 +102,8 @@ class MainStackedAreaChart(Chart):
 
 class AtomicStackedAreaChart(Chart):
 
+    widget = "StackedArea"
+
     def _map_iteration_values(self, iteration):
         iteration = self._fix_atomic_actions(iteration)
         atomics = list(iteration["atomic_actions"].items())
@@ -110,6 +120,8 @@ class AtomicStackedAreaChart(Chart):
 
 class AvgChart(Chart):
     """Base class for charts with average results."""
+
+    widget = "Pie"
 
     def add_iteration(self, iteration):
         for name, value in self._map_iteration_values(iteration):
@@ -130,6 +142,8 @@ class AtomicAvgChart(AvgChart):
 
 class LoadProfileChart(Chart):
     """Chart for parallel durations."""
+
+    widget = "StackedArea"
 
     def __init__(self, workload_info, name="parallel iterations",
                  scale=200):
@@ -193,6 +207,8 @@ class HistogramChart(Chart):
     of histograms, that usually can be switched by dropdown select.
     And each histogram has several data views.
     """
+
+    widget = "Histogram"
 
     def _init_views(self, min_value, max_value):
         """Generate initial data for each histogram view."""
@@ -285,6 +301,8 @@ class Table(Chart):
         This can be done in __init__() or even in add_iteration().
     """
 
+    widget = "Table"
+
     @abc.abstractproperty
     def columns(self):
         """List of columns names."""
@@ -369,10 +387,6 @@ class MainStatsTable(Table):
 class OutputChart(Chart):
     """Base class for charts related to scenario output."""
 
-    @abc.abstractproperty
-    def widget(self):
-        """Widget name to display this chart by JavaScript."""
-
     def __init__(self, workload_info,
                  zipped_size=1000, title="", description=""):
         super(OutputChart, self).__init__(workload_info, zipped_size)
@@ -389,19 +403,27 @@ class OutputChart(Chart):
                 "data": super(OutputChart, self).render()}
 
 
+@plugin.configure(name="StackedArea")
 class OutputStackedAreaChart(OutputChart):
 
     widget = "StackedArea"
 
 
+@plugin.configure(name="Pie")
 class OutputAvgChart(OutputChart, AvgChart):
 
     widget = "Pie"
 
 
-class OutputStatsTable(OutputChart, Table):
+@plugin.configure(name="Table")
+class OutputTable(OutputChart, Table):
 
     widget = "Table"
+
+
+@plugin.configure(name="StatsTable")
+class OutputStatsTable(OutputTable):
+
     columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
                "95%ile (sec)", "Max (sec)", "Avg (sec)", "Count"]
 
