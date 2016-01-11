@@ -44,14 +44,15 @@ def tempest_log_wrapper(func):
             pass
 
         # parse and save results
-        total, tests = scenario_obj.context["verifier"].parse_results(
+        results = scenario_obj.context["verifier"].parse_results(
             kwargs["log_file"])
-        if total and tests:
-            scenario_obj._atomic_actions["test_execution"] = total.get("time")
-            if total.get("errors") or total.get("failures"):
+        if results:
+            total = results.total
+            scenario_obj._atomic_actions["test_execution"] = total["time"]
+            if total.get("failures") or total.get("unexpected_success"):
                 raise TempestBenchmarkFailure([
-                    test for test in six.itervalues(tests)
-                    if test["status"] == "FAIL"])
+                    test["name"] for test in six.itervalues(results.tests)
+                    if test["status"] in ("fail", "uxsuccess")])
         else:
             raise TempestBenchmarkFailure(_("No information"))
 
