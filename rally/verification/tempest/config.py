@@ -15,7 +15,6 @@
 
 import inspect
 import os
-import uuid
 
 from oslo_config import cfg
 import requests
@@ -386,7 +385,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
     def _create_image(self):
         glanceclient = self.clients.glance()
         params = {
-            "name": "rally-verify-cirros-img-%s" % uuid.uuid4(),
+            "name": self.generate_random_name(),
             "disk_format": CONF.image.disk_format,
             "container_format": CONF.image.container_format,
             "is_public": True
@@ -402,7 +401,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
     def _create_flavor(self, flv_ram):
         novaclient = self.clients.nova()
         params = {
-            "name": "m1.rally-verify-flv-%s" % uuid.uuid4(),
+            "name": self.generate_random_name(),
             "ram": flv_ram,
             "vcpus": 1,
             "disk": 0
