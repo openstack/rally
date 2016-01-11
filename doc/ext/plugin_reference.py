@@ -43,6 +43,15 @@ DATA = [
         ]
     },
     {
+        "group": "processing",
+        "items": [
+            {
+                "name": "output chart",
+                "base": "rally.task.processing.charts:OutputChart"
+            }
+        ]
+    },
+    {
         "group": "deployment",
         "items": [
             {
