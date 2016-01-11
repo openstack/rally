@@ -31,7 +31,7 @@ LOG.setLevel(logging.DEBUG)
 
 MODES_PARAMETERS = {
     "full": "--set full",
-    "light": "--set compute"
+    "light": "--set smoke"
 }
 
 BASE_DIR = "rally-verify"
