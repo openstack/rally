@@ -28,6 +28,7 @@ Contents
    :maxdepth: 2
 
    overview
+   glossary
    install
    tutorial
    cli/cli_reference
