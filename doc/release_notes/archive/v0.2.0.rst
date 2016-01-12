@@ -80,23 +80,22 @@ Rally Task
   Here is a simple example how output can be added in any
   scenario plugin:
 
-.. code-block::
+  .. code-block:: python
 
-  # This represents a single X point in result StackedArea.
-  # Values from other X points are taken from other iterations.
-  self.add_output(additive={"title": "How do A and B changes",
-                            "description": ("Trend for A and B "
-                                            "during the scenario run"),
-                            "chart_plugin": "StackedArea",
-                            "data": [["foo", 42], ["bar", 24]]})
-
-  # This is a complete Pie chart that belongs to this concrete iteration
-  self.add_output(
-      complete={"title": "",
-                "description": ("Complete results for Foo and Bar "
-                                "from this iteration"),
-                "chart_plugin": "Pie",
-                "data": [["foo", 42], ["bar", 24]]})
+    # This represents a single X point in result StackedArea.
+    # Values from other X points are taken from other iterations.
+    self.add_output(additive={"title": "How do A and B changes",
+                              "description": ("Trend for A and B "
+                                              "during the scenario run"),
+                              "chart_plugin": "StackedArea",
+                              "data": [["foo", 42], ["bar", 24]]})
+    # This is a complete Pie chart that belongs to this concrete iteration
+    self.add_output(
+        complete={"title": "",
+                  "description": ("Complete results for Foo and Bar "
+                                  "from this iteration"),
+                  "chart_plugin": "Pie",
+                  "data": [["foo", 42], ["bar", 24]]})
 
 Rally Certification
 ~~~~~~~~~~~~~~~~~~~
