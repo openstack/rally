@@ -119,10 +119,10 @@ def launch_verification_once(launch_parameters):
     """Launch verification and show results in different formats."""
     results = call_rally("verify start %s" % launch_parameters)
     results["uuid"] = envutils.get_global(envutils.ENV_VERIFICATION)
-    results["result_in_html"] = call_rally(
-        "verify results --html", output_type="html")
-    results["result_in_json"] = call_rally(
-        "verify results --json", output_type="json")
+    results["result_in_html"] = call_rally("verify results",
+                                           output_type="html")
+    results["result_in_json"] = call_rally("verify results",
+                                           output_type="json")
     results["show"] = call_rally("verify show")
     results["show_detailed"] = call_rally("verify show --detailed")
     # NOTE(andreykurilin): we need to clean verification uuid from global
@@ -135,11 +135,9 @@ def do_compare(uuid_1, uuid_2):
     """Compare and save results in different formats."""
     results = {}
     for output_format in ("csv", "html", "json"):
-        cmd = ("verify compare --uuid-1 %(uuid-1)s --uuid-2 %(uuid-2)s "
-               "--%(output_format)s") % {
+        cmd = "verify compare --uuid-1 %(uuid-1)s --uuid-2 %(uuid-2)s" % {
             "uuid-1": uuid_1,
-            "uuid-2": uuid_2,
-            "output_format": output_format
+            "uuid-2": uuid_2
         }
         results[output_format] = call_rally(cmd, output_type=output_format)
     return results
