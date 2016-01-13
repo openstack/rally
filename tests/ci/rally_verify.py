@@ -25,7 +25,6 @@ from rally.cli import envutils
 from rally.ui import utils
 
 LOG = logging.getLogger(__name__)
-LOG.addHandler(logging.StreamHandler())
 LOG.setLevel(logging.DEBUG)
 
 
