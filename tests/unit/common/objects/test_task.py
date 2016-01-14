@@ -175,7 +175,7 @@ class TaskTestCase(test.TestCase):
 
         now = datetime.datetime.now()
         iterations = [
-            {"timestamp": i + 2, "error": [], "duration": i + 5,
+            {"timestamp": i + 2, "duration": i + 5,
              "scenario_output": {"errors": "", "data": {}},
              "error": [], "idle_duration": i,
              "atomic_actions": {
