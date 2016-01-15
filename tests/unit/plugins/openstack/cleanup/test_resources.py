@@ -37,6 +37,11 @@ class QuotaMixinTestCase(test.TestCase):
         quota.raw_resource = mock.MagicMock()
         self.assertEqual(quota.raw_resource, quota.id())
 
+    def test_name(self):
+        quota = resources.QuotaMixin()
+        quota.raw_resource = mock.MagicMock()
+        self.assertIsNone(quota.name())
+
     def test_delete(self):
         quota = resources.QuotaMixin()
         mock_manager = mock.MagicMock()
@@ -101,6 +106,14 @@ class NovaServerTestCase(test.TestCase):
             server.raw_resource.id)
 
 
+class NovaFloatingIPsTestCase(test.TestCase):
+
+    def test_name(self):
+        fips = resources.NovaFloatingIPs()
+        fips.raw_resource = mock.MagicMock()
+        self.assertIsNone(fips.name())
+
+
 class NovaSecurityGroupTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
@@ -122,6 +135,11 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
         ip_range.raw_resource = mock.MagicMock()
         self.assertEqual(ip_range.raw_resource.address, ip_range.id())
 
+    def test_name(self):
+        fips = resources.NovaFloatingIpsBulk()
+        fips.raw_resource = mock.MagicMock()
+        self.assertIsNone(fips.name())
+
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
     @mock.patch("rally.common.utils.name_matches_object")
     def test_list(self, mock_name_matches_object,
@@ -138,6 +156,11 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
 
 
 class NovaNetworksTestCase(test.TestCase):
+
+    def test_name(self):
+        network = resources.NovaNetworks()
+        network.raw_resource = mock.MagicMock()
+        self.assertEqual(network.raw_resource.label, network.name())
 
     @mock.patch("rally.common.plugin.discover.itersubclasses")
     def test_list(self, mock_itersubclasses):
@@ -252,6 +275,11 @@ class NeutronMixinTestCase(test.TestCase):
         neut = self.get_neutron_mixin()
         neut.raw_resource = {"id": "test"}
         self.assertEqual("test", neut.id())
+
+    def test_name(self):
+        neutron = self.get_neutron_mixin()
+        neutron.raw_resource = {"id": "test_id", "name": "test_name"}
+        self.assertEqual("test_name", neutron.name())
 
     def test_delete(self):
         neut = self.get_neutron_mixin()
@@ -473,6 +501,11 @@ class SwiftMixinTestCase(test.TestCase):
         swift_mixin.raw_resource = mock.MagicMock()
         self.assertEqual(swift_mixin.raw_resource, swift_mixin.id())
 
+    def test_name(self):
+        swift = self.get_swift_mixin()
+        swift.raw_resource = ["name1", "name2"]
+        self.assertEqual("name2", swift.name())
+
     def test_delete(self):
         swift_mixin = self.get_swift_mixin()
         swift_mixin.user = mock.MagicMock()
@@ -585,6 +618,11 @@ class FuelEnvironmentTestCase(test.TestCase):
         fres = resources.FuelEnvironment()
         fres.raw_resource = {"id": 42, "name": "chavez"}
         self.assertEqual(42, fres.id())
+
+    def test_name(self):
+        fuel = resources.FuelEnvironment()
+        fuel.raw_resource = {"id": "test_id", "name": "test_name"}
+        self.assertEqual("test_name", fuel.name())
 
     @mock.patch("%s.FuelEnvironment._manager" % BASE)
     def test_is_deleted(self, mock__manager):

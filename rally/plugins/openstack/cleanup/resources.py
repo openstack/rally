@@ -44,6 +44,9 @@ class QuotaMixin(SynchronizedDeletion):
     def id(self):
         return self.raw_resource
 
+    def name(self):
+        return None
+
     def delete(self):
         self._manager().delete(self.raw_resource)
 
@@ -98,7 +101,9 @@ class NovaServer(base.ResourceManager):
 
 @base.resource("nova", "floating_ips", order=next(_nova_order))
 class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
-    pass
+
+    def name(self):
+        return None
 
 
 @base.resource("nova", "keypairs", order=next(_nova_order))
@@ -127,6 +132,9 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
     def id(self):
         return self.raw_resource.address
 
+    def name(self):
+        return None
+
     def list(self):
         return [floating_ip for floating_ip in self._manager().list()
                 if utils.name_matches_object(floating_ip.pool,
@@ -136,6 +144,9 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
 @base.resource("nova", "networks", order=next(_nova_order),
                admin_required=True, tenant_resource=True)
 class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
+
+    def name(self):
+        return self.raw_resource.label
 
     def list(self):
         # NOTE(stpierre): any plugin can create a nova network via the
@@ -208,6 +219,9 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
 
     def id(self):
         return self.raw_resource["id"]
+
+    def name(self):
+        return self.raw_resource["name"]
 
     def delete(self):
         delete_method = getattr(self._manager(), "delete_%s" % self._resource)
@@ -550,6 +564,12 @@ class SwiftMixin(SynchronizedDeletion, base.ResourceManager):
     def id(self):
         return self.raw_resource
 
+    def name(self):
+        # NOTE(stpierre): raw_resource is a list of either [container
+        # name, object name] (as in SwiftObject) or just [container
+        # name] (as in SwiftContainer).
+        return self.raw_resource[-1]
+
     def delete(self):
         delete_method = getattr(self._manager(), "delete_%s" % self._resource)
         # NOTE(weiwu): *self.raw_resource is required because for deleting
@@ -635,6 +655,9 @@ class FuelEnvironment(base.ResourceManager):
 
     def id(self):
         return self.raw_resource["id"]
+
+    def name(self):
+        return self.raw_resource["name"]
 
     def is_deleted(self):
         return not self._manager().get(self.id())

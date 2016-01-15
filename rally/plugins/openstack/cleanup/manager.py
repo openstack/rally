@@ -74,12 +74,14 @@ class SeekAndDestroy(object):
 
         msg_kw = {
             "uuid": resource.id(),
+            "name": resource.name() or "",
             "service": resource._service,
             "resource": resource._resource
         }
 
-        LOG.debug("Deleting %(service)s %(resource)s object %(uuid)s" %
-                  msg_kw)
+        LOG.debug(
+            "Deleting %(service)s %(resource)s object %(name)s (%(uuid)s)" %
+            msg_kw)
 
         try:
             rutils.retry(resource._max_attempts, resource.delete)
