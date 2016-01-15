@@ -21,8 +21,8 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
-from rally.plugins.openstack.context.cleanup import manager as resource_manager
-from rally.plugins.openstack.context.cleanup import resources as res_cleanup
+from rally.plugins.openstack.cleanup import manager as resource_manager
+from rally.plugins.openstack.cleanup import resources as res_cleanup
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context

@@ -20,7 +20,7 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
-from rally.plugins.openstack.context.cleanup import manager as resource_manager
+from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.task import context
 from rally.task import utils as bench_utils
