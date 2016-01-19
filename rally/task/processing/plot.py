@@ -45,19 +45,13 @@ def _process_scenario(data, pos):
             try:
                 additive_output_charts[i].add_iteration(additive["data"])
             except IndexError:
-                data_ = {}
-                keys = []
-                for key, value in additive["data"]:
-                    if key not in data:
-                        data_[key] = []
-                        keys.append(key)
-                    data_[key].append(value)
-
-                info = data["info"].copy()
-                info["output_names"] = keys
                 chart_cls = plugin.Plugin.get(additive["chart_plugin"])
-                chart = chart_cls(info, title=additive["title"],
-                                  description=additive["description"])
+                chart = chart_cls(
+                    data["info"], title=additive["title"],
+                    description=additive.get("description", ""),
+                    label=additive.get("label", ""),
+                    axis_label=additive.get("axis_label",
+                                            "Iteration sequence number"))
                 chart.add_iteration(additive["data"])
                 additive_output_charts.append(chart)
 

@@ -387,11 +387,13 @@ class MainStatsTable(Table):
 class OutputChart(Chart):
     """Base class for charts related to scenario output."""
 
-    def __init__(self, workload_info,
-                 zipped_size=1000, title="", description=""):
+    def __init__(self, workload_info, zipped_size=1000,
+                 title="", description="", label="", axis_label=""):
         super(OutputChart, self).__init__(workload_info, zipped_size)
         self.title = title
         self.description = description
+        self.label = label
+        self.axis_label = axis_label
 
     def _map_iteration_values(self, iteration):
         return iteration
@@ -400,13 +402,32 @@ class OutputChart(Chart):
         return {"title": self.title,
                 "description": self.description,
                 "widget": self.widget,
-                "data": super(OutputChart, self).render()}
+                "data": super(OutputChart, self).render(),
+                "label": self.label,
+                "axis_label": self.axis_label}
 
 
 @plugin.configure(name="StackedArea")
 class OutputStackedAreaChart(OutputChart):
 
     widget = "StackedArea"
+
+    def render(self):
+        result = super(OutputStackedAreaChart, self).render()
+
+        # NOTE(amaretskiy): transform to Table if there is a single iteration
+        if result["data"] and len(result["data"][0][1]) == 1:
+            rows = [[v[0], v[1][0][1]] for v in result["data"]]
+            result.update({"widget": "Table",
+                           "data": {"cols": ["Name", self.label or "Value"],
+                                    "rows": rows}})
+        return result
+
+
+@plugin.configure(name="Lines")
+class OutputLinesChart(OutputStackedAreaChart):
+
+    widget = "Lines"
 
 
 @plugin.configure(name="Pie")

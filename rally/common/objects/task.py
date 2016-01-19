@@ -40,8 +40,10 @@ OUTPUT_SCHEMA = {
                             "type": "array",
                             "items": [{"type": "string"},
                                       {"type": "number"}],
-                            "additionalItems": False}}},
-                "required": ["title", "description", "chart_plugin", "data"],
+                            "additionalItems": False}},
+                    "label": {"type": "string"},
+                    "axis_label": {"type": "string"}},
+                "required": ["title", "chart_plugin", "data"],
                 "additionalProperties": False
             }
         },
@@ -80,9 +82,11 @@ OUTPUT_SCHEMA = {
                          },
                          "required": ["cols", "rows"],
                          "additionalProperties": False}
-                    ]}
+                    ]},
+                    "label": {"type": "string"},
+                    "axis_label": {"type": "string"}
                 },
-                "required": ["title", "description", "chart_plugin", "data"],
+                "required": ["title", "chart_plugin", "data"],
                 "additionalProperties": False
             }
         }
