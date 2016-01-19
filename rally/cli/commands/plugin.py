@@ -24,7 +24,7 @@ from rally import plugins
 
 
 class PluginCommands(object):
-    """Command allows to manage Rally plugins."""
+    """Set of commands that allow you to manage Rally plugins."""
 
     @staticmethod
     def _print_plugins_list(plugin_list):
@@ -41,7 +41,7 @@ class PluginCommands(object):
                    help="Plugin namespace.")
     @plugins.ensure_plugins_are_loaded
     def show(self, name, namespace=None):
-        """Show detailed information about Rally plugin."""
+        """Show detailed information about a Rally plugin."""
         name_lw = name.lower()
         all_plugins = plugin.Plugin.get_all(namespace=namespace)
         found = [p for p in all_plugins if name_lw in p.get_name().lower()]
@@ -78,9 +78,10 @@ class PluginCommands(object):
             self._print_plugins_list(found)
 
     @cliutils.args("--name", dest="name", type=str,
-                   help="List only plugins that match passed name.")
-    @cliutils.args("--namespace", dest="namespace", type=str,
-                   help="List only plugins that are in specified namespace")
+                   help="List only plugins that match the given name.")
+    @cliutils.args(
+        "--namespace", dest="namespace", type=str,
+        help="List only plugins that are in the specified namespace.")
     @plugins.ensure_plugins_are_loaded
     def list(self, name=None, namespace=None):
         """List all Rally plugins that match name and namespace."""
