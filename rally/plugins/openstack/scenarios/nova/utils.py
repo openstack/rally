@@ -801,10 +801,10 @@ class NovaScenario(scenario.OpenStackScenario):
         action_name = ("nova.create_%s_rules" % (rules_per_security_group *
                                                  len(security_groups)))
         with atomic.ActionTimer(self, action_name):
-            for i in range(len(security_groups)):
+            for i, security_group in enumerate(security_groups):
                 for j in range(rules_per_security_group):
                         self.clients("nova").security_group_rules.create(
-                            security_groups[i].id,
+                            security_group.id,
                             from_port=(i * rules_per_security_group + j + 1),
                             to_port=(i * rules_per_security_group + j + 1),
                             ip_protocol=ip_protocol,
