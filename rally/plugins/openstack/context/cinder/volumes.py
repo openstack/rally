@@ -76,8 +76,9 @@ class VolumeGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):
-        # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(
             names=["cinder.volumes"],
             users=self.context.get("users", []),
-            api_versions=self.context["config"].get("api_versions"))
+            api_versions=self.context["config"].get("api_versions"),
+            superclass=cinder_utils.CinderScenario,
+            task_id=self.context["task"]["uuid"])

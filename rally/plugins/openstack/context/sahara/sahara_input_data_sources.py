@@ -127,7 +127,8 @@ class SaharaInputDataSources(context.Context):
         res_cleanup.SwiftContainer(
             resource=self.context["sahara"]["container_name"])
 
-        # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(
             names=["sahara.%s" % res for res in resources],
-            users=self.context.get("users", []))
+            users=self.context.get("users", []),
+            superclass=utils.SaharaScenario,
+            task_id=self.context["task"]["uuid"])

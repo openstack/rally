@@ -20,11 +20,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exc
 from watcherclient.common.apiclient import exceptions as watcher_exceptions
 
-from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
-from rally.plugins.openstack.scenarios.cinder import utils as cutils
-from rally.plugins.openstack.scenarios.keystone import utils as kutils
-from rally.plugins.openstack.scenarios.nova import utils as nutils
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.cleanup.resources"
@@ -140,23 +136,10 @@ class NovaFloatingIPsTestCase(test.TestCase):
     def test_name(self):
         fips = resources.NovaFloatingIPs()
         fips.raw_resource = mock.MagicMock()
-        self.assertIsNone(fips.name())
+        self.assertTrue(fips.name())
 
 
 class NovaFlavorsTestCase(test.TestCase):
-
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object,
-                  mock_resource_manager__manager):
-        flavors = [mock.MagicMock(name="rally_foo1"),
-                   mock.MagicMock(name="rally_foo2"),
-                   mock.MagicMock(name="foo3")]
-        mock_name_matches_object.side_effect = [False, True, True]
-        mock_resource_manager__manager().list.return_value = flavors
-        self.assertEqual(flavors[1:], resources.NovaFlavors().list())
-        mock_name_matches_object.assert_has_calls(
-            [mock.call(r.name, nutils.NovaScenario) for r in flavors])
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
     def test_is_deleted(self, mock_resource_manager__manager):
@@ -174,22 +157,6 @@ class NovaFlavorsTestCase(test.TestCase):
         self.assertRaises(TypeError, flavor.is_deleted)
 
 
-class NovaAggregatesTestCase(test.TestCase):
-
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object,
-                  mock_resource_manager__manager):
-        aggregates = [mock.MagicMock(name="rally_foo1"),
-                      mock.MagicMock(name="rally_foo2"),
-                      mock.MagicMock(name="foo3")]
-        mock_name_matches_object.side_effect = [False, True, True]
-        mock_resource_manager__manager().list.return_value = aggregates
-        self.assertEqual(aggregates[1:], resources.NovaAggregate().list())
-        mock_name_matches_object.assert_has_calls(
-            [mock.call(r.name, nutils.NovaScenario) for r in aggregates])
-
-
 class NovaServerGroupsTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
@@ -201,10 +168,7 @@ class NovaServerGroupsTestCase(test.TestCase):
                          mock.MagicMock(name="foo3")]
         mock_name_matches_object.side_effect = [False, True, True]
         mock_resource_manager__manager().list.return_value = server_groups
-        self.assertEqual(server_groups[1:],
-                         resources.NovaServerGroups().list())
-        mock_name_matches_object.assert_has_calls(
-            [mock.call(r.name, nutils.NovaScenario) for r in server_groups])
+        self.assertEqual(server_groups, resources.NovaServerGroups().list())
 
 
 class NovaSecurityGroupTestCase(test.TestCase):
@@ -233,20 +197,6 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
         fips.raw_resource = mock.MagicMock()
         self.assertIsNone(fips.name())
 
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object,
-                  mock_resource_manager__manager):
-        ip_range = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
-        ip_range[0].pool = "a"
-        ip_range[1].pool = "rally_fip_pool_a"
-        ip_range[2].pool = "rally_fip_pool_b"
-        mock_name_matches_object.side_effect = (lambda n, o:
-                                                n.startswith("rally"))
-
-        mock_resource_manager__manager().list.return_value = ip_range
-        self.assertEqual(ip_range[1:], resources.NovaFloatingIpsBulk().list())
-
 
 class NovaNetworksTestCase(test.TestCase):
 
@@ -254,24 +204,6 @@ class NovaNetworksTestCase(test.TestCase):
         network = resources.NovaNetworks()
         network.raw_resource = mock.MagicMock()
         self.assertEqual(network.raw_resource.label, network.name())
-
-    @mock.patch("rally.common.plugin.discover.itersubclasses")
-    def test_list(self, mock_itersubclasses):
-        nova_nets = resources.NovaNetworks()
-
-        networks = [mock.Mock(label="rally_abcdefgh_12345678"),
-                    mock.Mock(label="rally_12345678_abcdefgh"),
-                    mock.Mock(label="foobar")]
-        nova_nets._manager = mock.Mock()
-        nova_nets._manager.return_value.list.return_value = networks
-
-        mock_itersubclasses.return_value = iter(
-            [utils.RandomNameGeneratorMixin])
-
-        self.assertEqual(networks[:2], nova_nets.list())
-        nova_nets._manager.return_value.list.assert_called_once_with()
-        mock_itersubclasses.assert_called_once_with(
-            utils.RandomNameGeneratorMixin)
 
 
 class EC2MixinTestCase(test.TestCase):
@@ -701,27 +633,18 @@ class KeystoneMixinTestCase(test.TestCase):
         identity_service = mock_identity.Identity.return_value
         identity_service.delete_some_resource.assert_called_once_with("id_a")
 
-    @mock.patch("rally.common.utils.name_matches_object")
     @mock.patch("%s.identity" % BASE)
-    def test_list(self, mock_identity, mock_name_matches_object):
+    def test_list(self, mock_identity):
         keystone_mixin = self.get_keystone_mixin()
-        keystone_mixin._resource = "fake_resource"
+        keystone_mixin._resource = "some_resource2"
         keystone_mixin.admin = mock.MagicMock()
+        identity = mock_identity.Identity
 
-        result = [mock.MagicMock(name="rally_foo1"),
-                  mock.MagicMock(name="rally_foo2"),
-                  mock.MagicMock(name="foo3")]
-        mock_name_matches_object.side_effect = [True, True, False]
-
-        identity_service = mock_identity.Identity.return_value
-
-        identity_service.list_fake_resources.return_value = result
-
-        self.assertSequenceEqual(result[:2], keystone_mixin.list())
-        identity_service.list_fake_resources.assert_called_once_with()
-
-        mock_name_matches_object.assert_has_calls(
-            [mock.call(r.name, kutils.KeystoneScenario) for r in result])
+        self.assertSequenceEqual(
+            identity.return_value.list_some_resource2s.return_value,
+            keystone_mixin.list())
+        identity.assert_called_once_with(keystone_mixin.admin)
+        identity.return_value.list_some_resource2s.assert_called_once_with()
 
 
 class SwiftMixinTestCase(test.TestCase):
@@ -905,18 +828,6 @@ class FuelEnvironmentTestCase(test.TestCase):
         self.assertFalse(fres.is_deleted())
         mock__manager.return_value.get.assert_called_with(fres.id.return_value)
 
-    @mock.patch("%s.FuelEnvironment._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object, mock__manager):
-        envs = [{"name": "rally_one"}, {"name": "rally_two"},
-                {"name": "three"}]
-        mock__manager.return_value.list.return_value = envs
-        mock_name_matches_object.side_effect = (
-            lambda n, o: n.startswith("rally_"))
-
-        fres = resources.FuelEnvironment()
-        self.assertEqual(envs[:-1], fres.list())
-
 
 class SenlinMixinTestCase(test.TestCase):
 
@@ -1042,19 +953,3 @@ class WatcherActionPlanTestCase(test.TestCase):
 
         self.assertEqual("action_plan", watcher._resource)
         watcher._manager().list.assert_called_once_with(limit=0)
-
-
-class CinderVolumeTypeTestCase(test.TestCase):
-
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object,
-                  mock_resource_manager__manager):
-        volume_types = [mock.MagicMock(name="foo1"),
-                        mock.MagicMock(name="rally_foo2"),
-                        mock.MagicMock(name="rally_foo3")]
-        mock_name_matches_object.side_effect = [False, True, True]
-        mock_resource_manager__manager().list.return_value = volume_types
-        self.assertEqual(volume_types[1:], resources.CinderVolumeType().list())
-        mock_name_matches_object.assert_has_calls(
-            [mock.call(r.name, cutils.CinderScenario) for r in volume_types])

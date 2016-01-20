@@ -18,6 +18,7 @@ import copy
 import mock
 
 from rally.plugins.openstack.context.nova import servers
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -169,5 +170,8 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         servers_ctx = servers.ServerGenerator(self.context)
         servers_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["nova.servers"],
-                                             users=self.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["nova.servers"],
+            users=self.context["users"],
+            superclass=nova_utils.NovaScenario,
+            task_id=self.context["task"]["uuid"])

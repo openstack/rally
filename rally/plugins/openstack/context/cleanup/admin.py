@@ -49,4 +49,5 @@ class AdminCleanup(base.CleanupMixin, context.Context):
             admin_required=True,
             admin=self.context["admin"],
             users=self.context.get("users", []),
-            api_versions=self.context["config"].get("api_versions"))
+            api_versions=self.context["config"].get("api_versions"),
+            task_id=self.context["task"]["uuid"])

@@ -16,6 +16,7 @@ import mock
 
 from rally.common import objects
 from rally.plugins.openstack.context.sahara import sahara_output_data_sources
+from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.sahara"
@@ -99,7 +100,9 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
 
         mock_cleanup.assert_called_once_with(
             names=["sahara.data_sources"],
-            users=self.context["users"])
+            users=self.context["users"],
+            superclass=sahara_utils.SaharaScenario,
+            task_id=self.context["task"]["uuid"])
 
     @mock.patch("%s.sahara_output_data_sources.osclients" % CTX)
     def test_setup_inputs_swift(self, mock_osclients):

@@ -16,6 +16,7 @@ import mock
 
 from rally import exceptions
 from rally.plugins.openstack.context.sahara import sahara_image
+from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from tests.unit import test
 
 
@@ -122,8 +123,11 @@ class SaharaImageTestCase(test.ScenarioTestCase):
             sahara_update_tags_calls)
 
         sahara_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["glance.images"],
-                                             users=ctx["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["glance.images"],
+            users=ctx["users"],
+            superclass=glance_utils.GlanceScenario,
+            task_id=ctx["task"]["uuid"])
 
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))

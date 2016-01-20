@@ -25,6 +25,7 @@ from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
+from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from rally.task import context
 
 
@@ -77,4 +78,6 @@ class PackageGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Murano packages`"))
     def cleanup(self):
         resource_manager.cleanup(names=["murano.packages"],
-                                 users=self.context.get("users", []))
+                                 users=self.context.get("users", []),
+                                 superclass=murano_utils.MuranoScenario,
+                                 task_id=self.context["task"]["uuid"])

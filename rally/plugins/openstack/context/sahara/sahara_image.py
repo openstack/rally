@@ -125,8 +125,8 @@ class SaharaImage(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):
-
-        # TODO(boris-42): Delete only resources created by this context
         if self.context["sahara"]["need_image_cleanup"]:
             resource_manager.cleanup(names=["glance.images"],
-                                     users=self.context.get("users", []))
+                                     users=self.context.get("users", []),
+                                     superclass=glance_utils.GlanceScenario,
+                                     task_id=self.context["task"]["uuid"])

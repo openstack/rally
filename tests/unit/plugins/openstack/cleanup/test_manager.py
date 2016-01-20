@@ -15,6 +15,7 @@
 
 import mock
 
+from rally.common import utils
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.cleanup import manager
 from tests.unit import test
@@ -172,12 +173,11 @@ class SeekAndDestroyTestCase(test.TestCase):
         return mock_mgr
 
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
-    def test__gen_publisher_admin(self, mock__get_cached_client):
+    def test__publisher_admin(self, mock__get_cached_client):
         mock_mgr = self._manager([Exception, Exception, [1, 2, 3]],
                                  _perform_for_admin_only=False)
         admin = mock.MagicMock()
-        publish = manager.SeekAndDestroy(
-            mock_mgr, admin, None)._gen_publisher()
+        publish = manager.SeekAndDestroy(mock_mgr, admin, None)._publisher
 
         queue = []
         publish(queue)
@@ -187,12 +187,12 @@ class SeekAndDestroyTestCase(test.TestCase):
         self.assertEqual(queue, [(admin, None, x) for x in range(1, 4)])
 
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
-    def test__gen_publisher_admin_only(self, mock__get_cached_client):
+    def test__publisher_admin_only(self, mock__get_cached_client):
         mock_mgr = self._manager([Exception, Exception, [1, 2, 3]],
                                  _perform_for_admin_only=True)
         admin = mock.MagicMock()
         publish = manager.SeekAndDestroy(
-            mock_mgr, admin, ["u1", "u2"])._gen_publisher()
+            mock_mgr, admin, ["u1", "u2"])._publisher
 
         queue = []
         publish(queue)
@@ -202,7 +202,7 @@ class SeekAndDestroyTestCase(test.TestCase):
         self.assertEqual(queue, [(admin, None, x) for x in range(1, 4)])
 
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
-    def test__gen_publisher_user_resource(self, mock__get_cached_client):
+    def test__publisher_user_resource(self, mock__get_cached_client):
         mock_mgr = self._manager([Exception, Exception, [1, 2, 3],
                                   Exception, Exception, [4, 5]],
                                  _perform_for_admin_only=False,
@@ -210,8 +210,7 @@ class SeekAndDestroyTestCase(test.TestCase):
 
         admin = mock.MagicMock()
         users = [{"tenant_id": 1, "id": 1}, {"tenant_id": 2, "id": 2}]
-        publish = manager.SeekAndDestroy(
-            mock_mgr, admin, users)._gen_publisher()
+        publish = manager.SeekAndDestroy(mock_mgr, admin, users)._publisher
 
         queue = []
         publish(queue)
@@ -251,7 +250,7 @@ class SeekAndDestroyTestCase(test.TestCase):
                  {"tenant_id": 2, "id": 3}]
 
         publish = manager.SeekAndDestroy(
-            mock_mgr, None, users)._gen_publisher()
+            mock_mgr, None, users)._publisher
 
         queue = []
         publish(queue)
@@ -277,13 +276,21 @@ class SeekAndDestroyTestCase(test.TestCase):
         self.assertTrue(mock_log.warning.mock_called)
         self.assertTrue(mock_log.exception.mock_called)
 
+    @mock.patch("rally.common.utils.name_matches_object")
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
     @mock.patch("%s.SeekAndDestroy._delete_single_resource" % BASE)
-    def test__gen_consumer(self, mock__delete_single_resource,
-                           mock__get_cached_client):
+    def test__consumer(self, mock__delete_single_resource,
+                       mock__get_cached_client,
+                       mock_name_matches_object):
         mock_mgr = mock.MagicMock(__name__="Test")
+        resource_classes = [mock.Mock()]
+        task_id = "task_id"
+        mock_name_matches_object.return_value = True
 
-        consumer = manager.SeekAndDestroy(mock_mgr, None, None)._gen_consumer()
+        consumer = manager.SeekAndDestroy(
+            mock_mgr, None, None,
+            resource_classes=resource_classes,
+            task_id=task_id)._consumer
 
         admin = mock.MagicMock()
         user1 = {"id": "a", "tenant_id": "uuid1"}
@@ -305,6 +312,7 @@ class SeekAndDestroyTestCase(test.TestCase):
         mock_mgr.reset_mock()
         mock__get_cached_client.reset_mock()
         mock__delete_single_resource.reset_mock()
+        mock_name_matches_object.reset_mock()
 
         consumer(cache, (admin, None, "res2"))
         mock_mgr.assert_called_once_with(
@@ -320,21 +328,17 @@ class SeekAndDestroyTestCase(test.TestCase):
         mock__delete_single_resource.assert_called_once_with(
             mock_mgr.return_value)
 
-    @mock.patch("%s.SeekAndDestroy._gen_consumer" % BASE)
-    @mock.patch("%s.SeekAndDestroy._gen_publisher" % BASE)
     @mock.patch("%s.broker.run" % BASE)
-    def test_exterminate(self, mock_broker_run, mock__gen_publisher,
-                         mock__gen_consumer):
-
+    def test_exterminate(self, mock_broker_run):
         manager_cls = mock.MagicMock(_threads=5)
-        manager.SeekAndDestroy(manager_cls, None, None).exterminate()
+        cleaner = manager.SeekAndDestroy(manager_cls, None, None)
+        cleaner._publisher = mock.Mock()
+        cleaner._consumer = mock.Mock()
+        cleaner.exterminate()
 
-        mock__gen_publisher.assert_called_once_with()
-        mock__gen_consumer.assert_called_once_with()
-        mock_broker_run.assert_called_once_with(
-            mock__gen_publisher.return_value,
-            mock__gen_consumer.return_value,
-            consumers_count=5)
+        mock_broker_run.assert_called_once_with(cleaner._publisher,
+                                                cleaner._consumer,
+                                                consumers_count=5)
 
 
 class ResourceManagerTestCase(test.TestCase):
@@ -402,53 +406,70 @@ class ResourceManagerTestCase(test.TestCase):
                          manager.find_resource_managers(names=["fake"],
                                                         admin_required=False))
 
+    @mock.patch("rally.common.plugin.discover.itersubclasses")
     @mock.patch("%s.SeekAndDestroy" % BASE)
     @mock.patch("%s.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
-    def test_cleanup(self, mock_find_resource_managers, mock_seek_and_destroy):
+    def test_cleanup(self, mock_find_resource_managers, mock_seek_and_destroy,
+                     mock_itersubclasses):
+        class A(utils.RandomNameGeneratorMixin):
+            pass
+
+        class B(object):
+            pass
+
+        mock_itersubclasses.return_value = [A, B]
+
         manager.cleanup(names=["a", "b"], admin_required=True,
-                        admin="admin", users=["user"])
+                        admin="admin", users=["user"],
+                        superclass=A,
+                        task_id="task_id")
 
         mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
 
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(
-                mock_find_resource_managers.return_value[0], "admin",
-                ["user"], None
-            ),
+            mock.call(mock_find_resource_managers.return_value[0], "admin",
+                      ["user"], api_versions=None,
+                      resource_classes=[A], task_id="task_id"),
             mock.call().exterminate(),
-            mock.call(
-                mock_find_resource_managers.return_value[1], "admin",
-                ["user"], None
-            ),
+            mock.call(mock_find_resource_managers.return_value[1], "admin",
+                      ["user"], api_versions=None,
+                      resource_classes=[A], task_id="task_id"),
             mock.call().exterminate()
         ])
 
+    @mock.patch("rally.common.plugin.discover.itersubclasses")
     @mock.patch("%s.SeekAndDestroy" % BASE)
     @mock.patch("%s.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
     def test_cleanup_with_api_versions(self,
                                        mock_find_resource_managers,
-                                       mock_seek_and_destroy):
+                                       mock_seek_and_destroy,
+                                       mock_itersubclasses):
+        class A(utils.RandomNameGeneratorMixin):
+            pass
+
+        class B(object):
+            pass
+
+        mock_itersubclasses.return_value = [A, B]
+
+        api_versions = {"cinder": {"version": "1", "service_type": "volume"}}
         manager.cleanup(names=["a", "b"], admin_required=True,
                         admin="admin", users=["user"],
-                        api_versions={"cinder": {
-                            "version": "1", "service_type": "volume"
-                        }})
+                        api_versions=api_versions,
+                        superclass=utils.RandomNameGeneratorMixin,
+                        task_id="task_id")
 
         mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
 
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(
-                mock_find_resource_managers.return_value[0], "admin",
-                ["user"],
-                {"cinder": {"service_type": "volume", "version": "1"}}
-            ),
+            mock.call(mock_find_resource_managers.return_value[0], "admin",
+                      ["user"], api_versions=api_versions,
+                      resource_classes=[A], task_id="task_id"),
             mock.call().exterminate(),
-            mock.call(
-                mock_find_resource_managers.return_value[1], "admin",
-                ["user"],
-                {"cinder": {"service_type": "volume", "version": "1"}}
-            ),
+            mock.call(mock_find_resource_managers.return_value[1], "admin",
+                      ["user"], api_versions=api_versions,
+                      resource_classes=[A], task_id="task_id"),
             mock.call().exterminate()
         ])

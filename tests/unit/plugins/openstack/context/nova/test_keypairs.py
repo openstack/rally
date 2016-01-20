@@ -72,8 +72,11 @@ class KeyPairContextTestCase(test.TestCase):
     def test_keypair_cleanup(self, mock_cleanup):
         keypair_ctx = keypairs.Keypair(self.ctx_with_keys)
         keypair_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["nova.keypairs"],
-                                             users=self.ctx_with_keys["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["nova.keypairs"],
+            users=self.ctx_with_keys["users"],
+            superclass=keypairs.Keypair,
+            task_id=self.ctx_with_keys["task"]["uuid"])
 
     @mock.patch("rally.osclients.Clients")
     def test_keypair_generate(self, mock_clients):

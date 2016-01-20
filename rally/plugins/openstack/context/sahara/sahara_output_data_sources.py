@@ -19,7 +19,6 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack.cleanup import resources as res_cleanup
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
@@ -100,18 +99,9 @@ class SaharaOutputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Exit context: `Sahara Output Data Sources`"))
     def cleanup(self):
-        for user, tenant_id in rutils.iterate_per_tenants(
-                self.context["users"]):
-            if self.context["tenants"][tenant_id].get(
-                    "sahara", {}).get("container", {}).get("name") is not None:
-                for swift_object in (
-                    self.context["tenants"][tenant_id]["sahara"]["container"][
-                        "output_swift_objects"]):
-                    res_cleanup.SwiftObject(swift_object[1])
-            res_cleanup.SwiftContainer(
-                self.context["tenants"][tenant_id].get(
-                    "sahara", {}).get("container", {}).get("name"))
         resources = ["data_sources"]
         resource_manager.cleanup(
             names=["sahara.%s" % res for res in resources],
-            users=self.context.get("users", []))
+            users=self.context.get("users", []),
+            superclass=utils.SaharaScenario,
+            task_id=self.context["task"]["uuid"])

@@ -20,13 +20,7 @@ from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import logging
-from rally.common.plugin import discover
-from rally.common import utils
 from rally.plugins.openstack.cleanup import base
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from rally.plugins.openstack.scenarios.fuel import utils as futils
-from rally.plugins.openstack.scenarios.keystone import utils as kutils
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import utils as task_utils
@@ -189,16 +183,14 @@ class NovaServer(base.ResourceManager):
 @base.resource("nova", "server_groups", order=next(_nova_order),
                tenant_resource=True)
 class NovaServerGroups(base.ResourceManager):
-    def list(self):
-        return [r for r in self._manager().list()
-                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+    pass
 
 
 @base.resource("nova", "floating_ips", order=next(_nova_order))
 class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
 
     def name(self):
-        return None
+        return self.raw_resource.pool
 
 
 @base.resource("nova", "keypairs", order=next(_nova_order))
@@ -224,9 +216,7 @@ class NovaQuotas(QuotaMixin, base.ResourceManager):
 @base.resource("nova", "flavors", order=next(_nova_order),
                admin_required=True, perform_for_admin_only=True)
 class NovaFlavors(base.ResourceManager):
-    def list(self):
-        return [r for r in self._manager().list()
-                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+    pass
 
     def is_deleted(self):
         try:
@@ -247,11 +237,6 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
     def name(self):
         return None
 
-    def list(self):
-        return [floating_ip for floating_ip in self._manager().list()
-                if utils.name_matches_object(floating_ip.pool,
-                                             nova_utils.NovaScenario)]
-
 
 @base.resource("nova", "networks", order=next(_nova_order),
                admin_required=True, tenant_resource=True)
@@ -260,25 +245,10 @@ class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
     def name(self):
         return self.raw_resource.label
 
-    def list(self):
-        # NOTE(stpierre): any plugin can create a nova network via the
-        # network wrapper, and that network's name will be created
-        # according to its owner's random name generation
-        # parameters. so we need to check if there are nova networks
-        # whose name pattern matches those of any loaded plugin that
-        # implements RandomNameGeneratorMixin
-        classes = list(discover.itersubclasses(utils.RandomNameGeneratorMixin))
-        return [net for net in self._manager().list()
-                if utils.name_matches_object(net.label, *classes)]
-
 
 @base.resource("nova", "aggregates", order=next(_nova_order),
                admin_required=True, perform_for_admin_only=True)
 class NovaAggregate(SynchronizedDeletion, base.ResourceManager):
-
-    def list(self):
-        return [r for r in self._manager().list()
-                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
 
     def delete(self):
         for host in self.raw_resource.hosts:
@@ -408,6 +378,12 @@ class NeutronV2Loadbalancer(NeutronLbaasV2Mixin):
         return False
 
 
+@base.resource("neutron", "floatingip", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronFloatingIP(NeutronMixin):
+    pass
+
+
 @base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronPort(NeutronMixin):
@@ -430,12 +406,6 @@ class NeutronPort(NeutronMixin):
                           % self.id())
 
 
-@base.resource("neutron", "router", order=next(_neutron_order),
-               tenant_resource=True)
-class NeutronRouter(NeutronMixin):
-    pass
-
-
 @base.resource("neutron", "subnet", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronSubnet(NeutronMixin):
@@ -448,9 +418,9 @@ class NeutronNetwork(NeutronMixin):
     pass
 
 
-@base.resource("neutron", "floatingip", order=next(_neutron_order),
+@base.resource("neutron", "router", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronFloatingIP(NeutronMixin):
+class NeutronRouter(NeutronMixin):
     pass
 
 
@@ -487,10 +457,7 @@ class CinderVolumeBackup(base.ResourceManager):
 @base.resource("cinder", "volume_types", order=next(_cinder_order),
                admin_required=True, perform_for_admin_only=True)
 class CinderVolumeType(base.ResourceManager):
-    def list(self):
-        return [r for r in self._manager().list()
-                if utils.name_matches_object(r.name,
-                                             cinder_utils.CinderScenario)]
+    pass
 
 
 @base.resource("cinder", "volume_snapshots", order=next(_cinder_order),
@@ -862,11 +829,6 @@ class FuelEnvironment(base.ResourceManager):
     def is_deleted(self):
         return not self._manager().get(self.id())
 
-    def list(self):
-        return [env for env in self._manager().list()
-                if utils.name_matches_object(env["name"],
-                                             futils.FuelScenario)]
-
 
 # WATCHER
 
@@ -927,11 +889,8 @@ class KeystoneMixin(SynchronizedDeletion):
         delete_method(self.id())
 
     def list(self):
-        # TODO(boris-42): We should use such stuff in all list commands.
         resources = self._resource + "s"
-        list_method = getattr(self._manager(), "list_%s" % resources)
-        return [r for r in list_method()
-                if utils.name_matches_object(r.name, kutils.KeystoneScenario)]
+        return getattr(self._manager(), "list_%s" % resources)()
 
 
 @base.resource("keystone", "user", order=next(_keystone_order),

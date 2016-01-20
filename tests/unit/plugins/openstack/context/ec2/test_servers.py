@@ -17,6 +17,7 @@ import copy
 import mock
 
 from rally.plugins.openstack.context.ec2 import servers
+from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -105,5 +106,8 @@ class EC2ServerGeneratorTestCase(test.TestCase):
         servers_ctx = servers.EC2ServerGenerator(context)
         servers_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["ec2.servers"],
-                                             users=context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["ec2.servers"],
+            users=context["users"],
+            superclass=ec2_utils.EC2Scenario,
+            task_id=context["task"]["uuid"])

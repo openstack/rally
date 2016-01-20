@@ -17,6 +17,7 @@ from oslo_config import cfg
 
 from rally import exceptions
 from rally.plugins.openstack.context.sahara import sahara_cluster
+from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from tests.unit import test
 
 CONF = cfg.CONF
@@ -106,8 +107,11 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
         mock_sahara_scenario__launch_cluster.assert_has_calls(
             launch_cluster_calls)
         sahara_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["sahara.clusters"],
-                                             users=self.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["sahara.clusters"],
+            users=self.context["users"],
+            superclass=sahara_utils.SaharaScenario,
+            task_id=self.context["task"]["uuid"])
 
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))

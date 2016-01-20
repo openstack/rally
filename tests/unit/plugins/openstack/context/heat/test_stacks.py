@@ -16,6 +16,7 @@
 import mock
 
 from rally.plugins.openstack.context.heat import stacks
+from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -90,5 +91,8 @@ class TestStackGenerator(test.ScenarioTestCase):
         })
         stack_ctx = stacks.StackGenerator(self.context)
         stack_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["heat.stacks"],
-                                             users=self.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["heat.stacks"],
+            users=self.context["users"],
+            superclass=heat_utils.HeatScenario,
+            task_id=self.context["task"]["uuid"])

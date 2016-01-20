@@ -95,4 +95,6 @@ class EC2ServerGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `EC2 Servers`"))
     def cleanup(self):
         resource_manager.cleanup(names=["ec2.servers"],
-                                 users=self.context.get("users", []))
+                                 users=self.context.get("users", []),
+                                 superclass=ec2_utils.EC2Scenario,
+                                 task_id=self.context["task"]["uuid"])

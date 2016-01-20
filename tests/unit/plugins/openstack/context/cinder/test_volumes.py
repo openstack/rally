@@ -19,6 +19,7 @@ import jsonschema
 import mock
 
 from rally.plugins.openstack.context.cinder import volumes
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -136,9 +137,10 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         volumes_ctx = volumes.VolumeGenerator(self.context)
         volumes_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["cinder.volumes"],
-                                             users=self.context["users"],
-                                             api_versions=None)
+        mock_cleanup.assert_called_once_with(
+            names=["cinder.volumes"], users=self.context["users"],
+            api_versions=None, superclass=cinder_utils.CinderScenario,
+            task_id=self.context["task"]["uuid"])
 
     @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup_api_versions(self, mock_cleanup):
@@ -190,4 +192,6 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         mock_cleanup.assert_called_once_with(
             names=["cinder.volumes"],
             users=self.context["users"],
-            api_versions=api_version)
+            api_versions=api_version,
+            superclass=cinder_utils.CinderScenario,
+            task_id=self.context["task"]["uuid"])

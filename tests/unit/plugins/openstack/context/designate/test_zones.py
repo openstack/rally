@@ -18,6 +18,7 @@ import copy
 import mock
 
 from rally.plugins.openstack.context.designate import zones
+from rally.plugins.openstack.scenarios.designate import utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
@@ -124,5 +125,8 @@ class ZoneGeneratorTestCase(test.ScenarioTestCase):
         zones_ctx = zones.ZoneGenerator(self.context)
         zones_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["designate.zones"],
-                                             users=self.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["designate.zones"],
+            users=self.context["users"],
+            superclass=utils.DesignateScenario,
+            task_id=self.context["task"]["uuid"])

@@ -86,4 +86,6 @@ class StackGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Stacks`"))
     def cleanup(self):
         resource_manager.cleanup(names=["heat.stacks"],
-                                 users=self.context.get("users", []))
+                                 users=self.context.get("users", []),
+                                 superclass=heat_utils.HeatScenario,
+                                 task_id=self.context["task"]["uuid"])

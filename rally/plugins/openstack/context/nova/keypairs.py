@@ -56,6 +56,7 @@ class Keypair(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):
-        # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(names=["nova.keypairs"],
-                                 users=self.context.get("users", []))
+                                 users=self.context.get("users", []),
+                                 superclass=self.__class__,
+                                 task_id=self.context["task"]["uuid"])

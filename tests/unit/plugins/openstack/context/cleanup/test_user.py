@@ -16,6 +16,7 @@
 import jsonschema
 import mock
 
+from rally.common import utils
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack.context.cleanup import user
 from tests.unit import test
@@ -45,15 +46,22 @@ class UserCleanupTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           user.UserCleanup.validate, {})
 
+    @mock.patch("rally.common.plugin.discover.itersubclasses")
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
     @mock.patch("%s.manager.SeekAndDestroy" % BASE)
-    def test_cleanup(self, mock_seek_and_destroy, mock_find_resource_managers):
+    def test_cleanup(self, mock_seek_and_destroy, mock_find_resource_managers,
+                     mock_itersubclasses):
+
+        class ResourceClass(utils.RandomNameGeneratorMixin):
+            pass
+
+        mock_itersubclasses.return_value = [ResourceClass]
 
         ctx = {
             "config": {"cleanup": ["a", "b"]},
             "users": mock.MagicMock(),
-            "task": mock.MagicMock()
+            "task": {"uuid": "task_id"}
         }
 
         admin_cleanup = user.UserCleanup(ctx)
@@ -61,25 +69,31 @@ class UserCleanupTestCase(test.TestCase):
         admin_cleanup.cleanup()
 
         mock_find_resource_managers.assert_called_once_with(("a", "b"), False)
-
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(
-                mock_find_resource_managers.return_value[0],
-                None, ctx["users"], None),
+            mock.call(mock_find_resource_managers.return_value[0],
+                      None, ctx["users"], api_versions=None,
+                      resource_classes=[ResourceClass], task_id="task_id"),
             mock.call().exterminate(),
-            mock.call(
-                mock_find_resource_managers.return_value[1],
-                None, ctx["users"], None),
+            mock.call(mock_find_resource_managers.return_value[1],
+                      None, ctx["users"], api_versions=None,
+                      resource_classes=[ResourceClass], task_id="task_id"),
             mock.call().exterminate()
         ])
 
+    @mock.patch("rally.common.plugin.discover.itersubclasses")
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
     @mock.patch("%s.manager.SeekAndDestroy" % BASE)
     def test_cleanup_user_with_api_versions(
             self,
             mock_seek_and_destroy,
-            mock_find_resource_managers):
+            mock_find_resource_managers,
+            mock_itersubclasses):
+
+        class ResourceClass(utils.RandomNameGeneratorMixin):
+            pass
+
+        mock_itersubclasses.return_value = [ResourceClass]
 
         ctx = {
             "config":
@@ -93,7 +107,7 @@ class UserCleanupTestCase(test.TestCase):
                  },
             "admin": mock.MagicMock(),
             "users": mock.MagicMock(),
-            "task": mock.MagicMock()
+            "task": {"uuid": "task_id"}
         }
 
         user_cleanup = user.UserCleanup(ctx)
@@ -102,16 +116,18 @@ class UserCleanupTestCase(test.TestCase):
 
         mock_find_resource_managers.assert_called_once_with({}, False)
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(
-                mock_find_resource_managers.return_value[0],
-                None,
-                ctx["users"],
-                ctx["config"]["api_versions"]),
+            mock.call(mock_find_resource_managers.return_value[0],
+                      None,
+                      ctx["users"],
+                      api_versions=ctx["config"]["api_versions"],
+                      resource_classes=[ResourceClass],
+                      task_id="task_id"),
             mock.call().exterminate(),
-            mock.call(
-                mock_find_resource_managers.return_value[1],
-                None,
-                ctx["users"],
-                ctx["config"]["api_versions"]),
+            mock.call(mock_find_resource_managers.return_value[1],
+                      None,
+                      ctx["users"],
+                      api_versions=ctx["config"]["api_versions"],
+                      resource_classes=[ResourceClass],
+                      task_id="task_id"),
             mock.call().exterminate()
         ])

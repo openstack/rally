@@ -16,6 +16,7 @@
 import mock
 
 from rally.plugins.openstack.context.murano import murano_packages
+from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.murano.murano_packages"
@@ -89,8 +90,11 @@ class MuranoPackageGeneratorTestCase(test.TestCase):
         murano_ctx.setup()
         murano_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["murano.packages"],
-                                             users=murano_ctx.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["murano.packages"],
+            users=murano_ctx.context["users"],
+            superclass=murano_utils.MuranoScenario,
+            task_id=murano_ctx.context["task"]["uuid"])
 
     @mock.patch("%s.osclients" % CTX)
     @mock.patch("%s.resource_manager.cleanup" % CTX)
@@ -107,5 +111,8 @@ class MuranoPackageGeneratorTestCase(test.TestCase):
         murano_ctx.setup()
         murano_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["murano.packages"],
-                                             users=murano_ctx.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["murano.packages"],
+            users=murano_ctx.context["users"],
+            superclass=murano_utils.MuranoScenario,
+            task_id=ctx_dict["task"]["uuid"])

@@ -15,6 +15,7 @@
 import mock
 
 from rally.plugins.openstack.context.sahara import sahara_job_binaries
+from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.sahara"
@@ -110,7 +111,9 @@ class SaharaJobBinariesTestCase(test.ScenarioTestCase):
 
         mock_cleanup.assert_called_once_with(
             names=["sahara.job_binary_internals", "sahara.job_binaries"],
-            users=self.context["users"])
+            users=self.context["users"],
+            superclass=sahara_utils.SaharaScenario,
+            task_id=self.context["task"]["uuid"])
 
     @mock.patch("%s.sahara_job_binaries.requests" % CTX)
     @mock.patch("%s.sahara_job_binaries.osclients" % CTX)

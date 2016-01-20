@@ -19,6 +19,7 @@ from rally.common import broker
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common.plugin import discover
+from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import osclients
 from rally.plugins.openstack.cleanup import base
@@ -30,7 +31,8 @@ LOG = logging.getLogger(__name__)
 class SeekAndDestroy(object):
     cache = {}
 
-    def __init__(self, manager_cls, admin, users, api_versions=None):
+    def __init__(self, manager_cls, admin, users, api_versions=None,
+                 resource_classes=None, task_id=None):
         """Resource deletion class.
 
         This class contains method exterminate() that finds and deletes
@@ -40,11 +42,17 @@ class SeekAndDestroy(object):
         :param admin: admin credential like in context["admin"]
         :param users: users credentials like in context["users"]
         :param api_versions: dict of client API versions
+        :param resource_classes: Resource classes to match resource names
+                                 against
+        :param task_id: The UUID of task to match resource names against
         """
         self.manager_cls = manager_cls
         self.admin = admin
         self.users = users or []
         self.api_versions = api_versions
+        self.resource_classes = resource_classes or [
+            rutils.RandomNameGeneratorMixin]
+        self.task_id = task_id
 
     def _get_cached_client(self, user):
         """Simplifies initialization and caching OpenStack clients."""
@@ -120,8 +128,8 @@ class SeekAndDestroy(object):
                           "%(service)s.%(resource)s: %(uuid)s.")
                         % msg_kw)
 
-    def _gen_publisher(self):
-        """Returns publisher for deletion jobs.
+    def _publisher(self, queue):
+        """Publisher for deletion jobs.
 
         This method iterates over all users, lists all resources
         (using manager_cls) and puts jobs for deletion.
@@ -132,65 +140,58 @@ class SeekAndDestroy(object):
         In case of tenant based resource, uuids are fetched only from one user
         per tenant.
         """
+        def _publish(admin, user, manager):
+            try:
+                for raw_resource in rutils.retry(3, manager.list):
+                    queue.append((admin, user, raw_resource))
+            except Exception as e:
+                LOG.warning(
+                    _("Seems like %s.%s.list(self) method is broken. "
+                      "It shouldn't raise any exceptions.")
+                    % (manager.__module__, type(manager).__name__))
+                LOG.exception(e)
 
-        def publisher(queue):
-
-            def _publish(admin, user, manager):
-                try:
-                    for raw_resource in rutils.retry(3, manager.list):
-                        queue.append((admin, user, raw_resource))
-                except Exception as e:
-                    LOG.warning(
-                        _("Seems like %s.%s.list(self) method is broken. "
-                          "It shouldn't raise any exceptions.")
-                        % (manager.__module__, type(manager).__name__))
-                    LOG.exception(e)
-
-            if self.admin and (not self.users
-                               or self.manager_cls._perform_for_admin_only):
-                manager = self.manager_cls(
-                    admin=self._get_cached_client(self.admin))
-                _publish(self.admin, None, manager)
-
-            else:
-                visited_tenants = set()
-                admin_client = self._get_cached_client(self.admin)
-                for user in self.users:
-                    if (self.manager_cls._tenant_resource
-                       and user["tenant_id"] in visited_tenants):
-                        continue
-
-                    visited_tenants.add(user["tenant_id"])
-                    manager = self.manager_cls(
-                        admin=admin_client,
-                        user=self._get_cached_client(user),
-                        tenant_uuid=user["tenant_id"])
-
-                    _publish(self.admin, user, manager)
-
-        return publisher
-
-    def _gen_consumer(self):
-        """Generate method that consumes single deletion job."""
-
-        def consumer(cache, args):
-            """Execute deletion job."""
-            admin, user, raw_resource = args
-
+        if self.admin and (not self.users
+                           or self.manager_cls._perform_for_admin_only):
             manager = self.manager_cls(
-                resource=raw_resource,
-                admin=self._get_cached_client(admin),
-                user=self._get_cached_client(user),
-                tenant_uuid=user and user["tenant_id"])
+                admin=self._get_cached_client(self.admin))
+            _publish(self.admin, None, manager)
 
+        else:
+            visited_tenants = set()
+            admin_client = self._get_cached_client(self.admin)
+            for user in self.users:
+                if (self.manager_cls._tenant_resource
+                   and user["tenant_id"] in visited_tenants):
+                    continue
+
+                visited_tenants.add(user["tenant_id"])
+                manager = self.manager_cls(
+                    admin=admin_client,
+                    user=self._get_cached_client(user),
+                    tenant_uuid=user["tenant_id"])
+
+                _publish(self.admin, user, manager)
+
+    def _consumer(self, cache, args):
+        """Method that consumes single deletion job."""
+        admin, user, raw_resource = args
+
+        manager = self.manager_cls(
+            resource=raw_resource,
+            admin=self._get_cached_client(admin),
+            user=self._get_cached_client(user),
+            tenant_uuid=user and user["tenant_id"])
+
+        if manager.name() == "" or rutils.name_matches_object(
+                manager.name(), *self.resource_classes,
+                task_id=self.task_id, exact=False):
             self._delete_single_resource(manager)
-
-        return consumer
 
     def exterminate(self):
         """Delete all resources for passed users, admin and resource_mgr."""
 
-        broker.run(self._gen_publisher(), self._gen_consumer(),
+        broker.run(self._publisher, self._consumer,
                    consumers_count=self.manager_cls._threads)
 
 
@@ -252,7 +253,7 @@ def find_resource_managers(names=None, admin_required=None):
 
 
 def cleanup(names=None, admin_required=None, admin=None, users=None,
-            api_versions=None):
+            api_versions=None, superclass=plugin.Plugin, task_id=None):
     """Generic cleaner.
 
     This method goes through all plugins. Filter those and left only plugins
@@ -261,10 +262,9 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
     Then goes through all passed users and using cleaners cleans all related
     resources.
 
-    :param names: Use only resource manages that has name from this list.
+    :param names: Use only resource managers that have names in this list.
                   There are in as _service or
                   (%s.%s % (_service, _resource)) from
-
     :param admin_required: If None -> return all plugins
                            If True -> return only admin plugins
                            If False -> return only non admin plugins
@@ -276,11 +276,23 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
                     "id": <uuid1>,
                     "tenant_id": <uuid2>,
                     "credential": <rally.common.objects.Credential>
-
                   }
+    :param superclass: The plugin superclass to perform cleanup
+                       for. E.g., this could be
+                       ``rally.task.scenario.Scenario`` to cleanup all
+                       Scenario resources.
+    :param task_id: The UUID of task
     """
+    resource_classes = [cls for cls in discover.itersubclasses(superclass)
+                        if issubclass(cls, rutils.RandomNameGeneratorMixin)]
+    if not resource_classes and issubclass(superclass,
+                                           rutils.RandomNameGeneratorMixin):
+        resource_classes.append(superclass)
     for manager in find_resource_managers(names, admin_required):
         LOG.debug("Cleaning up %(service)s %(resource)s objects" %
                   {"service": manager._service,
                    "resource": manager._resource})
-        SeekAndDestroy(manager, admin, users, api_versions).exterminate()
+        SeekAndDestroy(manager, admin, users,
+                       api_versions=api_versions,
+                       resource_classes=resource_classes,
+                       task_id=task_id).exterminate()
