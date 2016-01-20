@@ -197,7 +197,7 @@ class Tempest(object):
             else:
                 python_interpreter = sys.executable
             try:
-                check_output([python_interpreter, "./tools/install_venv.py"],
+                check_output(["virtualenv", "-p", python_interpreter, ".venv"],
                              cwd=self.path())
                 # NOTE(kun): Using develop mode installation is for run
                 #            multiple tempest instance. However, dependency

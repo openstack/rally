@@ -108,7 +108,8 @@ class TempestUtilsTestCase(BaseTestCase):
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
         mock_check_output.assert_has_calls([
-            mock.call(["python", "./tools/install_venv.py"], cwd="/tmp"),
+            mock.call(["virtualenv", "-p", mock_get_interpreter.return_value,
+                       ".venv"], cwd="/tmp"),
             mock.call(["/tmp/tools/with_venv.sh", "pip", "install", "-r",
                        "requirements.txt", "-r", "test-requirements.txt"],
                       cwd="/tmp"),

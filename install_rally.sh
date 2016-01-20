@@ -348,7 +348,7 @@ __EOF__
                         if ask_yn "Error installing python-pip. Install from external source?"; then
                             local pdir=$(mktemp -d)
                             local getpip="$pdir/get-pip.py"
-                            download "$getpip" https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+                            download "$getpip" https://bootstrap.pypa.io/get-pip.py
                             if ! "$PYTHON" "$getpip"; then
                                 abort $EX_PROTOCOL "Error while installing python-pip from external source."
                             fi
@@ -737,7 +737,7 @@ install_db_connector
 # Install rally
 cd "$SOURCEDIR"
 # Get latest available pip and reset shell cache
-pip install -i $BASE_PIP_URL -U 'pip'
+pip install -i $BASE_PIP_URL -U 'pip<8'
 hash -r
 
 # Install dependencies
