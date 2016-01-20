@@ -13,7 +13,7 @@
 #    under the License.
 
 import copy
-import datetime
+import datetime as dt
 
 from dateutil import parser
 import mock
@@ -33,7 +33,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__make_samples_no_batch_size(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="fake_resource")
-        test_timestamp = datetime.datetime(2015, 10, 20, 14, 18, 40)
+        test_timestamp = dt.datetime(2015, 10, 20, 14, 18, 40)
         result = list(self.scenario._make_samples(count=2, interval=60,
                                                   timestamp=test_timestamp))
         self.assertEqual(1, len(result))
@@ -51,7 +51,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__make_samples_batch_size(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="fake_resource")
-        test_timestamp = datetime.datetime(2015, 10, 20, 14, 18, 40)
+        test_timestamp = dt.datetime(2015, 10, 20, 14, 18, 40)
         result = list(self.scenario._make_samples(count=4, interval=60,
                                                   batch_size=2,
                                                   timestamp=test_timestamp))

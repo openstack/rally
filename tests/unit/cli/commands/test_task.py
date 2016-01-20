@@ -14,7 +14,7 @@
 #    under the License.
 
 import copy
-import datetime as date
+import datetime as dt
 import os.path
 
 import mock
@@ -606,8 +606,8 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="123456789")
     @mock.patch("rally.cli.commands.task.api.Task.list",
                 return_value=[fakes.FakeTask(uuid="a",
-                                             created_at=date.datetime.now(),
-                                             updated_at=date.datetime.now(),
+                                             created_at=dt.datetime.now(),
+                                             updated_at=dt.datetime.now(),
                                              status="c",
                                              tag="d",
                                              deployment_name="some_name")])
@@ -630,8 +630,8 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="123456789")
     @mock.patch("rally.cli.commands.task.api.Task.list",
                 return_value=[fakes.FakeTask(uuid="a",
-                                             created_at=date.datetime.now(),
-                                             updated_at=date.datetime.now(),
+                                             created_at=dt.datetime.now(),
+                                             updated_at=dt.datetime.now(),
                                              status="c",
                                              tag="d",
                                              deployment_name="some_name")])

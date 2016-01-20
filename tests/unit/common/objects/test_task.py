@@ -15,7 +15,7 @@
 
 """Tests for db.task layer."""
 
-import datetime
+import datetime as dt
 import json
 
 import ddt
@@ -173,7 +173,7 @@ class TaskTestCase(test.TestCase):
     def test_extend_results(self):
         self.assertRaises(TypeError, objects.Task.extend_results)
 
-        now = datetime.datetime.now()
+        now = dt.datetime.now()
         iterations = [
             {"timestamp": i + 2, "duration": i + 5,
              "scenario_output": {"errors": "", "data": {}},

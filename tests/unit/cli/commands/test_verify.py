@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime as date
+import datetime as dt
 import os.path
 import tempfile
 
@@ -150,8 +150,8 @@ class VerifyCommandsTestCase(test.TestCase):
     def test_list(self, mock_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
                   "Created at", "Duration", "Status"]
-        verifications = [{"created_at": date.datetime.now(),
-                          "updated_at": date.datetime.now()}]
+        verifications = [{"created_at": dt.datetime.now(),
+                          "updated_at": dt.datetime.now()}]
         mock_verification_list.return_value = verifications
         self.verify.list()
 

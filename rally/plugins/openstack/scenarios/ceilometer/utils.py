@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
+import datetime as dt
 
 import six
 
@@ -64,7 +64,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
             if v:
                 sample.update({k: v})
         len_meta = len(metadata_list) if metadata_list else 0
-        now = timestamp or datetime.datetime.utcnow()
+        now = timestamp or dt.datetime.utcnow()
         samples = []
         for i in six.moves.xrange(count):
             if i and not (i % batch_size):
@@ -72,7 +72,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                 samples = []
             sample_item = dict(sample)
             sample_item["timestamp"] = (
-                now - datetime.timedelta(seconds=(interval * i))
+                now - dt.timedelta(seconds=(interval * i))
             ).isoformat()
             if metadata_list:
                 # NOTE(idegtiarov): Adding more than one template of metadata

@@ -376,3 +376,17 @@ class HackingTestCase(test.TestCase):
         checkres = checks.check_old_type_class(line, line, "fakefile")
         self.assertIsNotNone(next(checkres))
         self.assertEqual([], list(checkres))
+
+    def test_check_datetime_alias(self):
+        lines = ["import datetime as date",
+                 "import datetime",
+                 "import datetime as dto",
+                 "from datetime import datetime as dtime"]
+
+        for line in lines:
+            checkres = checks.check_datetime_alias(line, line, "fakefile")
+            self.assertIsNotNone(next(checkres))
+            self.assertEqual([], list(checkres))
+
+        line = "import datetime as dt"
+        checkres = checks.check_datetime_alias(line, line, "fakefile")

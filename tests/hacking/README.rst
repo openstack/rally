@@ -29,6 +29,7 @@ Rally Specific Commandments
 * [N353] - Ensure that unicode() function is not uset because of absence in py3
 * [N354] - Ensure that ``:raises: Exception`` is not used
 * [N355] - Ensure that we use only "new-style" Python classes
+* [N356] - Ensure using ``dt`` as alias for ``datetime``
 * [N360-N370] - Reserved for rules related to CLI
  * [N360] - Ensure that CLI modules do not use ``rally.common.db``
  * [N361] - Ensure that CLI modules do not use ``rally.common.objects``

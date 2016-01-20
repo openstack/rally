@@ -64,6 +64,7 @@ re_raises = re.compile(
 re_db_import = re.compile(r"^from rally.common import db")
 re_objects_import = re.compile(r"^from rally.common import objects")
 re_old_type_class = re.compile(r"^\s*class \w+(\(\))?:")
+re_datetime_alias = re.compile(r"^(from|import) datetime(?!\s+as\s+dt$)")
 
 
 def skip_ignored_lines(func):
@@ -490,6 +491,16 @@ def check_old_type_class(logical_line, physical_line, filename):
 
 
 @skip_ignored_lines
+def check_datetime_alias(logical_line, physical_line, filename):
+    """Ensure using ``dt`` as alias for ``datetime``
+
+    N356
+    """
+    if re_datetime_alias.search(logical_line):
+        yield (0, "N356 Please use ``dt`` as alias for ``datetime``.")
+
+
+@skip_ignored_lines
 def check_db_imports_in_cli(logical_line, physical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.db``
 
@@ -534,6 +545,7 @@ def factory(register):
     register(check_dict_formatting_in_string)
     register(check_using_unicode)
     register(check_raises)
+    register(check_datetime_alias)
     register(check_db_imports_in_cli)
     register(check_objects_imports_in_cli)
     register(check_old_type_class)

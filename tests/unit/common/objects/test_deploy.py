@@ -177,7 +177,7 @@ class DeploymentTestCase(test.TestCase):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["id"], self.resource["id"])
 
-    @mock.patch("rally.common.objects.deploy.datetime.datetime")
+    @mock.patch("rally.common.objects.deploy.dt.datetime")
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_set_started(self, mock_deployment_update, mock_datetime):
         mock_datetime.now = mock.Mock(return_value="fake_time")
@@ -190,7 +190,7 @@ class DeploymentTestCase(test.TestCase):
              "status": consts.DeployStatus.DEPLOY_STARTED}
         )
 
-    @mock.patch("rally.common.objects.deploy.datetime.datetime")
+    @mock.patch("rally.common.objects.deploy.dt.datetime")
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_set_completed(self, mock_deployment_update, mock_datetime):
         mock_datetime.now = mock.Mock(return_value="fake_time")

@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
+import datetime as dt
 
 import mock
 
@@ -53,7 +53,7 @@ class HtmlOutputTestCase(test.TestCase):
             "unexpected_success": 0,
             "total": 4,
             "time": "{0} ({1} s)".format(
-                datetime.timedelta(seconds=23), 22.75),
+                dt.timedelta(seconds=23), 22.75),
             "tests": [{"name": "tf",
                        "id": 0,
                        "output": "fail_log",
@@ -99,7 +99,7 @@ class HtmlOutputTestCase(test.TestCase):
             "expected_failures": 0,
             "unexpected_success": 0,
             "total": 1,
-            "time": "{0} ({1} s)".format(datetime.timedelta(seconds=0), 0),
+            "time": "{0} ({1} s)".format(dt.timedelta(seconds=0), 0),
             "tests": [{
                 "id": 0,
                 "status": "skip",
