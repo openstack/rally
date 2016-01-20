@@ -2,11 +2,14 @@
 
 env
 
+LOG=.testrepository/subunit.log
+
 mkdir -p .testrepository
-python -m subunit.run discover tests/functional > .testrepository/subunit.log
 
-subunit2pyunit < .testrepository/subunit.log
-EXIT_CODE=$?
-subunit-stats < .testrepository/subunit.log
+date "+Start tests at %Y-%m-%d %H:%M:%S"
 
-exit $EXIT_CODE
+python -m subunit.run discover tests/functional | tee ${LOG} | subunit2pyunit
+
+cat ${LOG} | subunit-stats
+
+cat ${LOG} | subunit-stats | grep -Eq "^Failed tests:      0$"
