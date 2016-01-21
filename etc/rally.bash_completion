@@ -26,8 +26,6 @@ _rally()
     OPTS["deployment_recreate"]="--deployment"
     OPTS["deployment_show"]="--deployment"
     OPTS["deployment_use"]="--deployment"
-    OPTS["info_find"]="--query"
-    OPTS["info_list"]=""
     OPTS["plugin_list"]="--name --namespace"
     OPTS["plugin_show"]="--name --namespace"
     OPTS["show_flavors"]="--deployment"

@@ -21,7 +21,6 @@ import sys
 
 from rally.cli import cliutils
 from rally.cli.commands import deployment
-from rally.cli.commands import info
 from rally.cli.commands import plugin
 from rally.cli.commands import show
 from rally.cli.commands import task
@@ -30,7 +29,6 @@ from rally.cli.commands import verify
 
 categories = {
     "deployment": deployment.DeploymentCommands,
-    "info": info.InfoCommands,
     "plugin": plugin.PluginCommands,
     "show": show.ShowCommands,
     "task": task.TaskCommands,

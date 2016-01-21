@@ -21,7 +21,6 @@ import sqlalchemy.exc
 
 from rally.cli import cliutils
 from rally.cli.commands import deployment
-from rally.cli.commands import info
 from rally.cli.commands import show
 from rally.cli.commands import task
 from rally.cli.commands import verify
@@ -39,7 +38,6 @@ class CliUtilsTestCase(test.TestCase):
         super(CliUtilsTestCase, self).setUp()
         self.categories = {
             "deployment": deployment.DeploymentCommands,
-            "info": info.InfoCommands,
             "show": show.ShowCommands,
             "task": task.TaskCommands,
             "verify": verify.VerifyCommands
@@ -193,11 +191,6 @@ class CliUtilsTestCase(test.TestCase):
 
     def test_run_bash_completion(self):
         ret = cliutils.run(["rally", "bash-completion"], self.categories)
-        self.assertEqual(ret, 0)
-
-    def test_run_bash_completion_with_query_category(self):
-        ret = cliutils.run(["rally", "bash-completion", "info"],
-                           self.categories)
         self.assertEqual(ret, 0)
 
     def test_run_show(self):
