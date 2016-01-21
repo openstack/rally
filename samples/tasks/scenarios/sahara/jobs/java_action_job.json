@@ -35,7 +35,8 @@
                     ]
                 },
                 "sahara_cluster": {
-                    "flavor_id": "2",
+                    "master_flavor_id": "4",
+                    "worker_flavor_id": "3",
                     "workers_count": 3,
                     "plugin_name": "vanilla",
                     "hadoop_version": "2.6.0",
