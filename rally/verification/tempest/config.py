@@ -251,6 +251,8 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             # on attempt to get option with boolean value
             self.conf.set(section_name, service,
                           str(service in self.available_services))
+
+    def _configure_horizon_available(self, section_name="service_available"):
         horizon_url = ("http://" +
                        parse.urlparse(self.credential["auth_url"]).hostname)
         try:

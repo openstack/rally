@@ -250,28 +250,35 @@ class TempestConfigTestCase(test.TestCase):
         for item in expected:
             self.assertIn(item, result)
 
-    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
-    def test__configure_service_available(self, mock_get):
+    def test__configure_service_available(self):
         available_services = ("nova", "cinder", "glance", "sahara")
         self.tempest_conf.available_services = available_services
         self.tempest_conf._configure_service_available()
+
+        expected = (
+            ("neutron", "False"), ("heat", "False"), ("nova", "True"),
+            ("swift", "False"), ("cinder", "True"), ("sahara", "True"),
+            ("glance", "True"), ("ceilometer", "False"))
+        result = self.tempest_conf.conf.items("service_available")
+        for item in expected:
+            self.assertIn(item, result)
+
+    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
+    def test__configure_horizon_available(self, mock_get):
+        self.tempest_conf._configure_horizon_available()
 
         expected_horizon_url = "http://test"
         expected_timeout = CONF.openstack_client_http_timeout
         mock_get.assert_called_once_with(expected_horizon_url,
                                          timeout=expected_timeout)
-        expected = (
-            ("neutron", "False"), ("heat", "False"), ("nova", "True"),
-            ("swift", "False"), ("cinder", "True"), ("sahara", "True"),
-            ("glance", "True"), ("horizon", "True"), ("ceilometer", "False"))
-        result = self.tempest_conf.conf.items("service_available")
-        for item in expected:
-            self.assertIn(item, result)
+        self.assertEqual(
+            self.tempest_conf.conf.get(
+                "service_available", "horizon"), "True")
 
     @mock.patch("requests.get", return_value=mock.MagicMock(status_code=404))
-    def test__configure_service_available_horizon_not_available(
+    def test__configure_horizon_not_available(
             self, mock_get):
-        self.tempest_conf._configure_service_available()
+        self.tempest_conf._configure_horizon_available()
         self.assertEqual(
             self.tempest_conf.conf.get(
                 "service_available", "horizon"), "False")
@@ -279,7 +286,7 @@ class TempestConfigTestCase(test.TestCase):
     @mock.patch("requests.get", side_effect=requests.Timeout())
     def test__configure_service_available_horizon_request_timeout(
             self, mock_get):
-        self.tempest_conf._configure_service_available()
+        self.tempest_conf._configure_horizon_available()
         self.assertEqual(
             self.tempest_conf.conf.get(
                 "service_available", "horizon"), "False")
