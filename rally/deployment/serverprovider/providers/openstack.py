@@ -155,7 +155,7 @@ class OpenStackProvider(provider.ProviderFactory):
     def get_image_uuid(self):
         """Get image uuid. Download image if necessary."""
 
-        image_uuid = self.config["image"].get("uuid", None)
+        image_uuid = self.config["image"].get("uuid")
         if image_uuid:
             return image_uuid
         else:
@@ -187,7 +187,7 @@ class OpenStackProvider(provider.ProviderFactory):
         return image.id
 
     def get_userdata(self):
-        userdata = self.config["image"].get("userdata", None)
+        userdata = self.config["image"].get("userdata")
         return userdata
 
     def create_keypair(self):
@@ -205,7 +205,7 @@ class OpenStackProvider(provider.ProviderFactory):
         return keypair, public_key_path
 
     def get_nics(self):
-        return self.config.get("nics", None)
+        return self.config.get("nics")
 
     def create_security_group_and_rules(self):
         sec_group_name = self.config.get("secgroup_name",

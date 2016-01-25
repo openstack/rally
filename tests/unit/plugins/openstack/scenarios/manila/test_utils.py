@@ -89,7 +89,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(fake_shares, result)
         self.clients("manila").shares.list.assert_called_once_with(
             detailed=params.get("detailed", True),
-            search_opts=params.get("search_opts", None))
+            search_opts=params.get("search_opts"))
 
     def test__create_share_network(self):
         fake_sn = mock.Mock()
@@ -141,7 +141,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(fake_share_networks, result)
         self.clients("manila").share_networks.list.assert_called_once_with(
             detailed=params.get("detailed", True),
-            search_opts=params.get("search_opts", None))
+            search_opts=params.get("search_opts"))
 
     @ddt.data(
         {},
@@ -158,7 +158,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(fake_share_servers, result)
         self.admin_clients(
             "manila").share_servers.list.assert_called_once_with(
-                search_opts=params.get("search_opts", None))
+                search_opts=params.get("search_opts"))
 
     @ddt.data("ldap", "kerberos", "active_directory")
     def test__create_security_service(self, ss_type):

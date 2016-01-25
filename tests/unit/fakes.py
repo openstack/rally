@@ -313,7 +313,7 @@ class FakeManager(object):
         self.resources_order = []
 
     def get(self, resource_uuid):
-        return self.cache.get(resource_uuid, None)
+        return self.cache.get(resource_uuid)
 
     def delete(self, resource_uuid):
         cached = self.get(resource_uuid)
@@ -348,7 +348,7 @@ class FakeServerManager(FakeManager):
         self.images = image_mgr or FakeImageManager()
 
     def get(self, resource_uuid):
-        server = self.cache.get(resource_uuid, None)
+        server = self.cache.get(resource_uuid)
         if server is not None:
             return server
         raise nova_exceptions.NotFound("Server %s not found" % (resource_uuid))
@@ -389,7 +389,7 @@ class FakeImageManager(FakeManager):
         super(FakeImageManager, self).__init__()
 
     def get(self, resource_uuid):
-        image = self.cache.get(resource_uuid, None)
+        image = self.cache.get(resource_uuid)
         if image is not None:
             return image
         raise exc.HTTPNotFound("Image %s not found" % (resource_uuid))

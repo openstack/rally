@@ -116,7 +116,7 @@ class LxcEngine(engine.Engine):
         start_script = self.config.get("start_script",
                                        get_script_path(START_SCRIPT))
         distribution = self.config["distribution"]
-        release = self.config.get("release", None)
+        release = self.config.get("release")
         network = self.config.get("start_lxc_network")
         if network:
             network = netaddr.IPNetwork(network)
