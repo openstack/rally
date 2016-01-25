@@ -17,7 +17,7 @@ import mock
 
 from rally.common import utils
 from rally import exceptions
-from rally.plugins.openstack.context.keystone import api_versions
+from rally.plugins.openstack.context import api_versions
 from tests.unit import test
 
 
