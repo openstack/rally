@@ -318,7 +318,7 @@ class LxcProvider(provider.ProviderFactory):
         else:
             network = None
         distribution = self.config.get("distribution", "ubuntu")
-        release = self.config.get("release", None)
+        release = self.config.get("release")
 
         for server in host_provider.create_servers():
             config = {"tunnel_to": self.config.get("tunnel_to", []),
