@@ -52,6 +52,7 @@ Proposed change
 *rally/task/exporter.py*.
 
 ..code-block:: python
+
     class TaskExporter(plugin.Plugin):
         def export(self, task, connection_string):
             ...
@@ -59,12 +60,14 @@ Proposed change
 2. Implement a CLI command of the form
 
 ..code-block:: shell
+
     rally task export <UUID> <CONNECTION_STRING>
 
 3. Implement a base class VerifyExporter for an export plugin at
 *rally/verify/exporter.py*.
 
 ..code-block:: python
+
     class VerifyExporter(plugin.Plugin):
         def export(self, verification, connection_string):
             ...
@@ -72,6 +75,7 @@ Proposed change
 4. Implement a CLI command of the form
 
 ..code-block:: shell
+
     rally verify export <UUID> <CONNECTION_STRING>
 
 Alternatives
