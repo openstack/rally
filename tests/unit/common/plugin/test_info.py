@@ -36,8 +36,9 @@ description.
         expected = {
             "short_description": "One-line description.",
             "long_description": "Multi-\nline-\ndescription.",
-            "params": [{"name": "p1", "doc": "Param 1 description."},
-                       {"name": "p2", "doc": "Param 2\ndescription."}],
+            "params": [{"name": "p1", "doc": "Param 1 description.\n"},
+                       {"name": "p2", "doc": "Param 2\n           "
+                                             "description.\n"}],
             "returns": "Return value\ndescription."
         }
         self.assertEqual(expected, info.parse_docstring(docstring))
@@ -53,8 +54,9 @@ description.
         expected = {
             "short_description": "One-line description.",
             "long_description": "",
-            "params": [{"name": "p1", "doc": "Param 1 description."},
-                       {"name": "p2", "doc": "Param 2\ndescription."}],
+            "params": [{"name": "p1", "doc": "Param 1 description.\n"},
+                       {"name": "p2", "doc": "Param 2\n           "
+                                             "description."}],
             "returns": ""
         }
         self.assertEqual(expected, info.parse_docstring(docstring))

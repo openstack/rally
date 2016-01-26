@@ -62,7 +62,7 @@ def parse_docstring(docstring):
 
             if params_returns_desc:
                 params = [
-                    {"name": name, "doc": reindent(doc)}
+                    {"name": name, "doc": doc}
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
@@ -72,7 +72,7 @@ def parse_docstring(docstring):
 
     return {
         "short_description": short_description,
-        "long_description": reindent(long_description),
+        "long_description": long_description,
         "params": params,
         "returns": returns
     }
