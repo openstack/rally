@@ -606,7 +606,7 @@ class OSClientsTestCase(test.TestCase):
     def test_services(self, mock_keystone_create_client):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
-                              "unknown_service": {}}
+                              "some_service": {}}
         mock_keystone_create_client.return_value = mock.Mock(
             service_catalog=mock.Mock(
                 get_endpoints=lambda: available_services))
@@ -614,7 +614,8 @@ class OSClientsTestCase(test.TestCase):
 
         self.assertEqual(
             {consts.ServiceType.IDENTITY: consts.Service.KEYSTONE,
-             consts.ServiceType.COMPUTE: consts.Service.NOVA},
+             consts.ServiceType.COMPUTE: consts.Service.NOVA,
+             "some_service": "__unknown__"},
             clients.services())
 
     def test_murano(self):

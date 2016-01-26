@@ -699,6 +699,8 @@ class Clients(object):
             for stype in available_services.keys():
                 if stype in consts.ServiceType:
                     services_data[stype] = consts.ServiceType[stype]
+                else:
+                    services_data[stype] = "__unknown__"
             self.cache["services_data"] = services_data
 
         return self.cache["services_data"]
