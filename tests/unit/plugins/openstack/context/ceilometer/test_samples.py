@@ -17,6 +17,7 @@ import copy
 import mock
 import six
 
+from rally import exceptions
 from rally.plugins.openstack.context.ceilometer import samples
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
 from tests.unit import test
@@ -99,6 +100,22 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
 
         inst = samples.CeilometerSampleGenerator(context)
         self.assertEqual(inst.config, context["config"]["ceilometer"])
+
+    def test__store_batch_samples(self):
+        tenants_count = 2
+        users_per_tenant = 2
+        resources_per_tenant = 2
+        samples_per_resource = 2
+
+        tenants, real_context = self._gen_context(
+            tenants_count, users_per_tenant,
+            resources_per_tenant, samples_per_resource)
+        ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
+        scenario = ceilo_utils.CeilometerScenario(real_context)
+        self.assertRaises(
+            exceptions.ContextSetupFailure,
+            ceilometer_ctx._store_batch_samples,
+            scenario, ["foo", "bar"], 1)
 
     def test_setup(self):
         tenants_count = 2

@@ -1,0 +1,48 @@
+{
+    "VMTasks.runcommand_heat": [
+        {
+            "runner": {
+                "type": "constant",
+                "concurrency": 1,
+                "timeout": 3000,
+                "times": 1
+            },
+            "args": {
+                "files": {
+                    "wp-instances.yaml": "rally-jobs/extra/workload/wp-instances.yaml"
+                },
+                "workload": {
+                    "username": "fedora",
+                    "resource": [
+                        "rally.plugins.workload",
+                        "siege.py"
+                    ]
+                },
+                "template": "rally-jobs/extra/workload/wordpress_heat_template.yaml",
+                "parameters": {
+                    "router_id": "c497caa1-9d73-402b-bcd1-cc269e9af29e",
+                    "instance_type": "gig",
+                    "wp_image": "fedora",
+                    "network_id": "9d477754-e9ba-4560-9b2b-9ce9d36638ce",
+                    "image": "fedora",
+                    "wp_instance_type": "gig",
+                    "wp_instances_count": 2
+                }
+            },
+            "context": {
+                "flavors": [
+                    {
+                        "vcpus": 1,
+                        "disk": 4,
+                        "ram": 1024,
+                        "name": "gig"
+                    }
+                ],
+                "users": {
+                    "users_per_tenant": 1,
+                    "tenants": 1
+                }
+            }
+        }
+    ]
+}
