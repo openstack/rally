@@ -264,7 +264,9 @@ class ValidatorsTestCase(test.TestCase):
                                                       "image_name": "foo"}},
                                                  clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], {"image": "image_id"})
+        self.assertEqual({"image": "image_id", "min_disk": 0,
+                          "min_ram": 0, "size": 0},
+                         result[1])
         mock_image_resource_type_transform.assert_called_once_with(
             clients=clients, resource_config="test")
         clients.glance().images.get.assert_called_with(image="image_id")
@@ -426,9 +428,6 @@ class ValidatorsTestCase(test.TestCase):
         # test ram
         flavor.disk = None
         flavor.ram = 2
-        image["min_ram"] = None
-        result = validator(None, None, None)
-        self.assertTrue(result.is_valid, result.msg)
         image["min_ram"] = 4
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
@@ -475,10 +474,6 @@ class ValidatorsTestCase(test.TestCase):
         }
 
         # test ram
-        image["min_ram"] = None
-        result = validator(config, clients, None)
-        self.assertTrue(result.is_valid, result.msg)
-
         image["min_ram"] = 64
         result = validator(config, clients, None)
         self.assertFalse(result.is_valid, result.msg)

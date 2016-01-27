@@ -256,6 +256,12 @@ def _get_validated_image(config, clients, param_name):
         image_id = types.ImageResourceType.transform(
             clients=clients, resource_config=image_args)
         image = clients.glance().images.get(image=image_id).to_dict()
+        if not image.get("size"):
+            image["size"] = 0
+        if not image.get("min_ram"):
+            image["min_ram"] = 0
+        if not image.get("min_disk"):
+            image["min_disk"] = 0
         return (ValidationResult(True), image)
     except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
         message = _("Image '%s' not found") % image_args
@@ -349,18 +355,18 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
     if not valid_result.is_valid:
         return valid_result
 
-    if flavor.ram < (image["min_ram"] or 0):
+    if flavor.ram < image["min_ram"]:
         message = _("The memory size for flavor '%s' is too small "
                     "for requested image '%s'") % (flavor.id, image["id"])
         return ValidationResult(False, message)
 
     if flavor.disk:
-        if (image["size"] or 0) > flavor.disk * (1024 ** 3):
+        if image["size"] > flavor.disk * (1024 ** 3):
             message = _("The disk size for flavor '%s' is too small "
                         "for requested image '%s'") % (flavor.id, image["id"])
             return ValidationResult(False, message)
 
-        if (image["min_disk"] or 0) > flavor.disk:
+        if image["min_disk"] > flavor.disk:
             message = _("The disk size for flavor '%s' is too small "
                         "for requested image '%s'") % (flavor.id, image["id"])
             return ValidationResult(False, message)
