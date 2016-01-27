@@ -145,7 +145,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
                           get_from_manager, resource)
 
     def test_check_service_status(self):
-        class service():
+        class service(object):
             def __init__(self, name):
                 self.status = "enabled"
                 self.state = "up"
@@ -163,7 +163,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertTrue(client.services.list.called)
 
     def test_check_service_status_fail(self):
-        class service():
+        class service(object):
             def __init__(self, name):
                 self.status = "enabled"
                 self.state = "down"

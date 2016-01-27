@@ -125,7 +125,7 @@ class MethodClassTestCase(test.TestCase):
     @testtools.skipIf(sys.version_info > (2, 9), "Problems with access to "
                                                  "class from <locals>")
     def test_method_class_for_class_level_method(self):
-        class A:
+        class A(object):
             def m(self):
                 pass
         self.assertEqual(A, utils.get_method_class(A.m))

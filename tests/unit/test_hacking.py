@@ -367,3 +367,12 @@ class HackingTestCase(test.TestCase):
         checkres = checks.check_objects_imports_in_cli(
             line, line, "./filename")
         self.assertRaises(StopIteration, next, checkres)
+
+    @ddt.data(
+        "class Oldstype():",
+        "class Oldstyle:"
+    )
+    def test_check_old_type_class(self, line):
+        checkres = checks.check_old_type_class(line, line, "fakefile")
+        self.assertIsNotNone(next(checkres))
+        self.assertEqual([], list(checkres))

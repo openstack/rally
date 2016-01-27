@@ -63,6 +63,7 @@ re_raises = re.compile(
     r"\s:raise[^s] *.*$|\s:raises *:.*$|\s:raises *[^:]+$")
 re_db_import = re.compile(r"^from rally.common import db")
 re_objects_import = re.compile(r"^from rally.common import objects")
+re_old_type_class = re.compile(r"^\s*class \w+(\(\))?:")
 
 
 def skip_ignored_lines(func):
@@ -476,6 +477,19 @@ def check_raises(physical_line, filename):
 
 
 @skip_ignored_lines
+def check_old_type_class(logical_line, physical_line, filename):
+    """Use new-style Python classes
+
+    N355
+    """
+
+    if re_old_type_class.search(logical_line):
+        yield (0, "N355 This class does not inherit from anything and thus "
+                  "will be an old-style class by default. Try to inherit from "
+                  "``object`` or another new-style class.")
+
+
+@skip_ignored_lines
 def check_db_imports_in_cli(logical_line, physical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.db``
 
@@ -522,3 +536,4 @@ def factory(register):
     register(check_raises)
     register(check_db_imports_in_cli)
     register(check_objects_imports_in_cli)
+    register(check_old_type_class)

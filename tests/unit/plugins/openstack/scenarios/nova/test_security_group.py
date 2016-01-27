@@ -23,7 +23,7 @@ from tests.unit import test
 SECGROUP = "rally.plugins.openstack.scenarios.nova.security_group"
 
 
-class FakeNeutronScenario():
+class FakeNeutronScenario(object):
     def __enter__(self):
         return {}
 
