@@ -328,7 +328,7 @@ class Heat(OSClient):
         return client
 
 
-@configure("cinder", default_version="1", default_service_type="volume",
+@configure("cinder", default_version="2", default_service_type="volumev2",
            supported_versions=["1", "2"])
 class Cinder(OSClient):
     def create_client(self, version=None, service_type=None):
