@@ -335,11 +335,11 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.cinder()
             self.assertEqual(fake_cinder, client)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type="volume",
+                service_type="volumev2",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_cinder.client.Client.assert_called_once_with(
-                "1",
+                "2",
                 http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None,
