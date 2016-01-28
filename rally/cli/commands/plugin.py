@@ -67,7 +67,7 @@ class PluginCommands(object):
             if plugin_info["parameters"]:
                 print("PARAMETERS")
                 rows = [utils.Struct(name=p["name"],
-                                     description="g%s\n" % p["doc"])
+                                     description="%s\n" % p["doc"])
                         for p in plugin_info["parameters"]]
                 cliutils.print_list(rows, fields=["name", "description"])
         else:
