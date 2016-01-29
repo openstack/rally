@@ -78,7 +78,9 @@ class Keystone(ResourceManager):
         return self.client.users.list()
 
     def list_tenants(self):
-        return self.client.tenants.list()
+        if hasattr(self.client, "projects"):
+            return self.client.projects.list()  # V3
+        return self.client.tenants.list()  # V2
 
     def list_roles(self):
         return self.client.roles.list()

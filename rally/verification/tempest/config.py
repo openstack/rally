@@ -131,10 +131,18 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
                         "HTTP error code %d.") % response.status_code
             raise exceptions.TempestConfigCreationFailure(msg)
 
-    def _get_service_url(self, service_type):
-        for service in self.keystone.auth_ref["serviceCatalog"]:
-            if self.clients.services().get(service["type"]) == service_type:
-                return service["endpoints"][0]["publicURL"]
+    def _get_service_url(self, service_name):
+        s_type = self._get_service_type_by_service_name(service_name)
+        if hasattr(self.keystone, "service_catalog"):
+            available_endpoints = self.keystone.service_catalog.get_endpoints()
+            service_endpoints = available_endpoints.get(s_type, [])
+            for endpoint in service_endpoints:
+                if endpoint["interface"] == "public":
+                    return endpoint["url"]
+        else:
+            for service in self.keystone.auth_ref["serviceCatalog"]:
+                if service["type"] == s_type:
+                    return service["endpoints"][0]["publicURL"]
 
     def _get_service_type_by_service_name(self, service_name):
         for s_type, s_name in six.iteritems(self.clients.services()):

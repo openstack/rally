@@ -82,7 +82,8 @@ class TempestConfigTestCase(test.TestCase):
         self.assertRaises(exceptions.TempestConfigCreationFailure,
                           self.tempest_conf._download_cirros_image)
 
-    def test__get_service_url(self):
+    def test__get_service_url_keystone_v2(self):
+        self.tempest_conf.keystone = mock.MagicMock(spec=["auth_ref"])
         self.tempest_conf.keystone.auth_ref = {
             "serviceCatalog": [
                 {
@@ -92,6 +93,24 @@ class TempestConfigTestCase(test.TestCase):
                 }
             ]
         }
+        self.tempest_conf.clients.services.return_value = {
+            "test_service_type": "test_service"}
+        self.assertEqual(
+            self.tempest_conf._get_service_url("test_service"), "test_url")
+
+    def test__get_service_url_keystone_v3(self):
+
+        mock_catalog = mock.MagicMock()
+        mock_catalog.get_endpoints.return_value = {
+            "test_service_type": [
+                {
+                    "interface": "public",
+                    "url": "test_url"
+                }
+            ]
+        }
+
+        self.tempest_conf.keystone.service_catalog = mock_catalog
         self.tempest_conf.clients.services.return_value = {
             "test_service_type": "test_service"}
         self.assertEqual(
