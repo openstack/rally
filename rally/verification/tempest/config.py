@@ -15,6 +15,7 @@
 
 import inspect
 import os
+import re
 
 from oslo_config import cfg
 import requests
@@ -40,10 +41,20 @@ IMAGE_OPTS = [
                help="CirrOS image URL"),
     cfg.StrOpt("disk_format",
                default="qcow2",
-               help="Image disk format"),
+               help="Image disk format to use when creating the image"),
     cfg.StrOpt("container_format",
                default="bare",
-               help="Image container formate")
+               help="Image container format to use when creating the image"),
+    cfg.StrOpt("name_regex",
+               default="^.*(cirros|testvm).*$",
+               help="Regular expression for name of an image to discover it "
+                    "in the cloud and use it for the tests. Note that when "
+                    "Rally is searching for the image, case insensitive "
+                    "matching is performed. Specify nothing ('name_regex =') "
+                    "if you want to disable discovering. In this case Rally "
+                    "will create needed resources by itself if the values "
+                    "for the corresponding config options are not specified "
+                    "in the Tempest config file")
 ]
 
 ROLE_OPTS = [
@@ -97,9 +108,9 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
         self.conf = configparser.ConfigParser()
         self.conf.read(os.path.join(os.path.dirname(__file__), "config.ini"))
+
         self.image_name = parse.urlparse(
             CONF.image.cirros_img_url).path.split("/")[-1]
-
         self._download_cirros_image()
 
     def _download_cirros_image(self):
@@ -311,6 +322,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         self.conf_path = conf_path
         self.conf = configparser.ConfigParser()
         self.conf.read(conf_path)
+
         self.image_name = parse.urlparse(
             CONF.image.cirros_img_url).path.split("/")[-1]
 
@@ -321,8 +333,10 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
 
     def __enter__(self):
         self._create_tempest_roles()
-        self._configure_option("compute", "image_ref", self._create_image)
-        self._configure_option("compute", "image_ref_alt", self._create_image)
+        self._configure_option("compute", "image_ref",
+                               self._discover_or_create_image)
+        self._configure_option("compute", "image_ref_alt",
+                               self._discover_or_create_image)
         self._configure_option("compute",
                                "flavor_ref", self._create_flavor, 64)
         self._configure_option("compute",
@@ -387,12 +401,28 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             LOG.debug("Option '{opt}' is configured. "
                       "{opt} = {value}".format(opt=option, value=value))
         else:
-            LOG.debug("Option '{opt}' was configured manually "
+            LOG.debug("Option '{opt}' is already configured "
                       "in Tempest config file. {opt} = {opt_val}"
                       .format(opt=option, opt_val=option_value))
 
-    def _create_image(self):
+    def _discover_or_create_image(self):
         glanceclient = self.clients.glance()
+
+        if CONF.image.name_regex:
+            LOG.debug("Trying to discover an image with name matching "
+                      "regular expression '%s'. Note that case insensitive "
+                      "matching is performed" % CONF.image.name_regex)
+            img_list = [img for img in glanceclient.images.list()
+                        if img.status.lower() == "active" and img.name]
+            for img in img_list:
+                if re.match(CONF.image.name_regex, img.name, re.IGNORECASE):
+                    LOG.debug("The following image discovered: '{0}'. Using "
+                              "image '{0}' for the tests".format(img.name))
+                    return img
+
+            LOG.debug("There is no image with name matching "
+                      "regular expression '%s'" % CONF.image.name_regex)
+
         params = {
             "name": self.generate_random_name(),
             "disk_format": CONF.image.disk_format,

@@ -344,8 +344,8 @@ class Tempest(object):
                 "testr_args": testr_args,
                 "log_file": log_file or self.log_file_raw
             })
-        # Create all resources needed for Tempest before running tests.
-        # Once tests finish, all created resources will be deleted.
+        # Discover or create all resources needed for Tempest before running
+        # tests. Once tests finish, all created resources will be deleted.
         with config.TempestResourcesContext(
                 self.deployment, self.verification, self.config_file):
             # Run tests
