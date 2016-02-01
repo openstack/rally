@@ -65,19 +65,39 @@ def get_impl():
     return IMPL
 
 
-def db_cleanup():
-    """Recreate engine."""
-    get_impl().db_cleanup()
+def engine_reset():
+    """Reset DB engine."""
+    get_impl().engine_reset()
 
 
-def db_create():
-    """Initialize DB. This method will drop existing database."""
-    get_impl().db_create()
+def schema_cleanup():
+    """Drop DB schema. This method drops existing database."""
+    get_impl().schema_cleanup()
 
 
-def db_drop():
-    """Drop DB. This method drop existing database."""
-    get_impl().db_drop()
+def schema_upgrade(revision=None):
+    """Migrate the database to `revision` or the most recent revision."""
+    return get_impl().schema_upgrade(revision)
+
+
+def schema_create():
+    """Create database schema from models description."""
+    return get_impl().schema_create()
+
+
+def schema_downgrade(revision):
+    """Downgrade DB schema to specified revision."""
+    return get_impl().schema_downgrade(revision)
+
+
+def schema_revision():
+    """Return the schema revision."""
+    return get_impl().schema_revision()
+
+
+def schema_stamp(revision):
+    """Stamps database with provided revision."""
+    return get_impl().schema_stamp(revision)
 
 
 def task_get(uuid):

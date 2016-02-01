@@ -16,6 +16,11 @@
 SQLAlchemy implementation for DB.API
 """
 
+import os
+
+import alembic
+from alembic import config as alembic_config
+import alembic.migration as alembic_migration
 from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
@@ -32,6 +37,8 @@ from rally import exceptions
 CONF = cfg.CONF
 
 _FACADE = None
+
+INITIAL_REVISION_UUID = "ca3626f62937"
 
 
 def _create_facade_lazily():
@@ -58,18 +65,92 @@ def get_backend():
     return Connection()
 
 
+def _alembic_config():
+    path = os.path.join(os.path.dirname(__file__), "alembic.ini")
+    config = alembic_config.Config(path)
+    return config
+
+
 class Connection(object):
 
-    def db_cleanup(self):
+    def engine_reset(self):
         global _FACADE
 
         _FACADE = None
 
-    def db_create(self):
-        models.create_db()
-
-    def db_drop(self):
+    def schema_cleanup(self):
         models.drop_db()
+
+    def schema_revision(self, config=None, engine=None):
+        """Current database revision.
+
+        :param config: Instance of alembic config
+        :param engine: Instance of DB engine
+        :returns: Database revision
+        :rtype: string
+        """
+        engine = engine or get_engine()
+        with engine.connect() as conn:
+            context = alembic_migration.MigrationContext.configure(conn)
+            return context.get_current_revision()
+
+    def schema_upgrade(self, revision=None, config=None, engine=None):
+        """Used for upgrading database.
+
+        :param revision: Desired database version
+        :type revision: string
+        :param config: Instance of alembic config
+        :param engine: Instance of DB engine
+        """
+        revision = revision or "head"
+        config = config or _alembic_config()
+        engine = engine or get_engine()
+
+        if self.schema_revision() is None:
+            self.schema_stamp(INITIAL_REVISION_UUID, config=config)
+
+        alembic.command.upgrade(config, revision or "head")
+
+    def schema_create(self, config=None, engine=None):
+        """Create database schema from models description.
+
+        Can be used for initial installation instead of upgrade('head').
+        :param config: Instance of alembic config
+        :param engine: Instance of DB engine
+        """
+        engine = engine or get_engine()
+
+        # NOTE(viktors): If we will use metadata.create_all() for non empty db
+        #                schema, it will only add the new tables, but leave
+        #                existing as is. So we should avoid of this situation.
+        if self.schema_revision(engine=engine) is not None:
+            raise db_exc.DbMigrationError("DB schema is already under version"
+                                          " control. Use upgrade() instead")
+
+        models.BASE.metadata.create_all(engine)
+        self.schema_stamp("head", config=config)
+
+    def schema_downgrade(self, revision, config=None):
+        """Used for downgrading database.
+
+        :param revision: Desired database revision
+        :type revision: string
+        :param config: Instance of alembic config
+        """
+        config = config or _alembic_config()
+        return alembic.command.downgrade(config, revision)
+
+    def schema_stamp(self, revision, config=None):
+        """Stamps database with provided revision.
+
+        Don't run any migrations.
+        :param revision: Should match one from repository or head - to stamp
+                         database with most recent revision
+        :type revision: string
+        :param config: Instance of alembic config
+        """
+        config = config or _alembic_config()
+        return alembic.command.stamp(config, revision=revision)
 
     def model_query(self, model, session=None):
         """The helper method to create query.

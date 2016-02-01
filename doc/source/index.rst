@@ -33,6 +33,7 @@ Contents
    user_stories
    plugins
    plugin/plugin_reference
+   db_migrations
    contribute
    gates
    feature_requests
