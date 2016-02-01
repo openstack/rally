@@ -338,10 +338,10 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                                self._discover_or_create_image)
         self._configure_option("compute", "image_ref_alt",
                                self._discover_or_create_image)
-        self._configure_option("compute",
-                               "flavor_ref", self._create_flavor, 64)
-        self._configure_option("compute",
-                               "flavor_ref_alt", self._create_flavor, 128)
+        self._configure_option("compute", "flavor_ref",
+                               self._discover_or_create_flavor, 64)
+        self._configure_option("compute", "flavor_ref_alt",
+                               self._discover_or_create_flavor, 128)
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
             if neutronclient.list_networks(shared=True)["networks"]:
@@ -358,7 +358,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                                        self._create_network_resources)
         if "heat" in self.available_services:
             self._configure_option("orchestration", "instance_type",
-                                   self._create_flavor, 64)
+                                   self._discover_or_create_flavor, 64)
 
         _write_config(self.conf_path, self.conf)
 
@@ -438,15 +438,28 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
 
         return image
 
-    def _create_flavor(self, flv_ram):
+    def _discover_or_create_flavor(self, flv_ram):
         novaclient = self.clients.nova()
+
+        LOG.debug("Trying to discover a flavor with the following "
+                  "properties: RAM = %dMB, VCPUs = 1, disk = 0GB" % flv_ram)
+        for flavor in novaclient.flavors.list():
+            if (flavor.ram == flv_ram
+                    and flavor.vcpus == 1 and flavor.disk == 0):
+                LOG.debug("The following flavor discovered: '{0}'. Using "
+                          "flavor '{0}' for the tests".format(flavor.name))
+                return flavor
+
+        LOG.debug("There is no flavor with the mentioned properties")
+
         params = {
             "name": self.generate_random_name(),
             "ram": flv_ram,
             "vcpus": 1,
             "disk": 0
         }
-        LOG.debug("Creating flavor '%s'" % params["name"])
+        LOG.debug("Creating flavor '%s' with the following properties: RAM "
+                  "= %dMB, VCPUs = 1, disk = 0GB" % (params["name"], flv_ram))
         flavor = novaclient.flavors.create(**params)
         self._created_flavors.append(flavor)
 

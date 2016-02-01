@@ -118,11 +118,12 @@ class FakeServer(FakeResource):
 class FakeImage(FakeResource):
 
     def __init__(self, manager=None, id="image-id-0", min_ram=0,
-                 size=0, min_disk=0, name=None):
+                 size=0, min_disk=0, status="active", name=None):
         super(FakeImage, self).__init__(manager, id=id, name=name)
         self.min_ram = min_ram
         self.size = size
         self.min_disk = min_disk
+        self.status = status
         self.update = mock.MagicMock()
 
 
@@ -158,11 +159,12 @@ class FakeNetwork(FakeResource):
 
 class FakeFlavor(FakeResource):
 
-    def __init__(self, id="flavor-id-0", manager=None, ram=0, disk=0,
+    def __init__(self, id="flavor-id-0", manager=None, ram=0, disk=0, vcpus=1,
                  name="flavor-name-0"):
         super(FakeFlavor, self).__init__(manager, id=id)
         self.ram = ram
         self.disk = disk
+        self.vcpus = vcpus
         self.name = name
 
 

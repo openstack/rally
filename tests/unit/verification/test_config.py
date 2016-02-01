@@ -399,8 +399,8 @@ class TempestResourcesContextTestCase(test.TestCase):
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
     def test__discover_or_create_image_when_image_exists(self, mock_wrap):
         client = self.context.clients.glance()
-        client.images.list.return_value = [fakes.FakeResource(name="CirrOS",
-                                                              status="active")]
+        client.images.list.return_value = [fakes.FakeImage(name="CirrOS",
+                                                           status="active")]
         image = self.context._discover_or_create_image()
         self.assertEqual("CirrOS", image.name)
         self.assertEqual(0, len(self.context._created_images))
@@ -431,11 +431,20 @@ class TempestResourcesContextTestCase(test.TestCase):
             name=mock.ANY,
             is_public=True)
 
-    def test__create_flavor(self):
+    def test__discover_or_create_flavor_when_flavor_exists(self):
+        client = self.context.clients.nova()
+        client.flavors.list.return_value = [fakes.FakeFlavor(id="id1", ram=64,
+                                                             vcpus=1, disk=0)]
+
+        flavor = self.context._discover_or_create_flavor(64)
+        self.assertEqual("id1", flavor.id)
+        self.assertEqual(0, len(self.context._created_flavors))
+
+    def test__discover_or_create_flavor(self):
         client = self.context.clients.nova()
         client.flavors.create.side_effect = [fakes.FakeFlavor(id="id1")]
 
-        flavor = self.context._create_flavor(64)
+        flavor = self.context._discover_or_create_flavor(64)
         self.assertEqual("id1", flavor.id)
         self.assertEqual("id1", self.context._created_flavors[0].id)
 
