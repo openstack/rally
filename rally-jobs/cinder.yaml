@@ -94,8 +94,8 @@
           users_per_tenant: 2
         api_versions:
           cinder:
-            version: 2
-            service_name: cinderv2
+            version: 1
+            service_name: cinder
       sla:
         failure_rate:
           max: 0
