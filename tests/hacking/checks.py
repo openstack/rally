@@ -489,7 +489,7 @@ def check_objects_imports_in_cli(logical_line, physical_line, filename):
             or filename == "./rally/cli/commands/show.py"):
         return
     if re_objects_import.search(logical_line):
-        yield (0, "N360 CLI modules do not allow to work with "
+        yield (0, "N361 CLI modules do not allow to work with "
                   "`rally.common.objects``.")
 
 
