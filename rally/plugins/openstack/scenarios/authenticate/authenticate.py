@@ -26,6 +26,7 @@ class Authenticate(scenario.OpenStackScenario):
     """
 
     @validation.required_openstack(users=True)
+    @atomic.action_timer("authenticate.keystone")
     @scenario.configure()
     def keystone(self):
         """Check Keystone Client."""
