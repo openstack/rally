@@ -14,8 +14,9 @@
 #    under the License.
 
 from rally.plugins.openstack.scenarios.authenticate import authenticate
-from rally.task import atomic
 from tests.unit import test
+
+import mock
 
 
 AUTHENTICATE_MODULE = (
@@ -28,50 +29,63 @@ class AuthenticateTestCase(test.ScenarioTestCase):
         scenario_inst = authenticate.Authenticate()
         scenario_inst.keystone()
         self.assertTrue(self.client_created("keystone"))
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.keystone")
 
     def test_validate_glance(self):
         scenario_inst = authenticate.Authenticate()
-        image_name = "__intentionally_non_existent_image___"
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_glance"):
-            scenario_inst.validate_glance(5)
-        self.clients("glance").images.list.assert_called_with(name=image_name)
-        self.assertEqual(self.clients("glance").images.list.call_count, 5)
+        scenario_inst.validate_glance(5)
+
+        # NOTE(stpierre): We can't use assert_has_calls() here because
+        # that includes calls on the return values of the mock object
+        # as well. Glance (and Heat and Monasca, tested below) returns
+        # an iterator that the scenario wraps in list() in order to
+        # force glanceclient to actually make the API call, and this
+        # results in a bunch of call().__iter__() and call().__len__()
+        # calls that aren't matched if we use assert_has_calls().
+        self.assertItemsEqual(
+            self.clients("glance").images.list.call_args_list,
+            [mock.call(name=mock.ANY)] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_glance")
 
     def test_validate_nova(self):
         scenario_inst = authenticate.Authenticate()
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_nova"):
-            scenario_inst.validate_nova(5)
-        self.assertEqual(self.clients("nova").flavors.list.call_count, 5)
+        scenario_inst.validate_nova(5)
+        self.clients("nova").flavors.list.assert_has_calls([mock.call()] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_nova")
 
     def test_validate_cinder(self):
         scenario_inst = authenticate.Authenticate()
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_cinder"):
-            scenario_inst.validate_cinder(5)
-        self.assertEqual(self.clients("cinder").volume_types.list.call_count,
-                         5)
+        scenario_inst.validate_cinder(5)
+        self.clients("cinder").volume_types.list.assert_has_calls(
+            [mock.call()] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_cinder")
 
     def test_validate_neutron(self):
         scenario_inst = authenticate.Authenticate()
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_neutron"):
-            scenario_inst.validate_neutron(5)
-        self.assertEqual(self.clients("neutron").list_networks.call_count, 5)
+        scenario_inst.validate_neutron(5)
+        self.clients("neutron").list_networks.assert_has_calls(
+            [mock.call()] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_neutron")
 
     def test_validate_heat(self):
         scenario_inst = authenticate.Authenticate()
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_heat"):
-            scenario_inst.validate_heat(5)
-        self.clients("heat").stacks.list.assert_called_with(limit=0)
-        self.assertEqual(self.clients("heat").stacks.list.call_count, 5)
+        scenario_inst.validate_heat(5)
+        self.assertItemsEqual(
+            self.clients("heat").stacks.list.call_args_list,
+            [mock.call(limit=0)] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_heat")
 
     def test_validate_monasca(self):
         scenario_inst = authenticate.Authenticate()
-        with atomic.ActionTimer(scenario_inst,
-                                "authenticate.validate_monasca"):
-            scenario_inst.validate_monasca(5)
-        self.clients("monasca").metrics.list.assert_called_with(limit=0)
-        self.assertEqual(self.clients("monasca").metrics.list.call_count, 5)
+        scenario_inst.validate_monasca(5)
+        self.assertItemsEqual(
+            self.clients("monasca").metrics.list.call_args_list,
+            [mock.call(limit=0)] * 5)
+        self._test_atomic_action_timer(scenario_inst.atomic_actions(),
+                                       "authenticate.validate_monasca")
