@@ -892,3 +892,14 @@ class NovaScenario(scenario.OpenStackScenario):
         :param net_id: The nova-network ID to delete
         """
         return self.admin_clients("nova").networks.delete(net_id)
+
+    @atomic.action_timer("nova.list_flavors")
+    def _list_flavors(self, detailed=True, **kwargs):
+        """List all flavors.
+
+        :param kwargs: Optional additional arguments for flavor listing
+        :param detailed: True if the image listing
+                         should contain detailed information
+        :returns: flavors list
+        """
+        return self.clients("nova").flavors.list(detailed, **kwargs)

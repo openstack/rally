@@ -865,3 +865,13 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(return_netlabel, fake_net)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_network")
+
+    def test__list_flavors(self):
+        nova_scenario = utils.NovaScenario()
+        self.clients("nova").flavors.list.return_value = "flavors_list"
+        result = nova_scenario._list_flavors(detailed=True, fakearg="fakearg")
+        self.assertEqual("flavors_list", result)
+        self.clients("nova").flavors.list.assert_called_once_with(
+            True, fakearg="fakearg")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_flavors")
