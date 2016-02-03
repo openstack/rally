@@ -157,8 +157,8 @@ class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.credential = objects.Credential("http://auth_url", "use", "pass",
-                                             "tenant")
+        self.credential = objects.Credential("http://auth_url/v2.0", "use",
+                                             "pass", "tenant")
         self.clients = osclients.Clients(self.credential, {})
 
         self.fake_keystone = fakes.FakeKeystoneClient()

@@ -166,7 +166,10 @@ class OSClient(plugin.Plugin):
     def _get_auth_info(self, user_key="username",
                        password_key="password",
                        auth_url_key="auth_url",
-                       project_name_key="project_id"
+                       project_name_key="project_id",
+                       domain_name_key="domain_name",
+                       user_domain_name_key="user_domain_name",
+                       project_domain_name_key="project_domain_name"
                        ):
         kw = {
             user_key: self.credential.username,
@@ -175,6 +178,15 @@ class OSClient(plugin.Plugin):
         }
         if project_name_key:
             kw.update({project_name_key: self.credential.tenant_name})
+
+        if "v2.0" not in self.credential.auth_url:
+            kw.update({
+                domain_name_key: self.credential.domain_name})
+            kw.update({
+                user_domain_name_key: self.credential.user_domain_name})
+            kw.update({
+                project_domain_name_key: self.credential.project_domain_name})
+
         return kw
 
     @abc.abstractmethod
