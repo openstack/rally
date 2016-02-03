@@ -36,7 +36,9 @@ def make_fake_deployment(**kwargs):
 
 class FakeDeployment(object):
 
-    def __init__(self, values={}):
+    def __init__(self, values=None):
+        if values is None:
+            values = {}
         self._values = values
 
     def __getitem__(self, name):
