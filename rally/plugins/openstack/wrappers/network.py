@@ -216,7 +216,6 @@ class NovaNetworkWrapper(NetworkWrapper):
 
         :param extension: str Nova network extension
         :returns: result tuple. Always (True, "") for secgroups in nova-network
-        :rtype: (bool, string)
         """
         # TODO(rkiran): Add other extensions whenever necessary
         if extension == "security-group":
@@ -448,7 +447,6 @@ class NeutronWrapper(NetworkWrapper):
 
         :param extension: str, neutron extension
         :returns: result tuple
-        :rtype: (bool, string)
         """
         extensions = self.client.list_extensions().get("extensions", [])
         if any(ext.get("alias") == extension for ext in extensions):
