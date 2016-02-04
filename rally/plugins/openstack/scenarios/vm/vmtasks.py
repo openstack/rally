@@ -23,6 +23,8 @@ from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.task import types
 from rally.task import validation
 
+LOG = logging.getLogger(__name__)
+
 
 class VMTasks(vm_utils.VMScenario):
     """Benchmark scenarios that are to be run inside VM instances."""
@@ -56,6 +58,7 @@ class VMTasks(vm_utils.VMScenario):
                                use_floating_ip=True,
                                force_delete=False,
                                wait_for_ping=True,
+                               max_log_length=None,
                                **kwargs):
         """Boot a server, run a script that outputs JSON, delete the server.
 
@@ -143,6 +146,8 @@ class VMTasks(vm_utils.VMScenario):
         :param force_delete: whether to use force_delete for servers
         :param wait_for_ping: whether to check connectivity on server creation
         :param **kwargs: extra arguments for booting the server
+        :param max_log_length: The number of tail nova console-log lines user
+                               would like to retrieve
         :returns: dictionary with keys `data' and `errors':
                   data: dict, JSON output from the script
                   errors: str, raw data from the script's stderr stream
@@ -179,6 +184,13 @@ class VMTasks(vm_utils.VMScenario):
                     "Command %(command)s has not output valid JSON: %(error)s."
                     " Output: %(output)s" % {
                         "command": command, "error": str(e), "output": out})
+        except (exceptions.TimeoutException,
+                exceptions.SSHTimeout):
+            console_logs = self._get_server_console_output(server,
+                                                           max_log_length)
+            LOG.debug("VM console logs:\n%s", console_logs)
+            raise
+
         finally:
             self._delete_server_with_fip(server, fip,
                                          force_delete=force_delete)

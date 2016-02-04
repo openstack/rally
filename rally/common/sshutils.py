@@ -65,19 +65,10 @@ import time
 import paramiko
 import six
 
-from rally.common.i18n import _
 from rally.common import logging
-
+from rally import exceptions
 
 LOG = logging.getLogger(__name__)
-
-
-class SSHError(Exception):
-    pass
-
-
-class SSHTimeout(SSHError):
-    pass
 
 
 class SSH(object):
@@ -112,7 +103,7 @@ class SSH(object):
                 return key_class.from_private_key(key)
             except paramiko.SSHException as e:
                 errors.append(e)
-        raise SSHError("Invalid pkey: %s" % (errors))
+        raise exceptions.SSHError("Invalid pkey: %s" % (errors))
 
     def _get_client(self):
         if self._client:
@@ -126,15 +117,15 @@ class SSH(object):
                                  password=self.password, timeout=1)
             return self._client
         except Exception as e:
-            message = _("Exception %(exception_type)s was raised "
-                        "during connect to %(user)s@%(host)s:%(port)s. "
-                        "Exception value is: %(exception)r")
+            message = ("Exception %(exception_type)s was raised "
+                       "during connect to %(user)s@%(host)s:%(port)s. "
+                       "Exception value is: %(exception)r")
             self._client = False
-            raise SSHError(message % {"exception": e,
-                                      "user": self.user,
-                                      "host": self.host,
-                                      "port": self.port,
-                                      "exception_type": type(e)})
+            raise exceptions.SSHError(message % {"exception": e,
+                                                 "user": self.user,
+                                                 "host": self.host,
+                                                 "port": self.port,
+                                                 "exception_type": type(e)})
 
     def close(self):
         self._client.close()
@@ -220,18 +211,19 @@ class SSH(object):
 
             if timeout and (time.time() - timeout) > start_time:
                 args = {"cmd": cmd, "host": self.host}
-                raise SSHTimeout(_("Timeout executing command "
-                                   "'%(cmd)s' on host %(host)s") % args)
+                raise exceptions.SSHTimeout("Timeout executing command "
+                                            "'%(cmd)s' on host %(host)s"
+                                            % args)
             if e:
-                raise SSHError("Socket error.")
+                raise exceptions.SSHError("Socket error.")
 
         exit_status = session.recv_exit_status()
         if 0 != exit_status and raise_on_error:
-            fmt = _("Command '%(cmd)s' failed with exit_status %(status)d.")
+            fmt = "Command '%(cmd)s' failed with exit_status %(status)d."
             details = fmt % {"cmd": cmd, "status": exit_status}
             if stderr_data:
-                details += _(" Last stderr data: '%s'.") % stderr_data
-            raise SSHError(details)
+                details += " Last stderr data: '%s'." % stderr_data
+            raise exceptions.SSHError(details)
         return exit_status
 
     def execute(self, cmd, stdin=None, timeout=3600):
@@ -259,11 +251,12 @@ class SSH(object):
         while True:
             try:
                 return self.execute("uname")
-            except (socket.error, SSHError) as e:
+            except (socket.error, exceptions.SSHError) as e:
                 LOG.debug("Ssh is still unavailable: %r" % e)
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
-                raise SSHTimeout(_("Timeout waiting for '%s'") % self.host)
+                raise exceptions.SSHTimeout("Timeout waiting for '%s'" %
+                                            self.host)
 
     def _put_file_sftp(self, localpath, remotepath, mode=None):
         client = self._get_client()
