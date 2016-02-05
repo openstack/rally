@@ -50,20 +50,20 @@ class TitlesTestCase(test.TestCase):
         extra_sections = [x for x in actual.keys() if x not in expect.keys()]
 
         msgs = []
-        if len(missing_sections) > 0:
+        if missing_sections:
             msgs.append("Missing sections: %s" % missing_sections)
-        if len(extra_sections) > 0:
+        if extra_sections:
             msgs.append("Extra sections: %s" % extra_sections)
 
         for section in expect.keys():
             missing_subsections = [x for x in expect[section]
                                    if x not in actual.get(section, {})]
             # extra subsections are allowed
-            if len(missing_subsections) > 0:
+            if missing_subsections:
                 msgs.append("Section '%s' is missing subsections: %s"
                             % (section, missing_subsections))
 
-        if len(msgs) > 0:
+        if msgs:
             self.fail("While checking '%s':\n  %s"
                       % (filename, "\n  ".join(msgs)))
 
