@@ -78,54 +78,78 @@ class CachedTestCase(test.TestCase):
 
 class TestCreateKeystoneClient(test.TestCase):
 
-    def setUp(self):
-        super(TestCreateKeystoneClient, self).setUp()
-        self.kwargs = {"auth_url": "http://auth_url", "username": "user",
-                       "password": "password", "tenant_name": "tenant",
-                       "https_insecure": False, "https_cacert": None}
+    def make_auth_args(self):
+        auth_kwargs = {
+            "auth_url": "http://auth_url", "username": "user",
+            "password": "password", "tenant_name": "tenant",
+            "domain_name": "domain", "project_name": "project_name",
+            "project_domain_name": "project_domain_name",
+            "user_domain_name": "user_domain_name",
+        }
+        kwargs = {"https_insecure": False, "https_cacert": None}
+        kwargs.update(auth_kwargs)
+        return auth_kwargs, kwargs
 
-    def test_create_keystone_client_v2(self):
-        mock_keystone = mock.MagicMock()
-        fake_keystoneclient = mock.MagicMock()
-        mock_keystone.v2_0.client.Client.return_value = fake_keystoneclient
-        mock_discover = mock.MagicMock(
-            version_data=mock.MagicMock(return_value=[{"version": [2]}]))
-        mock_keystone.discover.Discover.return_value = mock_discover
-        with mock.patch.dict("sys.modules",
-                             {"keystoneclient": mock_keystone,
-                              "keystoneclient.v2_0": mock_keystone.v2_0}):
-            client = osclients.Keystone._create_keystone_client(self.kwargs)
-            mock_discover.version_data.assert_called_once_with()
-            self.assertEqual(fake_keystoneclient, client)
-            mock_keystone.v2_0.client.Client.assert_called_once_with(
-                **self.kwargs)
+    def set_up_keystone_mocks(self):
+        self.ksc_module = mock.MagicMock()
+        self.ksc_client = mock.MagicMock()
+        self.ksc_identity = mock.MagicMock()
+        self.ksc_password = mock.MagicMock()
+        self.ksc_session = mock.MagicMock()
+        self.ksc_auth = mock.MagicMock()
+        self.patcher = mock.patch.dict("sys.modules",
+                                       {"keystoneclient": self.ksc_module,
+                                        "keystoneclient.auth": self.ksc_auth})
+        self.patcher.start()
+        self.addCleanup(self.patcher.stop)
+        self.ksc_module.client = self.ksc_client
+        self.ksc_auth.identity = self.ksc_identity
+        self.ksc_auth.identity.Password = self.ksc_password
+        self.ksc_module.session = self.ksc_session
 
-    def test_create_keystone_client_v3(self):
-        mock_keystone = mock.MagicMock()
-        fake_keystoneclient = mock.MagicMock()
-        mock_keystone.v3.client.Client.return_value = fake_keystoneclient
-        mock_discover = mock.MagicMock(
-            version_data=mock.MagicMock(return_value=[{"version": [3]}]))
-        mock_keystone.discover.Discover.return_value = mock_discover
-        with mock.patch.dict("sys.modules",
-                             {"keystoneclient": mock_keystone,
-                              "keystoneclient.v3": mock_keystone.v3}):
-            client = osclients.Keystone._create_keystone_client(self.kwargs)
-            mock_discover.version_data.assert_called_once_with()
-            self.assertEqual(fake_keystoneclient, client)
-            mock_keystone.v3.client.Client.assert_called_once_with(
-                **self.kwargs)
+    def test_create_keystone_client(self):
+        # NOTE(bigjools): This is a very poor testing strategy as it
+        # tightly couples the test implementation to the tested
+        # function's implementation. Ideally, we'd use a fake keystone
+        # but all that's happening here is that it's checking the right
+        # parameters were passed to the various parts that create a
+        # client. Maybe one day we'll get a test double from the
+        # keystone guys.
+        self.set_up_keystone_mocks()
+        auth_kwargs, all_kwargs = self.make_auth_args()
+        keystone = osclients.Keystone(
+            mock.MagicMock(), mock.sentinel, mock.sentinel)
+        client = keystone._create_keystone_client(all_kwargs)
 
-    def test_create_keystone_client_version_not_found(self):
-        mock_keystone = mock.MagicMock()
-        mock_discover = mock.MagicMock(
-            version_data=mock.MagicMock(return_value=[{"version": [100500]}]))
-        mock_keystone.discover.Discover.return_value = mock_discover
-        with mock.patch.dict("sys.modules", {"keystoneclient": mock_keystone}):
-            self.assertRaises(exceptions.RallyException,
-                              osclients.Keystone._create_keystone_client,
-                              self.kwargs)
-            mock_discover.version_data.assert_called_once_with()
+        self.ksc_password.assert_called_once_with(**auth_kwargs)
+        self.ksc_session.Session.assert_called_once_with(
+            auth=self.ksc_identity.Password(), timeout=mock.ANY,
+            verify=mock.ANY)
+        self.ksc_client.Client.assert_called_once_with(**all_kwargs)
+        self.assertIs(client, self.ksc_client.Client())
+
+    def test_create_keystone_client_with_v2_url_omits_domain(self):
+        # NOTE(bigjools): Test that domain-related info is not present
+        # when forcing a v2 URL, because it breaks keystoneclient's
+        # service discovery.
+        self.set_up_keystone_mocks()
+        auth_kwargs, all_kwargs = self.make_auth_args()
+
+        all_kwargs["auth_url"] = "http://auth_url/v2.0"
+        auth_kwargs["auth_url"] = all_kwargs["auth_url"]
+        keystone = osclients.Keystone(
+            mock.MagicMock(), mock.sentinel, mock.sentinel)
+        client = keystone._create_keystone_client(all_kwargs)
+
+        auth_kwargs.pop("user_domain_name")
+        auth_kwargs.pop("project_domain_name")
+        auth_kwargs.pop("domain_name")
+        self.ksc_password.assert_called_once_with(**auth_kwargs)
+        self.ksc_session.Session.assert_called_once_with(
+            auth=self.ksc_identity.Password(), timeout=mock.ANY,
+            verify=mock.ANY)
+        self.ksc_client.Client.assert_called_once_with(**all_kwargs)
+        self.assertIs(client, self.ksc_client.Client())
 
 
 @ddt.ddt
