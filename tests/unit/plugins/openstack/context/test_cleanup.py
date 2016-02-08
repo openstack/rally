@@ -16,11 +16,11 @@
 import jsonschema
 import mock
 
-from rally.plugins.openstack.context.cleanup import context
+from rally.plugins.openstack.context import cleanup
 from tests.unit import test
 
 
-BASE = "rally.plugins.openstack.context.cleanup.context"
+BASE = "rally.plugins.openstack.context.cleanup"
 
 
 class AdminCleanupTestCase(test.TestCase):
@@ -28,21 +28,21 @@ class AdminCleanupTestCase(test.TestCase):
     @mock.patch("%s.manager" % BASE)
     def test_validate(self, mock_manager):
         mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        context.AdminCleanup.validate(["a"])
+        cleanup.AdminCleanup.validate(["a"])
         mock_manager.list_resource_names.assert_called_once_with(
             admin_required=True)
 
     @mock.patch("%s.manager" % BASE)
     def test_validate_no_such_cleanup(self, mock_manager):
         mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        self.assertRaises(context.NoSuchCleanupResources,
-                          context.AdminCleanup.validate, ["a", "d"])
+        self.assertRaises(cleanup.NoSuchCleanupResources,
+                          cleanup.AdminCleanup.validate, ["a", "d"])
         mock_manager.list_resource_names.assert_called_once_with(
             admin_required=True)
 
     def test_validate_invalid_config(self):
         self.assertRaises(jsonschema.ValidationError,
-                          context.AdminCleanup.validate, {})
+                          cleanup.AdminCleanup.validate, {})
 
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
@@ -56,7 +56,7 @@ class AdminCleanupTestCase(test.TestCase):
             "task": mock.MagicMock()
         }
 
-        admin_cleanup = context.AdminCleanup(ctx)
+        admin_cleanup = cleanup.AdminCleanup(ctx)
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
@@ -80,21 +80,21 @@ class UserCleanupTestCase(test.TestCase):
     @mock.patch("%s.manager" % BASE)
     def test_validate(self, mock_manager):
         mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        context.UserCleanup.validate(["a"])
+        cleanup.UserCleanup.validate(["a"])
         mock_manager.list_resource_names.assert_called_once_with(
             admin_required=False)
 
     @mock.patch("%s.manager" % BASE)
     def test_validate_no_such_cleanup(self, mock_manager):
         mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        self.assertRaises(context.NoSuchCleanupResources,
-                          context.UserCleanup.validate, ["a", "b", "d"])
+        self.assertRaises(cleanup.NoSuchCleanupResources,
+                          cleanup.UserCleanup.validate, ["a", "b", "d"])
         mock_manager.list_resource_names.assert_called_once_with(
             admin_required=False)
 
     def test_validate_invalid_config(self):
         self.assertRaises(jsonschema.ValidationError,
-                          context.UserCleanup.validate, {})
+                          cleanup.UserCleanup.validate, {})
 
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
@@ -107,7 +107,7 @@ class UserCleanupTestCase(test.TestCase):
             "task": mock.MagicMock()
         }
 
-        admin_cleanup = context.UserCleanup(ctx)
+        admin_cleanup = cleanup.UserCleanup(ctx)
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 

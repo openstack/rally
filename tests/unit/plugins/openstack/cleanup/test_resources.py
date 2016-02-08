@@ -19,11 +19,11 @@ from neutronclient.common import exceptions as neutron_exceptions
 
 from rally.common.plugin import discover
 from rally.common import utils
-from rally.plugins.openstack.context.cleanup import base
-from rally.plugins.openstack.context.cleanup import resources
+from rally.plugins.openstack.cleanup import base
+from rally.plugins.openstack.cleanup import resources
 from tests.unit import test
 
-BASE = "rally.plugins.openstack.context.cleanup.resources"
+BASE = "rally.plugins.openstack.cleanup.resources"
 
 
 class AllResourceManagerTestCase(test.TestCase):

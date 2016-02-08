@@ -16,7 +16,7 @@ import itertools
 
 from rally.common import logging
 from rally import osclients
-from rally.plugins.openstack.context.cleanup import base as cleanup_base
+from rally.plugins.openstack.cleanup import base as cleanup_base
 from rally.plugins.openstack.context.keystone import users
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils

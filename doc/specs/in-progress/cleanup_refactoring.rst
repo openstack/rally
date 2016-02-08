@@ -94,27 +94,27 @@ cleanup process, but it demonstrates the basic idea:
 
 A fair bit of functionality will need to be added to support this:
 
-* ``rally.plugins.openstack.context.cleanup.manager.cleanup()`` will
+* ``rally.plugins.openstack.cleanup.manager.cleanup()`` will
   need to accept a keyword argument specifying the type of
   cleanup. This should be a superclass that will be used to discover
   the subclasses to delete resources for. It will be passed to
-  ``rally.plugins.openstack.context.cleanup.manager.SeekAndDestroy``,
+  ``rally.plugins.openstack.cleanup.manager.SeekAndDestroy``,
   which will also need to accept the argument and generate the list of
   classes.
-* ``rally.plugins.openstack.context.cleanup.base``,
-  ``rally.plugins.openstack.context.cleanup.manager`` and
-  ``rally.plugins.openstack.context.cleanup.resources`` need to be
+* ``rally.plugins.openstack.cleanup.base``,
+  ``rally.plugins.openstack.cleanup.manager`` and
+  ``rally.plugins.openstack.cleanup.resources`` need to be
   moved out of the context space, since they will be used not only by
   the cleanup context to do scenario cleanup, but also to do
   out-of-band cleanup of all resources.
 * A new function, ``name()``, will need to be added to
-  ``rally.plugins.openstack.context.cleanup.base.ResourceManager``
+  ``rally.plugins.openstack.cleanup.base.ResourceManager``
   so that we can determine the name of a resource in order to match it.
 * A ``task_id`` keyword argument will be added to
   ``name_matches_object`` and ``name_matches_pattern`` in order to
   ensure that we only match names from the currently-running
   task. This will need to be passed along starting with
-  ``rally.plugins.openstack.context.cleanup.manager.cleanup()``, and
+  ``rally.plugins.openstack.cleanup.manager.cleanup()``, and
   added as a keyword argument to every intermediate function.
 
 Additionally, a new top-level command will be added::
@@ -170,7 +170,7 @@ Work Items
 #. Modify ``name_matches_{object,pattern}`` to accept a task ID.
 #. Add ``name()`` functions to all ``ResourceManager`` subclasses.
 #. Move
-   ``rally.plugins.openstack.context.cleanup.manager.{base,manager,resources}``
+   ``rally.plugins.openstack.cleanup.manager.{base,manager,resources}``
    to ``rally.plugins.openstack.cleanup``.
 #. Modify ``rally.plugins.openstack.cleanup.manager.cleanup()`` to
    accept a task ID and a superclass, pass them along to

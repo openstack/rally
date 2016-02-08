@@ -15,11 +15,11 @@
 
 import mock
 
-from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack.cleanup import base
 from tests.unit import test
 
 
-BASE = "rally.plugins.openstack.context.cleanup.base"
+BASE = "rally.plugins.openstack.cleanup.base"
 
 
 class ResourceDecoratorTestCase(test.TestCase):
