@@ -518,7 +518,7 @@ def timeout_thread(queue):
 
     all_threads = collections.deque()
     while True:
-        if len(all_threads) == 0:
+        if not all_threads:
             timeout = None
         else:
             thread_ident, deadline = all_threads[0]

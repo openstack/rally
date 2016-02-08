@@ -185,10 +185,10 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
                          "tuple")
 
     # make all statuses upper case
-    ready_statuses = set([s.upper() for s in ready_statuses or []])
-    failure_statuses = set([s.upper() for s in failure_statuses or []])
+    ready_statuses = set(s.upper() for s in ready_statuses or [])
+    failure_statuses = set(s.upper() for s in failure_statuses or [])
 
-    if len(ready_statuses & failure_statuses) > 0:
+    if (ready_statuses & failure_statuses):
         raise ValueError(
             "Can't wait for resource's %s status. Ready and Failure"
             "statuses conflict." % resource_repr)
