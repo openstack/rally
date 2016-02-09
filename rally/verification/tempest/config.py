@@ -133,18 +133,15 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
     def _get_service_url(self, service_name):
         s_type = self._get_service_type_by_service_name(service_name)
-        if hasattr(self.keystone, "service_catalog"):
-            available_endpoints = self.keystone.service_catalog.get_endpoints()
-            service_endpoints = available_endpoints.get(s_type, [])
-            for endpoint in service_endpoints:
-                if "publicURL" in endpoint:  # Kilo and older
-                    return endpoint["publicURL"]
-                if endpoint["interface"] == "public":
-                    return endpoint["url"]
-        else:
-            for service in self.keystone.auth_ref["serviceCatalog"]:
-                if service["type"] == s_type:
-                    return service["endpoints"][0]["publicURL"]
+        available_endpoints = self.keystone.service_catalog.get_endpoints()
+        service_endpoints = available_endpoints.get(s_type, [])
+        for endpoint in service_endpoints:
+            # If endpoints were returned by Keystone API V2
+            if "publicURL" in endpoint:
+                return endpoint["publicURL"]
+            # If endpoints were returned by Keystone API V3
+            if endpoint["interface"] == "public":
+                return endpoint["url"]
 
     def _get_service_type_by_service_name(self, service_name):
         for s_type, s_name in six.iteritems(self.clients.services()):
@@ -192,11 +189,11 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "region",
                       self.credential["region_name"])
 
+        url_trailer = parse.urlparse(self.credential["auth_url"]).path
+        self.conf.set(section_name, "auth_version", url_trailer[1:3])
         self.conf.set(section_name, "uri", self.credential["auth_url"])
-        v2_url_trailer = parse.urlparse(self.credential["auth_url"]).path
         self.conf.set(section_name, "uri_v3",
-                      self.credential["auth_url"].replace(
-                          v2_url_trailer, "/v3"))
+                      self.credential["auth_url"].replace(url_trailer, "/v3"))
 
         self.conf.set(section_name, "admin_domain_name",
                       self.credential["admin_domain_name"])

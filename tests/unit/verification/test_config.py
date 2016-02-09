@@ -82,33 +82,12 @@ class TempestConfigTestCase(test.TestCase):
         self.assertRaises(exceptions.TempestConfigCreationFailure,
                           self.tempest_conf._download_cirros_image)
 
-    def test__get_service_url_keystone_v2(self):
-        self.tempest_conf.keystone = mock.MagicMock(spec=["auth_ref"])
-        self.tempest_conf.keystone.auth_ref = {
-            "serviceCatalog": [
-                {
-                    "name": "test_service",
-                    "type": "test_service_type",
-                    "endpoints": [{"publicURL": "test_url"}]
-                }
-            ]
-        }
-        self.tempest_conf.clients.services.return_value = {
-            "test_service_type": "test_service"}
-        self.assertEqual(
-            self.tempest_conf._get_service_url("test_service"), "test_url")
-
-    def test__get_service_url_keystone_v3(self):
-
+    @ddt.data({"publicURL": "test_url"},
+              {"interface": "public", "url": "test_url"})
+    def test__get_service_url(self, endpoint):
         mock_catalog = mock.MagicMock()
         mock_catalog.get_endpoints.return_value = {
-            "test_service_type": [
-                {
-                    "interface": "public",
-                    "url": "test_url"
-                }
-            ]
-        }
+            "test_service_type": [endpoint]}
 
         self.tempest_conf.keystone.service_catalog = mock_catalog
         self.tempest_conf.clients.services.return_value = {
@@ -169,6 +148,7 @@ class TempestConfigTestCase(test.TestCase):
             ("admin_tenant_name", CREDS["admin"]["username"]),
             ("admin_domain_name", CREDS["admin"]["admin_domain_name"]),
             ("region", CREDS["admin"]["region_name"]),
+            ("auth_version", "v2"),
             ("uri", CREDS["admin"]["auth_url"]),
             ("uri_v3", CREDS["admin"]["auth_url"].replace("/v2.0/", "/v3")),
             ("disable_ssl_certificate_validation",
