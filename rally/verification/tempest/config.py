@@ -137,6 +137,8 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             available_endpoints = self.keystone.service_catalog.get_endpoints()
             service_endpoints = available_endpoints.get(s_type, [])
             for endpoint in service_endpoints:
+                if "publicURL" in endpoint:  # Kilo and older
+                    return endpoint["publicURL"]
                 if endpoint["interface"] == "public":
                     return endpoint["url"]
         else:
