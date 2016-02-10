@@ -59,7 +59,8 @@ class VolumeGenerator(context.Context):
             self.context["tenants"][tenant_id].setdefault("volumes", [])
             cinder_util = cinder_utils.CinderScenario(
                 {"user": user,
-                 "task": self.context["task"]})
+                 "task": self.context["task"],
+                 "config": self.context["config"]})
             for i in range(volumes_per_tenant):
                 vol = cinder_util._create_volume(size)
                 self.context["tenants"][tenant_id]["volumes"].append(vol._info)
