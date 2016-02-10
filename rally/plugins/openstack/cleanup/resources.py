@@ -218,7 +218,7 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
         list_method = getattr(self._manager(), "list_%s" % resources)
 
         return filter(lambda r: r["tenant_id"] == self.tenant_uuid,
-                      list_method({"tenant_id": self.tenant_uuid})[resources])
+                      list_method(tenant_id=self.tenant_uuid)[resources])
 
 
 class NeutronLbaasV1Mixin(NeutronMixin):

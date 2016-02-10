@@ -304,7 +304,7 @@ class NeutronMixinTestCase(test.TestCase):
         self.assertEqual([some_resources[0]], list(neut.list()))
 
         neut.user.neutron().list_some_resources.assert_called_once_with(
-            {"tenant_id": neut.tenant_uuid})
+            tenant_id=neut.tenant_uuid)
 
 
 class NeutronLbaasV1MixinTestCase(test.TestCase):
@@ -332,7 +332,7 @@ class NeutronLbaasV1MixinTestCase(test.TestCase):
 
         self.assertEqual([some_resources[0]], list(neut.list()))
         neut._manager().list_some_resources.assert_called_once_with(
-            {"tenant_id": neut.tenant_uuid})
+            tenant_id=neut.tenant_uuid)
 
     def test_list_lbaas_unavailable(self):
         neut = self.get_neutron_lbaasv1_mixin()
