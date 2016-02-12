@@ -47,7 +47,9 @@ class Quotas(context.Context):
 
     def __init__(self, ctx):
         super(Quotas, self).__init__(ctx)
-        self.clients = osclients.Clients(self.context["admin"]["credential"])
+        self.clients = osclients.Clients(
+            self.context["admin"]["credential"],
+            api_info=self.context["config"].get("api_versions"))
 
         self.manager = {
             "nova": nova_quotas.NovaQuotas(self.clients),
