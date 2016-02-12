@@ -512,14 +512,16 @@ class OutputChartTestCase(test.TestCase):
         chart = self.OutputChart({"iterations_count": 42})
         self.assertEqual(
             {"widget": "FooWidget", "data": [],
-             "title": "", "description": ""},
+             "title": "", "description": "", "label": "", "axis_label": ""},
             chart.render())
 
         chart = self.OutputChart({"iterations_count": 42},
-                                 title="foo title", description="Test!")
+                                 title="foo title", description="Test!",
+                                 label="Foo label", axis_label="Axis label")
         self.assertEqual(
-            {"widget": "FooWidget", "data": [],
-             "title": "foo title", "description": "Test!"},
+            {"widget": "FooWidget", "data": [], "label": "Foo label",
+             "axis_label": "Axis label", "title": "foo title",
+             "description": "Test!"},
             chart.render())
 
 
@@ -530,6 +532,36 @@ class OutputStackedAreaChartTestCase(test.TestCase):
 
         chart = charts.OutputStackedAreaChart({"iterations_count": 42})
         self.assertIsInstance(chart, charts.OutputChart)
+
+    def test_render(self):
+        # Explicit label
+        chart = charts.OutputStackedAreaChart(
+            {"iterations_count": 2}, label="Label", axis_label="Axis label")
+        chart.add_iteration((("foo", 10), ("bar", 20)))
+        # One iteration is transformed to Table
+        self.assertEqual({"axis_label": "Axis label",
+                          "data": {"cols": ["Name", "Label"],
+                                   "rows": [["foo", 10], ["bar", 20]]},
+                          "description": "", "label": "Label",
+                          "title": "", "widget": "Table"},
+                         chart.render())
+        chart.add_iteration((("foo", 11), ("bar", 21)))
+        # StackedArea for more iterations
+        self.assertEqual({"axis_label": "Axis label",
+                          "data": [("foo", [[1, 10], [2, 11]]),
+                                   ("bar", [[1, 20], [2, 21]])],
+                          "description": "", "label": "Label",
+                          "title": "", "widget": "StackedArea"},
+                         chart.render())
+
+        # No label
+        chart = charts.OutputStackedAreaChart({"iterations_count": 1})
+        chart.add_iteration((("foo", 10), ("bar", 20)))
+        self.assertEqual({"axis_label": "",
+                          "data": {"cols": ["Name", "Value"],
+                                   "rows": [["foo", 10], ["bar", 20]]},
+                          "description": "", "label": "", "title": "",
+                          "widget": "Table"}, chart.render())
 
 
 class OutputAvgChartTestCase(test.TestCase):
@@ -593,5 +625,7 @@ class OutputStatsTableTestCase(test.TestCase):
                           "description": description,
                           "widget": "Table",
                           "data": {"cols": charts.OutputStatsTable.columns,
-                                   "rows": expected}},
+                                   "rows": expected},
+                          "label": "",
+                          "axis_label": ""},
                          table.render())

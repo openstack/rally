@@ -233,10 +233,15 @@
     .directive("widget", function($compile) {
 
       var Chart = {
-        _render: function(node, data, chart){
+        _render: function(node, data, chart, do_after){
           nv.addGraph(function() {
-            d3.select(node).datum(data).transition().duration(0).call(chart);
-            nv.utils.windowResize(chart.update)
+            d3.select(node)
+              .datum(data).transition().duration(0)
+              .call(chart);
+            if (typeof do_after === "function") {
+              do_after(node, chart)
+            }
+            nv.utils.windowResize(chart.update);
           })
         },
         /* NOTE(amaretskiy): this is actually a result of
@@ -249,6 +254,7 @@
         _widgets: {
           Pie: "pie",
           StackedArea: "stack",
+          Lines: "lines",
           Histogram: "histogram"
         },
         get_chart: function(widget) {
@@ -258,7 +264,7 @@
           }
           return function() { console.log("Error: unexpected widget:", widget) }
         },
-        pie: function(node, data) {
+        pie: function(node, data, opts, do_after) {
           var chart = nv.models.pieChart()
             .x(function(d) { return d.key })
             .y(function(d) { return d.values })
@@ -282,7 +288,7 @@
           }
           Chart._render(node, data_, chart)
         },
-        stack: function(node, data, opts) {
+        stack: function(node, data, opts, do_after) {
           var chart = nv.models.stackedAreaChart()
             .x(function(d) { return d[0] })
             .y(function(d) { return d[1] })
@@ -294,8 +300,31 @@
             .axisLabel(opts.xname || "")
             .showMaxMin(false);
           chart.yAxis
-            .tickFormat(d3.format(opts.yformat || ",.3f"))
-            .axisLabel(opts.yname || "");
+            .orient("left")
+            .tickFormat(d3.format(opts.yformat || ",.3f"));
+          var data_ = [];
+          for (var i in data) {
+            var d = {key:data[i][0], values:data[i][1]};
+            if (d.key === "failed_duration") {
+              d.color = "#d62728"
+            }
+            data_.push(d);
+          }
+          Chart._render(node, data_, chart, do_after);
+        },
+        lines: function(node, data, opts, do_after) {
+          var chart = nv.models.lineChart()
+            .x(function(d) { return d[0] })
+            .y(function(d) { return d[1] })
+            .useInteractiveGuideline(opts.guide)
+            .clipEdge(true);
+          chart.xAxis
+            .tickFormat(d3.format(opts.xformat || "d"))
+            .axisLabel(opts.xname || "")
+            .showMaxMin(false);
+          chart.yAxis
+            .orient("left")
+            .tickFormat(d3.format(opts.yformat || ",.3f"));
           var data_ = [];
           for (var i in data) {
             var d = {key:data[i][0], values:data[i][1]};
@@ -304,9 +333,9 @@
             }
             data_.push(d)
           }
-          Chart._render(node, data_, chart)
+          Chart._render(node, data_, chart, do_after)
         },
-        histogram: function(node, data) {
+        histogram: function(node, data, opts) {
           var chart = nv.models.multiBarChart()
             .reduceXTicks(true)
             .showControls(false)
@@ -341,10 +370,43 @@
                 "</tbody></table>";
               var el = element.empty().append($compile(template)(scope)).children()[0]
             } else {
-              /* Hide widget if not enough data */
-              if (attrs.widget === "StackedArea") {
+
+              var el_chart = element.addClass("chart").css({display:"block"});
+              var el = el_chart.html("<svg></svg>").children()[0];
+
+              var do_after = null;
+
+              if (attrs.widget in {StackedArea:0, Lines:0}) {
+
+                /* Hide widget if not enough data */
                 if ((! data.length) || (data[0].length < 1) || (data[0][1].length < 2)) {
                   return element.empty().css({display:"none"})
+                }
+
+                /* NOTE(amaretskiy): Dirty fix for changing chart width in case
+                   if there are too long Y values that overlaps chart box. */
+                var do_after = function(node, chart){
+                  var g_box = angular.element(el_chart[0].querySelector(".nv-y.nv-axis"));
+
+                  if (g_box && g_box[0] && g_box[0].getBBox) {
+
+                    try {
+                      // 30 is padding aroung graphs
+                      var width = g_box[0].getBBox().width + 30;
+                    } catch (err) {
+                      // This happens sometimes, just skip silently
+                      return
+                    }
+
+                    // 890 is chart width (set by CSS)
+                    if (typeof width === "number" && width > 890) {
+                      width = (890 * 2) - width;
+                      if (width > 0) {
+                        angular.element(node).css({width:width+"px"});
+                        chart.update()
+                      }
+                    }
+                  }
                 }
               }
               else if (attrs.widget === "Pie") {
@@ -355,14 +417,19 @@
 
               var options = {
                 xname: attrs.nameX || "",
-                yname: attrs.nameY || "",
                 xformat: attrs.formatX || "d",
                 yformat: attrs.formatY || ",.3f",
                 controls: attrs.controls === "true",
                 guide: attrs.guide === "true"
               };
-              var el = element.addClass("chart").css({display:"block"}).html("<svg></svg>").children()[0];
-              Chart.get_chart(attrs.widget)(el, data, options)
+              Chart.get_chart(attrs.widget)(el, data, options, do_after);
+            }
+
+            if (attrs.nameY) {
+              /* NOTE(amaretskiy): Dirty fix for displaying Y-axis label correctly.
+                 I believe sometimes NVD3 will allow doing this in normal way */
+              var label_y = angular.element("<div>").addClass("chart-label-y").text(attrs.nameY);
+              angular.element(el).parent().prepend(label_y)
             }
 
             if (attrs.description) {
@@ -374,6 +441,8 @@
               var title_el = angular.element("<div>").addClass(attrs.titleClass || "h2").text(attrs.title);
               angular.element(el).parent().prepend(title_el)
             }
+
+            angular.element(el).parent().append(angular.element("<div style='clear:both'>"))
           });
         }
       }
@@ -406,9 +475,10 @@
     .link { color:#428BCA; padding:5px 15px 5px 5px; text-decoration:underline; cursor:pointer }
     .link.active { color:#333; text-decoration:none }
 
-    .chart { padding:0; margin:0 }
-    .chart svg { height:300px; padding:0; margin:0 }
+    .chart { padding:0; margin:0; width:890px }
+    .chart svg { height:300px; padding:0; margin:0; overflow:visible; float:right }
     .chart.lower svg { height:180px }
+    .chart-label-y { font-size:12px; position:relative; top:5px; padding:0; margin:0 }
 
     .expandable { cursor:pointer }
     .clearfix { clear:both }
@@ -680,6 +750,8 @@
             <div widget="{{chart.widget}}"
                  title="{{chart.title}}"
                  description="{{chart.description}}"
+                 name-x="{{chart.axis_label}}"
+                 name-y="{{chart.label}}"
                  data="chart.data">
             </div>
           </div>
@@ -695,6 +767,8 @@
               <div widget="{{chart.widget}}"
                    title="{{chart.title}}"
                    description="{{chart.description}}"
+                   name-x="{{chart.axis_label}}"
+                   name-y="{{chart.label}}"
                    data="chart.data">
               </div>
             </div>

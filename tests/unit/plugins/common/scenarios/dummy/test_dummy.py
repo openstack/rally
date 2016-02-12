@@ -64,43 +64,54 @@ class DummyTestCase(test.TestCase):
             expected = {
                 "additive": [
                     {"chart_plugin": "StatsTable",
-                     "data": [[s + " stat", exp]
+                     "data": [["%s stat" % s, exp]
                               for s in ("foo", "bar", "spam")],
-                     "title": "Additive Stat Table",
-                     "description": desc % "Additive Stat Table"},
+                     "description": desc % "Additive StatsTable",
+                     "title": "Additive StatsTable"},
                     {"chart_plugin": "StackedArea",
-                     "data": [["foo 1", exp], ["foo 2", exp]],
-                     "title": "Additive Foo StackedArea",
-                     "description": desc % "Additive Foo StackedArea"},
-                    {"chart_plugin": "StackedArea",
-                     "data": [["bar %d" % i, exp] for i in range(1, 7)],
-                     "title": "Additive Bar StackedArea (no description)",
-                     "description": ""},
+                     "data": [["foo %i" % i, exp] for i in range(1, 7)],
+                     "label": "Measure this in Foo units",
+                     "title": "Additive StackedArea (no description)"},
+                    {"chart_plugin": "Lines",
+                     "data": [["bar %i" % i, exp] for i in range(1, 4)],
+                     "description": desc % "Additive Lines",
+                     "label": "Measure this in Bar units",
+                     "title": "Additive Lines"},
                     {"chart_plugin": "Pie",
-                     "data": [["spam %d" % i, exp] for i in range(1, 4)],
-                     "title": "Additive Spam Pie",
-                     "description": desc % "Additive Spam Pie"}],
+                     "data": [["spam %i" % i, exp] for i in range(1, 4)],
+                     "description": desc % "Additive Pie",
+                     "title": "Additive Pie"}],
                 "complete": [
-                    {"data": [["alpha", [[i, exp] for i in range(30)]],
-                              ["beta", [[i, exp] for i in range(30)]],
-                              ["gamma", [[i, exp] for i in range(30)]]],
-                     "title": "Complete StackedArea",
+                    {"axis_label": "This is a custom X-axis label",
+                     "chart_plugin": "Lines",
+                     "data": [["Foo", [[i, exp] for i in range(1, 8)]],
+                              ["Bar", [[i, exp] for i in range(1, 8)]],
+                              ["Spam", [[i, exp] for i in range(1, 8)]]],
+                     "description": desc % "Complete Lines",
+                     "label": "Measure this is some units",
+                     "title": "Complete Lines"},
+                    {"axis_label": "This is a custom X-axis label",
+                     "chart_plugin": "StackedArea",
+                     "data": [["alpha", [[i, exp] for i in range(50)]],
+                              ["beta", [[i, exp] for i in range(50)]],
+                              ["gamma", [[i, exp] for i in range(50)]]],
                      "description": desc % "Complete StackedArea",
-                     "chart_plugin": "StackedArea"},
-                    {"data": [["delta", exp], ["epsilon", exp], ["zeta", exp],
-                              ["theta", exp], ["lambda", exp], ["omega", exp]],
-                     "title": "Complete Pie (no description)",
-                     "description": "",
-                     "chart_plugin": "Pie"},
-                    {"data": {
-                        "cols": ["mu column", "xi column", "pi column",
-                                 "tau column", "chi column"],
-                        "rows": [
-                            [r + " row", exp, exp, exp, exp]
-                            for r in ("iota", "nu", "rho", "phi", "psi")]},
-                     "title": "Complete Table",
+                     "label": "Yet another measurement units",
+                     "title": "Complete StackedArea"},
+                    {"chart_plugin": "Pie",
+                     "data": [[s, exp] for s in ("delta", "epsilon", "zeta",
+                                                 "theta", "lambda", "omega")],
+                     "title": "Complete Pie (no description)"},
+                    {"chart_plugin": "Table",
+                     "data": {"cols": ["%s column" % s
+                                       for s in ("mu", "xi", "pi",
+                                                 "tau", "chi")],
+                              "rows": [["%s row" % s, exp, exp, exp, exp]
+                                       for s in ("iota", "nu", "rho",
+                                                 "phi", "psi")]},
                      "description": desc % "Complete Table",
-                     "chart_plugin": "Table"}]}
+                     "title": "Complete Table"}]}
+
         self.assertEqual(expected, scenario._output)
 
     def test_dummy_dummy_with_scenario_output(self):

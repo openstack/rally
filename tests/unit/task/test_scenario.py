@@ -263,14 +263,13 @@ class ScenarioTestCase(test.TestCase):
 
         scenario_inst.add_output(additive=additive, complete=complete)
 
-        for key in additive.keys():
+        for key in "title", "chart_plugin", "data":
             broken_additive = additive.copy()
             del broken_additive[key]
             self.assertRaises(exceptions.RallyException,
                               scenario_inst.add_output,
                               additive=broken_additive)
 
-        for key in complete.keys():
             broken_complete = complete.copy()
             del broken_complete[key]
             self.assertRaises(exceptions.RallyException,
