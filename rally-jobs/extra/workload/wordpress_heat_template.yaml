@@ -1,0 +1,219 @@
+heat_template_version: 2014-10-16
+
+description: >
+  Heat WordPress template to support F23, using only Heat OpenStack-native
+  resource types, and without the requirement for heat-cfntools in the image.
+  WordPress is web software you can use to create a beautiful website or blog.
+  This template installs a single-instance WordPress deployment using a local
+  MySQL database to store the data.
+
+parameters:
+
+  wp_instances_count:
+    type: number
+    default: 1
+
+  timeout:
+    type: number
+    description: Timeout for WaitCondition, seconds
+    default: 1000
+
+  router_id:
+    type: string
+    description: ID of the router
+    default: b9135c24-d998-4e2f-b0aa-2b0a40c21ae5
+
+  network_id:
+    type: string
+    description: ID of the network to allocate floating IP from
+    default: 4eabc459-0096-4479-b105-67ec0cff18cb
+
+  key_name:
+    type: string
+    description : Name of a KeyPair to enable SSH access to the instance
+    default: nova-kp
+
+  wp_instance_type:
+    type: string
+    description: Instance type for WordPress server
+    default: m1.small
+
+  wp_image:
+    type: string
+    description: >
+      Name or ID of the image to use for the WordPress server.
+      Recommended value is fedora-23.x86_64;
+      http://cloud.fedoraproject.org/fedora-23.x86_64.qcow2.
+    default: fedora-23.x86_64
+
+  image:
+    type: string
+    description: >
+      Name or ID of the image to use for the gate-node.
+    default: fedora-23.x86_64
+
+  instance_type:
+    type: string
+    description: Instance type for gate-node.
+    default: m1.small
+
+
+  db_name:
+    type: string
+    description: WordPress database name
+    default: wordpress
+    constraints:
+      - length: { min: 1, max: 64 }
+        description: db_name must be between 1 and 64 characters
+      - allowed_pattern: '[a-zA-Z][a-zA-Z0-9]*'
+        description: >
+          db_name must begin with a letter and contain only alphanumeric
+          characters
+  db_username:
+    type: string
+    description: The WordPress database admin account username
+    default: admin
+    hidden: true
+    constraints:
+      - length: { min: 1, max: 16 }
+        description: db_username must be between 1 and 16 characters
+      - allowed_pattern: '[a-zA-Z][a-zA-Z0-9]*'
+        description: >
+          db_username must begin with a letter and contain only alphanumeric
+          characters
+  db_password:
+    type: string
+    description: The WordPress database admin account password
+    default: admin
+    hidden: true
+    constraints:
+      - length: { min: 1, max: 41 }
+        description: db_password must be between 1 and 41 characters
+      - allowed_pattern: '[a-zA-Z0-9]*'
+        description: db_password must contain only alphanumeric characters
+  db_root_password:
+    type: string
+    description: Root password for MySQL
+    default: admin
+    hidden: true
+    constraints:
+      - length: { min: 1, max: 41 }
+        description: db_root_password must be between 1 and 41 characters
+      - allowed_pattern: '[a-zA-Z0-9]*'
+        description: db_root_password must contain only alphanumeric characters
+
+resources:
+  wordpress_instances:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: wp_instances_count}
+      resource_def:
+        type: wp-instances.yaml
+        properties:
+          name: wp_%index%
+          image: { get_param: wp_image }
+          flavor: { get_param: wp_instance_type }
+          key_name: { get_param: key_name }
+          db_root_password: { get_param: db_root_password }
+          db_name: { get_param: db_name }
+          db_username: { get_param: db_username }
+          db_password: { get_param: db_password }
+          wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+          subnet: {get_resource: subnet}
+          network: {get_resource: network}
+          security_group: {get_resource: security_group}
+
+  gate_instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_name }
+      networks:
+        - port: {get_resource: port_gate}
+      user_data_format: RAW
+      user_data: |
+        #cloud-config
+        packages:
+          - python
+          - siege
+          - httpd-tools
+
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      rules:
+        - port_range_max: null
+          port_range_min: null
+          protocol: icmp
+          remote_ip_prefix: 0.0.0.0/0
+        - port_range_max: 80
+          port_range_min: 80
+          protocol: tcp
+          remote_ip_prefix: 0.0.0.0/0
+        - port_range_max: 443
+          port_range_min: 443
+          protocol: tcp
+          remote_ip_prefix: 0.0.0.0/0
+        - port_range_max: 22
+          port_range_min: 22
+          protocol: tcp
+          remote_ip_prefix: 0.0.0.0/0
+
+  network:
+    type: OS::Neutron::Net
+    properties:
+      name: wordpress-network
+
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      cidr: 10.0.0.1/24
+      dns_nameservers: [8.8.8.8]
+      ip_version: 4
+      network: {get_resource: network}
+
+  port_gate:
+    type: OS::Neutron::Port
+    properties:
+      fixed_ips:
+        - subnet: {get_resource: subnet}
+      network: {get_resource: network}
+      replacement_policy: AUTO
+      security_groups:
+        - {get_resource: security_group}
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      port_id: {get_resource: port_gate}
+      floating_network: {get_param: network_id}
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: {get_param: router_id}
+      subnet: {get_resource: subnet}
+
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: {get_resource: wait_handle}
+      count: {get_param: wp_instances_count}
+      timeout: {get_param: timeout}
+
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+
+outputs:
+  curl_cli:
+    value: { get_attr: ['wait_handle', 'curl_cli'] }
+
+  wp_nodes:
+    value: { get_attr: ['wordpress_instances', 'attributes', 'ip'] }
+
+  gate_node:
+    value: { get_attr: ['floating_ip', 'floating_ip_address'] }
+
+  net_name:
+    value: { get_attr: ['network', 'name'] }
