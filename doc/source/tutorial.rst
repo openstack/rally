@@ -25,4 +25,14 @@ In the following tutorial, we will guide you step-by-step through different use 
    :glob:
    :maxdepth: 1
 
-   tutorial/**
+   tutorial/step_0_installation
+   tutorial/step_1_setting_up_env_and_running_benchmark_from_samples
+   tutorial/step_2_input_task_format
+   tutorial/step_3_benchmarking_with_existing_users
+   tutorial/step_4_adding_success_criteria_for_benchmarks
+   tutorial/step_5_task_templates
+   tutorial/step_6_aborting_load_generation_on_sla_failure
+   tutorial/step_7_working_with_multple_openstack_clouds
+   tutorial/step_8_discovering_more_plugins
+   tutorial/step_9_deploying_openstack
+   tutorial/step_10_verifying_cloud_via_tempest
