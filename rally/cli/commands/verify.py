@@ -432,13 +432,6 @@ class VerifyCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
-    @cliutils.deprecated_args("--tempest-config", dest="tempest_config",
-                              type=str, required=False, metavar="<path>",
-                              release="0.3.2",
-                              help="User-specified Tempest config file "
-                                   "location. Note that in the future this "
-                                   "argument will be removed! Use `rally "
-                                   "verify genconfig` instead")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
     @cliutils.args("--system-wide", dest="system_wide",
@@ -447,17 +440,14 @@ class VerifyCommands(object):
                         "installed in the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def reinstall(self, deployment=None,
-                  tempest_config=None, source=None, system_wide=False):
+    def reinstall(self, deployment=None, source=None, system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
-        :param tempest_config: User specified Tempest config file location
         :param source: Path/URL to repo to clone Tempest from
         :param system_wide: Whether or not to create a Tempest virtual env
         """
-        api.Verification.reinstall_tempest(deployment, tempest_config,
-                                           source, system_wide)
+        api.Verification.reinstall_tempest(deployment, source, system_wide)
 
     @cliutils.args("--deployment", dest="deployment", type=str, required=False,
                    metavar="<uuid>", help="UUID or name of a deployment")
