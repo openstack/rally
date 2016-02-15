@@ -167,9 +167,9 @@ $GREEN  --url                 $NO_COLOR Git repository public URL to download Ra
                          from custom repository.
                          (Default: ${RALLY_GIT_URL}).
                          (Ignored when you are already in git repository).
-$GREEN  --branch              $NO_COLOR Git branch name name or git tag (Rally release) to install.
-                         (Default: latest - master).
-                         (Ignored when you are already in git repository).
+$GREEN  --branch              $NO_COLOR Git branch name, tag (Rally release), commit hash, ref, or other
+                         tree-ish to install. (Default: master)
+                         Ignored when you are already in git repository.
 $GREEN  -f, --overwrite       $NO_COLOR Deprecated. Use -r instead.
 $GREEN  -r, --recreate        $NO_COLOR Remove target directory if it already exist.
                          If neither '-r' nor '-R' is set default behaviour is to ask.
@@ -723,7 +723,11 @@ else
     then
         echo "Downloading Rally from git repository $RALLY_GIT_URL ..."
         CURRENT_ACTION="downloading-src"
-        git clone "$RALLY_GIT_URL" -b "$RALLY_GIT_BRANCH" "$SOURCEDIR"
+        git clone "$RALLY_GIT_URL" "$SOURCEDIR"
+        (
+            cd "$SOURCEDIR"
+            git checkout "$RALLY_GIT_BRANCH"
+        )
         if ! [ -d "$SOURCEDIR"/.git ]; then
             abort $EX_CANTCREAT "Unable to download git repository"
         fi
