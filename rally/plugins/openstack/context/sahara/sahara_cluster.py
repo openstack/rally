@@ -119,7 +119,7 @@ class SaharaCluster(context.Context):
             cluster = scenario._launch_cluster(
                 plugin_name=self.config["plugin_name"],
                 hadoop_version=self.config["hadoop_version"],
-                flavor_id=self.config.get("flavor_id", None),
+                flavor_id=self.config.get("flavor_id"),
                 master_flavor_id=self.config["master_flavor_id"],
                 worker_flavor_id=self.config["worker_flavor_id"],
                 workers_count=self.config["workers_count"],
