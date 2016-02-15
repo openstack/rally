@@ -33,6 +33,6 @@ use `sqlite` as database backend. If you execute the script as root,
 Rally will be installed system wide. For more installation options,
 please refer to the :ref:`installation <install>` page.
 
-**Note:** Rally requires Python version 2.6, 2.7 or 3.4.
+**Note:** Rally requires Python version 2.7 or 3.4.
 
 Now that you have rally installed, you are ready to start :ref:`benchmarking OpenStack with it <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`!
