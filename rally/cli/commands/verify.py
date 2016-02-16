@@ -452,6 +452,27 @@ class VerifyCommands(object):
         api.Verification.reinstall_tempest(deployment, tempest_config,
                                            source, system_wide)
 
+    @cliutils.args("--deployment", dest="deployment", type=str, required=False,
+                   metavar="<uuid>", help="UUID or name of a deployment")
+    @cliutils.args("--pattern", dest="pattern", type=str,
+                   required=False, metavar="<pattern>",
+                   help="Test name pattern which can be used to match")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def discover(self, deployment=None, pattern=""):
+        """Show a list of discovered tests.
+
+        :param deployment: UUID or name of a deployment
+        :param pattern: Test name pattern which can be used to match
+        """
+        discovered_tests = api.Verification.discover_tests(deployment, pattern)
+        p_str = (_(" matching pattern '%s'") % pattern) if pattern else ""
+        if discovered_tests:
+            print(_("Discovered tests%s:\n") % p_str)
+            for test in discovered_tests:
+                print(test)
+        else:
+            print(_("No tests%s discovered.") % p_str)
+
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")

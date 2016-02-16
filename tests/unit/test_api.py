@@ -500,6 +500,13 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.install.assert_called_once_with()
         mock_move.assert_called_once_with(tmp_file, fake_conf)
 
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_discover_tests(self, mock_tempest, mock_deployment_get):
+        mock_tempest.return_value = self.tempest
+        api.Verification.discover_tests(self.deployment_uuid, "some_pattern")
+        self.tempest.discover_tests.assert_called_once_with("some_pattern")
+
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
@@ -558,7 +565,7 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.assertEqual(0, mock_open.call_count)
 
     @mock.patch("rally.common.objects.Verification.list")
-    def test_delete(self, mock_verification_list):
+    def test_list(self, mock_verification_list):
         retval = api.Verification.list()
         self.assertEqual(mock_verification_list.return_value, retval)
         mock_verification_list.assert_called_once_with(None)
