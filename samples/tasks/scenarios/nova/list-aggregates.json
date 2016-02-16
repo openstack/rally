@@ -1,0 +1,11 @@
+{
+  "NovaAggregates.list_aggregates": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      }
+    }
+  ]
+}

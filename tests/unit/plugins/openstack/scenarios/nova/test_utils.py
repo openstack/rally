@@ -875,3 +875,50 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             True, fakearg="fakearg")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_flavors")
+
+    @ddt.data({},
+              {"hypervisor": "foo_hypervisor"})
+    @ddt.unpack
+    def test__list_agents(self, hypervisor=None):
+        nova_scenario = utils.NovaScenario()
+        self.admin_clients("nova").agents.list.return_value = "agents_list"
+        result = nova_scenario._list_agents(hypervisor)
+        self.assertEqual("agents_list", result)
+        self.admin_clients("nova").agents.list.assert_called_once_with(
+            hypervisor)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_agents")
+
+    def test__list_aggregates(self):
+        nova_scenario = utils.NovaScenario()
+        self.admin_clients("nova").aggregates.list.return_value = (
+            "aggregates_list")
+        result = nova_scenario._list_aggregates()
+        self.assertEqual("aggregates_list", result)
+        self.admin_clients("nova").aggregates.list.assert_called_once_with()
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_aggregates")
+
+    def test__list_availability_zones(self):
+        nova_scenario = utils.NovaScenario()
+        self.admin_clients("nova").availability_zones.list.return_value = (
+            "availability_zones_list")
+        result = nova_scenario._list_availability_zones(detailed=True)
+        self.assertEqual("availability_zones_list", result)
+        nova_admin_client = self.admin_clients("nova")
+        availability_zones_client = nova_admin_client.availability_zones
+        availability_zones_client.list.assert_called_once_with(True)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_availbility_zones")
+
+    @ddt.data({},
+              {"zone": "foo_zone"})
+    @ddt.unpack
+    def test__list_hosts(self, zone=None):
+        nova_scenario = utils.NovaScenario()
+        self.admin_clients("nova").hosts.list.return_value = "hosts_list"
+        result = nova_scenario._list_hosts(zone)
+        self.assertEqual("hosts_list", result)
+        self.admin_clients("nova").hosts.list.assert_called_once_with(zone)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_hosts")

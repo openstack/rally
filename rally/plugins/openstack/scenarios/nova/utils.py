@@ -903,3 +903,37 @@ class NovaScenario(scenario.OpenStackScenario):
         :returns: flavors list
         """
         return self.clients("nova").flavors.list(detailed, **kwargs)
+
+    @atomic.action_timer("nova.list_agents")
+    def _list_agents(self, hypervisor=None):
+        """List all nova-agent builds.
+
+        :param hypervisor: The nova-hypervisor ID on which we need to list all
+                           the builds
+        :returns: Nova-agent build list
+        """
+        return self.admin_clients("nova").agents.list(hypervisor)
+
+    @atomic.action_timer("nova.list_aggregates")
+    def _list_aggregates(self):
+        """Returns list of all os-aggregates."""
+        return self.admin_clients("nova").aggregates.list()
+
+    @atomic.action_timer("nova.list_availbility_zones")
+    def _list_availability_zones(self, detailed=True):
+        """List availability-zones.
+
+        :param detailed: True if the availability-zone listing should contain
+                         detailed information
+        :returns: Availability-zone list
+        """
+        return self.admin_clients("nova").availability_zones.list(detailed)
+
+    @atomic.action_timer("nova.list_hosts")
+    def _list_hosts(self, zone=None):
+        """List nova hosts.
+
+        :param zone: List all hosts in the given nova availability-zone ID
+        :returns: Nova host list
+        """
+        return self.admin_clients("nova").hosts.list(zone)

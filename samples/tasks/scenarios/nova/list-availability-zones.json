@@ -1,0 +1,14 @@
+{
+  "NovaAvailabilityZones.list_availability_zones": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      },
+      "args": {
+        "detailed": true
+      }
+    }
+  ]
+}

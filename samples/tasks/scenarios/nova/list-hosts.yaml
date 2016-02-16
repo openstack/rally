@@ -1,0 +1,7 @@
+---
+    NovaHosts.list_hosts:
+        -
+            runner:
+                type: "constant"
+                concurrency: 2
+                times: 10

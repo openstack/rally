@@ -876,3 +876,45 @@
       sla:
         failure_rate:
           max: 0
+
+  NovaAgents.list_agents:
+    -
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 5
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaAggregates.list_aggregates:
+    -
+      runner:
+        type: "constant"
+        concurrency: 2
+        times : 5
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaAvailabilityZones.list_availability_zones:
+    -
+      args:
+        detailed: true
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 5
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaHosts.list_hosts:
+    -
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 5
+      sla:
+        failure_rate:
+          max: 0

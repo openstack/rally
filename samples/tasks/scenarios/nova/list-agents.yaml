@@ -1,0 +1,7 @@
+---
+    NovaAgents.list_agents:
+        -
+            runner:
+                type: "constant"
+                concurrency: 2
+                times: 10
