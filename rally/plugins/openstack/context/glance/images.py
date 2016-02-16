@@ -79,7 +79,9 @@ class ImageGenerator(context.Context):
                 self.context["users"]):
             current_images = []
             glance_scenario = glance_utils.GlanceScenario(
-                {"user": user, "task": self.context["task"]})
+                {"user": user, "task":
+                 self.context["task"],
+                 "config": self.context["config"]})
 
             kwargs = self.config.get("image_args", {})
             if self.config.get("min_ram") is not None:
