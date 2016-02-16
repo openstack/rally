@@ -65,12 +65,100 @@ class AdminCleanupTestCase(test.TestCase):
             mock.call(
                 mock_find_resource_managers.return_value[0],
                 ctx["admin"],
-                ctx["users"]),
+                ctx["users"],
+                None),
             mock.call().exterminate(),
             mock.call(
                 mock_find_resource_managers.return_value[1],
                 ctx["admin"],
-                ctx["users"]),
+                ctx["users"],
+                None),
+            mock.call().exterminate()
+        ])
+
+    @mock.patch("%s.manager.find_resource_managers" % BASE,
+                return_value=[mock.MagicMock(), mock.MagicMock()])
+    @mock.patch("%s.manager.SeekAndDestroy" % BASE)
+    def test_cleanup_admin_with_api_versions(
+            self,
+            mock_seek_and_destroy,
+            mock_find_resource_managers):
+
+        ctx = {
+            "config":
+                {"admin_cleanup": ["a", "b"],
+                 "api_versions":
+                     {"cinder":
+                         {"version": "1",
+                          "service_type": "volume"
+                          }
+                      }
+                 },
+            "admin": mock.MagicMock(),
+            "users": mock.MagicMock(),
+            "task": mock.MagicMock()
+        }
+
+        admin_cleanup = cleanup.AdminCleanup(ctx)
+        admin_cleanup.setup()
+        admin_cleanup.cleanup()
+
+        mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
+        mock_seek_and_destroy.assert_has_calls([
+            mock.call(
+                mock_find_resource_managers.return_value[0],
+                ctx["admin"],
+                ctx["users"],
+                ctx["config"]["api_versions"]),
+            mock.call().exterminate(),
+            mock.call(
+                mock_find_resource_managers.return_value[1],
+                ctx["admin"],
+                ctx["users"],
+                ctx["config"]["api_versions"]),
+            mock.call().exterminate()
+        ])
+
+    @mock.patch("%s.manager.find_resource_managers" % BASE,
+                return_value=[mock.MagicMock(), mock.MagicMock()])
+    @mock.patch("%s.manager.SeekAndDestroy" % BASE)
+    def test_cleanup_user_with_api_versions(
+            self,
+            mock_seek_and_destroy,
+            mock_find_resource_managers):
+
+        ctx = {
+            "config":
+                {"admin_cleanup": ["a", "b"],
+                 "api_versions":
+                     {"cinder":
+                         {"version": "1",
+                          "service_type": "volume"
+                          }
+                      }
+                 },
+            "admin": mock.MagicMock(),
+            "users": mock.MagicMock(),
+            "task": mock.MagicMock()
+        }
+
+        user_cleanup = cleanup.UserCleanup(ctx)
+        user_cleanup.setup()
+        user_cleanup.cleanup()
+
+        mock_find_resource_managers.assert_called_once_with({}, False)
+        mock_seek_and_destroy.assert_has_calls([
+            mock.call(
+                mock_find_resource_managers.return_value[0],
+                None,
+                ctx["users"],
+                ctx["config"]["api_versions"]),
+            mock.call().exterminate(),
+            mock.call(
+                mock_find_resource_managers.return_value[1],
+                None,
+                ctx["users"],
+                ctx["config"]["api_versions"]),
             mock.call().exterminate()
         ])
 
@@ -116,10 +204,10 @@ class UserCleanupTestCase(test.TestCase):
         mock_seek_and_destroy.assert_has_calls([
             mock.call(
                 mock_find_resource_managers.return_value[0],
-                None, ctx["users"]),
+                None, ctx["users"], None),
             mock.call().exterminate(),
             mock.call(
                 mock_find_resource_managers.return_value[1],
-                None, ctx["users"]),
+                None, ctx["users"], None),
             mock.call().exterminate()
         ])

@@ -64,10 +64,12 @@ class AdminCleanup(CleanupMixin, context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("admin resources cleanup"))
     def cleanup(self):
-        manager.cleanup(names=self.config,
-                        admin_required=True,
-                        admin=self.context["admin"],
-                        users=self.context.get("users", []))
+        manager.cleanup(
+            names=self.config,
+            admin_required=True,
+            admin=self.context["admin"],
+            users=self.context.get("users", []),
+            api_versions=self.context["config"].get("api_versions"))
 
 
 # NOTE(amaretskiy): Set maximum order to run this last
@@ -89,6 +91,9 @@ class UserCleanup(CleanupMixin, context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("user resources cleanup"))
     def cleanup(self):
-        manager.cleanup(names=self.config,
-                        admin_required=False,
-                        users=self.context.get("users", []))
+        manager.cleanup(
+            names=self.config,
+            admin_required=False,
+            users=self.context.get("users", []),
+            api_versions=self.context["config"].get("api_versions")
+        )
