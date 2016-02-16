@@ -30,14 +30,14 @@ external changes. Most important of them are listed below.
 CLI changes
 ~~~~~~~~~~~
 
-* [Removed] ``rally info`` in favor of ``rally plugin *``.
+* .. warning:: [Removed] ``rally info`` in favor of ``rally plugin *``.
   It was deprecated for a long time.
 
 * [Modified] ``rally deployment check`` now prints services, which don't have
   names, since such services can be used via api_versions context.
 
-* [Modified] ``rally verify [re]install``  option --no-tempest-venv for was
-  deprecated in favor of --system-wide
+* .. warning:: [Modified] ``rally verify [re]install``
+      option --no-tempest-venv was deprecated in favor of --system-wide
 
 * [Added] ``rally-manage db revision`` displays current revision of
   Rally database schema
@@ -59,8 +59,8 @@ CLI changes
 Rally Deployment
 ~~~~~~~~~~~~~~~~
 
-* ``fuel`` deployment engine is removed since it was outdated and lacked
-  both usage and support
+* .. warning:: ``fuel`` deployment engine is removed since it was outdated and
+      lacked both usage and support
 
 Rally Task
 ~~~~~~~~~~
@@ -131,6 +131,9 @@ Plugins
 
 * **Context**:
 
+ - .. warning:: [deprecated] rally.plugins.openstack.context.cleanup
+       in favor of rally.plugins.openstack.cleanup
+
  - [improved] sahara_cluster
 
    Flavors for Master and Worker node groups are now
@@ -142,8 +145,10 @@ Miscellaneous
 * Cinder version 2 is used by default
 
 * Keystone API v3 compatibility improved
+
   - Auth URL in both formats http://foo.rally:5000/v3
     and http://foo.rally:5000 is supported for Keystone API v3
+
   - Tempest configuration file is created properly according
     to Keystone API version used
 
