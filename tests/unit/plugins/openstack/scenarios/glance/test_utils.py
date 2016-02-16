@@ -15,13 +15,11 @@
 import tempfile
 
 import mock
-from oslo_config import cfg
 
 from rally.plugins.openstack.scenarios.glance import utils
 from tests.unit import test
 
 GLANCE_UTILS = "rally.plugins.openstack.scenarios.glance.utils"
-CONF = cfg.CONF
 
 
 class GlanceScenarioTestCase(test.ScenarioTestCase):
@@ -30,6 +28,8 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
         super(GlanceScenarioTestCase, self).setUp()
         self.image = mock.Mock()
         self.image1 = mock.Mock()
+        self.scenario_clients = mock.Mock()
+        self.scenario_clients.glance.choose_version.return_value = 1
 
     def test_list_images(self):
         scenario = utils.GlanceScenario(context=self.context)
@@ -40,52 +40,28 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.list_images")
 
-    def test_create_image(self):
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test_create_image(self, mock_wrap):
         image_location = tempfile.NamedTemporaryFile()
-        self.clients("glance").images.create.return_value = self.image
-        scenario = utils.GlanceScenario(context=self.context)
+        mock_wrap.return_value.create_image.return_value = self.image
+        scenario = utils.GlanceScenario(context=self.context,
+                                        clients=self.scenario_clients)
         return_image = scenario._create_image("container_format",
                                               image_location.name,
                                               "disk_format")
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.image,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            ready_statuses=["active"],
-            check_interval=CONF.benchmark.glance_image_create_poll_interval,
-            timeout=CONF.benchmark.glance_image_create_timeout)
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_image)
+        self.assertEqual(self.image, return_image)
+        mock_wrap.assert_called_once_with(scenario._clients.glance, scenario)
+        mock_wrap.return_value.create_image.assert_called_once_with(
+            "container_format", image_location.name, "disk_format")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.create_image")
 
-    def test_create_image_with_location(self):
-        self.clients("glance").images.create.return_value = self.image
-        scenario = utils.GlanceScenario(context=self.context)
-        return_image = scenario._create_image("container_format",
-                                              "image_location",
-                                              "disk_format")
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.image,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            ready_statuses=["active"],
-            check_interval=CONF.benchmark.glance_image_create_poll_interval,
-            timeout=CONF.benchmark.glance_image_create_timeout)
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_image)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "glance.create_image")
-
-    def test_delete_image(self):
-        scenario = utils.GlanceScenario(context=self.context)
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test_delete_image(self, mock_wrap):
+        scenario = utils.GlanceScenario(context=self.context,
+                                        clients=self.scenario_clients)
         scenario._delete_image(self.image)
-        self.image.delete.assert_called_once_with()
-        self.mock_wait_for_status.mock.assert_called_once_with(
-            self.image,
-            ready_statuses=["deleted"],
-            check_deletion=True,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.glance_image_delete_poll_interval,
-            timeout=CONF.benchmark.glance_image_delete_timeout)
-        self.mock_get_from_manager.mock.assert_called_once_with()
+        mock_wrap.assert_called_once_with(scenario._clients.glance, scenario)
+        mock_wrap.return_value.delete_image.assert_called_once_with(self.image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.delete_image")

@@ -396,7 +396,8 @@ class TempestResourcesContextTestCase(test.TestCase):
         result = self.context.conf.get("compute", "flavor_ref")
         self.assertEqual("id1", result)
 
-    def test__discover_or_create_image_when_image_exists(self):
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__discover_or_create_image_when_image_exists(self, mock_wrap):
         client = self.context.clients.glance()
         client.images.list.return_value = [fakes.FakeResource(name="CirrOS",
                                                               status="active")]
@@ -404,14 +405,31 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual("CirrOS", image.name)
         self.assertEqual(0, len(self.context._created_images))
 
-    @mock.patch("six.moves.builtins.open")
-    def test__discover_or_create_image(self, mock_open):
-        client = self.context.clients.glance()
-        client.images.create.side_effect = [fakes.FakeImage(id="id1")]
+    # @mock.patch("six.moves.builtins.open")
+    # def test__discover_or_create_image(self, mock_wrap, mock_open):
+    #     client = self.context.clients.glance()
+    #     client.images.create.side_effect = [fakes.FakeImage(id="id1")]
+
+    #     image = self.context._discover_or_create_image()
+    #     self.assertEqual("id1", image.id)
+    #     self.assertEqual("id1", self.context._created_images[0].id)
+
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__discover_or_create_image(self, mock_wrap):
+        client = mock_wrap.return_value
 
         image = self.context._discover_or_create_image()
-        self.assertEqual("id1", image.id)
-        self.assertEqual("id1", self.context._created_images[0].id)
+        self.assertEqual(image, client.create_image.return_value)
+        self.assertEqual(self.context._created_images[0],
+                         client.create_image.return_value)
+        mock_wrap.assert_called_once_with(self.context.clients.glance,
+                                          self.context)
+        client.create_image.assert_called_once_with(
+            container_format=CONF.image.container_format,
+            image_location=mock.ANY,
+            disk_format=CONF.image.disk_format,
+            name=mock.ANY,
+            is_public=True)
 
     def test__create_flavor(self):
         client = self.context.clients.nova()

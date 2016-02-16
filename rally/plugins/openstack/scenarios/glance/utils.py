@@ -13,41 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-import time
-
-from oslo_config import cfg
-
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import atomic
-from rally.task import utils
-
-
-GLANCE_BENCHMARK_OPTS = [
-    cfg.FloatOpt("glance_image_create_prepoll_delay",
-                 default=2.0,
-                 help="Time to sleep after creating a resource before "
-                      "polling for it status"),
-    cfg.FloatOpt("glance_image_create_timeout",
-                 default=120.0,
-                 help="Time to wait for glance image to be created."),
-    cfg.FloatOpt("glance_image_create_poll_interval",
-                 default=1.0,
-                 help="Interval between checks when waiting for image "
-                      "creation."),
-    cfg.FloatOpt("glance_image_delete_timeout",
-                 default=120.0,
-                 help="Time to wait for glance image to be deleted."),
-    cfg.FloatOpt("glance_image_delete_poll_interval",
-                 default=1.0,
-                 help="Interval between checks when waiting for image "
-                      "deletion.")
-]
-
-
-CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class GlanceScenario(scenario.OpenStackScenario):
@@ -72,38 +40,9 @@ class GlanceScenario(scenario.OpenStackScenario):
 
         :returns: image object
         """
-        kw = {
-            "name": self.generate_random_name(),
-            "container_format": container_format,
-            "disk_format": disk_format,
-        }
-
-        kw.update(kwargs)
-        image_location = os.path.expanduser(image_location)
-
-        try:
-            if os.path.isfile(image_location):
-                kw["data"] = open(image_location)
-            else:
-                kw["copy_from"] = image_location
-
-            image = self.clients("glance").images.create(**kw)
-
-            time.sleep(CONF.benchmark.glance_image_create_prepoll_delay)
-
-            image = utils.wait_for(
-                image,
-                ready_statuses=["active"],
-                update_resource=utils.get_from_manager(),
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=CONF.benchmark.
-                glance_image_create_poll_interval)
-
-        finally:
-            if "data" in kw:
-                kw["data"].close()
-
-        return image
+        client = glance_wrapper.wrap(self._clients.glance, self)
+        return client.create_image(container_format, image_location,
+                                   disk_format)
 
     @atomic.action_timer("glance.delete_image")
     def _delete_image(self, image):
@@ -113,11 +52,5 @@ class GlanceScenario(scenario.OpenStackScenario):
 
         :param image: Image object
         """
-        image.delete()
-        utils.wait_for_status(
-            image,
-            ready_statuses=["deleted"],
-            check_deletion=True,
-            update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.glance_image_delete_timeout,
-            check_interval=CONF.benchmark.glance_image_delete_poll_interval)
+        client = glance_wrapper.wrap(self._clients.glance, self)
+        client.delete_image(image)
