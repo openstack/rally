@@ -1,0 +1,183 @@
+============
+Rally v0.3.0
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **69**         |
++------------------+-----------------------+
+| Bug fixes        |        **7**          |
++------------------+-----------------------+
+| Dev cycle        |       **29 days**     |
++------------------+-----------------------+
+| Release date     |     **2/16/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release, as well as all previous ones, includes a lot of internal and
+external changes. Most important of them are listed below.
+
+.. warning:: In this release Rally DB schema migration is introduced. While
+    upgrading Rally from previous versions it is required now to run
+    ``rally-manade db upgrade``. Please see 'Documentation' section for details.
+
+
+CLI changes
+~~~~~~~~~~~
+
+* [Removed] ``rally info`` in favor of ``rally plugin *``.
+  It was deprecated for a long time.
+
+* [Modified] ``rally deployment check`` now prints services, which don't have
+  names, since such services can be used via api_versions context.
+
+* [Modified] ``rally verify [re]install``  option --no-tempest-venv for was
+  deprecated in favor of --system-wide
+
+* [Added] ``rally-manage db revision`` displays current revision of
+  Rally database schema
+
+* [Added] ``rally-manage db upgrade`` upgrades pre-existing Rally
+  database schema to the latest revision
+
+* [Added] ``rally-manage db downgrade`` to downgrades existing Rally
+  database schema to previous revision
+
+* [Added] ``rally task export`` exports task results to external
+  services (only CLI command introduced, no real service support
+  implemented yet, however one could write own plugins)
+
+* [Added] ``rally verify export`` exports verification results to
+  external services (only CLI command introduced, no real service support
+  implemented yet, however one could write own plugins)
+
+Rally Deployment
+~~~~~~~~~~~~~~~~
+
+* ``fuel`` deployment engine is removed since it was outdated and lacked
+  both usage and support
+
+Rally Task
+~~~~~~~~~~
+
+Add custom labels for "Scenario Output" charts
+
+* X-axis label can be specified to add_output() by
+  "axis_label" key of chart options dict.
+  The key is named "axis_label" but not "x_label"
+  because chart can be displayed as table, so we explicitly
+  mention "axis" in option name to make this parameter
+  useless for tables
+
+* Y-axis label can be specified to add_output() by
+  "label" key of chart options dict
+  In some cases this parameter can be used for rendering
+  tables - it becomes column name in case if chart with
+  single iteration is transformed into table
+
+* As mentiones above, if we have output chart
+  with single iteration, then it is transformed to table,
+  because chart with single value is useless
+
+* OutputLinesChart is added, it is displayed by
+  NVD3 lineChart()
+
+* Chart "description" is optional now. Description is
+  not shown if it is not specified explicitly
+
+* Scenario Dummy.add_output is improved to display labels
+  and OutputLinesChart
+
+* Fix: If Y-values are too long and overlaps chart box,
+  then JavaScript updates chart width in runtime to fit
+  width of chart graphs + Y values to their DOM container
+
+Rally Certification
+~~~~~~~~~~~~~~~~~~~
+
+ None.
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* [Spec][Introduced] Export task and verification results to external services
+
+  https://github.com/openstack/rally/blob/master/doc/specs/in-progress/task_and_verification_export.rst
+
+* [Spec][Implemented]  Consistent resource names
+
+  https://github.com/openstack/rally/blob/master/doc/specs/implemented/consistent_resource_names.rst
+
+* [Feature request][Implemented]  Tempest concurrency
+
+  https://github.com/openstack/rally/blob/master/doc/feature_request/implemented/add_possibility_to_specify_concurrency_for_tempest.rst
+
+Plugins
+~~~~~~~
+
+* **Scenarios**:
+
+ - [added] VMTasks.workload_heat
+
+ - [added] NovaFlavors.list_flavors
+
+ - [updated] Flavors for Master and Worker node groups are now
+   configured separately for SaharaCluster.* scenarios
+
+* **Context**:
+
+ - [improved] sahara_cluster
+
+   Flavors for Master and Worker node groups are now
+   configured separately in ``sahara_cluster`` context
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* Cinder version 2 is used by default
+
+* Keystone API v3 compatibility improved
+  - Auth URL in both formats http://foo.rally:5000/v3
+    and http://foo.rally:5000 is supported for Keystone API v3
+  - Tempest configuration file is created properly according
+    to Keystone API version used
+
+* ``install_rally.sh --branch`` now accepts all git tree-ish,
+  not just branches or tags
+
+* VM console logs are now printed when Rally fails to connect to VM
+
+* Add support for Rally database schema migration (see 'Documentation' section)
+
+Bug fixes
+~~~~~~~~~
+
+**7 bugs were fixed**:
+
+* #1540563: Rally is incompatible with liberty Neutron client
+
+  The root cause is that in Neutron Liberty client,
+  the _fx function doesn't take any explicit keyword parameter
+  but Rally is passing one (tenant_id).
+
+* #1543414: The `rally verify start` command fails when running
+  a verification against Kilo OpenStack
+
+* #1538341: Error in logic to retrieve image details in image_valid_on_flavor
+
+Documentation
+~~~~~~~~~~~~~
+
+* Add documentation for DB migration
+
+  https://github.com/openstack/rally/blob/master/rally/common/db/sqlalchemy/migrations/README.rst
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
