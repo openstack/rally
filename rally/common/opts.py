@@ -20,7 +20,6 @@ from rally.plugins.openstack.cleanup import base as cleanup_base
 from rally.plugins.openstack.context.keystone import users
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
-from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 from rally.plugins.openstack.scenarios.ironic import utils as ironic_utils
 from rally.plugins.openstack.scenarios.manila import utils as manila_utils
@@ -28,6 +27,7 @@ from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
+from rally.plugins.openstack.wrappers import glance as glance_utils
 from rally.verification.tempest import config as tempest_conf
 
 
