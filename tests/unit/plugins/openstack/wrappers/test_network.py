@@ -398,7 +398,7 @@ class NeutronWrapperTestCase(test.TestCase):
         service = self.get_wrapper()
         pool = {"pool": {"id": "pool-id"}}
         service.delete_v1_pool(pool["pool"]["id"])
-        service.client.delete_pool.called_once_with([mock.call("pool-id")])
+        service.client.delete_pool.assert_called_once_with("pool-id")
 
     @mock.patch("rally.plugins.openstack.wrappers.network.NeutronWrapper"
                 ".supports_extension", return_value=(True, ""))
