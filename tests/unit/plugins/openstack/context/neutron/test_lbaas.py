@@ -85,9 +85,9 @@ class LbaasTestCase(test.TestCase):
         fake_args = {"lbaas_version": 1}
         lb_context = lbaas_context.Lbaas(self.get_context(**fake_args))
         lb_context.setup()
-        mock_utils.iterate_per_tenants.called_once_with(
+        mock_utils.iterate_per_tenants.assert_called_once_with(
             lb_context.context["users"])
-        net_wrapper.supports_extension.called_once_with("lbaas")
+        net_wrapper.supports_extension.assert_called_once_with("lbaas")
         for tenant_id, tenant_ctx in (
                 sorted(lb_context.context["tenants"].items())):
             for network in tenant_ctx["networks"]:
@@ -107,8 +107,7 @@ class LbaasTestCase(test.TestCase):
         net_wrapper = mock_wrap(mock_clients.return_value)
         net_wrapper.supports_extension.return_value = (False, None)
         lb_context.setup()
-        mock_utils.iterate_per_tenants.called_once_with(
-            lb_context.context["users"])
+        mock_utils.iterate_per_tenants.assert_not_called()
         net_wrapper.supports_extension.assert_called_once_with("lbaas")
         assert not net_wrapper.create_v1_pool.called
 

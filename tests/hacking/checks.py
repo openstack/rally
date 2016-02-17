@@ -80,6 +80,9 @@ def skip_ignored_lines(func):
 def _parse_assert_mock_str(line):
     point = line.find(".assert_")
 
+    if point == -1:
+        point = line.find(".called_once_with(")
+
     if point != -1:
         end_pos = line[point:].find("(") + point
         return point, line[point + 1: end_pos], line[: point]
@@ -94,10 +97,12 @@ def check_assert_methods_from_mock(logical_line, physical_line, filename):
     N301 - base error number
     N302 - related to nonexistent "assert_called"
     N303 - related to nonexistent "assert_called_once"
+    N304 - related to nonexistent "called_once_with"
     """
 
     correct_names = ["assert_any_call", "assert_called_once_with",
-                     "assert_called_with", "assert_has_calls"]
+                     "assert_called_with", "assert_has_calls",
+                     "assert_not_called"]
     ignored_files = ["./tests/unit/test_hacking.py"]
 
     if filename.startswith("./tests") and filename not in ignored_files:
@@ -123,6 +128,11 @@ def check_assert_methods_from_mock(logical_line, physical_line, filename):
                                   "'assertEqual(1, %s.call_count)' "
                                   "or '%s.assert_called_once_with()'"
                                   " instead." % (obj_name, obj_name))
+                elif method_name == "called_once_with":
+                    error_number = "N304"
+                    custom_msg = ("Maybe, you should try to use "
+                                  "'%s.assert_called_once_with()'"
+                                  " instead." % obj_name)
                 else:
                     custom_msg = ("Correct 'assert_*' methods: '%s'."
                                   % "', '".join(correct_names))
