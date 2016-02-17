@@ -1,3 +1,4 @@
+{%- set cirros_image_url = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img" %}
 {% set image_name = "^(cirros.*uec|TestVM)$" %}
 ---
   Authenticate.validate_nova:
@@ -522,6 +523,33 @@
         users:
           tenants: 3
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "rally-named-image-from-context"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        roles:
+          - admin
+        images:
+          image_url: "{{ cirros_image_url }}"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 1
+          image_name: "rally-named-image-from-context"
+          image_args:
+            is_public: True
       sla:
         failure_rate:
           max: 0

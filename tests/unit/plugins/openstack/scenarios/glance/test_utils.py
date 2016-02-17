@@ -48,11 +48,13 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
                                         clients=self.scenario_clients)
         return_image = scenario._create_image("container_format",
                                               image_location.name,
-                                              "disk_format")
+                                              "disk_format",
+                                              fakearg="fakearg")
         self.assertEqual(self.image, return_image)
         mock_wrap.assert_called_once_with(scenario._clients.glance, scenario)
         mock_wrap.return_value.create_image.assert_called_once_with(
-            "container_format", image_location.name, "disk_format")
+            "container_format", image_location.name, "disk_format",
+            fakearg="fakearg")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.create_image")
 
