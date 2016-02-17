@@ -346,7 +346,7 @@ __EOF__
                     missing=${missing//python-pip/}
                     if ! $pkg_manager python-pip; then
                         if ask_yn "Error installing python-pip. Install from external source?"; then
-                            local pdir=$(mktemp -d)
+                            local pdir=$(mktemp /tmp/tmp.XXXXXXXXXX -d)
                             local getpip="$pdir/get-pip.py"
                             download "$getpip" https://raw.github.com/pypa/pip/master/contrib/get-pip.py
                             if ! "$PYTHON" "$getpip"; then
@@ -459,7 +459,7 @@ setup_rally_configuration () {
     cp "$SRCDIR"/etc/rally/rally.conf.sample "$ETCDIR"/rally.conf
 
     [ -d "$DBDIR" ] || mkdir -p "$DBDIR"
-    local CONF_TMPFILE=$(mktemp)
+    local CONF_TMPFILE=$(mktemp /tmp/tmp.XXXXXXXXXX)
     sed "s|#connection *=.*|connection = \"$DBCONNSTRING\"|" "$ETCDIR"/rally.conf > "$CONF_TMPFILE"
     cat "$CONF_TMPFILE" > "$ETCDIR"/rally.conf
     rm "$CONF_TMPFILE"
