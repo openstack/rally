@@ -42,7 +42,7 @@ class GlanceScenario(scenario.OpenStackScenario):
         """
         client = glance_wrapper.wrap(self._clients.glance, self)
         return client.create_image(container_format, image_location,
-                                   disk_format)
+                                   disk_format, **kwargs)
 
     @atomic.action_timer("glance.delete_image")
     def _delete_image(self, image):
