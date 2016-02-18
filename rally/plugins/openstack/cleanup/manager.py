@@ -59,7 +59,8 @@ class SeekAndDestroy(object):
         else:
             key = user["credential"]
         if key not in cache:
-            cache[key] = osclients.Clients(key, api_info=api_versions)
+            cache[key] = osclients.Clients(user["credential"],
+                                           api_info=api_versions)
 
         return cache[key]
 
