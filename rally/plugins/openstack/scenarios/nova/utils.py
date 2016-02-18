@@ -937,3 +937,12 @@ class NovaScenario(scenario.OpenStackScenario):
         :returns: Nova host list
         """
         return self.admin_clients("nova").hosts.list(zone)
+
+    @atomic.action_timer("nova.list_services")
+    def _list_services(self, host=None, binary=None):
+        """return all nova service details
+
+        :param host: List all nova services on host
+        :param binary: List all nova services matching  given binary
+        """
+        return self.admin_clients("nova").services.list(host, binary)

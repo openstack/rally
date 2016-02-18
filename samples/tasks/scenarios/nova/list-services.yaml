@@ -1,0 +1,7 @@
+---
+  NovaServices.list_services:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
