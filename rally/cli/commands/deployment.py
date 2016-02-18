@@ -253,24 +253,24 @@ class DeploymentCommands(object):
     def _update_openrc_deployment_file(self, deployment, credential):
         openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
         with open(openrc_path, "w+") as env_file:
-            env_file.write("export OS_AUTH_URL=%(auth_url)s\n"
-                           "export OS_USERNAME=%(username)s\n"
-                           "export OS_PASSWORD=%(password)s\n"
-                           "export OS_TENANT_NAME=%(tenant_name)s\n"
+            env_file.write("export OS_AUTH_URL='%(auth_url)s'\n"
+                           "export OS_USERNAME='%(username)s'\n"
+                           "export OS_PASSWORD='%(password)s'\n"
+                           "export OS_TENANT_NAME='%(tenant_name)s'\n"
                            % credential)
             if credential.get("region_name"):
-                env_file.write("export OS_REGION_NAME=%s\n" %
+                env_file.write("export OS_REGION_NAME='%s'\n" %
                                credential["region_name"])
             if credential.get("endpoint"):
-                env_file.write("export OS_ENDPOINT=%s\n" %
+                env_file.write("export OS_ENDPOINT='%s'\n" %
                                credential["endpoint"])
             if credential.get("https_cacert"):
-                env_file.write("export OS_CACERT=%s\n" %
+                env_file.write("export OS_CACERT='%s'\n" %
                                credential["https_cacert"])
             if re.match(r"^/v3/?$", parse.urlparse(
                     credential["auth_url"]).path) is not None:
-                env_file.write("export OS_USER_DOMAIN_NAME=%s\n"
-                               "export OS_PROJECT_DOMAIN_NAME=%s\n" %
+                env_file.write("export OS_USER_DOMAIN_NAME='%s'\n"
+                               "export OS_PROJECT_DOMAIN_NAME='%s'\n" %
                                (credential["user_domain_name"],
                                 credential["project_domain_name"]))
         expanded_path = os.path.expanduser("~/.rally/openrc")
