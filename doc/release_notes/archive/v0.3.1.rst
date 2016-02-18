@@ -1,0 +1,47 @@
+============
+Rally v0.3.1
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |         **9**         |
++------------------+-----------------------+
+| Bug fixes        |         **6**         |
++------------------+-----------------------+
+| Dev cycle        |       **2 days**      |
++------------------+-----------------------+
+| Release date     |     **2/18/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release is more about bug-fixes than features.
+
+.. warning:: Please, update 0.3.0 to latest one.
+
+
+Features
+~~~~~~~~
+
+*  Pass api_versions info to glance images context
+
+* [Verify] Don't create new flavor when flavor already exists
+
+Bug fixes
+~~~~~~~~~
+
+**6 bugs were fixed, the most critical are**:
+
+* #1545889: Existing deployment with given endpoint doesn't work anymore
+
+* #1547092: Insecure doesn't work with Rally 0.3.0
+
+* #1547083: Rally Cleanup failed with api_versions context in 0.3.0 release
+
+* #1544839: Job gate-rally-dsvm-zaqar-zaqar fails since the recent Rally patch
+
+* #1544522: Non-existing "called_once_with" method of Mock library is used
