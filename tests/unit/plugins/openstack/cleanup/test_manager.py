@@ -26,9 +26,7 @@ BASE = "rally.plugins.openstack.cleanup.manager"
 
 class SeekAndDestroyTestCase(test.TestCase):
 
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client(self, mock_clients):
+    def test__get_cached_client(self):
         self.assertIsNone(manager.SeekAndDestroy._get_cached_client(None))
 
         users = [{"credential": "a"}, {"credential": "b"}]
@@ -47,9 +45,7 @@ class SeekAndDestroyTestCase(test.TestCase):
             manager.SeekAndDestroy._get_cached_client(users[0], cache=cache),
             manager.SeekAndDestroy._get_cached_client(users[1], cache=cache))
 
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client_with_api_versions(self, mock_clients):
+    def test__get_cached_client_with_api_versions(self):
         self.assertIsNone(manager.SeekAndDestroy._get_cached_client(None))
 
         user = {"credential": "a"}
