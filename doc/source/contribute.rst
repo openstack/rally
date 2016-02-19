@@ -64,7 +64,7 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
 7. Start coding
 
-8. Run the test suite locally to make sure nothing broke, e.g. (this will run py26/py27/pep8 tests):
+8. Run the test suite locally to make sure nothing broke, e.g. (this will run py34/py27/pep8 tests):
 
 .. code-block:: bash
 
@@ -127,13 +127,41 @@ To run unit tests locally:
   $ pip install tox
   $ tox
 
-To run py26, py27 or pep8 only:
+To run py34, py27 or pep8 only:
 
 .. code-block:: console
 
   $ tox -e <name>
 
-  #NOTE: <name> is one of py26, py27 or pep8
+  #NOTE: <name> is one of py34, py27 or pep8
+
+To run a single unit test e.g. test_deployment
+
+.. code-block:: console
+
+  $ tox -e <name> -- <test_name>
+
+  #NOTE: <name> is one of py34, py27 or pep8
+  #      <test_name> is the unit test case name
+
+To debug issues on the unit test:
+
+- Add breakpoints on the test file using ``import pdb;`` ``pdb.set_trace()``
+- Then run tox in debug mode:
+
+.. code-block:: console
+
+  $ tox -e debug <test_name>
+  #NOTE: use python 2.7
+  #NOTE: <test_name> is the unit test case name
+
+  or 
+
+.. code-block:: console
+
+  $ tox -e debug34 <test_name>
+  #NOTE: use python 3.4
+  #NOTE: <test_name> is the unit test case name
 
 To get test coverage:
 
