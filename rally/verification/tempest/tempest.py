@@ -227,13 +227,17 @@ class Tempest(object):
         """
         if not self.is_configured() or override:
             if not override:
-                LOG.info(_("Tempest is not configured."))
+                LOG.info(_("Tempest is not configured "
+                           "for deployment: %s") % self.deployment)
 
-            LOG.info(_("Starting: Creating configuration file for Tempest."))
+            LOG.info(_("Creating Tempest configuration "
+                       "file for deployment: %s") % self.deployment)
             config.TempestConfig(self.deployment).generate(self.config_file)
-            LOG.info(_("Completed: Creating configuration file for Tempest."))
+            LOG.info(_("Tempest configuration file "
+                       "has been successfully created!"))
         else:
-            LOG.info("Tempest is already configured.")
+            LOG.info(_("Tempest is already configured "
+                       "for deployment: %s") % self.deployment)
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):
@@ -269,6 +273,10 @@ class Tempest(object):
     def install(self):
         """Creates local Tempest repo and virtualenv for deployment."""
         if not self.is_installed():
+            LOG.info(_("Tempest is not installed "
+                       "for deployment: %s") % self.deployment)
+            LOG.info(_("Installing Tempest "
+                       "for deployment: %s") % self.deployment)
             try:
                 if not os.path.exists(self.path()):
                     if not self._is_git_repo(self.base_repo):
@@ -336,9 +344,14 @@ class Tempest(object):
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
         """
-        if tempest_conf and os.path.isfile(tempest_conf):
+        if tempest_conf:
             self.config_file = tempest_conf
-        LOG.info(_("Tempest config file: %s") % self.config_file)
+        if os.path.isfile(self.config_file):
+            LOG.info(_("Using Tempest config file: %s") % self.config_file)
+        else:
+            msg = _("Tempest config file '%s' not found!") % self.config_file
+            LOG.error(msg)
+            raise exceptions.NotFoundException(message=msg)
 
         concur_args = "--concurrency %d" % concur
         if concur != 1:
