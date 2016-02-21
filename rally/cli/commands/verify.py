@@ -426,9 +426,13 @@ class VerifyCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
-    @cliutils.args("--tempest-config", dest="tempest_config", type=str,
-                   required=False, metavar="<path>",
-                   help="User specified Tempest config file location")
+    @cliutils.deprecated_args("--tempest-config", dest="tempest_config",
+                              type=str, required=False, metavar="<path>",
+                              release="0.3.2",
+                              help="User-specified Tempest config file "
+                                   "location. Note that in the future this "
+                                   "argument will be removed! Use `rally "
+                                   "verify genconfig` instead")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
     @cliutils.args("--system-wide", dest="system_wide",
