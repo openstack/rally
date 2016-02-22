@@ -340,7 +340,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
             node_groups.append({
                 "name": "manager-ng",
-                "flavor_id": worker_flavor_id,
+                "flavor_id": master_flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["manager"],
                 "count": 1
