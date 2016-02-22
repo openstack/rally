@@ -386,6 +386,11 @@ class Verification(object):
                                    system_wide=system_wide)
 
         if not verifier.is_installed():
+            LOG.warning("Installation of Tempest will be deprecated and "
+                        "removed in the future when executing the `rally "
+                        "verify start` command. To install Tempest please "
+                        "start to use the `rally verify install` command "
+                        "before `rally verify start`.")
             LOG.info(_("Tempest is not installed "
                        "for the specified deployment."))
             LOG.info(_("Installing Tempest "
