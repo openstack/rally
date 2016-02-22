@@ -129,4 +129,56 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         volumes_ctx.cleanup()
 
         mock_cleanup.assert_called_once_with(names=["cinder.volumes"],
-                                             users=self.context["users"])
+                                             users=self.context["users"],
+                                             api_versions=None)
+
+    @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
+    def test_cleanup_api_versions(self, mock_cleanup):
+
+        tenants_count = 2
+        users_per_tenant = 5
+        volumes_per_tenant = 5
+
+        tenants = self._gen_tenants(tenants_count)
+        users = []
+        for id_ in tenants.keys():
+            for i in range(users_per_tenant):
+                users.append({"id": i, "tenant_id": id_,
+                              "credential": "credential"})
+            tenants[id_].setdefault("volumes", [])
+            for j in range(volumes_per_tenant):
+                tenants[id_]["volumes"].append({"id": "uuid"})
+
+        api_version = {
+            "cinder": {
+                "version": 1,
+                "service_type": "volume"
+            }
+        }
+        self.context.update({
+            "config": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 5,
+                    "concurrent": 10,
+                },
+                "volumes": {
+                    "size": 1,
+                    "volumes_per_tenant": 5,
+                },
+                "api_versions": api_version
+            },
+            "admin": {
+                "credential": mock.MagicMock()
+            },
+            "users": users,
+            "tenants": tenants
+        })
+
+        volumes_ctx = volumes.VolumeGenerator(self.context)
+        volumes_ctx.cleanup()
+
+        mock_cleanup.assert_called_once_with(
+            names=["cinder.volumes"],
+            users=self.context["users"],
+            api_versions=api_version)
