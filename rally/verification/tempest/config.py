@@ -263,8 +263,8 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "img_file", self.image_name)
 
     def _configure_service_available(self, section_name="service_available"):
-        services = ["ceilometer", "cinder", "glance",
-                    "heat", "neutron", "nova", "sahara", "swift"]
+        services = ["ceilometer", "cinder", "glance", "heat",
+                    "ironic", "neutron", "nova", "sahara", "swift"]
         for service in services:
             # Convert boolean to string because ConfigParser fails
             # on attempt to get option with boolean value
