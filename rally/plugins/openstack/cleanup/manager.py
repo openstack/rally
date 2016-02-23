@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SeekAndDestroy(object):
+    cache = {}
 
     def __init__(self, manager_cls, admin, users, api_versions=None):
         """Resource deletion class.
@@ -38,31 +39,26 @@ class SeekAndDestroy(object):
         :param manager_cls: subclass of base.ResourceManager
         :param admin: admin credential like in context["admin"]
         :param users: users credentials like in context["users"]
+        :param api_versions: dict of client API versions
         """
         self.manager_cls = manager_cls
         self.admin = admin
         self.users = users or []
         self.api_versions = api_versions
 
-    @staticmethod
-    def _get_cached_client(user, cache=None, api_versions=None):
+    def _get_cached_client(self, user):
         """Simplifies initialization and caching OpenStack clients."""
-
         if not user:
             return None
 
-        if not isinstance(cache, dict):
-            return osclients.Clients(user["credential"], api_info=api_versions)
-
-        if api_versions:
-            key = str((user["credential"], sorted(api_versions.items())))
+        if self.api_versions:
+            key = str((user["credential"], sorted(self.api_versions.items())))
         else:
             key = user["credential"]
-        if key not in cache:
-            cache[key] = osclients.Clients(user["credential"],
-                                           api_info=api_versions)
-
-        return cache[key]
+        if key not in self.cache:
+            self.cache[key] = osclients.Clients(
+                user["credential"], api_info=self.api_versions)
+        return self.cache[key]
 
     def _delete_single_resource(self, resource):
         """Safe resource deletion with retries and timeouts.
@@ -151,16 +147,12 @@ class SeekAndDestroy(object):
             if self.admin and (not self.users
                                or self.manager_cls._perform_for_admin_only):
                 manager = self.manager_cls(
-                    admin=self._get_cached_client(
-                        self.admin,
-                        api_versions=self.api_versions))
+                    admin=self._get_cached_client(self.admin))
                 _publish(self.admin, None, manager)
 
             else:
                 visited_tenants = set()
-                admin_client = self._get_cached_client(
-                    self.admin,
-                    api_versions=self.api_versions)
+                admin_client = self._get_cached_client(self.admin)
                 for user in self.users:
                     if (self.manager_cls._tenant_resource
                        and user["tenant_id"] in visited_tenants):
@@ -169,9 +161,7 @@ class SeekAndDestroy(object):
                     visited_tenants.add(user["tenant_id"])
                     manager = self.manager_cls(
                         admin=admin_client,
-                        user=self._get_cached_client(
-                            user,
-                            api_versions=self.api_versions),
+                        user=self._get_cached_client(user),
                         tenant_uuid=user["tenant_id"])
 
                     _publish(self.admin, user, manager)
@@ -187,12 +177,8 @@ class SeekAndDestroy(object):
 
             manager = self.manager_cls(
                 resource=raw_resource,
-                admin=self._get_cached_client(admin,
-                                              cache=cache,
-                                              api_versions=self.api_versions),
-                user=self._get_cached_client(user,
-                                             cache=cache,
-                                             api_versions=self.api_versions),
+                admin=self._get_cached_client(admin),
+                user=self._get_cached_client(user),
                 tenant_uuid=user and user["tenant_id"])
 
             self._delete_single_resource(manager)

@@ -26,61 +26,91 @@ BASE = "rally.plugins.openstack.cleanup.manager"
 
 class SeekAndDestroyTestCase(test.TestCase):
 
-    def test__get_cached_client(self):
-        self.assertIsNone(manager.SeekAndDestroy._get_cached_client(None))
+    def setUp(self):
+        super(SeekAndDestroyTestCase, self).setUp()
+        # clear out the client cache
+        manager.SeekAndDestroy.cache = {}
+
+    @mock.patch("%s.osclients.Clients" % BASE,
+                side_effect=[mock.MagicMock(), mock.MagicMock()])
+    def test__get_cached_client(self, mock_clients):
+        destroyer = manager.SeekAndDestroy(None, None, None)
+
+        self.assertIsNone(destroyer._get_cached_client(None))
 
         users = [{"credential": "a"}, {"credential": "b"}]
 
-        cache = {}
+        self.assertEqual(destroyer._get_cached_client(users[0]),
+                         destroyer._get_cached_client(users[0]))
+        # ensure that cache is used
+        self.assertItemsEqual(mock_clients.call_args_list,
+                              [mock.call("a", api_info=None)])
 
-        self.assertEqual(
-            manager.SeekAndDestroy._get_cached_client(users[0], cache=cache),
-            manager.SeekAndDestroy._get_cached_client(users[0], cache=cache))
+        mock_clients.reset_mock()
+        self.assertEqual(destroyer._get_cached_client(users[1]),
+                         destroyer._get_cached_client(users[1]))
+        self.assertItemsEqual(mock_clients.call_args_list,
+                              [mock.call("b", api_info=None)])
 
-        self.assertEqual(
-            manager.SeekAndDestroy._get_cached_client(users[1], cache=cache),
-            manager.SeekAndDestroy._get_cached_client(users[1], cache=cache))
+        mock_clients.reset_mock()
+        self.assertNotEqual(destroyer._get_cached_client(users[0]),
+                            destroyer._get_cached_client(users[1]))
+        self.assertFalse(mock_clients.called)
 
-        self.assertNotEqual(
-            manager.SeekAndDestroy._get_cached_client(users[0], cache=cache),
-            manager.SeekAndDestroy._get_cached_client(users[1], cache=cache))
-
-    def test__get_cached_client_with_api_versions(self):
-        self.assertIsNone(manager.SeekAndDestroy._get_cached_client(None))
+    @mock.patch("%s.osclients.Clients" % BASE,
+                side_effect=[mock.MagicMock(), mock.MagicMock()])
+    def test__get_cached_client_shared_cache(self, mock_clients):
+        # ensure that cache is shared between SeekAndDestroy objects
+        destroyer1 = manager.SeekAndDestroy(None, None, None)
+        destroyer2 = manager.SeekAndDestroy(None, None, None)
 
         user = {"credential": "a"}
+
+        self.assertEqual(destroyer1._get_cached_client(user),
+                         destroyer2._get_cached_client(user))
+        self.assertItemsEqual(mock_clients.call_args_list,
+                              [mock.call("a", api_info=None)])
+
+    @mock.patch("%s.osclients.Clients" % BASE,
+                side_effect=[mock.MagicMock(), mock.MagicMock()])
+    def test__get_cached_client_shared_cache_api_versions(self, mock_clients):
+        # ensure that cache is shared between SeekAndDestroy objects
+        # with matching api_versions dicts
+        api_versions = {"cinder": {"version": "1", "service_type": "volume"}}
+
+        destroyer1 = manager.SeekAndDestroy(None, None, None,
+                                            api_versions=api_versions)
+        destroyer2 = manager.SeekAndDestroy(None, None, None,
+                                            api_versions=api_versions)
+
+        user = {"credential": "a"}
+
+        self.assertEqual(destroyer1._get_cached_client(user),
+                         destroyer2._get_cached_client(user))
+        self.assertItemsEqual(mock_clients.call_args_list,
+                              [mock.call("a", api_info=api_versions)])
+
+    @mock.patch("%s.osclients.Clients" % BASE,
+                side_effect=[mock.MagicMock(), mock.MagicMock()])
+    def test__get_cached_client_no_cache_api_versions(self, mock_clients):
+        # ensure that cache is not shared between SeekAndDestroy
+        # objects with different api_versions dicts
         api_versions = [
             {"cinder": {"version": "1", "service_type": "volume"}},
             {"cinder": {"version": "2", "service_type": "volumev2"}}
         ]
 
-        cache = {}
+        destroyer1 = manager.SeekAndDestroy(None, None, None,
+                                            api_versions=api_versions[0])
+        destroyer2 = manager.SeekAndDestroy(None, None, None,
+                                            api_versions=api_versions[1])
+        user = {"credential": "a"}
 
-        self.assertEqual(
-            manager.SeekAndDestroy._get_cached_client(
-                user, cache=cache, api_versions=api_versions[0]),
-            manager.SeekAndDestroy._get_cached_client(
-                user, cache=cache, api_versions=api_versions[0]))
-
-        self.assertEqual(
-            manager.SeekAndDestroy._get_cached_client(
-                user,
-                cache=cache,
-                api_versions=api_versions[1]),
-            manager.SeekAndDestroy._get_cached_client(
-                user,
-                cache=cache,
-                api_versions=api_versions[1]))
-
-        self.assertNotEqual(
-            manager.SeekAndDestroy._get_cached_client(
-                user,
-                cache=cache,
-                api_versions=api_versions[0]),
-            manager.SeekAndDestroy._get_cached_client(
-                user,
-                cache=cache,
-                api_versions=api_versions[1]))
+        self.assertNotEqual(destroyer1._get_cached_client(user),
+                            destroyer2._get_cached_client(user))
+        self.assertItemsEqual(mock_clients.call_args_list,
+                              [mock.call("a", api_info=api_versions[0]),
+                               mock.call("a", api_info=api_versions[1])])
 
     @mock.patch("%s.LOG" % BASE)
     def test__delete_single_resource(self, mock_log):
@@ -152,8 +182,7 @@ class SeekAndDestroyTestCase(test.TestCase):
 
         queue = []
         publish(queue)
-        mock__get_cached_client.assert_called_once_with(admin,
-                                                        api_versions=None)
+        mock__get_cached_client.assert_called_once_with(admin)
         mock_mgr.assert_called_once_with(
             admin=mock__get_cached_client.return_value)
         self.assertEqual(queue, [(admin, None, x) for x in range(1, 4)])
@@ -168,8 +197,7 @@ class SeekAndDestroyTestCase(test.TestCase):
 
         queue = []
         publish(queue)
-        mock__get_cached_client.assert_called_once_with(admin,
-                                                        api_versions=None)
+        mock__get_cached_client.assert_called_once_with(admin)
         mock_mgr.assert_called_once_with(
             admin=mock__get_cached_client.return_value)
         self.assertEqual(queue, [(admin, None, x) for x in range(1, 4)])
@@ -202,9 +230,9 @@ class SeekAndDestroyTestCase(test.TestCase):
             mock.call().list()
         ])
         mock__get_cached_client.assert_has_calls([
-            mock.call(admin, api_versions=None),
-            mock.call(users[0], api_versions=None),
-            mock.call(users[1], api_versions=None)
+            mock.call(admin),
+            mock.call(users[0]),
+            mock.call(users[1])
         ])
         expected_queue = [(admin, users[0], x) for x in range(1, 4)]
         expected_queue += [(admin, users[1], x) for x in range(4, 6)]
@@ -240,9 +268,9 @@ class SeekAndDestroyTestCase(test.TestCase):
             mock.call().list()
         ])
         mock__get_cached_client.assert_has_calls([
-            mock.call(None, api_versions=None),
-            mock.call(users[0], api_versions=None),
-            mock.call(users[2], api_versions=None)
+            mock.call(None),
+            mock.call(users[0]),
+            mock.call(users[2])
         ])
         self.assertEqual(queue, [(None, users[0], x) for x in range(1, 4)])
 
@@ -265,8 +293,8 @@ class SeekAndDestroyTestCase(test.TestCase):
             user=mock__get_cached_client.return_value,
             tenant_uuid=user1["tenant_id"])
         mock__get_cached_client.assert_has_calls([
-            mock.call(admin, cache=cache, api_versions=None),
-            mock.call(user1, cache=cache, api_versions=None)
+            mock.call(admin),
+            mock.call(user1)
         ])
         mock__delete_single_resource.assert_called_once_with(
             mock_mgr.return_value)
@@ -283,8 +311,8 @@ class SeekAndDestroyTestCase(test.TestCase):
             tenant_uuid=None)
 
         mock__get_cached_client.assert_has_calls([
-            mock.call(admin, cache=cache, api_versions=None),
-            mock.call(None, cache=cache, api_versions=None)
+            mock.call(admin),
+            mock.call(None)
         ])
         mock__delete_single_resource.assert_called_once_with(
             mock_mgr.return_value)
