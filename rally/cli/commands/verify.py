@@ -71,9 +71,6 @@ class VerifyCommands(object):
                         "requirements have to be already installed in "
                         "the local env!",
                    required=False, action="store_true")
-    @cliutils.deprecated_args("--system-wide-install", dest="system_wide",
-                              required=False, action="store_true",
-                              release="0.1.2", alternative="--system-wide")
     @cliutils.args("--concurrency", metavar="N", dest="concur", type=int,
                    required=False,
                    help="How many processes to use to run Tempest tests. "
@@ -355,10 +352,6 @@ class VerifyCommands(object):
 
     @cliutils.args("--uuid", type=str, dest="verification",
                    required=False, help="UUID of a verification")
-    @cliutils.deprecated_args("--verification", dest="verification",
-                              required=False, type=str,
-                              release="0.2.0",
-                              alternative="--uuid")
     def use(self, verification):
         """Set active verification.
 
@@ -399,9 +392,6 @@ class VerifyCommands(object):
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
-    @cliutils.deprecated_args("--no-tempest-venv", dest="system_wide",
-                              required=False, action="store_true",
-                              release="0.2.0", alternative="--system-wide")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def install(self, deployment=None, source=None, system_wide=False):
         """Install Tempest.
@@ -440,9 +430,6 @@ class VerifyCommands(object):
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
-    @cliutils.deprecated_args("--no-tempest-venv", dest="system_wide",
-                              required=False, action="store_true",
-                              release="0.2.0", alternative="--system-wide")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def reinstall(self, deployment=None,
                   tempest_config=None, source=None, system_wide=False):
