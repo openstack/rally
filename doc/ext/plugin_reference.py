@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from docutils import nodes
 from docutils.parsers import rst
 
 from oslo_utils import importutils
 
 from rally import plugins
+from utils import category, subcategory, paragraph, parse_text
 
 DATA = [
     {
@@ -72,49 +72,52 @@ def _make_pretty_parameters(parameters):
     if not parameters:
         return ""
 
-    result = "PARAMETERS:\n"
+    result = "**Parameters**:\n\n"
     for p in parameters:
         result += "* %(name)s: %(doc)s\n" % p
     return result
 
 
-def _get_plugin_info(plugin_group_item):
-    module, cls = plugin_group_item["base"].split(":")
-    plugin_base = getattr(importutils.import_module(module), cls)
+def make_plugin_section(plugin, base_name):
+    subcategory_obj = subcategory("%s [%s]" % (plugin.get_name(), base_name))
+    info = plugin.get_info()
+    if info["title"]:
+        subcategory_obj.append(paragraph(info["title"]))
 
-    def process_plugin(p):
-        info = p.get_info()
+    if info["description"]:
+        subcategory_obj.extend(parse_text(info["description"]))
 
-        description = [info["title"] or ""]
-        if info["description"]:
-            description.append(info["description"])
-        if info["parameters"]:
-            description.append(_make_pretty_parameters(info["parameters"]))
+    if info["namespace"]:
+        subcategory_obj.append(paragraph(
+                "**Namespace**: %s" % info["namespace"]))
+
+    if info["parameters"]:
+        subcategory_obj.extend(parse_text(
+                _make_pretty_parameters(info["parameters"])))
         if info["returns"]:
-            description.append("RETURNS:\n%s" % info["returns"])
-        description.append("MODULE:\n%s" % info["module"])
-
-        return {
-            "name": p.get_name(),
-            "description": "\n\n".join(description)
-        }
-
-    return map(process_plugin, plugin_base.get_all())
+            subcategory_obj.extend(parse_text(
+                    "**Returns**:\n%s" % info["returns"]))
+    filename = info["module"].replace(".", "/")
+    ref = "https://github.com/openstack/rally/blob/master/%s.py" % filename
+    subcategory_obj.extend(parse_text("**Module**:\n`%s`__\n\n__ %s"
+                                      % (info["module"], ref)))
+    return subcategory_obj
 
 
-def make_plugin_section(plugin_group):
+def make_plugin_base_section(plugin_group):
     elements = []
 
     for item in plugin_group["items"]:
         name = item["name"].title() if "SLA" != item["name"] else item["name"]
-        elements.append(nodes.subtitle(
-            text="%ss [%s]" % (name, plugin_group["group"])))
+        category_obj = category("%s %ss" % (plugin_group["group"].title(),
+                                            name))
+        elements.append(category_obj)
 
-        for p in _get_plugin_info(item):
-            elements.append(nodes.rubric(
-                text="%s [%s]" % (p["name"], item["name"])))
+        module, cls = item["base"].split(":")
+        plugin_base = getattr(importutils.import_module(module), cls)
 
-            elements.append(nodes.doctest_block(text=p["description"]))
+        for p in plugin_base.get_all():
+            category_obj.append(make_plugin_section(p, item["name"]))
 
     return elements
 
@@ -124,7 +127,7 @@ class PluginReferenceDirective(rst.Directive):
     def run(self):
         content = []
         for i in range(len(DATA)):
-            content.extend(make_plugin_section(DATA[i]))
+            content.extend(make_plugin_base_section(DATA[i]))
 
         return content
 
