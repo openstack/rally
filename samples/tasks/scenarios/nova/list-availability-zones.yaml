@@ -1,0 +1,9 @@
+---
+    NovaAvailabilityZones.list_availability_zones:
+        -
+            args:
+                detailed: true
+            runner:
+                type: "constant"
+                concurrency: 2
+                times: 10
