@@ -2,7 +2,7 @@
   HeatStacks.create_and_delete_stack:
     -
       args:
-        template_path: "templates/resource_group_with_constraint.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/resource_group_with_constraint.yaml.template"
       runner:
         type: "constant"
         times: 10

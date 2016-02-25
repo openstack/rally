@@ -2,7 +2,7 @@
   HeatStacks.create_stack_and_list_output:
     -
       args:
-        template_path: "templates/resource_group_with_outputs.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/resource_group_with_outputs.yaml.template"
       runner:
         type: "constant"
         times: 5
@@ -15,7 +15,7 @@
   HeatStacks.create_stack_and_list_output_via_API:
     -
       args:
-        template_path: "templates/resource_group_with_outputs.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/resource_group_with_outputs.yaml.template"
       runner:
         type: "constant"
         times: 5

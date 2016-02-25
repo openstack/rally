@@ -2,7 +2,7 @@
     "HeatStacks.create_and_list_stack": [
         {
             "args": {
-               "template_path": "templates/default.yaml.template"
+               "template_path": "samples/tasks/scenarios/heat/templates/default.yaml.template"
             },
             "runner": {
                 "type": "constant",
