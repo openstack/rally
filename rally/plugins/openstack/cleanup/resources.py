@@ -470,26 +470,70 @@ _designate_order = get_order(900)
 
 class DesignateResource(SynchronizedDeletion, base.ResourceManager):
     def _manager(self):
-        # NOTE: service name contains version, so we should split them
-        service_name, version = self._service.split("_v")
-        return getattr(getattr(self.user, service_name)(version),
+        # Map resource names to api / client version
+        resource_versions = {
+            "domains": "1",
+            "servers": "1",
+            "recordsets": 2,
+            "zones": "2"
+        }
+        version = resource_versions[self._resource]
+        return getattr(getattr(self.user, self._service)(version),
                        self._resource)
 
+    def _walk_pages(self, func, *args, **kwargs):
+        """Generator that keeps fetching pages until there's none left."""
+        marker = None
 
-@base.resource("designate_v1", "domains", order=next(_designate_order))
+        while True:
+            items = func(marker=marker, limit=100, *args, **kwargs)
+            if not items:
+                break
+            for item in items:
+                yield item
+            marker = items[-1]["id"]
+
+
+@base.resource("designate", "domains", order=next(_designate_order))
 class DesignateDomain(DesignateResource):
     pass
 
 
-@base.resource("designate_v2", "zones", order=next(_designate_order))
-class DesignateZones(DesignateResource):
-    pass
-
-
-@base.resource("designate_v1", "servers", order=next(_designate_order),
+@base.resource("designate", "servers", order=next(_designate_order),
                admin_required=True, perform_for_admin_only=True)
 class DesignateServer(DesignateResource):
     pass
+
+
+@base.resource("designate", "recordsets", order=next(_designate_order),
+               tenant_resource=True)
+class DesignateRecordSets(DesignateResource):
+    def _client(self):
+        # Map resource names to api / client version
+        resource_versions = {
+            "domains": "1",
+            "servers": "1",
+            "recordsets": 2,
+            "zones": "2"
+        }
+        version = resource_versions[self._resource]
+        return getattr(self.user, self._service)(version)
+
+    def list(self):
+        criterion = {"name": "s_rally_*"}
+        for zone in self._walk_pages(self._client().zones.list,
+                                     criterion=criterion):
+            for recordset in self._walk_pages(self._client().recordsets.list,
+                                              zone["id"]):
+                yield recordset
+
+
+@base.resource("designate", "zones", order=next(_designate_order),
+               tenant_resource=True)
+class DesignateZones(DesignateResource):
+    def list(self):
+        criterion = {"name": "s_rally_*"}
+        return self._walk_pages(self._manager().list, criterion=criterion)
 
 
 # SWIFT
