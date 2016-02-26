@@ -708,7 +708,7 @@ class ValidatorsTestCase(test.TestCase):
                                            param_name="volume_type")
 
         clients = mock.MagicMock()
-        clients.cinder().volume_type.list.return_value = []
+        clients.cinder().volume_types.list.return_value = []
 
         context = {"args": {"volume_type": False}}
 
@@ -732,7 +732,7 @@ class ValidatorsTestCase(test.TestCase):
                                            param_name="volume_type")
 
         clients = mock.MagicMock()
-        clients().cinder().volume_type.list.return_value = []
+        clients.cinder().volume_types.list.return_value = []
 
         context = {"args": {"volume_type": True}}
 

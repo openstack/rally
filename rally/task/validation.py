@@ -620,7 +620,7 @@ def volume_type_exists(config, clients, deployment, param_name):
     val = config.get("args", {}).get(param_name)
     if val:
         volume_types_list = clients.cinder().volume_types.list()
-        if len(volume_types_list) < 1:
+        if not volume_types_list:
             message = (_("Must have at least one volume type created "
                          "when specifying use of volume types."))
             return ValidationResult(False, message)
