@@ -138,6 +138,8 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         for field in fields:
             if field in formatters:
                 row.append(formatters[field](o))
+            elif type(o) == dict:
+                row.append(o[field])
             else:
                 if field in mixed_case_fields:
                     field_name = field.replace(" ", "_")
@@ -295,7 +297,7 @@ def pretty_float_formatter(field, ndigits=None):
     """
 
     def _formatter(obj):
-        value = getattr(obj, field)
+        value = obj[field] if type(obj) == dict else getattr(obj, field)
         if value is not None:
             if ndigits is not None:
                 return round(value, ndigits)
