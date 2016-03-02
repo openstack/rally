@@ -155,7 +155,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
             result)
         self.admin_clients("keystone").services.create.assert_called_once_with(
             scenario.generate_random_name.return_value,
-            service_type, description)
+            service_type, description=description)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_service")
 

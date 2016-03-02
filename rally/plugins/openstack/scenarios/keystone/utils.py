@@ -82,7 +82,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         description = description or self.generate_random_name()
         return self.admin_clients("keystone").services.create(
             self.generate_random_name(),
-            service_type, description)
+            service_type, description=description)
 
     @atomic.action_timer("keystone.create_users")
     def _users_create(self, tenant, users_per_tenant):
