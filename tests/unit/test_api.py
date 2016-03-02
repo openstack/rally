@@ -256,6 +256,24 @@ class TaskAPITestCase(test.TestCase):
         mock_task_delete.assert_called_once_with(
             self.task_uuid, status=None)
 
+    @mock.patch("rally.api.objects.Task")
+    def test_get_detailed(self, mock_task):
+        mock_task.get_detailed.return_value = "detailed_task_data"
+        self.assertEqual("detailed_task_data",
+                         api.Task.get_detailed("task_uuid"))
+        mock_task.get_detailed.assert_called_once_with("task_uuid")
+
+    @mock.patch("rally.api.objects.Task")
+    def test_get_detailed_with_extended_results(self, mock_task):
+        mock_task.get_detailed.return_value = (("uuid", "foo_uuid"),
+                                               ("results", "raw_results"))
+        mock_task.extend_results.return_value = "extended_results"
+        self.assertEqual({"uuid": "foo_uuid", "results": "extended_results"},
+                         api.Task.get_detailed("foo_uuid",
+                                               extended_results=True))
+        mock_task.get_detailed.assert_called_once_with("foo_uuid")
+        mock_task.extend_results.assert_called_once_with("raw_results")
+
 
 class BaseDeploymentTestCase(test.TestCase):
     def setUp(self):
