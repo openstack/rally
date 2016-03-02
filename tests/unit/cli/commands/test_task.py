@@ -262,7 +262,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.api.Task")
     def test_detailed(self, mock_task):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
-        value = {
+        mock_task.get_detailed.return_value = {
             "id": "task",
             "uuid": test_uuid,
             "status": "status",
@@ -273,64 +273,46 @@ class TaskCommandsTestCase(test.TestCase):
                         "pos": "fake_pos",
                         "kw": "fake_kw"
                     },
-                    "data": {
-                        "load_duration": 1.0,
-                        "full_duration": 2.0,
-                        "raw": [
-                            {
-                                "duration": 0.9,
-                                "idle_duration": 0.5,
-                                "scenario_output": {
-                                    "data": {
-                                        "a": 3
-                                    },
-                                    "errors": "some"
-                                },
-                                "atomic_actions": {
-                                    "a": 0.6,
-                                    "b": 0.7
-                                },
-                                "error": ["type", "message", "traceback"]
-                            },
-                            {
-                                "duration": 0.5,
-                                "idle_duration": 0.2,
-                                "scenario_output": {
-                                    "data": {
-                                        "a": 1
-                                    },
-                                    "errors": "some"
-                                },
-                                "atomic_actions": {
-                                    "a": 0.2,
-                                    "b": 0.4
-                                },
-                                "error": None
-                            },
-                            {
-                                "duration": 0.6,
-                                "idle_duration": 0.4,
-                                "scenario_output": {
-                                    "data": {
-                                        "a": 2
-                                    },
-                                    "errors": None
-                                },
-                                "atomic_actions": {
-                                    "a": 0.3,
-                                    "b": 0.5
-                                },
-                                "error": None
-                            }
-                        ]
-                    }
+                    "info": {
+                        "load_duration": 3.2,
+                        "full_duration": 3.5,
+                        "iterations_count": 4,
+                        "atomic": {"foo": {}, "bar": {}}},
+                    "iterations": [
+                        {"duration": 0.9,
+                         "idle_duration": 0.1,
+                         "output": {"additive": [], "complete": []},
+                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "error": ["type", "message", "traceback"]
+                         },
+                        {"duration": 1.2,
+                         "idle_duration": 0.3,
+                         "output": {"additive": [], "complete": []},
+                            "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                            "error": ["type", "message", "traceback"]
+                         },
+                        {"duration": 0.7,
+                         "idle_duration": 0.5,
+                         "scenario_output": {
+                             "data": {"foo": 0.6, "bar": 0.7},
+                             "errors": "some"
+                         },
+                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "error": ["type", "message", "traceback"]
+                         },
+                        {"duration": 0.5,
+                         "idle_duration": 0.5,
+                         "output": {"additive": [], "complete": []},
+                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "error": ["type", "message", "traceback"]
+                         }
+                    ]
                 }
             ]
         }
-        mock_task.get_detailed = mock.MagicMock(return_value=value)
         self.task.detailed(test_uuid)
-        mock_task.get_detailed.assert_called_once_with(test_uuid)
-
+        mock_task.get_detailed.assert_called_once_with(test_uuid,
+                                                       extended_results=True)
         self.task.detailed(test_uuid, iterations_data=True)
 
     @mock.patch("rally.cli.commands.task.api.Task")
@@ -362,7 +344,8 @@ class TaskCommandsTestCase(test.TestCase):
         test_uuid = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         mock_task.get_detailed = mock.MagicMock(return_value=None)
         self.task.detailed(test_uuid)
-        mock_task.get_detailed.assert_called_once_with(test_uuid)
+        mock_task.get_detailed.assert_called_once_with(test_uuid,
+                                                       extended_results=True)
 
     @mock.patch("json.dumps")
     @mock.patch("rally.cli.commands.task.api.Task.get")

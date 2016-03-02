@@ -15,7 +15,6 @@
 
 import ddt
 
-from rally import exceptions
 from rally.task.processing import utils
 from tests.unit import test
 
@@ -35,40 +34,6 @@ class MathTestCase(test.TestCase):
         lst = list(range(1, 101))
         result = utils.percentile(lst, 1)
         self.assertEqual(result, 100)
-
-    def test_mean(self):
-        lst = list(range(1, 100))
-        result = utils.mean(lst)
-        self.assertEqual(result, 50.0)
-
-    def test_mean_empty_list(self):
-        lst = []
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          utils.mean, lst)
-
-    def test_median_single_value(self):
-        lst = [5]
-        result = utils.median(lst)
-        self.assertEqual(5, result)
-
-    def test_median_odd_sized_list(self):
-        lst = [1, 2, 3, 4, 5]
-        result = utils.median(lst)
-        self.assertEqual(3, result)
-
-    def test_median_even_sized_list(self):
-        lst = [1, 2, 3, 4]
-        result = utils.median(lst)
-        self.assertEqual(2.5, result)
-
-    def test_median_empty_list(self):
-        lst = []
-        self.assertRaises(ValueError,
-                          utils.median, lst)
-
-        lst = None
-        self.assertRaises(ValueError,
-                          utils.median, lst)
 
 
 @ddt.ddt

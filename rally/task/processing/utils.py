@@ -15,44 +15,9 @@
 
 import math
 
-from rally.common import costilius
-from rally.common.i18n import _
-from rally import exceptions
 
-
-def mean(values):
-    """Find the simple mean of a list of values.
-
-    :parameter values: non-empty list of numbers
-
-    :returns: float value
-    """
-    if not values:
-        raise exceptions.InvalidArgumentsException(
-            "the list should be non-empty")
-    return math.fsum(values) / len(values)
-
-
-def median(values):
-    """Find the simple median of a list of values.
-
-    :parameter values: non-empty list of numbers
-
-    :returns: float value
-     """
-    if not values:
-        raise ValueError(_("no median for empty data"))
-
-    values = sorted(values)
-    size = len(values)
-
-    if size % 2 == 1:
-        return values[size // 2]
-    else:
-        index = size // 2
-        return (values[index - 1] + values[index]) / 2.0
-
-
+# NOTE(amaretskiy): this is used only by rally.common.streaming_algorithms
+#                   so it is reasonable to move it there
 def percentile(values, percent):
     """Find the percentile of a list of values.
 
@@ -72,32 +37,6 @@ def percentile(values, percent):
     d0 = values[int(f)] * (c - k)
     d1 = values[int(c)] * (k - f)
     return (d0 + d1)
-
-
-# TODO(amaretskiy): This function is deprecated and should be removed
-#                   after it becomes not used by rally.cli.commands.task
-def get_atomic_actions_data(raw_data):
-    """Retrieve detailed (by atomic actions & total runtime) benchmark data.
-
-    :parameter raw_data: list of raw records (scenario runner output)
-
-    :returns: dictionary containing atomic action + total duration lists
-              for all atomic action keys
-    """
-    atomic_actions = []
-    for row in raw_data:
-        # find first non-error result to get atomic actions names
-        if not row["error"] and "atomic_actions" in row:
-            atomic_actions = row["atomic_actions"].keys()
-            break
-    actions_data = costilius.OrderedDict()
-    for atomic_action in atomic_actions:
-        actions_data[atomic_action] = [
-            r["atomic_actions"][atomic_action]
-            for r in raw_data
-            if r["atomic_actions"].get(atomic_action) is not None]
-    actions_data["total"] = [r["duration"] for r in raw_data if not r["error"]]
-    return actions_data
 
 
 class GraphZipper(object):

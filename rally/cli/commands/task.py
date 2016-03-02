@@ -38,7 +38,6 @@ from rally import consts
 from rally import exceptions
 from rally import plugins
 from rally.task.processing import plot
-from rally.task.processing import utils
 
 
 class FailedToLoadTask(exceptions.RallyException):
@@ -296,69 +295,36 @@ class TaskCommands(object):
                    help="Print detailed results for each iteration.")
     @envutils.with_default_task_id
     def detailed(self, task_id=None, iterations_data=False):
-        """Display results table.
+        """Print detailed information about given task.
 
-        :param task_id: Task uuid
-        :param iterations_data: print detailed results for each iteration
-        Prints detailed information of task.
+        :param task_id: str, task uuid
+        :param iterations_data: bool, include results for each iteration
         """
+        task = api.Task.get_detailed(task_id, extended_results=True)
 
-        def _print_iterations_data(result):
-            raw_data = result["data"]["raw"]
-            headers = ["iteration", "full duration"]
-            float_cols = ["full duration"]
-            atomic_actions = []
-            for row in raw_data:
-                # find first non-error result to get atomic actions names
-                if not row["error"] and "atomic_actions" in row:
-                    atomic_actions = row["atomic_actions"].keys()
-            for row in raw_data:
-                if row["atomic_actions"]:
-                    for (c, a) in enumerate(atomic_actions, 1):
-                        action = "%(no)i. %(action)s" % {"no": c, "action": a}
-                        headers.append(action)
-                        float_cols.append(action)
-                    break
-            table_rows = []
-            formatters = dict(zip(float_cols,
-                                  [cliutils.pretty_float_formatter(col, 3)
-                                   for col in float_cols]))
-            for (c, r) in enumerate(raw_data, 1):
-                dlist = [c]
-                dlist.append(r["duration"])
-                if r["atomic_actions"]:
-                    for action in atomic_actions:
-                        dlist.append(r["atomic_actions"].get(action) or 0)
-                table_rows.append(rutils.Struct(**dict(zip(headers,
-                                                           dlist))))
-            cliutils.print_list(table_rows,
-                                fields=headers,
-                                formatters=formatters)
-            print()
+        if not task:
+            print("The task %s can not be found" % task_id)
+            return 1
 
-        def _print_task_info(task):
-            print()
+        print()
+        print("-" * 80)
+        print(_("Task %(task_id)s: %(status)s")
+              % {"task_id": task_id, "status": task["status"]})
+
+        if task["status"] == consts.TaskStatus.FAILED:
             print("-" * 80)
-            print(_("Task %(task_id)s: %(status)s")
-                  % {"task_id": task_id, "status": task["status"]})
+            verification = yaml.safe_load(task["verification_log"])
 
-            if task["status"] == consts.TaskStatus.FAILED:
-                print("-" * 80)
-                verification = yaml.safe_load(task["verification_log"])
+            if logging.is_debug():
+                print(yaml.safe_load(verification[2]))
+            else:
+                print(verification[0])
+                print(verification[1])
+                print(_("\nFor more details run:\nrally -vd task detailed %s")
+                      % task["uuid"])
+            return 0
 
-                if not logging.is_debug():
-                    print(verification[0])
-                    print(verification[1])
-                    print()
-                    print(_("For more details run:\n"
-                            "rally -vd task detailed %s")
-                          % task["uuid"])
-                else:
-                    print(yaml.safe_load(verification[2]))
-                return False
-            return True
-
-        def _print_scenario_args(result):
+        for result in task["results"]:
             key = result["key"]
             print("-" * 80)
             print()
@@ -366,144 +332,106 @@ class TaskCommands(object):
             print("args position %s" % key["pos"])
             print("args values:")
             print(json.dumps(key["kw"], indent=2))
+            print()
 
-        def _print_summrized_result(result):
-            raw = result["data"]["raw"]
-            table_cols = ["action", "min", "median",
-                          "90%ile", "95%ile", "max",
-                          "avg", "success", "count"]
-            float_cols = ["min", "median",
-                          "90%ile", "95%ile", "max",
-                          "avg"]
-            formatters = dict(zip(float_cols,
-                                  [cliutils.pretty_float_formatter(col, 3)
-                                   for col in float_cols]))
-            table_rows = []
+            durations = plot.charts.MainStatsTable(result["info"])
+            iterations = []
+            iterations_headers = ["iteration", "full duration"]
+            iterations_actions = []
+            output = []
 
-            actions_data = utils.get_atomic_actions_data(raw)
-            for action in actions_data:
-                durations = actions_data[action]
-                if durations:
-                    data = [action,
-                            round(min(durations), 3),
-                            round(utils.median(durations), 3),
-                            round(utils.percentile(durations, 0.90), 3),
-                            round(utils.percentile(durations, 0.95), 3),
-                            round(max(durations), 3),
-                            round(utils.mean(durations), 3),
-                            "%.1f%%" % (len(durations) * 100.0 / len(raw)),
-                            len(raw)]
+            if iterations_data:
+                for i, atomic_name in enumerate(result["info"]["atomic"], 1):
+                    action = "%i. %s" % (i, atomic_name)
+                    iterations_headers.append(action)
+                    iterations_actions.append((atomic_name, action))
+
+            for idx, itr in enumerate(result["iterations"], 1):
+                durations.add_iteration(itr)
+
+                if iterations_data:
+                    row = {"iteration": idx,
+                           "full duration": itr["duration"]}
+                    for name, action in iterations_actions:
+                        row[action] = itr["atomic_actions"].get(name, 0)
+                    iterations.append(row)
+
+                if "output" in itr:
+                    iteration_output = itr["output"]
                 else:
-                    data = [action, None, None, None, None, None, None,
-                            "0.0%", len(raw)]
-                table_rows.append(rutils.Struct(**dict(zip(table_cols,
-                                                           data))))
-
-            cliutils.print_list(table_rows, fields=table_cols,
-                                formatters=formatters,
-                                table_label="Response Times (sec)",
-                                sortby_index=None)
-
-        def _print_ssrs_result(result):
-            raw = result["data"]["raw"]
-            # NOTE(hughsaunders): ssrs=scenario specific results
-            ssrs = []
-            for itr in raw:
-                if "output" not in itr:
-                    itr["output"] = {"additive": [], "complete": []}
+                    iteration_output = {"additive": [], "complete": []}
 
                     # NOTE(amaretskiy): "scenario_output" is supported
                     #   for backward compatibility
                     if ("scenario_output" in itr
                             and itr["scenario_output"]["data"]):
-                        itr["output"]["additive"].append(
+                        iteration_output["additive"].append(
                             {"data": itr["scenario_output"]["data"].items(),
                              "title": "Scenario output",
                              "description": "",
                              "chart_plugin": "StackedArea"})
-                        del itr["scenario_output"]
 
-                for idx, additive in enumerate(itr["output"]["additive"]):
-                    try:
-                        for key, value in additive["data"]:
-                            ssrs[idx]["data"][key].append(value)
-                    except IndexError:
-                        data = {}
-                        keys = []
-                        for key, value in additive["data"]:
-                            if key not in data:
-                                data[key] = []
-                                keys.append(key)
-                            data[key].append(value)
-                        ssrs.append({"title": additive["title"],
-                                     "keys": keys,
-                                     "data": data})
-            if not ssrs:
-                return
+                for idx, additive in enumerate(iteration_output["additive"]):
+                    if len(output) <= idx + 1:
+                        output_table = plot.charts.OutputStatsTable(
+                            result["info"], title=additive["title"])
+                        output.append(output_table)
+                    output[idx].add_iteration(additive["data"])
 
-            print("\nScenario Specific Results\n")
-
-            headers = ["key", "min", "median", "90%ile", "95%ile",
-                       "max", "avg"]
-            float_cols = ["min", "median", "90%ile", "95%ile", "max", "avg"]
+            cols = plot.charts.MainStatsTable.columns
+            float_cols = cols[1:7]
             formatters = dict(zip(float_cols,
-                              [cliutils.pretty_float_formatter(col, 3)
-                               for col in float_cols]))
+                                  [cliutils.pretty_float_formatter(col, 3)
+                                   for col in float_cols]))
+            rows = [dict(zip(cols, r)) for r in durations.render()["rows"]]
+            cliutils.print_list(rows,
+                                fields=cols,
+                                formatters=formatters,
+                                table_label="Response Times (sec)",
+                                sortby_index=None)
+            print()
 
-            for ssr in ssrs:
-                rows = []
-                for key in ssr["keys"]:
-                    values = ssr["data"][key]
-
-                    if values:
-                        row = [str(key),
-                               round(min(values), 3),
-                               round(utils.median(values), 3),
-                               round(utils.percentile(values, 0.90), 3),
-                               round(utils.percentile(values, 0.95), 3),
-                               round(max(values), 3),
-                               round(utils.mean(values), 3)]
-                    else:
-                        row = [str(key)] + ["n/a"] * 6
-                    rows.append(rutils.Struct(**dict(zip(headers, row))))
-
-                cliutils.print_list(rows,
-                                    fields=headers,
-                                    formatters=formatters,
-                                    table_label=ssr["title"])
+            if iterations_data:
+                formatters = dict(zip(iterations_headers[1:],
+                                      [cliutils.pretty_float_formatter(col, 3)
+                                       for col in iterations_headers[1:]]))
+                cliutils.print_list(iterations,
+                                    fields=iterations_headers,
+                                    table_label="Atomics per iteration",
+                                    formatters=formatters)
                 print()
 
-        def _print_hints(task):
-            print()
-            print("HINTS:")
+            if output:
+                cols = plot.charts.OutputStatsTable.columns
+                float_cols = cols[1:7]
+                formatters = dict(zip(float_cols,
+                                  [cliutils.pretty_float_formatter(col, 3)
+                                   for col in float_cols]))
+
+                for out in output:
+                    data = out.render()
+                    rows = [dict(zip(cols, r)) for r in data["data"]["rows"]]
+                    if rows:
+                        # NOTE(amaretskiy): print title explicitly because
+                        #     prettytable fails if title length is too long
+                        print(data["title"])
+                        cliutils.print_list(rows, fields=cols,
+                                            formatters=formatters)
+                        print()
+
+            print(_("Load duration: %s") %
+                  result["info"]["load_duration"])
+            print(_("Full duration: %s") %
+                  result["info"]["full_duration"])
+
+            print("\nHINTS:")
             print(_("* To plot HTML graphics with this data, run:"))
-            print("\trally task report %s --out output.html" % task["uuid"])
-            print()
+            print("\trally task report %s --out output.html\n" % task["uuid"])
             print(_("* To generate a JUnit report, run:"))
-            print("\trally task report %s --junit --out output.xml" %
+            print("\trally task report %s --junit --out output.xml\n" %
                   task["uuid"])
-            print()
             print(_("* To get raw JSON output of task results, run:"))
             print("\trally task results %s\n" % task["uuid"])
-
-        task = api.Task.get_detailed(task_id)
-
-        if task is None:
-            print("The task %s can not be found" % task_id)
-            return(1)
-
-        if _print_task_info(task):
-            for result in task["results"]:
-                _print_scenario_args(result)
-                _print_summrized_result(result)
-                if iterations_data:
-                    _print_iterations_data(result)
-                _print_ssrs_result(result)
-                print(_("Load duration: %s") %
-                      result["data"]["load_duration"])
-                print(_("Full duration: %s") %
-                      result["data"]["full_duration"])
-            _print_hints(task)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
