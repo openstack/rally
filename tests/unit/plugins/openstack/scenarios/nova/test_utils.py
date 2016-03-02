@@ -922,3 +922,19 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.admin_clients("nova").hosts.list.assert_called_once_with(zone)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hosts")
+
+    @ddt.data({},
+              {"host": "foo_host"},
+              {"binary": "foo_binary"},
+              {"host": "foo_host", "binary": "foo_binary"})
+    @ddt.unpack
+    def test__list_services(self, host=None, binary=None):
+        nova_scenario = utils.NovaScenario()
+        self.admin_clients("nova").services.list.return_value = (
+            "services_list")
+        result = nova_scenario._list_services(host=host, binary=binary)
+        self.assertEqual("services_list", result)
+        self.admin_clients("nova").services.list.assert_called_once_with(
+            host, binary)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_services")
