@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 from keystoneclient import exceptions as keystone_exc
 import mock
 from oslo_config import cfg
@@ -32,6 +33,7 @@ CONF = cfg.CONF
 FAKE_TASK_UUID = "bb0f621c-29bd-495c-9d7a-d844335ed0fa"
 
 
+@ddt.ddt
 class CliUtilsTestCase(test.TestCase):
 
     def setUp(self):
@@ -116,6 +118,11 @@ class CliUtilsTestCase(test.TestCase):
         return_value = formatter(self)
 
         self.assertEqual(return_value, "n/a")
+
+    def test_pretty_float_formatter_raises(self):
+        self.__dict__.update({"foo": 123})
+        formatter = cliutils.pretty_float_formatter("not_foo")
+        self.assertRaises(AttributeError, formatter, self)
 
     def test_process_keyestone_exc(self):
 
@@ -234,170 +241,119 @@ class CliUtilsTestCase(test.TestCase):
                            {"failure": SQLAlchemyCommands})
         self.assertEqual(1, ret)
 
-    def test_print_list(self):
-        class TestObj(object):
-            x = 1
-            y = 2
-            z = 3.142857142857143
-            aOrB = 3            # mixed case field
+    class TestObj(object):
+        x = 1
+        y = 2
+        z = 3.142857142857143
+        aOrB = 3  # mixed case field
 
+    @ddt.data(
+        {"args": [[TestObj()], ["x", "y"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True,
+                    "sortby_index": None},
+         "expected": ("+---+---+\n"
+                      "| x | y |\n"
+                      "+---+---+\n"
+                      "| 1 | 2 |\n"
+                      "+---+---+")},
+        {"args": [[TestObj()], ["z"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True,
+                    "sortby_index": None,
+                    "formatters": {"z": cliutils.pretty_float_formatter("z",
+                                                                        5)}},
+         "expected": ("+---------+\n"
+                      "| z       |\n"
+                      "+---------+\n"
+                      "| 3.14286 |\n"
+                      "+---------+")},
+        {"args": [[TestObj()], ["x"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True},
+         "expected": ("+---+\n"
+                      "| x |\n"
+                      "+---+\n"
+                      "| 1 |\n"
+                      "+---+")},
+        {"args": [[TestObj()], ["x", "y"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True},
+         "expected": ("+---+---+\n"
+                      "| x | y |\n"
+                      "+---+---+\n"
+                      "| 1 | 2 |\n"
+                      "+---+---+")},
+        {"args": [[TestObj()], ["x"]],
+         "kwargs": {"print_header": False,
+                    "print_border": False},
+         "expected": "1"},
+        {"args": [[TestObj()], ["x", "y"]],
+         "kwargs": {"print_header": False,
+                    "print_border": False},
+         "expected": "1 2"},
+        {"args": [[TestObj()], ["x"]],
+         "kwargs": {"print_header": True,
+                    "print_border": False},
+         "expected": "x \n1"},
+        {"args": [[TestObj()], ["x", "y"]],
+         "kwargs": {"print_header": True,
+                    "print_border": False},
+         "expected": "x y \n1 2"},
+        {"args": [[TestObj()], ["x"]],
+         "kwargs": {"print_header": False,
+                    "print_border": True},
+         "expected": ("+--+\n"
+                      "|1 |\n"
+                      "+--+")},
+        {"args": [[TestObj()], ["x", "y"]],
+         "kwargs": {"print_header": False,
+                    "print_border": True},
+         "expected": ("+--+--+\n"
+                      "|1 |2 |\n"
+                      "+--+--+")},
+        {"args": [[TestObj()], ["aOrB"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True,
+                    "mixed_case_fields": ["aOrB"]},
+         "expected": ("+------+\n"
+                      "| aOrB |\n"
+                      "+------+\n"
+                      "| 3    |\n"
+                      "+------+")},
+        {"args": [[TestObj()], ["aOrB"]],
+         "kwargs": {"print_header": False,
+                    "print_border": True,
+                    "mixed_case_fields": ["aOrB"]},
+         "expected": ("+--+\n"
+                      "|3 |\n"
+                      "+--+")},
+        {"args": [[TestObj()], ["aOrB"]],
+         "kwargs": {"print_header": True,
+                    "print_border": False,
+                    "mixed_case_fields": ["aOrB"]},
+         "expected": "aOrB \n3"},
+        {"args": [[TestObj()], ["aOrB"]],
+         "kwargs": {"print_header": False,
+                    "print_border": False,
+                    "mixed_case_fields": ["aOrB"]},
+         "expected": "3"})
+    @ddt.unpack
+    def test_print_list(self, args, kwargs, expected):
         out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x", "y"],
-                            print_header=True,
-                            print_border=True,
-                            sortby_index=None,
-                            out=out)
-        self.assertEqual("+---+---+\n"
-                         "| x | y |\n"
-                         "+---+---+\n"
-                         "| 1 | 2 |\n"
-                         "+---+---+",
-                         out.getvalue().strip())
+        kwargs["out"] = out
+        cliutils.print_list(*args, **kwargs)
+        self.assertEqual(expected, out.getvalue().strip())
 
+    def test_print_list_raises(self):
         out = moves.StringIO()
-        formatter = cliutils.pretty_float_formatter("z", 5)
-        cliutils.print_list([TestObj()], ["z"],
-                            print_header=True,
-                            print_border=True,
-                            sortby_index=None,
-                            formatters={"z": formatter},
-                            out=out)
-        self.assertEqual("+---------+\n"
-                         "| z       |\n"
-                         "+---------+\n"
-                         "| 3.14286 |\n"
-                         "+---------+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x"],
-                            print_header=True,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+---+\n"
-                         "| x |\n"
-                         "+---+\n"
-                         "| 1 |\n"
-                         "+---+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x", "y"],
-                            print_header=True,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+---+---+\n"
-                         "| x | y |\n"
-                         "+---+---+\n"
-                         "| 1 | 2 |\n"
-                         "+---+---+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x"],
-                            print_header=False,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("1",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x", "y"],
-                            print_header=False,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("1 2",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x"],
-                            print_header=True,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("x \n1",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x", "y"],
-                            print_header=True,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("x y \n1 2",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x"],
-                            print_header=False,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+--+\n"
-                         "|1 |\n"
-                         "+--+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["x", "y"],
-                            print_header=False,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+--+--+\n"
-                         "|1 |2 |\n"
-                         "+--+--+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["aOrB"],
-                            mixed_case_fields=["aOrB"],
-                            print_header=True,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+------+\n"
-                         "| aOrB |\n"
-                         "+------+\n"
-                         "| 3    |\n"
-                         "+------+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["aOrB"],
-                            mixed_case_fields=["aOrB"],
-                            print_header=False,
-                            print_border=True,
-                            out=out)
-        self.assertEqual("+--+\n"
-                         "|3 |\n"
-                         "+--+",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["aOrB"],
-                            mixed_case_fields=["aOrB"],
-                            print_header=True,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("aOrB \n"
-                         "3",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        cliutils.print_list([TestObj()], ["aOrB"],
-                            mixed_case_fields=["aOrB"],
-                            print_header=False,
-                            print_border=False,
-                            out=out)
-        self.assertEqual("3",
-                         out.getvalue().strip())
-
-        out = moves.StringIO()
-        self.assertRaisesRegexp(ValueError,
-                                "Field labels list.*has different number "
-                                "of elements than fields list",
-                                cliutils.print_list,
-                                [TestObj()],
-                                ["x"],
-                                field_labels=["x", "y"],
-                                sortby_index=None,
-                                out=out)
+        self.assertRaisesRegexp(
+            ValueError,
+            "Field labels list.*has different number "
+            "of elements than fields list",
+            cliutils.print_list,
+            [self.TestObj()], ["x"],
+            field_labels=["x", "y"], sortby_index=None, out=out)
 
 
 class ValidateArgsTest(test.TestCase):
