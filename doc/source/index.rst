@@ -30,6 +30,7 @@ Contents
    overview
    install
    tutorial
+   cli/cli_reference
    user_stories
    plugins
    plugin/plugin_reference

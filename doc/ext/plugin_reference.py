@@ -131,4 +131,4 @@ class PluginReferenceDirective(rst.Directive):
 
 def setup(app):
     plugins.load()
-    app.add_directive('generate_plugin_reference', PluginReferenceDirective)
+    app.add_directive("generate_plugin_reference", PluginReferenceDirective)

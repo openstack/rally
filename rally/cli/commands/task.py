@@ -701,7 +701,7 @@ class TaskCommands(object):
 
     @cliutils.args("--force", action="store_true", help="force delete")
     @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",
-                   metavar="TASK_ID",
+                   metavar="<task-id>",
                    help="UUID of task or a list of task UUIDs.")
     @envutils.with_default_task_id
     def delete(self, task_id=None, force=False):

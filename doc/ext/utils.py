@@ -43,7 +43,7 @@ def make_definition(term, ref, descriptions):
     """Constructs definition with reference to it"""
     ref = ref.replace("_", "-").replace(" ", "-")
     definition = parse_text(
-            ".. _%(ref)s:\n\n%(term)s (ref__)\n\n__ #%(ref)s" %
+            ".. _%(ref)s:\n\n*%(term)s* (ref__)\n\n__ #%(ref)s" %
             {"ref": ref, "term": term})
     for descr in descriptions:
         if isinstance(descr, (six.text_type, six.binary_type)):
