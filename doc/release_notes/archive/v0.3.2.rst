@@ -1,0 +1,214 @@
+============
+Rally v0.3.2
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |         **55**        |
++------------------+-----------------------+
+| Dev cycle        |       **25 days**     |
++------------------+-----------------------+
+| Release date     |     **3/14/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release, as well as all previous ones, includes a lot of internal and
+external changes. Most important of them are listed below.
+
+
+CLI changes
+~~~~~~~~~~~
+
+* .. warning:: [Modified] Option '--tempest-config' for 'rally verify
+  reinstall' command was deprecated for removal.
+
+* .. warning:: [Removed] Option `--system-wide-install` was removed from
+  `rally verify` commands in favor of `--system-wide` option.
+
+* .. warning:: [Modified] Step of installation of Tempest during execution of
+  the `rally verify start` command was deprecated and will be removed in the
+  future. Please use `rally verify install` instead.
+
+* Rework commands.task.TaskCommands.detailed. Now output of the command
+  contains the same results as in HTML report.
+
+Rally Verify
+~~~~~~~~~~~~
+
+* Re-run failed Tempest tests
+
+  Add the ability to re-run the tempest tests that failed in the last test
+  execution. Sometimes Tempest tests fail due to a special temporary condition
+  in the environment, in such cases it is very useful to be able to re-execute
+  those tests.
+
+  Running the following command will re-run all the test that failed during
+  the last test execution regardless of what test suite was run.
+
+  .. code-block:: bash
+
+      rally verify start --failing
+
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* [Spec][Introduced] Refactoring scenario utils
+
+  `https://github.com/openstack/rally/blob/master/doc/specs/in-progress
+  /refactor_scenario_utils.rst`_
+
+* [Spec] Deployment unification
+
+Plugins
+~~~~~~~
+
+* **Scenarios**:
+
+ * [updated] Fix flavor for cloudera manager
+
+   Cloudera manager need master-node flavor
+
+ * [added] Expand Nova API benchmark in Rally
+
+   Add support for listing nova hosts, agents, availability-zones
+   and aggregates.
+
+ * [updated] Make sure VolumeGenerator uses the api version info while cleanup
+
+ * Designate V2 - Add recordset scenarios
+
+   Add create_and_(list|delete)_recordset scenarios
+   Remove the test also that checks the allowed methods, this is in order for
+   us to be able to have a private method _walk_pages that will do fetching of
+   pages for us vs attempting to fetch 1 giant list at once.
+
+ * unify *_kwargs name in scenarios
+
+   When running a scenario, `kwargs` is used as default key-word arguments.
+   But in some scenarios, there are more and one services being called, and
+   we use xxx_kwargs for this case.
+
+   However, some xxx_kwargs are not unifed for same usage[0]. Unifying
+   these could avoid midleading for end users. Another improvement is to
+   add xxx_kwargs with empty settings for scenario config files.
+
+   [0] http://paste.openstack.org/show/489505/
+
+ * .. warning:: Deprecated arguments 'script' and 'interpreter' were removed
+     in favor of 'command' argument.
+
+   VM task scenarios executes a script with a interpreter provided through a
+   formatted argument called 'command' which expects the remote_path or
+   local_path of the script and optionally an interpreter with which the
+   script has to be executed.
+
+Miscellaneous
+~~~~~~~~~~~~~
+
+* Avoid using `len(x)` to check if x is empty
+
+  This cases are using `len()` to check if collection has items. As
+  collections have a boolean representation too, directly check for true /
+  false. And fix the wrong mock in its unit test.
+
+* Fix install_rally.sh to get it to work on MacOSX
+
+  On MacOSX, `mktemp` requires being passed a template. This change modifies
+  the calls to `mktemp` to explicitly pass a template so that the code works
+  on both MacOSX and linux.
+
+* Use new-style Python classes
+
+  There are some classes in the code that didn't inherited from
+  nothing and this is an old-style classes. A "New Class" is the
+  recommended way to create a class in modern Python.A "New Class"
+  should always inherit from `object` or another new-style class.
+
+  Hacking rule added as well.
+
+* Make Rally cope with unversioned keystone URL
+
+  With the change, the client version that's returned is now determined by
+  the keystoneclient library itself based on whether you supply a URL with a
+  version in it or not.
+
+* Fix rally-mos job to work with mos-8.0
+
+  Also remove hardcoded values for some other jobs.
+
+* Add name() to ResourceManager
+
+  This will allow us to perform cleanup based on the name.
+
+* Add task_id argument to name_matches_object
+
+  This will be used to ensure that we are only deleting resources for a
+  particular Rally task.
+
+* Extend api.Task.get_detailed
+
+  Extend api.Task.get_detailed with ability to return task data as dict with
+  extended results.
+
+Bug fixes
+~~~~~~~~~
+
+**The most critical fixed bugs are**:
+
+* #1547624: Wrong configuration for baremetal(ironic) tempest tests
+
+* #1536800: openrc values are not quoted
+
+  The openrc file created after rally deployment --fromenv did not quote the
+  values for environment variables that will be exported.
+
+* #1509027: Heat delete_stack never exits if status is DELETE_FAILED
+
+* #1540545: Refactored atomic action in authenticate scenario
+
+* #1469897: Incompatible with Keystone v3 argument in service create scenario
+
+* #1550262: Different results in ``rally task detailed``, ``rally task report``
+ and ``rally task status`` commands.
+
+* #1553024: Backward incompatible change in neutronclient(release 4.1.0) broke
+  Tempest config generation to support latest neutronclient.
+
+Documentation
+~~~~~~~~~~~~~
+
+* Add documentation for DB migration
+
+  Changes:
+    * Add descriptive docstrings for plugins based on OutputChart
+    * Register these plugins in doc/ext/plugin_reference.py
+      so plugin/plugin_reference.htmlwill have a documentation
+      chapter based on added docstrings
+
+* Documentation tox fix
+
+  Added information about debugging unit test with tox. Replace 3 references
+  to py26 with py34 to reflect current rally tox configuration.
+
+* Change structure of rally plugin and plugin references page
+
+* Update the scenario development, runner and context sections
+
+* The design of 'Rally Plugins Reference' page was improved (see
+  `http://docs.openstack.org/developer/rally/plugin/plugin_reference.html`_
+  with new design)
+
+* New page was added - CLI references
+
+  `http://docs.openstack.org/developer/rally/cli/cli_reference.html`_
+
+Thanks
+~~~~~~
+
+ To Everybody!
