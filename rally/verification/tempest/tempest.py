@@ -297,13 +297,16 @@ class Tempest(object):
             shutil.rmtree(self.path())
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
-    def _prepare_and_run(self, set_name, regex, tests_file, concur):
+    def _prepare_and_run(self, set_name, regex, tests_file, concur, failing):
         if not self.is_configured():
             self.generate_config_file()
 
         testr_args = "--concurrency %d" % concur
 
-        if set_name:
+        if failing:
+            testr_args += " --failing"
+            set_name = "re-run-failed"
+        elif set_name:
             if set_name == "full":
                 pass
             elif set_name in consts.TempestTestsSets:
@@ -385,8 +388,9 @@ class Tempest(object):
         else:
             self.verification.set_failed()
 
-    def verify(self, set_name, regex, tests_file, expected_failures, concur):
-        self._prepare_and_run(set_name, regex, tests_file, concur)
+    def verify(self, set_name, regex, tests_file, expected_failures, concur,
+               failing):
+        self._prepare_and_run(set_name, regex, tests_file, concur, failing)
         self._save_results(expected_failures=expected_failures)
 
     def import_results(self, set_name, log_file):

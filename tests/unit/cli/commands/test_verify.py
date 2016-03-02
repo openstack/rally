@@ -57,8 +57,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=None, expected_failures=None, system_wide=False,
-            concur=0)
+            tempest_config=None, expected_failures=None,
+            system_wide=False, concur=0, failing=False)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -76,7 +76,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
             tempest_config=tempest_config.name, expected_failures=None,
-            system_wide=False, concur=0)
+            system_wide=False, concur=0, failing=False)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")
@@ -91,7 +91,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="", regex=None, tests_file=tests_file,
             tempest_config=None, expected_failures=None, system_wide=False,
-            concur=0)
+            concur=0, failing=False)
 
     @mock.patch("rally.api.Verification.verify")
     @mock.patch("six.moves.builtins.open",
@@ -107,7 +107,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
             tempest_config=None, expected_failures={"test": "reason of fail"},
-            system_wide=False, concur=0)
+            system_wide=False, concur=0, failing=False)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):
@@ -119,6 +119,28 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.assertNotIn(wrong_set_name, consts.TempestTestsSets,
                          consts.TempestTestsAPI)
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
+    def test_start_with_failing_and_set_name(self, mock_verification_verify):
+        deployment_id = "f2009aae-6ef3-468e-96b2-3c987d584010"
+
+        set_name = "some_value"
+        self.verify.start(set_name=set_name, deployment=deployment_id,
+                          do_use=False, failing=True)
+
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_start_with_failing_and_test_files(self, mock_exists,
+                                               mock_verification_verify):
+        deployment_id = "f2009aae-6ef3-468e-96b2-3c987d584010"
+        tests_file = "/path/to/tests/file"
+
+        self.verify.start(tests_file=tests_file, deployment=deployment_id,
+                          do_use=False, failing=True)
+
         self.assertFalse(mock_verification_verify.called)
 
     @mock.patch("rally.api.Verification.import_results")

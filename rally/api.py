@@ -359,9 +359,10 @@ class Verification(object):
     @classmethod
     def verify(cls, deployment, set_name="", regex=None, tests_file=None,
                tempest_config=None, expected_failures=None, system_wide=False,
-               concur=0):
+               concur=0, failing=False):
         """Start verification.
 
+        :param deployment: UUID or name of a deployment
         :param deployment: UUID or name of a deployment
         :param set_name: Name of a Tempest test set
         :param regex: Regular expression of test
@@ -376,8 +377,11 @@ class Verification(object):
                             env when running the tests
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
+        :param failing: Re-run tests that failed during the last
+                        execution
         :returns: Verification object
         """
+
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verification = objects.Verification(deployment_uuid=deployment_uuid)
         verifier = tempest.Tempest(deployment_uuid,
@@ -400,7 +404,8 @@ class Verification(object):
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
         verification.set_running()
         verifier.verify(set_name=set_name, regex=regex, tests_file=tests_file,
-                        expected_failures=expected_failures, concur=concur)
+                        expected_failures=expected_failures, concur=concur,
+                        failing=failing)
 
         return verification
 
