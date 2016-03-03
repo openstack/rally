@@ -124,6 +124,22 @@ class CliUtilsTestCase(test.TestCase):
         formatter = cliutils.pretty_float_formatter("not_foo")
         self.assertRaises(AttributeError, formatter, self)
 
+    def test_pretty_float_formatter_rounding_with_dict(self):
+        formatter = cliutils.pretty_float_formatter("foo", 3)
+        self.assertEqual(6.566, formatter({"foo": 6.56565}))
+
+    def test_pretty_float_formatter_nonrounding_with_dict(self):
+        formatter = cliutils.pretty_float_formatter("foo")
+        self.assertEqual(6.56565, formatter({"foo": 6.56565}))
+
+    def test_pretty_float_formatter_none_value_with_dict(self):
+        formatter = cliutils.pretty_float_formatter("foo")
+        self.assertEqual("n/a", formatter({"foo": None}))
+
+    def test_pretty_float_formatter_raises_with_dict(self):
+        formatter = cliutils.pretty_float_formatter("foo")
+        self.assertRaises(KeyError, formatter, {"not_foo": 123})
+
     def test_process_keyestone_exc(self):
 
         @cliutils.process_keystone_exc
@@ -337,7 +353,43 @@ class CliUtilsTestCase(test.TestCase):
          "kwargs": {"print_header": False,
                     "print_border": False,
                     "mixed_case_fields": ["aOrB"]},
-         "expected": "3"})
+         "expected": "3"},
+        {"args": [[{"x": 1, "y": 2}], ["x", "y"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True,
+                    "sortby_index": None},
+         "expected": ("+---+---+\n"
+                      "| x | y |\n"
+                      "+---+---+\n"
+                      "| 1 | 2 |\n"
+                      "+---+---+")},
+        {"args": [[{"z": 3.142857142857143}], ["z"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True,
+                    "sortby_index": None,
+                    "formatters": {"z": cliutils.pretty_float_formatter("z",
+                                                                        5)}},
+         "expected": ("+---------+\n"
+                      "| z       |\n"
+                      "+---------+\n"
+                      "| 3.14286 |\n"
+                      "+---------+")},
+        {"args": [[{"x": 1}], ["x"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True},
+         "expected": ("+---+\n"
+                      "| x |\n"
+                      "+---+\n"
+                      "| 1 |\n"
+                      "+---+")},
+        {"args": [[{"x": 1, "y": 2}], ["x", "y"]],
+         "kwargs": {"print_header": True,
+                    "print_border": True},
+         "expected": ("+---+---+\n"
+                      "| x | y |\n"
+                      "+---+---+\n"
+                      "| 1 | 2 |\n"
+                      "+---+---+")})
     @ddt.unpack
     def test_print_list(self, args, kwargs, expected):
         out = moves.StringIO()
