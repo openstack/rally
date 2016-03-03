@@ -17,6 +17,7 @@ import itertools
 from rally.common import logging
 from rally import osclients
 from rally.plugins.openstack.cleanup import base as cleanup_base
+from rally.plugins.openstack.context.keystone import roles
 from rally.plugins.openstack.context.keystone import users
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
@@ -50,6 +51,7 @@ def list_opts():
         ("image",
          itertools.chain(tempest_conf.IMAGE_OPTS)),
         ("role", itertools.chain(tempest_conf.ROLE_OPTS)),
+        ("roles_context", itertools.chain(roles.ROLES_CONTEXT_OPTS)),
         ("users_context", itertools.chain(users.USER_CONTEXT_OPTS)),
         ("cleanup", itertools.chain(cleanup_base.CLEANUP_OPTS))
     ]

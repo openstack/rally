@@ -13,6 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+
+from rally.common import broker
 from rally.common.i18n import _
 from rally.common import logging
 from rally import consts
@@ -22,6 +25,19 @@ from rally.plugins.openstack.wrappers import keystone
 from rally.task import context
 
 LOG = logging.getLogger(__name__)
+
+
+ROLES_CONTEXT_OPTS = [
+    cfg.IntOpt("resource_management_workers",
+               default=30,
+               help="How many concurrent threads to use for serving roles "
+                    "context"),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(ROLES_CONTEXT_OPTS,
+                   group=cfg.OptGroup(name="roles_context",
+                                      title="benchmark context options"))
 
 
 @context.configure(name="roles", order=330)
@@ -40,52 +56,62 @@ class RoleGenerator(context.Context):
     def __init__(self, ctx):
         super(RoleGenerator, self).__init__(ctx)
         self.credential = self.context["admin"]["credential"]
+        self.workers = cfg.CONF.roles_context.resource_management_workers
 
-    def _add_role(self, admin_credential, context_role):
-        """Add role to users.
+    def _get_role_object(self, context_role):
+        """Check if role exists.
 
-        :param admin_credential: The admin credential.
         :param context_role: name of existing role.
         """
-        client = keystone.wrap(osclients.Clients(admin_credential).keystone())
+        client = keystone.wrap(osclients.Clients(self.credential).keystone())
         default_roles = client.list_roles()
         for def_role in default_roles:
             if str(def_role.name) == context_role:
-                role = def_role
-                break
+                return def_role
         else:
             raise exceptions.NoSuchRole(role=context_role)
 
-        LOG.debug("Adding role %s to all users" % (role.id))
-        for user in self.context["users"]:
-            client.add_role(user_id=user["id"], role_id=role.id,
-                            project_id=user["tenant_id"])
-
-        return {"id": str(role.id), "name": str(role.name)}
-
-    def _remove_role(self, admin_credential, role):
-        """Remove given role from users.
-
-        :param admin_credential: The admin credential.
-        :param role: dictionary with role parameters (id, name).
-        """
-        client = keystone.wrap(osclients.Clients(admin_credential).keystone())
-
-        for user in self.context["users"]:
-            with logging.ExceptionLogger(
-                    LOG, _("Failed to remove role: %s") % role["id"]):
-                client.remove_role(
-                    user_id=user["id"], role_id=role["id"],
-                    project_id=user["tenant_id"])
+    def _get_consumer(self, func_name):
+        def consume(cache, args):
+            role_id, user_id, project_id = args
+            if "client" not in cache:
+                clients = osclients.Clients(self.credential)
+                cache["client"] = keystone.wrap(clients.keystone())
+            getattr(cache["client"], func_name)(user_id, role_id, project_id)
+        return consume
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):
-        """Add roles to all users."""
-        self.context["roles"] = [self._add_role(self.credential, name)
-                                 for name in self.config]
+        """Add all roles to users."""
+        threads = self.workers
+        roles_dict = {}
+
+        def publish(queue):
+            for context_role in self.config:
+                role = self._get_role_object(context_role)
+                roles_dict[role.id] = role.name
+                LOG.debug("Adding role %(role_name)s having ID %(role_id)s "
+                          "to all users using %(threads)s threads" %
+                          {"role_name": role.name,
+                           "role_id": role.id,
+                           "threads": threads})
+                for user in self.context["users"]:
+                    args = (role.id, user["id"], user["tenant_id"])
+                    queue.append(args)
+
+        broker.run(publish, self._get_consumer("add_role"), threads)
+        self.context["roles"] = roles_dict
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `roles`"))
     def cleanup(self):
-        """Remove roles from users."""
-        for role in self.context["roles"]:
-            self._remove_role(self.credential, role)
+        """Remove all roles from users."""
+        threads = self.workers
+
+        def publish(queue):
+            for role_id in self.context["roles"]:
+                LOG.debug("Removing role %s from all users" % (role_id))
+                for user in self.context["users"]:
+                    args = (role_id, user["id"], user["tenant_id"])
+                    queue.append(args)
+
+        broker.run(publish, self._get_consumer("remove_role"), threads)
