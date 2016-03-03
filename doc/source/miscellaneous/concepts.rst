@@ -169,7 +169,7 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/benchmark/runner.py#L113>`_ class and located in the `rally.plugins.common.runners package <https://github.com/openstack/rally/tree/master/rally/plugins/common/runners>`_. The interface each scenario runner class should support is fairly easy:
+It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/task/runner.py>`_ class and located in the `rally.plugins.common.runners package <https://github.com/openstack/rally/tree/master/rally/plugins/common/runners>`_. The interface each scenario runner class should support is fairly easy:
 
 .. code-block:: python
 
@@ -265,7 +265,7 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/benchmark/context.py **Context**] class. Every context class should implement a fairly simple **interface**:
+From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/task/context.py **Context**] class. Every context class should implement a fairly simple **interface**:
 
 .. code-block:: python
 
@@ -319,7 +319,7 @@ Consequently, the algorithm of initiating the contexts can be roughly seen as fo
 
 - where the order of contexts in which they are set up depends on the value of their *order* attribute. Contexts with lower *order* have higher priority: *1xx* contexts are reserved for users-related stuff (e.g. users/tenants creation, roles assignment etc.), *2xx* - for quotas etc.
 
-The *hidden* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"cleanup" context** (:mod:`rally.plugins.openstack.context.cleanup`) is used to make generic cleanup after running benchmark. So user can't change
+The *hidden* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@scenario.configure(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"cleanup" context** (:mod:`rally.plugins.openstack.context.cleanup`) is used to make generic cleanup after running benchmark. So user can't change
 it configuration via task and break his cloud.
 
 If you want to dive deeper, also see the context manager (:mod:`rally.task.context`) class that actually implements the algorithm described above.
