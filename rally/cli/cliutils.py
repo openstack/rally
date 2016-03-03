@@ -288,23 +288,20 @@ class CategoryParser(argparse.ArgumentParser):
 
 
 def pretty_float_formatter(field, ndigits=None):
-    """Create a formatter function for the given float field.
+    """Create a float value formatter function for the given field.
 
-    :param field: a float object attribute name to be formatted.
-    :param ndigits: The number of digits after decimal point after round.
-    If None, then no rounding will be done.
-    :returns: the formatter function
+    :param field: str name of an object, which value should be formatted
+    :param ndigits: int number of digits after decimal point to round
+                    default is None - this disables rounding
+    :returns: field formatter function
     """
-
     def _formatter(obj):
         value = obj[field] if type(obj) == dict else getattr(obj, field)
-        if value is not None:
-            if ndigits is not None:
+        if type(value) in (int, float):
+            if ndigits:
                 return round(value, ndigits)
-            else:
-                return value
-        else:
-            return "n/a"
+            return value
+        return "n/a"
     return _formatter
 
 
