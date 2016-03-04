@@ -81,28 +81,28 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/openstack/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.task.scenarios <https://github.com/openstack/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
+From the developer's perspective, a benchmark scenario is a method marked by a **@configure** decorator and placed in a class that inherits from the base `Scenario <https://github.com/openstack/rally/blob/0.1/rally/task/scenario.py#L94>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
 In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
 .. code-block:: python
 
-    from rally.task.scenarios import base
-    from rally.task import utils
+    from rally.task import atomic
+    from rally.task import scenario
 
 
-    class MyScenario(base.Scenario):
+    class MyScenario(scenario.Scenario):
         """My class that contains benchmark scenarios."""
 
-        @base.atomic_action_timer("action_1")
+        @atomic.action_timer("action_1")
         def _action_1(self, **kwargs):
             """Do something with the cloud."""
 
-        @base.atomic_action_timer("action_2")
+        @atomic.action_timer("action_2")
         def _action_2(self, **kwargs):
             """Do something with the cloud."""
 
-        @base.scenario()
+        @scenario.configure()
         def scenario(self, **kwargs):
             self._action_1()
             self._action_2()
