@@ -13,8 +13,8 @@
         floating_network: "public"
         use_floating_ip: true
         force_delete: false
-        script: "samples/tasks/support/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+            remote_path: "samples/tasks/support/instance_dd_test.sh"
         username: "cirros"
       runner:
         type: "constant"

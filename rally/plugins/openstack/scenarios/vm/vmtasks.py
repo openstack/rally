@@ -39,10 +39,7 @@ class VMTasks(vm_utils.VMScenario):
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
-    @logging.log_deprecated_args("Use `command' argument instead", "0.0.5",
-                                 ("script", "interpreter"), once=True)
-    @validation.file_exists("script", required=False)
-    @validation.valid_command("command", required=False)
+    @validation.valid_command("command")
     @validation.number("port", minval=1, maxval=65535, nullable=True,
                        integer_only=True)
     @validation.external_network_exists("floating_network")
@@ -53,8 +50,6 @@ class VMTasks(vm_utils.VMScenario):
     def boot_runcommand_delete(self, image, flavor,
                                username,
                                password=None,
-                               script=None,
-                               interpreter=None,
                                command=None,
                                volume_args=None,
                                floating_network=None,
@@ -64,19 +59,18 @@ class VMTasks(vm_utils.VMScenario):
                                wait_for_ping=True,
                                max_log_length=None,
                                **kwargs):
-        """Boot a server, run a script that outputs JSON, delete the server.
+        """Boot a server, run script specified in command and delete server.
 
         Example Script in samples/tasks/support/instance_dd_test.sh
+
+        The script to be executed is provided like command['remote_path'] or
+        command['local_path'] and interpreter in command['interpreter']
+        respectively.
 
         :param image: glance image name to use for the vm
         :param flavor: VM flavor name
         :param username: ssh username on server, str
         :param password: Password on SSH authentication
-        :param script: DEPRECATED. Use `command' instead. Script to run on
-            server, must output JSON mapping metric names to values (see the
-            sample script below)
-        :param interpreter: DEPRECATED. Use `command' instead. server's
-            interpreter to run the script
         :param command: Command-specifying dictionary that either specifies
             remote command path via `remote_path' (can be uploaded from a
             local file specified by `local_path`), an inline script via
@@ -156,9 +150,6 @@ class VMTasks(vm_utils.VMScenario):
                   data: dict, JSON output from the script
                   errors: str, raw data from the script's stderr stream
         """
-
-        if command is None and script and interpreter:
-            command = {"script_file": script, "interpreter": interpreter}
 
         if volume_args:
             volume = self._create_volume(volume_args["size"], imageRef=None)
