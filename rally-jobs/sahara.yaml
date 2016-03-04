@@ -1,4 +1,3 @@
-{%- set sahara_service_type = sahara_service_type|default("data-processing") %}
 
   SaharaNodeGroupTemplates.create_and_list_node_group_templates:
     -
