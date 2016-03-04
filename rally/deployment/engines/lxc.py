@@ -41,6 +41,8 @@ class LxcEngine(engine.Engine):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "LxcEngine",
             "provider": {

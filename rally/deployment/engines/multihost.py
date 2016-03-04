@@ -30,6 +30,8 @@ class MultihostEngine(engine.Engine):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "MultihostEngine",
             "controller": {
@@ -48,6 +50,8 @@ class MultihostEngine(engine.Engine):
     If {controller_ip} is specified in configuration values, it will be
     replaced with controller address taken from credential returned by
     controller engine:
+
+    .. code-block:: json
 
         ...
         "nodes": [

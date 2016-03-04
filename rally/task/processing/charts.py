@@ -420,7 +420,7 @@ class OutputStackedAreaChart(OutputChart):
 
     Examples of using this plugin in Scenario, for saving output data:
 
-    ..code-block:: python
+    .. code-block:: python
 
         self.add_output(
             additive={"title": "Additive data as stacked area",
@@ -461,7 +461,7 @@ class OutputLinesChart(OutputStackedAreaChart):
 
     Examples of using this plugin in Scenario, for saving output data:
 
-    ..code-block:: python
+    .. code-block:: python
 
         self.add_output(
             additive={"title": "Additive data as stacked area",
@@ -489,7 +489,7 @@ class OutputAvgChart(OutputChart, AvgChart):
 
     Examples of using this plugin in Scenario, for saving output data:
 
-    ..code-block:: python
+    .. code-block:: python
 
         self.add_output(
             additive={"title": "Additive output",
@@ -516,7 +516,7 @@ class OutputTable(OutputChart, Table):
 
     Examples of using this plugin in Scenario, for saving output data:
 
-    ..code-block:: python
+    .. code-block:: python
 
         self.add_output(
             complete={"title": "Arbitrary Table",
@@ -539,7 +539,7 @@ class OutputStatsTable(OutputTable):
 
     Examples of using this plugin in Scenario, for saving output data:
 
-    ..code-block:: python
+    .. code-block:: python
 
         self.add_output(
             additive={"title": "Statistics",

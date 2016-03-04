@@ -48,6 +48,8 @@ class DevstackEngine(engine.Engine):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "DevstackEngine",
             "devstack_repo": "https://example.com/devstack/",
