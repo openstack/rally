@@ -190,7 +190,11 @@ class TempestConfigTestCase(test.TestCase):
         for item in expected:
             self.assertIn(item, result)
 
-    def test__configure_network_feature_enabled(self):
+    @ddt.data({}, {"version": "4.1.0", "args": ("extensions", "/extensions"),
+                   "kwargs": {"retrieve_all": True}})
+    @ddt.unpack
+    def test__configure_network_feature_enabled(
+            self, version="4.0.0", args=("/extensions",), kwargs={}):
         self.tempest_conf.available_services = ["neutron"]
         client = self.tempest_conf.clients.neutron()
         client.list_ext.return_value = {
@@ -201,7 +205,9 @@ class TempestConfigTestCase(test.TestCase):
             ]
         }
 
+        mock.patch("neutronclient.version.__version__", version).start()
         self.tempest_conf._configure_network_feature_enabled()
+        client.list_ext.assert_called_once_with(*args, **kwargs)
         self.assertEqual(self.tempest_conf.conf.get(
             "network-feature-enabled", "api_extensions"),
             "dvr,extra_dhcp_opt,extraroute")

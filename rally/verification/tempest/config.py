@@ -17,6 +17,7 @@ import inspect
 import os
 import re
 
+from neutronclient import version as nc_version
 from oslo_config import cfg
 import requests
 import six
@@ -240,10 +241,20 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             self, section_name="network-feature-enabled"):
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
-            ext_list = [ext["alias"] for ext in
-                        neutronclient.list_ext("/extensions")["extensions"]]
-            ext_list_str = ",".join(ext_list)
-            self.conf.set(section_name, "api_extensions", ext_list_str)
+            # NOTE(ylobankov): We need the if/else block here because
+            # the list_ext method has different number of arguments in
+            # different Neutron client versions.
+            version = nc_version.__version__
+            if version.startswith("4.1."):
+                # Neutron client version >= 4.1.0
+                extensions = neutronclient.list_ext(
+                    "extensions", "/extensions", retrieve_all=True)
+            else:
+                # Neutron client version < 4.1.0
+                extensions = neutronclient.list_ext("/extensions")
+            aliases = [ext["alias"] for ext in extensions["extensions"]]
+            aliases_str = ",".join(aliases)
+            self.conf.set(section_name, "api_extensions", aliases_str)
 
     def _configure_oslo_concurrency(self, section_name="oslo_concurrency"):
         lock_path = os.path.join(self.data_dir,
