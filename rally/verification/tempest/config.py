@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from distutils import version
 import inspect
 import os
 import re
@@ -244,8 +245,8 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             # NOTE(ylobankov): We need the if/else block here because
             # the list_ext method has different number of arguments in
             # different Neutron client versions.
-            version = nc_version.__version__
-            if version.startswith("4.1."):
+            cl_ver = nc_version.__version__
+            if version.StrictVersion(cl_ver) >= version.StrictVersion("4.1.0"):
                 # Neutron client version >= 4.1.0
                 extensions = neutronclient.list_ext(
                     "extensions", "/extensions", retrieve_all=True)
