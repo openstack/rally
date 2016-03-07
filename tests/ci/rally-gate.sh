@@ -52,7 +52,8 @@ fi
 env
 set -o pipefail
 rally deployment use --deployment devstack
-rally deployment check
+rally deployment config
+rally --debug deployment check
 source ~/.rally/openrc
 if rally deployment check | grep 'nova' | grep 'Available' > /dev/null; then
     nova flavor-create m1.nano 42 64 0 1
