@@ -859,4 +859,4 @@
         type: constant
       sla:
         failure_rate:
-          max: 0
+          max: 100
