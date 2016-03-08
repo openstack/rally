@@ -15,7 +15,6 @@
 
 import mock
 
-from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test
@@ -39,21 +38,17 @@ class VMTasksTestCase(test.ScenarioTestCase):
             return_value=(0, "\"foo_out\"", "foo_err"))
 
     def test_boot_runcommand_delete(self):
-        with logging.LogCatcher(logging.LOG) as catcher:
-            self.scenario.boot_runcommand_delete(
-                "foo_image", "foo_flavor",
-                script="foo_script", interpreter="foo_interpreter",
-                username="foo_username",
-                password="foo_password",
-                use_floating_ip="use_fip",
-                floating_network="ext_network",
-                force_delete="foo_force",
-                volume_args={"size": 16},
-                foo_arg="foo_value")
-
-        catcher.assertInLogs(
-            "Use `command' argument instead (args `script', `interpreter' "
-            "deprecated in Rally v0.0.5)")
+        self.scenario.boot_runcommand_delete(
+            "foo_image", "foo_flavor",
+            command={"script_file": "foo_script",
+                     "interpreter": "foo_interpreter"},
+            username="foo_username",
+            password="foo_password",
+            use_floating_ip="use_fip",
+            floating_network="ext_network",
+            force_delete="foo_force",
+            volume_args={"size": 16},
+            foo_arg="foo_value")
 
         self.scenario._create_volume.assert_called_once_with(
             16, imageRef=None)

@@ -11,8 +11,9 @@
                 },
                 "floating_network": "public",
                 "force_delete": false,
-                "script": "samples/tasks/support/instance_dd_test.sh",
-                "interpreter": "/bin/sh",
+                "command": {
+                    "remote_path": "samples/tasks/support/instance_dd_test.sh"
+                },
                 "username": "cirros"
             },
             "runner": {
