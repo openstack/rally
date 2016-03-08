@@ -451,19 +451,21 @@ class TaskCommands(object):
 
         :param task_id: Task uuid
         """
+        task = api.Task.get(task_id)
+        finished_statuses = (consts.TaskStatus.FINISHED,
+                             consts.TaskStatus.ABORTED)
+        if task["status"] not in finished_statuses:
+            print(_("Task status is %s. Results available when it is one "
+                    "of %s.") % (task["status"], ", ".join(finished_statuses)))
+            return 1
+
         results = [{"key": x["key"], "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "load_duration": x["data"]["load_duration"],
                     "full_duration": x["data"]["full_duration"]}
-                   for x in api.Task.get(task_id).get_results()]
+                   for x in task.get_results()]
 
-        if results:
-            print(json.dumps(results, sort_keys=True, indent=4))
-        else:
-            print(_("The task %s marked as '%s'. Results "
-                    "available when it is '%s' .") % (
-                task_id, consts.TaskStatus.FAILED, consts.TaskStatus.FINISHED))
-            return(1)
+        print(json.dumps(results, sort_keys=True, indent=4))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
