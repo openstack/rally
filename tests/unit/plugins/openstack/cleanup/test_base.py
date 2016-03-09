@@ -63,6 +63,12 @@ class ResourceManagerTestCase(test.TestCase):
         manager = base.ResourceManager(resource=resource)
         self.assertEqual(resource.id, manager.id())
 
+    def test_name(self):
+        resource = mock.MagicMock(name="test_name")
+
+        manager = base.ResourceManager(resource=resource)
+        self.assertEqual(resource.name, manager.name())
+
     @mock.patch("%s.ResourceManager._manager" % BASE)
     def test_is_deleted(self, mock_resource_manager__manager):
         raw_res = mock.MagicMock(status="deleted")

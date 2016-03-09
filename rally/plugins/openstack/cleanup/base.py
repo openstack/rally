@@ -98,6 +98,10 @@ class ResourceManager(object):
         """Returns id of resource."""
         return self.raw_resource.id
 
+    def name(self):
+        """Returns name of resource."""
+        return self.raw_resource.name
+
     def is_deleted(self):
         """Checks if the resource is deleted.
 
