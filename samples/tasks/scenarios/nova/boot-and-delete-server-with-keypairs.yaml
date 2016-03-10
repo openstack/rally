@@ -7,6 +7,7 @@
             name: "{{flavor_name}}"
         image:
             name: "^cirros.*uec$"
+        boot_server_kwargs: {}
       runner:
         type: "constant"
         times: 5

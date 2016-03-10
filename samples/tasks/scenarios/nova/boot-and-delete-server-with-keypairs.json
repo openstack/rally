@@ -8,7 +8,8 @@
                 },
                 "image": {
                     "name": "^cirros.*uec$"
-                }
+                },
+                "boot_server_kwargs": {}
             },
             "runner": {
                 "type": "constant",

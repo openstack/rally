@@ -10,7 +10,9 @@
                 },
                 "flavor": {
                     "name": "{{flavor_name}}"
-                }
+                },
+                "boot_server_kwargs": {},
+                "create_volume_kwargs": {}
             },
             "runner": {
                 "type": "constant",

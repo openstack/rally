@@ -57,7 +57,7 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
         }
 
         scenario.boot_and_delete_server_with_keypair(
-            "img", 1, server_kwargs=fake_server_args,
+            "img", 1, boot_server_kwargs=fake_server_args,
             fake_arg1="foo", fake_arg2="bar")
 
         scenario._create_keypair.assert_called_once_with(
