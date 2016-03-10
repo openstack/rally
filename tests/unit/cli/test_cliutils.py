@@ -92,53 +92,37 @@ class CliUtilsTestCase(test.TestCase):
         self.assertRaises(ValueError, cliutils.make_table_header,
                           "Response Times (sec)", len("Response Times (sec)"))
 
-    def test_pretty_float_formatter_rounding(self):
-        test_table_rows = {"test_header": 6.56565}
-        self.__dict__.update(**test_table_rows)
-
-        formatter = cliutils.pretty_float_formatter("test_header", 3)
-        return_value = formatter(self)
-
-        self.assertEqual(return_value, 6.566)
-
-    def test_pretty_float_formatter_nonrounding(self):
-        test_table_rows = {"test_header": 6.56565}
-        self.__dict__.update(**test_table_rows)
-
-        formatter = cliutils.pretty_float_formatter("test_header")
-        return_value = formatter(self)
-
-        self.assertEqual(return_value, 6.56565)
-
-    def test_pretty_float_formatter_none_value(self):
-        test_table_rows = {"test_header": None}
-        self.__dict__.update(**test_table_rows)
-
-        formatter = cliutils.pretty_float_formatter("test_header")
-        return_value = formatter(self)
-
-        self.assertEqual(return_value, "n/a")
-
-    def test_pretty_float_formatter_raises(self):
-        self.__dict__.update({"foo": 123})
-        formatter = cliutils.pretty_float_formatter("not_foo")
-        self.assertRaises(AttributeError, formatter, self)
-
-    def test_pretty_float_formatter_rounding_with_dict(self):
-        formatter = cliutils.pretty_float_formatter("foo", 3)
-        self.assertEqual(6.566, formatter({"foo": 6.56565}))
-
-    def test_pretty_float_formatter_nonrounding_with_dict(self):
-        formatter = cliutils.pretty_float_formatter("foo")
-        self.assertEqual(6.56565, formatter({"foo": 6.56565}))
-
-    def test_pretty_float_formatter_none_value_with_dict(self):
-        formatter = cliutils.pretty_float_formatter("foo")
-        self.assertEqual("n/a", formatter({"foo": None}))
-
-    def test_pretty_float_formatter_raises_with_dict(self):
-        formatter = cliutils.pretty_float_formatter("foo")
-        self.assertRaises(KeyError, formatter, {"not_foo": 123})
+    @ddt.data({"obj": mock.Mock(foo=6.56565), "args": ["foo", 3],
+               "expected": 6.566},
+              {"obj": mock.Mock(foo=6.56565), "args": ["foo"],
+               "expected": 6.56565},
+              {"obj": mock.Mock(foo=None), "args": ["foo"],
+               "expected": "n/a"},
+              {"obj": mock.Mock(foo="n/a"), "args": ["foo"],
+               "expected": "n/a"},
+              {"obj": mock.Mock(foo="n/a"), "args": ["foo", 3],
+               "expected": "n/a"},
+              {"obj": {"foo": 6.56565}, "args": ["foo", 3],
+               "expected": 6.566},
+              {"obj": {"foo": 6.56565}, "args": ["foo"],
+               "expected": 6.56565},
+              {"obj": {"foo": None}, "args": ["foo"],
+               "expected": "n/a"},
+              {"obj": {"foo": "n/a"}, "args": ["foo"],
+               "expected": "n/a"},
+              {"obj": {"foo": "n/a"}, "args": ["foo", 3],
+               "expected": "n/a"},
+              {"obj": object, "args": ["unexpected_field", 3],
+               "expected": AttributeError},
+              {"obj": {"foo": 42}, "args": ["unexpected_field", 3],
+               "expected": KeyError})
+    @ddt.unpack
+    def test_pretty_float_formatter(self, obj, args, expected=None):
+        formatter = cliutils.pretty_float_formatter(*args)
+        if type(expected) == type and issubclass(expected, Exception):
+            self.assertRaises(expected, formatter, obj)
+        else:
+            self.assertEqual(expected, formatter(obj))
 
     def test_process_keyestone_exc(self):
 
