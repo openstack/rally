@@ -157,8 +157,20 @@ class Task(object):
         return objects.Task.get(task_id)
 
     @staticmethod
-    def get_detailed(task_id):
-        return objects.Task.get_detailed(task_id)
+    def get_detailed(task_id, extended_results=False):
+        """Get detailed task data.
+
+        :param task_id: str task UUID
+        :param extended_results: whether to return task data as dict
+                                 with extended results
+        :returns: rally.common.db.sqlalchemy.models.Task
+        :returns: dict
+        """
+        task = objects.Task.get_detailed(task_id)
+        if task and extended_results:
+            task = dict(task)
+            task["results"] = objects.Task.extend_results(task["results"])
+        return task
 
     @classmethod
     def render_template(cls, task_template, template_dir="./", **kwargs):
