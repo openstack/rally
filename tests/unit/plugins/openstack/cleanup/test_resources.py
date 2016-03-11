@@ -14,6 +14,8 @@
 #    under the License.
 
 from boto import exception as boto_exception
+import ddt
+from glanceclient import exc as glance_exc
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 
@@ -391,18 +393,81 @@ class NeutronQuotaTestCase(test.TestCase):
         self.assertEqual("foo", getattr(admin, res._service)())
 
 
+@ddt.ddt
 class GlanceImageTestCase(test.TestCase):
+
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__manager_admin(self, mock_glance_wrap):
+        admin = mock.Mock()
+        glance = resources.GlanceImage(admin=admin)
+        manager = glance._manager()
+
+        mock_glance_wrap.assert_called_once_with(admin.glance, glance)
+        self.assertEqual(manager, mock_glance_wrap.return_value)
+
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__manager_user(self, mock_glance_wrap):
+        user = mock.Mock()
+        glance = resources.GlanceImage(user=user)
+        manager = glance._manager()
+
+        mock_glance_wrap.assert_called_once_with(user.glance, glance)
+        self.assertEqual(manager, mock_glance_wrap.return_value)
+
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__manager_admin_preferred(self, mock_glance_wrap):
+        admin = mock.Mock()
+        user = mock.Mock()
+        glance = resources.GlanceImage(admin=admin, user=user)
+        manager = glance._manager()
+
+        mock_glance_wrap.assert_called_once_with(admin.glance, glance)
+        self.assertEqual(manager, mock_glance_wrap.return_value)
 
     @mock.patch("%s.GlanceImage._manager" % BASE)
     def test_list(self, mock_glance_image__manager):
         glance = resources.GlanceImage()
-        glance.tenant_uuid = mock.MagicMock()
+        glance.tenant_uuid = mock.Mock()
 
-        mock_glance_image__manager().list.return_value = ["a", "b", "c"]
-
-        self.assertEqual(["a", "b", "c"], glance.list())
-        mock_glance_image__manager().list.assert_called_once_with(
+        manager = mock_glance_image__manager.return_value
+        self.assertEqual(glance.list(),
+                         manager.list_images.return_value)
+        manager.list_images.assert_called_once_with(
             owner=glance.tenant_uuid)
+
+    @ddt.data(
+        {"resource": mock.Mock(), "deleted": False},
+        {"resource": mock.Mock(status="deleted"), "deleted": True},
+        {"resource": mock.Mock(status="active"), "deleted": False},
+        {"resource": mock.Mock(status="delete_complete"), "deleted": True},
+        {"exception": glance_exc.HTTPNotFound, "deleted": True},
+        {"exception": glance_exc.HTTPUnauthorized, "deleted": False},
+        {"exception": Exception, "deleted": False})
+    @ddt.unpack
+    @mock.patch("%s.GlanceImage._manager" % BASE)
+    def test_is_deleted(self, mock_glance_image__manager, resource=None,
+                        exception=None, deleted=True):
+        if resource is None:
+            resource = mock.Mock()
+        manager = mock_glance_image__manager.return_value
+        if exception is not None:
+            manager.get_image.side_effect = exception
+        else:
+            manager.get_image.return_value = resource
+
+        glance = resources.GlanceImage(resource=resource)
+        self.assertEqual(deleted, glance.is_deleted())
+        manager.get_image.assert_called_once_with(resource)
+
+    @mock.patch("%s.GlanceImage._manager" % BASE)
+    def test_delete(self, mock_glance_image__manager):
+        glance = resources.GlanceImage()
+        glance.raw_resource = mock.Mock()
+
+        manager = mock_glance_image__manager.return_value
+        self.assertEqual(glance.delete(),
+                         manager.delete_image.return_value)
+        manager.delete_image.assert_called_once_with(glance.raw_resource)
 
 
 class CeilometerTestCase(test.TestCase):
