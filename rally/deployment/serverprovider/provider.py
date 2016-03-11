@@ -109,18 +109,20 @@ class ProviderFactory(plugin.Plugin):
 
     Example of usage with a simple provider:
 
-    # Add new provider with __name__ == "A"
-    class A(ProviderFactory):
-        def __init__(self, deployment, config):
-            # do something
+    .. code-block:: python
 
-        def create_servers(self, image_uuid, type_id, amount):
-            # Create the requested number of servers of a given type from the
-            # image passed as the first parameter.
-            return [server_1, server_2, ...]
+        # Add new provider with __name__ == "A"
+        class A(ProviderFactory):
+            def __init__(self, deployment, config):
+                # do something
 
-        def destroy_servers(self):
-            # Destroy servers created in create_servers().
+            def create_servers(self, image_uuid, type_id, amount):
+                # Create the requested number of servers of a given type from
+                # the image passed as the first parameter.
+                return [server_1, server_2, ...]
+
+            def destroy_servers(self):
+                # Destroy servers created in create_servers().
     """
 
     def __init__(self, deployment, config):

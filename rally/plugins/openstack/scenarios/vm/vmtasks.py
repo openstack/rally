@@ -218,9 +218,14 @@ class VMTasks(vm_utils.VMScenario):
         """Run workload on stack deployed by heat.
 
         Workload can be either file or resource:
+
+        .. code-block: json
+
             {"file": "/path/to/file.sh"}
             {"resource": ["package.module", "workload.py"]}
+
         Also it should contain "username" key.
+
         Given file will be uploaded to `gate_node` and started. This script
         should print `key` `value` pairs separated by colon. These pairs will
         be presented in results.

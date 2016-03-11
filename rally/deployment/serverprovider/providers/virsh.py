@@ -29,13 +29,23 @@ class VirshProvider(provider.ProviderFactory):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "VirshProvider",
-            "connection": "alex@performance-01",  # ssh connection to vms host
-            "template_name": "stack-01-devstack-template",  # vm image template
-            "template_user": "ubuntu",  # vm user to launch devstack
-            "template_password": "password" # vm password to launch devstack
+            "connection": "alex@performance-01",
+            "template_name": "stack-01-devstack-template",
+            "template_user": "ubuntu",
+            "template_password": "password"
         }
+
+    where :
+
+    * connection - ssh connection to vms host
+    * template_name - vm image template
+    * template_user - vm user to launch devstack
+    * template_password - vm password to launch devstack
+
     """
 
     CONFIG_SCHEMA = {

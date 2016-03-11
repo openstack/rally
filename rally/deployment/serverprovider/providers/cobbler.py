@@ -29,13 +29,15 @@ class CobblerProvider(provider.ProviderFactory):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
-            'type': 'CobblerProvider',
-            'host': '172.29.74.8',
-            'user': 'cobbler',
-            'password': 'cobbler',
-            'system_password': 'password'
-            'selector': {'profile': 'cobbler_profile_name', 'owners': 'user1'}
+            "type": "CobblerProvider",
+            "host": "172.29.74.8",
+            "user": "cobbler",
+            "password": "cobbler",
+            "system_password": "password"
+            "selector": {"profile": "cobbler_profile_name", "owners": "user1"}
         }
 
     """

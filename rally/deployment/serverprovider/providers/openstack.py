@@ -69,9 +69,11 @@ class OpenStackProvider(provider.ProviderFactory):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "OpenStackProvider",
-            "amount": 42
+            "amount": 42,
             "user": "admin",
             "tenant": "admin",
             "password": "secret",
@@ -82,7 +84,7 @@ class OpenStackProvider(provider.ProviderFactory):
                 "url": "http://example.com/disk1.img",
                 "name": "Ubuntu Precise(added by rally)",
                 "format": "qcow2",
-                "userdata": "#cloud-config\r\n disable_root: false"
+                "userdata": "disable_root: false"
             },
             "secgroup_name": "Rally"
         }

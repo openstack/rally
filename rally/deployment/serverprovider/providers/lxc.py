@@ -256,19 +256,22 @@ class LxcProvider(provider.ProviderFactory):
     """Provide lxc container(s) on given host.
 
     Sample configuration:
-    {
-        "type": "LxcProvider",
-        "distribution": "ubuntu",
-        "start_lxc_network": "10.1.1.0/24",
-        "containers_per_host": 32,
-        "tunnel_to": ["10.10.10.10"],
-        "forward_ssh": false,
-        "container_name_prefix": "rally-multinode-02",
-        "host_provider": {
-            "type": "ExistingServers",
-            "credentials": [{"user": "root", "host": "host.net"}]
+
+    .. code-block:: json
+
+        {
+            "type": "LxcProvider",
+            "distribution": "ubuntu",
+            "start_lxc_network": "10.1.1.0/24",
+            "containers_per_host": 32,
+            "tunnel_to": ["10.10.10.10"],
+            "forward_ssh": false,
+            "container_name_prefix": "rally-multinode-02",
+            "host_provider": {
+                "type": "ExistingServers",
+                "credentials": [{"user": "root", "host": "host.net"}]
+            }
         }
-    }
 
     """
 

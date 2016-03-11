@@ -24,6 +24,8 @@ class ExistingCloud(engine.Engine):
 
     To use ExistingCloud, you should put credential information to the config:
 
+    .. code-block:: json
+
         {
             "type": "ExistingCloud",
             "auth_url": "http://localhost:5000/v2.0/",
@@ -39,6 +41,8 @@ class ExistingCloud(engine.Engine):
         }
 
     Or, using keystone v3 API endpoint:
+
+    .. code-block:: json
 
         {
             "type": "ExistingCloud",

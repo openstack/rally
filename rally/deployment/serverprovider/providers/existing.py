@@ -23,6 +23,8 @@ class ExistingServers(provider.ProviderFactory):
 
     Sample configuration:
 
+    .. code-block:: json
+
         {
             "type": "ExistingServers",
             "credentials": [{"user": "root", "host": "localhost"}]
