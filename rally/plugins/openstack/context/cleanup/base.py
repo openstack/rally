@@ -1,4 +1,4 @@
-#
+# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,15 +13,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# NOTE(stpierre): This module is left for backward compatibility.
+from rally.common.i18n import _
+from rally.common import logging
+from rally import consts
+from rally import exceptions
 
-import sys
-import warnings
 
-from rally.plugins.openstack.cleanup import base
+LOG = logging.getLogger(__name__)
 
-warnings.warn("Module rally.plugins.openstack.context.cleanup.base has been "
-              "moved to rally.plugins.openstack.cleanup.base, and will be "
-              "removed at some point in the future.")
 
-sys.modules["rally.plugins.openstack.context.cleanup.base"] = base
+class NoSuchCleanupResources(exceptions.RallyException):
+    msg_fmt = _("Missing cleanup resource managers: %(message)s")
+
+
+class CleanupMixin(object):
+
+    CONFIG_SCHEMA = {
+        "type": "array",
+        "$schema": consts.JSON_SCHEMA,
+        "items": {
+            "type": "string",
+        },
+        "additionalProperties": False
+    }
+
+    def setup(self):
+        pass
