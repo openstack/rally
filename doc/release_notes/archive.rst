@@ -9,4 +9,3 @@ All release notes
    :maxdepth: 1
 
    archive/*
-   *
