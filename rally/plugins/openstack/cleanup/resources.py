@@ -58,7 +58,8 @@ class QuotaMixin(SynchronizedDeletion):
 
 @base.resource("heat", "stacks", order=100, tenant_resource=True)
 class HeatStack(base.ResourceManager):
-    pass
+    def name(self):
+        return self.raw_resource.stack_name
 
 
 # NOVA
