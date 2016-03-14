@@ -1,40 +1,50 @@
 ---
-{%- include "sahara.yaml" %}
+{%- set keystone_version = keystone_version|default("v2.0") %}
+{% if keystone_version == "v2.0" %}
 
-  KeystoneBasic.create_user:
+  SaharaNodeGroupTemplates.create_and_list_node_group_templates:
     -
-      args: {}
+      args:
+        hadoop_version: "{{sahara_hadoop_version}}"
+        flavor:
+         name: "m1.small"
       runner:
         type: "constant"
         times: 1
         concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        api_versions:
+          sahara:
+            service_type: {{sahara_service_type}}
       sla:
         failure_rate:
           max: 0
 
-  KeystoneBasic.create_delete_user:
+  SaharaNodeGroupTemplates.create_delete_node_group_templates:
     -
-      args: {}
+      args:
+        hadoop_version: "{{sahara_hadoop_version}}"
+        flavor:
+         name: "m1.small"
       runner:
         type: "constant"
         times: 1
         concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        api_versions:
+          sahara:
+            service_type: {{sahara_service_type}}
       sla:
         failure_rate:
           max: 0
 
   KeystoneBasic.create_and_list_tenants:
-    -
-      args: {}
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  KeystoneBasic.create_and_list_users:
     -
       args: {}
       runner:
@@ -67,6 +77,41 @@
       context:
         users:
           tenants: 1
+      sla:
+        failure_rate:
+          max: 0
+
+{% endif %}
+
+  KeystoneBasic.create_user:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_delete_user:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_list_users:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
       sla:
         failure_rate:
           max: 0
@@ -842,7 +887,6 @@
           wp_image: fedora
           image: fedora
           network_id: {{external_net_id}}
-          router_id: {{external_router_id}}
       context:
         users:
           tenants: 1
