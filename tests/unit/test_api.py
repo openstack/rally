@@ -25,6 +25,7 @@ import mock
 from rally import api
 from rally.common import objects
 from rally import consts
+from rally.deployment import engine
 from rally import exceptions
 from tests.unit import fakes
 from tests.unit import test
@@ -592,3 +593,25 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         retval = api.Verification.get("fake_id")
         self.assertEqual(mock_verification_get.return_value, retval)
         mock_verification_get.assert_called_once_with("fake_id")
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_delete")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_destroy_invalid_deployment_type(self, mock_deployment_get,
+                                             mock_deployment_update,
+                                             mock_deployment_delete):
+        with mock.patch.dict(self.deployment["config"],
+                             {"type": "InvalidDeploymentType"}):
+            deployment = mock.Mock()
+            deployment.update_status = lambda x: x
+            deployment.__getitem__ = lambda _self, key: self.deployment[key]
+            self.assertRaises(exceptions.PluginNotFound,
+                              engine.Engine.get_engine,
+                              self.deployment["config"]["type"],
+                              deployment)
+            mock_deployment_get.return_value = self.deployment
+            mock_deployment_update.return_value = self.deployment
+            api.Deployment.destroy(self.deployment_uuid)
+            mock_deployment_get.assert_called_once_with(self.deployment_uuid)
+            mock_deployment_delete.assert_called_once_with(
+                self.deployment_uuid)
