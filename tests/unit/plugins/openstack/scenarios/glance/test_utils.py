@@ -14,6 +14,7 @@
 
 import tempfile
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.glance import utils
@@ -22,6 +23,7 @@ from tests.unit import test
 GLANCE_UTILS = "rally.plugins.openstack.scenarios.glance.utils"
 
 
+@ddt.ddt
 class GlanceScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
@@ -40,21 +42,34 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.list_images")
 
+    @ddt.data({},
+              {"name": "foo"},
+              {"name": None},
+              {"name": ""},
+              {"name": "bar", "fakearg": "fakearg"},
+              {"fakearg": "fakearg"})
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test_create_image(self, mock_wrap):
+    def test_create_image(self, create_args, mock_wrap):
         image_location = tempfile.NamedTemporaryFile()
         mock_wrap.return_value.create_image.return_value = self.image
         scenario = utils.GlanceScenario(context=self.context,
                                         clients=self.scenario_clients)
+        scenario.generate_random_name = mock.Mock()
+
         return_image = scenario._create_image("container_format",
                                               image_location.name,
                                               "disk_format",
-                                              fakearg="fakearg")
+                                              **create_args)
+
+        expected_args = dict(create_args)
+        if not expected_args.get("name"):
+            expected_args["name"] = scenario.generate_random_name.return_value
+
         self.assertEqual(self.image, return_image)
         mock_wrap.assert_called_once_with(scenario._clients.glance, scenario)
         mock_wrap.return_value.create_image.assert_called_once_with(
             "container_format", image_location.name, "disk_format",
-            fakearg="fakearg")
+            **expected_args)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.create_image")
 

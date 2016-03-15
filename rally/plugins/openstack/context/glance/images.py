@@ -99,7 +99,7 @@ class ImageGenerator(context.Context):
                 elif image_name:
                     cur_name = image_name
                 else:
-                    cur_name = None
+                    cur_name = self.generate_random_name()
 
                 image = glance_scenario._create_image(
                     image_container, image_url, image_type,

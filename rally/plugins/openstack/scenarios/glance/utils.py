@@ -40,6 +40,8 @@ class GlanceScenario(scenario.OpenStackScenario):
 
         :returns: image object
         """
+        if not kwargs.get("name"):
+            kwargs["name"] = self.generate_random_name()
         client = glance_wrapper.wrap(self._clients.glance, self)
         return client.create_image(container_format, image_location,
                                    disk_format, **kwargs)
