@@ -79,7 +79,7 @@ def validate_args(fn, *args, **kwargs):
     MissingArgs: Missing argument(s): b, d
 
     :param fn: the function to check
-    :param arg: the positional arguments supplied
+    :param args: the positional arguments supplied
     :param kwargs: the keyword arguments supplied
     """
     argspec = inspect.getargspec(fn)
@@ -87,14 +87,11 @@ def validate_args(fn, *args, **kwargs):
     num_defaults = len(argspec.defaults or [])
     required_args = argspec.args[:len(argspec.args) - num_defaults]
 
-    def isbound(method):
-        return getattr(method, "__self__", None) is not None
-
-    if isbound(fn):
+    if getattr(fn, "__self__", None):
         required_args.pop(0)
 
-    missing = [arg for arg in required_args if arg not in kwargs]
-    missing = missing[len(args):]
+    missing_required_args = required_args[len(args):]
+    missing = [arg for arg in missing_required_args if arg not in kwargs]
     if missing:
         raise MissingArgs(missing)
 
