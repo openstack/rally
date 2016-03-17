@@ -103,29 +103,17 @@ class PlotTestCase(test.TestCase):
               {"include_libs": False})
     @ddt.unpack
     @mock.patch(PLOT + "_process_tasks")
-    @mock.patch(PLOT + "objects")
+    @mock.patch(PLOT + "_extend_results")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch(PLOT + "json.dumps", side_effect=lambda s: "json_" + s)
-    def test_plot(self, mock_dumps, mock_get_template, mock_objects,
+    def test_plot(self, mock_dumps, mock_get_template, mock__extend_results,
                   mock__process_tasks, **ddt_kwargs):
         mock__process_tasks.return_value = "source", "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
-        mock_objects.Task.extend_results.return_value = ["extended_result"]
-        tasks_results = [
-            {"key": "foo_key", "sla": "foo_sla", "result": "foo_result",
-             "full_duration": "foo_full_duration",
-             "load_duration": "foo_load_duration"}]
-        html = plot.plot(tasks_results, **ddt_kwargs)
+        mock__extend_results.return_value = ["extended_result"]
+        html = plot.plot("tasks_results", **ddt_kwargs)
         self.assertEqual(html, "tasks_html")
-        generic_results = [
-            {"id": None, "created_at": None, "updated_at": None,
-             "task_uuid": None, "key": "foo_key",
-             "data": {"raw": "foo_result",
-                      "full_duration": "foo_full_duration",
-                      "sla": "foo_sla",
-                      "load_duration": "foo_load_duration"}}]
-        mock_objects.Task.extend_results.assert_called_once_with(
-            generic_results)
+        mock__extend_results.assert_called_once_with("tasks_results")
         mock_get_template.assert_called_once_with("task/report.html")
         mock__process_tasks.assert_called_once_with(["extended_result"])
         if "include_libs" in ddt_kwargs:
@@ -136,3 +124,28 @@ class PlotTestCase(test.TestCase):
             mock_get_template.return_value.render.assert_called_once_with(
                 data="json_scenarios", source="json_source",
                 include_libs=False)
+
+    @mock.patch(PLOT + "objects.Task.extend_results")
+    def test__extend_results(self, mock_task_extend_results):
+        mock_task_extend_results.side_effect = iter(
+            [["extended_foo"], ["extended_bar"], ["extended_spam"]])
+        tasks_results = [
+            {"key": "%s_key" % k, "sla": "%s_sla" % k,
+             "full_duration": "%s_full_duration" % k,
+             "load_duration": "%s_load_duration" % k,
+             "result": "%s_result" % k} for k in ("foo", "bar", "spam")]
+        generic_results = [
+            {"id": None, "created_at": None, "updated_at": None,
+             "task_uuid": None, "key": "%s_key" % k,
+             "data": {"raw": "%s_result" % k,
+                      "full_duration": "%s_full_duration" % k,
+                      "load_duration": "%s_load_duration" % k,
+                      "sla": "%s_sla" % k}} for k in ("foo", "bar", "spam")]
+        results = plot._extend_results(tasks_results)
+        self.assertEqual([mock.call([r]) for r in generic_results],
+                         mock_task_extend_results.mock_calls)
+        self.assertEqual(["extended_foo", "extended_bar", "extended_spam"],
+                         results)
+
+    def test__extend_results_empty(self):
+        self.assertEqual([], plot._extend_results([]))
