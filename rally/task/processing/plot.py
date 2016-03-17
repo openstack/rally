@@ -154,6 +154,14 @@ def plot(tasks_results, include_libs=False):
                            include_libs=include_libs)
 
 
+def trends(tasks_results):
+    trends = Trends()
+    for i, scenario in enumerate(_extend_results(tasks_results), 1):
+        trends.add_result(scenario)
+    template = ui_utils.get_template("task/trends.html")
+    return template.render(data=json.dumps(trends.get_data()))
+
+
 class Trends(object):
     """Process tasks results and make trends data.
 
@@ -242,7 +250,8 @@ class Trends(object):
                                ("max", charts.streaming.MaxComputation()),
                                ("avg", charts.streaming.MeanComputation())):
                 for k, v in total[stat]:
-                    comp.add(v)
+                    if isinstance(v, (float,) + six.integer_types):
+                        comp.add(v)
                 self._tasks[key]["stat"][stat] = comp.result()
             del self._tasks[key]["data"]
             self._tasks[key]["total"] = list(total.items())

@@ -317,6 +317,40 @@ class TaskTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report)
 
+    def test_trends(self):
+        cfg1 = {
+            "Dummy.dummy": [
+                {"runner": {"type": "constant", "times": 2,
+                            "concurrency": 2}}],
+            "Dummy.dummy_random_action": [
+                {"args": {"actions_num": 4},
+                 "runner": {"type": "constant", "times": 2, "concurrency": 2}},
+                {"runner": {"type": "constant", "times": 2,
+                            "concurrency": 2}}]}
+        cfg2 = {
+            "Dummy.dummy": [
+                {"args": {"sleep": 0.6},
+                 "runner": {"type": "constant", "times": 2,
+                            "concurrency": 2}}]}
+
+        config1 = utils.TaskConfig(cfg1)
+        config2 = utils.TaskConfig(cfg2)
+        rally = utils.Rally()
+        report = rally.gen_report_path(extension="html")
+
+        for i in range(5):
+            rally("task start --task %(file)s --tag trends_run_%(idx)d"
+                  % {"file": config1.filename, "idx": i})
+        rally("task start --task %s --tag trends_run_once" % config2.filename)
+
+        tasks_list = rally("task list")
+        uuids = [u[2:38] for u in tasks_list.split("\n") if "trends_run" in u]
+
+        rally("task trends %(uuids)s --out %(report)s"
+              % {"uuids": " ".join(uuids), "report": report})
+        del config1, config2
+        self.assertTrue(os.path.exists(report))
+
     def test_delete(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()

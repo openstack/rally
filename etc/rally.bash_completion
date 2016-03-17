@@ -43,6 +43,7 @@ _rally()
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"
     OPTS["task_status"]="--uuid"
+    OPTS["task_trends"]="--out --open --tasks"
     OPTS["task_use"]="--uuid"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["verify_compare"]="--uuid-1 --uuid-2 --csv --html --json --output-file --threshold"

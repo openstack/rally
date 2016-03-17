@@ -543,6 +543,67 @@ class TaskCommands(object):
                 print(_("There are no tasks. To run a new task, use:\n"
                         "\trally task start"))
 
+    @cliutils.args("--out", metavar="<path>",
+                   type=str, dest="out", required=False,
+                   help="Path to output file.")
+    @cliutils.args("--open", dest="open_it", action="store_true",
+                   help="Open the output in a browser.")
+    @cliutils.args("--tasks", dest="tasks", nargs="+",
+                   help="UUIDs of tasks, or JSON files with task results")
+    @cliutils.suppress_warnings
+    def trends(self, *args, **kwargs):
+        """Generate workloads trends HTML report."""
+        tasks = kwargs.get("tasks", []) or list(args)
+
+        if not tasks:
+            print(_("ERROR: At least one task must be specified"),
+                  file=sys.stderr)
+            return 1
+
+        results = []
+        for task_id in tasks:
+            if os.path.exists(os.path.expanduser(task_id)):
+                with open(os.path.expanduser(task_id), "r") as inp_js:
+                    task_results = json.load(inp_js)
+                    for result in task_results:
+                        try:
+                            jsonschema.validate(
+                                result,
+                                api.Task.TASK_RESULT_SCHEMA)
+                        except jsonschema.ValidationError as e:
+                            print(_("ERROR: Invalid task result format in %s")
+                                  % task_id, file=sys.stderr)
+                            print(six.text_type(e), file=sys.stderr)
+                            return 1
+
+            elif uuidutils.is_uuid_like(task_id):
+                task_results = map(
+                    lambda x: {"key": x["key"],
+                               "sla": x["data"]["sla"],
+                               "result": x["data"]["raw"],
+                               "load_duration": x["data"]["load_duration"],
+                               "full_duration": x["data"]["full_duration"]},
+                    api.Task.get(task_id).get_results())
+            else:
+                print(_("ERROR: Invalid UUID or file name passed: %s")
+                      % task_id, file=sys.stderr)
+                return 1
+
+            results.extend(task_results)
+
+        result = plot.trends(results)
+
+        out = kwargs.get("out")
+        if out:
+            output_file = os.path.expanduser(out)
+
+            with open(output_file, "w+") as f:
+                f.write(result)
+            if kwargs.get("open_it"):
+                webbrowser.open_new_tab("file://" + os.path.realpath(out))
+        else:
+            print(result)
+
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="UUIDs of tasks, or JSON files with task results")
     @cliutils.args("--out", metavar="<path>",
