@@ -16,9 +16,73 @@
 import mock
 
 from rally import exceptions
+from rally.task import scenario
 from rally.task import types
 from tests.unit import fakes
 from tests.unit import test
+
+
+class TestConvertPlugin(scenario.Scenario):
+    @types.convert(bar={"type": "test_bar"})
+    @scenario.configure()
+    def one_arg(self, bar):
+        """Dummy docstring.
+
+        :param bar: dummy parameter
+        """
+        pass
+
+    @types.convert(bar={"type": "test_bar"},
+                   baz={"type": "test_baz"})
+    @scenario.configure()
+    def two_args(self, bar, baz):
+        """Dummy docstring.
+
+        :param bar: dummy parameter
+        :param baz: dummy parameter
+        """
+        pass
+
+
+class ConvertTestCase(test.TestCase):
+    # NOTE(stpierre): These cases test types.convert(),
+    # types._get_preprocessor_loader(), and bits of
+    # types.preprocess(). This may not look very elegant, but it's the
+    # easiest way to test both convert() and
+    # _get_preprocessor_loader() without getting so fine-grained that
+    # the tests are basically tests that the computer is on.
+
+    @mock.patch("rally.task.types.ResourceType.get", create=True)
+    def test_convert(self, mock_resource_type_get):
+        mock_transform = mock_resource_type_get.return_value.transform
+        args = types.preprocess("TestConvertPlugin.one_arg",
+                                mock.MagicMock(),
+                                {"bar": "bar_config"})
+        mock_resource_type_get.assert_called_once_with("test_bar")
+        mock_transform.assert_called_once_with(clients=mock.ANY,
+                                               resource_config="bar_config")
+        self.assertDictEqual(args, {"bar": mock_transform.return_value})
+
+    @mock.patch("rally.task.types.ResourceType.get", create=True)
+    def test_convert_multiple(self, mock_resource_type_get):
+        loaders = {"test_bar": mock.Mock(), "test_baz": mock.Mock()}
+        mock_resource_type_get.side_effect = lambda p: loaders[p]
+
+        args = types.preprocess("TestConvertPlugin.two_args",
+                                mock.MagicMock(),
+                                {"bar": "bar_config",
+                                 "baz": "baz_config"})
+        mock_resource_type_get.assert_has_calls([mock.call("test_bar"),
+                                                 mock.call("test_baz")],
+                                                any_order=True)
+        loaders["test_bar"].transform.assert_called_once_with(
+            clients=mock.ANY, resource_config="bar_config")
+        loaders["test_baz"].transform.assert_called_once_with(
+            clients=mock.ANY, resource_config="baz_config")
+        self.assertDictEqual(
+            args,
+            {"bar": loaders["test_bar"].transform.return_value,
+             "baz": loaders["test_baz"].transform.return_value})
 
 
 class FlavorResourceTypeTestCase(test.TestCase):
