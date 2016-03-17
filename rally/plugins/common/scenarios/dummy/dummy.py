@@ -183,3 +183,16 @@ class Dummy(scenario.Scenario):
         """
         self._random_fail_emitter(exception_probability)
         self._random_fail_emitter(exception_probability)
+
+    @scenario.configure()
+    def dummy_random_action(self, actions_num=5, sleep_min=0, sleep_max=2):
+        """Sleep random time in dummy actions.
+
+        :param actions_num: int number of actions to generate
+        :param sleep_min: minimal time to sleep, numeric seconds
+        :param sleep_max: maximum time to sleep, numeric seconds
+        """
+        for idx in range(actions_num):
+            duration = random.uniform(sleep_min, sleep_max)
+            with atomic.ActionTimer(self, "action_%d" % idx):
+                utils.interruptable_sleep(duration)

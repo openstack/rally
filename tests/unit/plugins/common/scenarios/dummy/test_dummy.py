@@ -11,16 +11,20 @@
 #    under the License.
 
 
+import ddt
 import mock
 
 from rally.plugins.common.scenarios.dummy import dummy
 from tests.unit import test
 
 
+DUMMY = "rally.plugins.common.scenarios.dummy.dummy."
+
+
+@ddt.ddt
 class DummyTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.utils."
-                "interruptable_sleep")
+    @mock.patch(DUMMY + "utils.interruptable_sleep")
     def test_dummy(self, mock_interruptable_sleep):
         scenario = dummy.Dummy(test.get_test_context())
         scenario.sleep_between = mock.MagicMock()
@@ -28,8 +32,7 @@ class DummyTestCase(test.TestCase):
         scenario.dummy(sleep=10)
         mock_interruptable_sleep.assert_called_once_with(10)
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.utils."
-                "interruptable_sleep")
+    @mock.patch(DUMMY + "utils.interruptable_sleep")
     def test_dummy_exception(self, mock_interruptable_sleep):
         scenario = dummy.Dummy(test.get_test_context())
 
@@ -51,7 +54,7 @@ class DummyTestCase(test.TestCase):
                               scenario.dummy_exception_probability,
                               exception_probability=1)
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.random")
+    @mock.patch(DUMMY + "random")
     def test_dummy_output(self, mock_random):
         mock_random.randint.side_effect = lambda min_, max_: max_
         desc = "This is a description text for %s"
@@ -132,3 +135,29 @@ class DummyTestCase(test.TestCase):
             self.assertRaises(KeyError,
                               scenario.dummy_random_fail_in_atomic,
                               exception_probability=1)
+
+    @ddt.data({},
+              {"actions_num": 5, "sleep_min": 0, "sleep_max": 2},
+              {"actions_num": 7, "sleep_min": 1.23, "sleep_max": 4.56},
+              {"actions_num": 1, "sleep_max": 4.56},
+              {"sleep_min": 1})
+    @ddt.unpack
+    @mock.patch(DUMMY + "random")
+    @mock.patch(DUMMY + "utils.interruptable_sleep")
+    def test_dummy_random_action(self, mock_interruptable_sleep, mock_random,
+                                 **kwargs):
+        mock_random.uniform.side_effect = range(100)
+
+        scenario = dummy.Dummy(test.get_test_context())
+        scenario.dummy_random_action(**kwargs)
+        actions_num = kwargs.get("actions_num", 5)
+        calls = [mock.call(i) for i in range(actions_num)]
+        self.assertEqual(calls, mock_interruptable_sleep.mock_calls)
+
+        calls = [mock.call(kwargs.get("sleep_min", 0),
+                           kwargs.get("sleep_max", 2))
+                 for i in range(actions_num)]
+        self.assertEqual(calls, mock_random.uniform.mock_calls)
+        for i in range(actions_num):
+            self._test_atomic_action_timer(scenario.atomic_actions(),
+                                           "action_%d" % i)

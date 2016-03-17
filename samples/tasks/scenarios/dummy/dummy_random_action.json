@@ -1,0 +1,22 @@
+{
+    "Dummy.dummy_random_action": [
+        {
+            "args": {
+                "atomics_num": 5,
+                "sleep_min": 0,
+                "sleep_max": 2
+            },
+            "runner": {
+                "type": "constant",
+                "times": 5,
+                "concurrency": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
