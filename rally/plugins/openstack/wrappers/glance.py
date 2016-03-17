@@ -61,6 +61,10 @@ class GlanceWrapper(object):
         self.client = client
 
     @abc.abstractmethod
+    def get_image(self, image):
+        """Refresh an image from an image object."""
+
+    @abc.abstractmethod
     def create_image(self, container_format, image_location, disk_format):
         """Creates new image."""
 
@@ -68,8 +72,15 @@ class GlanceWrapper(object):
     def delete_image(self, image):
         """Deletes image."""
 
+    @abc.abstractmethod
+    def list_images(self, **filters):
+        """List images."""
+
 
 class GlanceV1Wrapper(GlanceWrapper):
+    def get_image(self, image):
+        return image.manager.get(image.id)
+
     def create_image(self, container_format, image_location,
                      disk_format, **kwargs):
         kw = {
@@ -112,11 +123,17 @@ class GlanceV1Wrapper(GlanceWrapper):
             timeout=CONF.benchmark.glance_image_delete_timeout,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)
 
+    def list_images(self, **filters):
+        return self.client.images.list(**filters)
+
 
 class GlanceV2Wrapper(GlanceWrapper):
-    def _get_image(self, image):
+    def get_image(self, image):
+        return self.client.images.get(image.id)
+
+    def _update_image(self, image):
         try:
-            return self.client.images.get(image.id)
+            return self.get_image(image)
         except glance_exc.HTTPNotFound:
             raise exceptions.GetResourceNotFound(resource=image)
 
@@ -139,7 +156,7 @@ class GlanceV2Wrapper(GlanceWrapper):
         start = time.time()
         image = utils.wait_for_status(
             image, ["queued"],
-            update_resource=self._get_image,
+            update_resource=self._update_image,
             timeout=CONF.benchmark.glance_image_create_timeout,
             check_interval=CONF.benchmark.
             glance_image_create_poll_interval)
@@ -159,7 +176,7 @@ class GlanceV2Wrapper(GlanceWrapper):
 
         return utils.wait_for_status(
             image, ["active"],
-            update_resource=self._get_image,
+            update_resource=self._update_image,
             timeout=timeout,
             check_interval=CONF.benchmark.
             glance_image_create_poll_interval)
@@ -169,9 +186,12 @@ class GlanceV2Wrapper(GlanceWrapper):
         utils.wait_for_status(
             image, ["deleted"],
             check_deletion=True,
-            update_resource=self._get_image,
+            update_resource=self._update_image,
             timeout=CONF.benchmark.glance_image_delete_timeout,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)
+
+    def list_images(self, **filters):
+        return self.client.images.list(filters=filters)
 
 
 def wrap(client, owner):

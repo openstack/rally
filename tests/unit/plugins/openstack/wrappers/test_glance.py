@@ -47,6 +47,14 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.owner = mock.Mock()
         self.wrapped_client = glance_wrapper.wrap(self.client, self.owner)
 
+    def test_get_image(self):
+        image = mock.Mock()
+
+        return_image = self.wrapped_client.get_image(image)
+
+        image.manager.get.assert_called_once_with(image.id)
+        self.assertEqual(return_image, image.manager.get.return_value)
+
     @ddt.data(
         {"location": "image_location"},
         {"location": "image_location", "fakearg": "fake"},
@@ -94,6 +102,12 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
             timeout=CONF.benchmark.glance_image_delete_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
 
+    @ddt.data({}, {"fakearg": "fake"})
+    def test_list_images(self, filters):
+        self.assertEqual(self.wrapped_client.list_images(**filters),
+                         self.client().images.list.return_value)
+        self.client().images.list.assert_called_once_with(**filters)
+
 
 @ddt.ddt
 class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
@@ -106,22 +120,31 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.owner = mock.Mock()
         self.wrapped_client = glance_wrapper.wrap(self.client, self.owner)
 
-    def test__get_image(self):
+    def test_get_image(self):
         image = mock.Mock()
 
-        return_image = self.wrapped_client._get_image(image)
+        return_image = self.wrapped_client.get_image(image)
 
         self.client.return_value.images.get.assert_called_once_with(image.id)
         self.assertEqual(return_image,
                          self.client.return_value.images.get.return_value)
 
-    def test__get_image_not_found(self):
+    def test__update_image(self):
+        image = mock.Mock()
+
+        return_image = self.wrapped_client._update_image(image)
+
+        self.client.return_value.images.get.assert_called_once_with(image.id)
+        self.assertEqual(return_image,
+                         self.client.return_value.images.get.return_value)
+
+    def test__update_image_not_found(self):
         image = mock.Mock()
         self.client.return_value.images.get.side_effect = (
             glance_exc.HTTPNotFound)
 
         self.assertRaises(exceptions.GetResourceNotFound,
-                          self.wrapped_client._get_image, image)
+                          self.wrapped_client._update_image, image)
         self.client.return_value.images.get.assert_called_once_with(image.id)
 
     @ddt.data(
@@ -134,7 +157,7 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
     @mock.patch("requests.get")
     def test_create_image(self, mock_requests_get, mock_open, location,
                           **kwargs):
-        self.wrapped_client._get_image = mock.Mock()
+        self.wrapped_client._update_image = mock.Mock()
         created_image = mock.Mock()
         uploaded_image = mock.Mock()
         self.mock_wait_for_status.mock.side_effect = [created_image,
@@ -165,13 +188,13 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.mock_wait_for_status.mock.assert_has_calls([
             mock.call(
                 self.client().images.create.return_value, ["queued"],
-                update_resource=self.wrapped_client._get_image,
+                update_resource=self.wrapped_client._update_image,
                 check_interval=CONF.benchmark.
                 glance_image_create_poll_interval,
                 timeout=CONF.benchmark.glance_image_create_timeout),
             mock.call(
                 created_image, ["active"],
-                update_resource=self.wrapped_client._get_image,
+                update_resource=self.wrapped_client._update_image,
                 check_interval=CONF.benchmark.
                 glance_image_create_poll_interval,
                 timeout=mock.ANY)])
@@ -185,6 +208,12 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.mock_wait_for_status.mock.assert_called_once_with(
             image, ["deleted"],
             check_deletion=True,
-            update_resource=self.wrapped_client._get_image,
+            update_resource=self.wrapped_client._update_image,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval,
             timeout=CONF.benchmark.glance_image_delete_timeout)
+
+    @ddt.data({}, {"fakearg": "fake"})
+    def test_list_images(self, filters):
+        self.assertEqual(self.wrapped_client.list_images(**filters),
+                         self.client().images.list.return_value)
+        self.client().images.list.assert_called_once_with(filters=filters)

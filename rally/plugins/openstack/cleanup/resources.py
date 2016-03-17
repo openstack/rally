@@ -24,7 +24,9 @@ from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.scenarios.fuel import utils as futils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
+from rally.task import utils as task_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -384,8 +386,24 @@ class ManilaSecurityService(base.ResourceManager):
 @base.resource("glance", "images", order=500, tenant_resource=True)
 class GlanceImage(base.ResourceManager):
 
+    def _manager(self):
+        return glance_wrapper.wrap(
+            getattr(self.admin or self.user, self._service), self)
+
     def list(self):
-        return self._manager().list(owner=self.tenant_uuid)
+        return self._manager().list_images(owner=self.tenant_uuid)
+
+    def is_deleted(self):
+        try:
+            resource = self._manager().get_image(self.raw_resource)
+        except Exception as e:
+            return getattr(e, "code", getattr(e, "http_status", 400)) == 404
+
+        return task_utils.get_status(resource) in ("DELETED",
+                                                   "DELETE_COMPLETE")
+
+    def delete(self):
+        return self._manager().delete_image(self.raw_resource)
 
 
 # SAHARA
