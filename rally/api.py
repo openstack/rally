@@ -80,13 +80,17 @@ class Deployment(object):
         # TODO(akscram): Check that the deployment have got a status that
         #                is equal to "*->finished" or "deploy->inconsistent".
         deployment = objects.Deployment.get(deployment)
-        deployer = deploy_engine.Engine.get_engine(
-            deployment["config"]["type"], deployment)
-
         tempest.Tempest(deployment["uuid"]).uninstall()
-        with deployer:
-            deployer.make_cleanup()
-            deployment.delete()
+        try:
+            deployer = deploy_engine.Engine.get_engine(
+                deployment["config"]["type"], deployment)
+            with deployer:
+                deployer.make_cleanup()
+        except exceptions.PluginNotFound:
+            LOG.info(_("Deployment %s will be deleted despite"
+                       " exception") % deployment["uuid"])
+
+        deployment.delete()
 
     @classmethod
     def recreate(cls, deployment):
