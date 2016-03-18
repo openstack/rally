@@ -327,7 +327,6 @@ class TaskCommands(object):
                 print(_("\nFor more details run:\nrally -vd task detailed %s")
                       % task["uuid"])
             return 0
-
         for result in task["results"]:
             key = result["key"]
             print("-" * 80)
@@ -343,7 +342,7 @@ class TaskCommands(object):
             iterations_headers = ["iteration", "full duration"]
             iterations_actions = []
             output = []
-
+            task_errors = []
             if iterations_data:
                 for i, atomic_name in enumerate(result["info"]["atomic"], 1):
                     action = "%i. %s" % (i, atomic_name)
@@ -381,6 +380,11 @@ class TaskCommands(object):
                             result["info"], title=additive["title"])
                         output.append(output_table)
                     output[idx].add_iteration(additive["data"])
+
+                if itr.get("error"):
+                    task_errors.append(TaskCommands._format_task_error(itr))
+
+            self._print_task_errors(task_id, task_errors)
 
             cols = plot.charts.MainStatsTable.columns
             float_cols = cols[1:7]
@@ -749,3 +753,26 @@ class TaskCommands(object):
                     "connection": connection_string,
                     "name": parsed_obj.scheme
         })
+
+    @staticmethod
+    def _print_task_errors(task_id, task_errors):
+        print(cliutils.make_header("Task %s has %d error(s)" %
+                                   (task_id, len(task_errors))))
+        for err_data in task_errors:
+            print(*err_data, sep="\n")
+            print("-" * 80)
+
+    @staticmethod
+    def _format_task_error(data):
+        error_type = _("Unknown type")
+        error_message = _("Rally hasn't caught anything yet")
+        error_traceback = _("No traceback available.")
+        try:
+            error_type = data["error"][0]
+            error_message = data["error"][1]
+            error_traceback = data["error"][2]
+        except IndexError:
+            pass
+        return ("%(error_type)s: %(error_message)s\n" %
+                {"error_type": error_type, "error_message": error_message},
+                error_traceback)
