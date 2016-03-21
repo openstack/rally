@@ -64,6 +64,21 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        template_path: "~/.rally/extra/resource_group_with_constraint.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   HeatStacks.create_check_delete_stack:
     -
       args:
