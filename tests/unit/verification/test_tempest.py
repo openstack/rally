@@ -333,13 +333,14 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 
 
 class TempestVerifyTestCase(BaseTestCase):
-    def _get_fake_call(self, testr_args):
+    def _get_fake_call(self, testr_args,
+                       concur_args="--parallel --concurrency 0"):
         return (
-            "%(venv)s testr run --subunit --parallel"
-            " --concurrency 0 %(testr_args)s"
+            "%(venv)s testr run --subunit %(concur_args)s %(testr_args)s"
             " | tee %(log_file)s"
             " | %(venv)s subunit-trace -f -n" % {
                 "venv": self.verifier.venv_wrapper,
+                "concur_args": concur_args,
                 "testr_args": testr_args,
                 "log_file": self.verifier.path("subunit.stream")})
 
@@ -454,7 +455,52 @@ class TempestVerifyTestCase(BaseTestCase):
         mock_tempest_parse_results.assert_called_once_with(None, None)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
-                return_value=(None))
+                return_value=None)
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
+    @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
+                return_value=True)
+    def test_verify_concurrency_equals_to_1(
+            self, mock_tempest_is_configured, mock_tempest_resources_context,
+            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+        set_name = "identity"
+        fake_call = self._get_fake_call(
+            "tempest.api.%s" % set_name, "--concurrency 1")
+
+        self.verifier.verify("identity", None, None, None, 1, False)
+        self.verifier.verification.start_verifying.assert_called_once_with(
+            set_name)
+
+        mock_subprocess.check_call.assert_called_once_with(
+            fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
+            shell=True)
+        mock_tempest_parse_results.assert_called_once_with(None, None)
+
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
+                return_value=None)
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
+    @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
+                return_value=True)
+    def test_verify_concurrency_doesnt_equal_to_1(
+            self, mock_tempest_is_configured, mock_tempest_resources_context,
+            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+        set_name = "identity"
+        fake_call = self._get_fake_call("tempest.api.%s" % set_name)
+
+        self.verifier.verify("identity", None, None, None, 0, False)
+        self.verifier.verification.start_verifying.assert_called_once_with(
+            set_name)
+
+        mock_subprocess.check_call.assert_called_once_with(
+            fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
+            shell=True)
+        mock_tempest_parse_results.assert_called_once_with(None, None)
+
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
+                return_value=None)
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
     @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")

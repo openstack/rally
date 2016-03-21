@@ -301,31 +301,31 @@ class Tempest(object):
         if not self.is_configured():
             self.generate_config_file()
 
-        testr_args = "--concurrency %d" % concur
+        testr_args = ""
 
         if failing:
-            testr_args += " --failing"
+            testr_args = "--failing"
             set_name = "re-run-failed"
         elif set_name:
             if set_name == "full":
                 pass
             elif set_name in consts.TempestTestsSets:
-                testr_args += " %s" % set_name
+                testr_args = set_name
             elif set_name in consts.TempestTestsAPI:
-                testr_args += " tempest.api.%s" % set_name
+                testr_args = "tempest.api.%s" % set_name
         elif regex:
-            testr_args += " %s" % regex
+            testr_args = regex
         elif tests_file:
-            testr_args += " --load-list %s" % os.path.abspath(tests_file)
+            testr_args = "--load-list %s" % os.path.abspath(tests_file)
 
         self.verification.start_verifying(set_name)
         try:
-            self.run(testr_args)
+            self.run(testr_args, concur=concur)
         except subprocess.CalledProcessError:
             LOG.info(_("Test run has been finished with errors. "
                        "Check logs for details."))
 
-    def run(self, testr_args="", log_file=None, tempest_conf=None):
+    def run(self, testr_args="", log_file=None, tempest_conf=None, concur=0):
         """Run Tempest.
 
         :param testr_args: Arguments which will be passed to testr
@@ -333,17 +333,24 @@ class Tempest(object):
                          If not specified, the value from "self.log_file_raw"
                          will be used as the path to the file
         :param tempest_conf: User specified Tempest config file location
+        :param concur: How many processes to use to run Tempest tests.
+                       The default value (0) auto-detects CPU count
         """
         if tempest_conf and os.path.isfile(tempest_conf):
             self.config_file = tempest_conf
         LOG.info(_("Tempest config file: %s") % self.config_file)
 
+        concur_args = "--concurrency %d" % concur
+        if concur != 1:
+            concur_args = "--parallel %s" % concur_args
+
         test_cmd = (
-            "%(venv)s testr run --subunit --parallel %(testr_args)s "
+            "%(venv)s testr run --subunit %(concur_args)s %(testr_args)s "
             "| tee %(log_file)s "
             "| %(venv)s subunit-trace -f -n" %
             {
                 "venv": self.venv_wrapper,
+                "concur_args": concur_args,
                 "testr_args": testr_args,
                 "log_file": log_file or self.log_file_raw
             })
