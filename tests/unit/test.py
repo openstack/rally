@@ -148,18 +148,13 @@ class ScenarioTestCase(TestCase):
 
 
 class ContextClientAdapter(object):
-    def __init__(self, endpoint, clients):
+    def __init__(self, endpoint, test_case):
         self.endpoint = endpoint
-        self._clients = clients
+        self.test_case = test_case
 
     def mock_client(self, name, version=None):
         admin = self.endpoint.startswith("admin")
-        try:
-            client = self._clients[(name, version, admin)]
-        except KeyError:
-            raise ValueError(
-                "Client %s version %s (admin %s) is missing, "
-                "please configure" % (name, version, admin))
+        client = self.test_case.clients(name, version=version, admin=admin)
         if not isinstance(client.return_value, mock.Mock):
             return client.return_value
         if client.side_effect is not None:
@@ -181,10 +176,9 @@ class ContextTestCase(ScenarioTestCase):
 
         self._adapters = {}
 
-    def context_client(self, endpoint):
+    def context_client(self, endpoint, api_info=None):
         if endpoint not in self._adapters:
-            self._adapters[endpoint] = ContextClientAdapter(
-                endpoint, self._clients)
+            self._adapters[endpoint] = ContextClientAdapter(endpoint, self)
         return self._adapters[endpoint]
 
     def get_client_mocks(self):
