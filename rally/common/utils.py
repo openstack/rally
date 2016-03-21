@@ -326,13 +326,18 @@ class RandomNameGeneratorMixin(object):
             parts["suffix"]])
 
     @classmethod
-    def name_matches_object(cls, name, task_id=None):
+    def name_matches_object(cls, name, task_id=None, exact=True):
         """Determine if a resource name could have been created by this class.
 
         :param name: The resource name to check against this class's
                      RESOURCE_NAME_FORMAT.
         :param task_id: The task ID that must match the task portion of
                         the random name
+        :param exact: If False, then additional information may follow
+                      the expected name. (For instance, this is useful
+                      when bulk creating instances, since Nova
+                      automatically appends a UUID to each instance
+                      created thusly.)
         :returns: bool
         """
         match = cls._resource_name_placeholder_re.match(
@@ -350,9 +355,10 @@ class RandomNameGeneratorMixin(object):
         else:
             subst["task_id"] = "[%s]{%s}" % (subst["chars"],
                                              len(parts["task"]))
+        subst["extra"] = "" if exact else ".*"
         name_re = re.compile(
             "%(prefix)s%(task_id)s%(sep)s"
-            "[%(chars)s]{%(rand_length)s}%(suffix)s$" % subst)
+            "[%(chars)s]{%(rand_length)s}%(suffix)s%(extra)s$" % subst)
         return bool(name_re.match(name))
 
 
@@ -370,22 +376,17 @@ def name_matches_object(name, *objects, **kwargs):
                  RESOURCE_NAME_FORMAT.
     :param *objects: Classes or objects to fetch random name
                      generation parameters from.
-    :param **kwargs: Additional keyword args. Only 'task_id' is
-                     recognized, but the function signature must
-                     accept **kwargs because Python can be wierd about
-                     mixing *-magic and non-magic. The optional
-                     'task_id' kwarg can be used to specify the task
-                     ID that must match the task portion of the random
-                     name.
+    :param **kwargs: Additional keyword args. See the docstring for
+                     RandomNameGenerator.name_matches_object() for
+                     details on what args are recognized.
     :returns: bool
     """
-    task_id = kwargs.get("task_id")
     unique_rng_options = {}
     for obj in objects:
         key = (obj.RESOURCE_NAME_FORMAT, obj.RESOURCE_NAME_ALLOWED_CHARACTERS)
         if key not in unique_rng_options:
             unique_rng_options[key] = obj
-    return any(obj.name_matches_object(name, task_id=task_id)
+    return any(obj.name_matches_object(name, **kwargs)
                for obj in unique_rng_options.values())
 
 

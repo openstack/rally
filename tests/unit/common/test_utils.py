@@ -271,6 +271,13 @@ class RandomNameTestCase(test.TestCase):
          "bad": ("rally_12345678_abcdefgh", "rally_12345678_abcd1234",
                  "rally_abcd1234_", "rally_abcd1234_!!!!!!!!",
                  "rally_ABCD1234_abcdefgh")},
+        {"task_id": "abcd1234",
+         "exact": False,
+         "good": ("rally_abcd1234_abcdefghfoo", "rally_abcd1234_abcdefgh",
+                  "rally_abcd1234_abcdefgh-bar",
+                  "rally_abcd1234_abcdefgh+!@$"),
+         "bad": ("rally_abcd1234_", "rally_abcd1234_!!!!!!!!",
+                 "rally_abcd1234_abcdefg")},
         {"fmt": "][*_XXX_XXX",
          "chars": "abc(.*)",
          "good": ("][*_abc_abc", "][*_abc_((("),
@@ -283,7 +290,8 @@ class RandomNameTestCase(test.TestCase):
     @ddt.unpack
     def test_cls_name_matches_object(
             self, good=(), bad=(), fmt="rally_XXXXXXXX_XXXXXXXX",
-            chars=string.ascii_letters + string.digits, task_id=None):
+            chars=string.ascii_letters + string.digits, task_id=None,
+            exact=True):
         class FakeNameGenerator(utils.RandomNameGeneratorMixin):
             RESOURCE_NAME_FORMAT = fmt
             RESOURCE_NAME_ALLOWED_CHARACTERS = chars
@@ -291,27 +299,31 @@ class RandomNameTestCase(test.TestCase):
 
         for name in good:
             self.assertTrue(
-                FakeNameGenerator.name_matches_object(name, task_id),
-                "%s unexpectedly didn't match RESOURCE_NAME_FORMAT %s" %
-                (name, fmt))
+                FakeNameGenerator.name_matches_object(name, task_id, exact),
+                "%(name)s unexpectedly didn't match RESOURCE_NAME_FORMAT "
+                "%(fmt)s with exact=%(exact)s" %
+                {"name": name, "fmt": fmt, "exact": exact})
 
         for name in bad:
             self.assertFalse(
-                FakeNameGenerator.name_matches_object(name, task_id),
-                "%s unexpectedly matched RESOURCE_NAME_FORMAT %s" %
-                (name, fmt))
+                FakeNameGenerator.name_matches_object(name, task_id, exact),
+                "%(name)s unexpectedly matched RESOURCE_NAME_FORMAT %(fmt)s "
+                "with exact=%(exact)s" %
+                {"name": name, "fmt": fmt, "exact": exact})
 
     def test_name_matches_object(self):
         name = "foo"
         obj = mock.Mock()
         self.assertTrue(utils.name_matches_object(name, obj))
-        obj.name_matches_object.assert_called_once_with(name, task_id=None)
+        obj.name_matches_object.assert_called_once_with(name)
 
-    def test_name_matches_object_task_id(self):
+    def test_name_matches_object_kwargs(self):
         name = "foo"
         obj = mock.Mock()
-        self.assertTrue(utils.name_matches_object(name, obj, task_id="taskid"))
-        obj.name_matches_object.assert_called_once_with(name, task_id="taskid")
+        self.assertTrue(utils.name_matches_object(name, obj, task_id="taskid",
+                                                  exact=False))
+        obj.name_matches_object.assert_called_once_with(name, task_id="taskid",
+                                                        exact=False)
 
     def test_name_matches_object_identical_list(self):
         class One(utils.RandomNameGeneratorMixin):
@@ -326,7 +338,7 @@ class RandomNameTestCase(test.TestCase):
         self.assertItemsEqual(
             One.name_matches_object.call_args_list +
             Two.name_matches_object.call_args_list,
-            [mock.call(name, task_id=None)])
+            [mock.call(name)])
 
     def test_name_matches_object_differing_list(self):
         class One(utils.RandomNameGeneratorMixin):
@@ -349,7 +361,7 @@ class RandomNameTestCase(test.TestCase):
         name = "foo"
         self.assertFalse(utils.name_matches_object(name, *classes))
         for cls in classes:
-            cls.name_matches_object.assert_called_once_with(name, task_id=None)
+            cls.name_matches_object.assert_called_once_with(name)
 
     def test_cls_name_matches_object_identity(self):
         generator = utils.RandomNameGeneratorMixin()
