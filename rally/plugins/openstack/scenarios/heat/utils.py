@@ -291,6 +291,60 @@ class HeatScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.heat_stack_restore_poll_interval
         )
 
+    @atomic.action_timer("heat.show_output")
+    def _stack_show_output(self, stack, output_key):
+        """Execute output_show for specified "output_key".
+
+        This method uses new output API call.
+        :param stack: stack with output_key output.
+        :param output_key: The name of the output.
+        """
+        output = self.clients("heat").stacks.output_show(stack.id, output_key)
+        return output
+
+    @atomic.action_timer("heat.show_output_via_API")
+    def _stack_show_output_via_API(self, stack, output_key):
+        """Execute output_show for specified "output_key".
+
+        This method uses old way for getting output value.
+        It gets whole stack object and then finds necessary "output_key".
+        :param stack: stack with output_key output.
+        :param output_key: The name of the output.
+        """
+        # this code copy-pasted and adopted for rally from old client version
+        # https://github.com/openstack/python-heatclient/blob/0.8.0/heatclient/
+        # v1/shell.py#L682-L699
+        stack = self.clients("heat").stacks.get(stack_id=stack.id)
+        for output in stack.to_dict().get("outputs", []):
+            if output["output_key"] == output_key:
+                return output
+
+    @atomic.action_timer("heat.list_output")
+    def _stack_list_output(self, stack):
+        """Execute output_list for specified "stack".
+
+        This method uses new output API call.
+        :param stack: stack to call output-list.
+        """
+        output_list = self.clients("heat").stacks.output_list(stack.id)
+        return output_list
+
+    @atomic.action_timer("heat.list_output_via_API")
+    def _stack_list_output_via_API(self, stack):
+        """Execute output_list for specified "stack".
+
+        This method uses old way for getting output value.
+        It gets whole stack object and then prints all outputs
+        belongs this stack.
+        :param stack: stack to call output-list.
+        """
+        # this code copy-pasted and adopted for rally from old client version
+        # https://github.com/openstack/python-heatclient/blob/0.8.0/heatclient/
+        # v1/shell.py#L649-L663
+        stack = self.clients("heat").stacks.get(stack_id=stack.id)
+        output_list = stack.to_dict()["outputs"]
+        return output_list
+
     def _count_instances(self, stack):
         """Count instances in a Heat stack.
 

@@ -33,6 +33,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         self.dummy_parameters = {"dummy_param": "dummy_key"}
         self.dummy_files = ["dummy_file.yaml"]
         self.dummy_environment = {"dummy_env": "dummy_env_value"}
+        self.default_output_key = "dummy_output_key"
 
     def test_list_stacks(self):
         scenario = utils.HeatScenario(self.context)
@@ -240,6 +241,39 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
 
         self.assertRaises(exceptions.InvalidConfigException,
                           scenario._stack_webhook, stack, "bogus")
+
+    def test_stack_show_output(self):
+        scenario = utils.HeatScenario(self.context)
+        scenario._stack_show_output(self.stack, self.default_output_key)
+        self.clients("heat").stacks.output_show.assert_called_once_with(
+            self.stack.id, self.default_output_key)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.show_output")
+
+    def test_stack_show_output_via_API(self):
+        scenario = utils.HeatScenario(self.context)
+        scenario._stack_show_output_via_API(
+            self.stack, self.default_output_key)
+        self.clients("heat").stacks.get.assert_called_once_with(
+            stack_id=self.stack.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.show_output_via_API")
+
+    def test_stack_list_output(self):
+        scenario = utils.HeatScenario(self.context)
+        scenario._stack_list_output(self.stack)
+        self.clients("heat").stacks.output_list.assert_called_once_with(
+            self.stack.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.list_output")
+
+    def test_stack_list_output_via_API(self):
+        scenario = utils.HeatScenario(self.context)
+        scenario._stack_list_output_via_API(self.stack)
+        self.clients("heat").stacks.get.assert_called_once_with(
+            stack_id=self.stack.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.list_output_via_API")
 
 
 class HeatScenarioNegativeTestCase(test.ScenarioTestCase):
