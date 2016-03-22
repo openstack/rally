@@ -23,7 +23,9 @@ CONF = cfg.CONF
 
 CLEANUP_OPTS = [
     cfg.IntOpt("resource_deletion_timeout", default=600,
-               help="A timeout in seconds for deleting resources")
+               help="A timeout in seconds for deleting resources"),
+    cfg.IntOpt("cleanup_threads", default=20,
+               help="Number of cleanup threads to run")
 ]
 cleanup_group = cfg.OptGroup(name="cleanup", title="Cleanup Options")
 CONF.register_group(cleanup_group)
@@ -33,7 +35,7 @@ CONF.register_opts(CLEANUP_OPTS, cleanup_group)
 def resource(service, resource, order=0, admin_required=False,
              perform_for_admin_only=False, tenant_resource=False,
              max_attempts=3, timeout=CONF.cleanup.resource_deletion_timeout,
-             interval=1, threads=20):
+             interval=1, threads=CONF.cleanup.cleanup_threads):
     """Decorator that overrides resource specification.
 
     Just put it on top of your resource class and specify arguments that you
