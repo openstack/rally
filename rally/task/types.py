@@ -31,7 +31,7 @@ from rally.task import scenario
 LOG = logging.getLogger(__name__)
 
 
-@logging.log_deprecated("Use types.convert() instead", "0.3.2")
+@logging.log_deprecated("Use types.convert() instead", "0.3.2", once=True)
 def set(**kwargs):
     """Decorator to define resource transformation(s) on scenario parameters.
 
