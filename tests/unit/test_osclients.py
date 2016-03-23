@@ -18,6 +18,7 @@ from keystoneclient.auth import token_endpoint
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
+from testtools import matchers
 
 from rally.common import objects
 from rally import consts
@@ -125,7 +126,8 @@ class TestCreateKeystoneClient(test.TestCase):
         self.ksc_session.Session.assert_called_once_with(
             auth=self.ksc_identity.Password(), timeout=mock.ANY,
             verify=mock.ANY)
-        self.ksc_client.Client.assert_called_once_with(**all_kwargs)
+        self.ksc_client.Client.assert_called_once_with(
+            version=None, **all_kwargs)
         self.assertIs(client, self.ksc_client.Client())
 
     def test_client_is_pre_authed(self):
@@ -139,6 +141,27 @@ class TestCreateKeystoneClient(test.TestCase):
         client = keystone._create_keystone_client(all_kwargs)
         auth_ref = getattr(client, "auth_ref", None)
         self.assertIsNot(auth_ref, None)
+        self.ksc_client.Client.assert_called_once_with(
+            version=None, **all_kwargs)
+        self.assertIs(client, self.ksc_client.Client())
+
+    def test_create_client_removes_url_path_if_version_specified(self):
+        # If specifying a version on the client creation call, ensure
+        # the auth_url is versionless and the version required is passed
+        # into the Client() call.
+        self.set_up_keystone_mocks()
+        auth_kwargs, all_kwargs = self.make_auth_args()
+        credential = objects.Credential(
+            "http://auth_url/v2.0", "user", "pass", "tenant")
+        keystone = osclients.Keystone(
+            credential, {}, mock.MagicMock())
+        client = keystone.create_client(version="3")
+
+        self.assertIs(client, self.ksc_client.Client())
+        called_with = self.ksc_client.Client.call_args_list[0][1]
+        self.expectThat(
+            called_with["auth_url"], matchers.Equals("http://auth_url/"))
+        self.expectThat(called_with["version"], matchers.Equals("3"))
 
     def test_create_keystone_client_with_v2_url_omits_domain(self):
         # NOTE(bigjools): Test that domain-related info is not present
@@ -160,7 +183,29 @@ class TestCreateKeystoneClient(test.TestCase):
         self.ksc_session.Session.assert_called_once_with(
             auth=self.ksc_identity.Password(), timeout=mock.ANY,
             verify=mock.ANY)
-        self.ksc_client.Client.assert_called_once_with(**all_kwargs)
+        self.ksc_client.Client.assert_called_once_with(
+            version=None, **all_kwargs)
+        self.assertIs(client, self.ksc_client.Client())
+
+    def test_create_keystone_client_with_v2_version_omits_domain(self):
+        self.set_up_keystone_mocks()
+        auth_kwargs, all_kwargs = self.make_auth_args()
+
+        all_kwargs["auth_url"] = "http://auth_url/"
+        auth_kwargs["auth_url"] = all_kwargs["auth_url"]
+        keystone = osclients.Keystone(
+            mock.MagicMock(), mock.sentinel, mock.sentinel)
+        client = keystone._create_keystone_client(all_kwargs, version="2")
+
+        auth_kwargs.pop("user_domain_name")
+        auth_kwargs.pop("project_domain_name")
+        auth_kwargs.pop("domain_name")
+        self.ksc_password.assert_called_once_with(**auth_kwargs)
+        self.ksc_session.Session.assert_called_once_with(
+            auth=self.ksc_identity.Password(), timeout=mock.ANY,
+            verify=mock.ANY)
+        self.ksc_client.Client.assert_called_once_with(
+            version="2", **all_kwargs)
         self.assertIs(client, self.ksc_client.Client())
 
 
@@ -260,7 +305,8 @@ class OSClientsTestCase(test.TestCase):
                       "insecure": False, "cacert": None}
         kwargs = self.credential.to_dict()
         kwargs.update(credential.items())
-        self.mock_create_keystone_client.assert_called_once_with(kwargs)
+        self.mock_create_keystone_client.assert_called_once_with(
+            kwargs, version=None)
         self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
     @mock.patch("rally.osclients.Keystone.create_client")

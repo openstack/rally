@@ -16,6 +16,7 @@
 import abc
 
 from oslo_config import cfg
+from six.moves.urllib import parse
 
 from rally.cli import envutils
 from rally.common.i18n import _
@@ -94,9 +95,12 @@ class OSClient(plugin.Plugin):
         # version is a string object.
         # For those clients which doesn't accept string value(for example
         # zaqarclient), this method should be overridden.
-        return str(version
+        version = (version
                    or self.api_info.get(self.get_name(), {}).get("version")
                    or self._meta_get("default_version"))
+        if version is not None:
+            version = str(version)
+        return version
 
     @classmethod
     def get_supported_versions(cls):
@@ -208,13 +212,14 @@ class OSClient(plugin.Plugin):
         return super(OSClient, cls).get(name, namespace)
 
 
-@configure("keystone")
+@configure("keystone", supported_versions=("2", "3"))
 class Keystone(OSClient):
+
     def keystone(self, *args, **kwargs):
         raise exceptions.RallyException(_("Method 'keystone' is restricted "
                                           "for keystoneclient. :)"))
 
-    def _create_keystone_client(self, args):
+    def _create_keystone_client(self, args, version=None):
         from keystoneclient.auth import identity
         from keystoneclient import client
         auth_arg_list = [
@@ -223,7 +228,7 @@ class Keystone(OSClient):
         ]
         # NOTE(bigjools): If forcing a v2.0 URL then you cannot specify
         # domain-related info, or the service discovery will fail.
-        if "v2.0" not in args["auth_url"]:
+        if "v2.0" not in args["auth_url"] and version != "2":
             auth_arg_list.extend(
                 ["user_domain_name", "domain_name", "project_domain_name"])
         auth_args = {key: args.get(key) for key in auth_arg_list}
@@ -240,12 +245,36 @@ class Keystone(OSClient):
         # list which is why we need to ensure service_catalog is still
         # present.
         auth_ref = auth.get_access(session)
-        ks = client.Client(**args)
+        ks = client.Client(version=version, **args)
         ks.auth_ref = auth_ref
         return ks
 
-    def create_client(self):
-        """Return keystone client."""
+    def _remove_url_version(self):
+        """Remove any version from the auth_url.
+
+        The keystone Client code requires that auth_url be the root url
+        if a version override is used.
+        """
+        url = parse.urlparse(self.credential.auth_url)
+        # NOTE(bigjools): This assumes that non-versioned URLs have no
+        # path component at all.
+        parts = (url.scheme, url.netloc, "/", url.params, url.query,
+                 url.fragment)
+        return parse.urlunparse(parts)
+
+    def create_client(self, version=None):
+        """Return a keystone client.
+
+        :param version: Keystone API version, can be one of:
+            ("2", "3")
+
+        If this object was constructed with a version in the api_info
+        then that will be used unless the version parameter is passed.
+        """
+        # Use the version in the api_info if provided, otherwise fall
+        # back to the passed version (which may be None, in which case
+        # keystoneclient chooses).
+        version = self.choose_version(version)
         new_kw = {
             "timeout": CONF.openstack_client_http_timeout,
             "insecure": self.credential.insecure,
@@ -253,7 +282,9 @@ class Keystone(OSClient):
         }
         kw = self.credential.to_dict()
         kw.update(new_kw)
-        return self._create_keystone_client(kw)
+        if version is not None:
+            kw["auth_url"] = self._remove_url_version()
+        return self._create_keystone_client(kw, version=version)
 
 
 @configure("nova", default_version="2", default_service_type="compute")
