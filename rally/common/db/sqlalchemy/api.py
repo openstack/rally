@@ -292,6 +292,15 @@ class Connection(object):
     def deployment_create(self, values):
         deployment = models.Deployment()
         try:
+            # TODO(rpromyshlennikov): remove after credentials refactoring
+            values.setdefault(
+                "credentials",
+                [
+                    ["openstack",
+                     {"admin": values.get("admin"),
+                      "users": values.get("users", [])}]
+                ]
+            )
             deployment.update(values)
             deployment.save()
         except db_exc.DBDuplicateEntry:
@@ -319,6 +328,15 @@ class Connection(object):
         values.pop("uuid", None)
         with session.begin():
             dpl = self._deployment_get(deployment, session=session)
+            # TODO(rpromyshlennikov): remove after credentials refactoring
+            values.setdefault(
+                "credentials",
+                [
+                    ["openstack",
+                     {"admin": values.get("admin"),
+                      "users": values.get("users", [])}]
+                ]
+            )
             dpl.update(values)
         return dpl
 

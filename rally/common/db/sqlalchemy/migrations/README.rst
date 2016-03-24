@@ -61,7 +61,7 @@ Information for developers
 
 DB migration in Rally is implemented via package *alembic*.
 
-It is highly recommended to get familiar with it's documnetation
+It is highly recommended to get familiar with it's documentation
 available by the link_ before proceeding.
 
 .. _link: https://alembic.readthedocs.org
@@ -73,7 +73,17 @@ create new DB revision and migration script with the following command
 
   alembic --config rally/common/db/sqlalchemy/alembic.ini revision -m <Message>
 
+or
+
+.. code-block:: shell
+
+  alembic --config rally/common/db/sqlalchemy/alembic.ini revision --autogenerate -m <Message>
+
 It will generate migration script -- a file named `<UUID>_<Message>.py`
 located in `rally/common/db/sqlalchemy/migrations/versions`.
+
+Alembic with parameter ``--autogenerate`` makes some "routine" job for developer,
+for example it makes some SQLite compatible batch expressions for migrations.
+
 Generated script should then be checked, edited if it is needed to be
 and added to Rally source tree.

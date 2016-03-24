@@ -23,7 +23,7 @@ Source of documentation. Latest version of documentation_.
 
 
 specs
-~~~~~~
+~~~~~
 
 Specs are detailed description of proposed changes in project.
 Usually they answer on what, why, how to change in project and who is going to work on change.
