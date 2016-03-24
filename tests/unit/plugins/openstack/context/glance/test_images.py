@@ -185,15 +185,16 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
 
-        wrapper = mock_wrap.return_value
+        glance_client = mock_clients.return_value.glance.return_value
+        glance_client.images.get.assert_has_calls([mock.call(i)
+                                                   for i in created_images])
         wrapper_calls = []
         wrapper_calls.extend([mock.call(mock_clients.return_value.glance,
                                         images_ctx)] * tenants_count)
-        wrapper_calls.extend([mock.call().get_image(i)
-                              for i in created_images])
         wrapper_calls.extend(
-            [mock.call().delete_image(wrapper.get_image.return_value)] *
+            [mock.call().delete_image(glance_client.images.get.return_value)] *
             len(created_images))
         mock_wrap.assert_has_calls(wrapper_calls, any_order=True)
         mock_clients.assert_has_calls(
-            [mock.call(mock.ANY, api_info=api_versions)] * tenants_count)
+            [mock.call(mock.ANY, api_info=api_versions)] * tenants_count,
+            any_order=True)

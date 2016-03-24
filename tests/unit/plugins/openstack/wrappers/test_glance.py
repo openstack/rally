@@ -47,14 +47,6 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.owner = mock.Mock()
         self.wrapped_client = glance_wrapper.wrap(self.client, self.owner)
 
-    def test_get_image(self):
-        image = mock.Mock()
-
-        return_image = self.wrapped_client.get_image(image)
-
-        image.manager.get.assert_called_once_with(image.id)
-        self.assertEqual(return_image, image.manager.get.return_value)
-
     @ddt.data(
         {"location": "image_location"},
         {"location": "image_location", "fakearg": "fake"},
@@ -119,15 +111,6 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
         self.client.choose_version.return_value = "2"
         self.owner = mock.Mock()
         self.wrapped_client = glance_wrapper.wrap(self.client, self.owner)
-
-    def test_get_image(self):
-        image = mock.Mock()
-
-        return_image = self.wrapped_client.get_image(image)
-
-        self.client.return_value.images.get.assert_called_once_with(image.id)
-        self.assertEqual(return_image,
-                         self.client.return_value.images.get.return_value)
 
     def test__update_image(self):
         image = mock.Mock()
