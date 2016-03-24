@@ -1,0 +1,112 @@
+============
+Rally v0.3.3
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **20**         |
++------------------+-----------------------+
+| Dev cycle        |       **10 days**     |
++------------------+-----------------------+
+| Release date     |     **3/24/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+A half of patches relate to Cleanup. We have once again proved that ideal
+stuff can be improved. :)
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `[Spec][Introduced] Improve atomic actions format`__
+
+__ https://github.com/openstack/rally/blob/master/doc/specs/in-progress/improve_atomic_actions_format.rst
+
+Plugins
+~~~~~~~
+
+* **Cleanups**:
+
+ * Use proper attribute to get heat stack name
+
+ * Always assign a name to created images.
+
+   This is necessary for name-based cleanup. If a name is not specified, one
+   will be generated automatically.
+
+ * Improve filtering glance images in case of V2 API
+
+ * Delete only images created by images context
+
+   Since the images context allows creating images with arbitrary names,
+   name-based cleanup won't work for it, so we have to delete the exact list
+   of images that it created instead.
+
+ * New config option to set cleanup threads
+
+   Allow the user to change the number of cleanup threads via the rally
+   config. When scaling out to thousands of instances, the cleanup can take
+   forever with the static 20 threads.
+
+ * Add inexact matching to name_matches_object
+
+   This will support places where we create resources with names that start
+   with a given name pattern, but include some additional identifier
+   afterwards. For instance, when bulk creating instances, Nova appends a UUID
+   to each instance name.
+
+* **Scenarios**:
+
+ * Add sample of template for testing for testing heat caching.
+
+ * Introduced new scenario `Dummy.dummy_random_action`__. It is suitable for
+   demonstration of upcoming trends report.
+
+__ http://rally.readthedocs.org/en/latest/plugin/plugin_reference.html#dummy-dummy-random-action-scenario
+
+* **Contexts**:
+
+ `api_versions`__ context was extended to support switch between Keystone V2
+ and V3 API versions. Now it is possible to use one Rally deployment to check
+ both Keystone APIs.
+
+__ http://rally.readthedocs.org/en/latest/plugin/plugin_reference.html#api-versions-context
+
+* **Newcomer in the family**:
+
+ All ResourceType classes are pluggable now and it is much easier to use and
+ extend them.
+
+ .. warning:: Decorator ``rally.task.types.set`` is deprecated now in favor of
+    ``rally.task.types.convert``.
+
+
+Bug fixes
+~~~~~~~~~
+
+* #1536172: rally deployment destroy failed with traceback for failed
+  deployments. At current moment it is impossible to delete deployment if for
+  some reason deployment engine plugin cannot be found, because exception will
+  be thrown.
+
+Documentation
+~~~~~~~~~~~~~
+
+* Remove extra link in `All release notes`
+
+  Previously, two links for latest release were presented.
+
+* Update release notes for 0.3.2
+
+  * Fixed indents for warning messages
+  * Fixed all references
+
+Thanks
+~~~~~~
+
+ To Everybody!
