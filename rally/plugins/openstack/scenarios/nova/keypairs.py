@@ -52,8 +52,8 @@ class NovaKeypair(utils.NovaScenario):
         keypair = self._create_keypair(**kwargs)
         self._delete_keypair(keypair)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)

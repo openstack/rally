@@ -33,8 +33,8 @@ class NovaServers(utils.NovaScenario,
                   cinder_utils.CinderScenario):
     """Benchmark scenarios for Nova servers."""
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -74,8 +74,8 @@ class NovaServers(utils.NovaScenario,
         """
         self._list_servers(detailed)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -100,8 +100,8 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
@@ -127,8 +127,8 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_servers(servers, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -160,8 +160,8 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -196,8 +196,8 @@ class NovaServers(utils.NovaScenario,
             action()
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -227,8 +227,8 @@ class NovaServers(utils.NovaScenario,
         self._unlock_server(server)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.GLANCE)
     @validation.required_openstack(users=True)
@@ -251,8 +251,8 @@ class NovaServers(utils.NovaScenario,
         self._delete_server(server, force=force_delete)
         self._delete_image(image)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -270,8 +270,8 @@ class NovaServers(utils.NovaScenario,
         self._boot_server(image, flavor,
                           auto_assign_nic=auto_assign_nic, **kwargs)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -336,9 +336,9 @@ class NovaServers(utils.NovaScenario,
         self._rescue_server(server)
         self._unrescue_server(server)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType,
-               to_flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"},
+                   to_flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -366,9 +366,9 @@ class NovaServers(utils.NovaScenario,
             self._resize_revert(server)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType,
-               to_flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"},
+                   to_flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -417,9 +417,9 @@ class NovaServers(utils.NovaScenario,
             self._delete_volume(volume)
             self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType,
-               to_flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"},
+                   to_flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
@@ -474,8 +474,8 @@ class NovaServers(utils.NovaScenario,
         if do_delete:
             self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -494,8 +494,8 @@ class NovaServers(utils.NovaScenario,
         self._resume_server(server)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -514,8 +514,8 @@ class NovaServers(utils.NovaScenario,
         self._unpause_server(server)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -534,8 +534,8 @@ class NovaServers(utils.NovaScenario,
         self._unshelve_server(server)
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
@@ -572,8 +572,8 @@ class NovaServers(utils.NovaScenario,
 
         self._delete_server(server)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -620,8 +620,8 @@ class NovaServers(utils.NovaScenario,
 
         self._delete_server(server, force=force_delete)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -679,8 +679,8 @@ class NovaServers(utils.NovaScenario,
         self._delete_volume(volume)
         self._delete_server(server)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
@@ -708,9 +708,9 @@ class NovaServers(utils.NovaScenario,
             self._resize_revert(server, status="SHUTOFF")
         self._delete_server(server)
 
-    @types.set(from_image=types.ImageResourceType,
-               to_image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(from_image={"type": "glance_image"},
+                   to_image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "from_image")
     @validation.image_valid_on_flavor("flavor", "to_image")
     @validation.required_services(consts.Service.NOVA)
@@ -731,8 +731,8 @@ class NovaServers(utils.NovaScenario,
         self._rebuild_server(server, to_image)
         self._delete_server(server)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -750,8 +750,8 @@ class NovaServers(utils.NovaScenario,
             tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
@@ -770,8 +770,8 @@ class NovaServers(utils.NovaScenario,
         server = self._boot_server(image, flavor, **kwargs)
         self._show_server(server)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)

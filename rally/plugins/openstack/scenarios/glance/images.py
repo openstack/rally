@@ -24,7 +24,7 @@ from rally.task import validation
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     """Benchmark scenarios for Glance images."""
 
-    @types.set(image_location=types.FilePathOrUrlType)
+    @types.convert(image_location={"type": "path_or_url"})
     @validation.required_services(consts.Service.GLANCE)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["glance"]})
@@ -89,7 +89,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    **kwargs)
         self._delete_image(image)
 
-    @types.set(flavor=types.FlavorResourceType)
+    @types.convert(flavor={"type": "nova_flavor"})
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
     @validation.required_openstack(users=True)

@@ -95,8 +95,8 @@ class NovaSecGroup(utils.NovaScenario):
             security_group_count)
         self._update_security_groups(security_groups)
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_parameters("security_group_count",
                                     "rules_per_security_group")
