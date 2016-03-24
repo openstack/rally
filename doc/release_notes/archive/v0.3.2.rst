@@ -25,14 +25,14 @@ CLI changes
 ~~~~~~~~~~~
 
 * .. warning:: [Modified] Option '--tempest-config' for 'rally verify
-  reinstall' command was deprecated for removal.
+    reinstall' command was deprecated for removal.
 
 * .. warning:: [Removed] Option `--system-wide-install` was removed from
-  `rally verify` commands in favor of `--system-wide` option.
+    `rally verify` commands in favor of `--system-wide` option.
 
 * .. warning:: [Modified] Step of installation of Tempest during execution of
-  the `rally verify start` command was deprecated and will be removed in the
-  future. Please use `rally verify install` instead.
+    the `rally verify start` command was deprecated and will be removed in the
+    future. Please use `rally verify install` instead.
 
 * Rework commands.task.TaskCommands.detailed. Now output of the command
   contains the same results as in HTML report.
@@ -58,12 +58,13 @@ Rally Verify
 Specs & Feature Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-* [Spec][Introduced] Refactoring scenario utils
+* `[Spec][Introduced] Refactoring scenario utils`__
 
-  `https://github.com/openstack/rally/blob/master/doc/specs/in-progress
-  /refactor_scenario_utils.rst`_
+__ https://github.com/openstack/rally/blob/master/doc/specs/in-progress/refactor_scenario_utils.rst
 
-* [Spec] Deployment unification
+* `[Spec] Deployment unification`__
+
+__ https://github.com/openstack/rally/blob/master/doc/specs/in-progress/deployment_type.rst
 
 Plugins
 ~~~~~~~
@@ -88,7 +89,7 @@ Plugins
    us to be able to have a private method _walk_pages that will do fetching of
    pages for us vs attempting to fetch 1 giant list at once.
 
- * unify *_kwargs name in scenarios
+ * unify \*_kwargs name in scenarios
 
    When running a scenario, `kwargs` is used as default key-word arguments.
    But in some scenarios, there are more and one services being called, and
@@ -175,7 +176,7 @@ Bug fixes
 * #1469897: Incompatible with Keystone v3 argument in service create scenario
 
 * #1550262: Different results in ``rally task detailed``, ``rally task report``
- and ``rally task status`` commands.
+  and ``rally task status`` commands.
 
 * #1553024: Backward incompatible change in neutronclient(release 4.1.0) broke
   Tempest config generation to support latest neutronclient.
@@ -185,11 +186,12 @@ Documentation
 
 * Add documentation for DB migration
 
-  Changes:
-    * Add descriptive docstrings for plugins based on OutputChart
-    * Register these plugins in doc/ext/plugin_reference.py
-      so plugin/plugin_reference.htmlwill have a documentation
-      chapter based on added docstrings
+* Make documentation for output plugins
+
+  * Add descriptive docstrings for plugins based on OutputChart
+  * Register these plugins in `Rally Plugins Reference`__
+
+__ http://docs.openstack.org/developer/rally/plugin/plugin_reference.html
 
 * Documentation tox fix
 
@@ -200,15 +202,15 @@ Documentation
 
 * Update the scenario development, runner and context sections
 
-* The design of 'Rally Plugins Reference' page was improved (see
-  `http://docs.openstack.org/developer/rally/plugin/plugin_reference.html`_
-  with new design)
+* The design of `Rally Plugins Reference`__ page was improved
 
-* New page was added - CLI references
+__ http://docs.openstack.org/developer/rally/plugin/plugin_reference.html
 
-  `http://docs.openstack.org/developer/rally/cli/cli_reference.html`_
+* New page was added - `CLI references`__
+
+__ http://docs.openstack.org/developer/rally/cli/cli_reference.html
 
 Thanks
 ~~~~~~
 
- To Everybody!
+To Everybody!
