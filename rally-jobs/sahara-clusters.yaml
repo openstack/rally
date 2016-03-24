@@ -22,7 +22,7 @@
           tenants: 1
           users_per_tenant: 1
         sahara_image:
-          image_url: "http://sahara-files.mirantis.com/images/upstream/liberty/sahara-liberty-vanilla-2.7.1-ubuntu-14.04.qcow2"
+          image_url: "http://rally-ci.tk/stuff/sahara-liberty-vanilla-2.7.1-ubuntu-14.04.qcow2"
           username: "ubuntu"
           plugin_name: "vanilla"
           hadoop_version: "{{sahara_hadoop_version}}"
