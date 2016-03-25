@@ -782,3 +782,19 @@ class OSClientsTestCase(test.TestCase):
                 interface=consts.EndpointType.PUBLIC,
                 session=self.fake_keystone.session)
             self.assertEqual(fake_cue, self.clients.cache["cue"])
+
+    def test_senlin(self):
+        mock_senlin = mock.MagicMock()
+        self.assertNotIn("senlin", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"senlinclient": mock_senlin}):
+            client = self.clients.senlin()
+            self.assertEqual(mock_senlin.client.Client.return_value, client)
+            mock_senlin.client.Client.assert_called_once_with(
+                "1",
+                username=self.credential.username,
+                password=self.credential.password,
+                project_name=self.credential.tenant_name,
+                auth_url=self.credential.auth_url)
+            self.assertEqual(
+                mock_senlin.client.Client.return_value,
+                self.clients.cache["senlin"])

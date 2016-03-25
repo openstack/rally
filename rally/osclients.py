@@ -691,6 +691,17 @@ class Cue(OSClient):
         return cue.Client(session=session, interface=endpoint_type[0])
 
 
+@configure("senlin", default_version="1", default_service_type="clustering",
+           supported_versions=["1"])
+class Senlin(OSClient):
+    def create_client(self, version=None, service_type=None):
+        """Return senlin client."""
+        from senlinclient import client as senlin
+        return senlin.Client(
+            self.choose_version(version),
+            **self._get_auth_info(project_name_key="project_name"))
+
+
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 
