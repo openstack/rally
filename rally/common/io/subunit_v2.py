@@ -30,7 +30,7 @@ def total_seconds(td):
         # https://docs.python.org/2/library/datetime.html#datetime.timedelta.total_seconds
         s = (td.microseconds +
              (td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10.0 ** 6
-    return "%.5f" % s
+    return "%.3f" % s
 
 
 def preparse_input_args(func):
@@ -136,7 +136,7 @@ class SubunitV2StreamResult(object):
                                     "name": (test_id.split("[")[0]
                                              if test_id.find("[") > -1
                                              else test_id),
-                                    "time": 0.0}
+                                    "time": "%.3f" % 0}
             if tags:
                 self._tests[test_id]["tags"] = tags
         elif test_id in self._tests:

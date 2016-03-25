@@ -28,7 +28,7 @@ class SubunitParserTestCase(test.TestCase):
 
         self.assertEqual({"skipped": 1,
                           "success": 2,
-                          "time": "5.00732",
+                          "time": "5.007",
                           "failures": 3,
                           "expected_failures": 0,
                           "tests": 7,
@@ -42,7 +42,7 @@ class SubunitParserTestCase(test.TestCase):
         self.assertSequenceEqual([skipped_test], skipped_tests.keys())
         self.assertEqual(
             {"status": "skip", "reason": "This should be skipped.",
-             "time": "0.00007", "name": skipped_test},
+             "time": "0.000", "name": skipped_test},
             skipped_tests[skipped_test])
 
         failed_tests = result.filter_tests("fail")
@@ -56,7 +56,7 @@ class SubunitParserTestCase(test.TestCase):
 RuntimeError: broken setUp method
 """
         self.assertEqual({"status": "fail", "traceback": trace,
-                          "time": "0.00005", "name": failed_test},
+                          "time": "0.000", "name": failed_test},
                          failed_tests[failed_test])
 
     def test_filter_results(self):
