@@ -180,7 +180,7 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
             mock_open.assert_called_once_with(location)
         else:
             data = mock_requests_get.return_value.raw
-            mock_requests_get.assert_called_once_with(location)
+            mock_requests_get.assert_called_once_with(location, stream=True)
         data.close.assert_called_once_with()
         self.client().images.upload.assert_called_once_with(created_image.id,
                                                             data)

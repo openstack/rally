@@ -163,16 +163,19 @@ class GlanceV2Wrapper(GlanceWrapper):
         timeout = time.time() - start
 
         image_data = None
+        response = None
         try:
             if os.path.isfile(image_location):
                 image_data = open(image_location)
             else:
-                response = requests.get(image_location)
+                response = requests.get(image_location, stream=True)
                 image_data = response.raw
             self.client.images.upload(image.id, image_data)
         finally:
             if image_data is not None:
                 image_data.close()
+            if response is not None:
+                response.close()
 
         return utils.wait_for_status(
             image, ["active"],
