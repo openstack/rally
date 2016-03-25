@@ -6,10 +6,7 @@ set -o xtrace
 
 source $DEST/rally/devstack/lib/rally
 
-if [[ "$1" == "source" ]]; then
-    # Initial source
-    source $TOP_DIR/lib/rally
-elif [[ "$1" == "stack" && "$2" == "install" ]]; then
+if [[ "$1" == "stack" && "$2" == "install" ]]; then
     echo_summary "Installing Rally"
     install_rally
 elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
