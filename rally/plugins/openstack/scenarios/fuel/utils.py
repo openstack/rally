@@ -41,7 +41,7 @@ class FuelEnvManager(object):
         try:
             return self.client.get_all()
         except SystemExit:
-            raise RuntimeError(_("Can't list envitonments. "
+            raise RuntimeError(_("Can't list environments. "
                                  "Please check server availability."))
 
     def create(self, name, release_id=1,

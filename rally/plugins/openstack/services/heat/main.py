@@ -32,7 +32,6 @@ class Stack(common_utils.RandomNameGeneratorMixin):
 
         :param Scenario scenario: scenario instance
         :param Task task: task instance
-        :param str name: stack name
         :param str template: template file path
         :param dict files: dict with file name and path
         :param dict parameters: parameters for template

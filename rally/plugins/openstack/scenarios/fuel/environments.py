@@ -41,7 +41,7 @@ class FuelEnvironments(utils.FuelScenario):
         :param network_provider: network provider (default 'neutron')
         :param deployment_mode: deployment mode (default 'ha_compact')
         :param net_segment_type: net segment type (default 'vlan')
-        :param delete_retries: retries count on delete oprations (default 5)
+        :param delete_retries: retries count on delete operations (default 5)
         """
 
         env_id = self._create_environment(release_id=release_id,

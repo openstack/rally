@@ -260,7 +260,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         """Runs the specified benchmark scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
-        :param method_name: Name of the method that implements the scenario
+        :param method: Name of the method that implements the scenario
         :param context: Benchmark context that contains users, admin & other
                         information, that was created before benchmark started.
         :param args: Arguments to call the scenario method with

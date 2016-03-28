@@ -162,7 +162,7 @@ class DesignateScenario(scenario.OpenStackScenario):
         :param criterion: API Criterion to filter by
         :param marker: UUID marker of the item to start the page from
         :param limit: How many items to return in the page.
-        : returns: list of designate zones
+        :returns: list of designate zones
         """
         return self.clients("designate", version="2").zones.list()
 

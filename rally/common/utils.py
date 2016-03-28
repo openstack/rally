@@ -103,7 +103,7 @@ class RAMInt(object):
     """Share RAM integer, for IPC.
 
     This class represents iterable which refers directly to an integer value
-    stored in RAM. Being a true system-level singletone, this allows safely
+    stored in RAM. Being a true system-level singleton, this allows safely
     share integer among processes and threads.
     """
 

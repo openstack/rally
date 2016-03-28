@@ -138,7 +138,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
 
     @classmethod
     def unregister(cls):
-        """Removes all pluign meta information and makes it indiscoverable."""
+        """Removes all plugin meta information and makes it undiscoverable."""
         cls._meta_clear()
 
     @classmethod

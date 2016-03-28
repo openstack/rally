@@ -19,7 +19,7 @@ class MetaMixin(object):
 
     We are storing information in class object instead of the instance.
     Information is stored in dict that is initialized only once during the
-    load of module, it means that all subclasess of this class will point to
+    load of module, it means that all subclasses of this class will point to
     the same dict object with the information.
 
     Sample that explains why it's important to use MetaMixin:

@@ -189,8 +189,8 @@ class EC2Server(EC2Mixin, base.ResourceManager):
 
         # NOTE(wtakase): After instance deletion, instance can be 'terminated'
         #                state. If all instance states are 'terminated', this
-        #                returns True. And if get_only_instaces() returns empty
-        #                list, this also returns True because we consider
+        #                returns True. And if get_only_instances() returns an
+        #                empty list, this also returns True because we consider
         #                instance has already been deleted.
         return all(map(lambda i: i.state == "terminated", instances))
 

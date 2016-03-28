@@ -140,7 +140,7 @@ class SSH(object):
         :param stdout:          Open file to connect to stdout.
         :param stderr:          Open file to connect to stderr.
         :param raise_on_error:  If False then exit code will be return. If True
-                                then exception will be raized if non-zero code.
+                                then exception will be raised if non-zero code.
         :param timeout:         Timeout in seconds for command execution.
                                 Default 1 hour. No timeout if set to 0.
         """
