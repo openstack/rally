@@ -14,7 +14,6 @@
 
 import mock
 
-from rally.common import objects
 from rally.plugins.openstack.context.sahara import sahara_input_data_sources
 from tests.unit import test
 
@@ -25,26 +24,25 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(SaharaInputDataSourcesTestCase, self).setUp()
-        credential = objects.Endpoint("foo_url", "user", "passwd")
         self.tenants_num = 2
         self.users_per_tenant = 2
-        self.users = self.tenants_num * self.users_per_tenant
         self.task = mock.MagicMock()
-
         self.tenants = {}
-        self.users_key = []
+        self.users = []
 
         for i in range(self.tenants_num):
-            self.tenants[str(i)] = {"id": str(i), "name": str(i),
-                                    "sahara": {"image": "42"}}
-            for j in range(self.users_per_tenant):
-                self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
-                                       "tenant_id": str(i),
-                                       "credential": credential})
-
-        self.user_key = [{"id": i, "tenant_id": j, "credential": "credential"}
-                         for j in range(self.tenants_num)
-                         for i in range(self.users_per_tenant)]
+            tenant_id = "tenant_%d" % i
+            self.tenants[tenant_id] = {"id": tenant_id,
+                                       "name": tenant_id + "_name",
+                                       "sahara": {"image": "foo_image"}}
+            for u in range(self.users_per_tenant):
+                user_id = "%s_user_%d" % (tenant_id, u)
+                self.users.append(
+                    {"id": user_id,
+                     "tenant_id": tenant_id,
+                     "credential": mock.Mock(auth_url="foo_url",
+                                             username=user_id + "_name",
+                                             password="foo_password")})
 
         self.context.update({
             "config": {
@@ -58,7 +56,7 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
                 },
             },
             "admin": {"credential": mock.MagicMock()},
-            "users": self.users_key,
+            "users": self.users,
             "tenants": self.tenants
         })
 
@@ -95,9 +93,16 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
     @mock.patch("requests.get")
     @mock.patch("%s.sahara_input_data_sources.osclients" % CTX)
-    def test_setup_inputs_swift(self, mock_osclients, mock_get):
-        mock_clients = mock_osclients.Clients(mock.MagicMock())
-        mock_get.content = mock.MagicMock(content="OK")
+    @mock.patch("%s.sahara_input_data_sources.resource_manager" % CTX)
+    @mock.patch("%s.sahara_input_data_sources.swift_utils" % CTX)
+    def test_setup_inputs_swift(self, mock_swift_utils, mock_resource_manager,
+                                mock_osclients, mock_get):
+        mock_swift_scenario = mock.Mock()
+        mock_swift_scenario._create_container.side_effect = (
+            lambda container_name: "container_%s" % container_name)
+        mock_swift_scenario._upload_object.side_effect = iter(
+            ["uploaded_%d" % i for i in range(10)])
+        mock_swift_utils.SwiftScenario.return_value = mock_swift_scenario
 
         self.context.update({
             "config": {
@@ -115,28 +120,39 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
             },
             "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
-            "users": self.users_key,
+            "users": self.users,
             "tenants": self.tenants
         })
         sahara_ctx = sahara_input_data_sources.SaharaInputDataSources(
             self.context)
-        sahara_ctx.generate_random_name = mock.Mock()
+        sahara_ctx.generate_random_name = mock.Mock(
+            side_effect=iter(["random_name_%d" % i for i in range(10)]))
 
         input_ds_create_calls = []
 
         for i in range(self.tenants_num):
             input_ds_create_calls.append(mock.call(
-                name=sahara_ctx.generate_random_name.return_value,
+                name="random_name_%d" % i,
                 description="",
                 data_source_type="swift",
                 url="swift://rally.sahara/input_url",
-                credential_user="user",
-                credential_pass="passwd"
+                credential_user="tenant_%d_user_0_name" % i,
+                credential_pass="foo_password"
             ))
 
         sahara_ctx.setup()
 
-        self.assertEqual(input_ds_create_calls,
-                         mock_clients.sahara().data_sources.create.mock_calls)
+        self.assertEqual(
+            input_ds_create_calls,
+            (mock_osclients.Clients.return_value.sahara.return_value
+             .data_sources.create.mock_calls))
+
+        self.assertEqual({"container_name": "container_rally_rally",
+                          "swift_objects": ["uploaded_0", "uploaded_1"]},
+                         self.context["sahara"])
 
         sahara_ctx.cleanup()
+
+        mock_resource_manager.cleanup.assert_called_once_with(
+            names=["sahara.data_sources"],
+            users=self.context["users"])
