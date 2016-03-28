@@ -284,6 +284,13 @@ class CategoryParser(argparse.ArgumentParser):
 
     def error(self, message):
         self.print_help(sys.stderr)
+        if message.startswith("argument") and message.endswith("is required"):
+            # NOTE(pirsriva) Argparse will currently raise an error
+            # message for only 1 missing argument at a time i.e. in the
+            # error message it WILL NOT LIST ALL the missing arguments
+            # at once INSTEAD only 1 missing argument at a time
+            missing_arg = message.split()[1]
+            print(_("Missing argument:\n%s") % missing_arg)
         sys.exit(2)
 
 
