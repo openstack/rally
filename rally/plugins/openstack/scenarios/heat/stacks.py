@@ -239,3 +239,91 @@ class HeatStacks(utils.HeatScenario):
         snapshot = self._snapshot_stack(stack)
         self._restore_stack(stack, snapshot["id"])
         self._delete_stack(stack)
+
+    @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["heat"]})
+    def create_stack_and_show_output_via_API(self, template_path, output_key,
+                                             parameters=None, files=None,
+                                             environment=None):
+        """Create stack and show output by using old algorithm.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat output-show
+        :param template_path: path to stack template file
+        :param output_key: the stack output key that corresponds to
+                           the scaling webhook
+        :param parameters: parameters to use in heat template
+        :param files: files used in template
+        :param environment: stack environment definition
+        """
+        stack = self._create_stack(
+            template_path, parameters, files, environment)
+        self._stack_show_output_via_API(stack, output_key)
+
+    @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["heat"]})
+    def create_stack_and_show_output(self, template_path, output_key,
+                                     parameters=None, files=None,
+                                     environment=None):
+        """Create stack and show output by using new algorithm.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat output-show
+        :param template_path: path to stack template file
+        :param output_key: the stack output key that corresponds to
+                           the scaling webhook
+        :param parameters: parameters to use in heat template
+        :param files: files used in template
+        :param environment: stack environment definition
+        """
+        stack = self._create_stack(
+            template_path, parameters, files, environment)
+        self._stack_show_output(stack, output_key)
+
+    @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["heat"]})
+    def create_stack_and_list_output_via_API(self, template_path,
+                                             parameters=None, files=None,
+                                             environment=None):
+        """Create stack and list outputs by using old algorithm.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat output-list
+        :param template_path: path to stack template file
+        :param parameters: parameters to use in heat template
+        :param files: files used in template
+        :param environment: stack environment definition
+        """
+        stack = self._create_stack(
+            template_path, parameters, files, environment)
+        self._stack_list_output_via_API(stack)
+
+    @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["heat"]})
+    def create_stack_and_list_output(self, template_path,
+                                     parameters=None, files=None,
+                                     environment=None):
+        """Create stack and list outputs by using new algorithm.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat output-list
+        :param template_path: path to stack template file
+        :param parameters: parameters to use in heat template
+        :param files: files used in template
+        :param environment: stack environment definition
+        """
+        stack = self._create_stack(
+            template_path, parameters, files, environment)
+        self._stack_list_output(stack)

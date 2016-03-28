@@ -295,3 +295,57 @@
       sla:
         failure_rate:
           max: 0
+
+  HeatStacks.create_stack_and_list_output:
+    -
+      args:
+        template_path: "~/.rally/extra/resource_group_with_outputs.yaml.template"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
+  HeatStacks.create_stack_and_list_output_via_API:
+    -
+      args:
+        template_path: "~/.rally/extra/resource_group_with_outputs.yaml.template"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
+  HeatStacks.create_stack_and_show_output:
+    -
+      args:
+        template_path: "~/.rally/extra/resource_group_with_outputs.yaml.template"
+        output_key: "val1"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
+  HeatStacks.create_stack_and_show_output_via_API:
+    -
+      args:
+        template_path: "~/.rally/extra/resource_group_with_outputs.yaml.template"
+        output_key: "val1"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2

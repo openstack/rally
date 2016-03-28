@@ -29,6 +29,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
         self.default_parameters = {"dummy_param": "dummy_key"}
         self.default_files = ["dummy_file.yaml"]
         self.default_environment = {"env": "dummy_env"}
+        self.default_output_key = "dummy_output_key"
 
     @mock.patch(HEAT_STACKS + ".generate_random_name")
     @mock.patch(HEAT_STACKS + "._list_stacks")
@@ -215,4 +216,74 @@ class HeatStacksTestCase(test.ScenarioTestCase):
         mock__restore_stack.assert_called_once_with(
             mock__create_stack.return_value, "dummy_id")
         mock__delete_stack.assert_called_once_with(
+            mock__create_stack.return_value)
+
+    @mock.patch(HEAT_STACKS + "._stack_show_output_via_API")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_and_show_output_via_API(self, mock__create_stack,
+                                            mock__stack_show_output_via_api):
+        heat_scenario = stacks.HeatStacks(self.context)
+        heat_scenario.create_stack_and_show_output_via_API(
+            template_path=self.default_template,
+            output_key=self.default_output_key,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment
+        )
+        mock__create_stack.assert_called_once_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__stack_show_output_via_api.assert_called_once_with(
+            mock__create_stack.return_value, self.default_output_key)
+
+    @mock.patch(HEAT_STACKS + "._stack_show_output")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_and_show_output(self, mock__create_stack,
+                                    mock__stack_show_output):
+        heat_scenario = stacks.HeatStacks(self.context)
+        heat_scenario.create_stack_and_show_output(
+            template_path=self.default_template,
+            output_key=self.default_output_key,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment
+        )
+        mock__create_stack.assert_called_once_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__stack_show_output.assert_called_once_with(
+            mock__create_stack.return_value, self.default_output_key)
+
+    @mock.patch(HEAT_STACKS + "._stack_list_output_via_API")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_and_list_output_via_API(self, mock__create_stack,
+                                            mock__stack_list_output_via_api):
+        heat_scenario = stacks.HeatStacks(self.context)
+        heat_scenario.create_stack_and_list_output_via_API(
+            template_path=self.default_template,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment
+        )
+        mock__create_stack.assert_called_once_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__stack_list_output_via_api.assert_called_once_with(
+            mock__create_stack.return_value)
+
+    @mock.patch(HEAT_STACKS + "._stack_list_output")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_and_list_output(self, mock__create_stack,
+                                    mock__stack_list_output):
+        heat_scenario = stacks.HeatStacks(self.context)
+        heat_scenario.create_stack_and_list_output(
+            template_path=self.default_template,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment
+        )
+        mock__create_stack.assert_called_once_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__stack_list_output.assert_called_once_with(
             mock__create_stack.return_value)
