@@ -207,6 +207,13 @@ class FakeSecurityGroupRule(FakeResource):
             setattr(self, key, value)
 
 
+class FakeMetric(FakeResource):
+    def __init_(self, manager=None, **kwargs):
+        super(FakeMetric, self).__init__(manager)
+        self.metric = kwargs.get("metric_name")
+        self.optional_args = kwargs.get("optional_args", {})
+
+
 class FakeAlarm(FakeResource):
     def __init__(self, manager=None, **kwargs):
         super(FakeAlarm, self).__init__(manager)
@@ -714,6 +721,17 @@ class FakeRolesManager(FakeManager):
         pass
 
 
+class FakeMetricManager(FakeManager):
+
+    def create(self, **kwargs):
+        metric = FakeMetric(self, **kwargs)
+        return self._cache(metric)
+
+    def get(self, metric_id):
+        metric = self.find(metric_id=metric_id)
+        return [metric]
+
+
 class FakeAlarmManager(FakeManager):
 
     def get(self, alarm_id):
@@ -1034,6 +1052,11 @@ class FakeCeilometerClient(object):
         self.query_alarms = FakeQueryManager()
         self.query_samples = FakeQueryManager()
         self.query_alarm_history = FakeQueryManager()
+
+
+class FakeGnocchiClient(object):
+    def __init__(self):
+        self.metric = FakeMetricManager()
 
 
 class FakeMonascaClient(object):
