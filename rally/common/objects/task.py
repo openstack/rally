@@ -373,11 +373,11 @@ class Task(object):
         :returns: list of dicts, each dict represents scenario results:
                   key - dict, scenario input data
                   sla - list, SLA results
-                  iterations - if serializiable, then iterator with
+                  iterations - if serializable, then iterator with
                                iterations data, otherwise a list
-                  created_at - if serializiable, then str datetime,
+                  created_at - if serializable, then str datetime,
                                otherwise absent
-                  updated_at - if serializiable, then str datetime,
+                  updated_at - if serializable, then str datetime,
                                otherwise absent
                   info:
                       atomic - dict where key is one of atomic action names

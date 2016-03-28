@@ -173,7 +173,7 @@ def task_list(status=None, deployment=None):
 
     :param status: Task status to filter the returned list on. If set to
                    None, all the tasks will be returned.
-    :param deployment_id: deployment UUID to filter the returned list on.
+    :param deployment: deployment UUID to filter the returned list on.
                       if set to None tasks from all deployments well be
                       returned.
     :returns: A list of dicts with data on the tasks.
@@ -283,7 +283,7 @@ def resource_get_all(deployment_uuid, provider_name=None, type=None):
 
     :param deployment_uuid: filter by uuid of a deployment
     :param provider_name: filter by provider_name, if is None, then
-                          return all prorivders
+                          return all providers
     :param type: filter by type, if is None, then return all types
     :returns: a list of dicts with data on a resource
     """
@@ -313,7 +313,7 @@ def verification_create(deployment_uuid):
 def verification_get(verification_uuid):
     """Returns verification by UUID.
 
-    :param id: UUID of the verification.
+    :param verification_uuid: UUID of the verification.
     :raises NotFoundException: if verification does not exist.
     :returns: a dict with verification data.
     """
