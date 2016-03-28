@@ -161,3 +161,18 @@ class DummyTestCase(test.TestCase):
         for i in range(actions_num):
             self._test_atomic_action_timer(scenario.atomic_actions(),
                                            "action_%d" % i)
+
+    @ddt.data({"number_of_actions": 5, "sleep_factor": 1},
+              {"number_of_actions": 7, "sleep_factor": 2},
+              {"number_of_actions": 1, "sleep_factor": 3})
+    @ddt.unpack
+    @mock.patch(DUMMY + "utils.interruptable_sleep")
+    def test_dummy_timed_atomic_actions(self, mock_interruptable_sleep,
+                                        number_of_actions, sleep_factor):
+        scenario = dummy.Dummy(test.get_test_context())
+        scenario.dummy_random_action(number_of_actions, sleep_factor)
+        scenario.dummy_timed_atomic_actions(number_of_actions, sleep_factor)
+        for i in range(number_of_actions):
+            self._test_atomic_action_timer(scenario.atomic_actions(),
+                                           "action_%d" % i)
+            mock_interruptable_sleep.assert_any_call(i * sleep_factor)

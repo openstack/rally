@@ -196,3 +196,14 @@ class Dummy(scenario.Scenario):
             duration = random.uniform(sleep_min, sleep_max)
             with atomic.ActionTimer(self, "action_%d" % idx):
                 utils.interruptable_sleep(duration)
+
+    @scenario.configure()
+    def dummy_timed_atomic_actions(self, number_of_actions=5, sleep_factor=1):
+        """Run some sleepy atomic actions for SLA atomic action tests.
+
+        :param number_of_actions: int number of atomic actions to create
+        :param sleep_factor: int multiplier for number of seconds to sleep
+        """
+        for sleeptime in range(number_of_actions):
+            with atomic.ActionTimer(self, "action_%d" % sleeptime):
+                utils.interruptable_sleep(sleeptime * sleep_factor)

@@ -625,6 +625,23 @@
         times: 10
         concurrency: 5
 
+  Dummy.dummy_timed_atomic_actions:
+    -
+      args:
+        number_of_actions: 5
+        sleep_factor: 1
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      sla:
+        max_avg_duration_per_atomic:
+          action_0: 1.0
+          action_1: 2.0
+          action_2: 3.0
+          action_3: 4.0
+          action_4: 5.0
+
   FakePlugin.testplugin:
     -
       runner:

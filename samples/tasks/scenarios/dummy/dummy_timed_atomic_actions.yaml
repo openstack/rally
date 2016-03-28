@@ -1,0 +1,17 @@
+---
+  Dummy.dummy_timed_atomic_actions:
+    -
+      args:
+        number_of_actions: 1
+        sleep_factor: 1
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 5
+      sla:
+        max_avg_duration_per_atomic:
+          action_0: 1.0
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
