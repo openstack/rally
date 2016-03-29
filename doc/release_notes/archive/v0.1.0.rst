@@ -82,7 +82,7 @@ New Features & API changes
 
     This was done to:
 
-    * avoid doing rally.benchamrk.scenarios import base as scenario_base
+    * avoid doing rally.benchmark.scenarios import base as scenario_base
 
     * remove one level of nesting
 
@@ -333,7 +333,7 @@ Specs & Feature requests
 
   [feature request] Allows specific repos & packages in install-rally.sh
 
-  [feature request] Add abbility to caputre logs from tested services
+  [feature request] Add ability to capture logs from tested services
 
   [feature request] Check RPC queue perfdata
 

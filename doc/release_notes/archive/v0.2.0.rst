@@ -145,7 +145,7 @@ Bug fixes
  * #1530075: cirros_img_url in rally.conf doesn't take effective in
    verification tempest
 
- * #1517839: Make CONF.set_override with paramter enforce_type=True by default
+ * #1517839: Make CONF.set_override with parameter enforce_type=True by default
 
  * #1489059: "db type could not be determined" running py34
 

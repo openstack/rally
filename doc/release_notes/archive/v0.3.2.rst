@@ -95,8 +95,8 @@ Plugins
    But in some scenarios, there are more and one services being called, and
    we use xxx_kwargs for this case.
 
-   However, some xxx_kwargs are not unifed for same usage[0]. Unifying
-   these could avoid midleading for end users. Another improvement is to
+   However, some xxx_kwargs are not unified for same usage[0]. Unifying
+   these could avoid misleading for end users. Another improvement is to
    add xxx_kwargs with empty settings for scenario config files.
 
    [0] http://paste.openstack.org/show/489505/
