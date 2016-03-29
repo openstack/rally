@@ -85,7 +85,7 @@ with_default_verification_id = default_from_global(
 
 def get_creds_from_env_vars():
     required_env_vars = ["OS_AUTH_URL", "OS_USERNAME",
-                         "OS_PASSWORD", "OS_TENANT_NAME"]
+                         "OS_PASSWORD"]
     missing_env_vars = [v for v in required_env_vars if v not in os.environ]
     if missing_env_vars:
         msg = ("The following environment variables are "
@@ -97,7 +97,7 @@ def get_creds_from_env_vars():
         "admin": {
             "username": os.environ["OS_USERNAME"],
             "password": os.environ["OS_PASSWORD"],
-            "tenant_name": os.environ["OS_TENANT_NAME"]
+            "tenant_name": get_project_name_from_env()
         },
         "endpoint": os.environ.get("OS_ENDPOINT"),
         "region_name": os.environ.get("OS_REGION_NAME", ""),
@@ -107,3 +107,14 @@ def get_creds_from_env_vars():
     }
 
     return creds
+
+
+def get_project_name_from_env():
+    tenant_name = os.environ.get("OS_PROJECT_NAME",
+                                 os.environ.get("OS_TENANT_NAME"))
+    if tenant_name is None:
+        raise exceptions.ValidationError("Either the OS_PROJECT_NAME or "
+                                         "OS_TENANT_NAME environment variable "
+                                         "is required, but neither is set.")
+
+    return tenant_name

@@ -139,3 +139,24 @@ class EnvUtilsTestCase(test.TestCase):
             del os.environ["OS_USERNAME"]
         self.assertRaises(exceptions.ValidationError,
                           envutils.get_creds_from_env_vars)
+
+    @mock.patch.dict(os.environ, {"OS_TENANT_NAME": "fake_tenant_name"})
+    def test_get_project_name_from_env_when_tenant_name(self):
+        project_name = envutils.get_project_name_from_env()
+        self.assertEqual("fake_tenant_name", project_name)
+
+    @mock.patch.dict(os.environ, {"OS_PROJECT_NAME": "fake_project_name"})
+    def test_get_project_name_from_env_when_project_name(self):
+        project_name = envutils.get_project_name_from_env()
+        self.assertEqual("fake_project_name", project_name)
+
+    @mock.patch.dict(os.environ, {"OS_TENANT_NAME": "fake_tenant_name",
+                                  "OS_PROJECT_NAME": "fake_project_name"})
+    def test_get_project_name_from_env_when_both(self):
+        project_name = envutils.get_project_name_from_env()
+        self.assertEqual("fake_project_name", project_name)
+
+    @mock.patch.dict(os.environ, values={}, clear=True)
+    def test_get_project_name_from_env_when_neither(self):
+        self.assertRaises(exceptions.ValidationError,
+                          envutils.get_project_name_from_env)
