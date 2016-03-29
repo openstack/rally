@@ -555,3 +555,51 @@ class OutputStatsTable(OutputTable):
             self._data[name][-2][0].add(1)
             for idx, dummy in enumerate(self._data[name][:-1]):
                 self._data[name][idx][0].add(value)
+
+
+_OUTPUT_SCHEMA = {
+    "key_types": {
+        "title": str, "description": str, "chart_plugin": str,
+        "data": (list, dict), "label": str, "axis_label": str},
+    "required": ["title", "chart_plugin", "data"]}
+
+
+def validate_output(output_type, output):
+    # TODO(amaretskiy): this validation is simple and must be improved.
+    #   Maybe it is worth to add classmethod OutputChart.validate(), so
+    #   we could have flexible validation for custom chart plugins
+    if output_type not in ("additive", "complete"):
+        return ("unexpected output type: '%s', "
+                "should be in ('additive', 'complete')" % output_type)
+
+    if type(output) != dict:
+        return ("%(name)s output item has wrong type '%(type)s', "
+                "must be 'dict'" % {"name": output_type,
+                                    "type": type(output).__name__})
+
+    for key in _OUTPUT_SCHEMA["required"]:
+        if key not in output:
+            return ("%(name)s output missing key '%(key)s'"
+                    % {"name": output_type, "key": key})
+
+    for key in output:
+        if key not in _OUTPUT_SCHEMA["key_types"]:
+            return ("%(name)s output has unexpected key '%(key)s'"
+                    % {"name": output_type, "key": key})
+
+        proper_type = _OUTPUT_SCHEMA["key_types"][key]
+        if not isinstance(output[key], proper_type):
+            if type(proper_type) == tuple:
+                return ("Value of %(name)s output %(key)s has wrong type "
+                        "'%(actual_type)s', should be in %(types)r"
+                        % {"name": output_type,
+                           "key": key,
+                           "actual_type": type(output[key]).__name__,
+                           "types": tuple(t.__name__
+                                          for t in proper_type)})
+            return ("Value of %(name)s output %(key)s has wrong type "
+                    "'%(actual_type)s', should be %(proper_type)s"
+                    % {"name": output_type,
+                       "key": key,
+                       "actual_type": type(output[key]).__name__,
+                       "proper_type": proper_type.__name__})

@@ -21,11 +21,10 @@ import time
 import jsonschema
 
 from rally.common import logging
-from rally.common import objects
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
-from rally import consts
 from rally.task import context
+from rally.task.processing import charts
 from rally.task import scenario
 from rally.task import types
 from rally.task import utils
@@ -90,44 +89,6 @@ def _log_worker_info(**info):
     info_message = "\n\t".join(["%s: %s" % (k, v)
                                 for k, v in info.items()])
     LOG.debug("Starting a worker.\n\t%s" % info_message)
-
-
-class ScenarioRunnerResult(dict):
-    """Class for all scenario runners' result."""
-
-    RESULT_SCHEMA = {
-        "type": "object",
-        "$schema": consts.JSON_SCHEMA,
-        "properties": {
-            "duration": {
-                "type": "number"
-            },
-            "timestamp": {
-                "type": "number"
-            },
-            "idle_duration": {
-                "type": "number"
-            },
-            "output": objects.task.OUTPUT_SCHEMA,
-            "atomic_actions": {
-                "type": "object",
-                "patternProperties": {
-                    ".*": {"type": ["number", "null"]}
-                }
-            },
-            "error": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
-            }
-        },
-        "additionalProperties": False
-    }
-
-    def __init__(self, result_list):
-        super(ScenarioRunnerResult, self).__init__(result_list)
-        jsonschema.validate(result_list, self.RESULT_SCHEMA)
 
 
 def configure(name, namespace="default"):
@@ -195,7 +156,6 @@ class ScenarioRunner(plugin.Plugin):
             self._run_scenario(cls, method_name, context, args)
 
         self.run_duration = timer.duration()
-        return self.run_duration
 
     def abort(self):
         """Abort the execution of further benchmark scenario iterations."""
@@ -250,6 +210,74 @@ class ScenarioRunner(plugin.Plugin):
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
+    _RESULT_SCHEMA = {
+        "fields": [("duration", float), ("timestamp", float),
+                   ("idle_duration", float), ("output", dict),
+                   ("atomic_actions", dict), ("error", list)]
+    }
+
+    def _result_has_valid_schema(self, result):
+        """Check whatever result has valid schema or not."""
+        # NOTE(boris-42): We can't use here jsonschema, this method is called
+        #                 to check every iteration result schema. And this
+        #                 method works 200 times faster then jsonschema
+        #                 which totally makes sense.
+        for key, proper_type in self._RESULT_SCHEMA["fields"]:
+            if key not in result:
+                LOG.warning("'%s' is not result" % key)
+                return False
+            if not isinstance(result[key], proper_type):
+                LOG.warning(
+                    "Task %(uuid)s | result['%(key)s'] has wrong type "
+                    "'%(actual_type)s', should be '%(proper_type)s'"
+                    % {"uuid": self.task["uuid"],
+                       "key": key,
+                       "actual_type": type(result[key]),
+                       "proper_type": proper_type.__name__})
+                return False
+
+        for action, value in result["atomic_actions"].items():
+            if not isinstance(value, float):
+                LOG.warning(
+                    "Task %(uuid)s | Atomic action %(action)s has wrong type "
+                    "'%(type)s', should be 'float'"
+                    % {"uuid": self.task["uuid"],
+                       "action": action,
+                       "type": type(value)})
+                return False
+
+        for e in result["error"]:
+            if not isinstance(e, str):
+                LOG.warning("error value has wrong type '%s', should be 'str'"
+                            % type(e))
+                return False
+
+        for key in ("additive", "complete"):
+            if key not in result["output"]:
+                LOG.warning("Task %(uuid)s | Output missing key '%(key)s'"
+                            % {"uuid": self.task["uuid"], "key": key})
+                return False
+
+            type_ = type(result["output"][key])
+            if type_ != list:
+                LOG.warning(
+                    "Task %(uuid)s | Value of result['output']['%(key)s'] "
+                    "has wrong type '%(type)s', must be 'list'"
+                    % {"uuid": self.task["uuid"],
+                       "key": key, "type": type_.__name__})
+                return False
+
+        for key in result["output"]:
+            for output_data in result["output"][key]:
+                message = charts.validate_output(key, output_data)
+                if message:
+                    LOG.warning("Task %(uuid)s | %(message)s"
+                                % {"uuid": self.task["uuid"],
+                                   "message": message})
+                    return False
+
+        return True
+
     def _send_result(self, result):
         """Store partial result to send it to consumer later.
 
@@ -258,12 +286,18 @@ class ScenarioRunner(plugin.Plugin):
                        ValidationError is raised.
         """
 
-        r = ScenarioRunnerResult(result)
-        self.result_batch.append(r)
+        if not self._result_has_valid_schema(result):
+            LOG.warning(
+                "Task %(task)s | Runner `%(runner)s` is trying to send "
+                "results in wrong format"
+                % {"task": self.task["uuid"], "runner": self.get_name()})
+            return
+
+        self.result_batch.append(result)
 
         if len(self.result_batch) >= self.batch_size:
             sorted_batch = sorted(self.result_batch,
-                                  key=lambda r: r["timestamp"])
+                                  key=lambda r: result["timestamp"])
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 

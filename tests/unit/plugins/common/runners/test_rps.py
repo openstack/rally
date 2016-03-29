@@ -147,7 +147,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_exception(self, mock_sleep):
@@ -159,7 +159,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), config["times"])
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_aborted(self, mock_sleep):
@@ -173,7 +173,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), 0)
 
         for result in runner_obj.result_queue:
-            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+            self.assertIsNotNone(result)
 
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
     @mock.patch(RUNNERS + "rps.multiprocessing.cpu_count")

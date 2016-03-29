@@ -109,7 +109,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), self.config["times"])
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
 
     def test__run_scenario_exception(self):
         runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
@@ -119,7 +119,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), self.config["times"])
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
         self.assertIn("error", runner_obj.result_queue[0][0])
 
     def test__run_scenario_aborted(self):
@@ -262,7 +262,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), expected_times)
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
 
     def test_run_scenario_constantly_for_duration_exception(self):
         runner_obj = constant.ConstantForDurationScenarioRunner(
@@ -275,7 +275,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), expected_times)
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
         self.assertIn("error", runner_obj.result_queue[0][0])
 
     def test_run_scenario_constantly_for_duration_timeout(self):
@@ -289,7 +289,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner_obj.result_queue), expected_times)
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
-                self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+                self.assertIsNotNone(result)
         self.assertIn("error", runner_obj.result_queue[0][0])
 
     def test__run_scenario_constantly_aborted(self):

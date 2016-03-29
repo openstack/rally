@@ -110,6 +110,11 @@ class ResultConsumer(object):
         # NOTE(boris-42): Sort in order of starting instead of order of ending
         self.results.sort(key=lambda x: x["timestamp"])
 
+        LOG.info("Load duration is: %s" %
+                 (self.load_finished_at - self.load_started_at))
+        LOG.info("Full runner duration is: %s" % self.runner.run_duration)
+        LOG.info("Full duration is %s" % (self.finish - self.start))
+
         self.task.append_results(self.key, {
             "raw": self.results,
             "load_duration": self.load_finished_at - self.load_started_at,
