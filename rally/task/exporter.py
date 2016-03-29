@@ -31,15 +31,19 @@ def configure(name, namespace="default"):
 
 
 @six.add_metaclass(abc.ABCMeta)
-@configure(name="base_task_exporter")
+@configure(name="base-exporter")
 class TaskExporter(plugin.Plugin):
 
+    def __init__(self, connection_string):
+        self.connection_string = connection_string
+
     @abc.abstractmethod
-    def export(self, task_uuid, connection_string):
-        """
-         Export results of the task to the task storage.
+    def export(self, task_uuid):
+        """Export results of the task to the task storage.
 
         :param task_uuid: uuid of task results
-        :param connection_string: string used to connect
-                                  to the external system
         """
+
+    @abc.abstractmethod
+    def validate(self):
+        """Used to validate connection string."""

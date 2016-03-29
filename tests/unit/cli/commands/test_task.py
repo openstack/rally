@@ -742,3 +742,36 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
         mock_task_get.side_effect = exceptions.TaskNotFound(uuid=task_id)
         self.assertRaises(exceptions.TaskNotFound, self.task.use, task_id)
+
+    @mock.patch("rally.task.exporter.TaskExporter.get")
+    def test_export(self, mock_task_exporter_get):
+        mock_client = mock.Mock()
+        mock_exporter_class = mock.Mock(return_value=mock_client)
+        mock_task_exporter_get.return_value = mock_exporter_class
+        self.task.export("fake_uuid", "file-exporter:///fake_path.json")
+        mock_task_exporter_get.assert_called_once_with("file-exporter")
+        mock_client.export.assert_called_once_with("fake_uuid")
+
+    @mock.patch("rally.task.exporter.TaskExporter.get")
+    def test_export_exception(self, mock_task_exporter_get):
+        mock_client = mock.Mock()
+        mock_exporter_class = mock.Mock(return_value=mock_client)
+        mock_task_exporter_get.return_value = mock_exporter_class
+        mock_client.export.side_effect = IOError
+        self.task.export("fake_uuid", "file-exporter:///fake_path.json")
+        mock_task_exporter_get.assert_called_once_with("file-exporter")
+        mock_client.export.assert_called_once_with("fake_uuid")
+
+    @mock.patch("rally.cli.commands.task.sys.stdout")
+    @mock.patch("rally.task.exporter.TaskExporter.get")
+    def test_export_InvalidConnectionString(self, mock_task_exporter_get,
+                                            mock_stdout):
+        mock_exporter_class = mock.Mock(
+            side_effect=exceptions.InvalidConnectionString)
+        mock_task_exporter_get.return_value = mock_exporter_class
+        self.task.export("fake_uuid", "file-exporter:///fake_path.json")
+        mock_stdout.write.assert_has_calls([
+            mock.call("The connection string is not valid: None. "
+                      "Please check your connection string."),
+            mock.call("\n")])
+        mock_task_exporter_get.assert_called_once_with("file-exporter")
