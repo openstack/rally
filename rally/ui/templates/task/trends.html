@@ -1,0 +1,422 @@
+{% extends "/base.html" %}
+
+{% block html_attr %} ng-app="App"{% endblock %}
+
+{% block title_text %}Rally Tasks Trends{% endblock %}
+
+{% block libs %}
+  {% if include_libs %}
+  <style>
+    {{ include_raw_file("/libs/nv.d3.1.1.15-beta.min.css") }}
+  </style>
+  <script type="text/javascript">
+    {{ include_raw_file("/libs/angular.1.3.3.min.js") }}
+    {{ include_raw_file("/libs/d3.3.4.13.min.js") }}
+    {{ include_raw_file("/libs/nv.d3.1.1.15-beta.min.js") }}
+  </script>
+  {% else %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
+  {% endif %}
+{% endblock %}
+
+{% block js_before %}
+    "use strict";
+    {% include "/task/directive_widget.js" %}
+    var controllerFunction = function($scope, $location) {
+      $scope.data = {{ data }};
+{% raw %}
+      $scope.location = {
+        /* #/path/hash/sub/div */
+        normalize: function(str) {
+          /* Remove unwanted characters from string */
+          if (typeof str !== "string") { return "" }
+          return str.replace(/[^\w\-\.]/g, "")
+        },
+        uri: function(obj) {
+          /* Getter/Setter */
+          if (! obj) {
+            var uri = {path: "", hash: "", sub: "", div: ""};
+            var arr = ["div", "sub", "hash", "path"];
+            angular.forEach($location.url().split("/"), function(value){
+              var v = $scope.location.normalize(value);
+              if (v) { var k = arr.pop(); if (k) { this[k] = v }}
+            }, uri);
+            return uri
+          }
+          var arr = [obj.path, obj.hash, obj.sub, obj.div], res = [];
+          for (var i in arr) { if (! arr[i]) { break }; res.push(arr[i]) }
+          return $location.url("/" + res.join("/"))
+        },
+        path: function(path, hash) {
+          /* Getter/Setter */
+          if (path === "") { return this.uri({}) }
+          path = this.normalize(path);
+          var uri = this.uri();
+          if (! path) { return uri.path }
+          uri.path = path;
+          var _hash = this.normalize(hash);
+          if (_hash || hash === "") { uri.hash = _hash }
+          return this.uri(uri)
+        },
+        hash: function(hash) {
+          /* Getter/Setter */
+          if (hash) { this.uri({path:this.uri().path, hash:hash}) }
+          return this.uri().hash
+        }
+      }
+
+      /* Dispatch */
+
+      $scope.route = function(uri) {
+        if (! $scope.wload_map) { return }
+        if (uri.path in $scope.wload_map) {
+          $scope.view = {is_wload:true};
+          $scope.wload = $scope.wload_map[uri.path];
+          $scope.nav_idx = $scope.nav_map[uri.path];
+          $scope.showTab(uri);
+        } else {
+            $scope.wload = null;
+            $scope.view = {is_main:true}
+        }
+      }
+
+      $scope.$on("$locationChangeSuccess", function (event, newUrl, oldUrl) {
+        $scope.route($scope.location.uri())
+      });
+
+      $scope.showNav = function(nav_idx) { $scope.nav_idx = nav_idx }
+
+      /* Tabs */
+
+      $scope.tabs = [
+        {
+          id: "total",
+          name: "Total",
+          visible: function(){ return true }
+        }, {
+          id: "atomic",
+          name: "Atomic actions",
+          visible: function(){ return (! $scope.wload.single) && $scope.wload.atomic.length }
+        }, {
+          id: "config",
+          name: "Configuration",
+          visible: function(){ return !! $scope.wload.config.length }
+        }
+      ];
+      $scope.tabs_map = {};
+      angular.forEach($scope.tabs,
+                      function(tab){ this[tab.id] = tab }, $scope.tabs_map);
+
+      $scope.showTab = function(uri) {
+        $scope.tab = uri.hash in $scope.tabs_map ? uri.hash : "total"
+      }
+
+      for (var i in $scope.tabs) {
+        $scope.tabs[i].isVisible = function() {
+          if ($scope.wload) {
+            if (this.visible()) { return true }
+
+            /* If tab should be hidden but is selected - show another one */
+            if (this.id === $scope.location.hash()) {
+              for (var i in $scope.tabs) {
+                var tab = $scope.tabs[i];
+                if (tab.id != this.id && tab.visible()) {
+                  $scope.tab = tab.id;
+                  return false
+                }
+              }
+            }
+          }
+          return false
+        }
+      }
+
+      $scope.showError = function(message) {
+        return (function (e) {
+          e.style.display = "block";
+          e.textContent = message
+        })(document.getElementById("page-error"))
+      }
+
+      /* Initialization */
+
+      angular.element(document).ready(function(){
+        if (! $scope.data.length) {
+          return $scope.showError("No data...")
+        }
+
+        /* Compose data mapping */
+
+        $scope.nav = [];
+        $scope.nav_map = {};
+        $scope.wload_map = {};
+        var prev_cls, prev_met, met = [], itr = 0, cls_idx = 0;
+
+        for (var idx in $scope.data) {
+          var w = $scope.data[idx];
+          if (! prev_cls) {
+            prev_cls = w.cls
+          }
+          else if (prev_cls !== w.cls) {
+            $scope.nav.push({name:prev_cls, met:met, idx:cls_idx});
+            prev_cls = w.cls;
+            met = [];
+            itr = 1;
+            cls_idx += 1
+          }
+
+          if (prev_met !== w.met) { itr = 1 };
+          w.ref = $scope.location.normalize(w.cls+"."+w.met+(itr > 1 ? "-"+itr : ""));
+          w.order_idx = itr > 1 ? " ["+itr+"]" : ""
+          $scope.wload_map[w.ref] = w;
+          $scope.nav_map[w.ref] = cls_idx;
+          met.push({name:w.met, itr:itr, idx:idx, order_idx:w.order_idx,
+                    ref:w.ref, single:w.single});
+          prev_met = w.met;
+          itr += 1;
+        }
+
+        if (met.length) {
+          $scope.nav.push({name:prev_cls, met:met, idx:cls_idx})
+        }
+
+        /* Start */
+
+        $scope.route($scope.location.uri());
+        $scope.$digest()
+      });
+    };
+
+    if (typeof angular === "object") {
+      angular.module("App", [])
+        .controller("Controller", ["$scope", "$location", controllerFunction])
+        .directive("widget", widgetDirective)
+    }
+{% endraw %}
+{% endblock %}
+
+{% block css %}
+    .aside { margin:0 20px 0 0; display:block; width:255px; float:left }
+    .aside > div { margin-bottom: 15px }
+    .aside > div div:first-child { border-top-left-radius:4px; border-top-right-radius:4px }
+    .aside > div div:last-child { border-bottom-left-radius:4px; border-bottom-right-radius:4px }
+    .navcls { color:#678; background:#eee; border:1px solid #ddd; margin-bottom:-1px; display:block; padding:8px 9px; font-weight:bold; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer }
+    .navcls.expanded { color:#469 }
+    .navcls.active { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+    .navmet { color:#555; background:#fff; border:1px solid #ddd; font-size:12px; display:block; margin-bottom:-1px; padding:8px 10px; text-align:left; text-overflow:ellipsis; white-space:nowrap; overflow:hidden; cursor:pointer }
+    .navmet:hover { background:#f8f8f8 }
+    .navmet.active, .navmet.active:hover { background:#428bca; background-image:linear-gradient(to bottom, #428bca 0px, #3278b3 100%); border-color:#3278b3; color:#fff }
+    .navmet.single, .single, .single td { color:#999 }
+    .navmet.active.single { color:#ccc }
+
+    .tabs { list-style:outside none none; margin:0 0 5px; padding:0; border-bottom:1px solid #ddd }
+    .tabs:after { clear:both }
+    .tabs li { float:left; margin-bottom:-1px; display:block; position:relative }
+    .tabs li div { border:1px solid transparent; border-radius:4px 4px 0 0; line-height:20px; margin-right:2px; padding:10px 15px; color:#428bca }
+    .tabs li div:hover { border-color:#eee #eee #ddd; background:#eee; cursor:pointer; }
+    .tabs li.active div { background:#fff; border-color:#ddd #ddd transparent; border-style:solid; border-width:1px; color:#555; cursor:default }
+    .failure-mesg { color:#900 }
+    .failure-trace { color:#333; white-space:pre; overflow:auto }
+
+    .link { color:#428BCA; padding:5px 15px 5px 5px; text-decoration:underline; cursor:pointer }
+    .link.active { color:#333; text-decoration:none }
+
+    .chart { padding:0; margin:0; width:890px }
+    .chart svg { height:300px; padding:0; margin:0; overflow:visible; float:right }
+    .chart.lower svg { height:180px }
+    .chart-label-y { font-size:12px; position:relative; top:5px; padding:0; margin:0 }
+
+    .clearfix { clear:both }
+    .sortable > .arrow { display:inline-block; width:12px; height:inherit; color:#c90 }
+    .content-main { margin:0 5px; display:block; float:left }
+    .content-wrap { width:900px }
+
+    .chart-title { color:#f60; font-size:20px; padding:8px 0 3px }
+{% endblock %}
+
+{% block media_queries %}
+    @media only screen and (min-width: 320px)  { .content-wrap { width:900px  } .content-main { width:600px } }
+    @media only screen and (min-width: 900px)  { .content-wrap { width:880px  } .content-main { width:590px } }
+    @media only screen and (min-width: 1000px) { .content-wrap { width:980px  } .content-main { width:690px } }
+    @media only screen and (min-width: 1100px) { .content-wrap { width:1080px } .content-main { width:790px } }
+    @media only screen and (min-width: 1200px) { .content-wrap { width:1180px } .content-main { width:890px } }
+{% endblock %}
+
+{% block body_attr %} ng-controller="Controller"{% endblock %}
+
+{% block header_text %}tasks trends report{% endblock %}
+
+{% block content %}
+{% raw %}
+    <p id="page-error" class="notify-error" style="display:none"></p>
+
+    <div id="content-nav" class="aside" ng-cloack>
+      <div>
+        <div class="navcls"
+             ng-class="{active:view.is_main}"
+             ng-click="location.path('')">Trends overview</div>
+      </div>
+      <div>
+        <div class="navcls"
+             title="{{n.name}}"
+             ng-repeat-start="n in nav track by $index"
+             ng-click="showNav(n.idx)"
+             ng-class="{expanded:n.idx==nav_idx}">
+                <span ng-hide="n.idx==nav_idx">&#9658;</span>
+                <span ng-show="n.idx==nav_idx">&#9660;</span>
+                {{n.name}}</div>
+        <div class="navmet"
+             title="{{m.name}}{{m.order_idx}}"
+             ng-show="n.idx==nav_idx"
+             ng-class="{active:wload && m.ref==wload.ref, single:m.single}"
+             ng-click="location.path(m.ref)"
+             ng-repeat="m in n.met track by $index"
+             ng-repeat-end>{{m.name}}{{m.order_idx}}</div>
+      </div>
+    </div>
+
+    <div id="content-main" class="content-main" ng-show="data.length" ng-cloak>
+      <span id="/"></span>
+
+      <div ng-show="view.is_main">
+        <h2>Trends overview</h2>
+        <table class="linked compact"
+               ng-init="ov_srt='ref'; ov_dir=false">
+          <thead>
+            <tr>
+              <th class="sortable"
+                  title="Scenario name, with optional suffix of run number"
+                  ng-click="ov_srt='ref'; ov_dir=!ov_dir">
+                Scenario
+                <span class="arrow">
+                  <b ng-show="ov_srt=='ref' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='ref' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable"
+                  title="How many times the workload has run"
+                  ng-click="ov_srt='seq'; ov_dir=!ov_dir">
+                Number of runs
+                <span class="arrow">
+                  <b ng-show="ov_srt=='seq' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='seq' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Mimimum duration"
+                  ng-click="ov_srt='stat.min'; ov_dir=!ov_dir">
+                Min duration
+                <span class="arrow">
+                  <b ng-show="ov_srt=='stat.min' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='stat.min' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Maximum duration"
+                  ng-click="ov_srt='stat.max'; ov_dir=!ov_dir">
+                Max duration
+                <span class="arrow">
+                  <b ng-show="ov_srt=='stat.max' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='stat.max' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Average duration"
+                  ng-click="ov_srt='stat.avg'; ov_dir=!ov_dir">
+                Avg duration
+                <span class="arrow">
+                  <b ng-show="ov_srt=='stat.avg' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='stat.avg' && ov_dir">&#x25be;</b>
+                </span>
+              <th class="sortable" title="Whether there were SLA failures"
+                  ng-click="ov_srt='sla_failures'; ov_dir=!ov_dir">
+                SLA
+                <span class="arrow">
+                  <b ng-show="ov_srt=='sla_failures' && !ov_dir">&#x25b4;</b>
+                  <b ng-show="ov_srt=='sla_failures' && ov_dir">&#x25be;</b>
+                </span>
+            <tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="w in data | orderBy:ov_srt:ov_dir"
+                ng-click="location.path(w.ref)"
+                ng-class="{single:w.single}">
+              <td>{{w.ref}}
+              <td>{{w.seq}}
+              <td>
+                <span ng-if="w.single">-</span>
+                <span ng-if="!w.single">{{w.stat.min | number:4}}</span>
+              <td>
+                <span ng-if="w.single">-</span>
+                <span ng-if="!w.single">{{w.stat.max | number:4}}</span>
+              <td>
+                <span ng-if="w.single">-</span>
+                <span ng-if="!w.single">{{w.stat.avg | number:4}}</span>
+              <td title="{{w.sla_failures ? 'Failures: ' + w.sla_failures : 'No failures'}}">
+                <span ng-hide="w.sla_failures" class="status-pass">&#x2714;</span>
+                <span ng-show="w.sla_failures" class="status-fail">&#x2716;</span>
+            <tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div ng-show="view.is_wload">
+        <div style="color:#8be; font-size:18px;">Compare workload runs</div>
+        <h1>{{wload.cls}}.<wbr>{{wload.met}}{{wload.order_idx}}</h1>
+        <ul class="tabs">
+          <li ng-repeat="t in tabs"
+              ng-show="t.isVisible()"
+              ng-class="{active:t.id == tab}"
+              ng-click="location.hash(t.id)">
+            <div>{{t.name}}</div>
+          </li>
+          <div class="clearfix"></div>
+        </ul>
+        <div ng-include="tab"></div>
+
+        <script type="text/ng-template" id="total">
+          <div ng-if="wload.single">
+            <div style="margin:30px 0 10px; font-size:14px; color:#ff6622">
+              This wrokload has single run so trends can not be displayed.<br>
+              There should be at least two workload results with the same configuration
+            </div>
+          </div>
+          <div ng-if="!wload.single">
+            <h2>Total durations</h2>
+            <div widget="Lines"
+                 data="wload.total"
+                 name-x="Task run sequence number"
+                 controls="true"
+                 guide="true">
+            </div>
+          </div>
+        </script>
+
+        <script type="text/ng-template" id="atomic">
+          <h2>Atomic actions durations</h2>
+          <div ng-repeat="chart in wload.atomic track by $index">
+            <span id="{{chart.name}}"></span>
+            <div class="chart-title">{{chart.name}}</div>
+            <div widget="Lines"
+                 data="chart.values"
+                 name-x="Task run sequence number"
+                 controls="true"
+                 guide="true">
+            </div>
+          </div>
+        </script>
+
+        <script type="text/ng-template" id="config">
+          <h2>Workload configuration</h2>
+          <pre class="code">{{wload.config}}</pre>
+        </script>
+      </div>
+
+    </div>
+    <div class="clearfix"></div>
+{% endraw %}
+{% endblock %}
+
+{% block js_after %}
+    if (! window.angular) {(function(f){
+      f(document.getElementById("content-nav"), "none");
+      f(document.getElementById("content-main"), "none");
+      f(document.getElementById("page-error"), "block").textContent = "Failed to load AngularJS framework"
+    })(function(e, s){e.style.display = s; return e})}
+{% endblock %}
