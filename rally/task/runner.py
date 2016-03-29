@@ -270,7 +270,7 @@ class ScenarioRunner(plugin.Plugin):
         if self.result_batch:
             sorted_batch = sorted(self.result_batch)
             self.result_queue.append(sorted_batch)
-            self.result_batch = []
+            del self.result_batch[:]
 
     def _send_result(self, result):
         """Store partial result to send it to consumer later.
@@ -287,7 +287,7 @@ class ScenarioRunner(plugin.Plugin):
             sorted_batch = sorted(self.result_batch,
                                   key=lambda r: r["timestamp"])
             self.result_queue.append(sorted_batch)
-            self.result_batch = []
+            del self.result_batch[:]
 
     def _log_debug_info(self, **info):
         """Log runner parameters for debugging.
