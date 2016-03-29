@@ -173,16 +173,19 @@ class LoadProfileChartTestCase(test.TestCase):
                "kwargs": {"scale": 10}, "data": [
                    (12345, 4.2, False), (12347, 42, False), (12349, 10, True),
                    (12351, 5.5, False), (12353, 0.42, False)],
-               "expected": [("parallel iterations", [
-                   [6.0, 3], [12.0, 3], [18.0, 1], [24.0, 1], [30.0, 1],
-                   [36.0, 1], [42.0, 1], [48.0, 1], [54.0, 0], [63, 0]])]},
+               "expected": [("parallel iterations",
+                             [[0.0, 0], [7.56, 4], [15.12, 4], [22.68, 1],
+                              [30.24, 1], [37.8, 1], [45.36, 1],
+                              [52.919999999999995, 0], [60.48, 0],
+                              [68.03999999999999, 0], [75.6, 0]])]},
               {"count": 5, "load_duration": 63, "tstamp_start": 12345,
                "kwargs": {"scale": 8, "name": "Custom text"}, "data": [
                    (12345, 4.2, False), (12347, 42, False), (12349, 10, True),
                    (12351, 5.5, False), (12353, 0.42, False)],
-               "expected": [("Custom text", [
-                   [8.0, 4], [16.0, 3], [24.0, 1], [32.0, 1], [40.0, 1],
-                   [48.0, 1], [56.0, 0], [63, 0]])]},
+               "expected": [("Custom text",
+                             [[0.0, 0], [9.84375, 5], [19.6875, 3],
+                              [29.53125, 1], [39.375, 1], [49.21875, 1],
+                              [59.0625, 0], [68.90625, 0], [78.75, 0]])]},
               {"count": 0, "load_duration": 0, "tstamp_start": 12345,
                "kwargs": {"scale": 8}, "data": [],
                "expected": [("parallel iterations", [[0, 0]])]})
