@@ -188,8 +188,9 @@ class TaskEngine(object):
         try:
             self.config = TaskConfig(config)
         except Exception as e:
-            log = [str(type(e)), str(e), json.dumps(traceback.format_exc())]
-            task.set_failed(log=log)
+            task.set_failed(type(e).__name__,
+                            str(e),
+                            json.dumps(traceback.format_exc()))
             raise exceptions.InvalidTaskException(str(e))
 
         self.task = task
@@ -285,8 +286,9 @@ class TaskEngine(object):
             self._validate_config_syntax(self.config)
             self._validate_config_semantic(self.config)
         except Exception as e:
-            log = [str(type(e)), str(e), json.dumps(traceback.format_exc())]
-            self.task.set_failed(log=log)
+            self.task.set_failed(type(e).__name__,
+                                 str(e),
+                                 json.dumps(traceback.format_exc()))
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):

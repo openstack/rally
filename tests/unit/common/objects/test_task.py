@@ -240,10 +240,12 @@ class TaskTestCase(test.TestCase):
     def test_set_failed(self, mock_task_update):
         mock_task_update.return_value = self.task
         task = objects.Task(task=self.task)
-        task.set_failed()
+        task.set_failed("foo_type", "foo_error_message", "foo_trace")
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
-            {"status": consts.TaskStatus.FAILED, "verification_log": "\"\""},
+            {"status": consts.TaskStatus.FAILED,
+             "verification_log": "[\"foo_type\", \"foo_error_message\", "
+                                 "\"foo_trace\"]"},
         )
 
     @ddt.data(

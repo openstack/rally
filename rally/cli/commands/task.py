@@ -19,6 +19,7 @@ from __future__ import print_function
 import json
 import os
 import sys
+import traceback
 import webbrowser
 
 import jsonschema
@@ -131,10 +132,14 @@ class TaskCommands(object):
 
     def _load_and_validate_task(self, task, task_args, task_args_file,
                                 deployment, task_instance=None):
-        if not os.path.exists(task) or os.path.isdir(task):
+        if not os.path.isfile(task):
+            err_cls = IOError
+            msg = "No such file '%s'" % task
             if task_instance:
-                task_instance.set_failed(log="No such file '%s'" % task)
-            raise IOError("File '%s' is not found." % task)
+                task_instance.set_failed(err_cls.__name__,
+                                         msg,
+                                         json.dumps(traceback.format_stack()))
+            raise err_cls(msg)
         input_task = self._load_task(task, task_args, task_args_file)
         api.Task.validate(deployment, input_task, task_instance)
         print(_("Task config is valid :)"))
@@ -252,7 +257,9 @@ class TaskCommands(object):
             self.detailed(task_id=task_instance["uuid"])
 
         except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
-            task_instance.set_failed(log=e.format_message())
+            task_instance.set_failed(type(e).__name__,
+                                     str(e),
+                                     json.dumps(traceback.format_exc()))
             print(e, file=sys.stderr)
             return(1)
 
@@ -318,7 +325,6 @@ class TaskCommands(object):
         if task["status"] == consts.TaskStatus.FAILED:
             print("-" * 80)
             verification = yaml.safe_load(task["verification_log"])
-
             if logging.is_debug():
                 print(yaml.safe_load(verification[2]))
             else:
@@ -326,6 +332,13 @@ class TaskCommands(object):
                 print(verification[1])
                 print(_("\nFor more details run:\nrally -vd task detailed %s")
                       % task["uuid"])
+            return 0
+        elif task["status"] not in [consts.TaskStatus.FINISHED,
+                                    consts.TaskStatus.ABORTED]:
+            print("-" * 80)
+            print(_("\nThe task %s marked as '%s'. Results "
+                    "available when it is '%s'.") % (
+                task_id, task["status"], consts.TaskStatus.FINISHED))
             return 0
         for result in task["results"]:
             key = result["key"]
