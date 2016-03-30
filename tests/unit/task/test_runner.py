@@ -113,25 +113,6 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
-    def test_run_scenario_once_with_returned_scenario_output(self, mock_timer):
-        args = (1, fakes.FakeScenario, "with_output", mock.MagicMock(), {})
-        result = runner._run_scenario_once(args)
-
-        expected_result = {
-            "duration": fakes.FakeTimer().duration(),
-            "timestamp": fakes.FakeTimer().timestamp(),
-            "idle_duration": 0,
-            "error": [],
-            "output": {"additive": [{"chart_plugin": "StackedArea",
-                                     "description": "",
-                                     "data": [["a", 1]],
-                                     "title": "Scenario output"}],
-                       "complete": []},
-            "atomic_actions": {}
-        }
-        self.assertEqual(expected_result, result)
-
-    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_exception(self, mock_timer):
         args = (1, fakes.FakeScenario, "something_went_wrong",
                 mock.MagicMock(), {})
