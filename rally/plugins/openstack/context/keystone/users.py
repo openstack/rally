@@ -37,7 +37,7 @@ LOG = logging.getLogger(__name__)
 
 USER_CONTEXT_OPTS = [
     cfg.IntOpt("resource_management_workers",
-               default=30,
+               default=20,
                help="How many concurrent threads use for serving users "
                     "context"),
     cfg.StrOpt("project_domain",
