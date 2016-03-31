@@ -38,6 +38,7 @@ def run_migrations_online():
     engine = api.get_engine()
     with engine.connect() as connection:
         context.configure(connection=connection,
+                          render_as_batch=True,
                           target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()

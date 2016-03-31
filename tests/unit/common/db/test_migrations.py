@@ -21,6 +21,7 @@ import pprint
 import alembic
 import mock
 from oslo_db.sqlalchemy import test_migrations
+from oslo_db.sqlalchemy import utils as db_utils
 import six
 import sqlalchemy as sa
 
@@ -28,6 +29,7 @@ import rally
 from rally.common import db
 from rally.common.db.sqlalchemy import api
 from rally.common.db.sqlalchemy import models
+from tests.unit.common.db import test_migrations_base as base
 from tests.unit import test as rtest
 
 
@@ -202,3 +204,62 @@ class MigrationTestCase(rtest.DBTestCase,
         self.assertEqual("remove_table", action)
         self.assertIsInstance(object, sa.Table)
         self.assertEqual("workers", object.name)
+
+
+class MigrationWalkTestCase(rtest.DBTestCase, base.BaseWalkMigrationMixin):
+    """Test case covers upgrade and downgrade methods in migrations."""
+
+    snake_walk = True
+    downgrade = True
+
+    def setUp(self):
+        super(MigrationWalkTestCase, self).setUp()
+        self.engine = api.get_engine()
+
+    def assertColumnExists(self, engine, table, column):
+        t = db_utils.get_table(engine, table)
+        self.assertIn(column, t.c)
+
+    def assertColumnsExists(self, engine, table, columns):
+        for column in columns:
+            self.assertColumnExists(engine, table, column)
+
+    def assertColumnCount(self, engine, table, columns):
+        t = db_utils.get_table(engine, table)
+        self.assertEqual(len(t.columns), len(columns))
+
+    def assertColumnNotExists(self, engine, table, column):
+        t = db_utils.get_table(engine, table)
+        self.assertNotIn(column, t.c)
+
+    def assertIndexExists(self, engine, table, index):
+        t = db_utils.get_table(engine, table)
+        index_names = [idx.name for idx in t.indexes]
+        self.assertIn(index, index_names)
+
+    def assertColumnType(self, engine, table, column, sqltype):
+        t = db_utils.get_table(engine, table)
+        col = getattr(t.c, column)
+        self.assertIsInstance(col.type, sqltype)
+
+    def assertIndexMembers(self, engine, table, index, members):
+        self.assertIndexExists(engine, table, index)
+
+        t = db_utils.get_table(engine, table)
+        index_columns = None
+        for idx in t.indexes:
+            if idx.name == index:
+                index_columns = idx.columns.keys()
+                break
+
+        self.assertEqual(sorted(members), sorted(index_columns))
+
+    def test_walk_versions(self):
+        self.walk_versions(self.engine, self.snake_walk, self.downgrade)
+
+    def _check_3177d36ea270(self, engine, data):
+        self.assertEqual(
+            "3177d36ea270", api.get_backend().schema_revision(engine=engine))
+        self.assertColumnExists(engine, "deployments", "credentials")
+        self.assertColumnNotExists(engine, "deployments", "admin")
+        self.assertColumnNotExists(engine, "deployments", "users")
