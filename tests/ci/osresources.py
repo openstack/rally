@@ -319,11 +319,28 @@ def main():
         changes = resources.compare(with_list=given_list)
         removed, added = changes
 
+        # filter out expected additions
+        expected = []
+        for resource_tuple in added:
+            resource = dict(resource_tuple)
+            if ((resource["class"] == "keystone" and
+                 resource["resource_name"] == "role" and
+                 resource["name"] == "_member_") or
+                (resource["class"] == "nova" and
+                 resource["resource_name"] == "security_group" and
+                 resource["name"] == "default")):
+                expected.append(resource_tuple)
+        for resource in expected:
+            added.remove(resource)
+
         if removed:
             _print_tabular_resources(removed, "Removed resources")
 
         if added:
-            _print_tabular_resources(added, "Added resources")
+            _print_tabular_resources(added, "Added resources (unexpected)")
+
+        if expected:
+            _print_tabular_resources(expected, "Added resources (expected)")
 
         if any(changes):
             return 0  # `1' will fail gate job
