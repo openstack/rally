@@ -21,7 +21,8 @@ set +o xtrace
 # --------
 
 # Set up default directories
-RALLY_DIR=$DEST/rally
+DIR=$(dirname ${BASH_SOURCE[0]})
+RALLY_DIR=$(readlink -m $DIR/../..)
 RALLY_CONF_DIR=${RALLY_CONF_DIR:-/etc/rally}
 RALLY_CONF_FILE=rally.conf
 

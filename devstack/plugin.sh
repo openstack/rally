@@ -4,7 +4,8 @@
 XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
-source $DEST/rally/devstack/lib/rally
+DIR=$(dirname ${BASH_SOURCE[0]})
+source $DIR/lib/rally
 
 if [[ "$1" == "stack" && "$2" == "install" ]]; then
     echo_summary "Installing Rally"
