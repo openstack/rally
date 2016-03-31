@@ -224,7 +224,7 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
         return self.raw_resource["id"]
 
     def name(self):
-        return self.raw_resource["name"]
+        return self.raw_resource.get("name", "")
 
     def delete(self):
         delete_method = getattr(self._manager(), "delete_%s" % self._resource)
