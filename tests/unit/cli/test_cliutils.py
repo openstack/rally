@@ -421,6 +421,10 @@ class ValidateArgsTest(test.TestCase):
         self.assertRaises(cliutils.MissingArgs,
                           self._test_lambda_with_args, y=2)
 
+    def test_lambda_missing_args4(self):
+        self.assertRaises(cliutils.MissingArgs,
+                          self._test_lambda_with_args, 1, x=2)
+
     def _test_lambda_with_default(self, *args, **kwargs):
         cliutils.validate_args(lambda x, y, z=3: None, *args, **kwargs)
 
