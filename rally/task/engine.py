@@ -56,6 +56,9 @@ class ResultConsumer(object):
         self.key = key
         self.task = task
         self.runner = runner
+        self.load_started_at = float("inf")
+        self.load_finished_at = 0
+
         self.sla_checker = sla.SLAChecker(key["kw"])
         self.abort_on_sla_failure = abort_on_sla_failure
         self.is_done = threading.Event()
@@ -78,6 +81,10 @@ class ResultConsumer(object):
                 results = self.runner.result_queue.popleft()
                 self.results.extend(results)
                 for r in results:
+                    self.load_started_at = min(r["timestamp"],
+                                               self.load_started_at)
+                    self.load_finished_at = max(r["duration"] + r["timestamp"],
+                                                self.load_finished_at)
                     success = self.sla_checker.add_iteration(r)
                     if self.abort_on_sla_failure and not success:
                         self.sla_checker.set_aborted_on_sla()
@@ -105,7 +112,7 @@ class ResultConsumer(object):
 
         self.task.append_results(self.key, {
             "raw": self.results,
-            "load_duration": self.runner.run_duration,
+            "load_duration": self.load_finished_at - self.load_started_at,
             "full_duration": self.finish - self.start,
             "sla": self.sla_checker.results()})
 
