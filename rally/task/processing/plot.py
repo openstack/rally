@@ -117,27 +117,34 @@ def _process_tasks(tasks_results):
                                                 int(r["pos"])))
 
 
-def plot(tasks_results, include_libs=False):
-    # NOTE(amaretskiy): Transform generic results into extended
-    #   results, so they can be processed by charts classes
+def _extend_results(results):
+    """Transform tasks results into extended format.
+
+    This is a temporary workaround adapter that allows
+    working with task results using new schema, until
+    database refactoring actually comes.
+
+    :param results: tasks results list in old format
+    :returns: tasks results list in new format
+    """
     extended_results = []
-    for result in tasks_results:
-        generic = {
-            "id": None,
-            "task_uuid": None,
-            "key": result["key"],
-            "data": {
-                "sla": result["sla"],
-                "raw": result["result"],
-                "full_duration": result[
-                    "full_duration"],
-                "load_duration": result[
-                    "load_duration"]},
-            "created_at": None,
-            "updated_at": None}
+    for result in results:
+        generic = {"id": None,
+                   "task_uuid": None,
+                   "key": result["key"],
+                   "data": {"sla": result["sla"],
+                            "raw": result["result"],
+                            "full_duration": result["full_duration"],
+                            "load_duration": result["load_duration"]},
+                   "created_at": None,
+                   "updated_at": None}
         extended_results.extend(
             objects.Task.extend_results([generic]))
+    return extended_results
 
+
+def plot(tasks_results, include_libs=False):
+    extended_results = _extend_results(tasks_results)
     template = ui_utils.get_template("task/report.html")
     source, data = _process_tasks(extended_results)
     return template.render(source=json.dumps(source), data=json.dumps(data),
