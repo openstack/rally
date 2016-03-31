@@ -146,7 +146,7 @@ class LoadProfileChart(Chart):
     widget = "StackedArea"
 
     def __init__(self, workload_info, name="parallel iterations",
-                 scale=200):
+                 scale=100):
         """Setup chart with graph name and scale.
 
         :workload_info:  dict, generalized info about iterations
@@ -155,32 +155,21 @@ class LoadProfileChart(Chart):
         """
         super(LoadProfileChart, self).__init__(workload_info)
         self._name = name
-        self._duration = workload_info["load_duration"]
+        # NOTE(boris-42): Add 2 points at the end of graph so at the end of
+        #                 graph there will be point with 0 running iterations.
+        self._duration = workload_info["load_duration"] * (1 + 2.0 / scale)
         self._tstamp_start = workload_info["tstamp_start"]
 
-        # NOTE(amaretskiy): Determine a chart `step' - duration between
-        #   two X points, rounded with minimal accuracy (digits after point)
-        #   to improve JavaScript drawing performance.
-        # Examples:
-        #   scale  duration       step (initial)    accuracy  step
-        #   200    30.8043010235  0.154021505117    1         0.2
-        #   200    1.25884699821  0.00629423499107  3         0.006
         step = self._duration / float(scale)
-        if step == 0:
-            accuracy = 0
-        else:
-            accuracy = max(-int(math.floor(math.log10(step))), 0)
-        step = round(step, accuracy)
         self._time_axis = [step * x
-                           for x in six.moves.range(1, int(scale))
+                           for x in six.moves.range(int(scale))
                            if (step * x) < self._duration]
         self._time_axis.append(self._duration)
         self._started = [0] * len(self._time_axis)
         self._stopped = [0] * len(self._time_axis)
 
     def _map_iteration_values(self, iteration):
-        return (iteration["timestamp"],
-                0 if iteration["error"] else iteration["duration"])
+        return (iteration["timestamp"], iteration["duration"])
 
     def add_iteration(self, iteration):
         timestamp, duration = self._map_iteration_values(iteration)
@@ -197,6 +186,7 @@ class LoadProfileChart(Chart):
             running += started
             data.append([ts, running])
             running -= ended
+
         return [(self._name, data)]
 
 
