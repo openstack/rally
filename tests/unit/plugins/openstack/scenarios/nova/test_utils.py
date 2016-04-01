@@ -943,3 +943,29 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             host, binary)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_services")
+
+    def test__list_flavor_access(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._list_flavor_access("foo_id")
+        self.assertEqual(
+            self.admin_clients("nova").flavor_access.list.return_value,
+            result)
+        self.admin_clients("nova").flavor_access.list.assert_called_once_with(
+            flavor="foo_id")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_flavor_access")
+
+    def test__create_flavor(self):
+        nova_scenario = utils.NovaScenario()
+        random_name = "random_name"
+        nova_scenario.generate_random_name = mock.Mock(
+            return_value=random_name)
+        result = nova_scenario._create_flavor(500, 1, 1,
+                                              fakearg="fakearg")
+        self.assertEqual(
+            self.admin_clients("nova").flavors.create.return_value,
+            result)
+        self.admin_clients("nova").flavors.create.assert_called_once_with(
+            random_name, 500, 1, 1, fakearg="fakearg")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_flavor")

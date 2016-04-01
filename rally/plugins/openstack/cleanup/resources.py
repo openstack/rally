@@ -137,6 +137,14 @@ class NovaQuotas(QuotaMixin, base.ResourceManager):
     pass
 
 
+@base.resource("nova", "flavors", order=next(_nova_order),
+               admin_required=True, perform_for_admin_only=True)
+class NovaFlavors(base.ResourceManager):
+    def list(self):
+        return [r for r in self._manager().list()
+                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+
+
 @base.resource("nova", "floating_ips_bulk", order=next(_nova_order),
                admin_required=True)
 class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):

@@ -1,0 +1,16 @@
+{
+  "NovaFlavors.create_and_list_flavor_access": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      },
+      "args": {
+        "ram": 500,
+        "vcpus" : 1,
+        "disk": 1
+      }
+    }
+  ]
+}
