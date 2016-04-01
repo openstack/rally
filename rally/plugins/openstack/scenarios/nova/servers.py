@@ -171,7 +171,8 @@ class NovaServers(utils.NovaScenario,
         """Boot a server and run specified actions against it.
 
         Actions should be passed into the actions parameter. Available actions
-        are 'hard_reboot', 'soft_reboot', 'stop_start' and 'rescue_unrescue'.
+        are 'hard_reboot', 'soft_reboot', 'stop_start', 'rescue_unrescue',
+        'pause_unpause', 'suspend_resume', 'lock_unlock' and 'shelve_unshelve'.
         Delete server after all actions were completed.
 
         :param image: image to be used to boot an instance
@@ -297,7 +298,8 @@ class NovaServers(utils.NovaScenario,
 
     def _bind_actions(self):
         actions = ["hard_reboot", "soft_reboot", "stop_start",
-                   "rescue_unrescue"]
+                   "rescue_unrescue", "pause_unpause", "suspend_resume",
+                   "lock_unlock", "shelve_unshelve"]
         action_builder = task_utils.ActionBuilder(actions)
         action_builder.bind_action("hard_reboot", self._reboot_server)
         action_builder.bind_action("soft_reboot", self._soft_reboot_server)
@@ -305,6 +307,15 @@ class NovaServers(utils.NovaScenario,
                                    self._stop_and_start_server)
         action_builder.bind_action("rescue_unrescue",
                                    self._rescue_and_unrescue_server)
+        action_builder.bind_action("pause_unpause",
+                                   self._pause_and_unpause_server)
+        action_builder.bind_action("suspend_resume",
+                                   self._suspend_and_resume_server)
+        action_builder.bind_action("lock_unlock",
+                                   self._lock_and_unlock_server)
+        action_builder.bind_action("shelve_unshelve",
+                                   self._shelve_and_unshelve_server)
+
         return action_builder
 
     def _stop_and_start_server(self, server):
@@ -335,6 +346,64 @@ class NovaServers(utils.NovaScenario,
         """
         self._rescue_server(server)
         self._unrescue_server(server)
+
+    def _pause_and_unpause_server(self, server):
+        """Pause and then unpause the given server.
+
+        A pause will be issued on the given server upon which time
+        this method will wait for the server to become 'PAUSED'.
+        Once the server is PAUSED an unpause will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to pause and then unpause.
+
+        """
+        self._pause_server(server)
+        self._unpause_server(server)
+
+    def _suspend_and_resume_server(self, server):
+        """Suspend and then resume the given server.
+
+        A suspend will be issued on the given server upon which time
+        this method will wait for the server to become 'SUSPENDED'.
+        Once the server is SUSPENDED an resume will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to suspend and then resume.
+
+        """
+        self._suspend_server(server)
+        self._resume_server(server)
+
+    def _lock_and_unlock_server(self, server):
+        """Lock and then unlock the given server.
+
+        A lock will be issued on the given server upon which time
+        this method will wait for the server to become locked'.
+        Once the server is locked an unlock will be issued.
+
+        :param server: The server to lock and then unlock.
+
+        """
+        self._lock_server(server)
+        self._unlock_server(server)
+
+    def _shelve_and_unshelve_server(self, server):
+        """Shelve and then unshelve the given server.
+
+        A shelve will be issued on the given server upon which time
+        this method will wait for the server to become 'SHELVED'.
+        Once the server is SHELVED an unshelve will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to shelve and then unshelve.
+
+        """
+        self._shelve_server(server)
+        self._unshelve_server(server)
 
     @types.convert(image={"type": "glance_image"},
                    flavor={"type": "nova_flavor"},
