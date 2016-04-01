@@ -24,7 +24,7 @@
 
 {% block js_before %}
     "use strict";
-    {% include "/task/directive_widget.js" %}
+    {{ include_raw_file("/task/directive_widget.js") }}
     var controllerFunction = function($scope, $location) {
         $scope.source = {{ source }};
         $scope.scenarios = {{ data }};
