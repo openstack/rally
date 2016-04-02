@@ -1,5 +1,6 @@
 {% set image_name = "^cirros.*uec$" %}
 {% set flavor_name = "m1.nano" %}
+{% set smoke = 0 %}
 ---
 
   NovaSecGroup.boot_and_delete_server_with_secgroups:
