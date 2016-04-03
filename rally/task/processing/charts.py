@@ -14,11 +14,11 @@
 
 import abc
 import bisect
+import collections
 import math
 
 import six
 
-from rally.common import costilius
 from rally.common.plugin import plugin
 from rally.common import streaming_algorithms as streaming
 from rally.task.processing import utils
@@ -41,7 +41,7 @@ class Chart(plugin.Plugin):
                                that should have int value of total data size
         :param zipped_size: int maximum number of points on scale
         """
-        self._data = costilius.OrderedDict()  # Container for results
+        self._data = collections.OrderedDict()  # Container for results
         self._workload_info = workload_info
         self.base_size = workload_info.get("iterations_count", 0)
         self.zipped_size = zipped_size
