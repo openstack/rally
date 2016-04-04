@@ -17,7 +17,6 @@
 import json
 import os
 import re
-import subprocess
 import traceback
 import unittest
 
@@ -25,7 +24,9 @@ import six
 
 from rally import api
 from rally.common import db
+from rally.common import objects
 from rally import plugins
+from rally.plugins.openstack.context.keystone import users
 from tests.functional import utils
 
 
@@ -49,19 +50,41 @@ class TestTaskSamples(unittest.TestCase):
         return False
 
     def test_task_samples_is_valid(self):
-        plugins.load()
         rally = utils.Rally(force_new_db=True)
+        # In TestTaskSamples, Rally API will be called directly (not via
+        # subprocess), so we need to change database options to temp database.
         db.db_options.set_defaults(
             db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir,
             sqlite_db="rally.sqlite")
+
+        # let's use pre-created users to make TestTaskSamples quicker
+        deployment = api.Deployment.get("MAIN")
+        admin_cred = objects.Credential(**deployment["admin"])
+
+        ctx = {"admin": {"credential": admin_cred},
+               "task": {"uuid": self.__class__.__name__}}
+        user_ctx = users.UserGenerator(ctx)
+        user_ctx.setup()
+        self.addCleanup(user_ctx.cleanup)
+
+        config = deployment["config"]
+        config["users"] = [{
+            "username": ctx["users"][0]["credential"].username,
+            "password": ctx["users"][0]["credential"].password,
+            "tenant_name": ctx["users"][0]["credential"].tenant_name}]
+
+        rally("deployment destroy MAIN", write_report=False)
+        deployment_cfg = os.path.join(rally.tmp_dir, "new_deployment.json")
+        with open(deployment_cfg, "w") as f:
+            f.write(json.dumps(config))
+        rally("deployment create --name MAIN --filename %s" % deployment_cfg,
+              write_report=False)
+
+        plugins.load()
         samples_path = os.path.join(
             os.path.dirname(__file__), os.pardir, os.pardir,
             "samples", "tasks")
         matcher = re.compile("\.json$")
-
-        if not os.path.exists(utils.DEPLOYMENT_FILE):
-            subprocess.call(["rally", "deployment", "config"],
-                            stdout=open(utils.DEPLOYMENT_FILE, "w"))
 
         for dirname, dirnames, filenames in os.walk(samples_path):
             # NOTE(rvasilets): Skip by suggest of boris-42 because in
