@@ -29,7 +29,7 @@ import rally
 from rally.common import db
 from rally.common.db.sqlalchemy import api
 from rally.common.db.sqlalchemy import models
-from tests.unit.common.db import test_migrations_base as base
+from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
 
 
@@ -206,7 +206,8 @@ class MigrationTestCase(rtest.DBTestCase,
         self.assertEqual("workers", object.name)
 
 
-class MigrationWalkTestCase(rtest.DBTestCase, base.BaseWalkMigrationMixin):
+class MigrationWalkTestCase(rtest.DBTestCase,
+                            test_migrations_base.BaseWalkMigrationMixin):
     """Test case covers upgrade and downgrade methods in migrations."""
 
     snake_walk = True
