@@ -11,10 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 
 from rally.common import utils as common_utils
 from rally.task import atomic
 from rally.task import utils
+
+CONF = cfg.CONF
 
 
 class Stack(common_utils.RandomNameGeneratorMixin):
@@ -48,8 +51,8 @@ class Stack(common_utils.RandomNameGeneratorMixin):
     def _wait(self, ready_statuses, failure_statuses):
         self.stack = utils.wait_for_status(
             self.stack,
-            check_interval=10,
-            timeout=1200,
+            check_interval=CONF.benchmark.heat_stack_create_poll_interval,
+            timeout=CONF.benchmark.heat_stack_create_timeout,
             ready_statuses=ready_statuses,
             failure_statuses=failure_statuses,
             update_resource=utils.get_from_manager(),

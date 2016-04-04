@@ -48,10 +48,10 @@ class StackTestCase(test.ScenarioTestCase):
         stack.stack = fake_stack = mock.Mock()
         stack._wait(["ready_statuses"], ["failure_statuses"])
         mock_utils.wait_for_status.assert_called_once_with(
-            fake_stack, check_interval=10,
+            fake_stack, check_interval=1.0,
             ready_statuses=["ready_statuses"],
             failure_statuses=["failure_statuses"],
-            timeout=1200,
+            timeout=3600.0,
             update_resource=mock_utils.get_from_manager())
 
     @mock.patch("rally.task.atomic")
