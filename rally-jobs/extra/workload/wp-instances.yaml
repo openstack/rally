@@ -58,7 +58,8 @@ resources:
              done
             ) > /tmp/data &
             mysql -u root --password=db_rootpassword wordpress -e 'LOAD DATA LOCAL INFILE "/tmp/data" INTO TABLE wp_posts FIELDS TERMINATED BY "," (post_author,post_title,post_name,post_type,post_content);'
-            wc_notify --data-binary '{"status": "SUCCESS"}'
+            sudo sh -c 'echo "172.16.0.6 mos80-ssl.fuel.local" >> /etc/hosts'
+            wc_notify --insecure --data-binary '{"status": "SUCCESS"}'
           params:
             db_rootpassword: { get_param: db_root_password }
             db_name: { get_param: db_name }
