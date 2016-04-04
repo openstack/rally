@@ -160,10 +160,10 @@ class LoadProfileChart(Chart):
         self._duration = workload_info["load_duration"] * (1 + 2.0 / scale)
         self._tstamp_start = workload_info["tstamp_start"]
 
-        step = self._duration / float(scale)
-        self._time_axis = [step * x
+        self.step = self._duration / float(scale)
+        self._time_axis = [self.step * x
                            for x in six.moves.range(int(scale))
-                           if (step * x) < self._duration]
+                           if (self.step * x) < self._duration]
         self._time_axis.append(self._duration)
         self._running = [0] * len(self._time_axis)
 
@@ -175,11 +175,18 @@ class LoadProfileChart(Chart):
         ts_start = timestamp - self._tstamp_start
         started_idx = bisect.bisect(self._time_axis, ts_start)
         ended_idx = bisect.bisect(self._time_axis, ts_start + duration)
-
+        if self._time_axis[ended_idx - 1] == ts_start + duration:
+            ended_idx -= 1
         for idx in range(started_idx + 1, ended_idx):
             self._running[idx] += 1
-        self._running[started_idx] += 0.5
-        self._running[ended_idx] += 0.5
+        if started_idx == ended_idx:
+            self._running[ended_idx] += duration / self.step
+        else:
+            self._running[started_idx] += (
+                self._time_axis[started_idx] - ts_start) / self.step
+            self._running[ended_idx] += (
+                ts_start + duration
+                - self._time_axis[ended_idx - 1]) / self.step
 
     def render(self):
         return [(self._name, list(zip(self._time_axis, self._running)))]
