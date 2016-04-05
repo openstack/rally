@@ -28,14 +28,14 @@ from rally.task import exporter
 LOG = logging.getLogger(__name__)
 
 
-@exporter.configure(name="file-exporter")
-class FileExporter(exporter.TaskExporter):
+@exporter.configure(name="file")
+class FileExporter(exporter.Exporter):
 
     def validate(self):
         """Validate connection string.
 
         The format of connection string in file plugin is
-        file:///<path>.<type>
+            file:///<path>.<type-of-output>
         """
 
         parse_obj = urlparse.urlparse(self.connection_string)
@@ -44,7 +44,7 @@ class FileExporter(exporter.TaskExporter):
         available_formats_str = ", ".join(available_formats)
         if self.connection_string is None or parse_obj.path == "":
             raise exceptions.InvalidConnectionString(
-                "It should be `file-exporter:///<path>.<type>`.")
+                "It should be `file:///<path>.<type-of-output>`.")
         if self.type not in available_formats:
             raise exceptions.InvalidConnectionString(
                 "Type of the exported task is not available. The available "
@@ -92,3 +92,13 @@ class FileExporter(exporter.TaskExporter):
             f.write(res)
             LOG.debug("Task %s results was written to the %s." % (
                 uuid, self.connection_string))
+
+
+@exporter.configure(name="file-exporter")
+class DeprecatedFileExporter(FileExporter):
+    """DEPRECATED."""
+    def __init__(self, connection_string):
+        super(DeprecatedFileExporter, self).__init__(connection_string)
+        import warnings
+        warnings.warn("'file-exporter' plugin is deprecated. Use 'file' "
+                      "instead.")

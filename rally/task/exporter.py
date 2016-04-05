@@ -32,7 +32,7 @@ def configure(name, namespace="default"):
 
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class TaskExporter(plugin.Plugin):
+class Exporter(plugin.Plugin):
 
     def __init__(self, connection_string):
         self.connection_string = connection_string
@@ -47,3 +47,5 @@ class TaskExporter(plugin.Plugin):
     @abc.abstractmethod
     def validate(self):
         """Used to validate connection string."""
+
+TaskExporter = Exporter

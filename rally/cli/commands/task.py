@@ -797,7 +797,7 @@ class TaskCommands(object):
 
         parsed_obj = urlparse.urlparse(connection_string)
         try:
-            client = exporter.TaskExporter.get(parsed_obj.scheme)(
+            client = exporter.Exporter.get(parsed_obj.scheme)(
                 connection_string)
         except exceptions.InvalidConnectionString as e:
             if logging.is_debug():
