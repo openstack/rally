@@ -50,14 +50,14 @@ IMAGE_OPTS = [
                help="Image container format to use when creating the image"),
     cfg.StrOpt("name_regex",
                default="^.*(cirros|testvm).*$",
-               help="Regular expression for name of an image to discover it "
-                    "in the cloud and use it for the tests. Note that when "
-                    "Rally is searching for the image, case insensitive "
-                    "matching is performed. Specify nothing ('name_regex =') "
-                    "if you want to disable discovering. In this case Rally "
-                    "will create needed resources by itself if the values "
-                    "for the corresponding config options are not specified "
-                    "in the Tempest config file")
+               help="Regular expression for name of a public image to "
+                    "discover it in the cloud and use it for the tests. "
+                    "Note that when Rally is searching for the image, case "
+                    "insensitive matching is performed. Specify nothing "
+                    "('name_regex =') if you want to disable discovering. "
+                    "In this case Rally will create needed resources by "
+                    "itself if the values for the corresponding config "
+                    "options are not specified in the Tempest config file")
 ]
 
 ROLE_OPTS = [
@@ -422,18 +422,20 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         glance_wrap = glance_wrapper.wrap(self.clients.glance, self)
 
         if CONF.image.name_regex:
-            LOG.debug("Trying to discover an image with name matching "
+            LOG.debug("Trying to discover a public image with name matching "
                       "regular expression '%s'. Note that case insensitive "
                       "matching is performed" % CONF.image.name_regex)
-            img_list = [img for img in self.clients.glance().images.list()
-                        if img.status.lower() == "active" and img.name]
-            for img in img_list:
-                if re.match(CONF.image.name_regex, img.name, re.IGNORECASE):
-                    LOG.debug("The following image discovered: '{0}'. Using "
-                              "image '{0}' for the tests".format(img.name))
+            images = glance_wrap.list_images(status="active",
+                                             visibility="public")
+            for img in images:
+                if img.name and re.match(CONF.image.name_regex,
+                                         img.name, re.IGNORECASE):
+                    LOG.debug(
+                        "The following public image discovered: '{0}'. "
+                        "Using image '{0}' for the tests".format(img.name))
                     return img
 
-            LOG.debug("There is no image with name matching "
+            LOG.debug("There is no public image with name matching "
                       "regular expression '%s'" % CONF.image.name_regex)
 
         params = {
@@ -442,7 +444,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             "container_format": CONF.image.container_format,
             "image_location": os.path.join(_create_or_get_data_dir(),
                                            self.image_name),
-            "is_public": True
+            "visibility": "public"
         }
         LOG.debug("Creating image '%s'" % params["name"])
         image = glance_wrap.create_image(**params)
