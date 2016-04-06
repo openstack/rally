@@ -21,6 +21,7 @@ import json
 import subprocess
 import sys
 
+from rally.common import objects
 from rally.common.plugin import discover
 from rally import consts
 from rally import osclients
@@ -216,8 +217,7 @@ class CloudResources(object):
     """
 
     def __init__(self, **kwargs):
-        credential = osclients.objects.Endpoint(**kwargs)
-        self.clients = osclients.Clients(credential)
+        self.clients = osclients.Clients(objects.Credential(**kwargs))
 
     def _deduplicate(self, lst):
         """Change list duplicates to make all items unique.
