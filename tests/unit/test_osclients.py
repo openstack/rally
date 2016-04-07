@@ -568,6 +568,7 @@ class OSClientsTestCase(test.TestCase):
         mock_zaqar = mock.MagicMock()
         mock_zaqar.client.Client = mock.MagicMock(return_value=fake_zaqar)
         self.assertNotIn("zaqar", self.clients.cache)
+        p_id = self.fake_keystone.auth_ref.get("token").get("tenant").get("id")
         with mock.patch.dict("sys.modules", {"zaqarclient.queues":
                                              mock_zaqar}):
             client = self.clients.zaqar()
@@ -581,7 +582,7 @@ class OSClientsTestCase(test.TestCase):
                 "os_username": self.credential.username,
                 "os_password": self.credential.password,
                 "os_project_name": self.credential.tenant_name,
-                "os_project_id": self.fake_keystone.auth_tenant_id,
+                "os_project_id": p_id,
                 "os_auth_url": self.credential.auth_url,
                 "insecure": self.credential.insecure,
             }}}

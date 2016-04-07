@@ -523,7 +523,7 @@ class Zaqar(OSClient):
             "os_username": self.credential.username,
             "os_password": self.credential.password,
             "os_project_name": self.credential.tenant_name,
-            "os_project_id": kc.auth_tenant_id,
+            "os_project_id": kc.auth_ref.get("token").get("tenant").get("id"),
             "os_auth_url": self.credential.auth_url,
             "insecure": self.credential.insecure,
         }}}
