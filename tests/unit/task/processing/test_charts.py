@@ -719,3 +719,49 @@ class OutputStatsTableTestCase(test.TestCase):
                           "label": "",
                           "axis_label": ""},
                          table.render())
+
+
+@ddt.ddt
+class ModuleTestCase(test.TestCase):
+
+    @ddt.data({"args": ["unexpected_foo", {}],
+               "expected": ("unexpected output type: 'unexpected_foo', "
+                            "should be in ('additive', 'complete')")},
+              {"args": ["additive", 42],
+               "expected": ("additive output item has wrong type 'int', "
+                            "must be 'dict'")},
+              {"args": ["additive", {}],
+               "expected": "additive output missing key 'title'"},
+              {"args": ["additive", {"title": "foo"}],
+               "expected": "additive output missing key 'chart_plugin'"},
+              {"args": ["additive", {"title": "a", "chart_plugin": "b"}],
+               "expected": "additive output missing key 'data'"},
+              {"args": ["additive", {"title": "a", "chart_plugin": "b",
+                                     "data": "c"}],
+               "expected": ("Value of additive output data has wrong type "
+                            "'str', should be in ('list', 'dict')")},
+              {"args": ["additive", {"title": "a", "chart_plugin": "b",
+                                     "data": []}]},
+              {"args": ["additive", {"title": "a", "chart_plugin": "b",
+                                     "data": [], "unexpected_foo": 42}],
+               "expected": ("additive output has unexpected key "
+                            "'unexpected_foo'")},
+              {"args": ["complete", {}],
+               "expected": "complete output missing key 'title'"},
+              {"args": ["complete", {"title": "foo"}],
+               "expected": "complete output missing key 'chart_plugin'"},
+              {"args": ["complete", {"title": "a", "chart_plugin": "b"}],
+               "expected": "complete output missing key 'data'"},
+              {"args": ["complete", {"title": "a", "chart_plugin": "b",
+                                     "data": "c"}],
+               "expected": ("Value of complete output data has wrong type "
+                            "'str', should be in ('list', 'dict')")},
+              {"args": ["complete", {"title": "a", "chart_plugin": "b",
+                                     "data": {"foo": "bar"}}]},
+              {"args": ["complete", {"title": "a", "chart_plugin": "b",
+                                     "data": [], "unexpected": "bar"}],
+               "expected": ("complete output has unexpected key "
+                            "'unexpected'")})
+    @ddt.unpack
+    def test_validate_output(self, args, expected=None):
+        self.assertEqual(expected, charts.validate_output(*args))

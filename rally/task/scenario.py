@@ -16,7 +16,6 @@
 
 import random
 
-import jsonschema
 import six
 
 from rally.common import logging
@@ -27,6 +26,7 @@ from rally import consts
 from rally import exceptions
 from rally.task import atomic
 from rally.task import functional
+from rally.task.processing import charts
 
 
 LOG = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ class Scenario(plugin.Plugin,
         super(Scenario, self).__init__()
         self.context = context or {}
         self.task = self.context.get("task", {})
-        self._idle_duration = 0
+        self._idle_duration = 0.0
         self._output = {"additive": [], "complete": []}
 
     @staticmethod
@@ -177,10 +177,7 @@ class Scenario(plugin.Plugin,
         """
         for key, value in (("additive", additive), ("complete", complete)):
             if value:
-                try:
-                    jsonschema.validate(
-                        value, task.OUTPUT_SCHEMA["properties"][key]["items"])
-                    self._output[key].append(value)
-                except jsonschema.ValidationError:
-                    raise exceptions.RallyException(
-                        "%s output has wrong format" % key.capitalize())
+                message = charts.validate_output(key, value)
+                if message:
+                    raise exceptions.RallyException(message)
+                self._output[key].append(value)
