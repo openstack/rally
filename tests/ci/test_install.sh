@@ -19,6 +19,10 @@ env
 
 sudo yum remove -y python-crypto || true
 
+# NOTE(pabelanger): We run apt-get update to ensure we don't have a stale
+# package cache in the gate.
+sudo apt-get update || true
+
 sudo ./install_rally.sh --system --yes
 rally deployment list
 [ -d /etc/bash_completion.d ] && cat /etc/bash_completion.d/rally.bash_completion || true
