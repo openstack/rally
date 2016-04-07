@@ -13,15 +13,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-""" CLI interface for Rally. """
+""" CLI interface for Rally DB management. """
 
 from __future__ import print_function
 
+import contextlib
 import sys
 
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import db
+
+
+@contextlib.contextmanager
+def output_migration_result(method_name):
+    """Print migration result."""
+    print("%s started." % method_name.capitalize())
+    start_revision = db.schema_revision()
+    yield
+    print("%s processed." % method_name.capitalize())
+    current_revision = db.schema_revision()
+    if start_revision != current_revision:
+        print("Database migrated successfully "
+              "from {start} to {end} revision.".format(start=start_revision,
+                                                       end=current_revision))
+    else:
+        print("Database is already up to date")
 
 
 class DBCommands(object):
@@ -42,7 +59,8 @@ class DBCommands(object):
 
     def upgrade(self):
         """Upgrade Rally database to the latest state."""
-        db.schema_upgrade()
+        with output_migration_result("upgrade"):
+            db.schema_upgrade()
 
     @cliutils.args("--revision",
                    help=("Downgrade to specified revision UUID. "
@@ -50,7 +68,8 @@ class DBCommands(object):
                          "'rally-manage db revision'"))
     def downgrade(self, revision):
         """Downgrade Rally database."""
-        db.schema_downgrade(revision)
+        with output_migration_result("downgrade"):
+            db.schema_downgrade(revision)
 
     def revision(self):
         """Print current Rally database revision UUID."""

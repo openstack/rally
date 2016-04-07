@@ -56,14 +56,14 @@ class DBCommandsTestCase(test.TestCase):
     def test_upgrade(self, mock_db):
         self.db_commands.upgrade()
         calls = [mock.call.schema_upgrade()]
-        self.assertEqual(calls, mock_db.mock_calls)
+        mock_db.assert_has_calls(calls)
 
     @mock.patch("rally.cli.manage.db")
     def test_downgrade(self, mock_db):
         revision = mock.MagicMock()
         self.db_commands.downgrade(revision)
         calls = [mock.call.schema_downgrade(revision)]
-        self.assertEqual(calls, mock_db.mock_calls)
+        mock_db.assert_has_calls(calls)
 
     @mock.patch("rally.cli.manage.db")
     def test_revision(self, mock_db):
