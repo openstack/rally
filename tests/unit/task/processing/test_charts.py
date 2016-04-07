@@ -13,10 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 import ddt
 import mock
 
-from rally.common import costilius
 from rally.common.plugin import plugin
 from rally.task.processing import charts
 from tests.unit import test
@@ -161,7 +162,7 @@ class AtomicAvgChartTestCase(test.TestCase):
         chart = charts.AtomicAvgChart({"iterations_count": 3,
                                        "atomic": {"foo": {}, "bar": {}}})
         self.assertIsInstance(chart, charts.AvgChart)
-        [chart.add_iteration({"atomic_actions": costilius.OrderedDict(a)})
+        [chart.add_iteration({"atomic_actions": collections.OrderedDict(a)})
          for a in ([("foo", 2), ("bar", 5)], [("foo", 4)], [("bar", 7)])]
         self.assertEqual([("bar", 4.0), ("foo", 2.0)], sorted(chart.render()))
 
@@ -384,7 +385,7 @@ class AtomicHistogramChartTestCase(test.TestCase):
     def test_add_iteration_and_render(self):
         chart = charts.AtomicHistogramChart(
             {"iterations_count": 3,
-             "atomic": costilius.OrderedDict(
+             "atomic": collections.OrderedDict(
                  [("foo", {"min_duration": 1.6, "max_duration": 2.8}),
                   ("bar", {"min_duration": 3.1, "max_duration": 5.5})])})
         self.assertIsInstance(chart, charts.HistogramChart)
@@ -479,7 +480,7 @@ MAIN_STATS_TABLE_COLUMNS = ["Action", "Min (sec)", "Median (sec)",
 
 def generate_iteration(duration, error, *args):
     return {
-        "atomic_actions": costilius.OrderedDict(args),
+        "atomic_actions": collections.OrderedDict(args),
         "duration": duration,
         "error": error
     }
@@ -492,7 +493,7 @@ class MainStatsTableTestCase(test.TestCase):
         {
             "info": {
                 "iterations_count": 1,
-                "atomic": costilius.OrderedDict([("foo", {}), ("bar", {})])
+                "atomic": collections.OrderedDict([("foo", {}), ("bar", {})])
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
@@ -539,7 +540,7 @@ class MainStatsTableTestCase(test.TestCase):
         {
             "info": {
                 "iterations_count": 4,
-                "atomic": costilius.OrderedDict([("foo", {}), ("bar", {})])
+                "atomic": collections.OrderedDict([("foo", {}), ("bar", {})])
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 4.0)),
@@ -559,7 +560,7 @@ class MainStatsTableTestCase(test.TestCase):
         {
             "info": {
                 "iterations_count": 0,
-                "atomic": costilius.OrderedDict()
+                "atomic": collections.OrderedDict()
             },
             "data": [],
             "expected": {
