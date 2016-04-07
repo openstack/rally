@@ -843,3 +843,43 @@ class ValidatorsTestCase(test.TestCase):
             validation.restricted_parameters, "param_name")
         result = validator({"args": {}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
+
+    @ddt.data(
+        {"exception_msg": "Heat template validation failed on fake_path1. "
+                          "Original error message: fake_msg."},
+        {"exception_msg": None}
+    )
+    @ddt.unpack
+    @mock.patch(MODULE + "os.path.exists", return_value=True)
+    @mock.patch(MODULE + "open", side_effect=mock.mock_open(), create=True)
+    def test_validate_heat_template(self, mock_open, mock_exists,
+                                    exception_msg):
+        validator = self._unwrap_validator(
+            validation.validate_heat_template, "template_path1",
+            "template_path2")
+        clients = mock.MagicMock()
+        mock_open().__enter__().read.side_effect = ["fake_template1",
+                                                    "fake_template2"]
+        heat_validator = mock.MagicMock()
+        if exception_msg:
+            heat_validator.side_effect = Exception("fake_msg")
+        clients.heat().stacks.validate = heat_validator
+        context = {"args": {"template_path1": "fake_path1",
+                            "template_path2": "fake_path2"}}
+        result = validator(context, clients, mock.MagicMock())
+
+        if not exception_msg:
+            heat_validator.assert_has_calls([
+                mock.call(template="fake_template1"),
+                mock.call(template="fake_template2")
+            ])
+            mock_open.assert_has_calls([
+                mock.call("fake_path1", "r"),
+                mock.call("fake_path2", "r")
+            ], any_order=True)
+            self.assertTrue(result.is_valid, result.msg)
+        else:
+            heat_validator.assert_called_once_with(template="fake_template1")
+            self.assertEqual("Heat template validation failed on fake_path1."
+                             " Original error message: fake_msg.", result.msg)
+            self.assertFalse(result.is_valid)

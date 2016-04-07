@@ -25,6 +25,7 @@ class HeatStacks(utils.HeatScenario):
     """Benchmark scenarios for Heat stacks."""
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -56,6 +57,7 @@ class HeatStacks(utils.HeatScenario):
                 self.clients("heat").resources.list(stack.id)
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -77,6 +79,7 @@ class HeatStacks(utils.HeatScenario):
         self._delete_stack(stack)
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -104,6 +107,7 @@ class HeatStacks(utils.HeatScenario):
                    updated_template_path={"type": "file"},
                    files={"type": "file_dict"},
                    updated_files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -139,6 +143,7 @@ class HeatStacks(utils.HeatScenario):
         self._delete_stack(stack)
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -176,6 +181,7 @@ class HeatStacks(utils.HeatScenario):
         self._scale_stack(stack, output_key, delta)
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
@@ -214,6 +220,7 @@ class HeatStacks(utils.HeatScenario):
                 self.clients("heat").events.list(stack.id)
 
     @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
+    @validation.validate_heat_template("template_path")
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["heat"]})
