@@ -76,9 +76,17 @@ rally task detailed --iterations-data > rally-plot/detailed_with_iterations.txt
 gzip -9 rally-plot/detailed_with_iterations.txt
 rally task report --out rally-plot/results.html
 gzip -9 rally-plot/results.html
-rally task sla_check | tee rally-plot/sla.txt
 
+# NOTE(stpierre): if the sla check fails, we still want osresources.py
+# to run, so we turn off -e and save the return value
+set +e
+rally task sla_check | tee rally-plot/sla.txt
+retval=$?
+set -e
+
+cp resources_at_start.txt rally-plot/
 python $BASE/new/rally/tests/ci/osresources.py\
     --compare-with-list resources_at_start.txt\
         | gzip > rally-plot/resources_diff.txt.gz
-cp resources_at_start.txt rally-plot/
+
+exit $retval
