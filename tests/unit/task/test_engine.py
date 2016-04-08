@@ -505,6 +505,38 @@ class ResultConsumerTestCase(test.TestCase):
                           {"duration": 1, "timestamp": 3}],
                          consumer_obj.results)
 
+    @mock.patch("rally.task.engine.LOG")
+    @mock.patch("rally.task.engine.time.time")
+    @mock.patch("rally.common.objects.Task.get_status")
+    @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
+    @mock.patch("rally.task.sla.SLAChecker")
+    def test_consume_results_no_iteration(
+            self, mock_sla_checker, mock_result_consumer_wait_and_abort,
+            mock_task_get_status, mock_time, mock_log):
+        mock_time.side_effect = [0, 1]
+        mock_sla_instance = mock.MagicMock()
+        mock_sla_results = mock.MagicMock()
+        mock_sla_checker.return_value = mock_sla_instance
+        mock_sla_instance.results.return_value = mock_sla_results
+        mock_task_get_status.return_value = consts.TaskStatus.RUNNING
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        runner = mock.MagicMock()
+
+        results = []
+        runner.result_queue = collections.deque(results)
+        with engine.ResultConsumer(
+                key, task, runner, False):
+            pass
+        task.append_results.assert_has_calls([mock.call(
+            key, {
+                "raw": [],
+                "full_duration": 1,
+                "sla": mock_sla_results,
+                "load_duration": 0
+            }
+        )], any_order=True)
+
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
     @mock.patch("rally.task.sla.SLAChecker")
