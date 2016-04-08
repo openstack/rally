@@ -20,7 +20,6 @@ import os.path
 import ddt
 import mock
 
-from rally.cli import cliutils
 from rally.cli.commands import task
 from rally import consts
 from rally import exceptions
@@ -825,38 +824,6 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.detailed(test_uuid)
         mock_task.get_detailed.assert_called_once_with(test_uuid,
                                                        extended_results=True)
-        err_report = "%(error_type)s: %(error_message)s\n" % (
-            {"error_type": error_type, "error_message": error_message})
-        header = cliutils.make_header("Task %s has %d error(s)" %
-                                      (test_uuid, 1))
-
         mock_stdout.write.assert_has_calls([
-            mock.call("\n"), mock.call("-" * 80), mock.call("\n"),
-            mock.call("Task test_task_id: status"),
-            mock.call("\n"), mock.call("-" * 80), mock.call("\n"),
-            mock.call("\n"), mock.call("test scenario fake_name"),
-            mock.call("\n"), mock.call("args position fake_pos"),
-            mock.call("\n"), mock.call("args values:"),
-            mock.call("\n"), mock.call("\"fake_kw\""),
-            mock.call("\n"), mock.call("\n"),
-            mock.call(header), mock.call("\n"),
-            mock.call(err_report), mock.call("\n"),
-            mock.call(error_traceback or "No traceback available."),
-            mock.call("\n"), mock.call("-" * 80), mock.call("\n"),
-            mock.call("\n"), mock.call("Load duration: 3.2"),
-            mock.call("\n"), mock.call("Full duration: 3.5"),
-            mock.call("\n"), mock.call("\nHINTS:"),
-            mock.call("\n"),
-            mock.call("* To plot HTML graphics with this data, run:"),
-            mock.call("\n"),
-            mock.call("\trally task report test_task_id --out output.html\n"),
-            mock.call("\n"), mock.call("* To generate a JUnit report, run:"),
-            mock.call("\n"),
-            mock.call("\trally task report test_task_id "
-                      "--junit --out output.xml\n"),
-            mock.call("\n"),
-            mock.call("* To get raw JSON output of task results, run:"),
-            mock.call("\n"),
-            mock.call("\trally task results test_task_id\n"),
-            mock.call("\n")
-        ])
+            mock.call(error_traceback or "No traceback available.")
+        ], any_order=False)
