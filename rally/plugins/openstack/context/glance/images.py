@@ -117,4 +117,4 @@ class ImageGenerator(context.Context):
                 api_info=self.context["config"].get("api_versions"))
             glance_wrap = glance_wrapper.wrap(clients.glance, self)
             for image in self.context["tenants"][tenant_id].get("images", []):
-                glance_wrap.delete_image(glance_wrap.get_image(image))
+                glance_wrap.delete_image(clients.glance().images.get(image))

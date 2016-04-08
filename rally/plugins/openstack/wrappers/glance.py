@@ -61,10 +61,6 @@ class GlanceWrapper(object):
         self.client = client
 
     @abc.abstractmethod
-    def get_image(self, image):
-        """Refresh an image from an image object."""
-
-    @abc.abstractmethod
     def create_image(self, container_format, image_location, disk_format):
         """Creates new image."""
 
@@ -78,9 +74,6 @@ class GlanceWrapper(object):
 
 
 class GlanceV1Wrapper(GlanceWrapper):
-    def get_image(self, image):
-        return image.manager.get(image.id)
-
     def create_image(self, container_format, image_location,
                      disk_format, **kwargs):
         kw = {
@@ -128,12 +121,9 @@ class GlanceV1Wrapper(GlanceWrapper):
 
 
 class GlanceV2Wrapper(GlanceWrapper):
-    def get_image(self, image):
-        return self.client.images.get(image.id)
-
     def _update_image(self, image):
         try:
-            return self.get_image(image)
+            return self.client.images.get(image.id)
         except glance_exc.HTTPNotFound:
             raise exceptions.GetResourceNotFound(resource=image)
 
