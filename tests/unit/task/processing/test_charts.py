@@ -450,6 +450,16 @@ class TableTestCase(test.TestCase):
         self.assertEqual(round(42.424242, 3),
                          table._round(streaming_ins, True))
 
+    def test__row_has_results(self):
+        table = self.Table({"iterations_count": 1})
+        for st_cls in (charts.streaming.MinComputation,
+                       charts.streaming.MaxComputation,
+                       charts.streaming.MeanComputation):
+            st = st_cls()
+            self.assertFalse(table._row_has_results([(st, None)]))
+            st.add(0)
+            self.assertTrue(table._row_has_results([(st, None)]))
+
     def test__row_has_results_and_get_rows(self):
         table = self.Table({"iterations_count": 3})
         self.assertFalse(table._row_has_results(table._data["foo"]))
@@ -473,14 +483,9 @@ class TableTestCase(test.TestCase):
                          table.render())
 
 
-MAIN_STATS_TABLE_COLUMNS = ["Action", "Min (sec)", "Median (sec)",
-                            "90%ile (sec)", "95%ile (sec)", "Max (sec)",
-                            "Avg (sec)", "Success", "Count"]
-
-
-def generate_iteration(duration, error, *args):
+def generate_iteration(duration, error, *actions):
     return {
-        "atomic_actions": collections.OrderedDict(args),
+        "atomic_actions": collections.OrderedDict(actions),
         "duration": duration,
         "error": error
     }
@@ -498,14 +503,10 @@ class MainStatsTableTestCase(test.TestCase):
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
             ],
-            "expected": {
-                "cols": MAIN_STATS_TABLE_COLUMNS,
-                "rows": [
-                    ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "100.0%", 1],
-                    ["bar", 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, "100.0%", 1],
-                    ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1],
-                ]
-            }
+            "expected_rows": [
+                ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "100.0%", 1],
+                ["bar", 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, "100.0%", 1],
+                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1]]
         },
         {
             "info": {"iterations_count": 2, "atomic": {"foo": {}}},
@@ -513,15 +514,9 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(10.0, True, ("foo", 1.0)),
                 generate_iteration(10.0, True, ("foo", 2.0))
             ],
-            "expected": {
-                "cols": MAIN_STATS_TABLE_COLUMNS,
-                "rows": [
-                    ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
-                     2],
-                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
-                     2],
-                ]
-            }
+            "expected_rows": [
+                ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 2],
+                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 2]]
         },
         {
             "info": {"iterations_count": 2, "atomic": {"foo": {}}},
@@ -529,13 +524,9 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(10.0, False, ("foo", 1.0)),
                 generate_iteration(20.0, True, ("foo", 2.0))
             ],
-            "expected": {
-                "cols": MAIN_STATS_TABLE_COLUMNS,
-                "rows": [
-                    ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "50.0%", 2],
-                    ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "50.0%", 2]
-                ]
-            }
+            "expected_rows": [
+                ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "50.0%", 2],
+                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "50.0%", 2]]
         },
         {
             "info": {
@@ -548,14 +539,10 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(30.0, False, ("foo", 3.0), ("bar", 4.0)),
                 generate_iteration(40.0, True, ("foo", 4.0), ("bar", 4.0))
             ],
-            "expected": {
-                "cols": MAIN_STATS_TABLE_COLUMNS,
-                "rows": [
-                    ["foo", 1.0, 2.0, 2.8, 2.9, 3.0, 2.0, "75.0%", 4],
-                    ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
-                    ["total", 10.0, 20.0, 28.0, 29.0, 30.0, 20.0, "75.0%", 4]
-                ]
-            }
+            "expected_rows": [
+                ["foo", 1.0, 2.0, 2.8, 2.9, 3.0, 2.0, "75.0%", 4],
+                ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
+                ["total", 10.0, 20.0, 28.0, 29.0, 30.0, 20.0, "75.0%", 4]]
         },
         {
             "info": {
@@ -563,22 +550,35 @@ class MainStatsTableTestCase(test.TestCase):
                 "atomic": collections.OrderedDict()
             },
             "data": [],
-            "expected": {
-                "cols": MAIN_STATS_TABLE_COLUMNS,
-                "rows": [
-                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
-                     0]
-                ]
-            }
+            "expected_rows": [
+                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 0]]
+        },
+        {
+            "info": {"iterations_count": 4,
+                     "atomic": collections.OrderedDict([("foo", {}),
+                                                        ("bar", {})])},
+            "data": [
+                generate_iteration(1.6, True, ("foo", 1.2)),
+                generate_iteration(5.2, False, ("foo", 1.2)),
+                generate_iteration(5.0, True, ("bar", 4.8)),
+                generate_iteration(12.3, False, ("foo", 4.2), ("bar", 5.6))
+            ],
+            "expected_rows": [
+                ["foo", 1.2, 2.7, 3.9, 4.05, 4.2, 2.7, "66.7%", 3],
+                ["bar", 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, "50.0%", 2],
+                ["total", 5.2, 8.75, 11.59, 11.945, 12.3, 8.75, "50.0%", 4]]
         }
     )
     @ddt.unpack
-    def test_add_iteration_and_render(self, info, data, expected):
+    def test_add_iteration_and_render(self, info, data, expected_rows):
 
         table = charts.MainStatsTable(info)
         for el in data:
             table.add_iteration(el)
-
+        expected = {"cols": ["Action", "Min (sec)", "Median (sec)",
+                             "90%ile (sec)", "95%ile (sec)", "Max (sec)",
+                             "Avg (sec)", "Success", "Count"],
+                    "rows": expected_rows}
         self.assertEqual(expected, table.render())
 
 

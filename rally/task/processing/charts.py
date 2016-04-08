@@ -310,8 +310,12 @@ class Table(Chart):
         :returns: bool
         """
         for ins, fn in values:
-            if isinstance(ins, streaming.MinComputation):
-                return bool(ins.result())
+            if isinstance(ins, (streaming.MinComputation,
+                                streaming.MaxComputation,
+                                streaming.MeanComputation)):
+                # NOTE(amaretskiy): None means this computation
+                #                   has never been called
+                return ins.result() is not None
         return True
 
     def get_rows(self):
