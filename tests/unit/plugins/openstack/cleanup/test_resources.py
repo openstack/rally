@@ -376,6 +376,33 @@ class NeutronPortTestCase(test.TestCase):
             raw_res["device_id"], {"port_id": raw_res["id"]})
 
 
+@ddt.ddt
+class NeutronSecurityGroupTestCase(test.TestCase):
+
+    @ddt.data(
+        {"admin": mock.Mock(), "admin_required": True},
+        {"admin": None, "admin_required": False})
+    @ddt.unpack
+    def test_list(self, admin, admin_required):
+        sg_list = [{"tenant_id": "user_tenant", "name": "default"},
+                   {"tenant_id": "user_tenant", "name": "foo_sg"}]
+
+        neut = resources.NeutronSecurityGroup()
+        neut.user = mock.MagicMock()
+        neut._resource = "security_group"
+        neut.tenant_uuid = "user_tenant"
+
+        neut.user.neutron().list_security_groups.return_value = {
+            "security_groups": sg_list
+        }
+
+        expected_result = [sg_list[1]]
+        self.assertEqual(expected_result, list(neut.list()))
+
+        neut.user.neutron().list_security_groups.assert_called_once_with(
+            tenant_id=neut.tenant_uuid)
+
+
 class NeutronQuotaTestCase(test.TestCase):
 
     @mock.patch("%s.NeutronQuota._manager" % BASE)

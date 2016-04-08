@@ -311,7 +311,12 @@ class NeutronFloatingIP(NeutronMixin):
 @base.resource("neutron", "security_group", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronSecurityGroup(NeutronMixin):
-    pass
+    def list(self):
+        tenant_sgs = super(NeutronSecurityGroup, self).list()
+        # NOTE(pirsriva): Filter out "default" security group deletion
+        # by non-admin role user
+        return filter(lambda r: r["name"] != "default",
+                      tenant_sgs)
 
 
 @base.resource("neutron", "quota", order=next(_neutron_order),
