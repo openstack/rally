@@ -21,6 +21,7 @@ import json
 import subprocess
 import sys
 
+from rally.cli import cliutils
 from rally.common import objects
 from rally.common.plugin import discover
 from rally import consts
@@ -55,6 +56,9 @@ class ResourceManager(object):
             resource_name = prop[5:][:-1]
 
             for res in resources:
+                # NOTE(stpierre): It'd be nice if we could make this a
+                # dict, but then we get ordering issues. So a list of
+                # 2-tuples it must be.
                 res_repr = []
                 for key in self.REPR_KEYS + (resource_name,):
                     if isinstance(res, dict):
@@ -62,12 +66,13 @@ class ResourceManager(object):
                     else:
                         value = getattr(res, key, None)
                     if value:
-                        res_repr.append("%s:%s" % (key, value))
+                        res_repr.append((key, value))
                 if not res_repr:
                     raise ValueError("Failed to represent resource %r" % res)
 
-                all_resources.append(
-                    "%s %s %s" % (cls, resource_name, " ".join(res_repr)))
+                res_repr.extend([("class", cls),
+                                 ("resource_name", resource_name)])
+                all_resources.append(res_repr)
         return all_resources
 
 
@@ -247,12 +252,32 @@ class CloudResources(object):
         return sorted(self._deduplicate(resources))
 
     def compare(self, with_list):
-        saved_resources = set(with_list)
-        current_resources = set(self.list())
+        # NOTE(stpierre): Each resource is either a list of 2-tuples,
+        # or a list of lists. (JSON doesn't honor tuples, so when we
+        # load data from JSON our tuples get turned into lists.) It's
+        # easiest to do the comparison with sets, so we need to change
+        # it to a tuple of tuples so that it's hashable.
+        saved_resources = set(tuple(tuple(d) for d in r) for r in with_list)
+        current_resources = set(tuple(tuple(d) for d in r)
+                                for r in self.list())
         removed = saved_resources - current_resources
         added = current_resources - saved_resources
 
-        return sorted(list(removed)), sorted(list(added))
+        return (sorted(removed), sorted(added))
+
+
+def _print_tabular_resources(resources, table_label):
+    cliutils.print_list(
+        objs=[dict(r) for r in resources],
+        fields=("class", "resource_name", "identifiers"),
+        field_labels=("service", "resource type", "identifiers"),
+        table_label=table_label,
+        formatters={"identifiers":
+                    lambda d: " ".join("%s:%s" % (k, v)
+                                       for k, v in d.items()
+                                       if k not in ("class", "resource_name"))}
+    )
+    print("")
 
 
 def main():
@@ -288,13 +313,18 @@ def main():
 
     if args.dump_list:
         resources_list = resources.list()
-        json.dump(resources_list, args.dump_list, indent=2)
+        json.dump(resources_list, args.dump_list)
     elif args.compare_with_list:
         given_list = json.load(args.compare_with_list)
         changes = resources.compare(with_list=given_list)
         removed, added = changes
-        sys.stdout.write(
-            json.dumps({"removed": removed, "added": added}, indent=2))
+
+        if removed:
+            _print_tabular_resources(removed, "Removed resources")
+
+        if added:
+            _print_tabular_resources(added, "Added resources")
+
         if any(changes):
             return 0  # `1' will fail gate job
     return 0
