@@ -48,7 +48,8 @@ def tempest_log_wrapper(func):
             kwargs["log_file"])
         if results:
             total = results.total
-            scenario_obj._atomic_actions["test_execution"] = total["time"]
+            test_execution = float(total["time"])
+            scenario_obj._atomic_actions["test_execution"] = test_execution
             if total.get("failures") or total.get("unexpected_success"):
                 raise TempestBenchmarkFailure([
                     test["name"] for test in six.itervalues(results.tests)

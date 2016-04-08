@@ -58,3 +58,18 @@ class TempestLogWrappersTestCase(test.TestCase):
         target_func.assert_called_once_with(self.scenario,
                                             log_file="log_file")
         self.assertEqual(0, mock_tempfile.NamedTemporaryFile.call_count)
+
+    def test_func_time_result_is_string(self):
+        verifier = mock.MagicMock()
+        verifier.parse_results.return_value = mock.MagicMock(
+            total={"time": "0.1"}, tests={})
+        context = test.get_test_context()
+        context.update({"tmp_results_dir": "/tmp/dir", "verifier": verifier})
+        scenario = tempest.TempestScenario(context)
+
+        target_func = mock.MagicMock()
+        target_func.__name__ = "target_func"
+        func = utils.tempest_log_wrapper(target_func)
+
+        func(scenario)
+        self.assertEqual(0.1, scenario._atomic_actions["test_execution"])
