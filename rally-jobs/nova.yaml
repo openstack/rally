@@ -395,6 +395,14 @@
             stop_start: 1
           -
             rescue_unrescue: 1
+          -
+            pause_unpause: 1
+          -
+            suspend_resume: 1
+          -
+            lock_unlock: 1
+          -
+            shelve_unshelve: 1
       runner:
         type: "constant"
         times: 2

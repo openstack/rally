@@ -29,57 +29,42 @@ NOVA_SERVERS = NOVA_SERVERS_MODULE + ".NovaServers"
 @ddt.ddt
 class NovaServersTestCase(test.ScenarioTestCase):
 
-    def test_boot_rescue_unrescue(self):
-        actions = [{"rescue_unrescue": 5}]
+    @ddt.data(("rescue_unrescue", ["_rescue_server", "_unrescue_server"], 1),
+              ("stop_start", ["_stop_server", "_start_server"], 2),
+              ("pause_unpause", ["_pause_server", "_unpause_server"], 3),
+              ("suspend_resume", ["_suspend_server", "_resume_server"], 4),
+              ("lock_unlock", ["_lock_server", "_unlock_server"], 5),
+              ("shelve_unshelve", ["_shelve_server", "_unshelve_server"], 6))
+    @ddt.unpack
+    def test_action_pair(self, action_pair, methods, nof_calls):
+        actions = [{action_pair: nof_calls}]
         fake_server = mock.MagicMock()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario.generate_random_name = mock.MagicMock(return_value="name")
-        scenario._rescue_server = mock.MagicMock()
-        scenario._unrescue_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
-
-        scenario.boot_and_bounce_server("img", 1, actions=actions)
-        scenario._boot_server.assert_called_once_with("img", 1)
-        server_calls = []
-        for i in range(5):
-            server_calls.append(mock.call(fake_server))
-        self.assertEqual(5, scenario._rescue_server.call_count,
-                         "Rescue not called 5 times")
-        self.assertEqual(5, scenario._unrescue_server.call_count,
-                         "Unrescue not called 5 times")
-        scenario._rescue_server.assert_has_calls(server_calls)
-        scenario._unrescue_server.assert_has_calls(server_calls)
-        scenario._delete_server.assert_called_once_with(fake_server,
-                                                        force=False)
-
-    def test_boot_stop_start(self):
-        actions = [{"stop_start": 5}]
-        fake_server = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
-        scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
-        scenario._start_server = mock.MagicMock()
-        scenario._stop_server = mock.MagicMock()
-        scenario._delete_server = mock.MagicMock()
+        for method in methods:
+            setattr(scenario, method, mock.MagicMock())
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
         scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
-        for i in range(5):
+        for i in range(nof_calls):
             server_calls.append(mock.call(fake_server))
-        self.assertEqual(5, scenario._stop_server.call_count,
-                         "Stop not called 5 times")
-        self.assertEqual(5, scenario._start_server.call_count,
-                         "Start not called 5 times")
-        scenario._stop_server.assert_has_calls(server_calls)
-        scenario._start_server.assert_has_calls(server_calls)
+        for method in methods:
+            mocked_method = getattr(scenario, method)
+            self.assertEqual(nof_calls, mocked_method.call_count,
+                             "%s not called %d times" % (method, nof_calls))
+            mocked_method.assert_has_calls(server_calls)
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
     def test_multiple_bounce_actions(self):
-        actions = [{"hard_reboot": 5}, {"stop_start": 8}]
+        actions = [{"hard_reboot": 5}, {"stop_start": 8},
+                   {"rescue_unrescue": 3}, {"pause_unpause": 2},
+                   {"suspend_resume": 4}, {"lock_unlock": 6},
+                   {"shelve_unshelve": 7}]
         fake_server = mock.MagicMock()
         scenario = servers.NovaServers(self.context)
 
@@ -87,6 +72,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
         scenario._reboot_server = mock.MagicMock()
         scenario._stop_and_start_server = mock.MagicMock()
+        scenario._rescue_and_unrescue_server = mock.MagicMock()
+        scenario._pause_and_unpause_server = mock.MagicMock()
+        scenario._suspend_and_resume_server = mock.MagicMock()
+        scenario._lock_and_unlock_server = mock.MagicMock()
+        scenario._shelve_and_unshelve_server = mock.MagicMock()
         scenario.generate_random_name = mock.MagicMock(return_value="name")
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
@@ -103,6 +93,36 @@ class NovaServersTestCase(test.ScenarioTestCase):
         self.assertEqual(8, scenario._stop_and_start_server.call_count,
                          "Stop/Start not called 8 times")
         scenario._stop_and_start_server.assert_has_calls(server_calls)
+        server_calls = []
+        for i in range(3):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(3, scenario._rescue_and_unrescue_server.call_count,
+                         "Rescue/Unrescue not called 3 times")
+        scenario._rescue_and_unrescue_server.assert_has_calls(server_calls)
+        server_calls = []
+        for i in range(2):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(2, scenario._pause_and_unpause_server.call_count,
+                         "Pause/Unpause not called 2 times")
+        scenario._pause_and_unpause_server.assert_has_calls(server_calls)
+        server_calls = []
+        for i in range(4):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(4, scenario._suspend_and_resume_server.call_count,
+                         "Suspend/Resume not called 4 times")
+        scenario._suspend_and_resume_server.assert_has_calls(server_calls)
+        server_calls = []
+        for i in range(6):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(6, scenario._lock_and_unlock_server.call_count,
+                         "Lock/Unlock not called 6 times")
+        scenario._lock_and_unlock_server.assert_has_calls(server_calls)
+        server_calls = []
+        for i in range(7):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(7, scenario._shelve_and_unshelve_server.call_count,
+                         "Shelve/Unshelve not called 7 times")
+        scenario._shelve_and_unshelve_server.assert_has_calls(server_calls)
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
@@ -127,29 +147,33 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._unlock_server.assert_called_once_with(server)
         scenario._delete_server.assert_called_once_with(server, force=False)
 
-    def test_validate_actions(self):
-        actions = [{"hardd_reboot": 6}]
+    @ddt.data("hard_reboot", "soft_reboot", "stop_start",
+              "rescue_unrescue", "pause_unpause", "suspend_resume",
+              "lock_unlock", "shelve_unshelve")
+    def test_validate_actions(self, action):
         scenario = servers.NovaServers(self.context)
 
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           scenario.boot_and_bounce_server,
-                          1, 1, actions=actions)
-        actions = [{"hard_reboot": "no"}]
+                          1, 1, actions=[{action: "no"}])
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           scenario.boot_and_bounce_server,
-                          1, 1, actions=actions)
-        actions = {"hard_reboot": 6}
+                          1, 1, actions=[{action: -1}])
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           scenario.boot_and_bounce_server,
-                          1, 1, actions=actions)
-        actions = {"hard_reboot": -1}
+                          1, 1, actions=[{action: 0}])
+
+    def test_validate_actions_additional(self):
+        scenario = servers.NovaServers(self.context)
+
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           scenario.boot_and_bounce_server,
-                          1, 1, actions=actions)
-        actions = {"hard_reboot": 0}
+                          1, 1, actions=[{"not_existing_action": "no"}])
+        # NOTE: next should fail because actions parameter is a just a
+        # dictionary, not an array of dictionaries
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           scenario.boot_and_bounce_server,
-                          1, 1, actions=actions)
+                          1, 1, actions={"hard_reboot": 1})
 
     def _verify_reboot(self, soft=True):
         actions = [{"soft_reboot" if soft else "hard_reboot": 5}]
