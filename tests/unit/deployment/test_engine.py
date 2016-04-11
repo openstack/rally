@@ -184,25 +184,18 @@ class EngineTestCase(test.TestCase):
     @mock.patch.object(FakeDeployment, "update_status")
     def _assert_changed_status_on_error(self, initial, final,
                                         mock_fake_deployment_update_status):
-        # NOTE(akscram): The assertRaises of testtools can't be used as
-        #                a context manager in python26:
-        #                   with self.assertRaises(SomeError):
-        #                       with engine as deployer:
-        #                           raise SomeError()
-        #                instead of:
-        #                   self.assertRaises(SomeError,
-        #                                     context_with_error,
-        #                                     SomeError(), engine)
-        def context_with_error(error, manager):
-            with manager:
-                raise error
 
         class SomeError(Exception):
             pass
 
+        def context_with_error(manager):
+            with mock.patch("traceback.print_exception"):
+                with manager:
+                    raise SomeError()
+
         deployment = make_fake_deployment(status=initial)
         engine = FakeEngine(deployment)
-        self.assertRaises(SomeError, context_with_error, SomeError(), engine)
+        self.assertRaises(SomeError, context_with_error, engine)
         mock_fake_deployment_update_status.assert_called_once_with(final)
         self.assertFalse(engine.cleanuped)
         self.assertFalse(engine.deployed)
