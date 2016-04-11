@@ -1487,6 +1487,12 @@ class FakeSenlinClient(object):
         pass
 
 
+class FakeMagnumClient(object):
+
+    def __init__(self):
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, credential_=None):

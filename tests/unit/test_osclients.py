@@ -817,3 +817,28 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(
                 mock_senlin.client.Client.return_value,
                 self.clients.cache["senlin"])
+
+    @mock.patch("rally.osclients.Magnum._get_session")
+    def test_magnum(self, mock_magnum__get_session):
+        fake_magnum = fakes.FakeMagnumClient()
+        mock_magnum = mock.MagicMock()
+        mock_magnum.client.Client.return_value = fake_magnum
+
+        mock_magnum__get_session.return_value = self.fake_keystone.session
+
+        self.assertNotIn("magnum", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"magnumclient": mock_magnum}):
+            client = self.clients.magnum()
+
+            self.assertEqual(fake_magnum, client)
+
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="container",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.credential.region_name)
+
+            mock_magnum.client.Client.assert_called_once_with(
+                interface=consts.EndpointType.PUBLIC,
+                session=self.fake_keystone.session)
+
+            self.assertEqual(fake_magnum, self.clients.cache["magnum"])
