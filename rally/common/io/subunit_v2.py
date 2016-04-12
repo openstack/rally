@@ -81,9 +81,9 @@ class SubunitV2StreamResult(object):
     def _post_parse(self):
         # parse unknown entities
         for test_id in self._unknown_entities:
-            # NOTE(andreykurilin): When whole TestCase is marked as skipped,
-            # there is only one event with reason and status, so we should
-            # modify all tests of TestCase manually.
+            # NOTE(andreykurilin): When whole TestCase is marked as skipped
+            # or failed, there is only one event with reason and status, so
+            # we should modify all tests of TestCase manually.
             matcher = lambda i: i == test_id or i.startswith("%s." % test_id)
             known_ids = filter(matcher, self._tests)
             for id_ in known_ids:
@@ -97,6 +97,17 @@ class SubunitV2StreamResult(object):
                     self._tests[id_]["traceback"] = (
                         self._unknown_entities[test_id]["traceback"])
 
+        # parse expected failures
+        for test_id in self._expected_failures:
+            if self._tests.get(test_id):
+                if self._tests[test_id]["status"] == "fail":
+                    self._tests[test_id]["status"] = "xfail"
+                    if self._expected_failures[test_id]:
+                        self._tests[test_id]["reason"] = (
+                            self._expected_failures[test_id])
+                elif self._tests[test_id]["status"] == "success":
+                    self._tests[test_id]["status"] = "uxsuccess"
+
         # decode data
         for test_id in self._tests:
             for file_name in ["traceback", "reason"]:
@@ -105,6 +116,7 @@ class SubunitV2StreamResult(object):
                     self._tests[test_id][file_name] = (
                         encodeutils.safe_decode(
                             self._tests[test_id][file_name]))
+
         self._is_parsed = True
 
     @property
@@ -145,14 +157,6 @@ class SubunitV2StreamResult(object):
             elif test_status:
                 self._tests[test_id]["time"] = total_seconds(
                     timestamp - self._timestamps[test_id])
-                if test_id in self._expected_failures:
-                    if test_status == "fail":
-                        test_status = "xfail"
-                        if self._expected_failures[test_id]:
-                            self._tests[test_id]["reason"] = (
-                                self._expected_failures[test_id])
-                    elif test_status == "success":
-                        test_status = "uxsuccess"
                 self._tests[test_id]["status"] = test_status
             else:
                 if file_name in ["traceback", "reason"]:
