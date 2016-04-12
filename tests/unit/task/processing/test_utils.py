@@ -19,23 +19,6 @@ from rally.task.processing import utils
 from tests.unit import test
 
 
-class MathTestCase(test.TestCase):
-
-    def test_percentile(self):
-        lst = list(range(1, 101))
-        result = utils.percentile(lst, 0.1)
-        self.assertEqual(result, 10.9)
-
-    def test_percentile_value_none(self):
-        result = utils.percentile(None, 0.1)
-        self.assertIsNone(result)
-
-    def test_percentile_equal(self):
-        lst = list(range(1, 101))
-        result = utils.percentile(lst, 1)
-        self.assertEqual(result, 100)
-
-
 @ddt.ddt
 class GraphZipperTestCase(test.TestCase):
 

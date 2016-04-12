@@ -177,7 +177,16 @@ class PercentileComputation(StreamingAlgorithm):
         results = list(
             map(lambda x: x[1], self._graph_zipper.get_zipped_graph()))
         if results:
-            return utils.percentile(results, self._percent)
+            # NOTE(amaretskiy): Calculate percentile of a list of values
+            results.sort()
+            k = (len(results) - 1) * self._percent
+            f = math.floor(k)
+            c = math.ceil(k)
+            if f == c:
+                return results[int(k)]
+            d0 = results[int(f)] * (c - k)
+            d1 = results[int(c)] * (k - f)
+            return (d0 + d1)
         return None
 
 
