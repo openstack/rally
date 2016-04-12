@@ -26,6 +26,7 @@ import jsonschema
 from oslo_config import cfg
 from oslo_utils import encodeutils
 import prettytable
+from requests.packages import urllib3
 import six
 import sqlalchemy.exc
 
@@ -490,6 +491,12 @@ def run(argv, categories):
             requests_log.setLevel(logging.WARNING)
             urllib3_log = logging.getLogger("urllib3").logger
             urllib3_log.setLevel(logging.WARNING)
+
+            LOG.debug("urllib3 insecure warnings are hidden.")
+            urllib3.disable_warnings(
+                urllib3.exceptions.InsecurePlatformWarning)
+            urllib3.disable_warnings(urllib3.exceptions.SNIMissingWarning)
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
             # NOTE(wtakase): This is for suppressing boto error logging.
             LOG.debug("ERROR log from boto module is hide.")
