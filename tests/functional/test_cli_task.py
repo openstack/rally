@@ -124,6 +124,26 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("2. dummy_fail_test (2)", detailed_iterations_data)
         self.assertNotIn("n/a", detailed_iterations_data)
 
+    def test_detailed_with_errors(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    }
+                }
+            ]
+        }
+        config = utils.TaskConfig(cfg)
+        output = rally("task start --task %s" % config.filename)
+        uuid = re.search(
+            r"(?P<uuid>[0-9a-f\-]{36}): started", output).group("uuid")
+        output = rally("task detailed")
+        self.assertIn("Task %s has 1 error(s)" % uuid, output)
+
     def test_detailed_no_atomic_actions(self):
         rally = utils.Rally()
         cfg = {
