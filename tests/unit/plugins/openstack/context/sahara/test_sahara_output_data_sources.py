@@ -14,24 +14,19 @@
 
 import mock
 
+from rally.common import objects
 from rally.plugins.openstack.context.sahara import sahara_output_data_sources
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.sahara"
 
 
-class FakeDict(object):
-    def __init__(self):
-        pass
-
-
 class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(SaharaOutputDataSourcesTestCase, self).setUp()
-        fake_dict = FakeDict()
-        fake_dict.__dict__["username"] = "user"
-        fake_dict.__dict__["password"] = "passwd"
+        fake_dict = objects.Credential("http://fake.example.org:5000/v2.0/",
+                                       "user", "passwd")
         self.tenants_num = 2
         self.users_per_tenant = 2
         self.users = self.tenants_num * self.users_per_tenant
