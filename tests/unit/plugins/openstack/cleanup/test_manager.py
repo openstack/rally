@@ -238,8 +238,10 @@ class SeekAndDestroyTestCase(test.TestCase):
         expected_queue += [(admin, users[1], x) for x in range(4, 6)]
         self.assertEqual(queue, expected_queue)
 
+    @mock.patch("%s.LOG" % BASE)
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
-    def test__gen_publisher_tenant_resource(self, mock__get_cached_client):
+    def test__gen_publisher_tenant_resource(self, mock__get_cached_client,
+                                            mock_log):
         mock_mgr = self._manager([Exception, [1, 2, 3],
                                   Exception, Exception, Exception,
                                   ["this shouldn't be in results"]],
@@ -273,6 +275,8 @@ class SeekAndDestroyTestCase(test.TestCase):
             mock.call(users[2])
         ])
         self.assertEqual(queue, [(None, users[0], x) for x in range(1, 4)])
+        self.assertTrue(mock_log.warning.mock_called)
+        self.assertTrue(mock_log.exception.mock_called)
 
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
     @mock.patch("%s.SeekAndDestroy._delete_single_resource" % BASE)

@@ -27,17 +27,31 @@ from tests.unit import test
 CONF = cfg.CONF
 
 
-class GlanceWrapperTestBase(object):
-    def test_wrap(self):
+@ddt.ddt
+class GlanceWrapperTestCase(test.ScenarioTestCase):
+
+    @ddt.data(
+        {"version": "1", "expected_class": glance_wrapper.GlanceV1Wrapper},
+        {"version": "2", "expected_class": glance_wrapper.GlanceV2Wrapper}
+    )
+    @ddt.unpack
+    def test_wrap(self, version, expected_class):
         client = mock.MagicMock()
-        owner = mock.Mock()
-        client.version = "dummy"
+        client.choose_version.return_value = version
+        self.assertIsInstance(glance_wrapper.wrap(client, mock.Mock()),
+                              expected_class)
+
+    @mock.patch("rally.plugins.openstack.wrappers.glance.LOG")
+    def test_wrap_wrong_version(self, mock_log):
+        client = mock.MagicMock()
+        client.choose_version.return_value = "dummy"
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          glance_wrapper.wrap, client, owner)
+                          glance_wrapper.wrap, client, mock.Mock())
+        self.assertTrue(mock_log.warning.mock_called)
 
 
 @ddt.ddt
-class GlanceV1WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
+class GlanceV1WrapperTestCase(test.ScenarioTestCase):
     _tempfile = tempfile.NamedTemporaryFile()
 
     def setUp(self):
@@ -102,7 +116,7 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
 
 
 @ddt.ddt
-class GlanceV2WrapperTestCase(test.ScenarioTestCase, GlanceWrapperTestBase):
+class GlanceV2WrapperTestCase(test.ScenarioTestCase):
     _tempfile = tempfile.NamedTemporaryFile()
 
     def setUp(self):

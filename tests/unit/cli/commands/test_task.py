@@ -387,8 +387,8 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
         data = [
             {"key": "foo_key", "data": {"raw": "foo_raw", "sla": [],
-                                        "load_duration": "lo_duration",
-                                        "full_duration": "fu_duration"}}
+                                        "load_duration": 1.0,
+                                        "full_duration": 2.0}}
         ]
         result = map(lambda x: {"key": x["key"],
                                 "result": x["data"]["raw"],

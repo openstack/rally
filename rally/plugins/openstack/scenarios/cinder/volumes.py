@@ -364,11 +364,9 @@ class CinderVolumes(cinder_utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder", "nova"]})
-    @logging.log_deprecated_args("Use 'nested_level' as an int", "0.1.2",
-                                 ["nested_level"], once=True)
     def create_nested_snapshots_and_attach_volume(self,
                                                   size=None,
-                                                  nested_level=None,
+                                                  nested_level=1,
                                                   **kwargs):
 
         """Create a volume from snapshot and attach/detach the volume
@@ -382,25 +380,12 @@ class CinderVolumes(cinder_utils.CinderScenario,
                         min - minimum size volumes will be created as;
                         max - maximum size volumes will be created as.
                      default values: {"min": 1, "max": 5}
-        :param nested_level: Nested level - dictionary or int, dictionary
-                             contains two values:
-                               min - minimum number of volumes will be created
-                                     from snapshot;
-                               max - maximum number of volumes will be created
-                                     from snapshot.
-                             due to its deprecated would be taken min value.
-                             int, means the exact nested level.
-                             default value: 1.
+        :param nested_level: amount of nested levels
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
         if size is None:
             size = {"min": 1, "max": 5}
-        if nested_level is None:
-            nested_level = 1
-        nested_level = nested_level or 1
-        if isinstance(nested_level, dict):
-            nested_level = nested_level.get("min", 1)
 
         # NOTE: Volume size cannot be smaller than the snapshot size, so
         #       volume with specified size should be created to avoid
