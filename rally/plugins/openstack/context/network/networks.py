@@ -29,6 +29,12 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="network", order=350)
 class Network(context.Context):
+    """Create networking resources.
+
+    This creates networks for all tenants, and optionally creates
+    another resources like subnets and routers.
+    """
+
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
