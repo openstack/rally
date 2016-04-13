@@ -395,8 +395,9 @@ class TaskCommandsTestCase(test.TestCase):
                                 "load_duration": x["data"]["load_duration"],
                                 "full_duration": x["data"]["full_duration"],
                                 "sla": x["data"]["sla"]}, data)
-        mock_results = mock.Mock(return_value=data)
-        mock_task_get.return_value = mock.Mock(get_results=mock_results)
+        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED})
+        fake_task.get_results = mock.MagicMock(return_value=data)
+        mock_task_get.return_value = fake_task
 
         self.task.results(task_id)
         self.assertEqual(1, mock_json_dumps.call_count)
@@ -410,15 +411,18 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.api.Task.get")
     def test_results_no_data(self, mock_task_get, mock_stdout):
         task_id = "foo_task_id"
-        mock_results = mock.Mock(return_value=[])
-        mock_task_get.return_value = mock.Mock(get_results=mock_results)
+        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FAILED})
+        mock_task_get.return_value = fake_task
 
-        result = self.task.results(task_id)
+        self.assertEqual(1, self.task.results(task_id))
+
         mock_task_get.assert_called_once_with(task_id)
-        self.assertEqual(1, result)
-        expected_out = ("The task %s marked as '%s'. Results "
-                        "available when it is '%s' .") % (
-            task_id, consts.TaskStatus.FAILED, consts.TaskStatus.FINISHED)
+
+        expected_out = ("Task status is %s. Results "
+                        "available when it is one of %s.") % (
+            consts.TaskStatus.FAILED,
+            ", ".join((consts.TaskStatus.FINISHED,
+                       consts.TaskStatus.ABORTED)))
         mock_stdout.write.assert_has_calls([mock.call(expected_out)])
 
     @mock.patch("rally.cli.commands.task.jsonschema.validate",
