@@ -301,7 +301,7 @@ class DeploymentCommands(object):
                    "\n* To use standard OpenStack clients, set up your env by "
                    "running:\n\tsource ~/.rally/openrc\n"
                    "  OpenStack clients are now configured, e.g run:\n\t"
-                   "glance image-list")
+                   "openstack image list")
         except exceptions.DeploymentNotFound:
             print("Deployment %s is not found." % deployment)
             return 1
