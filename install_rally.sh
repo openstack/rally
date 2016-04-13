@@ -173,7 +173,7 @@ $GREEN  --branch              $NO_COLOR Git branch name, tag (Rally release), co
 $GREEN  -f, --overwrite       $NO_COLOR Deprecated. Use -r instead.
 $GREEN  -r, --recreate        $NO_COLOR Remove target directory if it already exist.
                          If neither '-r' nor '-R' is set default behaviour is to ask.
-$GREEN  -R, --no-recreate     $NO_COLOR Do not reemove target directory if it already exist.
+$GREEN  -R, --no-recreate     $NO_COLOR Do not remove target directory if it already exist.
                          If neither '-r' nor '-R' is set default behaviour is to ask.
 $GREEN  -y, --yes             $NO_COLOR Do not ask for confirmation: assume a 'yes' reply
                          to every question.
