@@ -23,7 +23,7 @@ So what are contexts doing? These plugins will be executed before
 scenario iteration starts. For example, a context plugin could create
 resources (e.g., download 10 images) that will be used by the
 scenarios. All created objects must be put into the *self.context*
-dict, trhough which they will be available in the scenarios. Let's
+dict, through which they will be available in the scenarios. Let's
 create a simple context plugin that adds a flavor to the environment
 before the benchmark task starts and deletes it after it finishes.
 
