@@ -81,7 +81,8 @@ class ScenarioTestCase(test.TestCase):
             validator.assert_called_with(config, clients=clients,
                                          deployment=deployment)
 
-    def test__validate_helper_somethingwent_wrong(self):
+    @mock.patch("rally.task.scenario.LOG")
+    def test__validate_helper_somethingwent_wrong(self, mock_log):
         validator = mock.MagicMock()
         validator.side_effect = Exception()
 
@@ -90,6 +91,7 @@ class ScenarioTestCase(test.TestCase):
                           [validator], "cl", "config", "deployment")
         validator.assert_called_once_with("config", clients="cl",
                                           deployment="deployment")
+        self.assertTrue(mock_log.exception.called)
 
     def test__validate_helper__no_valid(self):
         validators = [

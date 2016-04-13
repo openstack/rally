@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally import exceptions
@@ -20,16 +21,30 @@ from rally.plugins.openstack.wrappers import cinder as cinder_wrapper
 from tests.unit import test
 
 
-class CinderWrapperTestBase(object):
-    def test_wrap(self):
+@ddt.ddt
+class CinderWrapperTestCase(test.ScenarioTestCase):
+
+    @ddt.data(
+        {"version": "1", "expected_class": cinder_wrapper.CinderV1Wrapper},
+        {"version": "2", "expected_class": cinder_wrapper.CinderV2Wrapper}
+    )
+    @ddt.unpack
+    def test_wrap(self, version, expected_class):
         client = mock.MagicMock()
-        owner = mock.Mock()
-        client.version = "dummy"
+        client.choose_version.return_value = version
+        self.assertIsInstance(cinder_wrapper.wrap(client, mock.Mock()),
+                              expected_class)
+
+    @mock.patch("rally.plugins.openstack.wrappers.cinder.LOG")
+    def test_wrap_wrong_version(self, mock_log):
+        client = mock.MagicMock()
+        client.choose_version.return_value = "dummy"
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          cinder_wrapper.wrap, client, owner)
+                          cinder_wrapper.wrap, client, mock.Mock())
+        self.assertTrue(mock_log.warning.mock_called)
 
 
-class CinderV1WrapperTestCase(test.TestCase, CinderWrapperTestBase):
+class CinderV1WrapperTestCase(test.TestCase):
     def setUp(self):
         super(CinderV1WrapperTestCase, self).setUp()
         self.client = mock.MagicMock()
@@ -59,7 +74,7 @@ class CinderV1WrapperTestCase(test.TestCase, CinderWrapperTestBase):
              display_name=self.owner.generate_random_name.return_value))
 
 
-class CinderV2WrapperTestCase(test.TestCase, CinderWrapperTestBase):
+class CinderV2WrapperTestCase(test.TestCase):
     def setUp(self):
         super(CinderV2WrapperTestCase, self).setUp()
         self.client = mock.MagicMock()

@@ -292,8 +292,9 @@ class ScenarioRunnerTestCase(test.TestCase):
         {"data": {}},
         {"data": "foo"})
     @ddt.unpack
+    @mock.patch("rally.task.runner.LOG")
     @mock.patch(BASE + "charts.validate_output")
-    def test__result_has_valid_schema(self, mock_validate_output,
+    def test__result_has_valid_schema(self, mock_validate_output, mock_log,
                                       data, expected=False,
                                       validate_output_return_value=None,
                                       validate_output_calls=None):
@@ -315,11 +316,13 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual([], runner_.result_batch)
         self.assertEqual(collections.deque([[result]]), runner_.result_queue)
 
-    def test__send_result_with_invalid_schema(self):
+    @mock.patch("rally.task.runner.LOG")
+    def test__send_result_with_invalid_schema(self, mock_log):
         runner_ = self._get_runner(task={"uuid": "foo_uuid"})
         result = {"timestamp": 42}
         runner_._result_has_valid_schema = mock.Mock(return_value=False)
         self.assertIsNone(runner_._send_result(result))
         runner_._result_has_valid_schema.assert_called_once_with(result)
+        self.assertTrue(mock_log.warning.called)
         self.assertEqual([], runner_.result_batch)
         self.assertEqual(collections.deque([]), runner_.result_queue)
