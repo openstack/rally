@@ -359,31 +359,3 @@
       sla:
         failure_rate:
           max: 0
-
-  NeutronNetworks.create_and_update_ports:
-    -
-      args:
-        network_create_args: {}
-        port_create_args: {}
-        ports_per_network: 5
-        port_update_args:
-            admin_state_up: False
-            device_id: "dummy_id"
-            device_owner: "dummy_owner"
-            name: "_port_updated"
-      runner:
-        type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
-      context:
-        network: {}
-        users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
-        quotas:
-          neutron:
-            network: -1
-            port: -1
-      sla:
-        failure_rate:
-          max: 20

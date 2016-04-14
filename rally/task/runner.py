@@ -15,6 +15,7 @@
 
 import abc
 import collections
+import copy
 import multiprocessing
 import time
 
@@ -49,6 +50,8 @@ def _get_scenario_context(context_obj):
 
 def _run_scenario_once(args):
     iteration, cls, method_name, context_obj, kwargs = args
+
+    kwargs = copy.deepcopy(kwargs)
 
     LOG.info("Task %(task)s | ITER: %(iteration)s START" %
              {"task": context_obj["task"]["uuid"], "iteration": iteration})
