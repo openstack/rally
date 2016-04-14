@@ -70,7 +70,10 @@ class GlanceWrapper(object):
 
     @abc.abstractmethod
     def list_images(self, **filters):
-        """List images."""
+        """List images.
+
+        Accepts all Glance v2 filters.
+        """
 
 
 class GlanceV1Wrapper(GlanceWrapper):
@@ -117,7 +120,19 @@ class GlanceV1Wrapper(GlanceWrapper):
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)
 
     def list_images(self, **filters):
-        return self.client.images.list(**filters)
+        kwargs = {"filters": filters}
+        if "owner" in filters:
+            # NOTE(stpierre): in glance v1, "owner" is not a filter,
+            # so we need to handle it separately.
+            kwargs["owner"] = kwargs["filters"].pop("owner")
+        visibility = kwargs["filters"].pop("visibility", None)
+        images = self.client.images.list(**kwargs)
+        # NOTE(stpierre): Glance v1 isn't smart enough to filter on
+        # public/private images, so we have to do it manually.
+        if visibility is not None:
+            is_public = visibility == "public"
+            return [i for i in images if i.is_public is is_public]
+        return images
 
 
 class GlanceV2Wrapper(GlanceWrapper):

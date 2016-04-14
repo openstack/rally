@@ -109,10 +109,39 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
         self.mock_get_from_manager.mock.assert_called_once_with()
 
     @ddt.data({}, {"fakearg": "fake"})
-    def test_list_images(self, filters):
+    def test_list_images_basic(self, filters):
         self.assertEqual(self.wrapped_client.list_images(**filters),
                          self.client().images.list.return_value)
-        self.client().images.list.assert_called_once_with(**filters)
+        self.client().images.list.assert_called_once_with(filters=filters)
+
+    def test_list_images_with_owner(self):
+        self.assertEqual(self.wrapped_client.list_images(fakearg="fake",
+                                                         owner="fakeowner"),
+                         self.client().images.list.return_value)
+        self.client().images.list.assert_called_once_with(
+            owner="fakeowner", filters={"fakearg": "fake"})
+
+    def test_list_images_visibility_public(self):
+        public_images = [mock.Mock(is_public=True), mock.Mock(is_public=True)]
+        private_images = [mock.Mock(is_public=False),
+                          mock.Mock(is_public=False)]
+        self.client().images.list.return_value = public_images + private_images
+        self.assertEqual(self.wrapped_client.list_images(fakearg="fake",
+                                                         visibility="public"),
+                         public_images)
+        self.client().images.list.assert_called_once_with(
+            filters={"fakearg": "fake"})
+
+    def test_list_images_visibility_private(self):
+        public_images = [mock.Mock(is_public=True), mock.Mock(is_public=True)]
+        private_images = [mock.Mock(is_public=False),
+                          mock.Mock(is_public=False)]
+        self.client().images.list.return_value = public_images + private_images
+        self.assertEqual(self.wrapped_client.list_images(fakearg="fake",
+                                                         visibility="private"),
+                         private_images)
+        self.client().images.list.assert_called_once_with(
+            filters={"fakearg": "fake"})
 
 
 @ddt.ddt
