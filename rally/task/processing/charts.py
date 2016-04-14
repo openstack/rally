@@ -27,7 +27,12 @@ from rally.task.processing import utils
 @six.add_metaclass(abc.ABCMeta)
 @plugin.configure(name="base_output_chart")
 class Chart(plugin.Plugin):
-    """Base class for charts."""
+    """Base class for charts.
+
+    This is a base for all plugins that prepare data for specific charts
+    in HTML report. Each chart must at least declare chart widget and
+    prepare data that is suitable for rendering by JavaScript.
+    """
 
     @abc.abstractproperty
     def widget(self):
