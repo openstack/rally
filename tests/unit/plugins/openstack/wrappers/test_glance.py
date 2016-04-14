@@ -62,10 +62,10 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
         self.wrapped_client = glance_wrapper.wrap(self.client, self.owner)
 
     @ddt.data(
-        {"location": "image_location"},
+        {"location": "image_location", "visibility": "private"},
         {"location": "image_location", "fakearg": "fake"},
         {"location": "image_location", "name": "image_name"},
-        {"location": _tempfile.name})
+        {"location": _tempfile.name, "visibility": "public"})
     @ddt.unpack
     @mock.patch("six.moves.builtins.open")
     def test_create_image(self, mock_open, location, **kwargs):
@@ -73,7 +73,7 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
                                                         location,
                                                         "disk_format",
                                                         **kwargs)
-        call_args = dict(kwargs)
+        call_args = kwargs
         call_args["container_format"] = "container_format"
         call_args["disk_format"] = "disk_format"
         if location.startswith("/"):
@@ -84,6 +84,8 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
             call_args["copy_from"] = location
         if "name" not in kwargs:
             call_args["name"] = self.owner.generate_random_name.return_value
+        if "visibility" in kwargs:
+            call_args["is_public"] = call_args.pop("visibility") == "public"
 
         self.client().images.create.assert_called_once_with(**call_args)
 
@@ -174,10 +176,10 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
         self.client.return_value.images.get.assert_called_once_with(image.id)
 
     @ddt.data(
-        {"location": "image_location"},
+        {"location": "image_location", "visibility": "private"},
         {"location": "image_location", "fakearg": "fake"},
         {"location": "image_location", "name": "image_name"},
-        {"location": _tempfile.name})
+        {"location": _tempfile.name, "visibility": "public"})
     @ddt.unpack
     @mock.patch("six.moves.builtins.open")
     @mock.patch("requests.get")
@@ -193,7 +195,7 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
                                                         location,
                                                         "disk_format",
                                                         **kwargs)
-        create_args = dict(kwargs)
+        create_args = kwargs
         create_args["container_format"] = "container_format"
         create_args["disk_format"] = "disk_format"
         if "name" not in kwargs:

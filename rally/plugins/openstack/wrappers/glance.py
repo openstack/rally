@@ -62,7 +62,10 @@ class GlanceWrapper(object):
 
     @abc.abstractmethod
     def create_image(self, container_format, image_location, disk_format):
-        """Creates new image."""
+        """Creates new image.
+
+        Accepts all Glance v2 parameters.
+        """
 
     @abc.abstractmethod
     def delete_image(self, image):
@@ -86,6 +89,9 @@ class GlanceV1Wrapper(GlanceWrapper):
         kw.update(kwargs)
         if "name" not in kw:
             kw["name"] = self.owner.generate_random_name()
+        if "visibility" in kw:
+            kw["is_public"] = kw.pop("visibility") == "public"
+
         image_location = os.path.expanduser(image_location)
 
         try:
