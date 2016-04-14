@@ -45,6 +45,15 @@ class TaskEngineTestCase(test.TestCase):
         self.assertEqual(eng.task, task)
 
     @mock.patch("rally.task.engine.TaskConfig")
+    def test_init_empty_config(self, mock_task_config):
+        config = None
+        task = mock.Mock()
+        exception = self.assertRaises(exceptions.InvalidTaskException,
+                                      engine.TaskEngine, config, task)
+        self.assertIn("Input task is empty", str(exception))
+        self.assertTrue(task.set_failed.called)
+
+    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("jsonschema.validate")
     def test_validate(self, mock_validate, mock_task_config):
         mock_task_config.return_value = config = mock.MagicMock()
