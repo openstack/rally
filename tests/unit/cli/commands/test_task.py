@@ -814,6 +814,7 @@ class TaskCommandsTestCase(test.TestCase):
             mock.call("\n")])
         mock_task_exporter_get.assert_called_once_with("file-exporter")
 
+    @mock.patch("rally.cli.commands.task.plot.charts")
     @mock.patch("rally.cli.commands.task.sys.stdout")
     @mock.patch("rally.cli.commands.task.api.Task")
     @ddt.data({"error_type": "test_no_trace_type",
@@ -826,9 +827,9 @@ class TaskCommandsTestCase(test.TestCase):
                })
     @ddt.unpack
     def test_show_task_errors_no_trace(self, mock_task, mock_stdout,
-                                       error_type, error_message,
+                                       mock_charts, error_type, error_message,
                                        error_traceback=None):
-
+        mock_charts.MainStatsTable.columns = ["Column 1", "Column 2"]
         test_uuid = "test_task_id"
         error_data = [error_type, error_message]
         if error_traceback:
@@ -844,6 +845,8 @@ class TaskCommandsTestCase(test.TestCase):
                     "kw": "fake_kw"
                 },
                 "info": {
+                    "stat": {"cols": ["Column 1", "Column 2"],
+                             "rows": [[11, 22], [33, 44]]},
                     "load_duration": 3.2,
                     "full_duration": 3.5,
                     "iterations_count": 1,

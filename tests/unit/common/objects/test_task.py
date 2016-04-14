@@ -170,9 +170,13 @@ class TaskTestCase(test.TestCase):
             {"verification_log": json.dumps({"a": "fake"})}
         )
 
-    def test_extend_results(self):
+    @mock.patch("rally.common.objects.task.charts")
+    def test_extend_results(self, mock_charts):
         self.assertRaises(TypeError, objects.Task.extend_results)
 
+        mock_stat = mock.Mock()
+        mock_stat.render.return_value = "durations_stat"
+        mock_charts.MainStatsTable.return_value = mock_stat
         now = dt.datetime.now()
         iterations = [
             {"timestamp": i + 2, "duration": i + 5,
@@ -192,9 +196,10 @@ class TaskTestCase(test.TestCase):
              "info": {
                  "atomic": {"keystone.create_user": {"max_duration": 19,
                                                      "min_duration": 10}},
-             "iterations_count": 10, "iterations_failed": 0,
-             "max_duration": 14, "min_duration": 5,
-             "tstamp_start": 2, "full_duration": 40, "load_duration": 32}}]
+                 "iterations_count": 10, "iterations_failed": 0,
+                 "max_duration": 14, "min_duration": 5, "tstamp_start": 2,
+                 "full_duration": 40, "load_duration": 32,
+                 "stat": "durations_stat"}}]
 
         # serializable is default
         results = objects.Task.extend_results(obsolete)

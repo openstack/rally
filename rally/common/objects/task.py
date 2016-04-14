@@ -13,14 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import json
 import uuid
 
-from rally.common import costilius
 from rally.common import db
 from rally.common.i18n import _LE
 from rally import consts
 from rally import exceptions
+from rally.task.processing import charts
 
 
 OUTPUT_SCHEMA = {
@@ -401,7 +402,7 @@ class Task(object):
             min_duration = 0
             max_duration = 0
             iterations_failed = 0
-            atomic = costilius.OrderedDict()
+            atomic = collections.OrderedDict()
 
             for itr in scenario["data"]["raw"]:
                 for atomic_name, duration in itr["atomic_actions"].items():
@@ -449,7 +450,15 @@ class Task(object):
                 else:
                     del scenario[k]
 
+            durations_stat = charts.MainStatsTable(
+                {"iterations_count": len(scenario["data"]["raw"]),
+                 "atomic": atomic})
+
+            for itr in scenario["data"]["raw"]:
+                durations_stat.add_iteration(itr)
+
             scenario["info"] = {
+                "stat": durations_stat.render(),
                 "atomic": atomic,
                 "iterations_count": len(scenario["data"]["raw"]),
                 "iterations_failed": iterations_failed,

@@ -350,7 +350,6 @@ class TaskCommands(object):
             print(json.dumps(key["kw"], indent=2))
             print()
 
-            durations = plot.charts.MainStatsTable(result["info"])
             iterations = []
             iterations_headers = ["iteration", "full duration"]
             iterations_actions = []
@@ -363,7 +362,6 @@ class TaskCommands(object):
                     iterations_actions.append((atomic_name, action))
 
             for idx, itr in enumerate(result["iterations"], 1):
-                durations.add_iteration(itr)
 
                 if iterations_data:
                     row = {"iteration": idx,
@@ -400,11 +398,11 @@ class TaskCommands(object):
             self._print_task_errors(task_id, task_errors)
 
             cols = plot.charts.MainStatsTable.columns
-            float_cols = cols[1:7]
+            float_cols = result["info"]["stat"]["cols"][1:7]
             formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
-            rows = [dict(zip(cols, r)) for r in durations.render()["rows"]]
+            rows = [dict(zip(cols, r)) for r in result["info"]["stat"]["rows"]]
             cliutils.print_list(rows,
                                 fields=cols,
                                 formatters=formatters,
