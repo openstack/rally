@@ -185,6 +185,11 @@ class TaskEngine(object):
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
         """
+        if config is None:
+            msg = _("Input task is empty")
+            task.set_failed(log=msg)
+            raise exceptions.InvalidTaskException(msg)
+
         try:
             self.config = TaskConfig(config)
         except Exception as e:
