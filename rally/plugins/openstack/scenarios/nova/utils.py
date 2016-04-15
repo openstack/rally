@@ -21,6 +21,7 @@ import six
 
 from rally import exceptions
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
 from rally.task import utils
@@ -464,13 +465,14 @@ class NovaScenario(scenario.OpenStackScenario):
 
         :param image: Image object
         """
-        image.delete()
+        self.clients("glance").images.delete(image.id)
+        wrapper = glance_wrapper.wrap(self._clients.glance, self)
         check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
         utils.wait_for_status(
             image,
             ready_statuses=["deleted"],
             check_deletion=True,
-            update_resource=utils.get_from_manager(),
+            update_resource=wrapper.get_image,
             timeout=CONF.benchmark.nova_server_image_delete_timeout,
             check_interval=check_interval
         )

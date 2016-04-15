@@ -472,16 +472,24 @@ class TempestResourcesContextTestCase(test.TestCase):
         client = self.context.clients.keystone()
         self.assertEqual(client.roles.delete.call_count, 2)
 
-    def test__cleanup_images(self):
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__cleanup_images(self, mock_wrap):
         self.context._created_images = [fakes.FakeImage(id="id1"),
                                         fakes.FakeImage(id="id2")]
 
         self.context.conf.set("compute", "image_ref", "id1")
         self.context.conf.set("compute", "image_ref_alt", "id2")
 
+        wrapper = mock_wrap.return_value
+        wrapper.get_image.side_effect = [
+            fakes.FakeImage(id="id1", status="DELETED"),
+            fakes.FakeImage(id="id2"),
+            fakes.FakeImage(id="id2", status="DELETED")]
+
         self.context._cleanup_images()
         client = self.context.clients.glance()
-        self.assertEqual(client.images.delete.call_count, 2)
+        client.images.delete.assert_has_calls([mock.call("id1"),
+                                               mock.call("id2")])
 
         self.assertEqual("", self.context.conf.get("compute", "image_ref"))
         self.assertEqual("", self.context.conf.get("compute", "image_ref_alt"))

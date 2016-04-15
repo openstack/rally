@@ -15,6 +15,7 @@
 
 from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
+from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import logging
@@ -26,6 +27,9 @@ from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
+from rally.task import utils as task_utils
+
+CONF = cfg.CONF
 
 LOG = logging.getLogger(__name__)
 
@@ -390,15 +394,24 @@ class ManilaSecurityService(base.ResourceManager):
 @base.resource("glance", "images", order=500, tenant_resource=True)
 class GlanceImage(base.ResourceManager):
 
+    def _client(self):
+        return getattr(self.admin or self.user, self._service)
+
     def _wrapper(self):
-        return glance_wrapper.wrap(
-            getattr(self.admin or self.user, self._service), self)
+        return glance_wrapper.wrap(self._client(), self)
 
     def list(self):
         return self._wrapper().list_images(owner=self.tenant_uuid)
 
     def delete(self):
-        return self._wrapper().delete_image(self.raw_resource)
+        client = self._client()
+        client().images.delete(self.raw_resource.id)
+        task_utils.wait_for_status(
+            self.raw_resource, ["deleted"],
+            check_deletion=True,
+            update_resource=self._wrapper().get_image,
+            timeout=CONF.benchmark.glance_image_delete_timeout,
+            check_interval=CONF.benchmark.glance_image_delete_poll_interval)
 
 
 # SAHARA

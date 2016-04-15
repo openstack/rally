@@ -21,6 +21,7 @@ from oslo_config import cfg
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import cinder as cinder_wrapper
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import atomic
 from rally.task import utils as bench_utils
 
@@ -233,10 +234,11 @@ class CinderScenario(scenario.OpenStackScenario):
         )
         image_id = img["os-volume_upload_image"]["image_id"]
         image = self.clients("glance").images.get(image_id)
+        wrapper = glance_wrapper.wrap(self._clients.glance, self)
         image = bench_utils.wait_for(
             image,
             ready_statuses=["active"],
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=wrapper.get_image,
             timeout=CONF.benchmark.glance_image_create_timeout,
             check_interval=CONF.benchmark.glance_image_create_poll_interval
         )

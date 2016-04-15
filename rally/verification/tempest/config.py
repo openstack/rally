@@ -32,8 +32,9 @@ from rally.common import objects
 from rally.common import utils
 from rally import exceptions
 from rally import osclients
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
+from rally.plugins.openstack.wrappers import glance
 from rally.plugins.openstack.wrappers import network
+from rally.task import utils as task_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -419,14 +420,14 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                       .format(opt=option, opt_val=option_value))
 
     def _discover_or_create_image(self):
-        glance_wrap = glance_wrapper.wrap(self.clients.glance, self)
+        glance_wrapper = glance.wrap(self.clients.glance, self)
 
         if CONF.image.name_regex:
             LOG.debug("Trying to discover a public image with name matching "
                       "regular expression '%s'. Note that case insensitive "
                       "matching is performed" % CONF.image.name_regex)
-            images = glance_wrap.list_images(status="active",
-                                             visibility="public")
+            images = glance_wrapper.list_images(status="active",
+                                                visibility="public")
             for img in images:
                 if img.name and re.match(CONF.image.name_regex,
                                          img.name, re.IGNORECASE):
@@ -447,7 +448,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             "visibility": "public"
         }
         LOG.debug("Creating image '%s'" % params["name"])
-        image = glance_wrap.create_image(**params)
+        image = glance_wrapper.create_image(**params)
         self._created_images.append(image)
 
         return image
@@ -498,10 +499,17 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             keystoneclient.roles.delete(role.id)
 
     def _cleanup_images(self):
-        glanceclient = self.clients.glance()
+        glance_wrapper = glance.wrap(self.clients.glance, self)
         for image in self._created_images:
             LOG.debug("Deleting image '%s'" % image.name)
-            glanceclient.images.delete(image.id)
+            self.clients.glance().images.delete(image.id)
+            task_utils.wait_for_status(
+                image, ["deleted"],
+                check_deletion=True,
+                update_resource=glance_wrapper.get_image,
+                timeout=CONF.benchmark.glance_image_delete_timeout,
+                check_interval=CONF.benchmark.
+                glance_image_delete_poll_interval)
             self._remove_opt_value_from_config("compute", image.id)
 
     def _cleanup_flavors(self):

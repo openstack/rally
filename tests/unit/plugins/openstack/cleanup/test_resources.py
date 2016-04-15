@@ -462,14 +462,18 @@ class GlanceImageTestCase(test.TestCase):
 
     def test_delete(self):
         glance = resources.GlanceImage()
+        glance._client = mock.Mock()
         glance._wrapper = mock.Mock()
         glance.raw_resource = mock.Mock()
 
-        self.assertEqual(
-            glance.delete(),
-            glance._wrapper.return_value.delete_image.return_value)
-        glance._wrapper.return_value.delete_image.assert_called_once_with(
-            glance.raw_resource)
+        client = glance._client.return_value
+        wrapper = glance._wrapper.return_value
+
+        deleted_image = mock.Mock(status="DELETED")
+        wrapper.get_image.side_effect = [glance.raw_resource, deleted_image]
+
+        glance.delete()
+        client().images.delete.assert_called_once_with(glance.raw_resource.id)
 
 
 class CeilometerTestCase(test.TestCase):
