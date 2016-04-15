@@ -231,6 +231,14 @@ class UserGenerator(UserContextMixin, context.Context):
         broker.run(publish, consume, threads)
         return list(users)
 
+    def _get_consumer_for_deletion(self, func_name):
+        def consume(cache, resource_id):
+            if "client" not in cache:
+                clients = osclients.Clients(self.credential)
+                cache["client"] = keystone.wrap(clients.keystone())
+            getattr(cache["client"], func_name)(resource_id)
+        return consume
+
     def _delete_tenants(self):
         threads = self.config["resource_management_workers"]
 
@@ -240,13 +248,8 @@ class UserGenerator(UserContextMixin, context.Context):
             for tenant_id in self.context["tenants"]:
                 queue.append(tenant_id)
 
-        def consume(cache, tenant_id):
-            if "client" not in cache:
-                clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
-            cache["client"].delete_project(tenant_id)
-
-        broker.run(publish, consume, threads)
+        broker.run(publish, self._get_consumer_for_deletion("delete_project"),
+                   threads)
         self.context["tenants"] = {}
 
     def _delete_users(self):
@@ -256,13 +259,8 @@ class UserGenerator(UserContextMixin, context.Context):
             for user in self.context["users"]:
                 queue.append(user["id"])
 
-        def consume(cache, user_id):
-            if "client" not in cache:
-                clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
-            cache["client"].delete_user(user_id)
-
-        broker.run(publish, consume, threads)
+        broker.run(publish, self._get_consumer_for_deletion("delete_user"),
+                   threads)
         self.context["users"] = []
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
