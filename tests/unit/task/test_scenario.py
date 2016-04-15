@@ -14,6 +14,7 @@
 #    under the License.
 
 import traceback
+import uuid
 
 import mock
 
@@ -180,6 +181,48 @@ class ScenarioTestCase(test.TestCase):
         ])
 
         Testing.validate_user_validators.unregister()
+
+    def test__validate_scenario_args(self):
+
+        class Testing(fakes.FakeScenario):
+            @scenario.configure()
+            def fake_scenario_to_validate_scenario_args(self, arg1, arg2,
+                                                        arg3=None):
+                pass
+
+        name = "Testing.fake_scenario_to_validate_scenario_args"
+        scen = scenario.Scenario.get(name)
+
+        # check case when argument is missed
+        e = self.assertRaises(exceptions.InvalidArgumentsException,
+                              scenario.Scenario._validate_scenario_args,
+                              scen, name, {"args": {"arg1": 3}})
+        self.assertIn("Argument(s) 'arg2' should be specified in task config.",
+                      e.format_message())
+
+        # check case when one argument is redundant
+        e = self.assertRaises(exceptions.InvalidArgumentsException,
+                              scenario.Scenario._validate_scenario_args,
+                              scen, name,
+                              {"args": {"arg1": 1, "arg2": 2, "arg4": 4}})
+
+        self.assertIn("Unexpected argument(s) found ['arg4']",
+                      e.format_message())
+
+    def test__validate_scenario_args_with_class_based_scenario(self):
+        name = "%s.need_dot" % uuid.uuid4()
+
+        @scenario.configure(name=name)
+        class Testing(scenario.Scenario):
+            def run(self, arg):
+                pass
+
+        e = self.assertRaises(exceptions.InvalidArgumentsException,
+                              scenario.Scenario._validate_scenario_args,
+                              Testing, name, {})
+
+        self.assertIn("Argument(s) 'arg' should be specified in task config.",
+                      e.format_message())
 
     def test_sleep_between_invalid_args(self):
         self.assertRaises(exceptions.InvalidArgumentsException,

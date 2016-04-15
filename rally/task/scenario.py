@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import inspect
 import random
 
 import six
@@ -134,10 +134,45 @@ class Scenario(plugin.Plugin,
                 if not result.is_valid:
                     raise exceptions.InvalidScenarioArgument(result.msg)
 
+    @staticmethod
+    def _validate_scenario_args(scenario, name, config):
+        if scenario.is_classbased:
+            # We need initialize scenario class to access instancemethods
+            scenario = scenario().run
+        args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
+
+        hint_msg = (" Use `rally plugin show --name %s` to display "
+                    "scenario description." % name)
+
+        # scenario always accepts an instance of scenario cls as a first arg
+        missed_args = args[1:]
+        if defaults:
+            # do not require args with default values
+            missed_args = missed_args[:-len(defaults)]
+        if "args" in config:
+            missed_args = set(missed_args) - set(config["args"])
+        if missed_args:
+            msg = ("Argument(s) '%(args)s' should be specified in task config."
+                   "%(hint)s" % {"args": "', '".join(missed_args),
+                                 "hint": hint_msg})
+            raise exceptions.InvalidArgumentsException(msg)
+
+        if varkwargs is None and "args" in config:
+            redundant_args = set(config["args"]) - set(args[1:])
+            if redundant_args:
+                msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
+                       {"args": "', '".join(redundant_args),
+                        "hint": hint_msg})
+                raise exceptions.InvalidArgumentsException(msg)
+
     @classmethod
     def validate(cls, name, config, admin=None, users=None, deployment=None):
         """Semantic check of benchmark arguments."""
-        validators = Scenario.get(name)._meta_get("validators", default=[])
+        scenario = Scenario.get(name)
+
+        cls._validate_scenario_args(scenario, name, config)
+
+        validators = scenario._meta_get("validators", default=[])
 
         if not validators:
             return
