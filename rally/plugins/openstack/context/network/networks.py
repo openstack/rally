@@ -80,11 +80,12 @@ class Network(context.Context):
             for i in range(self.config["networks_per_tenant"]):
                 # NOTE(amaretskiy): add_router and subnets_num take effect
                 #                   for Neutron only.
+                network_create_args = self.config["network_create_args"].copy()
                 network = net_wrapper.create_network(
                     tenant_id,
                     add_router=True,
                     subnets_num=self.config["subnets_per_network"],
-                    network_create_args=self.config["network_create_args"])
+                    network_create_args=network_create_args)
                 self.context["tenants"][tenant_id]["networks"].append(network)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `network`"))

@@ -61,7 +61,7 @@ class AdminCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
-        mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
+        mock_find_resource_managers.assert_called_once_with(("a", "b"), True)
         mock_seek_and_destroy.assert_has_calls([
             mock.call(
                 mock_find_resource_managers.return_value[0],
@@ -104,7 +104,7 @@ class AdminCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
-        mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
+        mock_find_resource_managers.assert_called_once_with(("a", "b"), True)
         mock_seek_and_destroy.assert_has_calls([
             mock.call(
                 mock_find_resource_managers.return_value[0],

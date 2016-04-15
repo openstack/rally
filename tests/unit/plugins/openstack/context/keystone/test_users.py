@@ -223,8 +223,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test__create_tenants(self, mock_keystone):
+        self.context["config"]["users"]["tenants"] = 1
         user_generator = users.UserGenerator(self.context)
-        user_generator.config["tenants"] = 1
         tenants = user_generator._create_tenants()
         self.assertEqual(1, len(tenants))
         id, tenant = tenants.popitem()
@@ -232,10 +232,10 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.keystone" % CTX)
     def test__create_users(self, mock_keystone):
+        self.context["config"]["users"]["users_per_tenant"] = 2
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}
-        user_generator.config["users_per_tenant"] = 2
         users_ = user_generator._create_users()
         self.assertEqual(4, len(users_))
         for user in users_:

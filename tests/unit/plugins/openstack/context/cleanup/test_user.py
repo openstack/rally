@@ -60,7 +60,7 @@ class UserCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
-        mock_find_resource_managers.assert_called_once_with(["a", "b"], False)
+        mock_find_resource_managers.assert_called_once_with(("a", "b"), False)
 
         mock_seek_and_destroy.assert_has_calls([
             mock.call(

@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import ddt
 import jsonschema
 import mock
 
@@ -23,26 +23,39 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+@ddt.ddt
 class BaseContextTestCase(test.TestCase):
 
-    def test_init(self):
-        ctx0 = {
-            "config": {
-                "a": 1,
-                "fake": mock.MagicMock()
-            },
-            "task": mock.MagicMock()
-        }
+    @ddt.data({"config": {"bar": "spam"}, "expected": {"bar": "spam"}},
+              {"config": {"bar": "spam"}, "expected": {"bar": "spam"}},
+              {"config": {}, "expected": {}},
+              {"config": None, "expected": None},
+              {"config": 42, "expected": 42},
+              {"config": "foo str", "expected": "foo str"},
+              {"config": [], "expected": ()},
+              {"config": [11, 22, 33], "expected": (11, 22, 33)})
+    @ddt.unpack
+    def test_init(self, config, expected):
+        ctx = {"config": {"foo": 42, "fake": config}, "task": "foo_task"}
+        ins = fakes.FakeContext(ctx)
+        self.assertEqual(ins.config, expected)
+        self.assertEqual(ins.task, "foo_task")
+        self.assertEqual(ins.context, ctx)
 
-        ctx = fakes.FakeContext(ctx0)
-        self.assertEqual(ctx.config, ctx0["config"]["fake"])
-        self.assertEqual(ctx.task, ctx0["task"])
-        self.assertEqual(ctx.context, ctx0)
+    def test_init_with_default_config(self):
+        @context.configure(name="foo", order=1)
+        class FooContext(fakes.FakeContext):
+            DEFAULT_CONFIG = {"alpha": "beta", "delta": "gamma"}
+
+        ctx = {"config": {"foo": {"ab": "cd"}, "bar": 42}, "task": "foo_task"}
+        ins = FooContext(ctx)
+        self.assertEqual({"ab": "cd", "alpha": "beta", "delta": "gamma"},
+                         ins.config)
 
     def test_init_empty_context(self):
         ctx0 = {
             "task": mock.MagicMock(),
-            "config": {"fake": "test"}
+            "config": {"fake": {"foo": 42}}
         }
         ctx = fakes.FakeContext(ctx0)
         self.assertEqual(ctx.config, ctx0["config"]["fake"])
