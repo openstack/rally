@@ -38,36 +38,6 @@ class NeutronScenario(scenario.OpenStackScenario):
     HM_DELAY = 20
     HM_TIMEOUT = 10
 
-    def _warn_about_deprecated_name_kwarg(self, resource, kwargs):
-        """Warn about use of a deprecated 'name' kwarg and replace it.
-
-        Many of the functions in this class previously accepted a
-        'name' keyword argument so that the end user could explicitly
-        name their resources. That is no longer permitted, so when a
-        user includes a 'name' kwarg we warn about it, and replace it
-        with a random name.
-
-        This cannot be a decorator because _update_v1_pool() takes its
-        arguments in a different way than the other update functions
-        that this helper is used in.
-
-        :param resource: A neutron resource object dict describing the
-                         resource that the name is being set for. In
-                         particular, this must have a single key
-                         that is the resource type, and a single value
-                         that is itself a dict including the "id" key.
-        :param kwargs: The keyword arg dict that the user supplied,
-                       which will be modified in-place.
-        :returns: None; kwargs is modified in situ.
-        """
-        if "name" in kwargs:
-            kwargs["name"] = self.generate_random_name()
-            LOG.warning(_("Cannot set name of %(type)s %(id)s explicitly; "
-                          "setting to random string %(name)s") %
-                        {"type": list(resource.keys())[0],
-                         "id": list(resource.values())[0]["id"],
-                         "name": kwargs["name"]})
-
     def _get_network_id(self, network, **kwargs):
         """Get Neutron network ID for the network name.
 
@@ -114,7 +84,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param network_update_args: dict, POST /v2.0/networks update options
         :returns: updated neutron network dict
         """
-        self._warn_about_deprecated_name_kwarg(network, network_update_args)
+        network_update_args["name"] = self.generate_random_name()
         body = {"network": network_update_args}
         return self.clients("neutron").update_network(
             network["network"]["id"], body)
@@ -164,7 +134,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param subnet_update_args: dict, PUT /v2.0/subnets update options
         :returns: updated neutron subnet dict
         """
-        self._warn_about_deprecated_name_kwarg(subnet, subnet_update_args)
+        subnet_update_args["name"] = self.generate_random_name()
         body = {"subnet": subnet_update_args}
         return self.clients("neutron").update_subnet(
             subnet["subnet"]["id"], body)
@@ -221,7 +191,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param router_update_args: dict, PUT /v2.0/routers update options
         :returns: updated neutron router dict
         """
-        self._warn_about_deprecated_name_kwarg(router, router_update_args)
+        router_update_args["name"] = self.generate_random_name()
         body = {"router": router_update_args}
         return self.clients("neutron").update_router(
             router["router"]["id"], body)
@@ -253,7 +223,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param port_update_args: dict, PUT /v2.0/ports update options
         :returns: updated neutron port dict
         """
-        self._warn_about_deprecated_name_kwarg(port, port_update_args)
+        port_update_args["name"] = self.generate_random_name()
         body = {"port": port_update_args}
         return self.clients("neutron").update_port(port["port"]["id"], body)
 
@@ -431,7 +401,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param pool_update_args: dict, POST /lb/pools update options
         :returns: updated neutron pool dict
         """
-        self._warn_about_deprecated_name_kwarg(pool, pool_update_args)
+        pool_update_args["name"] = self.generate_random_name()
         body = {"pool": pool_update_args}
         return self.clients("neutron").update_pool(pool["pool"]["id"], body)
 
@@ -473,7 +443,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param vip_update_args: dict, POST /lb/vips update options
         :returns: updated neutron vip dict
         """
-        self._warn_about_deprecated_name_kwarg(vip, vip_update_args)
+        vip_update_args["name"] = self.generate_random_name()
         body = {"vip": vip_update_args}
         return self.clients("neutron").update_vip(vip["vip"]["id"], body)
 
@@ -594,8 +564,7 @@ class NeutronScenario(scenario.OpenStackScenario):
                                            update options
         return: dict, updated neutron security-group
         """
-        self._warn_about_deprecated_name_kwarg(security_group,
-                                               security_group_update_args)
+        security_group_update_args["name"] = self.generate_random_name()
         body = {"security_group": security_group_update_args}
         return self.clients("neutron").update_security_group(
             security_group["security_group"]["id"], body)
