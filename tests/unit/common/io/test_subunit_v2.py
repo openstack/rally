@@ -114,3 +114,20 @@ RuntimeError: broken setUp method
                           "success": 0, "unexpected_success": 0,
                           "expected_failures": 0},
                          subunit_v2.SubunitV2StreamResult().total)
+
+    def test_parse_results_file_with_expected_failures(self):
+        test_1 = "test_foo.SimpleTestCase.test_something_that_fails"
+        test_2 = "test_foo.SimpleTestCase.test_something_that_passes"
+        expected_failures = {
+            test_1: "Some details about why this test fails",
+            test_2: None
+        }
+
+        result = subunit_v2.parse_results_file(self.fake_stream,
+                                               expected_failures)
+        tests = result.tests
+
+        self.assertEqual("xfail", tests[test_1]["status"])
+        self.assertEqual("Some details about why this test fails",
+                         tests[test_1]["reason"])
+        self.assertEqual("uxsuccess", tests[test_2]["status"])
