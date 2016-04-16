@@ -297,15 +297,19 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         self.assertEqual(len(ctx.context["users"]), 0)
         self.assertEqual(len(ctx.context["tenants"]), 0)
 
+    @mock.patch("rally.common.broker.LOG.warning")
     @mock.patch("%s.keystone" % CTX)
-    def test_setup_and_cleanup_failure(self, mock_keystone):
+    def test_setup_and_cleanup_with_error_during_create_user(
+            self, mock_keystone, mock_log_warning):
         wrapped_keystone = mock_keystone.wrap.return_value
-        wrapped_keystone.create_user.side_effect = Exception()
+        wrapped_keystone.create_user.side_effect = Exception
         with users.UserGenerator(self.context) as ctx:
-            self.assertRaises(exceptions.ContextSetupFailure, ctx.setup)
+                self.assertRaises(exceptions.ContextSetupFailure, ctx.setup)
+                mock_log_warning.assert_called_with(
+                    "Failed to consume a task from the queue: ")
 
         # Ensure that tenants get deleted anyway
-        self.assertEqual(len(ctx.context["tenants"]), 0)
+        self.assertEqual(0, len(ctx.context["tenants"]))
 
     @mock.patch("%s.keystone" % CTX)
     def test_users_and_tenants_in_context(self, mock_keystone):
