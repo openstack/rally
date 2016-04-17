@@ -1,0 +1,278 @@
+============
+Rally v0.4.0
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **76**         |
++------------------+-----------------------+
+| Bug fixes        |        **12**         |
++------------------+-----------------------+
+| Dev cycle        |      **28 days**      |
++------------------+-----------------------+
+| Release date     |     **4/18/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+.. warning:: Rally DB schema was changed since previous release.
+    See `HOWTO <http://rally.readthedocs.org/en/latest/db_migrations.html>`_
+    about updating your database.
+
+
+CLI changes
+~~~~~~~~~~~
+
+* Add status messages of db migration process
+
+* Display task errors in human-friendly form
+
+* Support OS_PROJECT_NAME as well as OS_TENANT_NAME
+
+Messages
+~~~~~~~~
+
+* Removed deprecation warning in case of transmitted "name" attribute while
+  creation neutron resources.
+
+  .. warning:: Deprecated code was deleted.
+
+* Suppress warning insecure URL messages
+
+  Do not spam end users by insecure URL messages because it is
+  quite valid case in testing process
+
+Database
+~~~~~~~~
+
+While preparing for deployment refactoring:
+
+* db schema was changed;
+* migration with new column `credentials` to deployment model was added;
+* columns `users` and `admin` were dropped.
+
+Rally Task
+~~~~~~~~~~
+
+* Remove deprecated scenario output mechanism via returing value
+
+  .. warning:: Deprecated code was deleted.
+
+* Friendlier error message with empty task file
+
+  This is particularly useful when a Jinja2 template results in an empty
+  task. The current error message isn't very helpful:
+
+  Task config is invalid: `'NoneType' object has no attribute 'get'`
+
+* Add Heat template validator
+
+Plugins
+~~~~~~~
+
+**Scenarios**:
+
+* Extend VM bind actions with "pause_unpause", "suspend_resume", "lock_unlock",
+  "shelve_unshelve".
+
+* Add exact error message into `VMTasks.runcommand_heat scenario`__
+
+__ http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#vmtasks-runcommand-heat-scenario
+
+* Add heat scenarios: output-show, output-list
+
+  Current patch contains 4 scenarios from heat repo:
+   - `output-show for old algorithm
+     <http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#heatstacks-create-stack-and-list-output-via-api-scenario>`_
+   - `output-show for new algorithm
+     <http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#heatstacks-create-stack-and-show-output-scenario>`_
+   - `output-list for old algorithm
+     <http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#heatstacks-create-stack-and-list-output-via-api-scenario>`_
+   - `output-list for new algorithm
+     <http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#heatstacks-create-stack-and-list-output-scenario>`_
+
+
+**Contexts**:
+
+* Reduce default speed of users creation in users context from 30 to 20
+  by default.
+
+**SLAs**:
+
+* *NEW!!* MaxAverageDurationPerAtomic : Maximum average duration of one
+  iterations atomic actions in seconds.
+
+  `Plugin Reference <http://rally.readthedocs.org/en/0.4.0/plugin/plugin_reference.html#max-avg-duration-per-atomic-sla>`_
+
+**Reports**:
+
+* Improve results calculation in charts.Table
+
+* Use int instead of float for Y axis. It's number of parallel iterations and
+  it can't be float.
+
+* Remove accuracy that makes no sense, and creates a lot of noise on this graph
+
+* Include failed iterations as well, otherwise we will calculate load
+  incorrectly
+
+* Graph should start from 0 (begging of experiment)
+
+* Add 2 points at the end of graph to get at the end of graph 0 iterations
+  in parallel
+
+**Task Exporter**:
+
+In previous release we introduced new mechanism to export results in various
+external systems and various formats.
+
+In this release, we added first plugin for this stuff - `file_exporter`
+
+**Services**:
+
+Remove hardcoded timeout from heat service
+
+**Utils**:
+
+Make glance web uploads streamable
+
+Without this change entire file get's downloaded into memory and can cause
+issues.
+
+Rally Verify
+~~~~~~~~~~~~
+
+* Set time precision to 3 digits (instead of 5) after dot.
+
+* Don't use "--parallel" flag when concurrency == 1
+
+  If concurrency equals to 1, it means that we use only one thread to run
+  Tempest tests and the "--parallel" flag is not needed.
+
+Plugin for DevStack
+~~~~~~~~~~~~~~~~~~~
+
+* Support to be enabled with different plugin name
+
+  Allow rally to be installed by devstack through a different plugin
+  name, e.g:
+
+  .. code-block:: bash
+
+     enable_plugin test-rally http://github.com/rally/rally.git master
+
+* Removed uncalled code
+
+  Devstack won't "source plugin.sh source" any more.
+
+Bug fixes
+~~~~~~~~~
+
+**12 bugs were fixed**:
+
+* X-Fail mechanism did not work for TestCase which failed on setUp step
+
+  If Tempest fails in a test's setUpClass(), there is only one subunit event
+  for each TestCase. In this case, Rally did not check partial test with x-fail
+  list and marked test as "fail" insted of "x-fail".
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1568133>`_
+
+* Weak isolation of scenario arguments between iterations
+
+  Input arguments for sub-task were shared between all iterations. Rally team
+  found one scenario which modified mutable input variable.
+
+  Affected scenario: NeutronNetworks.create_and_update_ports
+
+* Incompatible filters between V1 and V2 for Glance images listing
+
+  Glance V1 and V2 have different filters. For example, "owner" is a separate
+  kwarg in V1, not a generic filter. Also, visibility has different labels in
+  different APIs. We modified our Glance wrapper to support Glance V2 format
+  of filters for both V1 and V2
+
+* Wrong way to store validation errors
+
+  Results of failed task validations saved in incorrect format. It broke and
+  made un-userfriendly `rally task detailed` command.
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1562713>`_
+
+* Hardcoded task's status in `rally task results`
+
+  If there are no results for task, `rally task results` printed message that
+  task has failed status, but it can be not true(tasks in running state do not
+  have results).
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1539096>`_
+
+* Tempest context failed to create network resources
+
+  While we merged improvement for keystoneclient, we used wrong way to obtain
+  tenant id in TempestContext.
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1550848>`_
+
+* Tasks based on Tempest failed to parse execution time.
+
+  There is an ability in Rally to launch tasks based on Tempest. Since launch
+  of Tempest is just subprocess, it is needed to parse subunit to set correct
+  atomic actions.
+
+  There was an issue while converting task execution time.
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1566712>`_
+
+* JSONSchema huge impact on task performance
+
+  Before runner sent data to engine we were checking jsonschema. This operation
+  is very expensive and in some cases it can take a lot of time.
+
+  Here are test results, with Dummy.dummy_output scenario, sleep 0.5s
+  (added manually), 8000 iterations, 400 in parallel:
+
+    * on master branch before the fix:
+        Load duration: 117.659588099
+        Full duration: 227.451056004
+
+    * on master  before the fix but remove jsonschema validation in scenario:
+        Load duration: 12.5437350273
+        Full duration: 128.942219973
+
+    * on this patch before the fix (pure python validation):
+        Load duration: 11.5991640091
+        Full duration: 22.7199981213
+
+* Wrong Calculation of running iterations in parallel
+
+  Load profile chart was calculated wrongly.
+  It showed more running iterations in parallel than actually are running.
+
+* Rally did not show "missing argument" error raised by argparse while parsing
+  cli args
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1562916>`_
+
+* Issue while checking required arguments in CLI
+
+  There was a possible issue in case of several required arguments
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1555764>`_
+
+* Prepare step of verification did not check visibility of obtained image
+
+  When we request a list of images to choose one of them for tests, we should
+  make sure all images are active and they are PUBLIC. If images are not
+  public, we will have failures of Tempest tests as described in the bug.
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1564431>`_
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
