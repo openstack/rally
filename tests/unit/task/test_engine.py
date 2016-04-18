@@ -44,8 +44,7 @@ class TaskEngineTestCase(test.TestCase):
         self.assertEqual(eng.config, fake_task_instance)
         self.assertEqual(eng.task, task)
 
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test_init_empty_config(self, mock_task_config):
+    def test_init_empty_config(self):
         config = None
         task = mock.Mock()
         exception = self.assertRaises(exceptions.InvalidTaskException,
