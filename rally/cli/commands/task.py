@@ -132,15 +132,14 @@ class TaskCommands(object):
 
     def _load_and_validate_task(self, task, task_args, task_args_file,
                                 deployment, task_instance=None):
-        if not os.path.isfile(task):
-            err_cls = IOError
-            msg = "No such file '%s'" % task
+        try:
+            input_task = self._load_task(task, task_args, task_args_file)
+        except Exception as err:
             if task_instance:
-                task_instance.set_failed(err_cls.__name__,
-                                         msg,
+                task_instance.set_failed(err.__class__.__name__,
+                                         str(err),
                                          json.dumps(traceback.format_stack()))
-            raise err_cls(msg)
-        input_task = self._load_task(task, task_args, task_args_file)
+            raise
         api.Task.validate(deployment, input_task, task_instance)
         print(_("Task config is valid :)"))
         return input_task

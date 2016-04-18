@@ -138,11 +138,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock_task_validate.assert_called_once_with(
             deployment, mock__load_task.return_value, None)
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=False)
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task")
     @mock.patch("rally.api.Task.validate")
-    def test__load_and_validate_file(self, mock_task_validate, mock__load_task,
-                                     mock_os_path_isfile):
+    def test__load_and_validate_file(self, mock_task_validate):
         deployment = "some_deployment_uuid"
         self.assertRaises(IOError, self.task._load_and_validate_task,
                           "some_task", "task_args",
