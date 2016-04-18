@@ -197,12 +197,14 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
         {"location": "image_location", "visibility": "private"},
         {"location": "image_location", "fakearg": "fake"},
         {"location": "image_location", "name": "image_name"},
-        {"location": _tempfile.name, "visibility": "public"})
+        {"location": _tempfile.name, "visibility": "public"},
+        {"location": "image_location",
+         "expected_kwargs": {"visibility": "public"}, "is_public": True})
     @ddt.unpack
     @mock.patch("six.moves.builtins.open")
     @mock.patch("requests.get")
     def test_create_image(self, mock_requests_get, mock_open, location,
-                          **kwargs):
+                          expected_kwargs=None, **kwargs):
         self.wrapped_client.get_image = mock.Mock()
         created_image = mock.Mock()
         uploaded_image = mock.Mock()
@@ -213,11 +215,11 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
                                                         location,
                                                         "disk_format",
                                                         **kwargs)
-        create_args = kwargs
+        create_args = expected_kwargs or kwargs
         create_args["container_format"] = "container_format"
         create_args["disk_format"] = "disk_format"
-        if "name" not in kwargs:
-            create_args["name"] = self.owner.generate_random_name.return_value
+        create_args.setdefault("name",
+                               self.owner.generate_random_name.return_value)
 
         self.client().images.create.assert_called_once_with(**create_args)
 

@@ -383,7 +383,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.glance()
             self.assertEqual(fake_glance, client)
             kw = {
-                "version": "1",
+                "version": "2",
                 "session": mock_keystoneauth1.session.Session(),
                 "endpoint_override": mock_glance__get_endpoint.return_value}
             mock_glance.Client.assert_called_once_with(**kw)

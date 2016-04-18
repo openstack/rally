@@ -177,6 +177,23 @@ class GlanceImageTestCase(test.TestCase):
                           resource_config)
 
 
+class GlanceImageArgsTestCase(test.TestCase):
+
+    def test_transform(self):
+        self.assertEqual({}, types.GlanceImageArguments.transform(
+            clients=None, resource_config={}))
+        self.assertEqual(
+            {"visibility": "public"}, types.GlanceImageArguments.transform(
+                clients=None, resource_config={"visibility": "public"}))
+        self.assertEqual(
+            {"visibility": "public"}, types.GlanceImageArguments.transform(
+                clients=None, resource_config={"visibility": "public",
+                                               "is_public": False}))
+        self.assertEqual(
+            {"visibility": "private"}, types.GlanceImageArguments.transform(
+                clients=None, resource_config={"is_public": False}))
+
+
 class EC2ImageTestCase(test.TestCase):
 
     def setUp(self):

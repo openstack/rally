@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from rally.common.plugin import plugin
 from rally import exceptions
 from rally.task import types
@@ -85,6 +87,29 @@ class GlanceImage(types.ResourceType):
                 resources=list(glanceclient.images.list()),
                 typename="image")
         return resource_id
+
+
+@plugin.configure(name="glance_image_args")
+class GlanceImageArguments(types.ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to id.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: id matching resource
+        """
+        resource_config = copy.deepcopy(resource_config)
+        if "is_public" in resource_config:
+            if "visibility" in resource_config:
+                resource_config.pop("is_public")
+            else:
+                visibility = ("public" if resource_config.pop("is_public")
+                              else "private")
+                resource_config["visibility"] = visibility
+        return resource_config
 
 
 @plugin.configure(name="ec2_image")

@@ -265,7 +265,12 @@ def _get_validated_image(config, clients, param_name):
     try:
         image_id = openstack_types.GlanceImage.transform(
             clients=clients, resource_config=image_args)
-        image = clients.glance().images.get(image=image_id).to_dict()
+        image = clients.glance().images.get(image_id)
+        if hasattr(image, "to_dict"):
+            # NOTE(stpierre): Glance v1 images are objects that can be
+            # converted to dicts; Glance v2 images are already
+            # dict-like
+            image = image.to_dict()
         if not image.get("size"):
             image["size"] = 0
         if not image.get("min_ram"):

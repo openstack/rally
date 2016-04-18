@@ -158,6 +158,10 @@ class GlanceV2Wrapper(GlanceWrapper):
         kw.update(kwargs)
         if "name" not in kw:
             kw["name"] = self.owner.generate_random_name()
+        if "is_public" in kw:
+            LOG.warning("is_public is not supported by Glance v2, and is "
+                        "deprecated in Rally v0.8.0")
+            kw["visibility"] = "public" if kw.pop("is_public") else "private"
 
         image_location = os.path.expanduser(image_location)
 

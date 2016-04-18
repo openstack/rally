@@ -123,7 +123,7 @@
           images_per_tenant: 1
           image_name: "image-context-test"
           image_args:
-            is_public: True
+            visibility: "public"
       sla:
         failure_rate:
           max: 0

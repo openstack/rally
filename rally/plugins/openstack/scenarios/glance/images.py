@@ -26,7 +26,8 @@ LOG = logging.getLogger(__name__)
 """Scenarios for Glance images."""
 
 
-@types.convert(image_location={"type": "path_or_url"})
+@types.convert(image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
 @validation.required_services(consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
@@ -79,6 +80,8 @@ class ListImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
 
+@types.convert(image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
 @validation.required_services(consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
@@ -102,7 +105,9 @@ class CreateAndDeleteImage(utils.GlanceScenario, nova_utils.NovaScenario):
         self._delete_image(image)
 
 
-@types.convert(flavor={"type": "nova_flavor"})
+@types.convert(flavor={"type": "nova_flavor"},
+               image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
 @validation.flavor_exists("flavor")
 @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
 @validation.required_openstack(users=True)

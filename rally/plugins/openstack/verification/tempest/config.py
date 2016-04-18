@@ -116,41 +116,6 @@ def _create_or_get_data_dir():
     return data_dir
 
 
-def _download_image(image_path, image=None):
-    if image:
-        LOG.debug("Downloading image '%s' "
-                  "from Glance to %s" % (image.name, image_path))
-        with open(image_path, "wb") as image_file:
-            for chunk in image.data():
-                image_file.write(chunk)
-    else:
-        LOG.debug("Downloading image from %s "
-                  "to %s" % (CONF.tempest.img_url, image_path))
-        try:
-            response = requests.get(CONF.tempest.img_url, stream=True)
-        except requests.ConnectionError as err:
-            msg = _("Failed to download image. "
-                    "Possibly there is no connection to Internet. "
-                    "Error: %s.") % (str(err) or "unknown")
-            raise exceptions.TempestConfigCreationFailure(msg)
-
-        if response.status_code == 200:
-            with open(image_path, "wb") as image_file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:   # filter out keep-alive new chunks
-                        image_file.write(chunk)
-                        image_file.flush()
-        else:
-            if response.status_code == 404:
-                msg = _("Failed to download image. Image was not found.")
-            else:
-                msg = _("Failed to download image. "
-                        "HTTP error code %d.") % response.status_code
-            raise exceptions.TempestConfigCreationFailure(msg)
-
-    LOG.debug("The image has been successfully downloaded!")
-
-
 def write_configfile(path, conf_object):
     with open(path, "w") as configfile:
         conf_object.write(configfile)
@@ -448,6 +413,40 @@ class TempestResourcesContext(context.VerifierContext):
         LOG.debug("There is no public image with name matching "
                   "regular expression '%s'" % CONF.tempest.img_name_regex)
 
+    def _do_download_image(self, image_path, image=None):
+        if image:
+            LOG.debug("Downloading image '%s' "
+                      "from Glance to %s" % (image.name, image_path))
+            with open(image_path, "wb") as image_file:
+                for chunk in self.clients.glance().images.data(image.id):
+                    image_file.write(chunk)
+        else:
+            LOG.debug("Downloading image from %s "
+                      "to %s" % (CONF.tempest.img_url, image_path))
+            try:
+                response = requests.get(CONF.tempest.img_url, stream=True)
+            except requests.ConnectionError as err:
+                msg = _("Failed to download image. "
+                        "Possibly there is no connection to Internet. "
+                        "Error: %s.") % (str(err) or "unknown")
+                raise exceptions.TempestConfigCreationFailure(msg)
+
+            if response.status_code == 200:
+                with open(image_path, "wb") as image_file:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        if chunk:   # filter out keep-alive new chunks
+                            image_file.write(chunk)
+                            image_file.flush()
+            else:
+                if response.status_code == 404:
+                    msg = _("Failed to download image. Image was not found.")
+                else:
+                    msg = _("Failed to download image. "
+                            "HTTP error code %d.") % response.status_code
+                raise exceptions.TempestConfigCreationFailure(msg)
+
+        LOG.debug("The image has been successfully downloaded!")
+
     def _download_image(self):
         image_path = os.path.join(self.data_dir, self.image_name)
         if os.path.isfile(image_path):
@@ -457,9 +456,9 @@ class TempestResourcesContext(context.VerifierContext):
         if CONF.tempest.img_name_regex:
             image = self._discover_image()
             if image:
-                return _download_image(image_path, image)
+                return self._do_download_image(image_path, image)
 
-        _download_image(image_path)
+        self._do_download_image(image_path)
 
     def _configure_option(self, section, option, value=None,
                           helper_method=None, *args, **kwargs):
