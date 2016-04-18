@@ -650,13 +650,13 @@
 # Image container format to use when creating the image (string value)
 #container_format = bare
 
-# Regular expression for name of an image to discover it in the cloud
-# and use it for the tests. Note that when Rally is searching for the
-# image, case insensitive matching is performed. Specify nothing
-# ('name_regex =') if you want to disable discovering. In this case
-# Rally will create needed resources by itself if the values for the
-# corresponding config options are not specified in the Tempest config
-# file (string value)
+# Regular expression for name of a public image to discover it in the
+# cloud and use it for the tests. Note that when Rally is searching
+# for the image, case insensitive matching is performed. Specify
+# nothing ('name_regex =') if you want to disable discovering. In this
+# case Rally will create needed resources by itself if the values for
+# the corresponding config options are not specified in the Tempest
+# config file (string value)
 #name_regex = ^.*(cirros|testvm).*$
 
 
@@ -689,7 +689,7 @@
 
 # How many concurrent threads use for serving users context (integer
 # value)
-#resource_management_workers = 30
+#resource_management_workers = 20
 
 # ID of domain in which projects will be created. (string value)
 #project_domain = default
