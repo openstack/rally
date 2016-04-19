@@ -69,26 +69,11 @@ Typical cases where Rally aims to help are:
 Links
 ----------------------
 
-Rally documentation:
+* Free software: Apache license
+* Documentation: http://rally.readthedocs.org/en/latest/
+* Source: http://git.openstack.org/cgit/openstack/rally
+* Bugs: http://bugs.launchpad.net/rally
+* Step-by-step tutorial: http://rally.readthedocs.org/en/latest/tutorial.html
+* RoadMap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g
+* Launchpad page: https://launchpad.net/rally
 
-    http://rally.readthedocs.org/en/latest/
-
-Rally step-by-step tutorial:
-
-    http://rally.readthedocs.org/en/latest/tutorial.html
-
-RoadMap:
-
-    https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g
-
-Launchpad page:
-
-    https://launchpad.net/rally
-
-Code is hosted on git.openstack.org:
-
-    http://git.openstack.org/cgit/openstack/rally
-
-Code is mirrored on github:
-
-    https://github.com/openstack/rally
