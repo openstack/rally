@@ -54,11 +54,11 @@ class RoleGeneratorTestCase(test.TestCase):
         ctx = roles.RoleGenerator(self.context)
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
                                 {"id": "u2", "tenant_id": "t2"}]
-        result = ctx._add_role(mock.MagicMock(),
-                               self.context["config"]["roles"][0])
+        ctx.credential = mock.MagicMock()
+        ctx.setup()
 
-        expected = {"id": "r1", "name": "test_role1"}
-        self.assertEqual(expected, result)
+        expected = {"r1": "test_role1", "r2": "test_role2"}
+        self.assertEqual(expected, ctx.context["roles"])
 
     @mock.patch("%s.osclients" % CTX)
     def test_add_role_which_does_not_exist(self, mock_osclients):
@@ -69,29 +69,35 @@ class RoleGeneratorTestCase(test.TestCase):
         ctx = roles.RoleGenerator(self.context)
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
                                 {"id": "u2", "tenant_id": "t2"}]
-        ex = self.assertRaises(exceptions.NoSuchRole, ctx._add_role,
-                               mock.MagicMock(), "unknown_role")
+        ctx.config = ["unknown_role"]
+        ctx.credential = mock.MagicMock()
+        ex = self.assertRaises(exceptions.NoSuchRole, ctx._get_role_object,
+                               "unknown_role")
 
         expected = "There is no role with name `unknown_role`."
         self.assertEqual(expected, str(ex))
 
     @mock.patch("%s.osclients" % CTX)
     def test_remove_role(self, mock_osclients):
-        role = mock.MagicMock()
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
         self.create_default_roles_and_patch_add_remove_functions(fc)
 
         ctx = roles.RoleGenerator(self.context)
+        ctx.context["roles"] = {"r1": "test_role1",
+                                "r2": "test_role2"}
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
                                 {"id": "u2", "tenant_id": "t2"}]
-        ctx._remove_role(mock.MagicMock(), role)
+        ctx.credential = mock.MagicMock()
+        ctx.cleanup()
         calls = [
-            mock.call("u1", role["id"], tenant="t1"),
-            mock.call("u2", role["id"], tenant="t2"),
+            mock.call("u1", "r1", tenant="t1"),
+            mock.call("u2", "r1", tenant="t2"),
+            mock.call("u1", "r2", tenant="t1"),
+            mock.call("u2", "r2", tenant="t2")
         ]
-        mock_keystone = mock_osclients.Clients().keystone()
-        mock_keystone.roles.remove_user_role.assert_has_calls(calls)
+
+        fc.keystone().roles.remove_user_role.assert_has_calls(calls)
 
     @mock.patch("%s.osclients" % CTX)
     def test_setup_and_cleanup(self, mock_osclients):
@@ -104,6 +110,7 @@ class RoleGeneratorTestCase(test.TestCase):
                                     {"id": "u2", "tenant_id": "t2"}]
 
             ctx.setup()
+            ctx.credential = mock.MagicMock()
             calls = [
                 mock.call("u1", "r1", tenant="t1"),
                 mock.call("u2", "r1", tenant="t2"),
