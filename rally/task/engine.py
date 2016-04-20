@@ -185,11 +185,6 @@ class TaskEngine(object):
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
         """
-        if config is None:
-            msg = _("Input task is empty")
-            task.set_failed(log=msg)
-            raise exceptions.InvalidTaskException(msg)
-
         try:
             self.config = TaskConfig(config)
         except Exception as e:
@@ -456,6 +451,13 @@ class TaskConfig(object):
 
         :param config: Dict with configuration of specified task
         """
+        if config is None:
+            # NOTE(stpierre): This gets reraised as
+            # InvalidTaskException. if we raise it here as
+            # InvalidTaskException, then "Task config is invalid: "
+            # gets prepended to the message twice.
+            raise Exception(_("Input task is empty"))
+
         self.version = self._get_version(config)
         self._validate_version()
         self._validate_json(config)

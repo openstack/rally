@@ -164,6 +164,13 @@ class TaskTestCase(unittest.TestCase):
         detailed_iterations_data = rally("task detailed --iterations-data")
         self.assertNotIn("n/a", detailed_iterations_data)
 
+    def test_start_with_empty_config(self):
+        rally = utils.Rally()
+        config = utils.TaskConfig(None)
+        with self.assertRaises(utils.RallyCliError) as err:
+            rally("task start --task %s" % config.filename)
+        self.assertIn("Input task is empty", err.exception.output)
+
     def test_results(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
