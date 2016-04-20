@@ -34,6 +34,8 @@ sys.path.insert(0, os.path.abspath('./'))
 
 # -- General configuration ----------------------------------------------------
 
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = "1.0"
 
@@ -122,22 +124,29 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "default"
-
+if not on_rtd:
+    html_theme = "openstackrally"
+else:
+    html_theme = "default"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = []
+if not on_rtd:
+    import oslosphinx
+    theme_dir = os.path.join(os.path.dirname(oslosphinx.__file__), 'theme')
+    html_theme_path = [theme_dir, "_templates"]
+else:
+    html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 # html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+# html_short_title = None
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -151,14 +160,17 @@ html_theme = "default"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+if not on_rtd:
+    html_static_path = ["_templates/openstackrally/_static"]
+else:
+    html_static_path = []
 
 # If not "", a "Last updated on:" timestamp is inserted at every page bottom,
 # using the given strftime format.
-git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local",
-    "-n1"]
-html_last_updated_fmt = subprocess.Popen(git_cmd,
-                                     stdout=subprocess.PIPE).communicate()[0]
+git_cmd = [
+    "git", "log", "--pretty=format:'%ad, commit %h'", "--date=local", "-n1"]
+html_last_updated_fmt = subprocess.Popen(
+        git_cmd, stdout=subprocess.PIPE).communicate()[0]
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
