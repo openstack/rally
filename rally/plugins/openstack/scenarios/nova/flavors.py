@@ -24,7 +24,7 @@ class NovaFlavors(utils.NovaScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
+    @scenario.configure()
     def list_flavors(self, detailed=True, **kwargs):
         """List all flavors.
 
