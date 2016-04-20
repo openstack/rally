@@ -1,0 +1,47 @@
+{% extends "openstack/layout.html" %}
+{% set show_source = False %}
+{% set css_files = css_files + ["_static/img.css"] %}
+
+{# sidebarlogo is a top block in sidebar. Let's use it to display home link #}
+{%- block sidebarlogo %}
+    <h3><a href="{{ pathto(master_doc) }}">What is Rally?</a></h3>
+{%- endblock %}
+
+{# Display global toc instead of local #}
+{%- block sidebartoc %}
+    <h3>Contents</h3>
+    {{ toctree() }}
+{%- endblock %}
+
+{# Turn off sections "Previous topic" and "Next topic" #}
+{%- block sidebarrel %}{% endblock %}
+
+{% block projectsource %}
+    <h3>Contacts</h3>
+    <p class="topless" style="color: black">
+        <b>IRC</b> <br /><a href="ircs://irc.freenode.net:6697/#openstack-rally">#openstack-rally</a> channel at FreeNode<br />
+        <b>E-mail</b> <br /><a href="mailto:openstack-dev@lists.openstack.org?subject=[Rally]">openstack-dev@lists.openstack.org</a> with "[Rally]" tag in subject
+    </p>
+    <h3>Useful links</h3>
+    <ul>
+        <li><a href="{{ pathto(master_doc) }}">Documentation</a></li>
+        <li><a href="http://rally.readthedocs.org/en/latest/">Documentation at RTD</a></li>
+        <li><a href="http://git.openstack.org/cgit/openstack/rally">Source</a></li>
+        <li><a href="https://github.com/openstack/rally">GitHub mirror</a></li>
+        <li><a href="http://bugs.launchpad.net/rally">Bug tracker</a></li>
+        <li><a href="https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g">RoadMap</a></li>
+        <li><a href="https://launchpad.net/rally">Launchpad page</a></li>
+    </ul>
+{% endblock %}
+
+{# copy-pasted from original theme and extended with Rally links #}
+{%- block header_navigation %}
+<li><a href="http://www.openstack.org/" title="Go to the Home page" class="link">Home</a></li>
+<li><a href="http://www.openstack.org/projects/" title="Go to the Projects page">Projects</a></li>
+<li><a href="http://www.openstack.org/user-stories/" title="Go to the User Stories page" class="link">User Stories</a></li>
+<li><a href="http://www.openstack.org/community/" title="Go to the Community page" class="link">Community</a></li>
+<li><a href="http://www.openstack.org/blog/" title="Go to the OpenStack Blog">Blog</a></li>
+<li><a href="http://wiki.openstack.org/" title="Go to the OpenStack Wiki">Wiki</a></li>
+<li><a href="{{ pathto(master_doc) }}" title="Go to Rally Documentation" class="current">Documentation</a></li>
+{% endblock %}
+
