@@ -309,7 +309,8 @@ class Task(object):
 
     def to_dict(self):
         db_task = self.task
-        deployment_name = db.deployment_get(self.task.deployment_uuid)["name"]
+        deployment_name = db.deployment_get(
+            self.task["deployment_uuid"])["name"]
         db_task["deployment_name"] = deployment_name
         return db_task
 

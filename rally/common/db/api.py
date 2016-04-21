@@ -40,9 +40,14 @@ these objects be simple dictionaries.
 
 """
 
+import datetime as dt
+
 from oslo_config import cfg
 from oslo_db import api as db_api
 from oslo_db import options as db_options
+import six
+
+from rally.common.i18n import _
 
 
 CONF = cfg.CONF
@@ -53,6 +58,36 @@ db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite",
 
 
 IMPL = None
+
+
+def serialize(fn):
+    def conv(data):
+        if data is None:
+            return None
+        if isinstance(data, (six.integer_types,
+                             six.string_types,
+                             six.text_type,
+                             dt.date,
+                             dt.time,
+                             float,
+                             )):
+            return data
+        if isinstance(data, dict):
+            return {k: conv(v) for k, v in six.iteritems(data)}
+        if isinstance(data, (list, tuple)):
+            return [conv(i) for i in data]
+        if hasattr(data, "_as_dict"):
+            result = data._as_dict()
+            for k, v in six.iteritems(result):
+                result[k] = conv(v)
+            return result
+
+        raise ValueError(_("Can not serialize %s") % data)
+
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        return conv(result)
+    return wrapper
 
 
 def get_impl():

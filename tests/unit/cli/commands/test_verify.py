@@ -183,6 +183,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_list.assert_called_once_with()
         mock_print_list.assert_called_once_with(verifications, fields,
+                                                normalize_field_names=True,
                                                 sortby_index=fields.index(
                                                     "Created at"))
 
@@ -208,8 +209,9 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.verify.show(verification_id)
 
-        self.assertEqual([mock.call([verification], fields=total_fields),
-                         mock.call(values, fields, sortby_index=0)],
+        self.assertEqual([mock.call([verification], fields=total_fields,
+                                    normalize_field_names=True,),
+                          mock.call(values, fields, sortby_index=0)],
                          mock_print_list.call_args_list)
         mock_verification.get.assert_called_once_with(verification_id)
 
