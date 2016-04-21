@@ -44,6 +44,9 @@ class RallyBase(models.ModelBase):
                            onupdate=lambda: timeutils.utcnow())
 
     def save(self, session=None):
+        # NOTE(LimingWu): We can't direct import the api module. that will
+        # result in the cyclic reference import since the api has imported
+        # this module.
         from rally.common.db.sqlalchemy import api as sa_api
 
         if session is None:
@@ -291,5 +294,8 @@ def drop_all_objects(engine):
 
 
 def drop_db():
+    # NOTE(LimingWu): We can't direct import the api module. that will
+    # result in the cyclic reference import since the api has imported
+    # this module.
     from rally.common.db.sqlalchemy import api as sa_api
     drop_all_objects(sa_api.get_engine())
