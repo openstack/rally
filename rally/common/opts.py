@@ -23,6 +23,7 @@ from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 from rally.plugins.openstack.scenarios.ironic import utils as ironic_utils
+from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
 from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.plugins.openstack.scenarios.monasca import utils as monasca_utils
 from rally.plugins.openstack.scenarios.murano import utils as murano_utils
@@ -45,6 +46,7 @@ def list_opts():
                          glance_utils.GLANCE_BENCHMARK_OPTS,
                          heat_utils.HEAT_BENCHMARK_OPTS,
                          ironic_utils.IRONIC_BENCHMARK_OPTS,
+                         magnum_utils.MAGNUM_BENCHMARK_OPTS,
                          manila_utils.MANILA_BENCHMARK_OPTS,
                          monasca_utils.MONASCA_BENCHMARK_OPTS,
                          murano_utils.MURANO_BENCHMARK_OPTS,
