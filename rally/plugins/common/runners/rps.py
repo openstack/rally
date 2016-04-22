@@ -73,10 +73,9 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
 
     i = 0
     while i < times and not aborted.is_set():
-        scenario_context = runner._get_scenario_context(context)
-        scenario_args = (next(iteration_gen), cls, method_name,
-                         scenario_context, args)
-        worker_args = (queue, scenario_args)
+        scenario_context = runner._get_scenario_context(next(iteration_gen),
+                                                        context)
+        worker_args = (queue, cls, method_name, scenario_context, args)
         thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
 

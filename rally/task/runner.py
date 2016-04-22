@@ -44,24 +44,26 @@ def format_result_on_timeout(exc, timeout):
     }
 
 
-def _get_scenario_context(context_obj):
+def _get_scenario_context(iteration, context_obj):
+    context_obj = copy.deepcopy(context_obj)
+    context_obj["iteration"] = iteration
     return context.ContextManager(context_obj).map_for_scenario()
 
 
-def _run_scenario_once(args):
-    iteration, cls, method_name, context_obj, kwargs = args
+def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs):
+    iteration = context_obj["iteration"]
 
-    kwargs = copy.deepcopy(kwargs)
+    # provide arguments isolation between iterations
+    scenario_kwargs = copy.deepcopy(scenario_kwargs)
 
     LOG.info("Task %(task)s | ITER: %(iteration)s START" %
              {"task": context_obj["task"]["uuid"], "iteration": iteration})
 
-    context_obj["iteration"] = iteration
     scenario_inst = cls(context_obj)
     error = []
     try:
         with rutils.Timer() as timer:
-            getattr(scenario_inst, method_name)(**kwargs)
+            getattr(scenario_inst, method_name)(**scenario_kwargs)
     except Exception as e:
         error = utils.format_exc(e)
         if logging.is_debug():
@@ -80,8 +82,9 @@ def _run_scenario_once(args):
                 "atomic_actions": scenario_inst.atomic_actions()}
 
 
-def _worker_thread(queue, args):
-    queue.put(_run_scenario_once(args))
+def _worker_thread(queue, cls, method_name, context_obj, scenario_kwargs):
+    queue.put(_run_scenario_once(cls, method_name, context_obj,
+                                 scenario_kwargs))
 
 
 def _log_worker_info(**info):

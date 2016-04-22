@@ -46,6 +46,15 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                           runner.ScenarioRunner.validate,
                           self.config)
 
+    @mock.patch(RUNNERS + "constant.runner")
+    def test__run_scenario_once_with_unpack_args(self, mock_runner):
+        result = constant._run_scenario_once_with_unpack_args(
+            ("FOO", ("BAR", "QUUZ")))
+
+        self.assertEqual(mock_runner._run_scenario_once.return_value, result)
+        mock_runner._run_scenario_once.assert_called_once_with(
+            "FOO", ("BAR", "QUUZ"))
+
     @mock.patch(RUNNERS + "constant.time")
     @mock.patch(RUNNERS + "constant.threading.Thread")
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
@@ -81,24 +90,24 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(times, mock_runner._get_scenario_context.call_count)
 
         for i in range(times):
-            scenario_context = mock_runner._get_scenario_context(context)
-            call = mock.call(args=(mock_queue,
-                                   (i, "Dummy", "dummy",
-                                    scenario_context, ())),
-                             target=mock_runner._worker_thread)
+            scenario_context = mock_runner._get_scenario_context(i, context)
+            call = mock.call(
+                args=(mock_queue, "Dummy", "dummy", scenario_context, ()),
+                target=mock_runner._worker_thread,
+            )
             self.assertIn(call, mock_thread.mock_calls)
 
     @mock.patch(RUNNERS_BASE + "_run_scenario_once")
     def test__worker_thread(self, mock__run_scenario_once):
         mock_queue = mock.MagicMock()
 
-        args = ("some_args",)
+        args = ("fake_cls", "fake_method_name", "fake_context_obj", {})
 
-        runner._worker_thread(mock_queue, args)
+        runner._worker_thread(mock_queue, *args)
 
         self.assertEqual(1, mock_queue.put.call_count)
 
-        expected_calls = [mock.call(("some_args",))]
+        expected_calls = [mock.call(*args)]
         self.assertEqual(expected_calls, mock__run_scenario_once.mock_calls)
 
     def test__run_scenario(self):
@@ -240,6 +249,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.config = {"duration": 0, "concurrency": 2,
                        "timeout": 2, "type": "constant_for_duration"}
         self.context = fakes.FakeContext({"task": {"uuid": "uuid"}}).context
+        self.context["iteration"] = 14
         self.args = {"a": 1}
 
     def test_validate(self):

@@ -31,14 +31,24 @@ class SerialScenarioRunnerTestCase(test.TestCase):
                   "timestamp": 1.}
         mock__run_scenario_once.return_value = result
         expected_results = [[result] for i in range(times)]
-
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": times})
+
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              fakes.FakeContext().context, {})
+
         self.assertEqual(len(runner.result_queue), times)
         results = list(runner.result_queue)
         self.assertEqual(results, expected_results)
+        expected_calls = []
+        for i in range(times):
+            ctxt = fakes.FakeContext().context
+            ctxt["iteration"] = i
+            ctxt["task"] = mock.ANY
+            expected_calls.append(
+                mock.call(fakes.FakeScenario, "do_it", ctxt, {})
+            )
+        mock__run_scenario_once.assert_has_calls(expected_calls)
 
     def test__run_scenario_aborted(self):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
