@@ -128,13 +128,13 @@ class KeystoneV2WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.wrapped_client.add_role("fake_role_id", "fake_user_id",
                                      "fake_project_id")
         self.client.roles.add_user_role.assert_called_once_with(
-            "fake_role_id", "fake_user_id", tenant="fake_project_id")
+            "fake_user_id", "fake_role_id", tenant="fake_project_id")
 
     def test_remove_role(self):
         self.wrapped_client.remove_role("fake_role_id", "fake_user_id",
                                         "fake_project_id")
         self.client.roles.remove_user_role.assert_called_once_with(
-            "fake_role_id", "fake_user_id", tenant="fake_project_id")
+            "fake_user_id", "fake_role_id", tenant="fake_project_id")
 
 
 class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
