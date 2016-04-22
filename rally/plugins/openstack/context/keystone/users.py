@@ -56,6 +56,20 @@ CONF.register_opts(USER_CONTEXT_OPTS,
 
 class UserContextMixin(object):
 
+    @property
+    def user_choice_method(self):
+        if not hasattr(self, "_user_choice_method"):
+            self._user_choice_method = self.context["config"].get(
+                "users", {}).get("user_choice_method")
+            if self._user_choice_method is None:
+                # NOTE(vponomaryov): consider 'existing_users' context
+                # picking up value for 'user_choice_method'
+                # when it is supported there.
+                # Until it happens we use old "random" approach for
+                # 'existing_users' context.
+                self.user_choice_method = "random"
+        return self._user_choice_method
+
     def map_for_scenario(self, context_obj):
         """Pass only context of one user and related to it tenant to scenario.
 
@@ -67,8 +81,19 @@ class UserContextMixin(object):
             if key not in ["users", "tenants"]:
                 scenario_ctx[key] = value
 
-        user = random.choice(context_obj["users"])
-        tenant = context_obj["tenants"][user["tenant_id"]]
+        if self.user_choice_method == "random":
+            user = random.choice(context_obj["users"])
+            tenant = context_obj["tenants"][user["tenant_id"]]
+        else:
+            # Second and last case - 'round_robin'.
+            tenants_amount = len(context_obj["tenants"])
+            tenant_id = sorted(context_obj["tenants"].keys())[
+                context_obj["iteration"] % tenants_amount]
+            tenant = context_obj["tenants"][tenant_id]
+            users = context_obj["tenants"][tenant_id]["users"]
+            user = users[
+                int(context_obj["iteration"] / tenants_amount) % len(users)]
+
         scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
 
         return scenario_ctx
@@ -100,6 +125,9 @@ class UserGenerator(UserContextMixin, context.Context):
             "user_domain": {
                 "type": "string",
             },
+            "user_choice_method": {
+                "enum": ["random", "round_robin"],
+            },
         },
         "additionalProperties": False
     }
@@ -110,7 +138,8 @@ class UserGenerator(UserContextMixin, context.Context):
         "resource_management_workers":
             cfg.CONF.users_context.resource_management_workers,
         "project_domain": cfg.CONF.users_context.project_domain,
-        "user_domain": cfg.CONF.users_context.user_domain
+        "user_domain": cfg.CONF.users_context.user_domain,
+        "user_choice_method": "random",
     }
 
     def __init__(self, context):
@@ -179,7 +208,7 @@ class UserGenerator(UserContextMixin, context.Context):
                 cache["client"] = keystone.wrap(clients.keystone())
             tenant = cache["client"].create_project(
                 self.generate_random_name(), domain)
-            tenant_dict = {"id": tenant.id, "name": tenant.name}
+            tenant_dict = {"id": tenant.id, "name": tenant.name, "users": []}
             tenants.append(tenant_dict)
 
         # NOTE(msdubov): consume() will fill the tenants list in the closure.
@@ -284,6 +313,8 @@ class UserGenerator(UserContextMixin, context.Context):
         LOG.debug("Creating %(users)d users using %(threads)s threads" %
                   {"users": users_num, "threads": threads})
         self.context["users"] = self._create_users()
+        for user in self.context["users"]:
+            self.context["tenants"][user["tenant_id"]]["users"].append(user)
 
         if len(self.context["users"]) < users_num:
             raise exceptions.ContextSetupFailure(
