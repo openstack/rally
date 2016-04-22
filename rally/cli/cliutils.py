@@ -504,10 +504,12 @@ def run(argv, categories):
             urllib3_log.setLevel(logging.WARNING)
 
             LOG.debug("urllib3 insecure warnings are hidden.")
-            urllib3.disable_warnings(
-                urllib3.exceptions.InsecurePlatformWarning)
-            urllib3.disable_warnings(urllib3.exceptions.SNIMissingWarning)
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            for warning in ("InsecurePlatformWarning",
+                            "SNIMissingWarning",
+                            "InsecureRequestWarning"):
+                warning_cls = getattr(urllib3.exceptions, warning, None)
+                if warning_cls is not None:
+                    urllib3.disable_warnings(warning_cls)
 
             # NOTE(wtakase): This is for suppressing boto error logging.
             LOG.debug("ERROR log from boto module is hide.")
