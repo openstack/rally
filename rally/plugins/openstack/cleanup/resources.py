@@ -66,6 +66,27 @@ class QuotaMixin(SynchronizedDeletion):
         return [self.tenant_uuid] if self.tenant_uuid else []
 
 
+# MAGNUM
+
+@base.resource("magnum", "baymodels", order=80, tenant_resource=True)
+class MagnumBaymodel(base.ResourceManager):
+
+    def id(self):
+        """Returns id of resource."""
+        return self.raw_resource.uuid
+
+    def list(self):
+        result = []
+        marker = None
+        while True:
+            baymodels = self._manager().list(marker=marker)
+            if not baymodels:
+                break
+            result.extend(baymodels)
+            marker = baymodels[-1].uuid
+        return result
+
+
 # HEAT
 
 @base.resource("heat", "stacks", order=100, tenant_resource=True)

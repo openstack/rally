@@ -322,6 +322,10 @@ class FakeObject(FakeResource):
     pass
 
 
+class FakeBaymodel(FakeResource):
+    pass
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -510,6 +514,23 @@ class FakeKeypairManager(FakeManager):
         cached = self.get(resource)
         if cached is not None:
             cached.status = "DELETED"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
+
+class FakeBaymodelManager(FakeManager):
+
+    def create(self, name):
+        baymodel = FakeBaymodel(self)
+        baymodel.name = name or baymodel.name
+        return self._cache(baymodel)
+
+    def delete(self, resource):
+        if not isinstance(resource, six.string_types):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
             del self.cache[resource]
             self.resources_order.remove(resource)
 
@@ -1512,7 +1533,7 @@ class FakeSenlinClient(object):
 class FakeMagnumClient(object):
 
     def __init__(self):
-        pass
+        self.baymodels = FakeBaymodelManager()
 
 
 class FakeWatcherClient(object):

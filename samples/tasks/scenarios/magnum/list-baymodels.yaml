@@ -1,0 +1,52 @@
+---
+  MagnumBaymodels.list_baymodels:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        baymodels:
+          image_id: "fedora-atomic-latest"
+          external_network_id: "public"
+          dns_nameserver: "8.8.8.8"
+          flavor_id: "m1.small"
+          docker_volume_size: 5
+          network_driver: "flannel"
+          coe: "kubernetes"
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        baymodels:
+          image_id: "fedora-atomic-latest"
+          external_network_id: "public"
+          dns_nameserver: "8.8.8.8"
+          flavor_id: "m1.small"
+          docker_volume_size: 5
+          network_driver: "docker"
+          coe: "swarm"
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        baymodels:
+          image_id: "ubuntu-mesos"
+          external_network_id: "public"
+          dns_nameserver: "8.8.8.8"
+          flavor_id: "m1.small"
+          network_driver: "docker"
+          coe: "mesos"
