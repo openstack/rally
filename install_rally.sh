@@ -275,7 +275,19 @@ download() {
 
 download_from_pypi () {
     local pkg=$1
-    local url=$(download - "$BASE_PIP_URL"/"$pkg"/ | sed -n '/source\/.\/'"$pkg"'.*gz/ { s:.*href="\([^#"]*\)["#].*:\1:g; p; }' | sort | tail -1)
+
+    # NOTE(amaretskiy): get packages list in HTML
+    local packages=$(download - "${BASE_PIP_URL}/${pkg}/")
+
+    # NOTE(amaretskiy): filter packages URLs
+    packages=$(echo ${packages} | sed -En "s/.*href=\"(.*${pkg}-.*\\.gz)\#.*/\1/p")
+
+    # NOTE(amaretskiy): sort packages URLs by their version part
+    packages=$(echo ${packages} | sort -t / -k 7 -V)
+
+    # NOTE(amaretskiy): finally, the URL is in the last line
+    local url=$(echo ${packages} | tail -1)
+
     if [ -n "$url" ]; then
         download "$(basename "$url")" "$BASE_PIP_URL"/"$pkg"/"$url"
     else
