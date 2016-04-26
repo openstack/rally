@@ -77,7 +77,7 @@ class RoleGenerator(context.Context):
             if "client" not in cache:
                 clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
-            getattr(cache["client"], func_name)(user_id, role_id, project_id)
+            getattr(cache["client"], func_name)(role_id, user_id, project_id)
         return consume
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `roles`"))

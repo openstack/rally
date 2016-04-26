@@ -151,10 +151,10 @@ class KeystoneV2Wrapper(KeystoneWrapper):
         return map(KeystoneV2Wrapper._wrap_v2_tenant,
                    self.client.tenants.list())
 
-    def add_role(self, user_id, role_id, project_id):
+    def add_role(self, role_id, user_id, project_id):
         self.client.roles.add_user_role(user_id, role_id, tenant=project_id)
 
-    def remove_role(self, user_id, role_id, project_id):
+    def remove_role(self, role_id, user_id, project_id):
         self.client.roles.remove_user_role(user_id, role_id, tenant=project_id)
 
 
