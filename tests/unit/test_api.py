@@ -496,27 +496,15 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         api.Verification.uninstall_tempest(self.deployment_uuid)
         self.tempest.uninstall.assert_called_once_with()
 
-    @mock.patch("tempfile.gettempdir")
-    @mock.patch("shutil.move")
-    @mock.patch("shutil.copy2")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.tempest.Tempest")
-    def test_reinstall_tempest(self, mock_tempest, mock_deployment_get,
-                               mock_copy2, mock_move, mock_gettempdir):
-
+    def test_reinstall_tempest(self, mock_tempest, mock_deployment_get):
         fake_source = "fake__source"
-        fake_conf = "/path/to/fake_conf"
-        fake_tmpdir = "/fake/tmp/path/to/dir"
-        tmp_file = os.path.join(fake_tmpdir, "fake_conf")
-        self.tempest.config_file = fake_conf
         mock_tempest.return_value = self.tempest
-        mock_gettempdir.return_value = fake_tmpdir
         api.Verification.reinstall_tempest(self.deployment_uuid,
                                            source=fake_source)
         self.tempest.uninstall.assert_called_once_with()
-        mock_copy2.assert_called_once_with(fake_conf, tmp_file)
         self.tempest.install.assert_called_once_with()
-        mock_move.assert_called_once_with(tmp_file, fake_conf)
 
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")

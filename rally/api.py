@@ -15,8 +15,6 @@
 
 import os
 import re
-import shutil
-import tempfile
 import time
 
 import jinja2
@@ -470,31 +468,18 @@ class Verification(object):
         verifier.uninstall()
 
     @classmethod
-    def reinstall_tempest(cls, deployment, tempest_config=None,
-                          source=None, system_wide=False):
+    def reinstall_tempest(cls, deployment, source=None, system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
-        :param tempest_config: User specified Tempest config file location
         :param source: Path/URL to repo to clone Tempest from
         :param system_wide: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        verifier = tempest.Tempest(deployment_uuid)
-        if not tempest_config:
-            config_path = verifier.config_file
-            filename = os.path.basename(config_path)
-            temp_location = tempfile.gettempdir()
-            tmp_conf_path = os.path.join(temp_location, filename)
-            shutil.copy2(config_path, tmp_conf_path)
-        source = source or verifier.tempest_source
-        verifier.uninstall()
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   tempest_config=tempest_config,
                                    system_wide=system_wide)
+        verifier.uninstall()
         verifier.install()
-        if not tempest_config:
-            shutil.move(tmp_conf_path, verifier.config_file)
 
     @classmethod
     def discover_tests(cls, deployment, pattern=""):
