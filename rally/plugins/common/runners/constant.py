@@ -71,9 +71,8 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
 
     iteration = next(iteration_gen)
     while iteration < times and not aborted.is_set():
-        scenario_context = runner._get_scenario_context(context)
-        scenario_args = (iteration, cls, method_name, scenario_context, args)
-        worker_args = (queue, scenario_args)
+        scenario_context = runner._get_scenario_context(iteration, context)
+        worker_args = (queue, cls, method_name, scenario_context, args)
 
         thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
@@ -210,6 +209,18 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         self._join_processes(process_pool, result_queue)
 
 
+def _run_scenario_once_with_unpack_args(args):
+    # NOTE(andreykurilin): `pool.imap` is used in
+    #     ConstantForDurationScenarioRunner. It does not want to work with
+    #     instance-methods, class-methods and static-methods. Also, it can't
+    #     transmit positional or keyword arguments to destination function.
+    #     While original `rally.task.runner._run_scenario_once` accepts
+    #     multiple arguments instead of one big tuple with all arguments, we
+    #     need to hardcode unpacking here(all other runners are able to
+    #     transmit arguments in proper way).
+    return runner._run_scenario_once(*args)
+
+
 @runner.configure(name="constant_for_duration")
 class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario for an interval of time.
@@ -253,7 +264,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         def _scenario_args(i):
             if aborted.is_set():
                 raise StopIteration()
-            return (i, cls, method, runner._get_scenario_context(ctx), args)
+            return (cls, method, runner._get_scenario_context(i, ctx), args)
         return _scenario_args
 
     def _run_scenario(self, cls, method, context, args):
@@ -272,12 +283,14 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         concurrency = self.config.get("concurrency", 1)
         duration = self.config.get("duration")
 
+        # FIXME(andreykurilin): unify `_worker_process`, use it here and remove
+        #     usage of `multiprocessing.Pool`(usage of separate process for
+        #     each concurrent iteration is redundant).
         pool = multiprocessing.Pool(concurrency)
 
         run_args = butils.infinite_run_args_generator(
-            self._iter_scenario_args(cls, method, context, args,
-                                     self.aborted))
-        iter_result = pool.imap(runner._run_scenario_once, run_args)
+            self._iter_scenario_args(cls, method, context, args, self.aborted))
+        iter_result = pool.imap(_run_scenario_once_with_unpack_args, run_args)
 
         start = time.time()
         while True:

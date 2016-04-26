@@ -68,9 +68,9 @@ class SerialScenarioRunner(runner.ScenarioRunner):
         for i in range(times):
             if self.aborted.is_set():
                 break
-            run_args = (i, cls, method_name,
-                        runner._get_scenario_context(context), args)
-            result = runner._run_scenario_once(run_args)
+            result = runner._run_scenario_once(
+                cls, method_name, runner._get_scenario_context(i, context),
+                args)
             self._send_result(result)
 
         self._flush_results()

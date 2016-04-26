@@ -115,24 +115,23 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(times, mock_runner._get_scenario_context.call_count)
 
         for i in range(times):
-            scenario_context = mock_runner._get_scenario_context(context)
-            call = mock.call(args=(mock_queue,
-                                   (i, "Dummy", "dummy",
-                                    scenario_context, ())),
-                             target=mock_runner._worker_thread)
+            scenario_context = mock_runner._get_scenario_context(i, context)
+            call = mock.call(
+                args=(mock_queue, "Dummy", "dummy", scenario_context, ()),
+                target=mock_runner._worker_thread,
+            )
             self.assertIn(call, mock_thread.mock_calls)
 
     @mock.patch(RUNNERS + "rps.runner._run_scenario_once")
     def test__worker_thread(self, mock__run_scenario_once):
         mock_queue = mock.MagicMock()
+        args = ("fake_cls", "fake_method_name", "fake_context_obj", {})
 
-        args = ("some_args",)
-
-        runner._worker_thread(mock_queue, args)
+        runner._worker_thread(mock_queue, *args)
 
         self.assertEqual(1, mock_queue.put.call_count)
 
-        expected_calls = [mock.call(("some_args",))]
+        expected_calls = [mock.call(*args)]
         self.assertEqual(expected_calls, mock__run_scenario_once.mock_calls)
 
     @mock.patch(RUNNERS + "rps.time.sleep")
