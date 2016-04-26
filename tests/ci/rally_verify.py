@@ -14,14 +14,18 @@
 
 import argparse
 import gzip
+import json
 import logging
 import os
 import subprocess
 import sys
+import uuid
 
 import yaml
 
 from rally.cli import envutils
+from rally.common import objects
+from rally import osclients
 from rally.ui import utils
 
 LOG = logging.getLogger(__name__)
@@ -154,12 +158,19 @@ def main():
         "--mode",
         type=str,
         default="light",
-        help="mode of job",
+        help="Mode of job. The 'full' mode corresponds to the full set of "
+             "Tempest tests. The 'light' mode corresponds to the smoke set "
+             "of Tempest tests.",
         choices=MODES_PARAMETERS.keys())
     parser.add_argument(
         "--compare",
         action="store_true",
-        help="Launch 2 verification and compare them.")
+        help="Launch 2 verifications and compare them.")
+    parser.add_argument(
+        "--ctx-create-resources",
+        action="store_true",
+        help="Make Tempest context create needed resources for the tests.")
+
     args = parser.parse_args()
 
     if not os.path.exists("%s/extra" % BASE_DIR):
@@ -168,6 +179,57 @@ def main():
     # Check deployment
     call_rally("deployment use --deployment devstack", print_output=True)
     call_rally("deployment check", print_output=True)
+
+    config = json.loads(
+        subprocess.check_output(["rally", "deployment", "config"]))
+    config.update(config.pop("admin"))
+    del config["type"]
+    clients = osclients.Clients(objects.Credential(**config))
+
+    if args.ctx_create_resources:
+        # If the 'ctx-create-resources' arg is provided, delete images and
+        # flavors, and also create a shared network to make Tempest context
+        # create needed resources.
+        LOG.info("The 'ctx-create-resources' arg is provided. Deleting "
+                 "images and flavors, and also creating a shared network "
+                 "to make Tempest context create needed resources.")
+
+        LOG.info("Deleting images.")
+        for image in clients.glance().images.list():
+            clients.glance().images.delete(image.id)
+
+        LOG.info("Deleting flavors.")
+        for flavor in clients.nova().flavors.list():
+            clients.nova().flavors.delete(flavor.id)
+
+        LOG.info("Creating a shared network.")
+        tenant_name = clients.keystone().tenant_name
+        tenant_id = clients.keystone().get_project_id(tenant_name)
+        net_body = {
+            "network": {
+                "name": "shared-net-%s" % str(uuid.uuid4()),
+                "tenant_id": tenant_id,
+                "shared": True
+            }
+        }
+        clients.neutron().create_network(net_body)
+    else:
+        # Otherwise, just in case create only flavors with the following
+        # properties: RAM = 64MB and 128MB, VCPUs = 1, disk = 0GB to make
+        # Tempest context discover them.
+        LOG.info("The 'ctx-create-resources' arg is not provided. "
+                 "Creating flavors to make Tempest context discover them.")
+        for flv_ram in [64, 128]:
+            params = {
+                "name": "flavor-%s" % str(uuid.uuid4()),
+                "ram": flv_ram,
+                "vcpus": 1,
+                "disk": 0
+            }
+            LOG.info(
+                "Creating flavor '%s' with the following properties: RAM "
+                "= %dMB, VCPUs = 1, disk = 0GB" % (params["name"], flv_ram))
+            clients.nova().flavors.create(**params)
 
     render_vars = {"verifications": []}
 
