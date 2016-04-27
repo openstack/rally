@@ -117,7 +117,8 @@ class RoleGeneratorTestCase(test.TestCase):
                 mock.call("u1", "r2", tenant="t1"),
                 mock.call("u2", "r2", tenant="t2")
             ]
-            fc.keystone().roles.add_user_role.assert_has_calls(calls)
+            fc.keystone().roles.add_user_role.assert_has_calls(calls,
+                                                               any_order=True)
             self.assertEqual(
                 4, fc.keystone().roles.add_user_role.call_count)
             self.assertEqual(
