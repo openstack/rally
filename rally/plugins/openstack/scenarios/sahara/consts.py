@@ -104,6 +104,24 @@ NODE_PROCESSES = {
                        "ZooKeeper"],
             "worker": ["DataNode", "NodeManager"]
         }
+    },
+    "mapr": {
+        "5.0.0.mrv2": {
+            "master": ["Metrics", "Webserver", "Zookeeper", "HTTPFS",
+                       "Oozie", "FileServer", "CLDB", "Flume", "Hue",
+                       "NodeManager", "HistoryServer", "ResourseManager",
+                       "HiveServer2", "HiveMetastore", "Sqoop2-Client",
+                       "Sqoop2-Server"],
+            "worker": ["NodeManager", "FileServer"]
+        },
+        "5.1.0.mrv2": {
+            "master": ["Metrics", "Webserver", "Zookeeper", "HTTPFS",
+                       "Oozie", "FileServer", "CLDB", "Flume", "Hue",
+                       "NodeManager", "HistoryServer", "ResourseManager",
+                       "HiveServer2", "HiveMetastore", "Sqoop2-Client",
+                       "Sqoop2-Server"],
+            "worker": ["NodeManager", "FileServer"]
+        }
     }
 }
 
@@ -165,6 +183,16 @@ REPLICATION_CONFIGS = {
             "target": "HDFS",
             "config_name": "dfs_replication"
         },
+    },
+    "mapr": {
+        "5.0.0.mrv2": {
+            "target": "HDFS",
+            "config_name": "dfs.replication"
+        },
+        "5.1.0.mrv2": {
+            "target": "HDFS",
+            "config_name": "dfs.replication"
+        }
     }
 
 }
@@ -191,5 +219,9 @@ ANTI_AFFINITY_PROCESSES = {
     },
     "ambari": {
         "2.3": ["DataNode"],
+    },
+    "mapr": {
+        "5.0.0.mrv2": ["FileServer"],
+        "5.1.0.mrv2": ["FileServer"],
     }
 }
