@@ -70,9 +70,8 @@ class FuelEnvGeneratorTestCase(test.TestCase):
         enves = config.pop("environments")
         config.pop("resource_management_workers")
         exp_calls = [mock.call(**config) for i in range(enves)]
-        self.assertEqual(
-            exp_calls,
-            env_ctx.fscenario._create_environment.mock_calls)
+        env_ctx.fscenario._create_environment.has_calls(exp_calls,
+                                                        any_order=True)
 
     def test__delete_envs(self):
         config = {"release_id": 42,
