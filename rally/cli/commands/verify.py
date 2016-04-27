@@ -403,20 +403,27 @@ class VerifyCommands(object):
                    help="UUID or name of a deployment.")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
+    @cliutils.args("--version", type=str, dest="version", required=False,
+                   help="Commit ID or tag to checkout before Tempest "
+                        "installation")
     @cliutils.args("--system-wide", dest="system_wide",
                    help="Don't create a virtual env for Tempest. Note "
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def install(self, deployment=None, source=None, system_wide=False):
+    def install(self, deployment=None, source=None, version=None,
+                system_wide=False):
         """Install Tempest.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
+        :param version: Commit ID or tag to checkout before Tempest
+                        installation
         :param system_wide: Whether or not to create a Tempest virtual env
         """
-        api.Verification.install_tempest(deployment, source, system_wide)
+        api.Verification.install_tempest(deployment, source,
+                                         version, system_wide)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -434,20 +441,27 @@ class VerifyCommands(object):
                    help="UUID or name of a deployment.")
     @cliutils.args("--source", type=str, dest="source", required=False,
                    help="Path/URL to repo to clone Tempest from")
+    @cliutils.args("--version", type=str, dest="version", required=False,
+                   help="Commit ID or tag to checkout before Tempest "
+                        "installation")
     @cliutils.args("--system-wide", dest="system_wide",
                    help="Don't create a virtual env for Tempest. Note "
                         "that all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def reinstall(self, deployment=None, source=None, system_wide=False):
+    def reinstall(self, deployment=None, source=None, version=None,
+                  system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
+        :param version: Commit ID or tag to checkout before Tempest
+                        installation
         :param system_wide: Whether or not to create a Tempest virtual env
         """
-        api.Verification.reinstall_tempest(deployment, source, system_wide)
+        api.Verification.reinstall_tempest(deployment, source,
+                                           version, system_wide)
 
     @cliutils.args("--deployment", dest="deployment", type=str, required=False,
                    metavar="<uuid>", help="UUID or name of a deployment")

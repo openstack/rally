@@ -444,16 +444,19 @@ class Verification(object):
         return deployment, verification
 
     @classmethod
-    def install_tempest(cls, deployment, source=None, system_wide=False):
+    def install_tempest(cls, deployment, source=None, version=None,
+                        system_wide=False):
         """Install Tempest.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
+        :param version: Commit ID or tag to checkout before Tempest
+                        installation
         :param system_wide: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   system_wide=system_wide)
+                                   version=version, system_wide=system_wide)
         verifier.install()
 
     @classmethod
@@ -467,16 +470,19 @@ class Verification(object):
         verifier.uninstall()
 
     @classmethod
-    def reinstall_tempest(cls, deployment, source=None, system_wide=False):
+    def reinstall_tempest(cls, deployment, source=None, version=None,
+                          system_wide=False):
         """Uninstall Tempest and install again.
 
         :param deployment: UUID or name of a deployment
         :param source: Path/URL to repo to clone Tempest from
+        :param version: Commit ID or tag to checkout before Tempest
+                        installation
         :param system_wide: Whether or not to create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
-                                   system_wide=system_wide)
+                                   version=version, system_wide=system_wide)
         verifier.uninstall()
         verifier.install()
 

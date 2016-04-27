@@ -171,8 +171,22 @@ def main():
 
     render_vars = {"verifications": []}
 
-    # Verification management stuff
+    # Install Tempest
     render_vars["install"] = call_rally("verify install")
+
+    # Get Rally deployment ID
+    rally_deployment_id = subprocess.check_output(
+        "rally deployment list | awk '/devstack/ {print $2}'",
+        shell=True, stderr=subprocess.STDOUT)
+    # Get the penultimate Tempest commit ID
+    tempest_commit_id = subprocess.check_output(
+        "cd /home/jenkins/.rally/tempest/for-deployment-%s "
+        "git log --skip 1 -n 1 | awk '/commit/ {print $2}' | head -1"
+        % rally_deployment_id, shell=True, stderr=subprocess.STDOUT).strip()
+    # Reinstall Tempest with providing the --version arg to the command
+    render_vars["reinstall"] = call_rally(
+        "verify reinstall --version %s" % tempest_commit_id)
+
     render_vars["genconfig"] = call_rally("verify genconfig")
     render_vars["showconfig"] = call_rally("verify showconfig")
 

@@ -58,9 +58,10 @@ class Tempest(object):
     base_repo_dir = os.path.join(os.path.expanduser("~"),
                                  ".rally/tempest/base")
 
-    def __init__(self, deployment, verification=None,
-                 tempest_config=None, source=None, system_wide=False):
+    def __init__(self, deployment, verification=None, tempest_config=None,
+                 source=None, version=None, system_wide=False):
         self.tempest_source = source or TEMPEST_SOURCE
+        self.version = version
         self.deployment = deployment
         self._path = os.path.join(os.path.expanduser("~"),
                                   ".rally/tempest",
@@ -282,7 +283,8 @@ class Tempest(object):
                     if not self._is_git_repo(self.base_repo):
                         self._clone()
                     shutil.copytree(self.base_repo, self.path())
-                    for cmd in ["git", "checkout", "master"], ["git", "pull"]:
+                    if self.version:
+                        cmd = ["git", "checkout", self.version]
                         subprocess.check_call(cmd, cwd=self.path("tempest"))
                 if not self._system_wide:
                     self._install_venv()

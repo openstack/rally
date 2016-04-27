@@ -252,6 +252,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
                                 mock_tempest__initialize_testr,
                                 mock_tempest_base_repo):
         mock_tempest_base_repo.__get__ = mock.Mock(return_value="fake_dir")
+        self.verifier.version = "3f4c8d44"
         self.verifier.install()
 
         mock_tempest__is_git_repo.assert_called_once_with(
@@ -263,10 +264,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
             self.verifier.base_repo,
             self.verifier.path())
         cwd = self.verifier.path("tempest")
-        expected = [
-            mock.call(["git", "checkout", "master"], cwd=cwd),
-            mock.call(["git", "pull"], cwd=cwd),
-        ]
+        expected = [mock.call(["git", "checkout", "3f4c8d44"], cwd=cwd)]
         self.assertEqual(expected, mock_check_call.mock_calls)
         mock_tempest__install_venv.assert_called_once_with()
         mock_tempest__initialize_testr.assert_called_once_with()
@@ -291,6 +289,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         mock_tempest_base_repo.__get__ = mock.Mock(return_value="fake_dir")
         mock_check_call.side_effect = subprocess.CalledProcessError(0, None)
 
+        self.verifier.version = "3f4c8d44"
         self.assertRaises(tempest.TempestSetupFailure, self.verifier.install)
 
         mock_tempest__is_git_repo.assert_called_once_with(

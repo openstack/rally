@@ -426,7 +426,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_uuid = "d26ebebc-3a5f-4d0d-9021-0c883bd560f5"
         self.verify.install(deployment_uuid)
         mock_verification_install_tempest.assert_called_once_with(
-            deployment_uuid, None, False)
+            deployment_uuid, None, None, False)
 
     @mock.patch("rally.api.Verification.install_tempest")
     def test_install_with_source_specified(
@@ -435,7 +435,16 @@ class VerifyCommandsTestCase(test.TestCase):
         source = "/tmp/tempest"
         self.verify.install(deployment_uuid, source)
         mock_verification_install_tempest.assert_called_once_with(
-            deployment_uuid, source, False)
+            deployment_uuid, source, None, False)
+
+    @mock.patch("rally.api.Verification.install_tempest")
+    def test_install_with_version_specified(
+            self, mock_verification_install_tempest):
+        deployment_uuid = "206118f8-fa8e-43a6-a3d5-a7d047c4091a"
+        version = "206118f8"
+        self.verify.install(deployment_uuid, version=version)
+        mock_verification_install_tempest.assert_called_once_with(
+            deployment_uuid, None, version, False)
 
     @mock.patch("rally.api.Verification.uninstall_tempest")
     def test_uninstall(self, mock_verification_uninstall_tempest):
@@ -449,7 +458,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_uuid = "05e0879b-9150-4e42-b6a0-3c6e48197cc1"
         self.verify.reinstall(deployment_uuid)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, None, False)
+            deployment_uuid, None, None, False)
 
     @mock.patch("rally.api.Verification.reinstall_tempest")
     def test_reinstall_with_source_specified(
@@ -458,7 +467,16 @@ class VerifyCommandsTestCase(test.TestCase):
         source = "/tmp/tempest"
         self.verify.reinstall(deployment_uuid, source=source)
         mock_verification_reinstall_tempest.assert_called_once_with(
-            deployment_uuid, source, False)
+            deployment_uuid, source, None, False)
+
+    @mock.patch("rally.api.Verification.reinstall_tempest")
+    def test_reinstall_with_version_specified(
+            self, mock_verification_reinstall_tempest):
+        deployment_uuid = "c0202924-fba7-442e-93dd-90bcd7282188"
+        version = "c0202924"
+        self.verify.reinstall(deployment_uuid, version=version)
+        mock_verification_reinstall_tempest.assert_called_once_with(
+            deployment_uuid, None, version, False)
 
     @mock.patch("rally.api.Verification.discover_tests")
     def test_discover(self, mock_verification_discover_tests):
