@@ -1457,6 +1457,13 @@ class FakeCueClient(object):
         pass
 
 
+class FakeSenlinClient(object):
+
+    def __init__(self):
+        # TODO(Yanyan Hu):Fake interfaces of senlinclient.
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, credential_=None):
@@ -1476,6 +1483,7 @@ class FakeClients(object):
         self._murano = None
         self._monasca = None
         self._ec2 = None
+        self._senlin = None
         self._credential = credential_ or objects.Credential(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1564,6 +1572,11 @@ class FakeClients(object):
         if not self._ec2:
             self._ec2 = FakeEC2Client()
         return self._ec2
+
+    def senlin(self):
+        if not self._senlin:
+            self._senlin = FakeSenlinClient()
+        return self._senlin
 
 
 class FakeRunner(object):

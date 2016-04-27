@@ -26,6 +26,7 @@ from rally.common import utils
 
 class _TempestTestsAPI(utils.ImmutableMixin, utils.EnumMixin):
     BAREMETAL = "baremetal"
+    CLUSTERING = "clustering"
     COMPUTE = "compute"
     DATA_PROCESSING = "data_processing"
     DATABASE = "database"
@@ -103,6 +104,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     CEILOMETER = "ceilometer"
     MONASCA = "monasca"
     S3 = "s3"
+    SENLIN = "senlin"
     TROVE = "trove"
     SAHARA = "sahara"
     SWIFT = "swift"
@@ -121,6 +123,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     CLOUD = "cloudformation"
     ORCHESTRATION = "orchestration"
     IDENTITY = "identity"
+    CLUSTERING = "clustering"
     COMPUTE = "compute"
     NETWORK = "network"
     DNS = "dns"
@@ -137,6 +140,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
 
     def __init__(self):
         self.__names = {
+            self.CLUSTERING: _Service.SENLIN,
             self.COMPUTE: _Service.NOVA,
             self.VOLUME: _Service.CINDER,
             self.SHARE: _Service.MANILA,
