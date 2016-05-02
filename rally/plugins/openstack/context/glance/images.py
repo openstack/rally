@@ -129,7 +129,8 @@ class ImageGenerator(context.Context):
             for image in self.context["tenants"][tenant_id].get("images", []):
                 clients.glance().images.delete(image)
                 utils.wait_for_status(
-                    clients.glance().images.get(image), ["deleted"],
+                    clients.glance().images.get(image),
+                    ["deleted", "pending_delete"],
                     check_deletion=True,
                     update_resource=glance_wrap.get_image,
                     timeout=CONF.benchmark.glance_image_delete_timeout,

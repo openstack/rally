@@ -470,7 +470,7 @@ class NovaScenario(scenario.OpenStackScenario):
         check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
         utils.wait_for_status(
             image,
-            ready_statuses=["deleted"],
+            ready_statuses=["deleted", "pending_delete"],
             check_deletion=True,
             update_resource=wrapper.get_image,
             timeout=CONF.benchmark.nova_server_image_delete_timeout,

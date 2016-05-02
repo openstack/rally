@@ -510,7 +510,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             LOG.debug("Deleting image '%s'" % image.name)
             self.clients.glance().images.delete(image.id)
             task_utils.wait_for_status(
-                image, ["deleted"],
+                image, ["deleted", "pending_delete"],
                 check_deletion=True,
                 update_resource=glance_wrapper.get_image,
                 timeout=CONF.benchmark.glance_image_delete_timeout,

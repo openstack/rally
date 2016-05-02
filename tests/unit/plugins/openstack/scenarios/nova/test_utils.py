@@ -415,7 +415,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.image.id)
         self.mock_wait_for_status.mock.assert_called_once_with(
             self.image,
-            ready_statuses=["deleted"],
+            ready_statuses=["deleted", "pending_delete"],
             check_deletion=True,
             update_resource=mock_wrap.return_value.get_image,
             check_interval=CONF.benchmark.
