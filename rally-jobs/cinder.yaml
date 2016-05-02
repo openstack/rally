@@ -477,6 +477,23 @@
       sla:
         failure_rate:
           max: 0
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        api_versions:
+          glance:
+            version: 2
+      sla:
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_volume_backup:
     -

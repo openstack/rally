@@ -75,10 +75,16 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
     def test_delete_image(self, mock_wrap):
+        deleted_image = mock.Mock(status="DELETED")
+        wrapper = mock_wrap.return_value
+        wrapper.get_image.side_effect = [self.image, deleted_image]
+
         scenario = utils.GlanceScenario(context=self.context,
                                         clients=self.scenario_clients)
         scenario._delete_image(self.image)
+        self.clients("glance").images.delete.assert_called_once_with(
+            self.image.id)
+
         mock_wrap.assert_called_once_with(scenario._clients.glance, scenario)
-        mock_wrap.return_value.delete_image.assert_called_once_with(self.image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.delete_image")

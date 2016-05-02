@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
@@ -19,7 +21,9 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import context
+from rally.task import utils
 
+CONF = cfg.CONF
 
 LOG = logging.getLogger(__name__)
 
@@ -117,4 +121,11 @@ class ImageGenerator(context.Context):
                 api_info=self.context["config"].get("api_versions"))
             glance_wrap = glance_wrapper.wrap(clients.glance, self)
             for image in self.context["tenants"][tenant_id].get("images", []):
-                glance_wrap.delete_image(clients.glance().images.get(image))
+                clients.glance().images.delete(image)
+                utils.wait_for_status(
+                    clients.glance().images.get(image), ["deleted"],
+                    check_deletion=True,
+                    update_resource=glance_wrap.get_image,
+                    timeout=CONF.benchmark.glance_image_delete_timeout,
+                    check_interval=CONF.benchmark.
+                    glance_image_delete_poll_interval)

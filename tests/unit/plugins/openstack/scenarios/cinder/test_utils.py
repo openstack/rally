@@ -196,7 +196,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.extend_volume")
 
-    def test__upload_volume_to_image(self):
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__upload_volume_to_image(self, mock_wrap):
         volume = mock.Mock()
         image = {"os-volume_upload_image": {"image_id": 1}}
         volume.upload_to_image.return_value = (None, image)
@@ -220,13 +221,12 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             mock.call(
                 self.clients("glance").images.get.return_value,
                 ready_statuses=["active"],
-                update_resource=self.mock_get_from_manager.mock.return_value,
+                update_resource=mock_wrap.return_value.get_image,
                 timeout=CONF.benchmark.glance_image_create_timeout,
                 check_interval=CONF.benchmark.
                 glance_image_create_poll_interval)
         ])
-        self.mock_get_from_manager.mock.assert_has_calls([mock.call(),
-                                                          mock.call()])
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self.clients("glance").images.get.assert_called_once_with(1)
 
     def test__create_snapshot(self):
