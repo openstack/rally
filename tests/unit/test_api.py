@@ -413,38 +413,18 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         super(VerificationAPITestCase, self).setUp()
         self.tempest = mock.Mock()
 
+    @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_verify(self, mock_tempest, mock_verification,
-                    mock_deployment_get):
+                    mock_deployment_get, mock_exists):
         mock_deployment_get.return_value = {"uuid": self.deployment_uuid}
-
         mock_tempest.return_value = self.tempest
-        self.tempest.is_installed.return_value = True
         api.Verification.verify(
             self.deployment_uuid, set_name="smoke",
             regex=None, tests_file=None, tempest_config=None)
 
-        self.tempest.is_installed.assert_called_once_with()
-        self.tempest.verify.assert_called_once_with(
-            set_name="smoke", regex=None, tests_file=None,
-            expected_failures=None, concur=0, failing=False)
-
-    @mock.patch("rally.api.objects.Deployment.get")
-    @mock.patch("rally.api.objects.Verification")
-    @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_verify_tempest_not_installed(self, mock_tempest,
-                                          mock_verification,
-                                          mock_deployment_get):
-        mock_deployment_get.return_value = {"uuid": self.deployment_uuid}
-        mock_tempest.return_value = self.tempest
-        self.tempest.is_installed.return_value = False
-        api.Verification.verify(
-            self.deployment_uuid, set_name="smoke",
-            regex=None, tests_file=None, tempest_config=None)
-        self.tempest.is_installed.assert_called_once_with()
-        self.tempest.install.assert_called_once_with()
         self.tempest.verify.assert_called_once_with(
             set_name="smoke", regex=None, tests_file=None,
             expected_failures=None, concur=0, failing=False)
@@ -457,7 +437,6 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
                                          mock_deployment_get, mock_exists):
         mock_deployment_get.return_value = {"uuid": self.deployment_uuid}
         mock_tempest.return_value = self.tempest
-        self.tempest.is_installed.return_value = True
         tests_file = "/path/to/tests/file"
         api.Verification.verify(
             self.deployment_uuid, set_name="", regex=None,
@@ -466,6 +445,16 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.verify.assert_called_once_with(
             set_name="", regex=None, tests_file=tests_file,
             expected_failures=None, concur=0, failing=False)
+
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.objects.Verification")
+    def test_verify_no_tempest_tree_exists(self, mock_verification,
+                                           mock_deployment_get):
+        mock_deployment_get.return_value = {"uuid": self.deployment_uuid}
+        self.assertRaises(
+            exceptions.NotFoundException, api.Verification.verify,
+            self.deployment_uuid, set_name="smoke", regex=None,
+            tests_file=None, tempest_config=None)
 
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")

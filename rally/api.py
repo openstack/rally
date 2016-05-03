@@ -370,6 +370,15 @@ class Task(object):
 
 class Verification(object):
 
+    @staticmethod
+    def _check_tempest_tree_existence(verifier):
+        if not os.path.exists(verifier.path()):
+            msg = _("Tempest tree for "
+                    "deployment '%s' not found! ") % verifier.deployment
+            LOG.error(
+                msg + _("Use `rally verify install` for Tempest installation"))
+            raise exceptions.NotFoundException(message=msg)
+
     @classmethod
     def verify(cls, deployment, set_name="", regex=None, tests_file=None,
                tempest_config=None, expected_failures=None, system_wide=False,
@@ -403,17 +412,7 @@ class Verification(object):
                                    tempest_config=tempest_config,
                                    system_wide=system_wide)
 
-        if not verifier.is_installed():
-            LOG.warning("Installation of Tempest will be deprecated and "
-                        "removed in the future when executing the `rally "
-                        "verify start` command. To install Tempest please "
-                        "start to use the `rally verify install` command "
-                        "before `rally verify start`.")
-            LOG.info(_("Tempest is not installed "
-                       "for the specified deployment."))
-            LOG.info(_("Installing Tempest "
-                       "for deployment: %s") % deployment_uuid)
-            verifier.install()
+        cls._check_tempest_tree_existence(verifier)
 
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
         verification.set_running()
@@ -491,15 +490,6 @@ class Verification(object):
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
         return verifier.discover_tests(pattern)
-
-    @staticmethod
-    def _check_tempest_tree_existence(verifier):
-        if not os.path.exists(verifier.path()):
-            msg = _("Tempest tree for "
-                    "deployment '%s' not found! ") % verifier.deployment
-            LOG.error(
-                msg + _("Use `rally verify install` for Tempest installation"))
-            raise exceptions.NotFoundException(message=msg)
 
     @classmethod
     def configure_tempest(cls, deployment, tempest_config=None,
