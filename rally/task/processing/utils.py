@@ -13,31 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import math
-
-
-# NOTE(amaretskiy): this is used only by rally.common.streaming_algorithms
-#                   so it is reasonable to move it there
-def percentile(values, percent):
-    """Find the percentile of a list of values.
-
-    :parameter values: list of numbers
-    :parameter percent: float value from 0.0 to 1.0
-
-    :returns: the percentile of values
-    """
-    if not values:
-        return None
-    values.sort()
-    k = (len(values) - 1) * percent
-    f = math.floor(k)
-    c = math.ceil(k)
-    if f == c:
-        return values[int(k)]
-    d0 = values[int(f)] * (c - k)
-    d1 = values[int(c)] * (k - f)
-    return (d0 + d1)
-
 
 class GraphZipper(object):
 
