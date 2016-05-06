@@ -25,7 +25,7 @@ class ExistingNetworkTestCase(test.TestCase):
     def setUp(self):
         super(ExistingNetworkTestCase, self).setUp()
 
-        self.config = mock.MagicMock()
+        self.config = {"foo": "bar"}
         self.context = test.get_test_context()
         self.context.update({
             "users": [

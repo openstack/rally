@@ -46,7 +46,8 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
             "tenants": self._gen_tenants(tenants_count)})
 
         inst = servers.ServerGenerator(self.context)
-        self.assertEqual(self.context["config"]["servers"], inst.config)
+        self.assertEqual({"auto_assign_nic": False, "servers_per_tenant": 5},
+                         inst.config)
 
     @mock.patch("%s.nova.utils.NovaScenario._boot_servers" % SCN,
                 return_value=[

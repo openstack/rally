@@ -57,14 +57,14 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                     "resources_per_tenant": resources_per_tenant,
                     "samples_per_resource": samples_per_resource,
                     "timestamp_interval": 60,
-                    "metadata_list": [
+                    "metadata_list": (
                         {"status": "active", "name": "fake_resource",
                          "deleted": "False",
                          "created_at": "2015-09-04T12:34:19.000000"},
                         {"status": "not_active", "name": "fake_resource_1",
                          "deleted": "False",
-                         "created_at": "2015-09-10T06:55:12.000000"}
-                    ]
+                         "created_at": "2015-09-10T06:55:12.000000"},
+                    )
                 }
             },
             "admin": {
@@ -86,15 +86,15 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                 "counter_volume": 1.0,
                 "resources_per_tenant": 5,
                 "samples_per_resource": 5,
-                "timestamp_intervals": 60,
-                "metadata_list": [
+                "timestamp_interval": 60,
+                "metadata_list": (
                     {"status": "active", "name": "fake_resource",
                      "deleted": "False",
                      "created_at": "2015-09-04T12:34:19.000000"},
                     {"status": "not_active", "name": "fake_resource_1",
                      "deleted": "False",
-                     "created_at": "2015-09-10T06:55:12.000000"}
-                ]
+                     "created_at": "2015-09-10T06:55:12.000000"},
+                )
             }
         }
 

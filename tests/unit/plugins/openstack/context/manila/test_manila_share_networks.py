@@ -70,7 +70,7 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
         inst = manila_share_networks.ManilaShareNetworks(context)
 
         self.assertEqual(
-            context["config"][consts.SHARE_NETWORKS_CONTEXT_NAME],
+            {"foo": "bar", "share_networks": {}, "use_share_networks": False},
             inst.config)
         self.assertIn(
             rally_consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
@@ -107,11 +107,11 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
     def test_setup_use_existing_share_networks(
             self, mock_manila_scenario__list_share_networks, mock_clients):
         existing_sns = self.existing_sns
+        expected_ctxt = copy.deepcopy(self.ctxt_use_existing)
         inst = manila_share_networks.ManilaShareNetworks(
             self.ctxt_use_existing)
         mock_manila_scenario__list_share_networks.return_value = (
             self.existing_sns)
-        expected_ctxt = copy.deepcopy(self.ctxt_use_existing)
         expected_ctxt.update({
             "delete_share_networks": False,
             "tenants": {

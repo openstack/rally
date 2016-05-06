@@ -71,10 +71,22 @@ class Context(plugin.Plugin, functional.FunctionalMixin,
     CONFIG_SCHEMA = {}
 
     def __init__(self, ctx):
-        self.config = ctx.get("config", {}).get(self.get_name(), {})
-        if hasattr(self, "DEFAULT_CONFIG"):
-            for key, value in self.DEFAULT_CONFIG.items():
-                self.config.setdefault(key, value)
+        config = ctx.get("config", {}).get(self.get_name(), {})
+        # NOTE(amaretskiy): self.config is a constant data and must be
+        #                   immutable or write-protected type to prevent
+        #                   unexpected changes in runtime
+        if type(config) == dict:
+            if hasattr(self, "DEFAULT_CONFIG"):
+                for key, value in self.DEFAULT_CONFIG.items():
+                    config.setdefault(key, value)
+            self.config = utils.LockedDict(config)
+        elif type(config) == list:
+            self.config = tuple(config)
+        else:
+            # NOTE(amaretskiy): It is improbable that config can be a None,
+            #                   number, boolean or even string,
+            #                   however we handle this
+            self.config = config
         self.context = ctx
         self.task = self.context.get("task", {})
 

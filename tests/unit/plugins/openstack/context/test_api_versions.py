@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 import jsonschema
 import mock
 
@@ -112,16 +110,17 @@ class OpenStackServicesTestCase(test.TestCase):
     def test_setup_with_service_name(self):
         self.mock_kc.services.list.return_value = [
             utils.Struct(type="computev21", name="NovaV21")]
+        name = api_versions.OpenStackAPIVersions.get_name()
         context = {
-            "config": {api_versions.OpenStackAPIVersions.get_name(): {
-                "nova": {"service_name": "NovaV21"}}},
+            "config": {name: {"nova": {"service_name": "NovaV21"}}},
             "admin": {"credential": mock.MagicMock()},
             "users": [{"credential": mock.MagicMock()}]}
-        ctx = api_versions.OpenStackAPIVersions(copy.deepcopy(context))
-
+        ctx = api_versions.OpenStackAPIVersions(context)
         ctx.setup()
 
         self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
         self.mock_kc.services.list.assert_called_once_with()
 
-        self.assertEqual("computev21", ctx.config["nova"]["service_type"])
+        self.assertEqual(
+            "computev21",
+            ctx.context["config"]["api_versions"]["nova"]["service_type"])
