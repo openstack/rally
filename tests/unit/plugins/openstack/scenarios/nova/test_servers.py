@@ -320,6 +320,25 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario.list_servers(True)
         scenario._list_servers.assert_called_once_with(True)
 
+    def test_boot_server_from_volume(self):
+        fake_server = object()
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
+
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
+        scenario.boot_server_from_volume("img", 0, 5, auto_assign_nic=False,
+                                         fakearg="f")
+
+        scenario._create_volume.assert_called_once_with(5, imageRef="img")
+        scenario._boot_server.assert_called_once_with(
+            None, 0, auto_assign_nic=False,
+            block_device_mapping={"vda": "volume_id:::1"},
+            fakearg="f")
+
     def test_boot_server_from_volume_and_delete(self):
         fake_server = object()
         scenario = servers.NovaServers(self.context)

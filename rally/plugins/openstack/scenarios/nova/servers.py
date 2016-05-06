@@ -292,7 +292,7 @@ class NovaServers(utils.NovaScenario,
         """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
-        self._boot_server(image, flavor, auto_assign_nic=auto_assign_nic,
+        self._boot_server(None, flavor, auto_assign_nic=auto_assign_nic,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
 
