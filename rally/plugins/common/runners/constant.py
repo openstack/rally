@@ -146,7 +146,6 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
             },
             "timeout": {
                 "type": "number",
-                "minimum": 1
             },
             "max_cpu_count": {
                 "type": "integer",
