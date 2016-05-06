@@ -15,6 +15,7 @@
 
 import bisect
 import collections
+import copy
 import ctypes
 import heapq
 import inspect
@@ -543,3 +544,87 @@ def timeout_thread(queue):
 
         if next_thread == (None, None,):
             return
+
+
+class LockedDict(dict):
+    """This represents dict which can be locked for updates.
+
+    It is read-only by default, but it can be updated via context manager
+    interface:
+
+    d = LockedDict(foo="bar")
+    d["spam"] = 42  # RuntimeError
+    with d.unlocked():
+         d["spam"] = 42  # Works
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(LockedDict, self).__init__(*args, **kwargs)
+        self._is_locked = True
+        self._is_ready_to_be_unlocked = False
+
+        def lock(obj):
+            if isinstance(obj, dict):
+                return LockedDict(obj)
+            elif isinstance(obj, list):
+                return tuple([lock(v) for v in obj])
+            return obj
+
+        with self.unlocked():
+            for k, v in self.items():
+                self[k] = lock(v)
+
+    def _check_is_unlocked(self):
+        if self._is_locked:
+            raise RuntimeError("Trying to change read-only dict %r" % self)
+
+    def unlocked(self):
+        self._is_ready_to_be_unlocked = True
+        return self
+
+    def __deepcopy__(self, memo=None):
+        def unlock(obj):
+            if isinstance(obj, LockedDict):
+                obj = dict(obj)
+                for k, v in obj.items():
+                    obj[k] = unlock(v)
+            elif type(obj) == tuple:
+                obj = tuple([unlock(v) for v in obj])
+            return obj
+        return copy.deepcopy(unlock(self), memo=memo)
+
+    def __enter__(self, *args):
+        if self._is_ready_to_be_unlocked:
+            self._is_locked = False
+
+    def __exit__(self, *args):
+        self._is_ready_to_be_unlocked = False
+        self._is_locked = True
+
+    def __setitem__(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).__setitem__(*args, **kwargs)
+
+    def __delitem__(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).__delitem__(*args, **kwargs)
+
+    def pop(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).pop(*args, **kwargs)
+
+    def popitem(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).popitem(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).update(*args, **kwargs)
+
+    def setdefault(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).setdefault(*args, **kwargs)
+
+    def clear(self, *args, **kwargs):
+        self._check_is_unlocked()
+        return super(LockedDict, self).clear(*args, **kwargs)

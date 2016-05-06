@@ -484,3 +484,67 @@ class TimeoutThreadTestCase(test.TestCase):
         # than 10 seconds.
         self.assertTrue(time_elapsed < 11,
                         "Thread killed too late (%s seconds)" % time_elapsed)
+
+
+class LockedDictTestCase(test.TestCase):
+
+    def test_init_unlock_and_update(self):
+        def setitem(obj, key, value):
+            obj[key] = value
+
+        def delitem(obj, key):
+            del obj[key]
+
+        d = utils.LockedDict()
+        self.assertIsInstance(d, dict)
+        self.assertEqual(d, {})
+
+        d = utils.LockedDict(foo="bar", spam={"a": ["b", {"c": "d"}]})
+        self.assertEqual(d, {"foo": "bar", "spam": {"a": ("b", {"c": "d"})}})
+        self.assertIsInstance(d["spam"], utils.LockedDict)
+        self.assertIsInstance(d["spam"]["a"][1], utils.LockedDict)
+        self.assertRaises(RuntimeError, setitem, d, 123, 456)
+        self.assertRaises(RuntimeError, delitem, d, "foo")
+        self.assertRaises(RuntimeError, setitem, d["spam"]["a"][1], 123, 456)
+        self.assertRaises(RuntimeError, delitem, d["spam"]["a"][1], "c")
+        self.assertRaises(RuntimeError, d.update, {123: 456})
+        self.assertRaises(RuntimeError, d.setdefault, 123, 456)
+        self.assertRaises(RuntimeError, d.pop, "foo")
+        self.assertRaises(RuntimeError, d.popitem)
+        self.assertRaises(RuntimeError, d.clear)
+        self.assertEqual(d, {"foo": "bar", "spam": {"a": ("b", {"c": "d"})}})
+
+        with d.unlocked():
+            d["spam"] = 42
+            self.assertEqual(d, {"foo": "bar", "spam": 42})
+            d.clear()
+            self.assertEqual(d, {})
+            d.setdefault("foo", 42)
+            d.update({"bar": 24})
+            self.assertEqual(d, {"foo": 42, "bar": 24})
+            self.assertEqual(24, d.pop("bar"))
+            self.assertEqual(("foo", 42), d.popitem())
+            d[123] = 456
+
+        self.assertEqual(d, {123: 456})
+
+        self.assertRaises(RuntimeError, setitem, d, 123, 456)
+        self.assertRaises(RuntimeError, delitem, d, "foo")
+
+    @mock.patch("rally.common.utils.copy.deepcopy")
+    def test___deepcopy__(self, mock_deepcopy):
+        mock_deepcopy.side_effect = lambda *args, **kw: (args, kw)
+        d = utils.LockedDict(foo="bar", spam={"a": ["b", {"c": "d"}]})
+        args, kw = d.__deepcopy__()
+        self.assertEqual({"memo": None}, kw)
+        self.assertEqual(({"foo": "bar", "spam": {"a": ("b", {"c": "d"})}},),
+                         args)
+        self.assertEqual(dict, type(args[0]))
+        self.assertEqual(dict, type(args[0]["spam"]))
+        self.assertEqual(dict, type(args[0]["spam"]["a"][1]))
+
+        mock_deepcopy.reset_mock()
+        args, kw = d.__deepcopy__("foo_memo")
+        self.assertEqual(({"foo": "bar", "spam": {"a": ("b", {"c": "d"})}},),
+                         args)
+        self.assertEqual({"memo": "foo_memo"}, kw)
