@@ -37,7 +37,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.volume = mock.Mock()
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
-        self.keypair = mock.Mock()
         self.context["iteration"] = 3
         self.context["config"] = {"users": {"tenants": 2}}
 
@@ -747,27 +746,32 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.list_security_groups")
 
     def test__list_keypairs(self):
-        keypairs_list = ["foo_keypair"]
-        self.clients("nova").keypairs.list.return_value = keypairs_list
-        nova_scenario = utils.NovaScenario(context=self.context)
-        return_keypairs_list = nova_scenario._list_keypairs()
-        self.assertEqual(keypairs_list, return_keypairs_list)
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._list_keypairs()
+        self.assertEqual(self.clients("nova").keypairs.list.return_value,
+                         result)
+        self.clients("nova").keypairs.list.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_keypairs")
 
     def test__create_keypair(self):
-        self.clients("nova").keypairs.create.return_value.name = self.keypair
-        nova_scenario = utils.NovaScenario(context=self.context)
-        return_keypair = nova_scenario._create_keypair()
-        self.assertEqual(self.keypair, return_keypair)
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.generate_random_name = mock.Mock(
+            return_value="rally_nova_keypair_fake")
+        result = nova_scenario._create_keypair(fakeargs="fakeargs")
+        self.assertEqual(
+            self.clients("nova").keypairs.create.return_value.name,
+            result)
+        self.clients("nova").keypairs.create.assert_called_once_with(
+            "rally_nova_keypair_fake", fakeargs="fakeargs")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_keypair")
 
     def test__delete_keypair(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._delete_keypair(self.keypair)
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_keypair("fake_keypair")
         self.clients("nova").keypairs.delete.assert_called_once_with(
-            self.keypair)
+            "fake_keypair")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_keypair")
 
@@ -807,8 +811,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.delete_floating_ips_bulk")
 
     def test__list_hypervisors(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._list_hypervisors(detailed=False)
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._list_hypervisors(detailed=False)
+        self.assertEqual(
+            self.admin_clients("nova").hypervisors.list.return_value, result)
         self.admin_clients("nova").hypervisors.list.assert_called_once_with(
             False)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -816,7 +822,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_images(self):
         nova_scenario = utils.NovaScenario()
-        nova_scenario._list_images(detailed=False, fakearg="fakearg")
+        result = nova_scenario._list_images(detailed=False, fakearg="fakearg")
+        self.assertEqual(self.clients("nova").images.list.return_value,
+                         result)
         self.clients("nova").images.list.assert_called_once_with(
             False, fakearg="fakearg")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -839,40 +847,42 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.unlock_server")
 
     def test__delete_network(self):
-        fake_netlabel = "test1"
         nova_scenario = utils.NovaScenario()
-        nova_scenario._delete_network(fake_netlabel)
+        result = nova_scenario._delete_network("fake_net_id")
+        self.assertEqual(
+            self.admin_clients("nova").networks.delete.return_value,
+            result)
         self.admin_clients("nova").networks.delete.assert_called_once_with(
-            fake_netlabel)
+            "fake_net_id")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_network")
 
     @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
     def test__create_network(self, mock_generate_cidr):
-        fake_cidr = "10.2.0.0/24"
-        fake_net = mock.MagicMock()
-        fake_net.cidr = fake_cidr
-        self.admin_clients("nova").networks.create.return_value = (fake_net)
-
         nova_scenario = utils.NovaScenario()
         nova_scenario.generate_random_name = mock.Mock(
             return_value="rally_novanet_fake")
 
-        return_netlabel = nova_scenario._create_network(fake_cidr,
-                                                        fakearg="fakearg")
-        mock_generate_cidr.assert_called_once_with(start_cidr=fake_cidr)
+        result = nova_scenario._create_network("fake_start_cidr",
+                                               fakearg="fakearg")
+
+        mock_generate_cidr.assert_called_once_with(
+            start_cidr="fake_start_cidr")
+
+        self.assertEqual(
+            self.admin_clients("nova").networks.create.return_value,
+            result)
         self.admin_clients("nova").networks.create.assert_called_once_with(
             label="rally_novanet_fake", cidr=mock_generate_cidr.return_value,
             fakearg="fakearg")
-        self.assertEqual(return_netlabel, fake_net)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_network")
 
     def test__list_flavors(self):
         nova_scenario = utils.NovaScenario()
-        self.clients("nova").flavors.list.return_value = "flavors_list"
         result = nova_scenario._list_flavors(detailed=True, fakearg="fakearg")
-        self.assertEqual("flavors_list", result)
+        self.assertEqual(self.clients("nova").flavors.list.return_value,
+                         result)
         self.clients("nova").flavors.list.assert_called_once_with(
             True, fakearg="fakearg")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -883,9 +893,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     @ddt.unpack
     def test__list_agents(self, hypervisor=None):
         nova_scenario = utils.NovaScenario()
-        self.admin_clients("nova").agents.list.return_value = "agents_list"
         result = nova_scenario._list_agents(hypervisor)
-        self.assertEqual("agents_list", result)
+        self.assertEqual(
+            self.admin_clients("nova").agents.list.return_value, result)
         self.admin_clients("nova").agents.list.assert_called_once_with(
             hypervisor)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -893,23 +903,21 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_aggregates(self):
         nova_scenario = utils.NovaScenario()
-        self.admin_clients("nova").aggregates.list.return_value = (
-            "aggregates_list")
         result = nova_scenario._list_aggregates()
-        self.assertEqual("aggregates_list", result)
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.list.return_value, result)
         self.admin_clients("nova").aggregates.list.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_aggregates")
 
     def test__list_availability_zones(self):
         nova_scenario = utils.NovaScenario()
-        self.admin_clients("nova").availability_zones.list.return_value = (
-            "availability_zones_list")
         result = nova_scenario._list_availability_zones(detailed=True)
-        self.assertEqual("availability_zones_list", result)
-        nova_admin_client = self.admin_clients("nova")
-        availability_zones_client = nova_admin_client.availability_zones
-        availability_zones_client.list.assert_called_once_with(True)
+        self.assertEqual(
+            self.admin_clients("nova").availability_zones.list.return_value,
+            result)
+        avail_zones_client = self.admin_clients("nova").availability_zones
+        avail_zones_client.list.assert_called_once_with(True)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_availbility_zones")
 
@@ -918,9 +926,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     @ddt.unpack
     def test__list_hosts(self, zone=None):
         nova_scenario = utils.NovaScenario()
-        self.admin_clients("nova").hosts.list.return_value = "hosts_list"
         result = nova_scenario._list_hosts(zone)
-        self.assertEqual("hosts_list", result)
+        self.assertEqual(self.admin_clients("nova").hosts.list.return_value,
+                         result)
         self.admin_clients("nova").hosts.list.assert_called_once_with(zone)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hosts")
@@ -932,10 +940,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     @ddt.unpack
     def test__list_services(self, host=None, binary=None):
         nova_scenario = utils.NovaScenario()
-        self.admin_clients("nova").services.list.return_value = (
-            "services_list")
         result = nova_scenario._list_services(host=host, binary=binary)
-        self.assertEqual("services_list", result)
+        self.assertEqual(self.admin_clients("nova").services.list.return_value,
+                         result)
         self.admin_clients("nova").services.list.assert_called_once_with(
             host, binary)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
