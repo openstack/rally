@@ -356,7 +356,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img")
         scenario._boot_server.assert_called_once_with(
-            "img", 0,
+            None, 0,
             block_device_mapping={"vda": "volume_id:::1"},
             fakearg="f")
         scenario.sleep_between.assert_called_once_with(10, 20)
@@ -528,7 +528,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario._create_volume.assert_called_once_with(10, imageRef="img")
         scenario._boot_server.assert_called_once_with(
-            "img", flavor,
+            None, flavor,
             block_device_mapping={"vda": "volume_id:::1"})
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._resize.assert_called_once_with(fake_server, to_flavor)
@@ -593,7 +593,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._create_volume.assert_called_once_with(5, imageRef="img")
 
         scenario._boot_server.assert_called_once_with(
-            "img", 0,
+            None, 0,
             block_device_mapping={"vda": "volume_id:::1"},
             fakearg="f")
 
