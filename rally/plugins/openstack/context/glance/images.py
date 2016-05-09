@@ -24,6 +24,12 @@ from rally.task import context
 from rally.task import utils
 
 CONF = cfg.CONF
+CONF.import_opt("glance_image_delete_timeout",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
+CONF.import_opt("glance_image_delete_poll_interval",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
 
 LOG = logging.getLogger(__name__)
 

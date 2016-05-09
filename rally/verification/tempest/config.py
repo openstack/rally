@@ -81,6 +81,12 @@ ROLE_OPTS = [
 CONF = cfg.CONF
 CONF.register_opts(IMAGE_OPTS, "image")
 CONF.register_opts(ROLE_OPTS, "role")
+CONF.import_opt("glance_image_delete_timeout",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
+CONF.import_opt("glance_image_delete_poll_interval",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
 
 
 def _create_or_get_data_dir():

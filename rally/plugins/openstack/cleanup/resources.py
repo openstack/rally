@@ -30,6 +30,12 @@ from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 from rally.task import utils as task_utils
 
 CONF = cfg.CONF
+CONF.import_opt("glance_image_delete_timeout",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
+CONF.import_opt("glance_image_delete_poll_interval",
+                "rally.plugins.openstack.scenarios.glance.utils",
+                "benchmark")
 
 LOG = logging.getLogger(__name__)
 
