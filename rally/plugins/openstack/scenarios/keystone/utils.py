@@ -15,13 +15,8 @@
 
 import uuid
 
-from rally.common import utils
 from rally.plugins.openstack import scenario
 from rally.task import atomic
-
-
-def is_temporary(resource):
-    return utils.name_matches_object(resource.name, KeystoneScenario)
 
 
 class KeystoneScenario(scenario.OpenStackScenario):

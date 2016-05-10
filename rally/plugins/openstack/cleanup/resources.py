@@ -719,8 +719,8 @@ class KeystoneMixin(SynchronizedDeletion):
         # TODO(boris-42): We should use such stuff in all list commands.
         resources = self._resource + "s"
         list_method = getattr(self._manager(), "list_%s" % resources)
-
-        return filter(kutils.is_temporary, list_method())
+        return [r for r in list_method()
+                if utils.name_matches_object(r.name, kutils.KeystoneScenario)]
 
 
 @base.resource("keystone", "user", order=next(_keystone_order),

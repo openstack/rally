@@ -20,6 +20,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 
 from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
+from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.cleanup.resources"
@@ -536,22 +537,25 @@ class KeystoneMixinTestCase(test.TestCase):
         mock_wrap().delete_some_resource.assert_called_once_with("id_a")
 
     @mock.patch(
-        "rally.plugins.openstack.scenarios.keystone.utils.is_temporary")
+        "rally.common.utils.name_matches_object")
     @mock.patch("%s.keystone_wrapper.wrap" % BASE)
-    def test_list(self, mock_wrap, mock_is_temporary):
+    def test_list(self, mock_wrap, mock_name_matches_object):
         keystone_mixin = self.get_keystone_mixin()
-        keystone_mixin._resource = "some_resource2"
+        keystone_mixin._resource = "fake_resource"
         keystone_mixin.admin = mock.MagicMock()
 
-        result = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
-        mock_is_temporary.side_effect = [True, True, False]
+        result = [mock.MagicMock(name="rally_foo1"),
+                  mock.MagicMock(name="rally_foo2"),
+                  mock.MagicMock(name="foo3")]
+        mock_name_matches_object.side_effect = [True, True, False]
 
-        mock_wrap().list_some_resource2s.return_value = result
+        mock_wrap().list_fake_resources.return_value = result
 
         self.assertSequenceEqual(result[:2], keystone_mixin.list())
-        mock_wrap().list_some_resource2s.assert_called_once_with()
+        mock_wrap().list_fake_resources.assert_called_once_with()
 
-        mock_is_temporary.assert_has_calls([mock.call(r) for r in result])
+        mock_name_matches_object.assert_has_calls(
+            [mock.call(r.name, kutils.KeystoneScenario) for r in result])
 
 
 class SwiftMixinTestCase(test.TestCase):
