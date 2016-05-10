@@ -530,16 +530,17 @@ def timeout_thread(queue):
         if not all_threads:
             timeout = None
         else:
-            thread_ident, deadline = all_threads[0]
+            thread, deadline = all_threads[0]
             timeout = deadline - time.time()
         try:
             next_thread = queue.get(timeout=timeout)
             all_threads.append(next_thread)
         except (moves.queue.Empty, ValueError):
             # NOTE(rvasilets) Empty means that timeout was occurred.
-            # ValueError means that timeout lower then 0.
-            LOG.info("Thread %s is timed out. Terminating." % thread_ident)
-            terminate_thread(thread_ident)
+            # ValueError means that timeout lower than 0.
+            if thread.isAlive():
+                LOG.info("Thread %s is timed out. Terminating." % thread.ident)
+                terminate_thread(thread.ident)
             all_threads.popleft()
 
         if next_thread == (None, None,):
