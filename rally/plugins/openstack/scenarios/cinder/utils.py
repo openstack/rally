@@ -115,7 +115,7 @@ class CinderScenario(scenario.OpenStackScenario):
                 to_del = keys[i * delete_size:(i + 1) * delete_size]
                 self.clients("cinder").volumes.delete_metadata(volume, to_del)
 
-    @atomic.action_timer("cinder.create_volume")
+    @atomic.optional_action_timer("cinder.create_volume")
     def _create_volume(self, size, **kwargs):
         """Create one volume.
 
@@ -126,6 +126,9 @@ class CinderScenario(scenario.OpenStackScenario):
                      dictionary, must contain two values:
                          min - minimum size volumes will be created as;
                          max - maximum size volumes will be created as.
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         :param kwargs: Other optional parameters to initialize the volume
         :returns: Created volume object
         """

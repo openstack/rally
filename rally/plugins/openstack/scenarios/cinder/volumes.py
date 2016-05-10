@@ -22,6 +22,7 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
@@ -540,3 +541,28 @@ class CinderVolumes(cinder_utils.CinderScenario,
         if do_delete:
             self._delete_volume(volume)
             self._delete_backup(backup)
+
+    @types.convert(image={"type": "glance_image"})
+    @validation.image_exists("image", nullable=True)
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["cinder"]})
+    def create_volume_and_clone(self, size, image=None, **kwargs):
+        """Create a volume, then clone it to another volume.
+
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
+        :param image: image to be used to create initial volume
+        :param kwargs: optional args to create volumes
+        """
+        if image:
+            kwargs["imageRef"] = image
+
+        vol1 = self._create_volume(size, **kwargs)
+
+        kwargs.pop("imageRef", None)
+        with atomic.ActionTimer(self, "cinder.clone_volume"):
+            self._create_volume(size, source_volid=vol1.id,
+                                atomic_action=False, **kwargs)
