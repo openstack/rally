@@ -1,32 +1,32 @@
 ---
-    CeilometerResource.list_resources:
-      -
-       runner:
-         type: "constant"
-         times: 10
-         concurrency: 1
-       context:
-         users:
-           tenants: 2
-           users_per_tenant: 2
-         ceilometer:
-           counter_name: "benchmark_meter"
-           counter_type: "gauge"
-           counter_unit: "%"
-           counter_volume: 100
-           resources_per_tenant: 100
-           samples_per_resource: 100
-           timestamp_interval: 10
-           metadata_list:
-             -
-               status: "active"
-               name: "rally benchmark on"
-               deleted: "false"
-             -
-               status: "terminated"
-               name: "rally benchmark off"
-               deleted: "true"
-       args:
-         limit: 50
-         metadata_query:
-           status: "terminated"
+  CeilometerResource.list_resources:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        ceilometer:
+          counter_name: "benchmark_meter"
+          counter_type: "gauge"
+          counter_unit: "%"
+          counter_volume: 100
+          resources_per_tenant: 100
+          samples_per_resource: 100
+          timestamp_interval: 10
+          metadata_list:
+            -
+              status: "active"
+              name: "rally benchmark on"
+              deleted: "false"
+            -
+              status: "terminated"
+              name: "rally benchmark off"
+              deleted: "true"
+      args:
+        limit: 50
+        metadata_query:
+          status: "terminated"

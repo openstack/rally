@@ -1,16 +1,16 @@
 ---
-    CeilometerResource.get_tenant_resources:
-     -
-       runner:
-         type: "constant"
-         times: 10
-         concurrency: 5
-       context:
-         users:
-           tenants: 2
-           users_per_tenant: 2
-         ceilometer:
-           counter_name: "cpu_util"
-           counter_type: "gauge"
-           counter_volume: 1.0
-           counter_unit: "instance"
+  CeilometerResource.get_tenant_resources:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        ceilometer:
+          counter_name: "cpu_util"
+          counter_type: "gauge"
+          counter_volume: 1.0
+          counter_unit: "instance"
