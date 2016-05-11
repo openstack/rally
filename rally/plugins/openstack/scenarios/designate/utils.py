@@ -188,13 +188,15 @@ class DesignateScenario(scenario.OpenStackScenario):
         return self.clients("designate", version="2").recordsets.list(
             zone_id, criterion=criterion, marker=marker, limit=limit)
 
-    def _create_recordset(self, zone, recordset=None, atomic_action=True):
+    @atomic.optional_action_timer("designate.create_recordset")
+    def _create_recordset(self, zone, recordset=None):
         """Create a recordset in a zone.
 
         :param zone: zone dict
         :param recordset: recordset dict
-        :param atomic_action: True if the recordset creation should be tracked
-                            as an atomic action
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         :returns: Designate recordset dict
         """
         recordset = recordset or {}
@@ -205,26 +207,19 @@ class DesignateScenario(scenario.OpenStackScenario):
         if "records" not in recordset:
             recordset["records"] = ["10.0.0.1"]
 
-        client = self.clients("designate", version="2")
+        return self.clients("designate", version="2").recordsets.create(
+            zone["id"], **recordset)
 
-        if atomic_action:
-            with atomic.ActionTimer(self, "designate.create_recordset"):
-                return client.recordsets.create(zone["id"], **recordset)
-
-        return client.recordsets.create(zone["id"], **recordset)
-
-    def _delete_recordset(self, zone_id, recordset_id, atomic_action=True):
+    @atomic.optional_action_timer("designate.delete_recordset")
+    def _delete_recordset(self, zone_id, recordset_id):
         """Delete a zone recordset.
 
         :param zone_id: Zone ID
         :param recordset_id: Recordset ID
-        :param atomic_action: True if the recordset creation should be tracked
-                            as an atomic action
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         """
-        client = self.clients("designate", version="2")
 
-        if atomic_action:
-            with atomic.ActionTimer(self, "designate.delete_recordset"):
-                client.recordsets.delete(zone_id, recordset_id)
-        else:
-            client.recordsets.delete(zone_id, recordset_id)
+        self.clients("designate", version="2").recordsets.delete(
+            zone_id, recordset_id)
