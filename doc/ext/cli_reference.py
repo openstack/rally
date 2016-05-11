@@ -116,7 +116,7 @@ def make_arguments_section(category_name, cmd_name, arguments, defaults):
                 description.append(compose_note_about_default_uuids(
                         args[0], dest))
                 description.append(
-                        compose_use_cmd_hint_msg("rally %verify use"))
+                        compose_use_cmd_hint_msg("rally verify use"))
 
         description.append(kwargs.get("help"))
 
