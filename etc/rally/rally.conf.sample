@@ -6,10 +6,11 @@
 
 # If set to true, the logging level will be set to DEBUG instead of
 # the default INFO level. (boolean value)
+# Note: This option can be changed without restarting.
 #debug = false
 
-# If set to false, the logging level will be set to WARNING instead of
-# the default INFO level. (boolean value)
+# DEPRECATED: If set to false, the logging level will be set to
+# WARNING instead of the default INFO level. (boolean value)
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #verbose = true
@@ -154,13 +155,6 @@
 # Interval between checks when waiting for image creation. (floating
 # point value)
 #glance_image_create_poll_interval = 1.0
-
-# Time to wait for glance image to be deleted. (floating point value)
-#glance_image_delete_timeout = 120.0
-
-# Interval between checks when waiting for image deletion. (floating
-# point value)
-#glance_image_delete_poll_interval = 1.0
 
 # Time(in sec) to sleep after creating a resource before polling for
 # it status. (floating point value)
@@ -635,50 +629,73 @@
 #db_max_retries = 20
 
 
-[image]
+[roles_context]
 
 #
 # From rally
 #
 
-# CirrOS image URL (string value)
-#cirros_img_url = http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+# How many concurrent threads to use for serving roles context
+# (integer value)
+#resource_management_workers = 30
+
+
+[tempest]
+
+#
+# From rally
+#
+
+# image URL (string value)
+# Deprecated group/name - [image]/cirros_img_url
+#img_url = http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 
 # Image disk format to use when creating the image (string value)
-#disk_format = qcow2
+# Deprecated group/name - [image]/disk_format
+#img_disk_format = qcow2
 
 # Image container format to use when creating the image (string value)
-#container_format = bare
+# Deprecated group/name - [image]/container_format
+#img_container_format = bare
 
 # Regular expression for name of a public image to discover it in the
 # cloud and use it for the tests. Note that when Rally is searching
 # for the image, case insensitive matching is performed. Specify
-# nothing ('name_regex =') if you want to disable discovering. In this
-# case Rally will create needed resources by itself if the values for
-# the corresponding config options are not specified in the Tempest
-# config file (string value)
-#name_regex = ^.*(cirros|testvm).*$
-
-
-[role]
-
-#
-# From rally
-#
+# nothing ('img_name_regex =') if you want to disable discovering. In
+# this case Rally will create needed resources by itself if the values
+# for the corresponding config options are not specified in the
+# Tempest config file (string value)
+# Deprecated group/name - [image]/name_regex
+#img_name_regex = ^.*(cirros|testvm).*$
 
 # Role required for users to be able to create Swift containers
 # (string value)
+# Deprecated group/name - [role]/swift_operator_role
 #swift_operator_role = Member
 
 # User role that has reseller admin (string value)
+# Deprecated group/name - [role]/swift_reseller_admin_role
 #swift_reseller_admin_role = ResellerAdmin
 
 # Role required for users to be able to manage Heat stacks (string
 # value)
+# Deprecated group/name - [role]/heat_stack_owner_role
 #heat_stack_owner_role = heat_stack_owner
 
 # Role for Heat template-defined users (string value)
+# Deprecated group/name - [role]/heat_stack_user_role
 #heat_stack_user_role = heat_stack_user
+
+# Primary flavor RAM size used by most of the test cases (integer
+# value)
+#flavor_ref_ram = 64
+
+# Alternate reference flavor RAM size used by test thatneed two
+# flavors, like those that resize an instnace (integer value)
+#flavor_ref_alt_ram = 128
+
+# RAM size flavor used for orchestration test cases (integer value)
+#heat_instance_type_ram = 64
 
 
 [users_context]

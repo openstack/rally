@@ -38,49 +38,67 @@ from rally.task import utils as task_utils
 
 LOG = logging.getLogger(__name__)
 
-IMAGE_OPTS = [
-    cfg.StrOpt("cirros_img_url",
+TEMPEST_OPTS = [
+    cfg.StrOpt("img_url",
+               deprecated_opts=[cfg.DeprecatedOpt("cirros_img_url",
+                                                  group="image")],
                default="http://download.cirros-cloud.net/"
                        "0.3.4/cirros-0.3.4-x86_64-disk.img",
-               help="CirrOS image URL"),
-    cfg.StrOpt("disk_format",
+               help="image URL"),
+    cfg.StrOpt("img_disk_format",
+               deprecated_opts=[cfg.DeprecatedOpt("disk_format",
+                                                  group="image")],
                default="qcow2",
                help="Image disk format to use when creating the image"),
-    cfg.StrOpt("container_format",
+    cfg.StrOpt("img_container_format",
+               deprecated_opts=[cfg.DeprecatedOpt("container_format",
+                                                  group="image")],
                default="bare",
                help="Image container format to use when creating the image"),
-    cfg.StrOpt("name_regex",
+    cfg.StrOpt("img_name_regex",
+               deprecated_opts=[cfg.DeprecatedOpt("name_regex",
+                                                  group="image")],
                default="^.*(cirros|testvm).*$",
                help="Regular expression for name of a public image to "
                     "discover it in the cloud and use it for the tests. "
                     "Note that when Rally is searching for the image, case "
                     "insensitive matching is performed. Specify nothing "
-                    "('name_regex =') if you want to disable discovering. "
+                    "('img_name_regex =') if you want to disable discovering. "
                     "In this case Rally will create needed resources by "
                     "itself if the values for the corresponding config "
-                    "options are not specified in the Tempest config file")
-]
-
-ROLE_OPTS = [
+                    "options are not specified in the Tempest config file"),
     cfg.StrOpt("swift_operator_role",
+               deprecated_group="role",
                default="Member",
                help="Role required for users "
                     "to be able to create Swift containers"),
     cfg.StrOpt("swift_reseller_admin_role",
+               deprecated_group="role",
                default="ResellerAdmin",
                help="User role that has reseller admin"),
     cfg.StrOpt("heat_stack_owner_role",
+               deprecated_group="role",
                default="heat_stack_owner",
                help="Role required for users "
                     "to be able to manage Heat stacks"),
     cfg.StrOpt("heat_stack_user_role",
+               deprecated_group="role",
                default="heat_stack_user",
-               help="Role for Heat template-defined users")
+               help="Role for Heat template-defined users"),
+    cfg.IntOpt("flavor_ref_ram",
+               default="64",
+               help="Primary flavor RAM size used by most of the test cases"),
+    cfg.IntOpt("flavor_ref_alt_ram",
+               default="128",
+               help="Alternate reference flavor RAM size used by test that"
+               "need two flavors, like those that resize an instnace"),
+    cfg.IntOpt("heat_instance_type_ram",
+               default="64",
+               help="RAM size flavor used for orchestration test cases")
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(IMAGE_OPTS, "image")
-CONF.register_opts(ROLE_OPTS, "role")
+CONF.register_opts(TEMPEST_OPTS, "tempest")
 CONF.import_opt("glance_image_delete_timeout",
                 "rally.plugins.openstack.scenarios.glance.utils",
                 "benchmark")
@@ -120,18 +138,18 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.read(os.path.join(os.path.dirname(__file__), "config.ini"))
 
         self.image_name = parse.urlparse(
-            CONF.image.cirros_img_url).path.split("/")[-1]
-        self._download_cirros_image()
+            CONF.tempest.img_url).path.split("/")[-1]
+        self._download_image()
 
-    def _download_cirros_image(self):
+    def _download_image(self):
         img_path = os.path.join(self.data_dir, self.image_name)
         if os.path.isfile(img_path):
             return
 
         try:
-            response = requests.get(CONF.image.cirros_img_url, stream=True)
+            response = requests.get(CONF.tempest.img_url, stream=True)
         except requests.ConnectionError as err:
-            msg = _("Failed to download CirrOS image. "
+            msg = _("Failed to download image. "
                     "Possibly there is no connection to Internet. "
                     "Error: %s.") % (str(err) or "unknown")
             raise exceptions.TempestConfigCreationFailure(msg)
@@ -145,10 +163,10 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             os.rename(img_path + ".tmp", img_path)
         else:
             if response.status_code == 404:
-                msg = _("Failed to download CirrOS image. "
+                msg = _("Failed to download image. "
                         "Image was not found.")
             else:
-                msg = _("Failed to download CirrOS image. "
+                msg = _("Failed to download image. "
                         "HTTP error code %d.") % response.status_code
             raise exceptions.TempestConfigCreationFailure(msg)
 
@@ -273,9 +291,9 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
     def _configure_object_storage(self, section_name="object-storage"):
         self.conf.set(section_name, "operator_role",
-                      CONF.role.swift_operator_role)
+                      CONF.tempest.swift_operator_role)
         self.conf.set(section_name, "reseller_admin_role",
-                      CONF.role.swift_reseller_admin_role)
+                      CONF.tempest.swift_reseller_admin_role)
 
     def _configure_scenario(self, section_name="scenario"):
         self.conf.set(section_name, "img_dir", self.data_dir)
@@ -314,9 +332,9 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
     def _configure_orchestration(self, section_name="orchestration"):
         self.conf.set(section_name, "stack_owner_role",
-                      CONF.role.heat_stack_owner_role)
+                      CONF.tempest.heat_stack_owner_role)
         self.conf.set(section_name, "stack_user_role",
-                      CONF.role.heat_stack_user_role)
+                      CONF.tempest.heat_stack_user_role)
 
     def generate(self, conf_path=None):
         for name, method in inspect.getmembers(self, inspect.ismethod):
@@ -344,7 +362,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         self.conf.read(conf_path)
 
         self.image_name = parse.urlparse(
-            CONF.image.cirros_img_url).path.split("/")[-1]
+            CONF.tempest.img_url).path.split("/")[-1]
 
         self._created_roles = []
         self._created_images = []
@@ -358,9 +376,11 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         self._configure_option("compute", "image_ref_alt",
                                self._discover_or_create_image)
         self._configure_option("compute", "flavor_ref",
-                               self._discover_or_create_flavor, 64)
+                               self._discover_or_create_flavor,
+                               CONF.tempest.flavor_ref_ram)
         self._configure_option("compute", "flavor_ref_alt",
-                               self._discover_or_create_flavor, 128)
+                               self._discover_or_create_flavor,
+                               CONF.tempest.flavor_ref_alt_ram)
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
             if neutronclient.list_networks(shared=True)["networks"]:
@@ -377,7 +397,8 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                                        self._create_network_resources)
         if "heat" in self.available_services:
             self._configure_option("orchestration", "instance_type",
-                                   self._discover_or_create_flavor, 64)
+                                   self._discover_or_create_flavor,
+                                   CONF.tempest.heat_instance_type_ram)
 
         _write_config(self.conf_path, self.conf)
 
@@ -397,10 +418,10 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
 
     def _create_tempest_roles(self):
         keystoneclient = self.clients.verified_keystone()
-        roles = [CONF.role.swift_operator_role,
-                 CONF.role.swift_reseller_admin_role,
-                 CONF.role.heat_stack_owner_role,
-                 CONF.role.heat_stack_user_role]
+        roles = [CONF.tempest.swift_operator_role,
+                 CONF.tempest.swift_reseller_admin_role,
+                 CONF.tempest.heat_stack_owner_role,
+                 CONF.tempest.heat_stack_user_role]
         existing_roles = set(role.name for role in keystoneclient.roles.list())
 
         for role in roles:
@@ -428,14 +449,14 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
     def _discover_or_create_image(self):
         glance_wrapper = glance.wrap(self.clients.glance, self)
 
-        if CONF.image.name_regex:
+        if CONF.tempest.img_name_regex:
             LOG.debug("Trying to discover a public image with name matching "
                       "regular expression '%s'. Note that case insensitive "
-                      "matching is performed" % CONF.image.name_regex)
+                      "matching is performed" % CONF.tempest.img_name_regex)
             images = glance_wrapper.list_images(status="active",
                                                 visibility="public")
             for img in images:
-                if img.name and re.match(CONF.image.name_regex,
+                if img.name and re.match(CONF.tempest.img_name_regex,
                                          img.name, re.IGNORECASE):
                     LOG.debug(
                         "The following public image discovered: '{0}'. "
@@ -443,12 +464,12 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                     return img
 
             LOG.debug("There is no public image with name matching "
-                      "regular expression '%s'" % CONF.image.name_regex)
+                      "regular expression '%s'" % CONF.tempest.img_name_regex)
 
         params = {
             "name": self.generate_random_name(),
-            "disk_format": CONF.image.disk_format,
-            "container_format": CONF.image.container_format,
+            "disk_format": CONF.tempest.img_disk_format,
+            "container_format": CONF.tempest.img_container_format,
             "image_location": os.path.join(_create_or_get_data_dir(),
                                            self.image_name),
             "visibility": "public"

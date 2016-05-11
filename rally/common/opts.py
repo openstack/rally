@@ -48,9 +48,8 @@ def list_opts():
                          nova_utils.NOVA_BENCHMARK_OPTS,
                          sahara_utils.SAHARA_BENCHMARK_OPTS,
                          vm_utils.VM_BENCHMARK_OPTS)),
-        ("image",
-         itertools.chain(tempest_conf.IMAGE_OPTS)),
-        ("role", itertools.chain(tempest_conf.ROLE_OPTS)),
+        ("tempest",
+         itertools.chain(tempest_conf.TEMPEST_OPTS)),
         ("roles_context", itertools.chain(roles.ROLES_CONTEXT_OPTS)),
         ("users_context", itertools.chain(users.USER_CONTEXT_OPTS)),
         ("cleanup", itertools.chain(cleanup_base.CLEANUP_OPTS))
