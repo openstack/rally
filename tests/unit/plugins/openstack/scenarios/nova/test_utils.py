@@ -633,6 +633,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__find_host_to_migrate(self):
         fake_server = self.server
         fake_host = {"nova-compute": {"available": True}}
+        fake_host_compute_off = {"nova-compute": {"available": False}}
+        fake_host_no_compute = {"nova-conductor": {"available": True}}
         self.admin_clients("nova").servers.get.return_value = fake_server
         self.admin_clients("nova").availability_zones.list.return_value = [
             mock.MagicMock(zoneName="a",
@@ -640,7 +642,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                   "a3": fake_host}),
             mock.MagicMock(zoneName="b",
                            hosts={"b1": fake_host, "b2": fake_host,
-                                  "b3": fake_host}),
+                                  "b3": fake_host, "b4": fake_host_compute_off,
+                                  "b5": fake_host_no_compute}),
             mock.MagicMock(zoneName="c",
                            hosts={"c1": fake_host,
                                   "c2": fake_host, "c3": fake_host})

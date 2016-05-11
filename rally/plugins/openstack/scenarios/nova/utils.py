@@ -752,7 +752,7 @@ class NovaScenario(scenario.OpenStackScenario):
             new_host = random.choice(
                 [key for key, value in six.iteritems(az.hosts)
                     if key != host and
-                    value["nova-compute"]["available"] is True])
+                    value.get("nova-compute", {}).get("available", False)])
             return new_host
         except IndexError:
             raise exceptions.InvalidHostException(
