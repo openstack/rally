@@ -490,3 +490,31 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._list_backups.assert_called_once_with(True)
         self.assertFalse(scenario._delete_volume.called)
         self.assertFalse(scenario._delete_backup.called)
+
+    def test_create_volume_and_clone(self):
+        fake_volumes = [mock.Mock(), mock.Mock()]
+        scenario = volumes.CinderVolumes(self.context)
+        scenario._create_volume = mock.MagicMock(side_effect=fake_volumes)
+
+        scenario.create_volume_and_clone(1, fakearg="fake")
+        scenario._create_volume.assert_has_calls([
+            mock.call(1, fakearg="fake"),
+            mock.call(1, source_volid=fake_volumes[0].id, atomic_action=False,
+                      fakearg="fake")])
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "cinder.clone_volume")
+
+    def test_create_volume_and_clone_from_image(self):
+        fake_volumes = [mock.Mock(), mock.Mock()]
+        scenario = volumes.CinderVolumes(self.context)
+        scenario._create_volume = mock.MagicMock(side_effect=fake_volumes)
+
+        scenario.create_volume_and_clone(1, image="image_id", fakearg="fake")
+        scenario._create_volume.assert_has_calls([
+            mock.call(1, fakearg="fake", imageRef="image_id"),
+            mock.call(1, source_volid=fake_volumes[0].id, atomic_action=False,
+                      fakearg="fake")])
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "cinder.clone_volume")
