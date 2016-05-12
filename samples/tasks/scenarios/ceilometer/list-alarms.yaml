@@ -1,11 +1,11 @@
 ---
-    CeilometerAlarms.list_alarms:
-     -
-       runner:
-         type: "constant"
-         times: 10
-         concurrency: 1
-       context:
-         users:
-           tenants: 2
-           users_per_tenant: 2
+  CeilometerAlarms.list_alarms:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
