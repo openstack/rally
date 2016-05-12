@@ -310,8 +310,17 @@ install_required_sw () {
         else
             pkg_manager="apt-get install"
         fi
+    elif have_command dnf; then
+        # dnf based RHEL/CentOS/Fedora
+        missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel redhat-rpm-config git wget)
+
+        if [ "$ASKCONFIRMATION" -eq 0 ]; then
+            pkg_manager="dnf install -y"
+        else
+            pkg_manager="dnf install"
+        fi
     elif have_command yum; then
-        # RHEL/CentOS
+        # yum based RHEL/CentOS/Fedora
         missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel redhat-rpm-config git wget)
 
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
