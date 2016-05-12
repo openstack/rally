@@ -22,7 +22,7 @@ from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.ec2"
 SCN = "rally.plugins.openstack.scenarios"
-TYP = "rally.task.types"
+TYP = "rally.plugins.openstack.types"
 
 
 class EC2ServerGeneratorTestCase(test.TestCase):
@@ -60,11 +60,10 @@ class EC2ServerGeneratorTestCase(test.TestCase):
 
     @mock.patch("%s.ec2.utils.EC2Scenario._boot_servers" % SCN,
                 return_value=[fakes.FakeServer(id=str(i)) for i in range(5)])
-    @mock.patch("%s.EC2ImageResourceType.transform" % TYP,
-                return_value=mock.MagicMock())
+    @mock.patch("%s.EC2Image.transform" % TYP, return_value=mock.MagicMock())
     @mock.patch("%s.servers.osclients" % CTX, return_value=fakes.FakeClients())
     def test_setup(self, mock_osclients,
-                   mock_ec2_image_resource_type_transform,
+                   mock_ec2_image_transform,
                    mock_ec2_scenario__boot_servers):
 
         tenants_count = 2

@@ -64,13 +64,11 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
     @mock.patch("%s.vmtasks.VMTasks" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
-    @mock.patch("%s.types.ImageResourceType.transform" % BASE,
-                return_value="image")
-    @mock.patch("%s.types.FlavorResourceType.transform" % BASE,
-                return_value="flavor")
+    @mock.patch("%s.types.GlanceImage.transform" % BASE, return_value="image")
+    @mock.patch("%s.types.Flavor.transform" % BASE, return_value="flavor")
     def test_create_one_image(
-            self, mock_flavor_resource_type_transform,
-            mock_image_resource_type_transform, mock_clients, mock_vm_tasks):
+            self, mock_flavor_transform, mock_glance_image_transform,
+            mock_clients, mock_vm_tasks):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
@@ -95,10 +93,10 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         custom_image = generator_ctx.create_one_image(user,
                                                       foo_arg="foo_value")
 
-        mock_flavor_resource_type_transform.assert_called_once_with(
+        mock_flavor_transform.assert_called_once_with(
             clients=mock_clients.return_value,
             resource_config={"name": "flavor"})
-        mock_image_resource_type_transform.assert_called_once_with(
+        mock_glance_image_transform.assert_called_once_with(
             clients=mock_clients.return_value,
             resource_config={"name": "image"})
         mock_vm_tasks.assert_called_once_with(
@@ -124,13 +122,14 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
     @mock.patch("%s.vmtasks.VMTasks" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
-    @mock.patch("%s.types.ImageResourceType.transform" % BASE,
+    @mock.patch("%s.types.GlanceImage.transform" % BASE,
                 return_value="image")
-    @mock.patch("%s.types.FlavorResourceType.transform" % BASE,
+    @mock.patch("%s.types.Flavor.transform" % BASE,
                 return_value="flavor")
     def test_create_one_image_cleanup(
-            self, mock_flavor_resource_type_transform,
-            mock_image_resource_type_transform, mock_clients, mock_vm_tasks):
+            self, mock_flavor_transform,
+            mock_glance_image_transform, mock_clients,
+            mock_vm_tasks):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 

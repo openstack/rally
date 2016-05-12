@@ -28,6 +28,7 @@ from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
+from rally.plugins.openstack import types as openstack_types
 from rally.task import types
 from rally.verification.tempest import tempest
 
@@ -253,7 +254,7 @@ def _get_validated_image(config, clients, param_name):
             }
             return (ValidationResult(True), image)
     try:
-        image_id = types.ImageResourceType.transform(
+        image_id = openstack_types.GlanceImage.transform(
             clients=clients, resource_config=image_args)
         image = clients.glance().images.get(image=image_id).to_dict()
         if not image.get("size"):
@@ -287,7 +288,7 @@ def _get_validated_flavor(config, clients, param_name):
         msg = "Parameter %s is not specified." % param_name
         return (ValidationResult(False, msg), None)
     try:
-        flavor_id = types.FlavorResourceType.transform(
+        flavor_id = openstack_types.Flavor.transform(
             clients=clients, resource_config=flavor_value)
         flavor = clients.nova().flavors.get(flavor=flavor_id)
         return (ValidationResult(True), flavor)

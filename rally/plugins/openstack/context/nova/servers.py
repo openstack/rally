@@ -19,8 +19,8 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack import types
 from rally.task import context
-from rally.task import types
 
 
 LOG = logging.getLogger(__name__)
@@ -78,10 +78,10 @@ class ServerGenerator(context.Context):
         servers_per_tenant = self.config["servers_per_tenant"]
 
         clients = osclients.Clients(self.context["users"][0]["credential"])
-        image_id = types.ImageResourceType.transform(clients=clients,
-                                                     resource_config=image)
-        flavor_id = types.FlavorResourceType.transform(clients=clients,
-                                                       resource_config=flavor)
+        image_id = types.GlanceImage.transform(clients=clients,
+                                               resource_config=image)
+        flavor_id = types.Flavor.transform(clients=clients,
+                                           resource_config=flavor)
 
         for iter_, (user, tenant_id) in enumerate(rutils.iterate_per_tenants(
                 self.context["users"])):
