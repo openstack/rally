@@ -46,7 +46,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     def test_rps_parameter_validate(self):
         config = {
             "type": "rps",
-            "rps": 0.0000001
+            "rps": 0.0000001,
+            "times": 1
         }
         rps.RPSScenarioRunner.validate(config)
 
