@@ -121,7 +121,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("Dummy.dummy_random_fail_in_atomic", detailed)
         self.assertIn("dummy_fail_test (2)", detailed)
         detailed_iterations_data = rally("task detailed --iterations-data")
-        self.assertIn("2. dummy_fail_test (2)", detailed_iterations_data)
+        self.assertIn(". dummy_fail_test (2)", detailed_iterations_data)
         self.assertNotIn("n/a", detailed_iterations_data)
 
     def test_detailed_with_errors(self):
