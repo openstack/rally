@@ -36,8 +36,8 @@ class EndpointTestCase(test.TestCase):
                           "endpoint_type": consts.EndpointType.PUBLIC,
                           "https_insecure": False,
                           "https_cacert": None,
-                          "project_domain_name": "Default",
-                          "user_domain_name": "Default",
+                          "project_domain_name": None,
+                          "user_domain_name": None,
                           "admin_domain_name": "Default"})
 
     def test_to_dict_with_include_permission(self):
@@ -57,8 +57,8 @@ class EndpointTestCase(test.TestCase):
                           "endpoint_type": consts.EndpointType.PUBLIC,
                           "https_insecure": False,
                           "https_cacert": None,
-                          "project_domain_name": "Default",
-                          "user_domain_name": "Default",
+                          "project_domain_name": None,
+                          "user_domain_name": None,
                           "admin_domain_name": "Default"})
 
     def test_to_dict_with_kwarg_credential(self):
@@ -78,6 +78,6 @@ class EndpointTestCase(test.TestCase):
                           "endpoint_type": consts.EndpointType.PUBLIC,
                           "https_insecure": False,
                           "https_cacert": None,
-                          "project_domain_name": "Default",
-                          "user_domain_name": "Default",
+                          "project_domain_name": None,
+                          "user_domain_name": None,
                           "admin_domain_name": "Default"})

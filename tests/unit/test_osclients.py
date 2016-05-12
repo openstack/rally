@@ -493,6 +493,24 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_ceilometer,
                              self.clients.cache["ceilometer"])
 
+    def test_gnocchi(self):
+        fake_gnocchi = fakes.FakeGnocchiClient()
+        mock_gnocchi = mock.MagicMock()
+        mock_gnocchi.client.Client.return_value = fake_gnocchi
+        mock_keystoneauth1 = mock.MagicMock()
+        self.assertNotIn("gnocchi", self.clients.cache)
+        with mock.patch.dict("sys.modules",
+                             {"gnocchiclient": mock_gnocchi,
+                              "keystoneauth1": mock_keystoneauth1}):
+            client = self.clients.gnocchi()
+
+            self.assertEqual(fake_gnocchi, client)
+            kw = {"version": "1",
+                  "session": mock_keystoneauth1.session.Session(),
+                  "service_type": "metric"}
+            mock_gnocchi.client.Client.assert_called_once_with(**kw)
+            self.assertEqual(fake_gnocchi, self.clients.cache["gnocchi"])
+
     def test_monasca(self):
         fake_monasca = fakes.FakeMonascaClient()
         mock_monasca = mock.MagicMock()

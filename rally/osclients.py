@@ -160,6 +160,21 @@ class OSClient(plugin.Plugin):
             auth=auth, verify=not self.credential.insecure,
             timeout=CONF.openstack_client_http_timeout)
 
+    def _get_keystoneauth_session(self):
+        from keystoneauth1 import loading
+        from keystoneauth1 import session
+        loader = loading.get_plugin_loader("password")
+        plugin = loader.load_from_options(
+            auth_url=self.credential.auth_url,
+            username=self.credential.username,
+            password=self.credential.password,
+            user_domain_name=self.credential.user_domain_name,
+            project_name=self.credential.tenant_name,
+            project_domain_name=self.credential.project_domain_name)
+        sess = session.Session(auth=plugin, verify=(
+            not self.credential.insecure))
+        return sess
+
     def _get_endpoint(self, service_type=None):
         kc = self.keystone()
         api_url = kc.service_catalog.url_for(
@@ -188,9 +203,11 @@ class OSClient(plugin.Plugin):
             kw.update({
                 domain_name_key: self.credential.domain_name})
             kw.update({
-                user_domain_name_key: self.credential.user_domain_name})
+                user_domain_name_key:
+                self.credential.user_domain_name or "Default"})
             kw.update({
-                project_domain_name_key: self.credential.project_domain_name})
+                project_domain_name_key:
+                self.credential.project_domain_name or "Default"})
 
         return kw
 
@@ -454,6 +471,22 @@ class Ceilometer(OSClient):
             cacert=self.credential.cacert,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
+
+
+@configure("gnocchi", default_service_type="metric", default_version="1",
+           supported_versions=["1"])
+class Gnocchi(OSClient):
+
+    def create_client(self, version=None, service_type=None):
+        """Return gnocchi client."""
+        # NOTE(sumantmurke): gnocchiclient requires keystoneauth1 for
+        # authenticating and creating a session.
+        from gnocchiclient import client as gnocchi
+        service_type = self.choose_service_type(service_type)
+        sess = self._get_keystoneauth_session()
+        gclient = gnocchi.Client(version=self.choose_version(
+            version), session=sess, service_type=service_type)
+        return gclient
 
 
 @configure("ironic", default_version="1", default_service_type="baremetal",

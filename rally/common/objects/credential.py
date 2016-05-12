@@ -22,8 +22,8 @@ class Credential(object):
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
                  domain_name=None, endpoint=None,
-                 user_domain_name="Default", admin_domain_name="Default",
-                 project_domain_name="Default",
+                 user_domain_name=None, admin_domain_name="Default",
+                 project_domain_name=None,
                  https_insecure=False, https_cacert=None):
         self.auth_url = auth_url
         self.username = username
