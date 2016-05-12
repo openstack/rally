@@ -22,17 +22,6 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.keystone.utils."
 
 
-class KeystoneUtilsTestCase(test.TestCase):
-
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_is_temporary(self, mock_name_matches_object):
-        resource = mock.Mock()
-        self.assertEqual(utils.is_temporary(resource),
-                         mock_name_matches_object.return_value)
-        mock_name_matches_object.assert_called_once_with(
-            resource.name, utils.KeystoneScenario)
-
-
 class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("uuid.uuid4", return_value="pwd")
