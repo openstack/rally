@@ -151,6 +151,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                 "minimum": 1
             }
         },
+        "required": ["type", "times", "rps"],
         "additionalProperties": False
     }
 
