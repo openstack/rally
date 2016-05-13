@@ -521,7 +521,7 @@
             name: "^ram64$"
         image:
             name: {{image_name}}
-        auto_assign_nics: false
+        auto_assign_nic: false
       runner:
         type: "constant"
         times: 2
