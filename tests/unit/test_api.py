@@ -495,9 +495,11 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.uninstall.assert_called_once_with()
         self.tempest.install.assert_called_once_with()
 
+    @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_discover_tests(self, mock_tempest, mock_deployment_get):
+    def test_discover_tests(
+            self, mock_tempest, mock_deployment_get, mock_exists):
         mock_tempest.return_value = self.tempest
         api.Verification.discover_tests(self.deployment_uuid, "some_pattern")
         self.tempest.discover_tests.assert_called_once_with("some_pattern")

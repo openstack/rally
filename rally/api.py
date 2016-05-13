@@ -495,6 +495,9 @@ class Verification(object):
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
+
+        cls._check_tempest_tree_existence(verifier)
+
         return verifier.discover_tests(pattern)
 
     @classmethod
