@@ -735,6 +735,19 @@ class Senlin(OSClient):
             **self._get_auth_info(project_name_key="project_name"))
 
 
+@configure("magnum", default_version="1", default_service_type="container",)
+class Magnum(OSClient):
+    def create_client(self, version=None, service_type=None):
+        """Return magnum client."""
+        from magnumclient import client as magnum
+
+        api_url = self._get_endpoint(service_type)
+        session = self._get_session(endpoint=api_url)
+        endpoint_type = self.credential.endpoint_type,
+
+        return magnum.Client(session=session, interface=endpoint_type[0])
+
+
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 
