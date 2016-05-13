@@ -948,3 +948,24 @@ class NovaScenario(scenario.OpenStackScenario):
         :param binary: List all nova services matching  given binary
         """
         return self.admin_clients("nova").services.list(host, binary)
+
+    @atomic.action_timer("nova.create_flavor")
+    def _create_flavor(self, ram, vcpus, disk, **kwargs):
+        """Create a flavor
+
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param kwargs: Optional additional arguments for flavor creation
+        """
+        name = self.generate_random_name()
+        return self.admin_clients("nova").flavors.create(name, ram, vcpus,
+                                                         disk, **kwargs)
+
+    @atomic.action_timer("nova.list_flavor_access")
+    def _list_flavor_access(self, flavor):
+        """List access-rules for non-public flavor.
+
+        :param flavor: List access rules for flavor instance or flavor ID
+        """
+        return self.admin_clients("nova").flavor_access.list(flavor=flavor)

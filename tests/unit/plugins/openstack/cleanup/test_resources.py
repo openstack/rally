@@ -21,6 +21,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
+from rally.plugins.openstack.scenarios.nova import utils as nutils
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.cleanup.resources"
@@ -114,6 +115,22 @@ class NovaFloatingIPsTestCase(test.TestCase):
         fips = resources.NovaFloatingIPs()
         fips.raw_resource = mock.MagicMock()
         self.assertIsNone(fips.name())
+
+
+class NovaFlavorsTestCase(test.TestCase):
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object,
+                  mock_resource_manager__manager):
+        flavors = [mock.MagicMock(name="rally_foo1"),
+                   mock.MagicMock(name="rally_foo2"),
+                   mock.MagicMock(name="foo3")]
+        mock_name_matches_object.side_effect = [False, True, True]
+        mock_resource_manager__manager().list.return_value = flavors
+        self.assertEqual(flavors[1:], resources.NovaFlavors().list())
+        mock_name_matches_object.assert_has_calls(
+            [mock.call(r.name, nutils.NovaScenario) for r in flavors])
 
 
 class NovaSecurityGroupTestCase(test.TestCase):
