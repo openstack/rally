@@ -969,3 +969,18 @@ class NovaScenario(scenario.OpenStackScenario):
         :param flavor: List access rules for flavor instance or flavor ID
         """
         return self.admin_clients("nova").flavor_access.list(flavor=flavor)
+
+    @atomic.action_timer("nova.update_server")
+    def _update_server(self, server, description=None):
+        """update the server's name and description.
+
+        :param server: Server object
+        :param description: update the server description
+        :returns: The updated server
+        """
+        new_name = self.generate_random_name()
+        if description:
+            return server.update(name=new_name,
+                                 description=description)
+        else:
+            return server.update(name=new_name)

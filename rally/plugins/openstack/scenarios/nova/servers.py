@@ -861,3 +861,24 @@ class NovaServers(utils.NovaScenario,
         """
         server = self._boot_server(image, flavor, **kwargs)
         self._get_server_console_output(server, length)
+
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova"]})
+    def boot_and_update_server(self, image, flavor, description=None,
+                               **kwargs):
+        """Boot a server, then update its name and description.
+
+        The scenario first creates a server, then update it.
+        Assumes that cleanup is done elsewhere.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param description: update the server description
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._update_server(server, description)
