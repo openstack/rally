@@ -80,14 +80,14 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
         thread.start()
         if timeout:
             timeout_queue.put((thread.ident, time.time() + timeout))
-        pool.append((thread, time.time()))
+        pool.append(thread)
         alive_threads_in_pool += 1
 
         while alive_threads_in_pool == concurrency:
             prev_finished_threads_in_pool = finished_threads_in_pool
             finished_threads_in_pool = 0
             for t in pool:
-                if not t[0].isAlive():
+                if not t.isAlive():
                     finished_threads_in_pool += 1
 
             alive_threads_in_pool -= finished_threads_in_pool
@@ -97,8 +97,8 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
                 # NOTE(boris-42): cleanup pool array. This is required because
                 # in other case array length will be equal to times which
                 # is unlimited big
-                while pool and not pool[0][0].isAlive():
-                    pool.popleft()[0].join()
+                while pool and not pool[0].isAlive():
+                    pool.popleft().join()
                     finished_threads_in_pool -= 1
                 break
 
@@ -108,7 +108,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
 
     # Wait until all threads are done
     while pool:
-        pool.popleft()[0].join()
+        pool.popleft().join()
 
     if timeout:
         timeout_queue.put((None, None,))
