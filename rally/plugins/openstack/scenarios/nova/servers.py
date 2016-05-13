@@ -154,7 +154,7 @@ class NovaServers(utils.NovaScenario,
         """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
-        server = self._boot_server(image, flavor,
+        server = self._boot_server(None, flavor,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
@@ -531,7 +531,7 @@ class NovaServers(utils.NovaScenario,
         boot_server_kwargs["block_device_mapping"] = {
             "vda": "%s:::1" % volume.id}
 
-        server = self._boot_server(image, flavor, **boot_server_kwargs)
+        server = self._boot_server(None, flavor, **boot_server_kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._resize(server, to_flavor)
 
@@ -678,7 +678,7 @@ class NovaServers(utils.NovaScenario,
         """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
-        server = self._boot_server(image, flavor,
+        server = self._boot_server(None, flavor,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
