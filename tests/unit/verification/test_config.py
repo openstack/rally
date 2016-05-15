@@ -256,14 +256,14 @@ class TempestConfigTestCase(test.TestCase):
             self.assertIn(item, result)
 
     def test__configure_service_available(self):
-        available_services = ("nova", "cinder", "glance", "sahara")
+        available_services = ("aodh", "nova", "cinder", "glance", "sahara")
         self.tempest_conf.available_services = available_services
         self.tempest_conf._configure_service_available()
 
         expected = (
             ("neutron", "False"), ("heat", "False"), ("nova", "True"),
             ("swift", "False"), ("cinder", "True"), ("sahara", "True"),
-            ("glance", "True"), ("ceilometer", "False"))
+            ("glance", "True"), ("ceilometer", "False"), ("aodh", "True"))
         result = self.tempest_conf.conf.items("service_available")
         for item in expected:
             self.assertIn(item, result)
