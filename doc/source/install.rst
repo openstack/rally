@@ -22,7 +22,7 @@ Automated installation
 ----------------------
 
 The easiest way to install Rally is by executing its `installation script
-<https://raw.githubusercontent.com/stackforge/rally/master/install_rally.sh>`_
+<https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh>`_
 
 .. code-block:: bash
 
