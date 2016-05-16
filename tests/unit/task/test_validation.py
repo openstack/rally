@@ -252,9 +252,9 @@ class ValidatorsTestCase(test.TestCase):
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], image)
 
-    @mock.patch(MODULE + "types.ImageResourceType.transform",
+    @mock.patch(MODULE + "openstack_types.GlanceImage.transform",
                 return_value="image_id")
-    def test__get_validated_image(self, mock_image_resource_type_transform):
+    def test__get_validated_image(self, mock_glance_image_transform):
         clients = mock.MagicMock()
         clients.glance().images.get().to_dict.return_value = {
             "image": "image_id"}
@@ -267,21 +267,21 @@ class ValidatorsTestCase(test.TestCase):
         self.assertEqual({"image": "image_id", "min_disk": 0,
                           "min_ram": 0, "size": 0},
                          result[1])
-        mock_image_resource_type_transform.assert_called_once_with(
+        mock_glance_image_transform.assert_called_once_with(
             clients=clients, resource_config="test")
         clients.glance().images.get.assert_called_with(image="image_id")
 
-    @mock.patch(MODULE + "types.ImageResourceType.transform",
+    @mock.patch(MODULE + "openstack_types.GlanceImage.transform",
                 side_effect=exceptions.InvalidScenarioArgument)
     def test__get_validated_image_transform_error(
-            self, mock_image_resource_type_transform):
+            self, mock_glance_image_transform):
         result = validation._get_validated_image({"args": {"a": "test"}},
                                                  None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.ImageResourceType.transform")
+    @mock.patch(MODULE + "openstack_types.GlanceImage.transform")
     def test__get_validated_image_not_found(
-            self, mock_image_resource_type_transform):
+            self, mock_glance_image_transform):
         clients = mock.MagicMock()
         clients.glance().images.get().to_dict.side_effect = (
             glance_exc.HTTPNotFound(""))
@@ -293,10 +293,10 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor({}, None, "non_existing")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform",
+    @mock.patch(MODULE + "openstack_types.Flavor.transform",
                 return_value="flavor_id")
     def test__get_validated_flavor(
-            self, mock_flavor_resource_type_transform):
+            self, mock_flavor_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.return_value = "flavor"
 
@@ -304,30 +304,30 @@ class ValidatorsTestCase(test.TestCase):
                                                   clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], "flavor")
-        mock_flavor_resource_type_transform.assert_called_once_with(
+        mock_flavor_transform.assert_called_once_with(
             clients=clients, resource_config="test")
         clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform",
+    @mock.patch(MODULE + "openstack_types.Flavor.transform",
                 side_effect=exceptions.InvalidScenarioArgument)
     def test__get_validated_flavor_transform_error(
-            self, mock_flavor_resource_type_transform):
+            self, mock_flavor_transform):
         result = validation._get_validated_flavor({"args": {"a": "test"}},
                                                   None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
+    @mock.patch(MODULE + "openstack_types.Flavor.transform")
     def test__get_validated_flavor_not_found(
-            self, mock_flavor_resource_type_transform):
+            self, mock_flavor_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         result = validation._get_validated_flavor({"args": {"a": "test"}},
                                                   clients, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
+    @mock.patch(MODULE + "openstack_types.Flavor.transform")
     def test__get_validated_flavor_from_context(
-            self, mock_flavor_resource_type_transform):
+            self, mock_flavor_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         config = {
@@ -342,9 +342,9 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor(config, clients, "flavor")
         self.assertTrue(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
+    @mock.patch(MODULE + "openstack_types.Flavor.transform")
     def test__get_validated_flavor_from_context_failed(
-            self, mock_flavor_resource_type_transform):
+            self, mock_flavor_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         config = {
@@ -449,11 +449,11 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
+    @mock.patch(MODULE + "openstack_types.Flavor.transform")
     @mock.patch(MODULE + "_get_validated_image")
     def test_image_valid_on_flavor_context(
             self, mock__get_validated_image,
-            mock_flavor_resource_type_transform):
+            mock_flavor_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
 

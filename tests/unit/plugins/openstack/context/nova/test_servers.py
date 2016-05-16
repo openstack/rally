@@ -23,7 +23,7 @@ from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.nova"
 SCN = "rally.plugins.openstack.scenarios"
-TYP = "rally.task.types"
+TYP = "rally.plugins.openstack.types"
 
 
 class ServerGeneratorTestCase(test.ScenarioTestCase):
@@ -57,13 +57,12 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
                     fakes.FakeServer(id="uuid"),
                     fakes.FakeServer(id="uuid")
                 ])
-    @mock.patch("%s.ImageResourceType.transform" % TYP,
+    @mock.patch("%s.GlanceImage.transform" % TYP,
                 return_value=mock.MagicMock())
-    @mock.patch("%s.FlavorResourceType.transform" % TYP,
-                return_value=mock.MagicMock())
+    @mock.patch("%s.Flavor.transform" % TYP, return_value=mock.MagicMock())
     @mock.patch("%s.servers.osclients" % CTX, return_value=fakes.FakeClients())
-    def test_setup(self, mock_osclients, mock_flavor_resource_type_transform,
-                   mock_image_resource_type_transform,
+    def test_setup(self, mock_osclients, mock_flavor_transform,
+                   mock_glance_image_transform,
                    mock_nova_scenario__boot_servers):
 
         tenants_count = 2
@@ -111,8 +110,8 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         servers_ctx = servers.ServerGenerator(self.context)
         servers_ctx.setup()
         self.assertEqual(new_context, self.context)
-        image_id = mock_image_resource_type_transform.return_value
-        flavor_id = mock_flavor_resource_type_transform.return_value
+        image_id = mock_glance_image_transform.return_value
+        flavor_id = mock_flavor_transform.return_value
         servers_ctx_config = self.context["config"]["servers"]
         expected_auto_nic = servers_ctx_config.get("auto_assign_nic", False)
         expected_requests = servers_ctx_config.get("servers_per_tenant", False)

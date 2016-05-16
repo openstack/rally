@@ -25,8 +25,8 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.vm import vmtasks
+from rally.plugins.openstack import types
 from rally.task import context
-from rally.task import types
 
 LOG = logging.getLogger(__name__)
 
@@ -147,9 +147,9 @@ class BaseCustomImageGenerator(context.Context):
 
         clients = osclients.Clients(user["credential"])
 
-        image_id = types.ImageResourceType.transform(
+        image_id = types.GlanceImage.transform(
             clients=clients, resource_config=self.config["image"])
-        flavor_id = types.FlavorResourceType.transform(
+        flavor_id = types.Flavor.transform(
             clients=clients, resource_config=self.config["flavor"])
 
         vm_scenario = vmtasks.VMTasks(self.context, clients=clients)
