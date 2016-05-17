@@ -7,6 +7,8 @@
         container_format: "bare"
         disk_format: "raw"
         do_delete: true
+        image:
+          name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 3
@@ -24,6 +26,8 @@
         container_format: "bare"
         disk_format: "raw"
         do_delete: true
+        image:
+          name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 3

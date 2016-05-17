@@ -221,12 +221,14 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._delete_volume = mock.MagicMock()
         scenario._delete_image = mock.MagicMock()
 
-        scenario.create_and_upload_volume_to_image(2,
+        scenario.create_and_upload_volume_to_image(2, image="img",
                                                    container_format="fake",
                                                    disk_format="disk",
-                                                   do_delete=False)
+                                                   do_delete=False,
+                                                   fakeargs="fakeargs")
 
-        scenario._create_volume.assert_called_once_with(2)
+        scenario._create_volume.assert_called_once_with(2, imageRef="img",
+                                                        fakeargs="fakeargs")
         scenario._upload_volume_to_image.assert_called_once_with(fake_volume,
                                                                  False,
                                                                  "fake",
@@ -234,9 +236,11 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_volume.reset_mock()
         scenario._upload_volume_to_image.reset_mock()
 
-        scenario.create_and_upload_volume_to_image(1, do_delete=True)
+        scenario.create_and_upload_volume_to_image(1, image=None,
+                                                   do_delete=True,
+                                                   fakeargs="fakeargs")
 
-        scenario._create_volume.assert_called_once_with(1)
+        scenario._create_volume.assert_called_once_with(1, fakeargs="fakeargs")
         scenario._upload_volume_to_image.assert_called_once_with(fake_volume,
                                                                  False,
                                                                  "bare",
