@@ -592,7 +592,7 @@ def run(argv, categories):
             LOG.exception(e)
         print(e)
         print("Looks like Rally can't connect to its DB.")
-        print("Make a sure that connection string in rally.conf is proper:")
+        print("Make sure that connection string in rally.conf is proper:")
         print(CONF.database.connection)
         return 1
     except Exception:
