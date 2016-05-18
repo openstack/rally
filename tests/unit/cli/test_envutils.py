@@ -109,6 +109,7 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_PASSWORD": "fake_password",
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert"})
@@ -120,6 +121,7 @@ class EnvUtilsTestCase(test.TestCase):
                 "password": "fake_password",
                 "tenant_name": "fake_tenant_name"
             },
+            "endpoint_type": "fake_endpoint_type",
             "endpoint": "fake_endpoint",
             "region_name": "fake_region_name",
             "https_cacert": "fake_cacert",
@@ -160,3 +162,24 @@ class EnvUtilsTestCase(test.TestCase):
     def test_get_project_name_from_env_when_neither(self):
         self.assertRaises(exceptions.ValidationError,
                           envutils.get_project_name_from_env)
+
+    @mock.patch.dict(os.environ, {"OS_ENDPOINT_TYPE": "fake_endpoint_typeURL"})
+    def test_get_endpoint_type_from_env_when_endpoint_type(self):
+        endpoint_type = envutils.get_endpoint_type_from_env()
+        self.assertEqual("fake_endpoint_type", endpoint_type)
+
+    @mock.patch.dict(os.environ, {"OS_INTERFACE": "fake_interface"})
+    def test_get_endpoint_type_from_env_when_interface(self):
+        endpoint_type = envutils.get_endpoint_type_from_env()
+        self.assertEqual("fake_interface", endpoint_type)
+
+    @mock.patch.dict(os.environ, {"OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
+                                  "OS_INTERFACE": "fake_interface"})
+    def test_get_endpoint_type_from_env_when_both(self):
+        endpoint_type = envutils.get_endpoint_type_from_env()
+        self.assertEqual("fake_endpoint_type", endpoint_type)
+
+    @mock.patch.dict(os.environ, values={}, clear=True)
+    def test_get_endpoint_type_from_env_when_neither(self):
+        endpoint_type = envutils.get_endpoint_type_from_env()
+        self.assertEqual("public", endpoint_type)
