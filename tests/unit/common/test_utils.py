@@ -472,7 +472,7 @@ class TimeoutThreadTestCase(test.TestCase):
         )
         test_thread.start()
         start_time = time.time()
-        queue.put((test_thread.ident, start_time + 1))
+        queue.put((test_thread, start_time + 1))
         killer_thread.start()
         test_thread.join()
         end_time = time.time()

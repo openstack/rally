@@ -79,7 +79,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
 
         thread.start()
         if timeout:
-            timeout_queue.put((thread.ident, time.time() + timeout))
+            timeout_queue.put((thread, time.time() + timeout))
         pool.append(thread)
         alive_threads_in_pool += 1
 

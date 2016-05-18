@@ -82,7 +82,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         i += 1
         thread.start()
         if timeout:
-            timeout_queue.put((thread.ident, time.time() + timeout))
+            timeout_queue.put((thread, time.time() + timeout))
         pool.append(thread)
 
         time_gap = time.time() - start
@@ -102,8 +102,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
                 time.sleep(0.001)
 
     while pool:
-        thr = pool.popleft()
-        thr.join()
+        pool.popleft().join()
 
     if timeout:
         timeout_queue.put((None, None,))
