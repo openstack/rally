@@ -21,10 +21,10 @@ from tests.unit import test
 CTX = "rally.plugins.openstack.context.murano.murano_packages"
 
 
-class MuranoGeneratorTestCase(test.TestCase):
+class MuranoPackageGeneratorTestCase(test.TestCase):
 
     def setUp(self):
-        super(MuranoGeneratorTestCase, self).setUp()
+        super(MuranoPackageGeneratorTestCase, self).setUp()
 
     @staticmethod
     def _get_context():
