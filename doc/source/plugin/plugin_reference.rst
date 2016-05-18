@@ -5,6 +5,8 @@
 Rally Plugins Reference
 =======================
 
-.. contents:: :depth: 2
+.. contents::
+  :depth: 1
+  :local:
 
 .. generate_plugin_reference::
