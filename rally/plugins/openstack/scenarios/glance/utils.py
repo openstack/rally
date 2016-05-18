@@ -74,7 +74,7 @@ class GlanceScenario(scenario.OpenStackScenario):
         self.clients("glance").images.delete(image.id)
         wrapper = glance_wrapper.wrap(self._clients.glance, self)
         utils.wait_for_status(
-            image, ["deleted"],
+            image, ["deleted", "pending_delete"],
             check_deletion=True,
             update_resource=wrapper.get_image,
             timeout=CONF.benchmark.glance_image_delete_timeout,
