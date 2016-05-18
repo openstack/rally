@@ -169,11 +169,39 @@ class Scenario(plugin.Plugin,
         return self._idle_duration
 
     def add_output(self, additive=None, complete=None):
-        """Add iteration values for additive output.
+        """Add iteration's custom output data.
+
+        This saves custom output data to task results. The main way to get
+        this data processed is to find it in HTML report ("Scenario Data"
+        tab), where it is displayed by tables or various charts (StackedArea,
+        Lines, Pie).
+
+        Take a look at "Processing Output Charts" section of Rally Plugins
+        Reference to find explanations and examples about additive and
+        complete output types and how to display this output data by
+        specific widgets.
+
+        Here is a simple example how to add both additive and complete data
+        and display them by StackedArea widget in HTML report:
+
+        .. code-block:: python
+
+            self.add_output(
+                additive={"title": "Additive data in StackedArea",
+                          "description": "Iterations trend for foo and bar",
+                          "chart_plugin": "StackedArea",
+                          "data": [["foo", 12], ["bar", 34]]},
+                complete={"title": "Complete data as stacked area",
+                          "description": "Data is shown as-is in StackedArea",
+                          "chart_plugin": "StackedArea",
+                          "data": [["foo", [0, 5], [1, 42], [2, 15], [3, 7]],
+                                   ["bar", [0, 2], [1, 1.3], [2, 5], [3, 9]]],
+                          "label": "Y-axis label text",
+                          "axis_label": "X-axis label text"})
 
         :param additive: dict with additive output
         :param complete: dict with complete output
-        :raises RallyException: When additive or complete has wrong format
+        :raises RallyException: if output has wrong format
         """
         for key, value in (("additive", additive), ("complete", complete)):
             if value:
