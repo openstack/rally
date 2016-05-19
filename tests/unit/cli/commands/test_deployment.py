@@ -49,6 +49,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_PASSWORD": "fake_password",
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
@@ -62,6 +63,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "type": "ExistingCloud",
                 "auth_url": "fake_auth_url",
                 "region_name": "fake_region_name",
+                "endpoint_type": "fake_endpoint_type",
                 "endpoint": "fake_endpoint",
                 "admin": {
                     "username": "fake_username",

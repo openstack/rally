@@ -67,6 +67,7 @@ class DeploymentCommands(object):
             OS_PASSWORD
             OS_AUTH_URL
             OS_TENANT_NAME
+            OS_ENDPOINT_TYPE or OS_INTERFACE
             OS_ENDPOINT
             OS_REGION_NAME
             OS_CACERT
@@ -261,6 +262,11 @@ class DeploymentCommands(object):
             if credential.get("region_name"):
                 env_file.write("export OS_REGION_NAME='%s'\n" %
                                credential["region_name"])
+            if credential.get("endpoint_type"):
+                env_file.write("export OS_ENDPOINT_TYPE='%sURL'\n" %
+                               credential["endpoint_type"])
+                env_file.write("export OS_INTERFACE='%s'\n" %
+                               credential["endpoint_type"])
             if credential.get("endpoint"):
                 env_file.write("export OS_ENDPOINT='%s'\n" %
                                credential["endpoint"])

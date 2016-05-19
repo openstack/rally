@@ -84,8 +84,7 @@ with_default_verification_id = default_from_global(
 
 
 def get_creds_from_env_vars():
-    required_env_vars = ["OS_AUTH_URL", "OS_USERNAME",
-                         "OS_PASSWORD"]
+    required_env_vars = ["OS_AUTH_URL", "OS_USERNAME", "OS_PASSWORD"]
     missing_env_vars = [v for v in required_env_vars if v not in os.environ]
     if missing_env_vars:
         msg = ("The following environment variables are "
@@ -99,6 +98,7 @@ def get_creds_from_env_vars():
             "password": os.environ["OS_PASSWORD"],
             "tenant_name": get_project_name_from_env()
         },
+        "endpoint_type": get_endpoint_type_from_env(),
         "endpoint": os.environ.get("OS_ENDPOINT"),
         "region_name": os.environ.get("OS_REGION_NAME", ""),
         "https_cacert": os.environ.get("OS_CACERT", ""),
@@ -118,3 +118,12 @@ def get_project_name_from_env():
                                          "is required, but neither is set.")
 
     return tenant_name
+
+
+def get_endpoint_type_from_env():
+    endpoint_type = os.environ.get("OS_ENDPOINT_TYPE",
+                                   os.environ.get("OS_INTERFACE", "public"))
+    if "URL" in endpoint_type:
+        endpoint_type = endpoint_type.replace("URL", "")
+
+    return endpoint_type

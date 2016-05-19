@@ -770,6 +770,7 @@ class Clients(object):
                 creds["admin"]["username"],
                 creds["admin"]["password"],
                 creds["admin"]["tenant_name"],
+                endpoint_type=creds["endpoint_type"],
                 endpoint=creds["endpoint"],
                 region_name=creds["region_name"],
                 https_cacert=creds["https_cacert"],
