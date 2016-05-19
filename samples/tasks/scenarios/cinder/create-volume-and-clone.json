@@ -21,7 +21,8 @@
                 "size": {
                     "min": 1,
                     "max": 5
-                }
+                },
+                "nested_level": 3
             },
             "runner": {
                 "type": "constant",

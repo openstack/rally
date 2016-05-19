@@ -551,22 +551,34 @@ class CinderVolumes(cinder_utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder"]})
-    def create_volume_and_clone(self, size, image=None, **kwargs):
+    def create_volume_and_clone(self, size, image=None, nested_level=1,
+                                **kwargs):
         """Create a volume, then clone it to another volume.
+
+          This creates a volume, then clone it to anothor volume,
+          and then clone the new volume to next volume...
+           1. create source volume (from image)
+           2. clone source volume to volume1
+           3. clone volume1 to volume2
+           4. clone volume2 to volume3
+           5. ...
 
         :param size: volume size (integer, in GB) or
                      dictionary, must contain two values:
                          min - minimum size volumes will be created as;
                          max - maximum size volumes will be created as.
         :param image: image to be used to create initial volume
+        :param nested_level: amount of nested levels
         :param kwargs: optional args to create volumes
         """
         if image:
             kwargs["imageRef"] = image
 
-        vol1 = self._create_volume(size, **kwargs)
+        source_vol = self._create_volume(size, **kwargs)
 
         kwargs.pop("imageRef", None)
-        with atomic.ActionTimer(self, "cinder.clone_volume"):
-            self._create_volume(size, source_volid=vol1.id,
-                                atomic_action=False, **kwargs)
+        for i in range(nested_level):
+            with atomic.ActionTimer(self, "cinder.clone_volume"):
+                source_vol = self._create_volume(source_vol.size,
+                                                 source_volid=source_vol.id,
+                                                 atomic_action=False, **kwargs)
