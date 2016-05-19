@@ -480,6 +480,8 @@
     -
       args:
         size: 1
+        image:
+          name: {{image_name}}
       runner:
         type: "constant"
         times: 1
@@ -498,6 +500,8 @@
       args:
         size: 1
         volume_type: test
+        image:
+          name: {{image_name}}
       runner:
         type: "constant"
         times: 1

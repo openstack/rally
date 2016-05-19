@@ -433,11 +433,12 @@ class CinderVolumes(cinder_utils.CinderScenario,
         self._create_snapshot(volume["id"], force=force, **kwargs)
         self._list_snapshots(detailed)
 
+    @types.convert(image={"type": "glance_image"})
     @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
     @validation.required_openstack(users=True)
     @validation.required_parameters("size")
     @scenario.configure(context={"cleanup": ["cinder", "glance"]})
-    def create_and_upload_volume_to_image(self, size, force=False,
+    def create_and_upload_volume_to_image(self, size, image=None, force=False,
                                           container_format="bare",
                                           disk_format="raw",
                                           do_delete=True,
@@ -448,6 +449,7 @@ class CinderVolumes(cinder_utils.CinderScenario,
                      dictionary, must contain two values:
                          min - minimum size volumes will be created as;
                          max - maximum size volumes will be created as.
+        :param image: image to be used to create volume.
         :param force: when set to True volume that is attached to an instance
                       could be uploaded to image
         :param container_format: image container format
@@ -455,6 +457,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
         :param do_delete: deletes image and volume after uploading if True
         :param kwargs: optional args to create a volume
         """
+        if image:
+            kwargs["imageRef"] = image
         volume = self._create_volume(size, **kwargs)
         image = self._upload_volume_to_image(volume, force, container_format,
                                              disk_format)

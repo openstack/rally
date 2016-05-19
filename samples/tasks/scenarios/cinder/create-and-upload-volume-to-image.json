@@ -6,7 +6,10 @@
                 "force": false,
                 "container_format": "bare",
                 "disk_format": "raw",
-                "do_delete": true
+                "do_delete": true,
+                "image": {
+                    "name": "^cirros.*uec$"
+                }
             },
             "runner": {
                 "type": "constant",
@@ -29,7 +32,10 @@
                 "force": false,
                 "container_format": "bare",
                 "disk_format": "raw",
-                "do_delete": true
+                "do_delete": true,
+                "image": {
+                    "name": "^cirros.*uec$"
+                }
             },
             "runner": {
                 "type": "constant",
