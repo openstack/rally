@@ -538,6 +538,9 @@
         users:
           tenants: 1
           users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         sleep: 0.6
@@ -550,7 +553,9 @@
         users:
           tenants: 1
           users_per_tenant: 1
-
+      sla:
+        failure_rate:
+          max: 0
 
   Dummy.dummy_exception:
     -
