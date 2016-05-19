@@ -6,13 +6,14 @@
             },
             "runner": {
                 "type": "constant",
-                "times": 10,
+                "times": 12,
                 "concurrency": 1
             },
             "context": {
                 "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
+                    "tenants": 3,
+                    "users_per_tenant": 4,
+                    "user_choice_method": "round_robin"
                 }
             }
         }
