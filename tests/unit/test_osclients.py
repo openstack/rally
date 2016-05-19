@@ -684,9 +684,7 @@ class OSClientsTestCase(test.TestCase):
                   "insecure": False,
                   "cacert": None,
                   "user": self.credential.username,
-                  "key": self.credential.password,
                   "tenant_name": self.credential.tenant_name,
-                  "authurl": self.credential.auth_url
                   }
             mock_swift.client.Connection.assert_called_once_with(**kw)
             self.assertEqual(self.clients.cache["swift"], fake_swift)

@@ -96,7 +96,10 @@ def get_creds_from_env_vars():
         "admin": {
             "username": os.environ["OS_USERNAME"],
             "password": os.environ["OS_PASSWORD"],
-            "tenant_name": get_project_name_from_env()
+            "tenant_name": get_project_name_from_env(),
+            "user_domain_name": os.environ.get("OS_USER_DOMAIN_NAME", ""),
+            "project_domain_name": os.environ.get("OS_PROJECT_DOMAIN_NAME",
+                                                  ""),
         },
         "endpoint_type": get_endpoint_type_from_env(),
         "endpoint": os.environ.get("OS_ENDPOINT"),

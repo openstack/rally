@@ -50,6 +50,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
                                   "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
+                                  "OS_PROJECT_DOMAIN_NAME": "fake_pdn",
+                                  "OS_USER_DOMAIN_NAME": "fake_udn",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
@@ -68,6 +70,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "admin": {
                     "username": "fake_username",
                     "password": "fake_password",
+                    "user_domain_name": "fake_udn",
+                    "project_domain_name": "fake_pdn",
                     "tenant_name": "fake_tenant_name"
                 },
                 "https_insecure": True,

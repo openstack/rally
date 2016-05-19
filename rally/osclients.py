@@ -647,16 +647,18 @@ class Swift(OSClient):
             service_type=self.choose_service_type(service_type),
             endpoint_type=self.credential.endpoint_type,
             region_name=self.credential.region_name)
+        auth_info = self._get_auth_info(
+            user_key="user",
+            password_key="key",
+            auth_url_key="authurl",
+            project_name_key="tenant_name")
         client = swift.Connection(retries=1,
                                   preauthurl=object_api_url,
                                   preauthtoken=kc.auth_token,
                                   insecure=self.credential.insecure,
                                   cacert=self.credential.cacert,
-                                  **self._get_auth_info(
-                                      user_key="user",
-                                      password_key="key",
-                                      auth_url_key="authurl",
-                                      project_name_key="tenant_name")
+                                  user=auth_info["user"],
+                                  tenant_name=auth_info["tenant_name"],
                                   )
         return client
 
@@ -771,6 +773,8 @@ class Clients(object):
                 creds["admin"]["password"],
                 creds["admin"]["tenant_name"],
                 endpoint_type=creds["endpoint_type"],
+                user_domain_name=creds["admin"].get("user_domain_name"),
+                project_domain_name=creds["admin"].get("project_domain_name"),
                 endpoint=creds["endpoint"],
                 region_name=creds["region_name"],
                 https_cacert=creds["https_cacert"],

@@ -112,6 +112,8 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
+                                  "OS_PROJECT_DOMAIN_NAME": "fake_pdn",
+                                  "OS_USER_DOMAIN_NAME": "fake_udn",
                                   "OS_CACERT": "fake_cacert"})
     def test_get_creds_from_env_vars(self):
         expected_creds = {
@@ -119,6 +121,8 @@ class EnvUtilsTestCase(test.TestCase):
             "admin": {
                 "username": "fake_username",
                 "password": "fake_password",
+                "user_domain_name": "fake_udn",
+                "project_domain_name": "fake_pdn",
                 "tenant_name": "fake_tenant_name"
             },
             "endpoint_type": "fake_endpoint_type",
