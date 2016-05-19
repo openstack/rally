@@ -21,18 +21,14 @@ from six.moves.urllib import parse as urlparse
 
 from rally import api
 from rally.common import logging
-from rally.common.plugin import plugin
 from rally import exceptions
 from rally.task import exporter
 
 
-def configure(name, namespace="default"):
-    return plugin.configure(name=name, namespace=namespace)
-
 LOG = logging.getLogger(__name__)
 
 
-@configure(name="file-exporter")
+@exporter.configure(name="file-exporter")
 class FileExporter(exporter.TaskExporter):
 
     def validate(self):
