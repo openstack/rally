@@ -174,6 +174,12 @@ def main():
     # Install Tempest
     render_vars["install"] = call_rally("verify install")
 
+    # Discover tests depending on Tempest suite
+    discover_cmd = "verify discover"
+    if args.mode == "light":
+        discover_cmd += " --pattern smoke"
+    render_vars["discover"] = call_rally(discover_cmd)
+
     # Get Rally deployment ID
     rally_deployment_id = subprocess.check_output(
         "rally deployment list | awk '/devstack/ {print $2}'",
