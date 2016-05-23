@@ -67,7 +67,7 @@ class UserContextMixin(object):
                 # when it is supported there.
                 # Until it happens we use old "random" approach for
                 # 'existing_users' context.
-                self.user_choice_method = "random"
+                self._user_choice_method = "random"
         return self._user_choice_method
 
     def map_for_scenario(self, context_obj):

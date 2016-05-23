@@ -83,6 +83,14 @@ class UserContextMixinTestCase(test.TestCase):
             self.mixin.map_for_scenario(context)
         )
 
+    def test_user_choice_method_default(self):
+        self.mixin.context["config"]["users"]["user_choice_method"] = None
+
+        self.assertEqual(
+            "random",
+            self.mixin.user_choice_method
+        )
+
     @mock.patch("%s.random.choice" % CTX,
                 side_effect=Exception("Should not be raised"))
     def test_map_for_scenario_round_robin(self, mock_choice):
