@@ -155,9 +155,9 @@ class OSClient(plugin.Plugin):
             endpoint = endpoint or self._get_endpoint()
             kc = self.keystone()
             auth = token_endpoint.Token(endpoint, kc.auth_token)
-
+        verify = self.credential.cacert or not self.credential.insecure
         return ks_session.Session(
-            auth=auth, verify=not self.credential.insecure,
+            auth=auth, verify=verify,
             timeout=CONF.openstack_client_http_timeout)
 
     def _get_keystoneauth_session(self):

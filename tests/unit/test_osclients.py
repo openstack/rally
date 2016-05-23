@@ -297,6 +297,19 @@ class OSClientsTestCase(test.TestCase):
             auth=fake_auth, verify=not self.credential.insecure,
             timeout=cfg.CONF.openstack_client_http_timeout)
 
+    @mock.patch("keystoneclient.session.Session")
+    def test_get_session_with_ca(self, mock_session):
+        # Use DummyClient since if not the abc meta kicks in
+        osc = DummyClient(self.credential, {}, {})
+
+        self.credential.cacert = "/fake/ca"
+        fake_auth = mock.Mock()
+        osc._get_session(auth=fake_auth)
+
+        mock_session.assert_called_once_with(
+            auth=fake_auth, verify="/fake/ca",
+            timeout=cfg.CONF.openstack_client_http_timeout)
+
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
