@@ -210,11 +210,18 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "region",
                       self.credential["region_name"])
 
-        url_trailer = parse.urlparse(self.credential["auth_url"]).path
-        self.conf.set(section_name, "auth_version", url_trailer[1:3])
-        self.conf.set(section_name, "uri", self.credential["auth_url"])
+        auth_url = self.credential["auth_url"]
+        if "/v2" not in auth_url and "/v3" not in auth_url:
+            auth_version = "v2"
+            auth_url_v2 = parse.urljoin(auth_url, "/v2.0")
+        else:
+            url_path = parse.urlparse(auth_url).path
+            auth_version = url_path[1:3]
+            auth_url_v2 = auth_url.replace(url_path, "/v2.0")
+        self.conf.set(section_name, "auth_version", auth_version)
+        self.conf.set(section_name, "uri", auth_url_v2)
         self.conf.set(section_name, "uri_v3",
-                      self.credential["auth_url"].replace(url_trailer, "/v3"))
+                      auth_url_v2.replace("/v2.0", "/v3"))
 
         self.conf.set(section_name, "admin_domain_name",
                       self.credential["admin_domain_name"])
