@@ -13,11 +13,15 @@
 import random
 
 from rally.common.i18n import _
+from rally.common import logging
 from rally.common import utils
 from rally import exceptions
 from rally.task import atomic
 from rally.task import scenario
 from rally.task import validation
+
+
+LOG = logging.getLogger(__name__)
 
 
 class DummyScenarioException(exceptions.RallyException):
@@ -148,6 +152,8 @@ class Dummy(scenario.Scenario):
                                   "chart_plugin": "Table",
                                   "data": data})
 
+    @logging.log_deprecated("Use Dummy.dummy_output() instead.", "0.4.1",
+                            once=True)
     @scenario.configure()
     def dummy_with_scenario_output(self):
         """Return a dummy scenario output.
