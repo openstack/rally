@@ -190,7 +190,21 @@ class VMTasks(vm_utils.VMScenario):
             self._delete_server_with_fip(server, fip,
                                          force_delete=force_delete)
 
-        return {"data": data, "errors": err}
+        # NOTE(amaretskiy): command output should be in format:
+        #     {"key1": numeric_value, "key2": numeric_value, ...}
+        output = None
+        if type(data) == dict:
+            try:
+                output = [[str(k), float(v)] for k, v in data.items()]
+            except (TypeError, ValueError):
+                LOG.error(("Command has returned data in unexpected format.\n"
+                           "Expected format: {key1: numeric_value, "
+                           "key2: numeric_value, ...}.\n"
+                           "Actual data: %s" % data))
+        if output:
+            self.add_output(additive={"title": "Command output",
+                                      "chart_plugin": "Lines",
+                                      "data": output})
 
     @types.convert(image={"type": "glance_image"},
                    flavor={"type": "nova_flavor"})

@@ -36,8 +36,11 @@ class VMTasksTestCase(test.ScenarioTestCase):
             return_value=mock.Mock(id="foo_volume"))
         self.scenario._run_command = mock.MagicMock(
             return_value=(0, "\"foo_out\"", "foo_err"))
+        self.scenario.add_output = mock.Mock()
 
     def test_boot_runcommand_delete(self):
+        self.scenario._run_command = mock.MagicMock(
+            return_value=(0, "{\"foo\": 42}", "foo_err"))
         self.scenario.boot_runcommand_delete(
             "foo_image", "foo_flavor",
             command={"script_file": "foo_script",
@@ -65,6 +68,9 @@ class VMTasksTestCase(test.ScenarioTestCase):
                      "interpreter": "foo_interpreter"})
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete="foo_force")
+        self.scenario.add_output.assert_called_once_with(
+            additive={"title": "Command output", "chart_plugin": "Lines",
+                      "data": [["foo", 42.0]]})
 
     def test_boot_runcommand_delete_command(self):
         self.scenario.boot_runcommand_delete(
@@ -101,6 +107,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
                           "foo_script", "foo_username")
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
+        self.assertFalse(self.scenario.add_output.called)
 
     def test_boot_runcommand_delete_command_timeouts(self):
         self.scenario._run_command.side_effect = exceptions.SSHTimeout()
@@ -110,6 +117,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
                           "foo_script", "foo_username")
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
+        self.assertFalse(self.scenario.add_output.called)
 
     def test_boot_runcommand_delete_ping_wait_timeouts(self):
         self.scenario._wait_for_ping.side_effect = exceptions.TimeoutException(
@@ -131,6 +139,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
 
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
+        self.assertFalse(self.scenario.add_output.called)
 
     @mock.patch("rally.plugins.openstack.scenarios.vm.vmtasks.json")
     def test_boot_runcommand_delete_json_fails(self, mock_json):
@@ -141,6 +150,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
                           "foo_script", "foo_username")
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
+        self.assertFalse(self.scenario.add_output.called)
 
     def test_boot_runcommand_delete_custom_image(self):
         context = {
