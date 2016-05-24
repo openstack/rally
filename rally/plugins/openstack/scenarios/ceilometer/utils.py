@@ -317,8 +317,8 @@ class CeilometerScenario(scenario.OpenStackScenario):
         key = self._make_profiler_key("ceilometer.list_samples", query,
                                       limit)
         with atomic.ActionTimer(self, key):
-            return self.clients("ceilometer").samples.list(q=query,
-                                                           limit=limit)
+            return self.clients("ceilometer").new_samples.list(q=query,
+                                                               limit=limit)
 
     @atomic.action_timer("ceilometer.get_resource")
     def _get_resource(self, resource_id):
