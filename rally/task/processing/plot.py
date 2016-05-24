@@ -14,7 +14,10 @@
 #    under the License.
 
 import collections
+import hashlib
 import json
+
+import six
 
 from rally.common import objects
 from rally.common.plugin import plugin
@@ -149,3 +152,99 @@ def plot(tasks_results, include_libs=False):
     source, data = _process_tasks(extended_results)
     return template.render(source=json.dumps(source), data=json.dumps(data),
                            include_libs=include_libs)
+
+
+class Trends(object):
+    """Process tasks results and make trends data.
+
+    Group tasks results by their input configuration,
+    calculate statistics for these groups and prepare it
+    for displaying in trends HTML report.
+    """
+
+    def __init__(self):
+        self._tasks = {}
+
+    def _to_str(self, obj):
+        """Convert object into string."""
+        if obj is None:
+            return "None"
+        elif isinstance(obj, six.string_types + (int, float)):
+            return str(obj).strip()
+        elif isinstance(obj, (list, tuple)):
+            return ",".join(sorted([self._to_str(v) for v in obj]))
+        elif isinstance(obj, dict):
+            return "|".join(sorted([":".join([self._to_str(k),
+                                              self._to_str(v)])
+                                    for k, v in obj.items()]))
+        raise TypeError("Unexpected type %(type)r of object %(obj)r"
+                        % {"obj": obj, "type": type(obj)})
+
+    def _make_hash(self, obj):
+        return hashlib.md5(self._to_str(obj).encode("utf8")).hexdigest()
+
+    def add_result(self, result):
+        key = self._make_hash(result["key"]["kw"])
+        if key not in self._tasks:
+            name = result["key"]["name"]
+            self._tasks[key] = {"seq": 1,
+                                "name": name,
+                                "cls": name.split(".")[0],
+                                "met": name.split(".")[1],
+                                "data": {},
+                                "total": None,
+                                "atomic": [],
+                                "stat": {},
+                                "sla_failures": 0,
+                                "config": json.dumps(result["key"]["kw"],
+                                                     indent=2)}
+        else:
+            self._tasks[key]["seq"] += 1
+
+        for sla in result["sla"]:
+            self._tasks[key]["sla_failures"] += not sla["success"]
+
+        task = {row[0]: dict(zip(result["info"]["stat"]["cols"], row))
+                for row in result["info"]["stat"]["rows"]}
+
+        for k in task:
+            for tgt, src in (("min", "Min (sec)"),
+                             ("median", "Median (sec)"),
+                             ("90%ile", "90%ile (sec)"),
+                             ("95%ile", "95%ile (sec)"),
+                             ("max", "Max (sec)"),
+                             ("avg", "Avg (sec)")):
+
+                # NOTE(amaretskiy): some atomic actions can be
+                #   missed due to failures. We can ignore that
+                #   because we use NVD3 lineChart() for displaying
+                #   trends, which is safe for missed points
+                if k not in self._tasks[key]["data"]:
+                    self._tasks[key]["data"][k] = {"min": [],
+                                                   "median": [],
+                                                   "90%ile": [],
+                                                   "95%ile": [],
+                                                   "max": [],
+                                                   "avg": []}
+                self._tasks[key]["data"][k][tgt].append(
+                    (self._tasks[key]["seq"], task[k][src]))
+
+    def get_data(self):
+        for key, value in self._tasks.items():
+            total = None
+            for k, v in value["data"].items():
+                if k == "total":
+                    total = v
+                else:
+                    self._tasks[key]["atomic"].append(
+                        {"name": k, "values": list(v.items())})
+            for stat, comp in (("min", charts.streaming.MinComputation()),
+                               ("max", charts.streaming.MaxComputation()),
+                               ("avg", charts.streaming.MeanComputation())):
+                for k, v in total[stat]:
+                    comp.add(v)
+                self._tasks[key]["stat"][stat] = comp.result()
+            del self._tasks[key]["data"]
+            self._tasks[key]["total"] = list(total.items())
+            self._tasks[key]["single"] = self._tasks[key]["seq"] < 2
+        return sorted(self._tasks.values(), key=lambda s: s["name"])

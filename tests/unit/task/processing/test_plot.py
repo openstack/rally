@@ -149,3 +149,134 @@ class PlotTestCase(test.TestCase):
 
     def test__extend_results_empty(self):
         self.assertEqual([], plot._extend_results([]))
+
+
+@ddt.ddt
+class TrendsTestCase(test.TestCase):
+
+    def test___init__(self):
+        trends = plot.Trends()
+        self.assertEqual({}, trends._tasks)
+        self.assertRaises(TypeError, plot.Trends, 42)
+
+    @ddt.data({"args": [None], "result": "None"},
+              {"args": [""], "result": ""},
+              {"args": [" str value "], "result": "str value"},
+              {"args": [" 42 "], "result": "42"},
+              {"args": ["42"], "result": "42"},
+              {"args": [42], "result": "42"},
+              {"args": [42.00], "result": "42.0"},
+              {"args": [[3.2, 1, " foo ", None]], "result": "1,3.2,None,foo"},
+              {"args": [(" def", "abc", [22, 33])], "result": "22,33,abc,def"},
+              {"args": [{}], "result": ""},
+              {"args": [{1: 2, "a": " b c "}], "result": "1:2|a:b c"},
+              {"args": [{"foo": "bar", (1, 2): [5, 4, 3]}],
+               "result": "1,2:3,4,5|foo:bar"},
+              {"args": [1, 2], "raises": TypeError},
+              {"args": [set()], "raises": TypeError})
+    @ddt.unpack
+    def test__to_str(self, args, result=None, raises=None):
+        trends = plot.Trends()
+        if raises:
+            self.assertRaises(raises, trends._to_str, *args)
+        else:
+            self.assertEqual(result, trends._to_str(*args))
+
+    @mock.patch(PLOT + "hashlib")
+    def test__make_hash(self, mock_hashlib):
+        mock_hashlib.md5.return_value.hexdigest.return_value = "md5_digest"
+        trends = plot.Trends()
+        trends._to_str = mock.Mock()
+        trends._to_str.return_value.encode.return_value = "foo_str"
+
+        self.assertEqual("md5_digest", trends._make_hash("foo_obj"))
+        trends._to_str.assert_called_once_with("foo_obj")
+        trends._to_str.return_value.encode.assert_called_once_with("utf8")
+        mock_hashlib.md5.assert_called_once_with("foo_str")
+
+    def _make_result(self, salt, sla_success=True):
+        return {
+            "key": {"kw": salt + "_kw", "name": "Scenario.name_%s" % salt},
+            "sla": [{"success": sla_success}],
+            "info": {"iterations_count": 4,
+                     "atomic": {"a": 123, "b": 456},
+                     "stat": {"rows": [["a", 0.7, 0.85, 0.9, 0.87,
+                                        1.25, 0.67, "100.0%", 4],
+                                       ["b", 0.5, 0.75, 0.85, 0.9,
+                                        1.1, 0.58, "100.0%", 4],
+                                       ["total", 1.2, 1.55, 1.7, 1.9,
+                                        1.5, 1.6, "100.0%", 4]],
+                              "cols": ["Action", "Min (sec)", "Median (sec)",
+                                       "90%ile (sec)", "95%ile (sec)",
+                                       "Max (sec)", "Avg (sec)", "Success",
+                                       "Count"]}},
+            "iterations": ["<iter-0>", "<iter-1>", "<iter-2>", "<iter-3>"]}
+
+    def _sort_trends(self, trends_result):
+        for r_idx, res in enumerate(trends_result):
+            trends_result[r_idx]["total"].sort()
+            for a_idx, dummy in enumerate(res["atomic"]):
+                trends_result[r_idx]["atomic"][a_idx]["values"].sort()
+        return trends_result
+
+    def test_add_result_and_get_data(self):
+        trends = plot.Trends()
+        for i in 0, 1:
+            trends.add_result(self._make_result(str(i)))
+        expected = [
+            {"atomic": [
+                {"name": "a",
+                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
+                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
+                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
+                {"name": "b",
+                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
+                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
+                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
+             "cls": "Scenario", "config": "\"0_kw\"", "met": "name_0",
+             "name": "Scenario.name_0", "seq": 1, "single": True,
+             "sla_failures": 0, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
+             "total": [("90%ile", [(1, 1.7)]), ("95%ile", [(1, 1.9)]),
+                       ("avg", [(1, 1.6)]), ("max", [(1, 1.5)]),
+                       ("median", [(1, 1.55)]), ("min", [(1, 1.2)])]},
+            {"atomic": [
+                {"name": "a",
+                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
+                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
+                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
+                {"name": "b",
+                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
+                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
+                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
+             "cls": "Scenario", "config": "\"1_kw\"", "met": "name_1",
+             "name": "Scenario.name_1", "seq": 1, "single": True,
+             "sla_failures": 0, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
+             "total": [("90%ile", [(1, 1.7)]), ("95%ile", [(1, 1.9)]),
+                       ("avg", [(1, 1.6)]), ("max", [(1, 1.5)]),
+                       ("median", [(1, 1.55)]), ("min", [(1, 1.2)])]}]
+        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+
+    def test_add_result_once_and_get_data(self):
+        trends = plot.Trends()
+        trends.add_result(self._make_result("foo", sla_success=False))
+        expected = [
+            {"atomic": [
+                {"name": "a",
+                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
+                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
+                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
+                {"name": "b",
+                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
+                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
+                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
+             "cls": "Scenario", "config": "\"foo_kw\"", "met": "name_foo",
+             "name": "Scenario.name_foo", "seq": 1, "single": True,
+             "sla_failures": 1, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
+             "total": [("90%ile", [(1, 1.7)]), ("95%ile", [(1, 1.9)]),
+                       ("avg", [(1, 1.6)]), ("max", [(1, 1.5)]),
+                       ("median", [(1, 1.55)]), ("min", [(1, 1.2)])]}]
+        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+
+    def test_get_data_no_results_added(self):
+        trends = plot.Trends()
+        self.assertEqual([], trends.get_data())
