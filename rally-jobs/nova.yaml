@@ -75,6 +75,7 @@
             name: {{flavor_name}}
         image:
             name: {{image_name}}
+        auto_assign_nic: true
       runner:
         type: "constant"
         times: 2
