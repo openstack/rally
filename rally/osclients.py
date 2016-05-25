@@ -395,7 +395,7 @@ class Heat(OSClient):
                              token=kc.auth_token,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=self.credential.insecure,
-                             cacert=self.credential.cacert,
+                             ca_file=self.credential.cacert,
                              **self._get_auth_info(project_name_key=None))
         return client
 
