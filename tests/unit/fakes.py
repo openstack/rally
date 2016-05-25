@@ -1662,6 +1662,14 @@ class FakeScenario(scenario.Scenario):
         raise multiprocessing.TimeoutError()
 
 
+@scenario.configure(name="classbased.fooscenario")
+class FakeClassBasedScenario(FakeScenario):
+    """Fake class-based scenario."""
+
+    def run(self, *args, **kwargs):
+        pass
+
+
 class FakeTimer(rally_utils.Timer):
 
     def duration(self):

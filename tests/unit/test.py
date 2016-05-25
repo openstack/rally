@@ -200,9 +200,6 @@ class FakeClientsScenarioTestCase(ScenarioTestCase):
         self._fake_clients = fakes.FakeClients()
 
 
-def get_test_context():
-    return {
-        "task": {
-            "uuid": str(uuid.uuid4())
-        }
-    }
+def get_test_context(**kwargs):
+    kwargs["task"] = {"uuid": str(uuid.uuid4())}
+    return kwargs

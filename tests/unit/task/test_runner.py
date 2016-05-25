@@ -169,6 +169,29 @@ class ScenarioRunnerTestCase(test.TestCase):
         runner_obj._run_scenario.assert_called_once_with(
             cls, method_name, context_obj, expected_config_kwargs)
 
+    @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
+    def test_run_classbased(self, mock_timer_duration):
+        scenario_class = fakes.FakeClassBasedScenario
+        runner_obj = serial.SerialScenarioRunner(
+            mock.MagicMock(),
+            mock.MagicMock())
+        runner_obj._run_scenario = mock.Mock()
+        context_obj = {"task": runner_obj.task,
+                       "scenario_name": "classbased.fooscenario",
+                       "admin": {"credential": "foo_credentials"},
+                       "config": {}}
+
+        result = runner_obj.run("classbased.fooscenario", context_obj,
+                                {"foo": 11, "bar": "spam"})
+
+        self.assertIsNone(result)
+        self.assertEqual(runner_obj.run_duration,
+                         mock_timer_duration.return_value)
+        self.assertEqual([], list(runner_obj.result_queue))
+
+        runner_obj._run_scenario.assert_called_once_with(
+            scenario_class, "run", context_obj, {"foo": 11, "bar": "spam"})
+
     def test_abort(self):
         runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
