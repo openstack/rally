@@ -49,22 +49,24 @@ and another is class-based:
 
 .. code-block:: json
 
-{
-  "Dummy.dummy": [
-    {
-      "runner": {
-        "type": "serial",
-        "times": 20
-    }
-  ],
-  "another_dummy_scenario": [
-    {
-      "runner": {
-        "type": "serial",
-        "times": 20
-    }
-  ],
-}
+ {
+   "Dummy.dummy": [
+     {
+       "runner": {
+         "type": "serial",
+         "times": 20
+       }
+     }
+   ],
+   "another_dummy_scenario": [
+     {
+       "runner": {
+         "type": "serial",
+         "times": 20
+       }
+     }
+   ]
+ }
 
 Class AnotherDummyScenario should have method run():
 
@@ -78,7 +80,7 @@ Class AnotherDummyScenario should have method run():
       def run(self):
           """Scenario implementation."""
 
-Modules rally.task.engine and rally.task.processing should be modified to
+Modules *rally.task.engine* and *rally.task.processing* should be modified to
 make them working with class-based scenarios.
 
 Alternatives
