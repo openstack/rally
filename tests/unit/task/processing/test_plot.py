@@ -150,6 +150,25 @@ class PlotTestCase(test.TestCase):
     def test__extend_results_empty(self):
         self.assertEqual([], plot._extend_results([]))
 
+    @mock.patch(PLOT + "Trends")
+    @mock.patch(PLOT + "ui_utils.get_template")
+    @mock.patch(PLOT + "_extend_results")
+    def test_trends(self, mock__extend_results, mock_get_template,
+                    mock_trends):
+        mock__extend_results.return_value = ["foo", "bar"]
+        trends = mock.Mock()
+        trends.get_data.return_value = ["foo", "bar"]
+        mock_trends.return_value = trends
+        template = mock.Mock()
+        template.render.return_value = "trends html"
+        mock_get_template.return_value = template
+
+        self.assertEqual("trends html", plot.trends("tasks_results"))
+        self.assertEqual([mock.call("foo"), mock.call("bar")],
+                         trends.add_result.mock_calls)
+        mock_get_template.assert_called_once_with("task/trends.html")
+        template.render.assert_called_once_with(data="[\"foo\", \"bar\"]")
+
 
 @ddt.ddt
 class TrendsTestCase(test.TestCase):
