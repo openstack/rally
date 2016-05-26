@@ -140,7 +140,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     APPLICATION_CATALOG = "application-catalog"
     BARE_METAL = "baremetal"
     METRIC = "metric"
-    CONTAINER = "container"
+    CONTAINER_INFRA = "container-infra"
 
     def __init__(self):
         self.__names = {
@@ -166,7 +166,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.APPLICATION_CATALOG: _Service.MURANO,
             self.BARE_METAL: _Service.IRONIC,
             self.METRIC: _Service.GNOCCHI,
-            self.CONTAINER: _Service.MAGNUM,
+            self.CONTAINER_INFRA: _Service.MAGNUM,
         }
 
     def __getitem__(self, service_type):

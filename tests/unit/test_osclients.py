@@ -844,7 +844,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_magnum, client)
 
             self.service_catalog.url_for.assert_called_once_with(
-                service_type="container",
+                service_type="container-infra",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
 
