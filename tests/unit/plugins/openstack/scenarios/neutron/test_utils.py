@@ -124,9 +124,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.delete_network")
 
-    def test_create_subnet(self):
+    @mock.patch(NEUTRON_UTILS + "network_wrapper")
+    def test_create_subnet(self, mock_network_wrapper):
         network_id = "fake-id"
         start_cidr = "192.168.0.0/24"
+        mock_network_wrapper.generate_cidr.return_value = "192.168.0.0/24"
 
         network = {"network": {"id": network_id}}
         expected_subnet_data = {
@@ -150,6 +152,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
         # Custom options
         extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
+        mock_network_wrapper.generate_cidr.return_value = "192.168.16.0/24"
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
         self.scenario._create_subnet(network, subnet_data)
