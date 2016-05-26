@@ -36,7 +36,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
             "user": {"tenant_id": "fake",
                      "credential": mock.MagicMock()},
             "tenant": {"id": "fake", "name": "fake",
-                       "volumes": [{"id": "uuid"}],
+                       "volumes": [{"id": "uuid", "size": 1}],
                        "servers": [1]}})
         return context
 
@@ -522,3 +522,40 @@ class CinderServersTestCase(test.ScenarioTestCase):
             self._test_atomic_action_timer(scenario.atomic_actions(),
                                            "cinder.clone_volume")
         scenario._create_volume.assert_has_calls(expected)
+
+    def test_create_volume_from_snapshot(self):
+        fake_snapshot = mock.MagicMock(id=1)
+        fake_volume = mock.MagicMock()
+        create_snapshot_args = {"force": False}
+        scenario = volumes.CinderVolumes(self._get_context())
+
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_snapshot = mock.MagicMock()
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.create_volume_from_snapshot(fakearg="f")
+
+        scenario._create_snapshot.assert_called_once_with("uuid")
+        scenario._create_volume.assert_called_once_with(
+            1, snapshot_id=fake_snapshot.id, fakearg="f")
+        scenario._delete_snapshot.assert_called_once_with(fake_snapshot)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
+        scenario._create_snapshot.reset_mock()
+        scenario._create_volume.reset_mock()
+        scenario._delete_snapshot.reset_mock()
+        scenario._delete_volume.reset_mock()
+
+        scenario.create_volume_from_snapshot(
+            do_delete=False,
+            create_snapshot_kwargs=create_snapshot_args,
+            fakearg="f"
+        )
+
+        scenario._create_snapshot.assert_called_once_with(
+            "uuid", **create_snapshot_args)
+        scenario._create_volume.assert_called_once_with(
+            1, snapshot_id=fake_snapshot.id, fakearg="f")
+        self.assertFalse(scenario._delete_snapshot.called)
+        self.assertFalse(scenario._delete_volume.called)
