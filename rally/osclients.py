@@ -530,6 +530,7 @@ class Sahara(OSClient):
         client = sahara.Client(
             self.choose_version(version),
             service_type=self.choose_service_type(service_type),
+            endpoint_type=self.credential.endpoint_type,
             insecure=self.credential.insecure,
             **self._get_auth_info(password_key="api_key",
                                   project_name_key="project_name"))
