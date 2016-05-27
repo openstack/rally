@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.cinder import volumes
@@ -26,6 +27,7 @@ class fake_type(object):
     name = "fake"
 
 
+@ddt.ddt
 class CinderServersTestCase(test.ScenarioTestCase):
 
     def _get_context(self):
@@ -495,30 +497,28 @@ class CinderServersTestCase(test.ScenarioTestCase):
         self.assertFalse(scenario._delete_volume.called)
         self.assertFalse(scenario._delete_backup.called)
 
-    def test_create_volume_and_clone(self):
-        fake_volumes = [mock.Mock(), mock.Mock()]
+    @ddt.data({},
+              {"nested_level": 2},
+              {"image": "img"})
+    @ddt.unpack
+    def test_create_volume_and_clone(self, nested_level=1,
+                                     image=None):
+        create_volumes_count = nested_level + 1
+        fake_volumes = [mock.Mock(size=1) for i in range(create_volumes_count)]
         scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(side_effect=fake_volumes)
 
-        scenario.create_volume_and_clone(1, fakearg="fake")
-        scenario._create_volume.assert_has_calls([
-            mock.call(1, fakearg="fake"),
-            mock.call(1, source_volid=fake_volumes[0].id, atomic_action=False,
-                      fakearg="fake")])
+        scenario.create_volume_and_clone(1, image=image,
+                                         nested_level=nested_level,
+                                         fakearg="fake")
 
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "cinder.clone_volume")
-
-    def test_create_volume_and_clone_from_image(self):
-        fake_volumes = [mock.Mock(), mock.Mock()]
-        scenario = volumes.CinderVolumes(self.context)
-        scenario._create_volume = mock.MagicMock(side_effect=fake_volumes)
-
-        scenario.create_volume_and_clone(1, image="image_id", fakearg="fake")
-        scenario._create_volume.assert_has_calls([
-            mock.call(1, fakearg="fake", imageRef="image_id"),
-            mock.call(1, source_volid=fake_volumes[0].id, atomic_action=False,
-                      fakearg="fake")])
-
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "cinder.clone_volume")
+        expected = [mock.call(1, imageRef=image, fakearg="fake")
+                    if image else mock.call(1, fakearg="fake")]
+        for i in range(nested_level):
+            expected.append(mock.call(fake_volumes[i].size,
+                                      source_volid=fake_volumes[i].id,
+                                      atomic_action=False, fakearg="fake")
+                            )
+            self._test_atomic_action_timer(scenario.atomic_actions(),
+                                           "cinder.clone_volume")
+        scenario._create_volume.assert_has_calls(expected)
