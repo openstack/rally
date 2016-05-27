@@ -222,6 +222,7 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         scenario_runner = ScenarioRunner(task, config, batch_size)
         scenario_runner._meta_init()
+        scenario_runner._meta_set("name", "FakePlugin_%s" % id(ScenarioRunner))
         return scenario_runner
 
     @ddt.data(
