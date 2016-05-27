@@ -12,10 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
+import k8sclient.client as k8s_client
 import mock
 
+from k8sclient.client.rest import ApiException
+from rally import exceptions
 from rally.plugins.openstack.scenarios.magnum import utils
 from tests.unit import test
+
+MAGNUM_UTILS = "rally.plugins.openstack.scenarios.magnum.utils"
 
 CONF = utils.CONF
 
@@ -25,6 +32,7 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         super(MagnumScenarioTestCase, self).setUp()
         self.cluster_template = mock.Mock()
         self.cluster = mock.Mock()
+        self.pod = mock.Mock()
         self.scenario = utils.MagnumScenario(self.context)
 
     def test_list_cluster_templates(self):
@@ -61,6 +69,15 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "magnum.create_cluster_template")
 
+    def test_get_cluster_template(self):
+        client = self.clients("magnum")
+        client.cluster_templates.get.return_value = self.cluster_template
+        return_cluster_template = self.scenario._get_cluster_template("uuid")
+        client.cluster_templates.get.assert_called_once_with("uuid")
+        self.assertEqual(self.cluster_template, return_cluster_template)
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.get_cluster_template")
+
     def test_list_clusters(self):
         return_clusters_list = self.scenario._list_clusters(limit="foo1")
         client = self.clients("magnum")
@@ -92,3 +109,250 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
             self.mock_wait_for_status.mock.return_value, return_cluster)
         self._test_atomic_action_timer(
             self.scenario.atomic_actions(), "magnum.create_cluster")
+
+    def test_get_cluster(self):
+        self.clients("magnum").clusters.get.return_value = self.cluster
+        return_cluster = self.scenario._get_cluster("uuid")
+        self.clients("magnum").clusters.get.assert_called_once_with("uuid")
+        self.assertEqual(self.cluster, return_cluster)
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.get_cluster")
+
+    def test_get_ca_certificate(self):
+        self.scenario._get_ca_certificate(self.cluster.uuid)
+        self.clients("magnum").certificates.get.assert_called_once_with(
+            self.cluster.uuid)
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.get_ca_certificate")
+
+    def test_create_ca_certificate(self):
+        csr_req = {"cluster_uuid": "uuid", "csr": "csr file"}
+        self.scenario._create_ca_certificate(csr_req)
+        self.clients("magnum").certificates.create.assert_called_once_with(
+            **csr_req)
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.create_ca_certificate")
+
+    @mock.patch("k8sclient.client.apis.apiv_api.ApivApi")
+    @mock.patch("k8sclient.client.api_client.ApiClient")
+    def test_get_k8s_api_client_using_tls(self, mock_api_client,
+                                          mock_apiv_api):
+        self.context.update({
+            "ca_certs_directory": "/home/stack",
+            "tenant": {
+                "id": "rally_tenant_id",
+                "cluster": "rally_cluster_uuid"
+            }
+        })
+        self.scenario = utils.MagnumScenario(self.context)
+        cluster_uuid = self.context["tenant"]["cluster"]
+        client = self.clients("magnum")
+        client.clusters.get.return_value = self.cluster
+        cluster = self.scenario._get_cluster(cluster_uuid)
+        self.cluster_template.tls_disabled = False
+        client.cluster_templates.get.return_value = self.cluster_template
+        dir = self.context["ca_certs_directory"]
+        key_file = os.path.join(dir, cluster_uuid.__add__(".key"))
+        cert_file = os.path.join(dir, cluster_uuid.__add__(".crt"))
+        ca_certs = os.path.join(dir, cluster_uuid.__add__("_ca.crt"))
+        k8s_client = mock_api_client.return_value
+        self.scenario._get_k8s_api_client()
+        mock_api_client.assert_called_once_with(
+            cluster.api_address,
+            key_file=key_file,
+            cert_file=cert_file,
+            ca_certs=ca_certs)
+        mock_apiv_api.assert_called_once_with(k8s_client)
+
+    @mock.patch("k8sclient.client.apis.apiv_api.ApivApi")
+    @mock.patch("k8sclient.client.api_client.ApiClient")
+    def test_get_k8s_api_client(self, mock_api_client,
+                                mock_apiv_api):
+        self.context.update({
+            "tenant": {
+                "id": "rally_tenant_id",
+                "cluster": "rally_cluster_uuid"
+            }
+        })
+        self.scenario = utils.MagnumScenario(self.context)
+        cluster_uuid = self.context["tenant"]["cluster"]
+        client = self.clients("magnum")
+        client.clusters.get.return_value = self.cluster
+        cluster = self.scenario._get_cluster(cluster_uuid)
+        self.cluster_template.tls_disabled = True
+        client.cluster_templates.get.return_value = self.cluster_template
+        k8s_client = mock_api_client.return_value
+        self.scenario._get_k8s_api_client()
+        mock_api_client.assert_called_once_with(
+            cluster.api_address, key_file=None, cert_file=None, ca_certs=None)
+        mock_apiv_api.assert_called_once_with(k8s_client)
+
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_list_v1pods(self, mock__get_k8s_api_client):
+        k8s_api = mock__get_k8s_api_client.return_value
+        self.scenario._list_v1pods()
+        k8s_api.list_namespaced_pod.assert_called_once_with(
+            namespace="default")
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.k8s_list_v1pods")
+
+    @mock.patch("random.choice")
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_create_v1pod(self, mock__get_k8s_api_client,
+                          mock_random_choice):
+        k8s_api = mock__get_k8s_api_client.return_value
+        manifest = (
+            {"apiVersion": "v1", "kind": "Pod",
+             "metadata": {"name": "nginx"}})
+        podname = manifest["metadata"]["name"] + "-"
+        for i in range(5):
+            podname = podname + mock_random_choice.return_value
+        k8s_api.create_namespaced_pod = mock.MagicMock(
+            side_effect=[ApiException(status=403), self.pod])
+        not_ready_pod = k8s_client.models.V1Pod()
+        not_ready_status = k8s_client.models.V1PodStatus()
+        not_ready_status.phase = "not_ready"
+        not_ready_pod.status = not_ready_status
+        almost_ready_pod = k8s_client.models.V1Pod()
+        almost_ready_status = k8s_client.models.V1PodStatus()
+        almost_ready_status.phase = "almost_ready"
+        almost_ready_pod.status = almost_ready_status
+        ready_pod = k8s_client.models.V1Pod()
+        ready_condition = k8s_client.models.V1PodCondition()
+        ready_condition.status = "True"
+        ready_condition.type = "Ready"
+        ready_status = k8s_client.models.V1PodStatus()
+        ready_status.phase = "Running"
+        ready_status.conditions = [ready_condition]
+        ready_pod_metadata = k8s_client.models.V1ObjectMeta()
+        ready_pod_metadata.uid = "123456789"
+        ready_pod_spec = k8s_client.models.V1PodSpec()
+        ready_pod_spec.node_name = "host_abc"
+        ready_pod.status = ready_status
+        ready_pod.metadata = ready_pod_metadata
+        ready_pod.spec = ready_pod_spec
+        k8s_api.read_namespaced_pod = mock.MagicMock(
+            side_effect=[not_ready_pod, almost_ready_pod, ready_pod])
+        self.scenario._create_v1pod(manifest)
+        k8s_api.create_namespaced_pod.assert_called_with(
+            body=manifest, namespace="default")
+        k8s_api.read_namespaced_pod.assert_called_with(
+            name=podname, namespace="default")
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.k8s_create_v1pod")
+
+    @mock.patch("time.time")
+    @mock.patch("random.choice")
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_create_v1pod_timeout(self, mock__get_k8s_api_client,
+                                  mock_random_choice, mock_time):
+        k8s_api = mock__get_k8s_api_client.return_value
+        manifest = (
+            {"apiVersion": "v1", "kind": "Pod",
+             "metadata": {"name": "nginx"}})
+        k8s_api.create_namespaced_pod.return_value = self.pod
+        mock_time.side_effect = [1, 2, 3, 4, 5, 900, 901]
+        not_ready_pod = k8s_client.models.V1Pod()
+        not_ready_status = k8s_client.models.V1PodStatus()
+        not_ready_status.phase = "not_ready"
+        not_ready_pod_metadata = k8s_client.models.V1ObjectMeta()
+        not_ready_pod_metadata.uid = "123456789"
+        not_ready_pod.status = not_ready_status
+        not_ready_pod.metadata = not_ready_pod_metadata
+        k8s_api.read_namespaced_pod = mock.MagicMock(
+            side_effect=[not_ready_pod
+                         for i in range(4)])
+
+        self.assertRaises(
+            exceptions.TimeoutException,
+            self.scenario._create_v1pod, manifest)
+
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_list_v1rcs(self, mock__get_k8s_api_client):
+        k8s_api = mock__get_k8s_api_client.return_value
+        self.scenario._list_v1rcs()
+        (k8s_api.list_namespaced_replication_controller
+            .assert_called_once_with(namespace="default"))
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.k8s_list_v1rcs")
+
+    @mock.patch("random.choice")
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_create_v1rc(self, mock__get_k8s_api_client,
+                         mock_random_choice):
+        k8s_api = mock__get_k8s_api_client.return_value
+        manifest = (
+            {"apiVersion": "v1",
+             "kind": "ReplicationController",
+             "metadata": {"name": "nginx-controller"},
+             "spec": {"replicas": 2,
+                      "selector": {"name": "nginx"},
+                      "template": {"metadata":
+                                   {"labels":
+                                    {"name": "nginx"}}}}})
+        suffix = "-"
+        for i in range(5):
+            suffix = suffix + mock_random_choice.return_value
+        rcname = manifest["metadata"]["name"] + suffix
+        rc = k8s_client.models.V1ReplicationController()
+        rc.spec = k8s_client.models.V1ReplicationControllerSpec()
+        rc.spec.replicas = manifest["spec"]["replicas"]
+        k8s_api.create_namespaced_replication_controller.return_value = rc
+        not_ready_rc = k8s_client.models.V1ReplicationController()
+        not_ready_rc_status = (
+            k8s_client.models.V1ReplicationControllerStatus())
+        not_ready_rc_status.replicas = None
+        not_ready_rc.status = not_ready_rc_status
+        ready_rc = k8s_client.models.V1ReplicationController()
+        ready_rc_status = k8s_client.models.V1ReplicationControllerStatus()
+        ready_rc_status.replicas = manifest["spec"]["replicas"]
+        ready_rc_metadata = k8s_client.models.V1ObjectMeta()
+        ready_rc_metadata.uid = "123456789"
+        ready_rc_metadata.name = rcname
+        ready_rc.status = ready_rc_status
+        ready_rc.metadata = ready_rc_metadata
+        k8s_api.read_namespaced_replication_controller = mock.MagicMock(
+            side_effect=[not_ready_rc, ready_rc])
+        self.scenario._create_v1rc(manifest)
+        (k8s_api.create_namespaced_replication_controller
+            .assert_called_once_with(body=manifest, namespace="default"))
+        (k8s_api.read_namespaced_replication_controller
+            .assert_called_with(name=rcname, namespace="default"))
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "magnum.k8s_create_v1rc")
+
+    @mock.patch("time.time")
+    @mock.patch("random.choice")
+    @mock.patch(MAGNUM_UTILS + ".MagnumScenario._get_k8s_api_client")
+    def test_create_v1rc_timeout(self, mock__get_k8s_api_client,
+                                 mock_random_choice, mock_time):
+        k8s_api = mock__get_k8s_api_client.return_value
+        manifest = (
+            {"apiVersion": "v1",
+             "kind": "ReplicationController",
+             "metadata": {"name": "nginx-controller"},
+             "spec": {"replicas": 2,
+                      "selector": {"app": "nginx"},
+                      "template": {"metadata":
+                                   {"labels":
+                                    {"name": "nginx"}}}}})
+        rc = k8s_client.models.V1ReplicationController()
+        rc.spec = k8s_client.models.V1ReplicationControllerSpec()
+        rc.spec.replicas = manifest["spec"]["replicas"]
+        mock_time.side_effect = [1, 2, 3, 4, 5, 900, 901]
+        k8s_api.create_namespaced_replication_controller.return_value = rc
+        not_ready_rc = k8s_client.models.V1ReplicationController()
+        not_ready_rc_status = (
+            k8s_client.models.V1ReplicationControllerStatus())
+        not_ready_rc_status.replicas = None
+        not_ready_rc_metadata = k8s_client.models.V1ObjectMeta()
+        not_ready_rc_metadata.uid = "123456789"
+        not_ready_rc.status = not_ready_rc_status
+        not_ready_rc.metadata = not_ready_rc_metadata
+        k8s_api.read_namespaced_replication_controller = mock.MagicMock(
+            side_effect=[not_ready_rc
+                         for i in range(4)])
+
+        self.assertRaises(
+            exceptions.TimeoutException,
+            self.scenario._create_v1rc, manifest)
