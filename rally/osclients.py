@@ -738,7 +738,8 @@ class Senlin(OSClient):
             **self._get_auth_info(project_name_key="project_name"))
 
 
-@configure("magnum", default_version="1", default_service_type="container",)
+@configure("magnum", default_version="1",
+           default_service_type="container-infra",)
 class Magnum(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return magnum client."""
