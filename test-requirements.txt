@@ -5,7 +5,7 @@ hacking<0.10,>=0.9.2
 
 coverage>=3.6 # Apache-2.0
 ddt>=1.0.1 # MIT
-mock>=1.2 # BSD
+mock>=2.0 # BSD
 python-dateutil>=2.4.2 # BSD
 testrepository>=0.0.18 # Apache-2.0/BSD
 testtools>=1.4.0 # MIT
