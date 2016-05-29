@@ -242,8 +242,8 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__list_samples(self):
         self.assertEqual(
             self.scenario._list_samples(),
-            self.clients("ceilometer").samples.list.return_value)
-        self.clients("ceilometer").samples.list.assert_called_once_with(
+            self.clients("ceilometer").new_samples.list.return_value)
+        self.clients("ceilometer").new_samples.list.assert_called_once_with(
             q=None, limit=None)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_samples")
@@ -253,8 +253,8 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             self.scenario._list_samples(query=[{"field": "user_id",
                                                 "volume": "fake_id"}],
                                         limit=10),
-            self.clients("ceilometer").samples.list.return_value)
-        self.clients("ceilometer").samples.list.assert_called_once_with(
+            self.clients("ceilometer").new_samples.list.return_value)
+        self.clients("ceilometer").new_samples.list.assert_called_once_with(
             q=[{"field": "user_id", "volume": "fake_id"}], limit=10)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_samples:limit&user_id")
