@@ -47,11 +47,16 @@ class ManilaShareNetworks(context.Context):
             # users.
             # Expected value is dict of lists where tenant Name or ID is key
             # and list of share_network Names or IDs is value. Example:
-            # share_networks = [
-            #     {"tenant_1_name_or_id": ["share_network_1_name_or_id",
-            #                              "share_network_2_name_or_id"]},
-            #     {"tenant_2_name_or_id": ["share_network_3_name_or_id"]}
-            # ]
+            # "context": {
+            #   "manila_share_networks": {
+            #     "use_share_networks": true,
+            #     "share_networks": {
+            #       "tenant_1_name_or_id": ["share_network_1_name_or_id",
+            #                               "share_network_2_name_or_id"],
+            #       "tenant_2_name_or_id": ["share_network_3_name_or_id"]
+            #     }
+            #   }
+            # }
             # Also, make sure that all 'existing users' in appropriate
             # registered deployment have share networks if its usage is
             # enabled, else Rally will randomly take users that does not
