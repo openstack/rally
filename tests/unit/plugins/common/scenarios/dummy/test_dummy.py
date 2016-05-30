@@ -22,6 +22,44 @@ DUMMY = "rally.plugins.common.scenarios.dummy.dummy."
 
 
 @ddt.ddt
+class DummyFailureTestCase(test.TestCase):
+
+    @ddt.data({"iteration": 0, "kwargs": {}},
+              {"iteration": 0, "kwargs": {"each": 1}},
+              {"iteration": 5, "kwargs": {"from_iteration": 4},
+               "raises": False},
+              {"iteration": 5,
+               "kwargs": {"from_iteration": 5, "to_iteration": 5}},
+              {"iteration": 5,
+               "kwargs": {"from_iteration": 4, "to_iteration": 5}},
+              {"iteration": 5,
+               "kwargs": {"from_iteration": 5, "to_iteration": 6}},
+              {"iteration": 5,
+               "kwargs": {"from_iteration": 4, "to_iteration": 6}},
+              {"iteration": 5, "kwargs": {"from_iteration": 4,
+                                          "to_iteration": 6, "sleep": 5}},
+              {"iteration": 5, "raises": False,
+               "kwargs": {"from_iteration": 4, "to_iteration": 6,
+                          "sleep": 5, "each": 2}},
+              {"iteration": 6, "kwargs": {"from_iteration": 4,
+                                          "to_iteration": 6,
+                                          "sleep": 5, "each": 2}})
+    @ddt.unpack
+    @mock.patch(DUMMY + "utils.interruptable_sleep")
+    def test_run(self, mock_interruptable_sleep, iteration, kwargs,
+                 raises=True):
+        scenario = dummy.DummyFailure(
+            test.get_test_context(iteration=iteration))
+        if raises:
+            self.assertRaises(dummy.DummyScenarioException, scenario.run,
+                              **kwargs)
+        else:
+            scenario.run(**kwargs)
+        mock_interruptable_sleep.assert_called_once_with(
+            kwargs.get("sleep", 0.1))
+
+
+@ddt.ddt
 class DummyTestCase(test.TestCase):
 
     @mock.patch(DUMMY + "utils.interruptable_sleep")

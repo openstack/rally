@@ -672,6 +672,26 @@
           action_3: 4.0
           action_4: 5.0
 
+  dummy.failure:
+    -
+      args:
+        sleep: 0.2
+        from_iteration: 5
+        to_iteration: 15
+        each: 2
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          min: 25
+          max: 25
+
   FakePlugin.testplugin:
     -
       runner:

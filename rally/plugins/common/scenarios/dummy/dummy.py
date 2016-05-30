@@ -28,6 +28,28 @@ class DummyScenarioException(exceptions.RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
+@scenario.configure(name="dummy.failure")
+class DummyFailure(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine at scale."""
+
+    def run(self, sleep=0.1, from_iteration=0, to_iteration=0, each=1):
+        """Raise errors in some iterations.
+
+        :param sleep: float iteration sleep time in seconds
+        :param from_iteration: int iteration number which starts range
+                             of failed iterations
+        :param to_iteration: int iteration number which ends range of
+                             failed iterations
+        :param each: int cyclic number of iteration which actually raises
+                     an error in selected range. For example, each=3 will
+                     raise error in each 3rd iteration.
+        """
+        utils.interruptable_sleep(sleep)
+        if from_iteration <= self.context["iteration"] <= to_iteration:
+            if each and not self.context["iteration"] % each:
+                raise DummyScenarioException(_("Expected failure"))
+
+
 class Dummy(scenario.Scenario):
     """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
