@@ -761,3 +761,16 @@ class NovaServersTestCase(test.ScenarioTestCase):
             tenant_id=server.tenant_id)
         scenario._associate_floating_ip.assert_called_once_with(
             server, net_wrap.create_floating_ip.return_value["ip"])
+
+    def test_boot_and_update_server(self):
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.Mock()
+        scenario._update_server = mock.Mock()
+
+        scenario.boot_and_update_server("img", "flavor",
+                                        "desp",
+                                        fakearg="fakearg")
+        scenario._boot_server.assert_called_once_with("img", "flavor",
+                                                      fakearg="fakearg")
+        scenario._update_server.assert_called_once_with(
+            scenario._boot_server.return_value, "desp")

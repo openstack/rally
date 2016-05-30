@@ -976,3 +976,28 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             random_name, 500, 1, 1, fakearg="fakearg")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_flavor")
+
+    def test__update_server(self):
+        server = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.generate_random_name = mock.Mock(
+            return_value="new_name")
+        server.update = mock.Mock()
+
+        result = nova_scenario._update_server(server)
+        self.assertEqual(result, server.update.return_value)
+        nova_scenario.generate_random_name.assert_called_once_with()
+        server.update.assert_called_once_with(name="new_name")
+
+        nova_scenario.generate_random_name.reset_mock()
+        server.update.reset_mock()
+
+        result = nova_scenario._update_server(server,
+                                              description="desp")
+        self.assertEqual(result, server.update.return_value)
+        nova_scenario.generate_random_name.assert_called_once_with()
+        server.update.assert_called_once_with(name="new_name",
+                                              description="desp")
+
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.update_server")
