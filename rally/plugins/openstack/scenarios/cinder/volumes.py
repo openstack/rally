@@ -582,3 +582,30 @@ class CinderVolumes(cinder_utils.CinderScenario,
                 source_vol = self._create_volume(source_vol.size,
                                                  source_volid=source_vol.id,
                                                  atomic_action=False, **kwargs)
+
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_contexts("volumes")
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["cinder"]})
+    def create_volume_from_snapshot(self, do_delete=True,
+                                    create_snapshot_kwargs=None,
+                                    **kwargs):
+        """Create a volume-snapshot, then create a volume from this snapshot.
+
+        :param do_delete: if True, a snapshot and a volume will
+                          be deleted after creation.
+        :param create_snapshot_kwargs: optional args to create a snapshot
+        :param kwargs: optional args to create a volume
+        """
+        create_snapshot_kwargs = create_snapshot_kwargs or {}
+        src_volume = random.choice(self.context["tenant"]["volumes"])
+
+        snapshot = self._create_snapshot(src_volume["id"],
+                                         **create_snapshot_kwargs)
+        volume = self._create_volume(src_volume["size"],
+                                     snapshot_id=snapshot.id,
+                                     **kwargs)
+
+        if do_delete:
+            self._delete_snapshot(snapshot)
+            self._delete_volume(volume)
