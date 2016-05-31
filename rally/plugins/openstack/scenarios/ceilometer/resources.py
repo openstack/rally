@@ -23,6 +23,7 @@ class CeilometerResource(ceiloutils.CeilometerScenario):
     """Benchmark scenarios for Ceilometer Resource API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_resources(self, metadata_query=None,
@@ -71,6 +72,7 @@ class CeilometerResource(ceiloutils.CeilometerScenario):
             self._get_resource(res_id)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_matched_resources(self, filter_by_user_id=False,

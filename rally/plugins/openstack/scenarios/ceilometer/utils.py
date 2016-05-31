@@ -112,18 +112,14 @@ class CeilometerScenario(scenario.OpenStackScenario):
         metadata_query = metadata_query or {}
 
         if filter_by_user_id:
-            user_id = self.context["user"]["id"]
-            query.append(self._make_query_item("user_id", "eq", user_id))
-
-        if filter_by_project_id or filter_by_resource_id:
-            project_id = self.context["tenant"]["id"]
-            if filter_by_project_id:
-                query.append(self._make_query_item("project_id", "eq",
-                                                   project_id))
-            if filter_by_resource_id:
-                resource_id = self.context["tenant"]["resources"][0]
-                query.append(self._make_query_item("resource_id", "eq",
-                                                   resource_id))
+            query.append(self._make_query_item("user_id", "eq",
+                                               self.context["user"]["id"]))
+        if filter_by_project_id:
+            query.append(self._make_query_item(
+                "project_id", "eq", self.context["tenant"]["id"]))
+        if filter_by_resource_id:
+            query.append(self._make_query_item(
+                "resource_id", "eq", self.context["tenant"]["resources"][0]))
 
         for key, value in metadata_query.items():
             query.append(self._make_query_item("metadata.%s" % key,
