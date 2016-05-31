@@ -26,6 +26,7 @@ from rally import osclients
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from rally.plugins.openstack import types
+from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import context
 
 LOG = logging.getLogger(__name__)
@@ -125,7 +126,6 @@ class BaseCustomImageGenerator(context.Context):
                 nics = [{"net-id": tenant["networks"][0]["id"]}]
 
             custom_image = self.create_one_image(user, nics=nics)
-            self.make_image_public(custom_image)
 
             for tenant in self.context["tenants"].values():
                 tenant["custom_image"] = custom_image
@@ -146,6 +146,7 @@ class BaseCustomImageGenerator(context.Context):
         """Create one image for the user."""
 
         clients = osclients.Clients(user["credential"])
+        admin_clients = osclients.Clients(self.context["admin"]["credential"])
 
         image_id = types.GlanceImage.transform(
             clients=clients, resource_config=self.config["image"])
@@ -153,6 +154,8 @@ class BaseCustomImageGenerator(context.Context):
             clients=clients, resource_config=self.config["flavor"])
 
         vm_scenario = vmtasks.VMTasks(self.context, clients=clients)
+
+        glance_wrap = glance_wrapper.wrap(admin_clients.glance, self)
 
         server, fip = vm_scenario._boot_server_with_fip(
             image=image_id, flavor=flavor_id,
@@ -170,20 +173,18 @@ class BaseCustomImageGenerator(context.Context):
             vm_scenario._stop_server(server)
 
             LOG.debug("Creating snapshot for %r", server)
-            custom_image = vm_scenario._create_image(server).to_dict()
+            custom_image = vm_scenario._create_image(server)
+            glance_wrap.set_visibility(custom_image)
         finally:
             vm_scenario._delete_server_with_fip(server, fip)
 
+        if hasattr(custom_image, "to_dict"):
+            # NOTE(stpierre): Glance v1 images are objects that can be
+            # converted to dicts; Glance v2 images are already
+            # dict-like
+            custom_image = custom_image.to_dict()
+
         return custom_image
-
-    def make_image_public(self, custom_image):
-        """Make the image available publicly."""
-
-        admin_clients = osclients.Clients(self.context["admin"]["credential"])
-
-        LOG.debug("Making image %r public", custom_image["id"])
-        admin_clients.glance().images.get(
-            custom_image["id"]).update(is_public=True)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `custom_image`"))
     def cleanup(self):
