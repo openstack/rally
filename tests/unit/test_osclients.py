@@ -590,6 +590,7 @@ class OSClientsTestCase(test.TestCase):
                 "username": self.credential.username,
                 "api_key": self.credential.password,
                 "project_name": self.credential.tenant_name,
+                "cacert": self.credential.cacert,
                 "auth_url": self.credential.auth_url
             }
             mock_sahara.client.Client.assert_called_once_with(1.1, **kw)
@@ -825,6 +826,7 @@ class OSClientsTestCase(test.TestCase):
                 username=self.credential.username,
                 password=self.credential.password,
                 project_name=self.credential.tenant_name,
+                cert=self.credential.cacert,
                 auth_url=self.credential.auth_url)
             self.assertEqual(
                 mock_senlin.client.Client.return_value,

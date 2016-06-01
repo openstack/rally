@@ -189,12 +189,14 @@ class OSClient(plugin.Plugin):
                        project_name_key="project_id",
                        domain_name_key="domain_name",
                        user_domain_name_key="user_domain_name",
-                       project_domain_name_key="project_domain_name"
+                       project_domain_name_key="project_domain_name",
+                       cacert_key="cacert",
                        ):
         kw = {
             user_key: self.credential.username,
             password_key: self.credential.password,
-            auth_url_key: self.credential.auth_url
+            auth_url_key: self.credential.auth_url,
+            cacert_key: self.credential.cacert,
         }
         if project_name_key:
             kw.update({project_name_key: self.credential.tenant_name})
@@ -330,7 +332,6 @@ class Nova(OSClient):
                              http_log_debug=logging.is_debug(),
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=self.credential.insecure,
-                             cacert=self.credential.cacert,
                              **self._get_auth_info(password_key="api_key"))
         client.set_management_url(compute_api_url)
         return client
@@ -352,10 +353,9 @@ class Neutron(OSClient):
                                 endpoint_url=network_api_url,
                                 timeout=CONF.openstack_client_http_timeout,
                                 insecure=self.credential.insecure,
-                                ca_cert=self.credential.cacert,
                                 **self._get_auth_info(
-                                    project_name_key="tenant_name")
-                                )
+                                    project_name_key="tenant_name",
+                                    cacert_key="ca_cert"))
         return client
 
 
@@ -395,8 +395,8 @@ class Heat(OSClient):
                              token=kc.auth_token,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=self.credential.insecure,
-                             ca_file=self.credential.cacert,
-                             **self._get_auth_info(project_name_key=None))
+                             **self._get_auth_info(project_name_key=None,
+                                                   cacert_key="ca_file"))
         return client
 
 
@@ -410,7 +410,6 @@ class Cinder(OSClient):
                                http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=self.credential.insecure,
-                               cacert=self.credential.cacert,
                                **self._get_auth_info(password_key="api_key"))
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
@@ -434,7 +433,6 @@ class Manila(OSClient):
             http_log_debug=logging.is_debug(),
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
-            cacert=self.credential.cacert,
             **self._get_auth_info(password_key="api_key",
                                   project_name_key="project_name"))
         kc = self.keystone()
@@ -468,7 +466,6 @@ class Ceilometer(OSClient):
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
-            cacert=self.credential.cacert,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
@@ -613,7 +610,6 @@ class Trove(OSClient):
                               region_name=self.credential.region_name,
                               timeout=CONF.openstack_client_http_timeout,
                               insecure=self.credential.insecure,
-                              cacert=self.credential.cacert,
                               **self._get_auth_info(password_key="api_key")
                               )
         return client
@@ -648,18 +644,13 @@ class Swift(OSClient):
             service_type=self.choose_service_type(service_type),
             endpoint_type=self.credential.endpoint_type,
             region_name=self.credential.region_name)
-        auth_info = self._get_auth_info(
-            user_key="user",
-            password_key="key",
-            auth_url_key="authurl",
-            project_name_key="tenant_name")
         client = swift.Connection(retries=1,
                                   preauthurl=object_api_url,
                                   preauthtoken=kc.auth_token,
                                   insecure=self.credential.insecure,
                                   cacert=self.credential.cacert,
-                                  user=auth_info["user"],
-                                  tenant_name=auth_info["tenant_name"],
+                                  user=self.credential.username,
+                                  tenant_name=self.credential.tenant_name,
                                   )
         return client
 
@@ -706,7 +697,6 @@ class Monasca(OSClient):
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
-            cacert=self.credential.cacert,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
@@ -735,7 +725,8 @@ class Senlin(OSClient):
         from senlinclient import client as senlin
         return senlin.Client(
             self.choose_version(version),
-            **self._get_auth_info(project_name_key="project_name"))
+            **self._get_auth_info(project_name_key="project_name",
+                                  cacert_key="cert"))
 
 
 @configure("magnum", default_version="1",
