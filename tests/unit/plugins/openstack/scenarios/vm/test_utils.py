@@ -106,7 +106,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario(self.context)
         vm_scenario._wait_for_ssh(ssh)
-        ssh.wait.assert_called_once_with()
+        ssh.wait.assert_called_once_with(120, 1)
 
     def test__wait_for_ping(self):
         vm_scenario = utils.VMScenario(self.context)
@@ -131,7 +131,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
 
         mock_sshutils_ssh.assert_called_once_with(
             "username", "1.2.3.4", port=22, pkey="ssh", password="password")
-        mock_sshutils_ssh.return_value.wait.assert_called_once_with()
+        mock_sshutils_ssh.return_value.wait.assert_called_once_with(120, 1)
         mock_vm_scenario__run_command_over_ssh.assert_called_once_with(
             mock_sshutils_ssh.return_value,
             {"script_file": "foo", "interpreter": "bar"})
