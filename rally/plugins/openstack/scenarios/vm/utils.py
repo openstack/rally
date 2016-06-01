@@ -193,8 +193,8 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
         return self._delete_server(server, force=force_delete)
 
     @atomic.action_timer("vm.wait_for_ssh")
-    def _wait_for_ssh(self, ssh):
-        ssh.wait()
+    def _wait_for_ssh(self, ssh, timeout=120, interval=1):
+        ssh.wait(timeout, interval)
 
     @atomic.action_timer("vm.wait_for_ping")
     def _wait_for_ping(self, server_ip):
@@ -208,7 +208,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
         )
 
     def _run_command(self, server_ip, port, username, password, command,
-                     pkey=None):
+                     pkey=None, timeout=120, interval=1):
         """Run command via SSH on server.
 
         Create SSH connection for server, wait for server to become available
@@ -224,11 +224,13 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
             See `rally info find VMTasks.boot_runcommand_delete' parameter
             `command' docstring for explanation.
         :param pkey: key for SSH authentication
+        :param timeout: wait for ssh timeout. Default is 120 seconds
+        :param interval: ssh retry interval. Default is 1 second
 
         :returns: tuple (exit_status, stdout, stderr)
         """
         pkey = pkey if pkey else self.context["user"]["keypair"]["private"]
         ssh = sshutils.SSH(username, server_ip, port=port,
                            pkey=pkey, password=password)
-        self._wait_for_ssh(ssh)
+        self._wait_for_ssh(ssh, timeout, interval)
         return self._run_command_over_ssh(ssh, command)
