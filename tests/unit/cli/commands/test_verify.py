@@ -145,8 +145,10 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.api.Verification.import_results")
     def test_import_results(self, mock_verification_import_results):
-        deployment_id = "fake_uuid"
-        mock_verification_import_results.return_value = (None, None)
+        deployment_id = "fake_deployment_uuid"
+        fake_verification = {"uuid": "fake_verification_uuid"}
+        mock_verification_import_results.return_value = (None,
+                                                         fake_verification)
         self.verify.import_results(deployment=deployment_id, do_use=False)
         default_set_name = ""
         default_log_file = None
@@ -160,7 +162,9 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_id = "fake_uuid"
         set_name = "fake_set_name"
         log_file = "fake_log_file"
-        mock_verification_import_results.return_value = (None, None)
+        fake_verification = {"uuid": "fake_verification_uuid"}
+        mock_verification_import_results.return_value = (None,
+                                                         fake_verification)
         self.verify.import_results(deployment=deployment_id, set_name=set_name,
                                    log_file=log_file, do_use=False)
 

@@ -150,6 +150,8 @@ class VerifyCommands(object):
 
         if do_use:
             self.use(verification["uuid"])
+        else:
+            print(_("Verification UUID: %s") % verification["uuid"])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -181,6 +183,8 @@ class VerifyCommands(object):
                                                                    log_file)
         if do_use:
             self.use(verification["uuid"])
+        else:
+            print(_("Verification UUID: %s") % verification["uuid"])
 
     def list(self):
         """List verification runs."""
