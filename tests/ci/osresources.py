@@ -308,6 +308,8 @@ def main():
                                                      "config"]))
         config.update(config.pop("admin"))
         del config["type"]
+        if "users" in config:
+            del config["users"]
 
     resources = CloudResources(**config)
 
