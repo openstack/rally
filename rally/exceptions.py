@@ -235,6 +235,11 @@ class InvalidHostException(RallyException):
 class MultipleMatchesFound(RallyException):
     msg_fmt = _("Found multiple %(needle)s: %(haystack)s")
 
+    def __init__(self, **kwargs):
+        if "hint" in kwargs:
+            self.msg_fmt += ". Hint: %(hint)s"
+        super(MultipleMatchesFound, self).__init__(**kwargs)
+
 
 class TempestConfigCreationFailure(RallyException):
     msg_fmt = _("Unable to create Tempest config file: %(message)s")

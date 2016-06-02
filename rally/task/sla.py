@@ -114,8 +114,8 @@ def configure(name, namespace="default"):
     return plugin.configure(name=name, namespace=namespace)
 
 
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@configure(name="base_sla")
 class SLA(plugin.Plugin):
     """Factory for criteria classes."""
 

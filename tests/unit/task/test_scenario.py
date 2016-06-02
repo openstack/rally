@@ -106,8 +106,7 @@ class ScenarioTestCase(test.TestCase):
                           scenario.Scenario._validate_helper,
                           validators, clients, args, "fake_uuid")
 
-    @mock.patch("rally.task.scenario.Scenario.get")
-    def test_validate__no_validators(self, mock_scenario_get):
+    def test_validate__no_validators(self):
 
         class Testing(fakes.FakeScenario):
 
@@ -115,25 +114,18 @@ class ScenarioTestCase(test.TestCase):
             def validate__no_validators(self):
                 pass
 
-        mock_scenario_get.return_value = Testing.validate__no_validators
         scenario.Scenario.validate("Testing.validate__no_validators",
                                    {"a": 1, "b": 2})
-        mock_scenario_get.assert_called_once_with(
-            "Testing.validate__no_validators")
         Testing.validate__no_validators.unregister()
 
     @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    @mock.patch("rally.task.scenario.Scenario.get")
-    def test_validate__admin_validators(self, mock_scenario_get,
-                                        mock_scenario__validate_helper):
+    def test_validate__admin_validators(self, mock_scenario__validate_helper):
 
         class Testing(fakes.FakeScenario):
 
             @scenario.configure(namespace="testing")
             def validate_admin_validators(self):
                 pass
-
-        mock_scenario_get.return_value = Testing.validate_admin_validators
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:
@@ -151,17 +143,13 @@ class ScenarioTestCase(test.TestCase):
         Testing.validate_admin_validators.unregister()
 
     @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    @mock.patch("rally.task.scenario.Scenario.get")
-    def test_validate_user_validators(self, mock_scenario_get,
-                                      mock_scenario__validate_helper):
+    def test_validate_user_validators(self, mock_scenario__validate_helper):
 
         class Testing(fakes.FakeScenario):
 
             @scenario.configure()
             def validate_user_validators(self):
                 pass
-
-        mock_scenario_get.return_value = Testing.validate_user_validators
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:

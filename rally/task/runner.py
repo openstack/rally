@@ -101,7 +101,7 @@ def configure(name, namespace="default"):
     return plugin.configure(name=name, namespace=namespace)
 
 
-@configure(name="base_runner")
+@plugin.base()
 class ScenarioRunner(plugin.Plugin):
     """Base class for all scenario runners.
 

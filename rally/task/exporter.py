@@ -30,8 +30,8 @@ def configure(name, namespace="default"):
     return plugin.configure(name=name, namespace=namespace)
 
 
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@configure(name="base-exporter")
 class TaskExporter(plugin.Plugin):
 
     def __init__(self, connection_string):

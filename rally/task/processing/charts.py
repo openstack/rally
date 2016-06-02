@@ -24,8 +24,8 @@ from rally.common import streaming_algorithms as streaming
 from rally.task.processing import utils
 
 
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@plugin.configure(name="base_output_chart")
 class Chart(plugin.Plugin):
     """Base class for charts.
 

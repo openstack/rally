@@ -95,8 +95,8 @@ def configure(name, namespace="default"):
     return plugin.configure(name, namespace=namespace)
 
 
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@configure(name="ProviderFactory")
 class ProviderFactory(plugin.Plugin):
     """Base class of all server providers.
 
