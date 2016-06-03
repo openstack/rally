@@ -22,6 +22,7 @@ class CeilometerMeters(ceiloutils.CeilometerScenario):
     """Benchmark scenarios for Ceilometer Meters API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_meters(self, metadata_query=None, limit=None):
@@ -40,6 +41,7 @@ class CeilometerMeters(ceiloutils.CeilometerScenario):
             self.list_matched_meters(limit=limit)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_matched_meters(self, filter_by_user_id=False,

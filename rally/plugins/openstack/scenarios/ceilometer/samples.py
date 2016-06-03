@@ -22,6 +22,7 @@ class CeilometerSamples(ceiloutils.CeilometerScenario):
     """Benchmark scenarios for Ceilometer Samples API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_matched_samples(self, filter_by_resource_id=False,
@@ -43,6 +44,7 @@ class CeilometerSamples(ceiloutils.CeilometerScenario):
         self._list_samples(query, limit)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def list_samples(self, metadata_query=None, limit=None):

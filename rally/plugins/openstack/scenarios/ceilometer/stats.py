@@ -39,6 +39,7 @@ class CeilometerStats(utils.CeilometerScenario):
         self._get_stats(meter.counter_name)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_contexts("ceilometer")
     @validation.required_openstack(users=True)
     @scenario.configure()
     def get_stats(self, meter_name, filter_by_user_id=False,
