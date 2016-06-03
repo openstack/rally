@@ -96,12 +96,6 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             ["foo", "bar", "arg1", "arg2"],
             stdin=None)
 
-    def test__run_command_over_ssh_fails(self):
-        vm_scenario = utils.VMScenario(self.context)
-        self.assertRaises(ValueError,
-                          vm_scenario._run_command_over_ssh,
-                          None, command={})
-
     def test__wait_for_ssh(self):
         ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario(self.context)
