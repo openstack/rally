@@ -92,7 +92,13 @@ class SaharaImage(context.Context):
 
             image = clients.glance().images.get(image_uuid)
 
-            if not image.is_public:
+            visibility = None
+            if hasattr(image, "is_public"):
+                visibility = "public" if image.is_public else "private"
+            else:
+                visibility = image["visibility"]
+
+            if visibility != "public":
                 raise exceptions.BenchmarkSetupFailure(
                     "Image provided in the Sahara context should be public.")
             image_id = image_uuid
