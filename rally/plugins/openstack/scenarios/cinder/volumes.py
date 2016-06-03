@@ -365,9 +365,14 @@ class CinderVolumes(cinder_utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder", "nova"]})
+    @logging.log_deprecated_args(
+        "Use 'create_snapshot_kwargs' for additional snapshot kwargs.",
+        "0.4.1", ["kwargs"], once=True)
     def create_nested_snapshots_and_attach_volume(self,
                                                   size=None,
                                                   nested_level=1,
+                                                  create_volume_kwargs=None,
+                                                  create_snapshot_kwargs=None,
                                                   **kwargs):
 
         """Create a volume from snapshot and attach/detach the volume
@@ -382,6 +387,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
                         max - maximum size volumes will be created as.
                      default values: {"min": 1, "max": 5}
         :param nested_level: amount of nested levels
+        :param create_volume_kwargs: optional args to create a volume
+        :param create_snapshot_kwargs: optional args to create a snapshot
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
@@ -394,16 +401,22 @@ class CinderVolumes(cinder_utils.CinderScenario,
         #       size in _create_volume method.
         size = random.randint(size["min"], size["max"])
 
-        source_vol = self._create_volume(size)
+        create_volume_kwargs = create_volume_kwargs or {}
+
+        create_snapshot_kwargs = create_snapshot_kwargs or kwargs or {}
+
+        source_vol = self._create_volume(size, **create_volume_kwargs)
         nes_objs = [(self.get_random_server(), source_vol,
-                     self._create_snapshot(source_vol.id, False, **kwargs))]
+                     self._create_snapshot(source_vol.id, False,
+                                           **create_snapshot_kwargs))]
 
         self._attach_volume(nes_objs[0][0], nes_objs[0][1])
         snapshot = nes_objs[0][2]
 
         for i in range(nested_level - 1):
             volume = self._create_volume(size, snapshot_id=snapshot.id)
-            snapshot = self._create_snapshot(volume.id, False, **kwargs)
+            snapshot = self._create_snapshot(volume.id, False,
+                                             **create_snapshot_kwargs)
             server = self.get_random_server()
             self._attach_volume(server, volume)
 

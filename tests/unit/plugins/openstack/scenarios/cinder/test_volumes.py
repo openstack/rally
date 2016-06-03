@@ -342,6 +342,84 @@ class CinderServersTestCase(test.ScenarioTestCase):
         self.assertEqual(scenario._delete_snapshot.call_count, snapshots_count)
         self.assertEqual(scenario._detach_volume.call_count, attached_count)
 
+    def test_create_nested_snapshots_and_attach_volume_kwargs(self):
+        fake_volume = mock.MagicMock()
+        fake_snapshot = mock.MagicMock()
+
+        scenario = volumes.CinderVolumes(context=self._get_context())
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+
+        volume_kwargs = {"volume_type": "type1"}
+        scenario.create_nested_snapshots_and_attach_volume(
+            size={"min": 1, "max": 1},
+            create_volume_kwargs=volume_kwargs)
+
+        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
+        self.assertEqual(fake_volume, scenario._create_volume.return_value)
+
+    def test_create_nested_snapshots_and_attach_volume_snapshot_kwargs(self):
+        fake_volume = mock.MagicMock()
+        fake_volume.id = "FAKE_ID"
+        fake_snapshot = mock.MagicMock()
+
+        scenario = volumes.CinderVolumes(context=self._get_context())
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+
+        volume_kwargs = {"volume_type": "type1"}
+        snapshot_kwargs = {"name": "snapshot1", "description": "snaphot one"}
+        scenario.create_nested_snapshots_and_attach_volume(
+            size={"min": 1, "max": 1},
+            create_volume_kwargs=volume_kwargs,
+            create_snapshot_kwargs=snapshot_kwargs
+        )
+
+        scenario._create_snapshot.assert_called_once_with(fake_volume.id,
+                                                          False,
+                                                          **snapshot_kwargs)
+        self.assertEqual(fake_snapshot, scenario._create_snapshot.return_value)
+
+    def test_create_nested_snapshots_and_attach_volume_deprecate_kwargs(self):
+        fake_volume = mock.MagicMock()
+        fake_volume.id = "FAKE_ID"
+        fake_snapshot = mock.MagicMock()
+
+        scenario = volumes.CinderVolumes(context=self._get_context())
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+
+        volume_kwargs = {"volume_type": "type1"}
+        snapshot_kwargs = {"name": "snapshot1", "description": "snaphot one"}
+        scenario.create_nested_snapshots_and_attach_volume(
+            size={"min": 1, "max": 1},
+            create_volume_kwargs=volume_kwargs,
+            **snapshot_kwargs
+        )
+
+        scenario._create_snapshot.assert_called_once_with(fake_volume.id,
+                                                          False,
+                                                          **snapshot_kwargs)
+        self.assertEqual(fake_snapshot, scenario._create_snapshot.return_value)
+
     def test_create_nested_snapshots_calls_order(self):
         fake_volume1 = mock.MagicMock()
         fake_volume2 = mock.MagicMock()
