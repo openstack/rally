@@ -883,3 +883,33 @@ class ValidatorsTestCase(test.TestCase):
             self.assertEqual("Heat template validation failed on fake_path1."
                              " Original error message: fake_msg.", result.msg)
             self.assertFalse(result.is_valid)
+
+    def test_required_api_versions(self):
+        validatorv2 = self._unwrap_validator(
+            validation.required_api_versions, component="keystone",
+            versions=[2.0])
+        clients = mock.MagicMock()
+        if hasattr(clients.keystone(), "tenants"):
+            del clients.keystone().tenants
+        self.assertFalse(validatorv2(None, clients, None).is_valid)
+        clients.keystone().tenants = mock.MagicMock
+        self.assertTrue(validatorv2(None, clients, None).is_valid)
+
+        validatorv3 = self._unwrap_validator(
+            validation.required_api_versions, component="keystone",
+            versions=[3])
+        if hasattr(clients.keystone(), "projects"):
+            del clients.keystone().projects
+        self.assertFalse(validatorv3(None, clients, None).is_valid)
+        clients.keystone().projects = mock.MagicMock
+        self.assertTrue(validatorv3(None, clients, None).is_valid)
+
+        validatorother = self._unwrap_validator(
+            validation.required_api_versions, component="nova",
+            versions=[2])
+        clients.nova.choose_version.return_value = 2
+        self.assertTrue(validatorother(None, clients, None).is_valid)
+        clients.nova.choose_version.return_value = 3
+        self.assertFalse(validatorother(None, clients, None).is_valid)
+        clients.nova.choose_version.return_value = None
+        self.assertFalse(validatorother(None, clients, None).is_valid)

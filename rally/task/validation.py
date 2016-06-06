@@ -612,6 +612,35 @@ def required_openstack(config, clients, deployment, admin=False, users=False):
 
 
 @validator
+def required_api_versions(config, clients, deployment, component, versions):
+    """Validator checks component API versions."""
+    versions = [str(v) for v in versions]
+    versions_str = ", ".join(versions)
+    msg = _("Task was designed to be used with %(component)s "
+            "V%(version)s, but V%(found_version)s is "
+            "selected.")
+    if component == "keystone":
+        if "2.0" in versions and not hasattr(clients.keystone(), "tenants"):
+            return ValidationResult(False, msg % {"component": component,
+                                                  "version": versions_str,
+                                                  "found_version": "3"})
+        if "3" in versions and not hasattr(clients.keystone(), "projects"):
+            return ValidationResult(False, msg % {"component": component,
+                                                  "version": versions_str,
+                                                  "found_version": "2.0"})
+    else:
+        used_version = getattr(clients, component).choose_version()
+        if not used_version:
+            return ValidationResult(
+                False, _("Unable to determine the API version."))
+        if str(used_version) not in versions:
+            return ValidationResult(
+                False, msg % {"component": component,
+                              "version": versions_str,
+                              "found_version": used_version})
+
+
+@validator
 def volume_type_exists(config, clients, deployment, param_name):
     """Returns validator for volume types.
 

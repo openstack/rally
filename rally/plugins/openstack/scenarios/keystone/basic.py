@@ -64,6 +64,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._resource_delete(user)
 
     @validation.required_openstack(admin=True)
+    @validation.required_api_versions(component="keystone", versions=[2.0])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
     @logging.log_deprecated_args(
         "The 'name_length' argument to create_tenant is ignored",
@@ -77,6 +78,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("users_per_tenant", minval=1)
     @validation.required_openstack(admin=True)
+    @validation.required_api_versions(component="keystone", versions=[2.0])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
     @logging.log_deprecated_args(
         "The 'name_length' argument to create_tenant_with_users is ignored",
@@ -107,6 +109,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_users()
 
     @validation.required_openstack(admin=True)
+    @validation.required_api_versions(component="keystone", versions=[2.0])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
     @logging.log_deprecated_args(
         "The 'name_length' argument to create_and_list_tenants is ignored",
@@ -147,6 +150,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_roles_for_user(user_id, tenant_id)
 
     @validation.required_openstack(admin=True)
+    @validation.required_api_versions(component="keystone", versions=[2.0])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def get_entities(self, service_name="keystone"):
         """Get instance of a tenant, user, role and service by id's.
@@ -190,6 +194,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._delete_service(service.id)
 
     @validation.required_openstack(admin=True)
+    @validation.required_api_versions(component="keystone", versions=[2.0])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
     @logging.log_deprecated_args(
         "The 'name_length' argument to create_update_and_delete_tenant is "
