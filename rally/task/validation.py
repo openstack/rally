@@ -620,16 +620,18 @@ def required_api_versions(config, clients, deployment, component, versions):
             "V%(version)s, but V%(found_version)s is "
             "selected.")
     if component == "keystone":
-        if "2.0" in versions and not hasattr(clients.keystone(), "tenants"):
-            return ValidationResult(False, msg % {"component": component,
-                                                  "version": versions_str,
-                                                  "found_version": "3"})
-        if "3" in versions and not hasattr(clients.keystone(), "projects"):
+        if "2.0" not in versions and hasattr(clients.keystone(), "tenants"):
             return ValidationResult(False, msg % {"component": component,
                                                   "version": versions_str,
                                                   "found_version": "2.0"})
+        if "3" not in versions and hasattr(clients.keystone(), "projects"):
+            return ValidationResult(False, msg % {"component": component,
+                                                  "version": versions_str,
+                                                  "found_version": "3"})
     else:
-        used_version = getattr(clients, component).choose_version()
+        used_version = config.get("context", {}).get("api_versions", {}).get(
+            component, {}).get("version",
+                               getattr(clients, component).choose_version())
         if not used_version:
             return ValidationResult(
                 False, _("Unable to determine the API version."))

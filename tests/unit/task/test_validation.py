@@ -884,32 +884,79 @@ class ValidatorsTestCase(test.TestCase):
                              " Original error message: fake_msg.", result.msg)
             self.assertFalse(result.is_valid)
 
-    def test_required_api_versions(self):
-        validatorv2 = self._unwrap_validator(
+    def _get_keystone_v2_mock_client(self):
+        keystone = mock.Mock()
+        del keystone.projects
+        keystone.tenants = mock.Mock()
+        return keystone
+
+    def _get_keystone_v3_mock_client(self):
+        keystone = mock.Mock()
+        del keystone.tenants
+        keystone.projects = mock.Mock()
+        return keystone
+
+    def test_required_api_versions_keystonev2(self):
+        validator = self._unwrap_validator(
             validation.required_api_versions, component="keystone",
             versions=[2.0])
         clients = mock.MagicMock()
-        if hasattr(clients.keystone(), "tenants"):
-            del clients.keystone().tenants
-        self.assertFalse(validatorv2(None, clients, None).is_valid)
-        clients.keystone().tenants = mock.MagicMock
-        self.assertTrue(validatorv2(None, clients, None).is_valid)
+        clients.keystone.return_value = self._get_keystone_v3_mock_client()
+        self.assertFalse(validator({}, clients, None).is_valid)
 
-        validatorv3 = self._unwrap_validator(
+        clients.keystone.return_value = self._get_keystone_v2_mock_client()
+        self.assertTrue(validator({}, clients, None).is_valid)
+
+    def test_required_api_versions_keystonev3(self):
+        validator = self._unwrap_validator(
             validation.required_api_versions, component="keystone",
             versions=[3])
-        if hasattr(clients.keystone(), "projects"):
-            del clients.keystone().projects
-        self.assertFalse(validatorv3(None, clients, None).is_valid)
-        clients.keystone().projects = mock.MagicMock
-        self.assertTrue(validatorv3(None, clients, None).is_valid)
+        clients = mock.MagicMock()
 
-        validatorother = self._unwrap_validator(
+        clients.keystone.return_value = self._get_keystone_v2_mock_client()
+        self.assertFalse(validator({}, clients, None).is_valid)
+
+        clients.keystone.return_value = self._get_keystone_v3_mock_client()
+        self.assertTrue(validator({}, clients, None).is_valid)
+
+    def test_required_api_versions_keystone_all_versions(self):
+        validator = self._unwrap_validator(
+            validation.required_api_versions, component="keystone",
+            versions=[2.0, 3])
+        clients = mock.MagicMock()
+
+        clients.keystone.return_value = self._get_keystone_v3_mock_client()
+        self.assertTrue(validator({}, clients, None).is_valid)
+
+        clients.keystone.return_value = self._get_keystone_v2_mock_client()
+        self.assertTrue(validator({}, clients, None).is_valid)
+
+    @ddt.data({"nova_version": 2, "required_versions": [2], "valid": True},
+              {"nova_version": 3, "required_versions": [2], "valid": False},
+              {"nova_version": None, "required_versions": [2], "valid": False},
+              {"nova_version": 2, "required_versions": [2, 3], "valid": True},
+              {"nova_version": 4, "required_versions": [2, 3], "valid": False})
+    @ddt.unpack
+    def test_required_api_versions_choose_version(self, nova_version=None,
+                                                  required_versions=(2,),
+                                                  valid=False):
+        validator = self._unwrap_validator(
             validation.required_api_versions, component="nova",
-            versions=[2])
-        clients.nova.choose_version.return_value = 2
-        self.assertTrue(validatorother(None, clients, None).is_valid)
-        clients.nova.choose_version.return_value = 3
-        self.assertFalse(validatorother(None, clients, None).is_valid)
-        clients.nova.choose_version.return_value = None
-        self.assertFalse(validatorother(None, clients, None).is_valid)
+            versions=required_versions)
+        clients = mock.MagicMock()
+        clients.nova.choose_version.return_value = nova_version
+        self.assertEqual(validator({}, clients, None).is_valid,
+                         valid)
+
+    @ddt.data({"required_version": 2, "valid": True},
+              {"required_version": 3, "valid": False})
+    @ddt.unpack
+    def test_required_api_versions_context(self, required_version=None,
+                                           valid=False):
+        validator = self._unwrap_validator(
+            validation.required_api_versions, component="nova",
+            versions=[required_version])
+        clients = mock.MagicMock()
+        config = {"context": {"api_versions": {"nova": {"version": 2}}}}
+        self.assertEqual(validator(config, clients, None).is_valid,
+                         valid)
