@@ -146,12 +146,14 @@ class EnvUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.ValidationError,
                           envutils.get_creds_from_env_vars)
 
-    @mock.patch.dict(os.environ, {"OS_TENANT_NAME": "fake_tenant_name"})
+    @mock.patch.dict(os.environ, {"OS_TENANT_NAME": "fake_tenant_name"},
+                     clear=True)
     def test_get_project_name_from_env_when_tenant_name(self):
         project_name = envutils.get_project_name_from_env()
         self.assertEqual("fake_tenant_name", project_name)
 
-    @mock.patch.dict(os.environ, {"OS_PROJECT_NAME": "fake_project_name"})
+    @mock.patch.dict(os.environ, {"OS_PROJECT_NAME": "fake_project_name"},
+                     clear=True)
     def test_get_project_name_from_env_when_project_name(self):
         project_name = envutils.get_project_name_from_env()
         self.assertEqual("fake_project_name", project_name)
@@ -167,12 +169,14 @@ class EnvUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.ValidationError,
                           envutils.get_project_name_from_env)
 
-    @mock.patch.dict(os.environ, {"OS_ENDPOINT_TYPE": "fake_endpoint_typeURL"})
+    @mock.patch.dict(os.environ, {"OS_ENDPOINT_TYPE": "fake_endpoint_typeURL"},
+                     clear=True)
     def test_get_endpoint_type_from_env_when_endpoint_type(self):
         endpoint_type = envutils.get_endpoint_type_from_env()
         self.assertEqual("fake_endpoint_type", endpoint_type)
 
-    @mock.patch.dict(os.environ, {"OS_INTERFACE": "fake_interface"})
+    @mock.patch.dict(os.environ, {"OS_INTERFACE": "fake_interface"},
+                     clear=True)
     def test_get_endpoint_type_from_env_when_interface(self):
         endpoint_type = envutils.get_endpoint_type_from_env()
         self.assertEqual("fake_interface", endpoint_type)
