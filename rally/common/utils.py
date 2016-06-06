@@ -172,6 +172,8 @@ def first_index(lst, predicate):
     return None
 
 
+@logging.log_deprecated(message="Its not used elsewhere in Rally already.",
+                        rally_version="0.4.1")
 def distance(s1, s2):
     """Computes the edit distance between two strings.
 
