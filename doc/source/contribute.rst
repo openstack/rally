@@ -116,7 +116,7 @@ All internal methods should be fully covered by unit tests with a reasonable moc
 About Rally unit tests:
 
 - All `unit tests <http://en.wikipedia.org/wiki/Unit_testing>`_ are located inside /tests/unit/*
-- Tests are written on top of: *testtools*, *fixtures* and *mock* libs
+- Tests are written on top of: *testtools* and *mock* libs
 - `Tox <https://tox.readthedocs.org/en/latest/>`_ is used to run unit tests
 
 
