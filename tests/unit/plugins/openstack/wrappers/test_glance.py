@@ -115,6 +115,19 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
         self.assertEqual(self.mock_wait_for_status.mock.return_value,
                          return_image)
 
+    @ddt.data({"expected": True},
+              {"visibility": "public", "expected": True},
+              {"visibility": "private", "expected": False})
+    @ddt.unpack
+    def test_set_visibility(self, visibility=None, expected=None):
+        image = mock.Mock()
+        if visibility is None:
+            self.wrapped_client.set_visibility(image)
+        else:
+            self.wrapped_client.set_visibility(image, visibility=visibility)
+        self.client().images.update.assert_called_once_with(
+            image.id, is_public=expected)
+
     @ddt.data({}, {"fakearg": "fake"})
     def test_list_images_basic(self, filters):
         self.assertEqual(self.wrapped_client.list_images(**filters),
@@ -232,6 +245,20 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
                 glance_image_create_poll_interval,
                 timeout=mock.ANY)])
         self.assertEqual(uploaded_image, return_image)
+
+    @ddt.data({},
+              {"visibility": "public"},
+              {"visibility": "private"})
+    @ddt.unpack
+    def test_set_visibility(self, visibility=None):
+        image = mock.Mock()
+        if visibility is None:
+            self.wrapped_client.set_visibility(image)
+            visibility = "public"
+        else:
+            self.wrapped_client.set_visibility(image, visibility=visibility)
+        self.client().images.update.assert_called_once_with(
+            image.id, visibility=visibility)
 
     @ddt.data({}, {"fakearg": "fake"})
     def test_list_images(self, filters):

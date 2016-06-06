@@ -66,9 +66,10 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.types.GlanceImage.transform" % BASE, return_value="image")
     @mock.patch("%s.types.Flavor.transform" % BASE, return_value="flavor")
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
     def test_create_one_image(
-            self, mock_flavor_transform, mock_glance_image_transform,
-            mock_clients, mock_vm_tasks):
+            self, mock_glance_wrap, mock_flavor_transform,
+            mock_glance_image_transform, mock_clients, mock_vm_tasks):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
@@ -93,6 +94,9 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         custom_image = generator_ctx.create_one_image(user,
                                                       foo_arg="foo_value")
 
+        mock_glance_wrap.assert_called_once_with(
+            mock_clients.return_value.glance, generator_ctx)
+
         mock_flavor_transform.assert_called_once_with(
             clients=mock_clients.return_value,
             resource_config={"name": "flavor"})
@@ -114,6 +118,8 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
             fake_server, ip, user)
 
         mock_vm_scenario._create_image.assert_called_once_with(fake_server)
+        mock_glance_wrap.return_value.set_visibility.assert_called_once_with(
+            fake_image)
 
         mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
             fake_server, ip)
@@ -126,8 +132,9 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
                 return_value="image")
     @mock.patch("%s.types.Flavor.transform" % BASE,
                 return_value="flavor")
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
     def test_create_one_image_cleanup(
-            self, mock_flavor_transform,
+            self, mock_glance_wrap, mock_flavor_transform,
             mock_glance_image_transform, mock_clients,
             mock_vm_tasks):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
@@ -162,24 +169,6 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
             fake_server, ip)
-
-    @mock.patch("%s.osclients.Clients" % BASE)
-    def test_make_image_public(self, mock_clients):
-        fc = mock.MagicMock()
-        mock_clients.return_value = fc
-
-        generator_ctx = TestImageGenerator(self.context)
-        custom_image = {"id": "image"}
-
-        generator_ctx.make_image_public(custom_image=custom_image)
-
-        mock_clients.assert_called_once_with(
-            self.context["admin"]["credential"])
-
-        fc.glance.assert_called_once_with()
-        fc.glance.return_value.images.get.assert_called_once_with("image")
-        (fc.glance.return_value.images.get.
-            return_value.update.assert_called_once_with(is_public=True))
 
     @mock.patch("%s.nova_utils.NovaScenario" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
@@ -217,8 +206,6 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         generator_ctx.create_one_image.assert_called_once_with(
             self.context["users"][0], nics=[{"net-id": "network_id"}])
-        generator_ctx.make_image_public.assert_called_once_with(
-            "custom_image")
 
     def test_cleanup_admin(self):
         tenant = self.context["tenants"]["tenant_id0"]

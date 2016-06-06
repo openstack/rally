@@ -79,6 +79,10 @@ class GlanceWrapper(object):
         """
 
     @abc.abstractmethod
+    def set_visibility(self, image, visibility="public"):
+        """Set an existing image to public or private."""
+
+    @abc.abstractmethod
     def list_images(self, **filters):
         """List images.
 
@@ -122,6 +126,9 @@ class GlanceV1Wrapper(GlanceWrapper):
                 kw["data"].close()
 
         return image
+
+    def set_visibility(self, image, visibility="public"):
+        self.client.images.update(image.id, is_public=(visibility == "public"))
 
     def list_images(self, **filters):
         kwargs = {"filters": filters}
@@ -186,6 +193,9 @@ class GlanceV2Wrapper(GlanceWrapper):
             timeout=timeout,
             check_interval=CONF.benchmark.
             glance_image_create_poll_interval)
+
+    def set_visibility(self, image, visibility="public"):
+        self.client.images.update(image.id, visibility=visibility)
 
     def list_images(self, **filters):
         return self.client.images.list(filters=filters)
