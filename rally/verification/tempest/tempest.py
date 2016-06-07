@@ -22,7 +22,6 @@ import tempfile
 
 from oslo_utils import encodeutils
 
-from rally.common import costilius
 from rally.common.i18n import _
 from rally.common.io import subunit_v2
 from rally.common import logging
@@ -43,7 +42,7 @@ class TempestSetupFailure(exceptions.RallyException):
 def check_output(*args, **kwargs):
     kwargs["stderr"] = subprocess.STDOUT
     try:
-        output = costilius.sp_check_output(*args, **kwargs)
+        output = subprocess.check_output(*args, **kwargs)
     except subprocess.CalledProcessError as e:
         LOG.error("Failed cmd: '%s'" % e.cmd)
         LOG.error("Error output: '%s'" % encodeutils.safe_decode(e.output))
@@ -182,23 +181,8 @@ class Tempest(object):
             LOG.debug("No virtual environment for Tempest found.")
             LOG.info(_("Installing the virtual environment for Tempest."))
             LOG.debug("Virtual environment directory: %s" % path_to_venv)
-            required_vers = (2, 7)
-            if sys.version_info[:2] != required_vers:
-                # NOTE(andreykurilin): let's try to find a suitable python
-                # interpreter for Tempest
-                python_interpreter = costilius.get_interpreter(required_vers)
-                if not python_interpreter:
-                    raise exceptions.IncompatiblePythonVersion(
-                        version=sys.version, required_version=required_vers)
-                LOG.info(
-                    _("Tempest requires Python %(required)s, '%(found)s' was "
-                      "found in your system and it will be used for installing"
-                      " virtual environment.") % {"required": required_vers,
-                                                  "found": python_interpreter})
-            else:
-                python_interpreter = sys.executable
             try:
-                check_output(["virtualenv", "-p", python_interpreter, ".venv"],
+                check_output(["virtualenv", "-p", sys.executable, ".venv"],
                              cwd=self.path())
                 # NOTE(kun): Using develop mode installation is for run
                 #            multiple tempest instance. However, dependency

@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import functools
 
-from rally.common import costilius
 from rally.common import utils
 
 
 class ActionTimerMixin(object):
 
     def __init__(self):
-        self._atomic_actions = costilius.OrderedDict()
+        self._atomic_actions = collections.OrderedDict()
 
     def atomic_actions(self):
         """Returns the content of each atomic action."""

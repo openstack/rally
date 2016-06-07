@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 import mock
 
-from rally.common import costilius
 from rally.task import atomic
 from tests.unit import test
 
@@ -39,7 +40,7 @@ class AtomicActionTestCase(test.TestCase):
                     pass
 
         expected = [("test", 20), ("test (2)", 12), ("some", 4)]
-        self.assertEqual(costilius.OrderedDict(expected),
+        self.assertEqual(collections.OrderedDict(expected),
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -56,7 +57,7 @@ class AtomicActionTestCase(test.TestCase):
             pass
 
         expected = [("test", 2)]
-        self.assertEqual(costilius.OrderedDict(expected),
+        self.assertEqual(collections.OrderedDict(expected),
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -70,7 +71,7 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = Some()
         self.assertEqual(5, inst.some_func(2, 3))
-        self.assertEqual(costilius.OrderedDict({"some": 2}),
+        self.assertEqual(collections.OrderedDict({"some": 2}),
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -87,7 +88,7 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestTimer()
         self.assertRaises(TestException, inst.some_func)
-        self.assertEqual(costilius.OrderedDict({"test": 2}),
+        self.assertEqual(collections.OrderedDict({"test": 2}),
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3, 1, 3])
@@ -106,20 +107,20 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.some_func(2, 3))
-        self.assertEqual(costilius.OrderedDict({"some": 2}),
+        self.assertEqual(collections.OrderedDict({"some": 2}),
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.some_func(2, 3, atomic_action=False))
-        self.assertEqual(costilius.OrderedDict(),
+        self.assertEqual(collections.OrderedDict(),
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3))
-        self.assertEqual(costilius.OrderedDict(),
+        self.assertEqual(collections.OrderedDict(),
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3, foo=True))
-        self.assertEqual(costilius.OrderedDict({"some": 2}),
+        self.assertEqual(collections.OrderedDict({"some": 2}),
                          inst.atomic_actions())
