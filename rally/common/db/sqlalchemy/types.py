@@ -13,13 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import json
 
 from sqlalchemy.dialects import mysql as mysql_types
 from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
-
-from rally.common import costilius
 
 
 class JSONEncodedDict(sa_types.TypeDecorator):
@@ -34,8 +33,8 @@ class JSONEncodedDict(sa_types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            value = costilius.json_loads(
-                value, object_pairs_hook=costilius.OrderedDict)
+            value = json.loads(
+                value, object_pairs_hook=collections.OrderedDict)
         return value
 
 

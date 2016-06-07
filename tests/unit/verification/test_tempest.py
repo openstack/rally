@@ -94,22 +94,18 @@ class TempestUtilsTestCase(BaseTestCase):
         self.assertFalse(mock_check_output.called)
 
     @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
-    @mock.patch("%s.tempest.costilius.get_interpreter" % TEMPEST_PATH,
-                return_value="python")
     @mock.patch("os.path.isdir", return_value=False)
     @mock.patch("%s.tempest.check_output" % TEMPEST_PATH,
                 return_value="some_output")
     def test__venv_install_when_venv_not_exist(self, mock_check_output,
-                                               mock_isdir,
-                                               mock_get_interpreter, mock_sys):
+                                               mock_isdir, mock_sys):
         mock_sys.version_info = "not_py27_env"
-
         self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
         mock_check_output.assert_has_calls([
-            mock.call(["virtualenv", "-p", mock_get_interpreter.return_value,
-                       ".venv"], cwd="/tmp"),
+            mock.call(["virtualenv", "-p", mock_sys.executable, ".venv"],
+                      cwd="/tmp"),
             mock.call(["/tmp/tools/with_venv.sh", "pip", "install", "-r",
                        "requirements.txt", "-r", "test-requirements.txt"],
                       cwd="/tmp"),
@@ -118,14 +114,13 @@ class TempestUtilsTestCase(BaseTestCase):
         ])
 
     @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
-    @mock.patch("%s.tempest.costilius.get_interpreter" % TEMPEST_PATH,
-                return_value=None)
     @mock.patch("os.path.isdir", return_value=False)
     def test__venv_install_fails__when_py27_is_not_present(
-            self, mock_isdir, mock_get_interpreter, mock_sys):
+            self, mock_isdir, mock_sys):
         mock_sys.version_info = "not_py27_env"
+        mock_sys.executable = "fake_path"
 
-        self.assertRaises(exceptions.IncompatiblePythonVersion,
+        self.assertRaises(tempest.TempestSetupFailure,
                           self.verifier._install_venv)
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
