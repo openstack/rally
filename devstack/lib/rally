@@ -45,6 +45,8 @@ RALLY_ADD_DEPLOYMENT=$(trueorfalse True $RALLY_ADD_DEPLOYMENT)
 #
 # _create_deployment_config filename
 function _create_deployment_config() {
+if [[ "$IDENTITY_API_VERSION" == 2.0 ]]
+then
     cat >$1 <<EOF
 {
     "type": "ExistingCloud",
@@ -53,10 +55,28 @@ function _create_deployment_config() {
     "admin": {
         "username": "admin",
         "password": "$ADMIN_PASSWORD",
-        "tenant_name": "admin"
+        "tenant_name": "admin",
     }
 }
 EOF
+fi
+if [[ "$IDENTITY_API_VERSION" == 3 ]]
+then
+    cat >$1 <<EOF
+{
+    "type": "ExistingCloud",
+    "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+    "region_name": "$REGION_NAME",
+    "admin": {
+        "username": "admin",
+        "password": "$ADMIN_PASSWORD",
+        "tenant_name": "admin",
+        "user_domain_name": "Default",
+        "project_domain_name": "Default"
+    }
+}
+EOF
+fi
 }
 
 # install_rally() - Collect source and prepare
