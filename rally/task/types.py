@@ -204,7 +204,7 @@ def obj_from_id(resource_config, resources, typename):
                 typename=typename.title(), resource_config=resource_config))
 
 
-def _id_from_name(resource_config, resources, typename):
+def _id_from_name(resource_config, resources, typename, id_attr="id"):
     """Return the id of the resource whose name matches the pattern.
 
     resource_config has to contain `name`, as it is used to lookup an id.
@@ -216,10 +216,17 @@ def _id_from_name(resource_config, resources, typename):
     :param resource_config: resource to be transformed
     :param resources: iterable containing all resources
     :param typename: name which describes the type of resource
+    :param id_attr: id or uuid should be returned
 
     :returns: resource id uniquely mapped to `name` or `regex`
     """
-    return obj_from_name(resource_config, resources, typename).id
+    try:
+        return getattr(obj_from_name(resource_config, resources, typename),
+                       id_attr)
+    except AttributeError:
+        raise exceptions.RallyException(
+            "There is no attribute {attr} in the object {type}".format(
+                attr=id_attr, type=typename))
 
 
 def _name_from_id(resource_config, resources, typename):
