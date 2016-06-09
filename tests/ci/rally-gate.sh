@@ -57,18 +57,18 @@ rally --debug deployment check
 source ~/.rally/openrc
 if rally deployment check | grep 'nova' | grep 'Available' > /dev/null; then
     nova flavor-create m1.nano 42 64 0 1
-fi
 
-# TODO(stpierre): We should prepopulate the cluster with a wide
-# variety of resources to ensure that Rally cleanup isn't overzealous,
-# but in the meantime this solves an issue with resource
-# comparison. When the first instance is booted, default security
-# groups are created in the 'service' tenant, and they were being
-# reported (erroneously) in the resource comparison. This forces
-# creation of those security groups before we record the initial
-# resources, and also starts us along the path of prepopulating
-# resources.
-nova boot --image cirros-0.3.4-x86_64-uec --flavor m1.tiny --poll test-server
+    # TODO(stpierre): We should prepopulate the cluster with a wide
+    # variety of resources to ensure that Rally cleanup isn't overzealous,
+    # but in the meantime this solves an issue with resource
+    # comparison. When the first instance is booted, default security
+    # groups are created in the 'service' tenant, and they were being
+    # reported (erroneously) in the resource comparison. This forces
+    # creation of those security groups before we record the initial
+    # resources, and also starts us along the path of prepopulating
+    # resources.
+    nova boot --image cirros-0.3.4-x86_64-uec --flavor m1.tiny --poll test-server
+fi
 
 python $BASE/new/rally/tests/ci/osresources.py\
     --dump-list resources_at_start.txt
