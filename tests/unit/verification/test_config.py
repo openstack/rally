@@ -61,26 +61,26 @@ class TempestConfigTestCase(test.TestCase):
     @mock.patch("os.rename")
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
     @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
-    def test__download_cirros_image_success(self, mock_get,
-                                            mock_open, mock_rename):
+    def test__download_image_success(self, mock_get,
+                                     mock_open, mock_rename):
         self.mock_isfile.return_value = False
-        self.tempest_conf._download_cirros_image()
+        self.tempest_conf._download_image()
         mock_get.assert_called_once_with(
-            CONF.image.cirros_img_url, stream=True)
+            CONF.tempest.img_url, stream=True)
 
     @mock.patch("requests.get")
     @ddt.data(404, 500)
-    def test__download_cirros_image_failure(self, status_code, mock_get):
+    def test__download_image_failure(self, status_code, mock_get):
         self.mock_isfile.return_value = False
         mock_get.return_value = mock.MagicMock(status_code=status_code)
         self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.tempest_conf._download_cirros_image)
+                          self.tempest_conf._download_image)
 
     @mock.patch("requests.get", side_effect=requests.ConnectionError())
-    def test__download_cirros_image_connection_error(self, mock_requests_get):
+    def test__download_image_connection_error(self, mock_requests_get):
         self.mock_isfile.return_value = False
         self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.tempest_conf._download_cirros_image)
+                          self.tempest_conf._download_image)
 
     @ddt.data({"publicURL": "test_url"},
               {"interface": "public", "url": "test_url"})
@@ -228,8 +228,8 @@ class TempestConfigTestCase(test.TestCase):
         self.tempest_conf._configure_object_storage()
 
         expected = (
-            ("operator_role", CONF.role.swift_operator_role),
-            ("reseller_admin_role", CONF.role.swift_reseller_admin_role))
+            ("operator_role", CONF.tempest.swift_operator_role),
+            ("reseller_admin_role", CONF.tempest.swift_reseller_admin_role))
         result = self.tempest_conf.conf.items("object-storage")
         for item in expected:
             self.assertIn(item, result)
@@ -238,8 +238,8 @@ class TempestConfigTestCase(test.TestCase):
         self.tempest_conf._configure_orchestration()
 
         expected = (
-            ("stack_owner_role", CONF.role.heat_stack_owner_role),
-            ("stack_user_role", CONF.role.heat_stack_user_role))
+            ("stack_owner_role", CONF.tempest.heat_stack_owner_role),
+            ("stack_user_role", CONF.tempest.heat_stack_user_role))
         result = self.tempest_conf.conf.items("orchestration")
         for item in expected:
             self.assertIn(item, result)
@@ -248,7 +248,7 @@ class TempestConfigTestCase(test.TestCase):
         self.tempest_conf._configure_scenario()
 
         image_name = parse.urlparse(
-            config.CONF.image.cirros_img_url).path.split("/")[-1]
+            config.CONF.tempest.img_url).path.split("/")[-1]
         expected = (("img_dir", self.tempest_conf.data_dir),
                     ("img_file", image_name))
         result = self.tempest_conf.conf.items("scenario")
@@ -370,10 +370,10 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual(mock_neutron_wrapper_create_network.call_count, 0)
 
     def test__create_tempest_roles(self):
-        role1 = CONF.role.swift_operator_role
-        role2 = CONF.role.swift_reseller_admin_role
-        role3 = CONF.role.heat_stack_owner_role
-        role4 = CONF.role.heat_stack_user_role
+        role1 = CONF.tempest.swift_operator_role
+        role2 = CONF.tempest.swift_reseller_admin_role
+        role3 = CONF.tempest.heat_stack_owner_role
+        role4 = CONF.tempest.heat_stack_user_role
 
         client = self.context.clients.verified_keystone()
         client.roles.list.return_value = [fakes.FakeRole(name=role1),
@@ -423,9 +423,9 @@ class TempestResourcesContextTestCase(test.TestCase):
         mock_wrap.assert_called_once_with(self.context.clients.glance,
                                           self.context)
         client.create_image.assert_called_once_with(
-            container_format=CONF.image.container_format,
+            container_format=CONF.tempest.img_container_format,
             image_location=mock.ANY,
-            disk_format=CONF.image.disk_format,
+            disk_format=CONF.tempest.img_disk_format,
             name=mock.ANY,
             visibility="public")
 
