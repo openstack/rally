@@ -52,9 +52,51 @@ fi
 env
 set -o pipefail
 rally deployment use --deployment devstack
+
+# NOTE(ikhudoshyn): Create additional users and register a new env
+# so that we could run scenarios using 'existing_users' context
+if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" -eq "1" ]; then
+    source ~/.rally/openrc admin admin
+    openstack --version
+
+    openstack --os-interface admin project create rally-test-project-1
+    openstack --os-interface admin user create --project rally-test-project-1 --password rally-test-password-1 rally-test-user-1
+
+    openstack --os-interface admin project create rally-test-project-2
+    openstack --os-interface admin user create --project rally-test-project-2 --password rally-test-password-2 rally-test-user-2
+
+    set +e
+    NEUTRON_EXISTS=$(openstack --os-interface admin service list | grep neutron)
+    set -e
+    if [ "$NEUTRON_EXISTS" ]; then
+        OS_QUOTA_STR="--networks -1 --subnets -1 --routers -1 --vips -1 --floating-ips -1 --subnetpools -1 --secgroups -1 --secgroup-rules -1 --ports -1 --health-monitors -1"
+        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-1 
+        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-2 
+    fi
+
+    DEPLOYMENT_CONFIG_FILE=~/.rally/with-existing-users-config
+
+    rally deployment config > $DEPLOYMENT_CONFIG_FILE
+    sed -i '1a    "users": [\
+      {\
+          "username": "rally-test-user-1",\
+          "password": "rally-test-password-1",\
+          "tenant_name": "rally-test-project-1",\
+      },\
+      {\
+          "username": "rally-test-user-2",\
+          "password": "rally-test-password-2",\
+          "tenant_name": "rally-test-project-2"\
+      }\
+    ],\
+' $DEPLOYMENT_CONFIG_FILE
+
+    rally deployment create --name devstask-with-users --filename $DEPLOYMENT_CONFIG_FILE
+fi
+
 rally deployment config
 rally --debug deployment check
-source ~/.rally/openrc
+source ~/.rally/openrc demo demo
 if rally deployment check | grep 'nova' | grep 'Available' > /dev/null; then
     nova flavor-create m1.nano 42 64 0 1
 
