@@ -575,8 +575,12 @@ class OutputStatsTable(OutputTable):
 
 _OUTPUT_SCHEMA = {
     "key_types": {
-        "title": str, "description": str, "chart_plugin": str,
-        "data": (list, dict), "label": str, "axis_label": str},
+        "title": six.string_types,
+        "description": six.string_types,
+        "chart_plugin": six.string_types,
+        "data": (list, dict),
+        "label": six.string_types,
+        "axis_label": six.string_types},
     "required": ["title", "chart_plugin", "data"]}
 
 

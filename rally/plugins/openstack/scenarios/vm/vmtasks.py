@@ -190,21 +190,38 @@ class VMTasks(vm_utils.VMScenario):
             self._delete_server_with_fip(server, fip,
                                          force_delete=force_delete)
 
-        # NOTE(amaretskiy): command output should be in format:
-        #     {"key1": numeric_value, "key2": numeric_value, ...}
-        output = None
-        if type(data) == dict:
+        if type(data) != dict:
+            raise exceptions.ScriptError(
+                "Command has returned data in unexpected format.\n"
+                "Expected format: {"
+                "\"additive\": [{chart data}, {chart data}, ...], "
+                "\"complete\": [{chart data}, {chart data}, ...]}\n"
+                "Actual data: %s" % data)
+
+        if set(data) - {"additive", "complete"}:
+            LOG.warning(
+                "Deprecated since Rally release 0.4.1: command has "
+                "returned data in format {\"key\": <value>, ...}\n"
+                "Expected format: {"
+                "\"additive\": [{chart data}, {chart data}, ...], "
+                "\"complete\": [{chart data}, {chart data}, ...]}")
+            output = None
             try:
                 output = [[str(k), float(v)] for k, v in data.items()]
             except (TypeError, ValueError):
-                LOG.error(("Command has returned data in unexpected format.\n"
-                           "Expected format: {key1: numeric_value, "
-                           "key2: numeric_value, ...}.\n"
-                           "Actual data: %s" % data))
-        if output:
-            self.add_output(additive={"title": "Command output",
-                                      "chart_plugin": "Lines",
-                                      "data": output})
+                raise exceptions.ScriptError(
+                    "Command has returned data in unexpected format.\n"
+                    "Expected format: {key1: <number>, "
+                    "key2: <number>, ...}.\n"
+                    "Actual data: %s" % data)
+            if output:
+                self.add_output(additive={"title": "Command output",
+                                          "chart_plugin": "Lines",
+                                          "data": output})
+        else:
+            for chart_type, charts in data.items():
+                for chart in charts:
+                    self.add_output(**{chart_type: chart})
 
     @types.convert(image={"type": "glance_image"},
                    flavor={"type": "nova_flavor"})

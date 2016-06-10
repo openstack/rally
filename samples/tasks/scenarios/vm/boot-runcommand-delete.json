@@ -13,7 +13,7 @@
                 "force_delete": false,
                 "command": {
                     "interpreter": "/bin/sh",
-                    "script_file": "samples/tasks/support/instance_dd_test.sh"
+                    "script_file": "samples/tasks/support/instance_test.sh"
                 },
                 "username": "cirros"
             },
