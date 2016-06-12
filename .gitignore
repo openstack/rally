@@ -31,6 +31,8 @@ cover
 .testrepository
 *.sqlite
 .venv
+.cache
+pytest_results.html
 
 # Docs
 doc/source/_build/
