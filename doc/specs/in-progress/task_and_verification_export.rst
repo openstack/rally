@@ -48,12 +48,12 @@ plugins.
 Proposed change
 ===============
 
-1. Implement a base class TaskExporter for an export plugin at
+1. Implement a base class Exporter for an export plugin at
 *rally/task/exporter.py*.
 
 ..code-block:: python
 
-    class TaskExporter(plugin.Plugin):
+    class Exporter(plugin.Plugin):
         def export(self, task, connection_string):
             ...
 

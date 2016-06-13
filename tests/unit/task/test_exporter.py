@@ -17,7 +17,7 @@ from tests.unit import test
 
 
 @exporter.configure(name="test-exporter")
-class TestExporter(exporter.TaskExporter):
+class TestExporter(exporter.Exporter):
 
     def validate(self):
         pass
@@ -29,7 +29,7 @@ class TestExporter(exporter.TaskExporter):
 class ExporterTestCase(test.TestCase):
 
     def test_task_export(self):
-        self.assertRaises(TypeError, exporter.TaskExporter, "fake_connection")
+        self.assertRaises(TypeError, exporter.Exporter, "fake_connection")
 
     def test_task_export_instantiate(self):
         TestExporter("fake_connection")
