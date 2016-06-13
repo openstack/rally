@@ -22,6 +22,32 @@
                     "users_per_tenant": 2
                 }
             }
+        },
+        {
+            "args": {
+                "flavor": {
+                    "name": "{{flavor_name}}"
+                },
+                "image": {
+                    "name": "^cirros.*uec$"
+                },
+                "auto_assign_nic": true
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                },
+                "network": {
+                    "start_cidr": "10.2.0.0/24",
+                    "networks_per_tenant": 2
+                }
+            }
         }
     ]
 }
