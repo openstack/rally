@@ -324,7 +324,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario.generate_random_name = mock.MagicMock(return_value="name")
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
@@ -343,7 +342,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
