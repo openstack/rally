@@ -59,6 +59,14 @@ class ServerGenerator(context.Context):
             },
             "auto_assign_nic": {
                 "type": "boolean",
+            },
+            "nics": {
+                "type": "array",
+                "properties": {
+                    "net-id": {
+                        "type": "string"
+                    }
+                }
             }
         },
         "required": ["image", "flavor"],
@@ -76,6 +84,7 @@ class ServerGenerator(context.Context):
         flavor = self.config["flavor"]
         auto_nic = self.config["auto_assign_nic"]
         servers_per_tenant = self.config["servers_per_tenant"]
+        kwargs = {"nics": self.config.get("nics", [])}
 
         clients = osclients.Clients(self.context["users"][0]["credential"])
         image_id = types.GlanceImage.transform(clients=clients,
@@ -102,7 +111,8 @@ class ServerGenerator(context.Context):
 
             servers = nova_scenario._boot_servers(image_id, flavor_id,
                                                   requests=servers_per_tenant,
-                                                  auto_assign_nic=auto_nic)
+                                                  auto_assign_nic=auto_nic,
+                                                  **kwargs)
 
             current_servers = [server.id for server in servers]
 

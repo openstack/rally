@@ -114,10 +114,12 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         flavor_id = mock_flavor_transform.return_value
         servers_ctx_config = self.context["config"]["servers"]
         expected_auto_nic = servers_ctx_config.get("auto_assign_nic", False)
+        expected_nics = servers_ctx_config.get("nics", [])
         expected_requests = servers_ctx_config.get("servers_per_tenant", False)
         called_times = len(tenants)
         mock_calls = [mock.call(image_id, flavor_id,
                                 auto_assign_nic=expected_auto_nic,
+                                nics=expected_nics,
                                 requests=expected_requests)
                       for i in range(called_times)]
         mock_nova_scenario__boot_servers.assert_has_calls(mock_calls)
