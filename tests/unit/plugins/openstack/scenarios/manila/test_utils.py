@@ -36,12 +36,11 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.scenario.context = {
             "tenant": {
                 consts.SHARE_NETWORKS_CONTEXT_NAME: {
-                    "share_networks": ["sn_1_id", "sn_2_id", ],
+                    "share_networks": [{"id": "sn_1_id"}, {"id": "sn_2_id"}],
                 }
-            }
+            },
+            "iteration": 0,
         }
-        self.scenario.context["tenant"][consts.SHARE_NETWORKS_CONTEXT_NAME][
-            "sn_iterator"] = iter((0, ))
         self.scenario.generate_random_name = mock.Mock()
 
         self.scenario._create_share("nfs")
@@ -49,7 +48,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients("manila").shares.create.assert_called_once_with(
             "nfs", 1, name=self.scenario.generate_random_name.return_value,
             share_network=self.scenario.context["tenant"][
-                consts.SHARE_NETWORKS_CONTEXT_NAME]["share_networks"][0])
+                consts.SHARE_NETWORKS_CONTEXT_NAME]["share_networks"][0]["id"])
 
         self.mock_wait_for.mock.assert_called_once_with(
             fake_share,

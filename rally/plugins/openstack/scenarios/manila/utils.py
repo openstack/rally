@@ -78,16 +78,15 @@ class ManilaScenario(scenario.OpenStackScenario):
                 consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
                     "share_networks", [])
             if share_networks and not kwargs.get("share_network"):
-                index = next(self.context.get("tenant", {}).get(
-                    consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
-                        "sn_iterator")) % len(share_networks)
-                kwargs["share_network"] = share_networks[index]
+                kwargs["share_network"] = share_networks[
+                    self.context["iteration"] % len(share_networks)]["id"]
 
         if not kwargs.get("name"):
             kwargs["name"] = self.generate_random_name()
 
         share = self.clients("manila").shares.create(
             share_proto, size, **kwargs)
+
         time.sleep(CONF.benchmark.manila_share_create_prepoll_delay)
         share = utils.wait_for(
             share,

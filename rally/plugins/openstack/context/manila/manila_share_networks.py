@@ -23,6 +23,7 @@ from rally import exceptions
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.task import context
+from rally.task import utils as bench_utils
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ CONTEXT_NAME = consts.SHARE_NETWORKS_CONTEXT_NAME
 
 
 @context.configure(name=CONTEXT_NAME, order=450)
-class ManilaShareNetworks(context.Context):
+class ShareNetworks(context.Context):
     """This context creates resources specific for Manila project."""
     CONFIG_SCHEMA = {
         "type": "object",
@@ -42,9 +43,12 @@ class ManilaShareNetworks(context.Context):
             "use_share_networks": {"type": "boolean"},
 
             # NOTE(vponomaryov): this context arg will be used only when
-            # context arg "use_share_networks" is set to True and context
-            # 'existing_users' is not empty, considering usage of existing
-            # users.
+            # context arg "use_share_networks" is set to True.
+            # If context arg 'share_networks' has values
+            # then they will be used else share networks will be autocreated -
+            # one for each tenant network. If networks do not exist then will
+            # be created one share network for each tenant without network
+            # data.
             # Expected value is dict of lists where tenant Name or ID is key
             # and list of share_network Names or IDs is value. Example:
             # "context": {
@@ -103,8 +107,12 @@ class ManilaShareNetworks(context.Context):
             self.context["tenants"][tenant_id][CONTEXT_NAME][
                 "share_networks"] = []
 
-            manila_scenario = manila_utils.ManilaScenario(
-                {"user": existing_user})
+            manila_scenario = manila_utils.ManilaScenario({
+                "user": existing_user,
+                "config": {
+                    "api_versions": self.context["config"].get(
+                        "api_versions", [])}
+            })
             existing_sns = manila_scenario._list_share_networks(
                 detailed=False, search_opts={"project_id": tenant_id})
 
@@ -122,26 +130,137 @@ class ManilaShareNetworks(context.Context):
 
                 # Set share network for project
                 self.context["tenants"][tenant_id][CONTEXT_NAME][
-                    "share_networks"].append(sn)
+                    "share_networks"].append(sn.to_dict())
 
-            # Add shared integer var per project that will be used as index
-            # for list with share networks. It is required for balancing.
-            self.context["tenants"][tenant_id][CONTEXT_NAME]["sn_iterator"] = (
-                utils.RAMInt())
+    def _setup_for_autocreated_users(self):
+        # Create share network for each network of tenant
+        for user, tenant_id in (utils.iterate_per_tenants(
+                self.context.get("users", []))):
+            networks = self.context["tenants"][tenant_id].get("networks")
+            manila_scenario = manila_utils.ManilaScenario({
+                "task": self.task,
+                "user": user,
+                "config": {
+                    "api_versions": self.context["config"].get(
+                        "api_versions", [])}
+            })
+            self.context["tenants"][tenant_id][CONTEXT_NAME] = {
+                "share_networks": []}
+            data = {}
+
+            def _setup_share_network(tenant_id, data):
+                share_network = manila_scenario._create_share_network(
+                    **data).to_dict()
+                self.context["tenants"][tenant_id][CONTEXT_NAME][
+                    "share_networks"].append(share_network)
+
+            if networks:
+                for network in networks:
+                    if network.get("cidr"):
+                        data["nova_net_id"] = network["id"]
+                    elif network.get("subnets"):
+                        data["neutron_net_id"] = network["id"]
+                        data["neutron_subnet_id"] = network["subnets"][0]
+                    else:
+                        LOG.warning(_(
+                            "Can not determine network service provider. "
+                            "Share network will have no data."))
+                    _setup_share_network(tenant_id, data)
+            else:
+                _setup_share_network(tenant_id, data)
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `%s`")
                               % CONTEXT_NAME)
     def setup(self):
         self.context[CONTEXT_NAME] = {}
         if not self.config["use_share_networks"]:
-            return
+            self.context[CONTEXT_NAME]["delete_share_networks"] = False
         elif self.context["config"].get("existing_users"):
             self._setup_for_existing_users()
         else:
-            # TODO(vponomaryov): add support of autocreated resources
-            pass
+            self._setup_for_autocreated_users()
+
+    def _cleanup_tenant_resources(self, resources_plural_name,
+                                  resources_singular_name):
+        """Cleans up tenant resources.
+
+        :param resources_plural_name: plural name for resources
+        :param resources_singular_name: singular name for resource. Expected
+            to be part of resource deletion method name (obj._delete_%s)
+        """
+        for user, tenant_id in (utils.iterate_per_tenants(
+                self.context.get("users", []))):
+            manila_scenario = manila_utils.ManilaScenario({
+                "user": user,
+                "config": {
+                    "api_versions": self.context["config"].get(
+                        "api_versions", [])}
+            })
+            resources = self.context["tenants"][tenant_id][CONTEXT_NAME].get(
+                resources_plural_name, [])
+            for resource in resources:
+                logger = logging.ExceptionLogger(
+                    LOG,
+                    _("Failed to delete %(name)s %(id)s for tenant %(t)s.") % {
+                        "id": resource, "t": tenant_id,
+                        "name": resources_singular_name})
+                with logger:
+                    delete_func = getattr(
+                        manila_scenario,
+                        "_delete_%s" % resources_singular_name)
+                    delete_func(resource)
+
+    def _wait_for_cleanup_of_share_networks(self):
+        """Waits for deletion of Manila service resources."""
+        for user, tenant_id in (utils.iterate_per_tenants(
+                self.context.get("users", []))):
+            self._wait_for_resources_deletion(
+                self.context["tenants"][tenant_id][CONTEXT_NAME].get("shares"))
+            manila_scenario = manila_utils.ManilaScenario({
+                "user": user,
+                "admin": self.context["admin"],
+                "config": {
+                    "api_versions": self.context["config"].get(
+                        "api_versions", [])}
+            })
+            for sn in self.context["tenants"][tenant_id][CONTEXT_NAME][
+                    "share_networks"]:
+                share_servers = manila_scenario._list_share_servers(
+                    search_opts={"share_network": sn["id"]})
+                self._wait_for_resources_deletion(share_servers)
+
+    def _wait_for_resources_deletion(self, resources):
+        """Waiter for resources deletion.
+
+        :param resources: resource or list of resources for deletion
+            verification
+        """
+        if not resources:
+            return
+        if not isinstance(resources, list):
+            resources = [resources]
+        for resource in resources:
+            bench_utils.wait_for_status(
+                resource,
+                ready_statuses=["deleted"],
+                check_deletion=True,
+                update_resource=bench_utils.get_from_manager(),
+                timeout=CONF.benchmark.manila_share_delete_timeout,
+                check_interval=(
+                    CONF.benchmark.manila_share_delete_poll_interval))
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
-        # TODO(vponomaryov): add cleanup for autocreated resources when appear.
-        return
+        if self.context[CONTEXT_NAME].get("delete_share_networks", True):
+            # NOTE(vponomaryov): Schedule 'share networks' deletion.
+            self._cleanup_tenant_resources("share_networks", "share_network")
+
+            # NOTE(vponomaryov): Share network deletion schedules deletion of
+            # share servers. So, we should wait for its deletion too to avoid
+            # further failures of network resources release.
+            # Use separate cycle to make share servers be deleted in parallel.
+            self._wait_for_cleanup_of_share_networks()
+        else:
+            # NOTE(vponomaryov): assume that share networks were not created
+            # by test run.
+            return
