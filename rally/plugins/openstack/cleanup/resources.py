@@ -78,7 +78,8 @@ class HeatStack(base.ResourceManager):
 _nova_order = get_order(200)
 
 
-@base.resource("nova", "servers", order=next(_nova_order))
+@base.resource("nova", "servers", order=next(_nova_order),
+               tenant_resource=True)
 class NovaServer(base.ResourceManager):
     def list(self):
         """List all servers."""
@@ -123,7 +124,8 @@ class NovaKeypair(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("nova", "security_groups", order=next(_nova_order))
+@base.resource("nova", "security_groups", order=next(_nova_order),
+               tenant_resource=True)
 class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
