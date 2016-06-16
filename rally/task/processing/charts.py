@@ -431,8 +431,8 @@ class OutputStackedAreaChart(OutputChart):
             complete={"title": "Complete data as stacked area",
                       "description": "Data is shown as stacked area, as-is",
                       "chart_plugin": "StackedArea",
-                      "data": [["foo", [0, 5], [1, 42], [2, 15], [3, 7]],
-                               ["bar", [0, 2], [1, 1.3], [2, 5], [3, 9]]],
+                      "data": [["foo", [[0, 5], [1, 42], [2, 15], [3, 7]]],
+                               ["bar", [[0, 2], [1, 1.3], [2, 5], [3, 9]]]],
                       "label": "Y-axis label text",
                       "axis_label": "X-axis label text"})
     """
@@ -472,8 +472,8 @@ class OutputLinesChart(OutputStackedAreaChart):
             complete={"title": "Complete data as stacked area",
                       "description": "Data is shown as stacked area, as-is",
                       "chart_plugin": "Lines",
-                      "data": [["foo", [0, 5], [1, 42], [2, 15], [3, 7]],
-                               ["bar", [0, 2], [1, 1.3], [2, 5], [3, 9]]],
+                      "data": [["foo", [[0, 5], [1, 42], [2, 15], [3, 7]]],
+                               ["bar", [[0, 2], [1, 1.3], [2, 5], [3, 9]]]],
                       "label": "Y-axis label text",
                       "axis_label": "X-axis label text"})
     """
