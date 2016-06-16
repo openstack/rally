@@ -17,7 +17,8 @@
                 "use_floating_ip": true,
                 "force_delete": false,
                 "command": {
-                    "remote_path": "samples/tasks/support/instance_dd_test.sh"
+                    "interpreter": "/bin/sh",
+                    "script_file": "samples/tasks/support/instance_dd_test.sh"
                 },
                 "username": "cirros"
             },
