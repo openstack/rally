@@ -125,3 +125,18 @@ class TaskSampleTestCase(test.TestCase):
                     self.assertEqual(json_config, yaml_config,
                                      "Sample task configs are not equal:"
                                      "\n%s\n%s" % (yaml_path, json_path))
+
+    def test_no_underscores_in_filename(self):
+        bad_filenames = []
+
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
+            for filename in filenames:
+                if "_" in filename and (filename.endswith(".yaml") or
+                                        filename.endswith(".json")):
+                    full_path = os.path.join(dirname, filename)
+                    bad_filenames.append(full_path)
+
+        self.assertEqual([], bad_filenames,
+                         "Following sample task filenames contain "
+                         "underscores (_) but must use dashes (-) instead: "
+                         "{}".format(bad_filenames))

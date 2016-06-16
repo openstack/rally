@@ -2,10 +2,10 @@
   HeatStacks.create_and_delete_stack:
     -
       args:
-        template_path: "samples/tasks/scenarios/heat/templates/resource_group_server_with_volume.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/resource-group-server-with-volume.yaml.template"
         parameters:
            num_instances: 2
-        files: ["samples/tasks/scenarios/heat/templates/server_with_volume.yaml.template"]
+        files: ["samples/tasks/scenarios/heat/templates/server-with-volume.yaml.template"]
       runner:
         type: "constant"
         times: 3

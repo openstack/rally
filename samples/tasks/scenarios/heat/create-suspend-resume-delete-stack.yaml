@@ -2,7 +2,7 @@
   HeatStacks.create_suspend_resume_delete_stack:
     -
       args:
-        template_path: "samples/tasks/scenarios/heat/templates/random_strings.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/random-strings.yaml.template"
       runner:
         type: "constant"
         times: 10

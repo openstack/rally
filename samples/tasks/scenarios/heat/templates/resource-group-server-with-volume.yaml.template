@@ -36,7 +36,7 @@ resources:
     properties:
       count: {get_param: num_instances}
       resource_def:
-        type: templates/server_with_volume.yaml.template
+        type: templates/server-with-volume.yaml.template
         properties:
           image: {get_param: instance_image}
           volume_size: {get_param: instance_volume_size}

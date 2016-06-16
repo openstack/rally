@@ -2,8 +2,8 @@
   HeatStacks.create_update_delete_stack:
     -
       args:
-        template_path: "samples/tasks/scenarios/heat/templates/random_strings.yaml.template"
-        updated_template_path: "samples/tasks/scenarios/heat/templates/updated_random_strings_delete.yaml.template"
+        template_path: "samples/tasks/scenarios/heat/templates/random-strings.yaml.template"
+        updated_template_path: "samples/tasks/scenarios/heat/templates/updated-random-strings-delete.yaml.template"
       runner:
         type: "constant"
         times: 10

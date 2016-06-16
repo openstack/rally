@@ -2,7 +2,7 @@ heat_template_version: 2014-10-16
 
 description: >
   Test template for create-update-delete-stack scenario in rally.
-  The template updates one resource from the stack defined by resource_group.yaml.template
+  The template updates one resource from the stack defined by resource-group.yaml.template
   and deletes children resources from that resource.
 
 resources:
