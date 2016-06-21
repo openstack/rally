@@ -653,7 +653,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario = servers.NovaServers(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._stop_server = mock.MagicMock()
         scenario._migrate = mock.MagicMock()
         scenario._resize_confirm = mock.MagicMock()
         scenario._resize_revert = mock.MagicMock()
@@ -667,16 +666,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                       fakearg="fakearg",
                                                       confirm=confirm)
 
-        scenario._stop_server.assert_called_once_with(fake_server)
-
         scenario._migrate.assert_called_once_with(fake_server)
 
         if confirm:
             scenario._resize_confirm.assert_called_once_with(fake_server,
-                                                             status="SHUTOFF")
+                                                             status="ACTIVE")
         else:
             scenario._resize_revert.assert_called_once_with(fake_server,
-                                                            status="SHUTOFF")
+                                                            status="ACTIVE")
 
         scenario._delete_server.assert_called_once_with(fake_server)
 
