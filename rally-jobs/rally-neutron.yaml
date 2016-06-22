@@ -677,6 +677,28 @@
         image:
             name: {{image_name}}
         command:
+          script_file: "~/.rally/extra/instance_test.sh"
+          interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: {{smoke or 4}}
+        concurrency: {{smoke or 2}}
+      context:
+        users:
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 2}}
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        command:
           script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
@@ -689,6 +711,9 @@
           tenants: {{smoke or 2}}
           users_per_tenant: {{smoke or 2}}
         network: {}
+      sla:
+        failure_rate:
+          max: 0
 
   VMTasks.boot_runcommand_delete_custom_image:
     -
