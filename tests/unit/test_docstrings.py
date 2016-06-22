@@ -56,17 +56,18 @@ class DocstringsTestCase(test.TestCase):
                              "One-line description for %s "
                              "should be declarative and not start "
                              "with 'Test(s) ...'" % scenario_inst.get_name())
-            params_count = scenario_inst.__code__.co_argcount
-            params = scenario_inst.__code__.co_varnames[:params_count]
-            documented_params = [p["name"] for p in doc["params"]]
-            for param in params:
-                if param not in ignored_params:
-                    self.assertIn(param, documented_params,
-                                  "Docstring for %(scenario)s should "
-                                  "describe the '%(param)s' parameter "
-                                  "in the :param <name>: clause." %
-                                  {"scenario": scenario_inst.get_name(),
-                                   "param": param})
+            if not scenario_inst.is_classbased:
+                params_count = scenario_inst.__code__.co_argcount
+                params = scenario_inst.__code__.co_varnames[:params_count]
+                documented_params = [p["name"] for p in doc["params"]]
+                for param in params:
+                    if param not in ignored_params:
+                        self.assertIn(param, documented_params,
+                                      "Docstring for %(scenario)s should "
+                                      "describe the '%(param)s' parameter "
+                                      "in the :param <name>: clause." %
+                                      {"scenario": scenario_inst.get_name(),
+                                       "param": param})
 
     def test_all_deploy_engines_have_docstrings(self):
         for deploy_engine in engine.Engine.get_all():

@@ -18,6 +18,7 @@ import random
 
 import six
 
+from rally.common.i18n import _
 from rally.common import logging
 from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
@@ -33,23 +34,32 @@ LOG = logging.getLogger(__name__)
 
 
 def configure(name=None, namespace="default", context=None):
-    """Make from plain python method task scenario plugin.
+    """Configure scenario by setting proper meta data.
 
-       :param name: Plugin name
-       :param namespace: Plugin namespace
-       :param context: Default task context that is created for this scenario.
-                       If there are custom user specified contexts this one
-                       will be updated by provided contexts.
+    This can also transform plain function into scenario plugin, however
+    this approach is deprecated - now scenarios must be represented by classes
+    based on rally.task.scenario.Scenario.
+
+    :param name: str scenario name
+    :param namespace: str plugin namespace
+    :param context: default task context that is created for this scenario.
+                    If there are custom user specified contexts this one
+                    will be updated by provided contexts.
     """
-    def wrapper(func):
-        plugin.from_func(Scenario)(func)
-        func._meta_init()
+    def wrapper(scen):
+        scen.is_classbased = hasattr(scen, "run") and callable(scen.run)
+        if not scen.is_classbased:
+            plugin.from_func(Scenario)(scen)
+        scen._meta_init()
         if name:
-            func._set_name_and_namespace(name, namespace)
+            if "." not in name.strip("."):
+                msg = (_("Scenario name must include a dot: '%s'") % name)
+                raise exceptions.RallyException(msg)
+            scen._set_name_and_namespace(name, namespace)
         else:
-            func._meta_set("namespace", namespace)
-        func._meta_set("default_context", context or {})
-        return func
+            scen._meta_set("namespace", namespace)
+        scen._meta_set("default_context", context or {})
+        return scen
     return wrapper
 
 

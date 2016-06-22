@@ -30,12 +30,13 @@ class ScenarioConfigureTestCase(test.TestCase):
 
     def test_configure(self):
 
-        @scenario.configure("test_configure", "testing")
+        @scenario.configure("fooscenario.name", "testing")
         def some_func():
             pass
 
-        self.assertEqual("test_configure", some_func.get_name())
+        self.assertEqual("fooscenario.name", some_func.get_name())
         self.assertEqual("testing", some_func.get_namespace())
+        self.assertFalse(some_func.is_classbased)
         some_func.unregister()
 
     def test_configure_default_name(self):
@@ -47,6 +48,7 @@ class ScenarioConfigureTestCase(test.TestCase):
         self.assertIsNone(some_func._meta_get("name"))
         self.assertEqual("testing", some_func.get_namespace())
         self.assertEqual({"any": 42}, some_func._meta_get("default_context"))
+        self.assertFalse(some_func.is_classbased)
         some_func.unregister()
 
     def test_configure_cls(self):
@@ -62,7 +64,19 @@ class ScenarioConfigureTestCase(test.TestCase):
         self.assertEqual("any", ScenarioPluginCls.some.get_namespace())
         self.assertEqual({"any": 43},
                          ScenarioPluginCls.some._meta_get("default_context"))
+        self.assertFalse(ScenarioPluginCls.some.is_classbased)
         ScenarioPluginCls.some.unregister()
+
+    def test_configure_classbased(self):
+
+        @scenario.configure(name="fooscenario.name", namespace="testing")
+        class SomeScenario(scenario.Scenario):
+            def run(self):
+                pass
+
+        self.assertEqual("fooscenario.name", SomeScenario.get_name())
+        self.assertTrue(SomeScenario.is_classbased)
+        SomeScenario.unregister()
 
 
 class ScenarioTestCase(test.TestCase):

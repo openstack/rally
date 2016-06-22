@@ -152,11 +152,16 @@ class ScenarioRunner(plugin.Plugin):
         """
 
     def run(self, name, context, args):
-        cls_name, method_name = name.split(".", 1)
-        cls = scenario.Scenario.get(name)._meta_get("cls_ref")
+        scenario_plugin = scenario.Scenario.get(name)
 
         # NOTE(boris-42): processing @types decorators
         args = types.preprocess(name, context, args)
+
+        if scenario_plugin.is_classbased:
+            cls, method_name = scenario_plugin, "run"
+        else:
+            cls, method_name = (scenario_plugin._meta_get("cls_ref"),
+                                name.split(".", 1).pop())
 
         with rutils.Timer() as timer:
             self._run_scenario(cls, method_name, context, args)
