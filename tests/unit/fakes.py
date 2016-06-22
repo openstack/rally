@@ -429,7 +429,7 @@ class FakePackageManager(FakeManager):
 
     def create(self, package_descr, package_arch, package_class=FakeMurano):
         package = self._cache(package_class(self))
-        package.name = package_arch.keys()[0]
+        package.name = list(package_arch.keys())[0]
         return package
 
 
