@@ -758,7 +758,7 @@ class NovaServers(utils.NovaScenario,
         """Migrate a server.
 
         This scenario launches a VM on a compute node available in
-        the availability zone and stops the VM, and then migrates the VM
+        the availability zone, and then migrates the VM
         to another compute node on the same availability zone.
 
         :param image: image to be used to boot an instance
@@ -766,15 +766,14 @@ class NovaServers(utils.NovaScenario,
         :param kwargs: Optional additional arguments for server creation
         """
         server = self._boot_server(image, flavor, **kwargs)
-        self._stop_server(server)
         self._migrate(server)
         # NOTE(wtakase): This is required because cold migration and resize
         #                share same code path.
         confirm = kwargs.get("confirm", True)
         if confirm:
-            self._resize_confirm(server, status="SHUTOFF")
+            self._resize_confirm(server, status="ACTIVE")
         else:
-            self._resize_revert(server, status="SHUTOFF")
+            self._resize_revert(server, status="ACTIVE")
         self._delete_server(server)
 
     @types.convert(from_image={"type": "glance_image"},
