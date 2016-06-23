@@ -46,6 +46,9 @@ USER_CONTEXT_OPTS = [
     cfg.StrOpt("user_domain",
                default="default",
                help="ID of domain in which users will be created."),
+    cfg.StrOpt("keystone_default_role",
+               default="member",
+               help="The default role name of the keystone."),
 ]
 
 CONF = cfg.CONF
@@ -223,6 +226,7 @@ class UserGenerator(UserContextMixin, context.Context):
         # NOTE(msdubov): This should be called after _create_tenants().
         threads = self.config["resource_management_workers"]
         users_per_tenant = self.config["users_per_tenant"]
+        default_role = cfg.CONF.users_context.keystone_default_role
 
         users = collections.deque()
 
@@ -241,9 +245,11 @@ class UserGenerator(UserContextMixin, context.Context):
                 clients = osclients.Clients(self.credential)
                 cache["client"] = keystone.wrap(clients.keystone())
             client = cache["client"]
-            user = client.create_user(username, password,
-                                      "%s@email.me" % username,
-                                      tenant_id, user_dom)
+            user = client.create_user(
+                username, password,
+                "%s@email.me" % username,
+                tenant_id, user_dom,
+                default_role=default_role)
             user_credential = objects.Credential(
                 client.auth_url, user.name, password,
                 self.context["tenants"][tenant_id]["name"],
