@@ -52,16 +52,26 @@ class ExistingUsers(users.UserContextMixin, context.Context):
             user_credential = objects.Credential(**user)
             user_kclient = osclients.Clients(user_credential).keystone()
 
-            if user_kclient.tenant_id not in self.context["tenants"]:
-                self.context["tenants"][user_kclient.tenant_id] = {
-                    "id": user_kclient.tenant_id,
-                    "name": user_kclient.tenant_name
+            if user_kclient.version == "2.0":
+                tenant_id = user_kclient.tenant_id
+                tenant_name = user_kclient.tenant_name
+            else:
+                tenant_name = user_kclient.project_name
+                tenant_id = user_kclient.project_id
+
+                if not tenant_id:
+                    tenant_id = user_kclient.get_project_id(tenant_name)
+
+            if tenant_id not in self.context["tenants"]:
+                self.context["tenants"][tenant_id] = {
+                    "id": tenant_id,
+                    "name": tenant_name
                 }
 
             self.context["users"].append({
                 "credential": user_credential,
                 "id": user_kclient.user_id,
-                "tenant_id": user_kclient.tenant_id
+                "tenant_id": tenant_id
             })
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `existing_users`"))
