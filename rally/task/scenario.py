@@ -205,8 +205,8 @@ class Scenario(plugin.Plugin,
                 complete={"title": "Complete data as stacked area",
                           "description": "Data is shown as-is in StackedArea",
                           "chart_plugin": "StackedArea",
-                          "data": [["foo", [0, 5], [1, 42], [2, 15], [3, 7]],
-                                   ["bar", [0, 2], [1, 1.3], [2, 5], [3, 9]]],
+                          "data": [["foo", [[0, 5], [1, 42], [2, 15]]],
+                                   ["bar", [[0, 2], [1, 1.3], [2, 5]]]],
                           "label": "Y-axis label text",
                           "axis_label": "X-axis label text"})
 
