@@ -22,24 +22,28 @@ show_diff () {
     diff -U 0 $1 $2 | sed 1,2d
 }
 
-# Stash uncommitted changes, checkout master and save coverage report
-uncommited=$(git status --porcelain | grep -v "^??")
-[[ -n $uncommited ]] && git stash > /dev/null
+if ! git diff --exit-code || ! git diff --cached --exit-code
+then
+    echo "There are uncommited changes!"
+    echo "Please clean git working directory and try again"
+    exit 1
+fi
+
+# Checkout master and save coverage report
 git checkout HEAD^
 
 baseline_report=$(mktemp -t rally_coverageXXXXXXX)
-find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr-args="$*"
+py.test --cov=rally tests/unit/ --cov-report=html
 coverage report > $baseline_report
+mv cover cover-master
 cat $baseline_report
 baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
-# Checkout back and unstash uncommitted changes (if any)
+# Checkout back and save coverage report
 git checkout -
-[[ -n $uncommited ]] && git stash pop > /dev/null
 
-# Generate and save coverage report
 current_report=$(mktemp -t rally_coverageXXXXXXX)
-find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr-args="$*"
+py.test --cov=rally tests/unit/ --cov-report=html
 coverage report > $current_report
 current_missing=$(awk 'END { print $3 }' $current_report)
 

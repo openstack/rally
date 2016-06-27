@@ -6,3 +6,6 @@ source = rally
 ignore_errors = True
 precision = 3
 omit = */migrations/versions/ca3626f62937_init_migration.py
+
+[html]
+directory = cover
