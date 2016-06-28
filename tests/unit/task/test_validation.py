@@ -423,9 +423,9 @@ class ValidatorsTestCase(test.TestCase):
         mock__get_validated_flavor.return_value = (success, flavor)
         mock__get_validated_image.return_value = (success, image)
 
+        # test flavor.disk None
         validator = self._unwrap_validator(validation.image_valid_on_flavor,
                                            "flavor", "image")
-        # test ram
         flavor.disk = None
         flavor.ram = 2
         image["min_ram"] = 4
@@ -435,7 +435,21 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(None, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
-        # test disk (flavor.disk not None)
+        # test validate_disk false
+        validator = self._unwrap_validator(validation.image_valid_on_flavor,
+                                           "flavor", "image", False)
+        flavor.disk = 1
+        flavor.ram = 2
+        image["min_ram"] = 4
+        result = validator(None, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+        image["min_ram"] = 1
+        result = validator(None, None, None)
+        self.assertTrue(result.is_valid, result.msg)
+
+        # test validate_disk true and flavor.disk not None
+        validator = self._unwrap_validator(validation.image_valid_on_flavor,
+                                           "flavor", "image")
         image["size"] = 2
         image["min_disk"] = 0
         flavor.disk = 5.0 / (1024 ** 3)

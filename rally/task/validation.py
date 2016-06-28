@@ -339,13 +339,17 @@ def flavor_exists(config, clients, deployment, param_name):
 
 @validator
 def image_valid_on_flavor(config, clients, deployment, flavor_name,
-                          image_name):
+                          image_name, validate_disk=True):
     """Returns validator for image could be used for current flavor
 
     :param flavor_name: defines which variable should be used
                        to get flavor id value.
     :param image_name: defines which variable should be used
                        to get image id value.
+    :param validate_disk: flag to indicate whether to validate flavor's disk.
+                          Should be True if instance is booted from image.
+                          Should be False if instance is booted from volume.
+                          Default value is True.
 
     """
     valid_result, flavor = _get_validated_flavor(config, clients, flavor_name)
@@ -361,7 +365,7 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
                     "for requested image '%s'") % (flavor.id, image["id"])
         return ValidationResult(False, message)
 
-    if flavor.disk:
+    if flavor.disk and validate_disk:
         if image["size"] > flavor.disk * (1024 ** 3):
             message = _("The disk size for flavor '%s' is too small "
                         "for requested image '%s'") % (flavor.id, image["id"])
