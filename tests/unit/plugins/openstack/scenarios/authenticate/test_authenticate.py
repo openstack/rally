@@ -56,6 +56,15 @@ class AuthenticateTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
                                        "authenticate.validate_nova_5_times")
 
+    def test_validate_ceilometer(self):
+        scenario_inst = authenticate.Authenticate()
+        scenario_inst.validate_ceilometer(5)
+        self.clients("ceilometer").meters.list.assert_has_calls(
+            [mock.call()] * 5)
+        self._test_atomic_action_timer(
+            scenario_inst.atomic_actions(),
+            "authenticate.validate_ceilometer_5_times")
+
     def test_validate_cinder(self):
         scenario_inst = authenticate.Authenticate()
         scenario_inst.validate_cinder(5)

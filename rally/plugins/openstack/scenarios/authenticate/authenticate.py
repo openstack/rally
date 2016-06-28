@@ -71,6 +71,24 @@ class Authenticate(scenario.OpenStackScenario):
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
     @scenario.configure()
+    def validate_ceilometer(self, repetitions):
+        """Check Ceilometer Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
+        We have to do some minimal operation to make sure token gets validated.
+
+        :param repetitions: number of times to validate
+        """
+        ceilometer_client = self.clients("ceilometer")
+        with atomic.ActionTimer(self,
+                                "authenticate.validate_ceilometer_%s_times"
+                                % repetitions):
+            for i in range(repetitions):
+                ceilometer_client.meters.list()
+
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
+    @scenario.configure()
     def validate_cinder(self, repetitions):
         """Check Cinder Client to ensure validation of token.
 
