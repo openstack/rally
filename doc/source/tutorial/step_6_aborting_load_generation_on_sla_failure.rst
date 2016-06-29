@@ -18,11 +18,11 @@
 Step 6. Aborting load generation on success criteria failure
 ============================================================
 
-Benchmarking pre-production and production OpenStack clouds is not a trivial task. From the one side it’s important to reach the OpenStack cloud’s limits, from the other side the cloud shouldn’t be damaged. Rally aims to make this task as simple as possible. Since the very beginning Rally was able to generate enough load for any OpenStack cloud. Generating too big a load was the major issue for production clouds, because Rally didn’t know how to stop the load until it was too late.
+Benchmarking pre-production and production OpenStack clouds is not a trivial task. From the one side it is important to reach the OpenStack cloud’s limits, from the other side the cloud shouldn’t be damaged. Rally aims to make this task as simple as possible. Since the very beginning Rally was able to generate enough load for any OpenStack cloud. Generating too big a load was the major issue for production clouds, because Rally didn’t know how to stop the load until it was too late.
 
 With the **"stop on SLA failure"** feature, however, things are much better.
 
-This feature can be easily tested in real life by running one of the most important and plain benchmark scenario called *"KeystoneBasic.authenticate"*. This scenario just tries to authenticate from users that were pre-created by Rally. Rally input task looks as follows (*auth.yaml*):
+This feature can be easily tested in real life by running one of the most important and plain benchmark scenario called *"Authenticate.keystone"*. This scenario just tries to authenticate from users that were pre-created by Rally. Rally input task looks as follows (*auth.yaml*):
 
 .. code-block:: yaml
 
@@ -71,7 +71,7 @@ To understand better what has happened let’s generate HTML report:
 .. image:: ../images/Report-Abort-on-SLA-task-1.png
     :align: center
 
-On the chart with durations we can observe that the duration of authentication request reaches 65 seconds at the end of the load generation. **Rally stopped load at the very last moment just before the mad things happened. The reason why it runs so many attempts to authenticate is because of not enough good success criteria.** We had to run a lot of iterations to make average duration bigger than 5 seconds. Let’s chose better success criteria for this task and run it one more time.
+On the chart with durations we can observe that the duration of authentication request reaches 65 seconds at the end of the load generation. **Rally stopped load at the very last moment just before bad things happened. The reason why it runs so many attempts to authenticate is because of not enough good success criteria.** We had to run a lot of iterations to make average duration bigger than 5 seconds. Let’s chose better success criteria for this task and run it one more time.
 
 .. code-block:: yaml
 
@@ -114,6 +114,6 @@ Let’s run it!
 .. image:: ../images/Report-Abort-on-SLA-task-2.png
     :align: center
 
-This time load stopped after 1410 iterations versus 2495 which is much better. The interesting thing on this chart is that first occurrence of “> 10 second” authentication happened on 950 iteration. The reasonable question: “Why Rally run 500 more authentication requests then?”. This appears from the math: During the execution of **bad** authentication (10 seconds) Rally performed about 50 request/sec * 10 sec = 500 new requests as a result we run 1400 iterations instead of 950.
+This time load stopped after 1410 iterations versus 2495 which is much better. The interesting thing on this chart is that first occurrence of “> 10 second” authentication happened on 950 iteration. The reasonable question: “Why does Rally run 500 more authentication requests then?”. This appears from the math: During the execution of **bad** authentication (10 seconds) Rally performed about 50 request/sec * 10 sec = 500 new requests as a result we run 1400 iterations instead of 950.
 
 (based on: http://boris-42.me/rally-tricks-stop-load-before-your-openstack-goes-wrong/)
