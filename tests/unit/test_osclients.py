@@ -14,11 +14,9 @@
 #    under the License.
 
 import ddt
-from keystoneclient.auth import token_endpoint
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
-from testtools import matchers
 
 from rally.common import objects
 from rally import consts
@@ -34,7 +32,51 @@ class DummyClient(osclients.OSClient):
         pass
 
 
-class OSClientTestCase(test.TestCase):
+class OSClientTestCaseUtils(object):
+
+    def set_up_keystone_mocks(self):
+        self.ksc_module = mock.MagicMock()
+        self.ksc_client = mock.MagicMock()
+        self.ksc_identity = mock.MagicMock()
+        self.ksc_identity_plugin = mock.MagicMock()
+        self.ksc_password = mock.MagicMock(
+            return_value=self.ksc_identity_plugin)
+        self.ksc_auth = mock.MagicMock()
+
+        self.ksa_auth = mock.MagicMock()
+        self.ksa_session = mock.MagicMock()
+        self.patcher = mock.patch.dict("sys.modules",
+                                       {"keystoneclient": self.ksc_module,
+                                        "keystoneclient.auth": self.ksc_auth,
+                                        "keystoneauth1": self.ksa_auth})
+        self.patcher.start()
+        self.addCleanup(self.patcher.stop)
+        self.ksc_module.client = self.ksc_client
+        self.ksc_auth.identity = self.ksc_identity
+        self.ksc_auth.identity.Password = self.ksc_password
+        self.ksa_auth.session = self.ksa_session
+
+    def make_auth_args(self):
+        auth_kwargs = {
+            "auth_url": "http://auth_url/", "username": "user",
+            "password": "password", "tenant_name": "tenant",
+            "domain_name": "domain", "project_name": "project_name",
+            "project_domain_name": "project_domain_name",
+            "user_domain_name": "user_domain_name",
+        }
+        kwargs = {"https_insecure": False, "https_cacert": None}
+        kwargs.update(auth_kwargs)
+        return auth_kwargs, kwargs
+
+
+@ddt.ddt
+class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
+
+    def setUp(self):
+        super(OSClientTestCase, self).setUp()
+        self.credential = objects.Credential("http://auth_url/v2.0", "user",
+                                             "pass", "tenant")
+
     def test_choose_service_type(self):
         default_service_type = "default_service_type"
 
@@ -48,6 +90,45 @@ class OSClientTestCase(test.TestCase):
                          fake_client.choose_service_type())
         self.assertEqual("foo",
                          fake_client.choose_service_type("foo"))
+
+    @ddt.data(
+        {"auth_url": "http://auth_url/v2.0"},
+        {"auth_url": "http://auth_url/v3"},
+        {"auth_url": "http://auth_url/"},
+        {"auth_url": None},
+    )
+    @ddt.unpack
+    def test__get_session(self, auth_url):
+        mock_keystoneauth1 = mock.MagicMock()
+        self.set_up_keystone_mocks()
+        osclient = osclients.OSClient(
+            self.credential, {}, mock.MagicMock())
+        with mock.patch.dict(
+                "sys.modules", {
+                    "keystoneauth1": mock_keystoneauth1}):
+            mock_keystoneauth1.discover.Discover.return_value = (
+                mock.Mock(version_data=mock.Mock(return_value=[
+                    {"version": (1, 0)}]))
+            )
+            osclient._get_session(auth_url=auth_url)
+            if auth_url == "http://auth_url/v2.0":
+                self.ksc_password.assert_called_once_with(
+                    auth_url=auth_url, password="pass",
+                    tenant_name="tenant", username="user")
+            elif auth_url is None:
+                self.ksc_password.assert_called_once_with(
+                    auth_url="http://auth_url/v2.0", password="pass",
+                    tenant_name="tenant", username="user")
+            else:
+                self.ksc_password.assert_called_once_with(
+                    auth_url=auth_url, password="pass",
+                    tenant_name="tenant", username="user",
+                    domain_name=None, project_domain_name=None,
+                    user_domain_name=None)
+            mock_keystoneauth1.session.Session.assert_has_calls(
+                [mock.call(timeout=180.0, verify=True),
+                 mock.call(auth=self.ksc_identity_plugin, timeout=180.0,
+                           verify=True)])
 
 
 class CachedTestCase(test.TestCase):
@@ -77,38 +158,14 @@ class CachedTestCase(test.TestCase):
         self.assertEqual({}, clients.cache)
 
 
-class TestCreateKeystoneClient(test.TestCase):
+class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
 
-    def make_auth_args(self):
-        auth_kwargs = {
-            "auth_url": "http://auth_url", "username": "user",
-            "password": "password", "tenant_name": "tenant",
-            "domain_name": "domain", "project_name": "project_name",
-            "project_domain_name": "project_domain_name",
-            "user_domain_name": "user_domain_name",
-        }
-        kwargs = {"https_insecure": False, "https_cacert": None}
-        kwargs.update(auth_kwargs)
-        return auth_kwargs, kwargs
+    def setUp(self):
+        super(TestCreateKeystoneClient, self).setUp()
+        self.credential = objects.Credential("http://auth_url/v2.0", "user",
+                                             "pass", "tenant")
 
-    def set_up_keystone_mocks(self):
-        self.ksc_module = mock.MagicMock()
-        self.ksc_client = mock.MagicMock()
-        self.ksc_identity = mock.MagicMock()
-        self.ksc_password = mock.MagicMock()
-        self.ksc_session = mock.MagicMock()
-        self.ksc_auth = mock.MagicMock()
-        self.patcher = mock.patch.dict("sys.modules",
-                                       {"keystoneclient": self.ksc_module,
-                                        "keystoneclient.auth": self.ksc_auth})
-        self.patcher.start()
-        self.addCleanup(self.patcher.stop)
-        self.ksc_module.client = self.ksc_client
-        self.ksc_auth.identity = self.ksc_identity
-        self.ksc_auth.identity.Password = self.ksc_password
-        self.ksc_module.session = self.ksc_session
-
-    def test_create_keystone_client(self):
+    def test_create_client(self):
         # NOTE(bigjools): This is a very poor testing strategy as it
         # tightly couples the test implementation to the tested
         # function's implementation. Ideally, we'd use a fake keystone
@@ -117,33 +174,31 @@ class TestCreateKeystoneClient(test.TestCase):
         # client. Hopefully one day we'll get a real fake from the
         # keystone guys.
         self.set_up_keystone_mocks()
-        auth_kwargs, all_kwargs = self.make_auth_args()
-        keystone = osclients.Keystone(
-            mock.MagicMock(), mock.sentinel, mock.sentinel)
-        client = keystone._create_keystone_client(all_kwargs)
+        keystone = osclients.Keystone(self.credential, {}, mock.MagicMock())
+        keystone._get_session = mock.Mock(
+            return_value=(self.ksa_session, self.ksc_identity_plugin,))
+        self.ksc_identity_plugin.get_access = mock.Mock(
+            return_value="fake_auth_ref")
+        client = keystone.create_client(version=3)
 
-        self.ksc_password.assert_called_once_with(**auth_kwargs)
-        self.ksc_session.Session.assert_called_once_with(
-            auth=self.ksc_identity.Password(), timeout=mock.ANY,
-            verify=mock.ANY)
+        kwargs_session = self.credential.to_dict()
+        kwargs_session.update({
+            "auth_url": "http://auth_url/",
+            "session": self.ksa_session,
+            "timeout": 180.0})
+        keystone._get_session.assert_called_once_with(
+            auth_url="http://auth_url/", version="3")
+        self.ksc_identity_plugin.get_access.assert_called_once_with(
+            self.ksa_session)
         self.ksc_client.Client.assert_called_once_with(
-            version=None, **all_kwargs)
+            session=self.ksa_session, timeout=180.0, version="3")
         self.assertIs(client, self.ksc_client.Client())
-
-    def test_client_is_pre_authed(self):
+        self.assertEqual("fake_auth_ref", self.ksc_client.Client().auth_ref)
         # The client needs to be pre-authed so that service_catalog
         # works. This is because when using sessions, lazy auth is done
         # in keystoneclient.
-        self.set_up_keystone_mocks()
-        _, all_kwargs = self.make_auth_args()
-        keystone = osclients.Keystone(
-            mock.MagicMock(), mock.sentinel, mock.sentinel)
-        client = keystone._create_keystone_client(all_kwargs)
         auth_ref = getattr(client, "auth_ref", None)
         self.assertIsNot(auth_ref, None)
-        self.ksc_client.Client.assert_called_once_with(
-            version=None, **all_kwargs)
-        self.assertIs(client, self.ksc_client.Client())
 
     def test_create_client_removes_url_path_if_version_specified(self):
         # If specifying a version on the client creation call, ensure
@@ -151,62 +206,17 @@ class TestCreateKeystoneClient(test.TestCase):
         # into the Client() call.
         self.set_up_keystone_mocks()
         auth_kwargs, all_kwargs = self.make_auth_args()
-        credential = objects.Credential(
-            "http://auth_url/v2.0", "user", "pass", "tenant")
         keystone = osclients.Keystone(
-            credential, {}, mock.MagicMock())
+            self.credential, {}, mock.MagicMock())
+        keystone._get_session = mock.Mock(
+            return_value=(self.ksa_session, self.ksc_identity_plugin,))
         client = keystone.create_client(version="3")
 
         self.assertIs(client, self.ksc_client.Client())
         called_with = self.ksc_client.Client.call_args_list[0][1]
-        self.expectThat(
-            called_with["auth_url"], matchers.Equals("http://auth_url/"))
-        self.expectThat(called_with["version"], matchers.Equals("3"))
-
-    def test_create_keystone_client_with_v2_url_omits_domain(self):
-        # NOTE(bigjools): Test that domain-related info is not present
-        # when forcing a v2 URL, because it breaks keystoneclient's
-        # service discovery.
-        self.set_up_keystone_mocks()
-        auth_kwargs, all_kwargs = self.make_auth_args()
-
-        all_kwargs["auth_url"] = "http://auth_url/v2.0"
-        auth_kwargs["auth_url"] = all_kwargs["auth_url"]
-        keystone = osclients.Keystone(
-            mock.MagicMock(), mock.sentinel, mock.sentinel)
-        client = keystone._create_keystone_client(all_kwargs)
-
-        auth_kwargs.pop("user_domain_name")
-        auth_kwargs.pop("project_domain_name")
-        auth_kwargs.pop("domain_name")
-        self.ksc_password.assert_called_once_with(**auth_kwargs)
-        self.ksc_session.Session.assert_called_once_with(
-            auth=self.ksc_identity.Password(), timeout=mock.ANY,
-            verify=mock.ANY)
-        self.ksc_client.Client.assert_called_once_with(
-            version=None, **all_kwargs)
-        self.assertIs(client, self.ksc_client.Client())
-
-    def test_create_keystone_client_with_v2_version_omits_domain(self):
-        self.set_up_keystone_mocks()
-        auth_kwargs, all_kwargs = self.make_auth_args()
-
-        all_kwargs["auth_url"] = "http://auth_url/"
-        auth_kwargs["auth_url"] = all_kwargs["auth_url"]
-        keystone = osclients.Keystone(
-            mock.MagicMock(), mock.sentinel, mock.sentinel)
-        client = keystone._create_keystone_client(all_kwargs, version="2")
-
-        auth_kwargs.pop("user_domain_name")
-        auth_kwargs.pop("project_domain_name")
-        auth_kwargs.pop("domain_name")
-        self.ksc_password.assert_called_once_with(**auth_kwargs)
-        self.ksc_session.Session.assert_called_once_with(
-            auth=self.ksc_identity.Password(), timeout=mock.ANY,
-            verify=mock.ANY)
-        self.ksc_client.Client.assert_called_once_with(
-            version="2", **all_kwargs)
-        self.assertIs(client, self.ksc_client.Client())
+        self.assertEqual(
+            {"session": self.ksa_session, "timeout": 180.0, "version": "3"},
+            called_with)
 
 
 @ddt.ddt
@@ -214,7 +224,7 @@ class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.credential = objects.Credential("http://auth_url/v2.0", "use",
+        self.credential = objects.Credential("http://auth_url/v2.0", "user",
                                              "pass", "tenant")
         self.clients = osclients.Clients(self.credential, {})
 
@@ -224,7 +234,7 @@ class OSClientsTestCase(test.TestCase):
         self.service_catalog.url_for = mock.MagicMock()
 
         keystone_patcher = mock.patch(
-            "rally.osclients.Keystone._create_keystone_client")
+            "rally.osclients.Keystone.create_client")
         self.mock_create_keystone_client = keystone_patcher.start()
         self.addCleanup(keystone_patcher.stop)
         self.mock_create_keystone_client.return_value = self.fake_keystone
@@ -247,69 +257,6 @@ class OSClientsTestCase(test.TestCase):
         self.assertEqual("foo_tenant_name", clients.credential.tenant_name)
         self.assertEqual("foo_region_name", clients.credential.region_name)
 
-    @mock.patch.object(DummyClient, "_get_endpoint")
-    @mock.patch("keystoneclient.session.Session")
-    def test_get_session(self, mock_session, mock_dummy_client__get_endpoint):
-        # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.credential, {}, {})
-
-        with mock.patch.object(token_endpoint, "Token") as token:
-            osc._get_session()
-
-            token.assert_called_once_with(
-                mock_dummy_client__get_endpoint.return_value,
-                self.fake_keystone.auth_token
-            )
-            mock_session.assert_called_once_with(
-                auth=token.return_value, verify=not self.credential.insecure,
-                timeout=cfg.CONF.openstack_client_http_timeout)
-
-    @mock.patch.object(DummyClient, "_get_endpoint")
-    @mock.patch("keystoneclient.session.Session")
-    def test_get_session_with_endpoint(
-            self, mock_session, mock_dummy_client__get_endpoint):
-        # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.credential, {}, {})
-
-        fake_endpoint = mock.Mock()
-        with mock.patch.object(token_endpoint, "Token") as token:
-            osc._get_session(endpoint=fake_endpoint)
-
-            self.assertFalse(mock_dummy_client__get_endpoint.called)
-
-            token.assert_called_once_with(
-                fake_endpoint,
-                self.fake_keystone.auth_token
-            )
-            mock_session.assert_called_once_with(
-                auth=token.return_value, verify=not self.credential.insecure,
-                timeout=cfg.CONF.openstack_client_http_timeout)
-
-    @mock.patch("keystoneclient.session.Session")
-    def test_get_session_with_auth(self, mock_session):
-        # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.credential, {}, {})
-
-        fake_auth = mock.Mock()
-        osc._get_session(auth=fake_auth)
-
-        mock_session.assert_called_once_with(
-            auth=fake_auth, verify=not self.credential.insecure,
-            timeout=cfg.CONF.openstack_client_http_timeout)
-
-    @mock.patch("keystoneclient.session.Session")
-    def test_get_session_with_ca(self, mock_session):
-        # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.credential, {}, {})
-
-        self.credential.cacert = "/fake/ca"
-        fake_auth = mock.Mock()
-        osc._get_session(auth=fake_auth)
-
-        mock_session.assert_called_once_with(
-            auth=fake_auth, verify="/fake/ca",
-            timeout=cfg.CONF.openstack_client_http_timeout)
-
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
@@ -317,9 +264,8 @@ class OSClientsTestCase(test.TestCase):
         credential = {"timeout": cfg.CONF.openstack_client_http_timeout,
                       "insecure": False, "cacert": None}
         kwargs = self.credential.to_dict()
-        kwargs.update(credential.items())
-        self.mock_create_keystone_client.assert_called_once_with(
-            kwargs, version=None)
+        kwargs.update(credential)
+        self.mock_create_keystone_client.assert_called_once_with()
         self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
     @mock.patch("rally.osclients.Keystone.create_client")
@@ -515,6 +461,10 @@ class OSClientsTestCase(test.TestCase):
         with mock.patch.dict("sys.modules",
                              {"gnocchiclient": mock_gnocchi,
                               "keystoneauth1": mock_keystoneauth1}):
+            mock_keystoneauth1.discover.Discover.return_value = (
+                mock.Mock(version_data=mock.Mock(return_value=[
+                    {"version": (1, 0)}]))
+            )
             client = self.clients.gnocchi()
 
             self.assertEqual(fake_gnocchi, client)
@@ -691,23 +641,21 @@ class OSClientsTestCase(test.TestCase):
             mock_swift.client.Connection.assert_called_once_with(**kw)
             self.assertEqual(self.clients.cache["swift"], fake_swift)
 
-    def test_ec2(self):
+    @mock.patch("rally.osclients.EC2._get_endpoint")
+    def test_ec2(self, mock_ec2__get_endpoint):
         mock_boto = mock.Mock()
-        self.service_catalog.url_for.return_value = "http://fake.to:1/fake"
         self.fake_keystone.ec2 = mock.Mock()
         self.fake_keystone.ec2.create.return_value = mock.Mock(
             access="fake_access", secret="fake_secret")
+        mock_ec2__get_endpoint.return_value = "http://fake.to:1/fake"
         fake_ec2 = fakes.FakeEC2Client()
         mock_boto.connect_ec2_endpoint.return_value = fake_ec2
 
         self.assertNotIn("ec2", self.clients.cache)
         with mock.patch.dict("sys.modules", {"boto": mock_boto}):
             client = self.clients.ec2()
+
             self.assertEqual(fake_ec2, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="ec2",
-                endpoint_type=consts.EndpointType.PUBLIC,
-                region_name=self.credential.region_name)
             kw = {
                 "url": "http://fake.to:1/fake",
                 "aws_access_key_id": "fake_access",
@@ -764,7 +712,8 @@ class OSClientsTestCase(test.TestCase):
         mock_designate = mock.Mock()
         mock_designate.client.Client.return_value = fake_designate
 
-        mock_designate__get_session.return_value = self.fake_keystone.session
+        mock_designate__get_session.return_value = ("fake_session",
+                                                    "fake_auth_plugin")
 
         self.assertNotIn("designate", self.clients.cache)
         with mock.patch.dict("sys.modules",
@@ -787,10 +736,10 @@ class OSClientsTestCase(test.TestCase):
             url.__iadd__.assert_called_once_with("/v%s" % default)
 
             mock_designate__get_session.assert_called_once_with(
-                endpoint=url.__iadd__.return_value)
+                auth_url=url.__iadd__.return_value)
 
             mock_designate.client.Client.assert_called_once_with(
-                default, session=self.fake_keystone.session)
+                default, session="fake_session")
 
             key = "designate"
             if version is not None:
@@ -802,9 +751,8 @@ class OSClientsTestCase(test.TestCase):
         fake_cue = fakes.FakeCueClient()
         mock_cue = mock.MagicMock()
         mock_cue.client.Client = mock.MagicMock(return_value=fake_cue)
-
-        mock_cue__get_session.return_value = self.fake_keystone.session
-
+        mock_cue__get_session.return_value = ("fake_session",
+                                              "fake_auth_plugin")
         self.assertNotIn("cue", self.clients.cache)
         with mock.patch.dict("sys.modules", {"cueclient": mock_cue,
                                              "cueclient.v1": mock_cue}):
@@ -812,7 +760,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_cue, client)
             mock_cue.client.Client.assert_called_once_with(
                 interface=consts.EndpointType.PUBLIC,
-                session=self.fake_keystone.session)
+                session="fake_session")
             self.assertEqual(fake_cue, self.clients.cache["cue"])
 
     def test_senlin(self):
@@ -838,7 +786,8 @@ class OSClientsTestCase(test.TestCase):
         mock_magnum = mock.MagicMock()
         mock_magnum.client.Client.return_value = fake_magnum
 
-        mock_magnum__get_session.return_value = self.fake_keystone.session
+        mock_magnum__get_session.return_value = (self.fake_keystone.session,
+                                                 "fake_auth_plugin")
 
         self.assertNotIn("magnum", self.clients.cache)
         with mock.patch.dict("sys.modules", {"magnumclient": mock_magnum}):

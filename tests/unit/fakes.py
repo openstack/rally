@@ -1039,7 +1039,7 @@ class FakeKeystoneClient(object):
         self.auth_ref = mock.Mock()
         self.auth_ref.role_names = ["admin"]
         self.version = "v2.0"
-        self.session = mock.Mock()
+        self.session = mock.MagicMock()
         self.authenticate = mock.MagicMock()
 
     def authenticate(self):

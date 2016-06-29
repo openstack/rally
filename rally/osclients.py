@@ -148,33 +148,45 @@ class OSClient(plugin.Plugin):
                                             self.cache)
         return keystone(*args, **kwargs)
 
-    def _get_session(self, auth=None, endpoint=None):
-        from keystoneclient.auth import token_endpoint
-        from keystoneclient import session as ks_session
-
-        if auth is None:
-            endpoint = endpoint or self._get_endpoint()
-            kc = self.keystone()
-            auth = token_endpoint.Token(endpoint, kc.auth_token)
-        verify = self.credential.cacert or not self.credential.insecure
-        return ks_session.Session(
-            auth=auth, verify=verify,
-            timeout=CONF.openstack_client_http_timeout)
-
-    def _get_keystoneauth_session(self):
-        from keystoneauth1 import loading
+    def _get_session(self, auth_url=None, version=None):
+        from keystoneauth1 import discover
         from keystoneauth1 import session
-        loader = loading.get_plugin_loader("password")
-        plugin = loader.load_from_options(
-            auth_url=self.credential.auth_url,
-            username=self.credential.username,
-            password=self.credential.password,
-            user_domain_name=self.credential.user_domain_name,
-            project_name=self.credential.tenant_name,
-            project_domain_name=self.credential.project_domain_name)
-        sess = session.Session(auth=plugin, verify=(
-            not self.credential.insecure))
-        return sess
+        from keystoneclient.auth import identity
+
+        password_args = {
+            "auth_url": auth_url or self.credential.auth_url,
+            "username": self.credential.username,
+            "password": self.credential.password,
+            "tenant_name": self.credential.tenant_name
+        }
+
+        version = OSClient.get("keystone")(
+            self.credential, self.api_info, self.cache).choose_version(version)
+        if version is None:
+            # NOTE(rvasilets): If version not specified than we discover
+            # available version with the smallest number. To be able to
+            # discover versions we need session
+            temp_session = session.Session(
+                verify=(
+                    self.credential.cacert or not self.credential.insecure),
+                timeout=CONF.openstack_client_http_timeout)
+            version = str(discover.Discover(
+                temp_session,
+                password_args["auth_url"]).version_data()[0]["version"][0])
+
+        if "v2.0" not in password_args["auth_url"] and (
+                version != "2"):
+            password_args.update({
+                "user_domain_name": self.credential.user_domain_name,
+                "domain_name": self.credential.domain_name,
+                "project_domain_name": self.credential.project_domain_name,
+            })
+        identity_plugin = identity.Password(**password_args)
+        sess = session.Session(
+            auth=identity_plugin, verify=(
+                self.credential.cacert or not self.credential.insecure),
+            timeout=CONF.openstack_client_http_timeout)
+        return sess, identity_plugin
 
     def _get_endpoint(self, service_type=None):
         kc = self.keystone()
@@ -239,36 +251,6 @@ class Keystone(OSClient):
         raise exceptions.RallyException(_("Method 'keystone' is restricted "
                                           "for keystoneclient. :)"))
 
-    def _create_keystone_client(self, args, version=None):
-        from keystoneclient.auth import identity
-        from keystoneclient import client
-        auth_arg_list = [
-            "username", "project_name", "tenant_name", "auth_url",
-            "password",
-        ]
-        # NOTE(bigjools): If forcing a v2.0 URL then you cannot specify
-        # domain-related info, or the service discovery will fail.
-        if "v2.0" not in args["auth_url"] and version != "2":
-            auth_arg_list.extend(
-                ["user_domain_name", "domain_name", "project_domain_name"])
-        auth_args = {key: args.get(key) for key in auth_arg_list}
-        auth = identity.Password(**auth_args)
-        session = self._get_session(auth=auth)
-        args["session"] = session
-        # NOTE(bigjools): When using sessions, keystoneclient no longer
-        # does any pre-auth and calling client.authenticate() with
-        # sessions is deprecated (it's still possible to call it but if
-        # endpoint is defined it'll crash). We're forcing that pre-auth
-        # here because the use of the service_catalog depends on doing
-        # this. Also note that while the API has got the
-        # endpoints.list() equivalent, there is no service_type in that
-        # list which is why we need to ensure service_catalog is still
-        # present.
-        auth_ref = auth.get_access(session)
-        ks = client.Client(version=version, **args)
-        ks.auth_ref = auth_ref
-        return ks
-
     def _remove_url_version(self):
         """Remove any version from the auth_url.
 
@@ -291,20 +273,32 @@ class Keystone(OSClient):
         If this object was constructed with a version in the api_info
         then that will be used unless the version parameter is passed.
         """
+        from keystoneclient import client
+
         # Use the version in the api_info if provided, otherwise fall
         # back to the passed version (which may be None, in which case
         # keystoneclient chooses).
+
         version = self.choose_version(version)
-        new_kw = {
-            "timeout": CONF.openstack_client_http_timeout,
-            "insecure": self.credential.insecure,
-            "cacert": self.credential.cacert
-        }
-        kw = self.credential.to_dict()
-        kw.update(new_kw)
+
+        auth_url = self.credential.auth_url
         if version is not None:
-            kw["auth_url"] = self._remove_url_version()
-        return self._create_keystone_client(kw, version=version)
+            auth_url = self._remove_url_version()
+        sess, plugin = self._get_session(auth_url=auth_url, version=version)
+        # NOTE(bigjools): When using sessions, keystoneclient no longer
+        # does any pre-auth and calling client.authenticate() with
+        # sessions is deprecated (it's still possible to call it but if
+        # endpoint is defined it'll crash). We're forcing that pre-auth
+        # here because the use of the service_catalog depends on doing
+        # this. Also note that while the API has got the
+        # endpoints.list() equivalent, there is no service_type in that
+        # list which is why we need to ensure service_catalog is still
+        # present.
+        auth_ref = plugin.get_access(sess)
+        ks = client.Client(version=version, session=sess,
+                           timeout=CONF.openstack_client_http_timeout)
+        ks.auth_ref = auth_ref
+        return ks
 
 
 @configure("nova", default_version="2", default_service_type="compute")
@@ -323,18 +317,15 @@ class Nova(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return nova client."""
         from novaclient import client as nova
+
         kc = self.keystone()
-        compute_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = nova.Client(self.choose_version(version),
                              auth_token=kc.auth_token,
                              http_log_debug=logging.is_debug(),
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=self.credential.insecure,
                              **self._get_auth_info(password_key="api_key"))
-        client.set_management_url(compute_api_url)
+        client.set_management_url(self._get_endpoint(service_type))
         return client
 
 
@@ -344,14 +335,11 @@ class Neutron(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return neutron client."""
         from neutronclient.neutron import client as neutron
+
         kc = self.keystone()
-        network_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = neutron.Client(self.choose_version(version),
                                 token=kc.auth_token,
-                                endpoint_url=network_api_url,
+                                endpoint_url=self._get_endpoint(service_type),
                                 timeout=CONF.openstack_client_http_timeout,
                                 insecure=self.credential.insecure,
                                 **self._get_auth_info(
@@ -366,13 +354,10 @@ class Glance(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return glance client."""
         import glanceclient as glance
+
         kc = self.keystone()
-        image_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = glance.Client(self.choose_version(version),
-                               endpoint=image_api_url,
+                               endpoint=self._get_endpoint(service_type),
                                token=kc.auth_token,
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=self.credential.insecure,
@@ -386,13 +371,10 @@ class Heat(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return heat client."""
         from heatclient import client as heat
+
         kc = self.keystone()
-        orchestration_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = heat.Client(self.choose_version(version),
-                             endpoint=orchestration_api_url,
+                             endpoint=self._get_endpoint(service_type),
                              token=kc.auth_token,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=self.credential.insecure,
@@ -407,17 +389,14 @@ class Cinder(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return cinder client."""
         from cinderclient import client as cinder
+
         client = cinder.Client(self.choose_version(version),
                                http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=self.credential.insecure,
                                **self._get_auth_info(password_key="api_key"))
         kc = self.keystone()
-        volume_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
-        client.client.management_url = volume_api_url
+        client.client.management_url = self._get_endpoint(service_type)
         client.client.auth_token = kc.auth_token
         return client
 
@@ -437,10 +416,7 @@ class Manila(OSClient):
             **self._get_auth_info(password_key="api_key",
                                   project_name_key="project_name"))
         kc = self.keystone()
-        manila_client.client.management_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
+        manila_client.client.management_url = self._get_endpoint(service_type)
         manila_client.client.auth_token = kc.auth_token
         return manila_client
 
@@ -451,11 +427,8 @@ class Ceilometer(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return ceilometer client."""
         from ceilometerclient import client as ceilometer
+
         kc = self.keystone()
-        metering_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         auth_token = kc.auth_token
         if not hasattr(auth_token, "__call__"):
             # python-ceilometerclient requires auth_token to be a callable
@@ -463,7 +436,7 @@ class Ceilometer(OSClient):
 
         client = ceilometer.get_client(
             self.choose_version(version),
-            os_endpoint=metering_api_url,
+            os_endpoint=self._get_endpoint(service_type),
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
@@ -480,8 +453,9 @@ class Gnocchi(OSClient):
         # NOTE(sumantmurke): gnocchiclient requires keystoneauth1 for
         # authenticating and creating a session.
         from gnocchiclient import client as gnocchi
+
         service_type = self.choose_service_type(service_type)
-        sess = self._get_keystoneauth_session()
+        sess = self._get_session()[0]
         gclient = gnocchi.Client(version=self.choose_version(
             version), session=sess, service_type=service_type)
         return gclient
@@ -494,14 +468,11 @@ class Ironic(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return Ironic client."""
         from ironicclient import client as ironic
+
         kc = self.keystone()
-        baremetal_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = ironic.get_client(self.choose_version(version),
                                    os_auth_token=kc.auth_token,
-                                   ironic_url=baremetal_api_url,
+                                   ironic_url=self._get_endpoint(service_type),
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=self.credential.insecure,
                                    cacert=self.credential.cacert)
@@ -525,6 +496,7 @@ class Sahara(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return Sahara client."""
         from saharaclient import client as sahara
+
         client = sahara.Client(
             self.choose_version(version),
             service_type=self.choose_service_type(service_type),
@@ -547,10 +519,6 @@ class Zaqar(OSClient):
         """Return Zaqar client."""
         from zaqarclient.queues import client as zaqar
         kc = self.keystone()
-        messaging_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         conf = {"auth_opts": {"backend": "keystone", "options": {
             "os_username": self.credential.username,
             "os_password": self.credential.password,
@@ -559,7 +527,7 @@ class Zaqar(OSClient):
             "os_auth_url": self.credential.auth_url,
             "insecure": self.credential.insecure,
         }}}
-        client = zaqar.Client(url=messaging_api_url,
+        client = zaqar.Client(url=self._get_endpoint(),
                               version=self.choose_version(version),
                               conf=conf)
         return client
@@ -572,15 +540,10 @@ class Murano(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return Murano client."""
         from muranoclient import client as murano
-        kc = self.keystone()
-        murano_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name
-        )
 
+        kc = self.keystone()
         client = murano.Client(self.choose_version(version),
-                               endpoint=murano_url,
+                               endpoint=self._get_endpoint(service_type),
                                token=kc.auth_token)
 
         return client
@@ -598,7 +561,7 @@ class Designate(OSClient):
         api_url = self._get_endpoint(service_type)
         api_url += "/v%s" % version
 
-        session = self._get_session(endpoint=api_url)
+        session = self._get_session(auth_url=api_url)[0]
         return client.Client(version, session=session)
 
 
@@ -607,6 +570,7 @@ class Trove(OSClient):
     def create_client(self, version=None):
         """Returns trove client."""
         from troveclient import client as trove
+
         client = trove.Client(self.choose_version(version),
                               region_name=self.credential.region_name,
                               timeout=CONF.openstack_client_http_timeout,
@@ -621,15 +585,10 @@ class Mistral(OSClient):
     def create_client(self, service_type=None):
         """Return Mistral client."""
         from mistralclient.api import client
+
         kc = self.keystone()
-
-        mistral_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
-
         client = client.client(
-            mistral_url=mistral_url,
+            mistral_url=self._get_endpoint(service_type),
             service_type=self.choose_service_type(service_type),
             auth_token=kc.auth_token)
         return client
@@ -640,13 +599,10 @@ class Swift(OSClient):
     def create_client(self, service_type=None):
         """Return swift client."""
         from swiftclient import client as swift
+
         kc = self.keystone()
-        object_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = swift.Connection(retries=1,
-                                  preauthurl=object_api_url,
+                                  preauthurl=self._get_endpoint(service_type),
                                   preauthtoken=kc.auth_token,
                                   insecure=self.credential.insecure,
                                   cacert=self.credential.cacert,
@@ -661,6 +617,7 @@ class EC2(OSClient):
     def create_client(self):
         """Return ec2 client."""
         import boto
+
         kc = self.keystone()
         if kc.version != "v2.0":
             raise exceptions.RallyException(
@@ -668,12 +625,8 @@ class EC2(OSClient):
                   "Keystone version 2"))
         ec2_credential = kc.ec2.create(user_id=kc.auth_user_id,
                                        tenant_id=kc.auth_tenant_id)
-        ec2_api_url = kc.service_catalog.url_for(
-            service_type=consts.ServiceType.EC2,
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         client = boto.connect_ec2_endpoint(
-            url=ec2_api_url,
+            url=self._get_endpoint(),
             aws_access_key_id=ec2_credential.access,
             aws_secret_access_key=ec2_credential.secret,
             is_secure=self.credential.insecure)
@@ -686,15 +639,12 @@ class Monasca(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return monasca client."""
         from monascaclient import client as monasca
+
         kc = self.keystone()
-        monitoring_api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
         auth_token = kc.auth_token
         client = monasca.Client(
             self.choose_version(version),
-            monitoring_api_url,
+            self._get_endpoint(service_type),
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
@@ -712,10 +662,10 @@ class Cue(OSClient):
         api_url = self._get_endpoint(service_type)
         api_url += "v%s" % version
 
-        session = self._get_session(endpoint=api_url)
-        endpoint_type = self.credential.endpoint_type,
+        session = self._get_session(auth_url=api_url)[0]
+        endpoint_type = self.credential.endpoint_type
 
-        return cue.Client(session=session, interface=endpoint_type[0])
+        return cue.Client(session=session, interface=endpoint_type)
 
 
 @configure("senlin", default_version="1", default_service_type="clustering",
@@ -724,6 +674,7 @@ class Senlin(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return senlin client."""
         from senlinclient import client as senlin
+
         return senlin.Client(
             self.choose_version(version),
             **self._get_auth_info(project_name_key="project_name",
@@ -738,10 +689,10 @@ class Magnum(OSClient):
         from magnumclient import client as magnum
 
         api_url = self._get_endpoint(service_type)
-        session = self._get_session(endpoint=api_url)
-        endpoint_type = self.credential.endpoint_type,
+        session = self._get_session(auth_url=api_url)[0]
+        endpoint_type = self.credential.endpoint_type
 
-        return magnum.Client(session=session, interface=endpoint_type[0])
+        return magnum.Client(session=session, interface=endpoint_type)
 
 
 @configure("watcher", default_version="1", default_service_type="infra-optim",
@@ -835,50 +786,3 @@ class Clients(object):
             self.cache["services_data"] = services_data
 
         return self.cache["services_data"]
-
-    @classmethod
-    @logging.log_deprecated("Use rally.osclients.configure decorator instead.",
-                            "0.1.2")
-    def register(cls, client_name):
-        """DEPRECATED!Decorator that adds new OpenStack client dynamically.
-
-        Use rally.osclients.configure decorator instead!
-
-        :param client_name: str name how client will be named in Rally clients
-
-        Decorated class will be added to Clients in runtime, so its sole
-        argument is a Clients instance.
-
-        Decorated function will be added to Clients in runtime, so its sole
-        argument is a Clients instance.
-
-        Example:
-          >>> from rally import osclients
-          >>> @osclients.Clients.register("supernova")
-          ... def another_nova_client(self):
-          ...   from novaclient import client as nova
-          ...   return nova.Client("2", auth_token=self.keystone().auth_token,
-          ...                      **self._get_auth_info(password_key="key"))
-          ...
-          >>> clients = osclients.Clients.create_from_env()
-          >>> clients.supernova().services.list()[:2]
-          [<Service: nova-conductor>, <Service: nova-cert>]
-        """
-        def wrap(client_func):
-            try:
-                OSClient.get(client_name)
-            except exceptions.PluginNotFound:
-                # everything is ok
-                pass
-            else:
-                raise ValueError(
-                    _("Can not register client: name already exists: %s")
-                    % client_name)
-
-            @configure(client_name)
-            class NewClient(OSClient):
-                create_client = client_func
-
-            return NewClient
-
-        return wrap
