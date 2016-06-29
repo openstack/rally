@@ -769,3 +769,23 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                       fakearg="fakearg")
         scenario._update_server.assert_called_once_with(
             scenario._boot_server.return_value, "desp")
+
+    def test_boot_server_from_volume_snapshot(self):
+        fake_volume = mock.MagicMock(id="volume_id")
+        fake_snapshot = mock.MagicMock(id="snapshot_id")
+
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+
+        scenario.boot_server_from_volume_snapshot("img", "flavor", 1,
+                                                  auto_assign_nic=False,
+                                                  fakearg="f")
+
+        scenario._create_volume.assert_called_once_with(1, imageRef="img")
+        scenario._create_snapshot.assert_called_once_with("volume_id", False)
+        scenario._boot_server.assert_called_once_with(
+            None, "flavor", auto_assign_nic=False,
+            block_device_mapping={"vda": "snapshot_id:snap::1"},
+            fakearg="f")

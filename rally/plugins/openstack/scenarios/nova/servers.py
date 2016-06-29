@@ -881,3 +881,31 @@ class NovaServers(utils.NovaScenario,
         """
         server = self._boot_server(image, flavor, **kwargs)
         self._update_server(server, description)
+
+    @types.convert(image={"type": "glance_image"},
+                   flavor={"type": "nova_flavor"})
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova", "cinder"]})
+    def boot_server_from_volume_snapshot(self, image, flavor, volume_size,
+                                         auto_assign_nic=False, **kwargs):
+        """Boot a server from a snapshot.
+
+        The scenario first creates a volume and creates a
+        snapshot from this volume, then boots a server from
+        the created snapshot.
+        Assumes that cleanup is done elsewhere.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param volume_size: volume size (in GB)
+        :param auto_assign_nic: True if NICs should be assigned
+        :param kwargs: Optional additional arguments for server creation
+        """
+        volume = self._create_volume(volume_size, imageRef=image)
+        snapshot = self._create_snapshot(volume.id, False)
+        block_device_mapping = {"vda": "%s:snap::1" % snapshot.id}
+        self._boot_server(None, flavor, auto_assign_nic=auto_assign_nic,
+                          block_device_mapping=block_device_mapping,
+                          **kwargs)
