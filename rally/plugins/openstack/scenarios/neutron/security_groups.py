@@ -37,7 +37,7 @@ class NeutronSecurityGroup(utils.NeutronScenario):
 
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
-    @scenario.configure()
+    @scenario.configure(context={"cleanup": ["neutron"]})
     def create_and_delete_security_groups(self,
                                           security_group_create_args=None):
         """Create and delete Neutron security-groups.
@@ -66,7 +66,7 @@ class NeutronSecurityGroup(utils.NeutronScenario):
 
         :param security_group_create_args: dict, POST /v2.0/security-groups
                                            request options
-        :param security_group_update_args: dict, POST /v2.0/security-groups
+        :param security_group_update_args: dict, PUT /v2.0/security-groups
                                            update options
         """
         security_group_create_args = security_group_create_args or {}
