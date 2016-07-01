@@ -1,4 +1,5 @@
 {% set flavor_name = flavor_name or "m1.tiny" %}
+{% set volume_type = volume_type or "" %}
 {
     "NovaServers.boot_server_from_volume_snapshot": [
         {
@@ -9,7 +10,8 @@
                 "image": {
                     "name": "^cirros.*uec$"
                 },
-                "volume_size": 10
+                "volume_size": 10,
+                "volume_type": "{{volume_type}}"
             },
             "runner": {
                 "type": "constant",

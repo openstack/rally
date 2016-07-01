@@ -329,10 +329,12 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_volume.id = "volume_id"
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
-        scenario.boot_server_from_volume("img", 0, 5, auto_assign_nic=False,
+        scenario.boot_server_from_volume("img", 0, 5, volume_type=None,
+                                         auto_assign_nic=False,
                                          fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img")
+        scenario._create_volume.assert_called_once_with(5, imageRef="img",
+                                                        volume_type=None)
         scenario._boot_server.assert_called_once_with(
             None, 0, auto_assign_nic=False,
             block_device_mapping={"vda": "volume_id:::1"},
@@ -349,10 +351,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_volume.id = "volume_id"
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
-        scenario.boot_server_from_volume_and_delete("img", 0, 5, 10, 20,
+        scenario.boot_server_from_volume_and_delete("img", 0, 5, None, 10, 20,
                                                     fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img")
+        scenario._create_volume.assert_called_once_with(5, imageRef="img",
+                                                        volume_type=None)
         scenario._boot_server.assert_called_once_with(
             None, 0,
             block_device_mapping={"vda": "volume_id:::1"},
@@ -584,11 +587,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
         scenario.boot_server_from_volume_and_live_migrate("img", 0, 5,
+                                                          volume_type=None,
                                                           min_sleep=10,
                                                           max_sleep=20,
                                                           fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img")
+        scenario._create_volume.assert_called_once_with(5, imageRef="img",
+                                                        volume_type=None)
 
         scenario._boot_server.assert_called_once_with(
             None, 0,
@@ -780,10 +785,12 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
 
         scenario.boot_server_from_volume_snapshot("img", "flavor", 1,
+                                                  volume_type=None,
                                                   auto_assign_nic=False,
                                                   fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(1, imageRef="img")
+        scenario._create_volume.assert_called_once_with(1, imageRef="img",
+                                                        volume_type=None)
         scenario._create_snapshot.assert_called_once_with("volume_id", False)
         scenario._boot_server.assert_called_once_with(
             None, "flavor", auto_assign_nic=False,
