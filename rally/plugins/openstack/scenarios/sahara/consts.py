@@ -87,10 +87,22 @@ NODE_PROCESSES = {
                        "HDFS_SECONDARYNAMENODE", "HIVE_METASTORE",
                        "HIVE_SERVER2"],
             "worker": ["YARN_NODEMANAGER", "HDFS_DATANODE"]
+        },
+        "5.5.0": {
+            "manager": ["CLOUDERA_MANAGER"],
+            "master": ["HDFS_NAMENODE", "YARN_RESOURCEMANAGER",
+                       "OOZIE_SERVER", "YARN_JOBHISTORY",
+                       "HDFS_SECONDARYNAMENODE", "HIVE_METASTORE",
+                       "HIVE_SERVER2"],
+            "worker": ["YARN_NODEMANAGER", "HDFS_DATANODE"]
         }
     },
     "spark": {
         "1.3.1": {
+            "master": ["namenode", "master"],
+            "worker": ["datanode", "slave"]
+        },
+        "1.6.0": {
             "master": ["namenode", "master"],
             "worker": ["datanode", "slave"]
         }
@@ -170,6 +182,10 @@ REPLICATION_CONFIGS = {
         "5.4.0": {
             "target": "HDFS",
             "config_name": "dfs_replication"
+        },
+        "5.5.0": {
+            "target": "HDFS",
+            "config_name": "dfs_replication"
         }
     },
     "spark": {
@@ -177,12 +193,16 @@ REPLICATION_CONFIGS = {
             "target": "HDFS",
             "config_name": "dfs_replication"
         },
+        "1.6.0": {
+            "target": "HDFS",
+            "config_name": "dfs_replication"
+        }
     },
     "ambari": {
         "2.3": {
             "target": "HDFS",
             "config_name": "dfs_replication"
-        },
+        }
     },
     "mapr": {
         "5.0.0.mrv2": {
@@ -212,10 +232,12 @@ ANTI_AFFINITY_PROCESSES = {
     },
     "cdh": {
         "5": ["HDFS_DATANODE"],
-        "5.4.0": ["HDFS_DATANODE"]
+        "5.4.0": ["HDFS_DATANODE"],
+        "5.5.0": ["HDFS_DATANODE"]
     },
     "spark": {
         "1.3.1": ["datanode"],
+        "1.6.0": ["datanode"]
     },
     "ambari": {
         "2.3": ["DataNode"],
