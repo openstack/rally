@@ -1,0 +1,20 @@
+{
+    "Authenticate.validate_ceilometer": [
+        {
+            "args": {
+                "repetitions": 2
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 5
+                }
+            }
+        }
+    ]
+}
