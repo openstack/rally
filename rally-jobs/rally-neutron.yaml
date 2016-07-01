@@ -623,6 +623,9 @@
         network:
           start_cidr: "10.2.0.0/24"
           networks_per_tenant: 2
+          dns_nameservers:
+            - "8.8.8.8"
+            - "8.8.4.4"
       sla:
         failure_rate:
           max: 0
@@ -740,4 +743,5 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        network: {}
+        network:
+          dns_nameservers: []

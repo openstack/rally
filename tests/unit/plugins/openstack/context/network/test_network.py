@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 import netaddr
 
@@ -22,6 +23,7 @@ from tests.unit import test
 NET = "rally.plugins.openstack.wrappers.network."
 
 
+@ddt.ddt
 class NetworkTestCase(test.TestCase):
     def get_context(self, **kwargs):
         return {"task": {"uuid": "foo_task"},
@@ -42,22 +44,30 @@ class NetworkTestCase(test.TestCase):
         self.assertEqual(context.config["networks_per_tenant"], 1)
         self.assertEqual(context.config["start_cidr"],
                          network_context.Network.DEFAULT_CONFIG["start_cidr"])
+        self.assertIsNone(context.config["dns_nameservers"])
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__explicit(self, mock_wrap, mock_clients):
         context = network_context.Network(
             self.get_context(start_cidr="foo_cidr", networks_per_tenant=42,
-                             network_create_args={"fakearg": "fake"}))
+                             network_create_args={"fakearg": "fake"},
+                             dns_nameservers=["1.2.3.4", "5.6.7.8"]))
         self.assertEqual(context.config["networks_per_tenant"], 42)
         self.assertEqual(context.config["start_cidr"], "foo_cidr")
         self.assertDictEqual(context.config["network_create_args"],
                              {"fakearg": "fake"})
+        self.assertEqual(context.config["dns_nameservers"],
+                         ("1.2.3.4", "5.6.7.8"))
 
+    @ddt.data({},
+              {"dns_nameservers": []},
+              {"dns_nameservers": ["1.2.3.4", "5.6.7.8"]})
+    @ddt.unpack
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.network.networks.utils")
     @mock.patch("rally.osclients.Clients")
-    def test_setup(self, mock_clients, mock_utils, mock_wrap):
+    def test_setup(self, mock_clients, mock_utils, mock_wrap, **dns_kwargs):
         mock_utils.iterate_per_tenants.return_value = [
             ("foo_user", "foo_tenant"),
             ("bar_user", "bar_tenant")]
@@ -67,13 +77,18 @@ class NetworkTestCase(test.TestCase):
         nets_per_tenant = 2
         net_context = network_context.Network(
             self.get_context(networks_per_tenant=nets_per_tenant,
-                             network_create_args={"fakearg": "fake"}))
+                             network_create_args={"fakearg": "fake"},
+                             **dns_kwargs))
 
         net_context.setup()
 
+        if "dns_nameservers" in dns_kwargs:
+            dns_kwargs["dns_nameservers"] = tuple(
+                dns_kwargs["dns_nameservers"])
         create_calls = [
             mock.call(tenant, add_router=True,
-                      subnets_num=1, network_create_args={"fakearg": "fake"})
+                      subnets_num=1, network_create_args={"fakearg": "fake"},
+                      **dns_kwargs)
             for user, tenant in mock_utils.iterate_per_tenants.return_value]
         mock_create.assert_has_calls(create_calls)
 

@@ -53,6 +53,11 @@ class Network(context.Context):
             "network_create_args": {
                 "type": "object",
                 "additionalProperties": True
+            },
+            "dns_nameservers": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": True
             }
         },
         "additionalProperties": False
@@ -62,7 +67,8 @@ class Network(context.Context):
         "start_cidr": "10.2.0.0/24",
         "networks_per_tenant": 1,
         "subnets_per_network": 1,
-        "network_create_args": {}
+        "network_create_args": {},
+        "dns_nameservers": None
     }
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `network`"))
@@ -74,6 +80,9 @@ class Network(context.Context):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
+        kwargs = {}
+        if self.config["dns_nameservers"] is not None:
+            kwargs["dns_nameservers"] = self.config["dns_nameservers"]
         for user, tenant_id in (utils.iterate_per_tenants(
                 self.context.get("users", []))):
             self.context["tenants"][tenant_id]["networks"] = []
@@ -85,7 +94,8 @@ class Network(context.Context):
                     tenant_id,
                     add_router=True,
                     subnets_num=self.config["subnets_per_network"],
-                    network_create_args=network_create_args)
+                    network_create_args=network_create_args,
+                    **kwargs)
                 self.context["tenants"][tenant_id]["networks"].append(network)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `network`"))
