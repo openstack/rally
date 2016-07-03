@@ -57,8 +57,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=None, expected_failures=None,
-            system_wide=False, concur=0, failing=False)
+            tests_file_to_skip=None, tempest_config=None,
+            expected_failures=None, system_wide=False, concur=0, failing=False)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -75,8 +75,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=tempest_config.name, expected_failures=None,
-            system_wide=False, concur=0, failing=False)
+            tests_file_to_skip=None, tempest_config=tempest_config.name,
+            expected_failures=None, system_wide=False, concur=0, failing=False)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")
@@ -90,8 +90,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="", regex=None, tests_file=tests_file,
-            tempest_config=None, expected_failures=None, system_wide=False,
-            concur=0, failing=False)
+            tests_file_to_skip=None, tempest_config=None,
+            expected_failures=None, system_wide=False, concur=0, failing=False)
 
     @mock.patch("rally.api.Verification.verify")
     @mock.patch("six.moves.builtins.open",
@@ -106,8 +106,9 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, set_name="full", regex=None, tests_file=None,
-            tempest_config=None, expected_failures={"test": "reason of fail"},
-            system_wide=False, concur=0, failing=False)
+            tests_file_to_skip=None, tempest_config=None,
+            expected_failures={"test": "reason of fail"}, system_wide=False,
+            concur=0, failing=False)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):
@@ -122,12 +123,46 @@ class VerifyCommandsTestCase(test.TestCase):
         self.assertFalse(mock_verification_verify.called)
 
     @mock.patch("rally.api.Verification.verify")
+    def test_start_with_set_name_and_regex(self, mock_verification_verify):
+        deployment_id = "2856e214-90d1-4d82-9402-dd13973ca0f6"
+
+        set_name = "identity"
+        regex = "tempest.api.compute"
+        self.verify.start(set_name=set_name, regex=regex,
+                          deployment=deployment_id, do_use=False)
+
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
+    def test_start_with_tests_file_and_tests_file_to_skip(
+            self, mock_verification_verify):
+        deployment_id = "3580e214-90d1-4d82-9402-dd13973ca0f6"
+
+        tests_file = "/path/to/tests/file-1"
+        tests_file_to_skip = "/path/to/tests/file-2"
+        self.verify.start(tests_file=tests_file,
+                          tests_file_to_skip=tests_file_to_skip,
+                          deployment=deployment_id, do_use=False)
+
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
     def test_start_with_failing_and_set_name(self, mock_verification_verify):
         deployment_id = "f2009aae-6ef3-468e-96b2-3c987d584010"
 
         set_name = "some_value"
         self.verify.start(set_name=set_name, deployment=deployment_id,
                           do_use=False, failing=True)
+
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
+    def test_start_with_failing_and_regex(self, mock_verification_verify):
+        deployment_id = "25d19aec-f39e-459e-b3d5-24a718e92233"
+
+        regex = "tempest.api.compute"
+        self.verify.start(regex=regex, deployment=deployment_id, do_use=False,
+                          failing=True)
 
         self.assertFalse(mock_verification_verify.called)
 
@@ -140,6 +175,18 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.verify.start(tests_file=tests_file, deployment=deployment_id,
                           do_use=False, failing=True)
+
+        self.assertFalse(mock_verification_verify.called)
+
+    @mock.patch("rally.api.Verification.verify")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_start_with_failing_and_test_files_to_skip(
+            self, mock_exists, mock_verification_verify):
+        deployment_id = "7902051d-8286-4cfc-aec5-addde73b3a1f"
+
+        tests_file = "/path/to/tests/file"
+        self.verify.start(tests_file_to_skip=tests_file,
+                          deployment=deployment_id, do_use=False, failing=True)
 
         self.assertFalse(mock_verification_verify.called)
 

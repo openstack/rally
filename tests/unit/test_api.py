@@ -427,7 +427,8 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
 
         self.tempest.verify.assert_called_once_with(
             set_name="smoke", regex=None, tests_file=None,
-            expected_failures=None, concur=0, failing=False)
+            tests_file_to_skip=None, expected_failures=None,
+            concur=0, failing=False)
 
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.api.objects.Deployment.get")
@@ -444,7 +445,8 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
 
         self.tempest.verify.assert_called_once_with(
             set_name="", regex=None, tests_file=tests_file,
-            expected_failures=None, concur=0, failing=False)
+            tests_file_to_skip=None, expected_failures=None,
+            concur=0, failing=False)
 
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")

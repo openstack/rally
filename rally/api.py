@@ -381,15 +381,18 @@ class Verification(object):
 
     @classmethod
     def verify(cls, deployment, set_name="", regex=None, tests_file=None,
-               tempest_config=None, expected_failures=None, system_wide=False,
-               concur=0, failing=False):
+               tests_file_to_skip=None, tempest_config=None,
+               expected_failures=None, system_wide=False, concur=0,
+               failing=False):
         """Start verification.
 
-        :param deployment: UUID or name of a deployment
         :param deployment: UUID or name of a deployment
         :param set_name: Name of a Tempest test set
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
+                           to run them
+        :param tests_file_to_skip: Path to a file with a list of Tempest tests
+                                   to skip them
         :param tempest_config: User specified Tempest config file location
         :param expected_failures: Dictionary with Tempest tests that are
                                   expected to fail. Keys are test names;
@@ -400,8 +403,7 @@ class Verification(object):
                             env when running the tests
         :param concur: How many processes to use to run Tempest tests.
                        The default value (0) auto-detects CPU count
-        :param failing: Re-run tests that failed during the last
-                        execution
+        :param failing: Re-run tests that failed during the last execution
         :returns: Verification object
         """
 
@@ -417,6 +419,7 @@ class Verification(object):
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
         verification.set_running()
         verifier.verify(set_name=set_name, regex=regex, tests_file=tests_file,
+                        tests_file_to_skip=tests_file_to_skip,
                         expected_failures=expected_failures, concur=concur,
                         failing=failing)
 
