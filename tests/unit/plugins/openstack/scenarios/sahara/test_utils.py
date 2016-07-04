@@ -79,12 +79,14 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         scenario._create_master_node_group_template(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version"
+            hadoop_version="test_version",
+            use_autoconfig=True
         )
         scenario._create_worker_node_group_template(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version"
+            hadoop_version="test_version",
+            use_autoconfig=True
         )
 
         create_calls = [
@@ -93,13 +95,15 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
-                node_processes=["p1"]),
+                node_processes=["p1"],
+                use_autoconfig=True),
             mock.call(
                 name="random_name",
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
-                node_processes=["p2"]
+                node_processes=["p2"],
+                use_autoconfig=True
             )]
         self.clients("sahara").node_group_templates.create.assert_has_calls(
             create_calls)
@@ -175,6 +179,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
+                "use_autoconfig": True,
             }, {
                 "name": "worker-ng",
                 "flavor_id": "test_flavor_w",
@@ -186,6 +191,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
+                "use_autoconfig": True,
             }
         ]
 
@@ -210,7 +216,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             auto_security_group=True,
             security_groups=["g1", "g2"],
             workers_count=42,
-            node_configs={"HDFS": {"local_config": "local_value"}}
+            node_configs={"HDFS": {"local_config": "local_value"}},
+            use_autoconfig=True
         )
 
         self.clients("sahara").clusters.create.assert_called_once_with(
@@ -221,7 +228,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             default_image_id="test_image",
             cluster_configs={"HDFS": {"dfs.replication": 3}},
             net_id="test_neutron_id",
-            anti_affinity=None
+            anti_affinity=None,
+            use_autoconfig=True
         )
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -279,7 +287,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
-                "is_proxy_gateway": True
+                "is_proxy_gateway": True,
+                "use_autoconfig": True,
             }, {
                 "name": "worker-ng",
                 "flavor_id": "test_flavor_w",
@@ -290,6 +299,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
+                "use_autoconfig": True,
             }, {
                 "name": "proxy-ng",
                 "flavor_id": "test_flavor_w",
@@ -301,7 +311,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
-                "is_proxy_gateway": True
+                "is_proxy_gateway": True,
+                "use_autoconfig": True,
             }
         ]
 
@@ -327,7 +338,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             security_groups=["g1", "g2"],
             workers_count=42,
             node_configs={"HDFS": {"local_config": "local_value"}},
-            enable_proxy=True
+            enable_proxy=True,
+            use_autoconfig=True
         )
 
         self.clients("sahara").clusters.create.assert_called_once_with(
@@ -338,7 +350,8 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             default_image_id="test_image",
             cluster_configs={"HDFS": {"dfs.replication": 3}},
             net_id="test_neutron_id",
-            anti_affinity=None
+            anti_affinity=None,
+            use_autoconfig=True
         )
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
