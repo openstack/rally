@@ -86,6 +86,9 @@ class Host(object):
                 other, Host.__class__.__name__))
         return self.ip == other.ip and self.status == other.status
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
     """Base class for VM scenarios with basic atomic actions.

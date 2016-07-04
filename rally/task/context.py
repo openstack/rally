@@ -99,6 +99,9 @@ class Context(plugin.Plugin, functional.FunctionalMixin,
     def __eq__(self, other):
         return self.get_order() == other.get_order()
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @classmethod
     def validate(cls, config, non_hidden=False):
         # TODO(boris-42): This is going to be replaced with common validation
