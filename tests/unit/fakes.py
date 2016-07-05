@@ -127,6 +127,14 @@ class FakeImage(FakeResource):
         self.update = mock.MagicMock()
 
 
+class FakeStrategy(FakeResource):
+    pass
+
+
+class FakeGoal(FakeResource):
+    pass
+
+
 class FakeMurano(FakeResource):
     pass
 
@@ -423,6 +431,18 @@ class FakeImageManager(FakeManager):
             cached.status = "DELETED"
             del self.cache[resource]
             self.resources_order.remove(resource)
+
+
+class FakeStrategyManager(FakeManager):
+
+    def create(self):
+        return FakeStrategy(self)
+
+
+class FakeGoalManager(FakeManager):
+
+    def create(self):
+        return FakeGoal(self)
 
 
 class FakePackageManager(FakeManager):
@@ -1493,6 +1513,13 @@ class FakeMagnumClient(object):
         pass
 
 
+class FakeWatcherClient(object):
+
+    def __init__(self):
+        self.strategy = FakeStrategyManager()
+        self.goal = FakeGoalManager()
+
+
 class FakeClients(object):
 
     def __init__(self, credential_=None):
@@ -1513,6 +1540,7 @@ class FakeClients(object):
         self._monasca = None
         self._ec2 = None
         self._senlin = None
+        self._watcher = None
         self._credential = credential_ or objects.Credential(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1606,6 +1634,11 @@ class FakeClients(object):
         if not self._senlin:
             self._senlin = FakeSenlinClient()
         return self._senlin
+
+    def watcher(self):
+        if not self._watcher:
+            self._watcher = FakeWatcherClient()
+        return self._watcher
 
 
 class FakeRunner(object):
