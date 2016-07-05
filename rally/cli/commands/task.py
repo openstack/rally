@@ -802,7 +802,7 @@ class TaskCommands(object):
         except exceptions.InvalidConnectionString as e:
             if logging.is_debug():
                 LOG.exception(e)
-            print (e)
+            print(e)
             return 1
         except exceptions.PluginNotFound as e:
             if logging.is_debug():
@@ -810,7 +810,7 @@ class TaskCommands(object):
             msg = ("\nPlease check your connection string. The format of "
                    "`connection` should be plugin-name://"
                    "<user>:<pwd>@<full_address>:<port>/<path>.<type>")
-            print (str(e) + msg)
+            print(str(e) + msg)
             return 1
 
         try:
@@ -818,7 +818,7 @@ class TaskCommands(object):
         except (IOError, exceptions.RallyException) as e:
             if logging.is_debug():
                 LOG.exception(e)
-            print (e)
+            print(e)
             return 1
         print(_("Task %(uuid)s results was successfully exported to %("
                 "connection)s using %(name)s plugin.") % {

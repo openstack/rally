@@ -301,13 +301,13 @@ class DeploymentCommands(object):
             self._update_openrc_deployment_file(
                 deployment["uuid"],
                 deployment["admin"] or deployment["users"][0])
-            print ("~/.rally/openrc was updated\n\nHINTS:\n"
-                   "* To get your cloud resources, run:\n\t"
-                   "rally show [flavors|images|keypairs|networks|secgroups]\n"
-                   "\n* To use standard OpenStack clients, set up your env by "
-                   "running:\n\tsource ~/.rally/openrc\n"
-                   "  OpenStack clients are now configured, e.g run:\n\t"
-                   "openstack image list")
+            print("~/.rally/openrc was updated\n\nHINTS:\n"
+                  "* To get your cloud resources, run:\n\t"
+                  "rally show [flavors|images|keypairs|networks|secgroups]\n"
+                  "\n* To use standard OpenStack clients, set up your env by "
+                  "running:\n\tsource ~/.rally/openrc\n"
+                  "  OpenStack clients are now configured, e.g run:\n\t"
+                  "openstack image list")
         except exceptions.DeploymentNotFound:
             print("Deployment %s is not found." % deployment)
             return 1

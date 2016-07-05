@@ -106,7 +106,7 @@ class TestTaskSamples(unittest.TestCase):
                         api.Task.validate("MAIN", task_config)
                     except Exception as e:
                         if not self._skip(six.text_type(e)):
-                            print (traceback.format_exc())
-                            print ("Failed on task config %s with error." %
-                                   full_path)
+                            print(traceback.format_exc())
+                            print("Failed on task config %s with error." %
+                                  full_path)
                             raise

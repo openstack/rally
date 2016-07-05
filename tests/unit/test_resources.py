@@ -32,7 +32,7 @@ class BashCompletionTestCase(test.TestCase):
         new = cliutils._generate_bash_completion_script().splitlines()
         if old != new:
             for line in difflib.unified_diff(old, new):
-                print (line)
+                print(line)
             new_filename = "/tmp/rally.bash.new"
             with open(new_filename, "wb") as new_file:
                 new_file.write(encodeutils.safe_encode("\n".join(new)))
