@@ -172,11 +172,17 @@
         }
       }
 
+      /* Other helpers */
+
       $scope.showError = function(message) {
           return (function (e) {
             e.style.display = "block";
             e.textContent = message
           })(document.getElementById("page-error"))
+      }
+
+      $scope.compact_atomics = function() {
+        return ($scope.scenario && $scope.scenario.atomic.iter.length < 9)
       }
 
       /* Initialization */
@@ -502,12 +508,14 @@
                data="scenario.atomic.pie"
                title="Distribution"
                title-class="h3"
-               style="float:left; width:40%; margin-top:15px">
+               style="float:left; margin-top:15px"
+               ng-style="compact_atomics() ? {width:'40%'} : {}">
           </div>
 
           <div widget="Histogram" data="scenario.atomic.histogram.data[atomicHistogram.id]"
                ng-if="scenario.atomic.histogram.data.length"
-               style="float:left; width:59%; margin-top:15px; position:relative; top:40px">
+               style="float:left; position:relative; top:40px"
+               ng-style="compact_atomics() ? {width:'59%', 'margin-top':'15px'} : {}">
           </div>
 
           <select ng-show="scenario.atomic.histogram.data.length"
