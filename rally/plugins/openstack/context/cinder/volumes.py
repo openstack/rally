@@ -36,6 +36,9 @@ class VolumeGenerator(context.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "type": {
+                "type": "string"
+            },
             "volumes_per_tenant": {
                 "type": "integer",
                 "minimum": 1
@@ -52,6 +55,7 @@ class VolumeGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):
         size = self.config["size"]
+        volume_type = self.config.get("type", None)
         volumes_per_tenant = self.config["volumes_per_tenant"]
 
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -62,7 +66,7 @@ class VolumeGenerator(context.Context):
                  "task": self.context["task"],
                  "config": self.context["config"]})
             for i in range(volumes_per_tenant):
-                vol = cinder_util._create_volume(size)
+                vol = cinder_util._create_volume(size, volume_type=volume_type)
                 self.context["tenants"][tenant_id]["volumes"].append(vol._info)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))

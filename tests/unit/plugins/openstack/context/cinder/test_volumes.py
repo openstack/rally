@@ -164,6 +164,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
                 },
                 "volumes": {
                     "size": 1,
+                    "type": "volume_type",
                     "volumes_per_tenant": 5,
                 },
                 "api_versions": api_version
