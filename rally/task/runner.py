@@ -32,6 +32,7 @@ from rally.task import utils
 
 
 LOG = logging.getLogger(__name__)
+configure = plugin.configure
 
 
 def format_result_on_timeout(exc, timeout):
@@ -95,10 +96,6 @@ def _log_worker_info(**info):
     info_message = "\n\t".join(["%s: %s" % (k, v)
                                 for k, v in info.items()])
     LOG.debug("Starting a worker.\n\t%s" % info_message)
-
-
-def configure(name, namespace="default"):
-    return plugin.configure(name=name, namespace=namespace)
 
 
 @plugin.base()
