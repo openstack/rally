@@ -620,7 +620,7 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
     @mock.patch("rally.task.sla.SLAChecker")
-    def test_comsume_results_with_unexpected_failure(self, mock_sla_checker,
+    def test_consume_results_with_unexpected_failure(self, mock_sla_checker,
                                                      mock_event, mock_thread,
                                                      mock_task_get_status):
         mock_sla_instance = mock.MagicMock()
