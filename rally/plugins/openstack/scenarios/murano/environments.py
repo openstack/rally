@@ -13,14 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.murano import utils
 from rally.task import atomic
 from rally.task import validation
-
-LOG = logging.getLogger(__name__)
 
 
 class MuranoEnvironments(utils.MuranoScenario):
