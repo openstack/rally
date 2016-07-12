@@ -26,8 +26,6 @@ from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
-LOG = logging.getLogger(__name__)
-
 
 class CinderVolumes(cinder_utils.CinderScenario,
                     nova_utils.NovaScenario,

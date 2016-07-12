@@ -14,12 +14,8 @@
 #    under the License.
 
 from rally.common.i18n import _
-from rally.common import logging
 from rally import consts
 from rally import exceptions
-
-
-LOG = logging.getLogger(__name__)
 
 
 class NoSuchCleanupResources(exceptions.RallyException):

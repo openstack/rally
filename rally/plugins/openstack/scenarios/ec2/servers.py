@@ -12,15 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ec2 import utils
 from rally.task import types
 from rally.task import validation
-
-
-LOG = logging.getLogger(__name__)
 
 
 class EC2Servers(utils.EC2Scenario):

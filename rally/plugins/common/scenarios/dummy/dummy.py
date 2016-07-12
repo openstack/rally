@@ -21,9 +21,6 @@ from rally.task import scenario
 from rally.task import validation
 
 
-LOG = logging.getLogger(__name__)
-
-
 class DummyScenarioException(exceptions.RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
