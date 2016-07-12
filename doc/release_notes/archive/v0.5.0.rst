@@ -1,0 +1,393 @@
+============
+Rally v0.5.0
+============
+
+Information
+-----------
+
++------------------+-----------------------+
+| Commits          |        **175**        |
++------------------+-----------------------+
+| Bug fixes        |        **19**         |
++------------------+-----------------------+
+| Dev cycle        |      **93 days**      |
++------------------+-----------------------+
+| Release date     |     **7/20/2016**     |
++------------------+-----------------------+
+
+
+Details
+-------
+
+This release took much more time than we expected, but we have a lot of
+reasons for such delay and if you look at our change-log, you will understand
+them.:)
+
+Here is a quick introduction:
+
+* To make our releases as much as possible stable, we added upper limits for
+  each of our requirements;
+* A lot of deprecated lines of code were removed, so be careful;
+* Statistics trends for given tasks were introduced;
+* Support for tempest plugins was added;
+* Several new pages at docs.
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `[Introduced && implemented] Introduce class-based scenario implementation <https://github.com/openstack/rally/blob/0.5.0/doc/specs/implemented/class-based-scenarios.rst>`_
+
+* `[Introduced] Rally Task Validation refactoring <https://github.com/openstack/rally/blob/0.5.0/doc/specs/in-progress/pluggable_validators.rst>`_
+
+* `[Introduced] Scaling & Refactoring Rally DB <https://github.com/openstack/rally/blob/0.5.0/doc/specs/in-progress/db_refactoring.rst>`_
+
+* `[Introduced] SLA Performance degradation plugin <https://github.com/openstack/rally/blob/0.5.0/doc/specs/in-progress/sla_pd_plugin.rst>`_
+
+Logging
+~~~~~~~
+
+* disable urllib3 warnings only if the library provide them
+
+Database
+~~~~~~~~
+
+[doesn't require migration]
+Transform DB layer to return dicts, not SQLAlchemy models
+
+Rally Deployment
+~~~~~~~~~~~~~~~~
+
+* Support single-AZ deployment
+
+  This supports the case where OpenStack is deployed with a single AZ for both
+  controller(s) and compute(s), and not all hosts in the AZ that contains an
+  instance are guaranteed to have the nova-compute service.
+
+* Extend creation from environment with several new vars
+
+  - OS_ENDPOINT_TYPE/OS_INTERFACE
+  - OS_USER_DOMAIN_NAME
+  - OS_PROJECT_DOMAIN_NAME
+
+* Improve devstack plugin for Keystone V3
+
+Rally Task
+~~~~~~~~~~
+
+*NEW!!* Statistics trends for given tasks.
+
+
+Rally Verify
+~~~~~~~~~~~~
+
+* Remove '--tempest-config' arg from 'reinstall' command
+
+  .. warning:: Using `--tempest-config` is became an error from this release.
+      Use `rally verify genconfig` cmd for all config related stuff.
+
+* Don't install Tempest when `rally verify start`
+
+  .. warning:: Use should use `rally verify install` cmd to install tempest now
+
+* Add ability to setup version of Tempest to install
+
+  `CLI argument to setup version <http://rally.readthedocs.io/en/0.5.0/cli/cli_reference.html#verify-install-version>`_
+
+* Configure 'aodh' service in 'service_available' section
+
+* Check existence of Tempest-tree in `rally verify discover` cmd
+
+* Make Tempest work with auth url which doesn't include keystone version
+
+  Tempest needs /v2.0 and /v3 at the end of URLs. Actually, we can't fix
+  Tempest, so we extend our configuration module with workaround which allow
+  to specify auth_url without version in rally deployment config.
+
+* Use default list of plugins for sahara
+
+* Move tempest related options of rally configuration to separate section.
+
+* *NEW!!* Support for tempest plugins.
+
+  `CLI argument to install them <http://rally.readthedocs.io/en/0.5.0/cli/cli_reference.html#verify-installplugin>`_
+
+
+Plugins
+~~~~~~~
+
+In this release we are happy to introduce new entity - plugins Base classes
+
+We have a lot of base plugin entities: Context, Scenario, SLA and etc.
+Sometimes plugins of different bases can have equal names(i.e ceilometer
+OSClient and ceilometer Context). It is normal and we should allow such
+conflicts. To support such cases we introduced new entity - plugin base.
+Statements of plugin bases:
+ - Each plugin base is unique entity;
+ - Names of plugin bases can't conflict with each other;
+ - Names of two or more plugins in one plugin base can't conflict with each
+   other(in case of same namespace).
+ - Names of two or more plugins in different plugin base can conflict
+
+Current list of plugin bases:
+ - rally.task.context.Context
+ - rally.task.scenario.Scenario
+ - rally.task.types.ResourceType
+ - rally.task.exporter.TaskExporter
+ - rally.task.processing.charts.Chart
+ - rally.task.runner.ScenarioRunner
+ - rally.task.sla.SLA
+ - rally.deployment.serverprovider.provider.ProviderFactory
+ - rally.deployment.engine.Engine
+ - rally.osclients.OSClient
+
+**OSClients**
+
+* *NEW!!* Support for Senlin client
+
+* *NEW!!* Support for Gnocchi client
+
+* *NEW!!* Support for Magnum client
+
+* *NEW!!* Support for Watcher client
+
+* Transmit endpoint_type to saharaclient
+
+**Scenarios**:
+
+* *NEW!!*:
+
+ - `Authenticate.validate_ceilometer <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#authenticate-validate-ceilometer-scenario>`_
+ - `CinderVolumes.create_volume_from_snapshot <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-volume-from-snapshot>`_
+ - `CinderVolumes.create_volume_and_clone <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-volume-and-clone>`_
+ - `NovaFlavors.create_and_list_flavor_access <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#novaflavors-create-and-list-flavor-access-scenario>`_
+ - `NovaFlavors.create_flavor <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#novaflavors-create-flavor-scenario>`_
+ - `NovaServers.boot_and_update_server <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#novaservers-boot-and-update-server>`_
+ - `NovaServers.boot_server_from_volume_snapshot <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#novaservers-boot-server-from-volume-snapshot>`_
+
+* [Sahara] Add configs to MapR plugin
+
+* Extend CinderVolumes.create_and_upload_volume_to_image with "image" argument
+
+  `Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-and-upload-volume-to-image-scenario>`_
+
+* Deprecate Dummy.dummy_with_scenario_output scenario in favor of Dummy.dummy_output
+
+  .. warning:: Dummy.dummy_with_scenario_output scenario will be removed after
+      several releases
+
+  `Deprecated Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#dummy-dummy-with-scenario-output-scenario>`_
+  `New Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#dummy-dummy-output-scenario>`_
+
+* Extend CinderVolumes.create_volume_and_clone with nested_level
+
+  Add nested_level argument for nested cloning volume to new volume
+
+  `Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-volume-and-clone>`_
+
+* Extend CinderVolumes.create_nested_snapshots_and_attach_volume
+
+  Two new arguments were added: create_volume_kwargs and create_snapshot_kwargs
+
+  .. warning:: All arguments related to snapshot creation should be transmitted
+        only via create_snapshot_kwargs.
+
+  `Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-nested-snapshots-and-attach-volume>`_
+
+* Introduce new style of scenarios - class based.
+
+  `Spec Reference <https://github.com/openstack/rally/blob/0.5.0/doc/specs/implemented/class-based-scenarios.rst>`_
+
+* Improve report for VMTasks.boot_runcommand_delete
+
+* [Sahara] Added 5.5.0 version for cdh-plugin and 1.6.0 version for spark
+
+* Extend boot_server_from_volume_and_delete, boot_server_from_volume,
+  boot_server_from_volume_and_live_migrate, boot_server_from_volume_snapshot
+  scenarios of NovaServers class with "volume_type" parameter.
+
+**Contexts**:
+
+* *NEW!!*:
+
+  - `Cinder volume_types <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#volume-types-context>`_
+  - `Murano environments <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#murano-environments-context>`_
+  - `Heat dataplane <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#heat-dataplane-context>`_
+
+* Use Broker Pattern in Keystone roles context
+
+* Use immutable types for locking context configuration
+
+  Since context configuration passed to Context.__init__() was a mutable type
+  (dict or list), sometimes we had unexpected changes done by unpredictable
+  code (for example, in wrappers).
+
+* Add possibility to balance usage of users
+
+  For the moment all users for tasks were taken randomly and there was no way
+  to balance them between tasks. It may be very useful when we have difference
+  between first usage of tenant/user and all consecutive. In this case we get
+  different load results.
+
+  Therefore, "users" context was extended with new config option
+  'user_choice_method' that defines approach for picking up users.
+
+  Two values are available:
+  - random
+  - round_robin
+
+  Default one is compatible with old approach - "random".
+
+* Make sahara_image and custom_image contexts glance v2 compatible
+
+* Extend servers context with "nics" parameter
+
+* Extend network context with "dns_nameservers" parameter
+
+* Extend volume context with "volume_type" parameter
+
+**Cleanup**:
+
+* Mark several cleanup resources as tenant_resource
+
+  Nova servers and security groups are tenant related resources, but resource
+  decorator missed that fact which makes cleanup tries to delete one resources
+  several times.
+
+* Turn off redundant nova servers cleanup for NovaFlavors.list_flavors scenario
+
+* Add neutron cleanup for NeutronSecurityGroup.create_and_delete_security_groups
+
+**Exporter**:
+
+Rename task-exporter "file-exporter" to "file".
+
+.. warning:: "file-exporter" is deprecated and will be removed in further
+    releases.
+
+**Types**:
+
+Remove deprecated types.
+
+.. warning:: you should use rally.task.types.convert instead of
+    rally.task.types.set decorator
+
+**Validators**
+
+* Add a required_api_version validator
+* Add validators for scenario arguments
+
+**Utils**:
+
+Use glance wrapper where appropriate to support compatibility between V1 and V2
+
+Bug fixes
+~~~~~~~~~
+
+**19 bugs were fixed**:
+
+* Wrong arguments order of Keystone wrapper in case of V2 and V3
+
+* AttributeError while disabling urllib3 warnings on old installations
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1573650>`_
+
+* install_rally.sh script is failed while obtaining setuptools
+
+* "-inf" load duration in case of wrong runner plugin and failed start of
+  contexts
+
+* Strange input task in the report
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1570328>`_
+
+* Wrong behaviour of boot_server_from_volume scenarios in case of booting
+  server from image.
+
+  The arg of image must be None, when booting server from volume. Otherwise
+  still boot server from image.
+
+  Affected scenarios:
+    NovaServers.boot_server_from_volume
+    NovaServers.boot_server_from_volume_and_delete
+    NovaServers.boot_server_from_volume_and_resize
+    NovaServers.boot_server_from_volume_and_live_migrate
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1578556>`_
+
+* Weak validation of json schema of RPS runner
+
+  JSON Schema of RPS runner doesn't have "required" field. It means that
+  users are able to pass wrong configs and we will have runtime error while
+  running task.
+
+* Rally doesn't take cacert setting while creating keystone session
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1577360>`_
+
+* Heat scenarios fail when API uses TLS
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1585456>`_
+
+* Example in comment of context manila_share_networks wrong
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587164>`_
+
+* There is no way to get UUID of a verification after it is created by
+  "rally verify start" or "rally verify import_results" when --no-use is set
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587034>`_
+
+* Exposed ssh timeout and interval in vm scenario
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587728>`_
+
+* Ceilometer scenario doesn't require "ceilometer" ctx
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1557642>`_
+
+* "servers" context requires setting network id for multiple possible networks
+  found.
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1592292>`_
+
+* nested_level data type incorrect in create_nested_snapshots_and_attach_volume
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1594656>`_
+
+* Rally cleanup servers raises exception
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1584104>`_
+
+* Stopping server is redundant before cold-migrating server
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1594730>`_
+
+* existing_users context doesn't work in case of Keystone v3
+
+* Whether validates flavor's disk or not depends on booting type of the instance
+
+  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1596756>`_
+
+Documentation
+~~~~~~~~~~~~~
+
+* Re-use openstack theme for building docs outside rtd.
+
+  `Rally Docs at docs.openstack.org <http://docs.openstack.org/developer/rally/>`_
+
+* Add page for Verification component
+
+  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/step_10_verifying_cloud_via_tempest.html>`_
+
+* Add glossary page
+
+  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/glossary.html>`_
+
+* Adjust docs reference to "KeystoneBasic.authenticate" scenario
+
+  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/step_6_aborting_load_generation_on_sla_failure.html>`_
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
