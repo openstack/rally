@@ -22,6 +22,8 @@ from rally.common.plugin import plugin
 from rally.common import sshutils
 from rally.common import utils
 
+configure = plugin.configure
+
 
 class Server(utils.ImmutableMixin):
     """Represent information about created Server.
@@ -89,10 +91,6 @@ class ResourceManager(object):
         :param resource_id: an ID of a resource
         """
         self.deployment.delete_resource(resource_id)
-
-
-def configure(name, namespace="default"):
-    return plugin.configure(name, namespace=namespace)
 
 
 @plugin.base()
