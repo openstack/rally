@@ -70,10 +70,10 @@ def get_from_manager(error_statuses=None):
     error_statuses = error_statuses or ["ERROR"]
     error_statuses = map(lambda str: str.upper(), error_statuses)
 
-    def _get_from_manager(resource):
+    def _get_from_manager(resource, id_attr="id"):
         # catch client side errors
         try:
-            res = resource.manager.get(resource.id)
+            res = resource.manager.get(getattr(resource, id_attr))
         except Exception as e:
             if getattr(e, "code", getattr(e, "http_status", 400)) == 404:
                 raise exceptions.GetResourceNotFound(resource=resource)
@@ -103,7 +103,7 @@ def manager_list_size(sizes):
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
 def wait_for(resource, is_ready=None, ready_statuses=None,
              failure_statuses=None, status_attr="status", update_resource=None,
-             timeout=60, check_interval=1):
+             timeout=60, check_interval=1, id_attr="id"):
     """Waits for the given resource to come into the one of the given statuses.
 
     The method can be used to check resource for status with a `is_ready`
@@ -144,7 +144,8 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
                                status_attr=status_attr,
                                update_resource=update_resource,
                                timeout=timeout,
-                               check_interval=check_interval)
+                               check_interval=check_interval,
+                               id_attr=id_attr)
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
@@ -173,7 +174,8 @@ def wait_is_ready(resource, is_ready, update_resource=None,
 
 def wait_for_status(resource, ready_statuses, failure_statuses=None,
                     status_attr="status", update_resource=None,
-                    timeout=60, check_interval=1, check_deletion=False):
+                    timeout=60, check_interval=1, check_deletion=False,
+                    id_attr="id"):
 
     resource_repr = getattr(resource, "name", repr(resource))
     if not isinstance(ready_statuses, (set, list, tuple)):
@@ -208,7 +210,10 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
 
     while True:
         try:
-            resource = update_resource(resource)
+            if id_attr == "id":
+                resource = update_resource(resource)
+            else:
+                resource = update_resource(resource, id_attr=id_attr)
         except exceptions.GetResourceNotFound:
             if check_deletion:
                 return
