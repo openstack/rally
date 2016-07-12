@@ -87,12 +87,15 @@ class UserContextMixin(object):
         else:
             # Second and last case - 'round_robin'.
             tenants_amount = len(context_obj["tenants"])
-            tenant_id = sorted(context_obj["tenants"].keys())[
-                context_obj["iteration"] % tenants_amount]
+            # NOTE(amaretskiy): iteration is subtracted by `1' because it
+            #                   starts from `1' but we count from `0'
+            tenant_index = int((context_obj["iteration"] - 1) % tenants_amount)
+            tenant_id = sorted(context_obj["tenants"].keys())[tenant_index]
             tenant = context_obj["tenants"][tenant_id]
             users = context_obj["tenants"][tenant_id]["users"]
-            user = users[
-                int(context_obj["iteration"] / tenants_amount) % len(users)]
+            user_index = int(((context_obj["iteration"] - 1) / tenants_amount)
+                             % len(users))
+            user = users[user_index]
 
         scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
 

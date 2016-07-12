@@ -38,7 +38,7 @@ def _process_scenario(data, pos):
     output_errors = []
     additive_output_charts = []
     complete_output = []
-    for idx, itr in enumerate(data["iterations"]):
+    for idx, itr in enumerate(data["iterations"], 1):
         if itr["error"]:
             typ, msg, trace = itr["error"]
             errors.append({"iteration": idx,
