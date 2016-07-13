@@ -33,3 +33,22 @@ class WatcherTestCase(test.ScenarioTestCase):
                                                                 {})
         scenario._delete_audit_template.assert_called_once_with(
             audit_template.uuid)
+
+    def test_list_audit_template(self):
+        scenario = basic.Watcher(self.context)
+        scenario._list_audit_templates = mock.MagicMock()
+        scenario.list_audit_templates()
+        scenario._list_audit_templates.assert_called_once_with(
+            detail=False, goal=None, limit=None, name=None, sort_dir=None,
+            sort_key=None, strategy=None)
+
+    def test_create_audit_and_delete(self):
+        mock_audit = mock.MagicMock()
+        scenario = basic.Watcher(self.context)
+        scenario.context = mock.MagicMock()
+        scenario._create_audit = mock.MagicMock(return_value=mock_audit)
+        scenario.sleep_between = mock.MagicMock()
+        scenario._delete_audit = mock.MagicMock()
+        scenario.create_audit_and_delete()
+        scenario._create_audit.assert_called_once_with(mock.ANY)
+        scenario._delete_audit.assert_called_once_with(mock_audit)

@@ -29,6 +29,7 @@ from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
+from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
 from rally.plugins.openstack.wrappers import glance as glance_utils
 from rally.verification.tempest import config as tempest_conf
 
@@ -49,7 +50,8 @@ def list_opts():
                          murano_utils.MURANO_BENCHMARK_OPTS,
                          nova_utils.NOVA_BENCHMARK_OPTS,
                          sahara_utils.SAHARA_BENCHMARK_OPTS,
-                         vm_utils.VM_BENCHMARK_OPTS)),
+                         vm_utils.VM_BENCHMARK_OPTS,
+                         watcher_utils.WATCHER_BENCHMARK_OPTS)),
         ("tempest",
          itertools.chain(tempest_conf.TEMPEST_OPTS)),
         ("roles_context", itertools.chain(roles.ROLES_CONTEXT_OPTS)),

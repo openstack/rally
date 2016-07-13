@@ -509,6 +509,11 @@
 # Time to wait for a VM to become pingable (floating point value)
 #vm_ping_timeout = 120.0
 
+# Watcher audit launch interval (floating point value)
+#watcher_audit_launch_poll_interval = 2.0
+
+# Watcher audit launch timeout (integer value)
+#watcher_audit_launch_timeout = 300
 
 [cleanup]
 

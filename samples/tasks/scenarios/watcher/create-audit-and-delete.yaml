@@ -1,0 +1,20 @@
+---
+  Watcher.create_audit_and_delete:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        audit_templates:
+          audit_templates_per_admin: 5
+          fill_strategy: "round_robin"
+          params:
+            - goal:
+                  name: "dummy"
+              strategy:
+                  name: "dummy"
+              extra: {}

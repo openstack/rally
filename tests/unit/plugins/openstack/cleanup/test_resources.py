@@ -780,3 +780,65 @@ class WatcherTemplateTestCase(test.TestCase):
 
         self.assertEqual("audit_template", watcher._resource)
         watcher._manager().list.assert_called_once_with(limit=0)
+
+
+class WatcherAuditTestCase(test.TestCase):
+
+    def test_id(self):
+        watcher = resources.WatcherAudit()
+        watcher.raw_resource = mock.MagicMock(uuid=100)
+        self.assertEqual(100, watcher.id())
+
+    def test_name(self):
+        watcher = resources.WatcherAudit()
+        watcher.raw_resource = mock.MagicMock(uuid="name")
+        self.assertEqual("name", watcher.name())
+
+    @mock.patch("%s.WatcherAudit._manager" % BASE)
+    def test_is_deleted(self, mock__manager):
+        mock__manager.return_value.get.return_value = None
+        watcher = resources.WatcherAudit()
+        watcher.id = mock.Mock()
+        self.assertFalse(watcher.is_deleted())
+        mock__manager.side_effect = [watcher_exceptions.NotFound()]
+        self.assertTrue(watcher.is_deleted())
+
+    def test_list(self):
+        watcher = resources.WatcherAudit()
+        watcher._manager = mock.MagicMock()
+
+        watcher.list()
+
+        self.assertEqual("audit", watcher._resource)
+        watcher._manager().list.assert_called_once_with(limit=0)
+
+
+class WatcherActionPlanTestCase(test.TestCase):
+
+    def test_id(self):
+        watcher = resources.WatcherActionPlan()
+        watcher.raw_resource = mock.MagicMock(uuid=100)
+        self.assertEqual(100, watcher.id())
+
+    def test_name(self):
+        watcher = resources.WatcherActionPlan()
+        watcher.raw_resource = mock.MagicMock(uuid="name")
+        self.assertEqual("name", watcher.name())
+
+    @mock.patch("%s.WatcherActionPlan._manager" % BASE)
+    def test_is_deleted(self, mock__manager):
+        mock__manager.return_value.get.return_value = None
+        watcher = resources.WatcherActionPlan()
+        watcher.id = mock.Mock()
+        self.assertFalse(watcher.is_deleted())
+        mock__manager.side_effect = [watcher_exceptions.NotFound()]
+        self.assertTrue(watcher.is_deleted())
+
+    def test_list(self):
+        watcher = resources.WatcherActionPlan()
+        watcher._manager = mock.MagicMock()
+
+        watcher.list()
+
+        self.assertEqual("action_plan", watcher._resource)
+        watcher._manager().list.assert_called_once_with(limit=0)
