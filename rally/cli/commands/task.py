@@ -438,9 +438,9 @@ class TaskCommands(object):
                         print()
 
             print(_("Load duration: %s") %
-                  result["info"]["load_duration"])
+                  rutils.format_float_to_str(result["info"]["load_duration"]))
             print(_("Full duration: %s") %
-                  result["info"]["full_duration"])
+                  rutils.format_float_to_str(result["info"]["full_duration"]))
 
             print("\nHINTS:")
             print(_("* To plot HTML graphics with this data, run:"))

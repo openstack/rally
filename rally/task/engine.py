@@ -25,6 +25,7 @@ import six
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import objects
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -112,9 +113,12 @@ class ResultConsumer(object):
 
         load_duration = max(self.load_finished_at - self.load_started_at, 0)
 
-        LOG.info("Load duration is: %s" % load_duration)
-        LOG.info("Full runner duration is: %s" % self.runner.run_duration)
-        LOG.info("Full duration is %s" % (self.finish - self.start))
+        LOG.info("Load duration is: %s" % utils.format_float_to_str(
+            load_duration))
+        LOG.info("Full runner duration is: %s" %
+                 utils.format_float_to_str(self.runner.run_duration))
+        LOG.info("Full duration is %s" % utils.format_float_to_str(
+            self.finish - self.start))
 
         self.task.append_results(self.key, {
             "raw": self.results,
