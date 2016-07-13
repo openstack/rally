@@ -434,15 +434,17 @@ class FakeImageManager(FakeManager):
 
 
 class FakeStrategyManager(FakeManager):
-
-    def create(self):
-        return FakeStrategy(self)
+    def get(self, resource_name):
+        for key in self.resources_order:
+            if self.cache[key].name == resource_name:
+                return self.cache[key]
 
 
 class FakeGoalManager(FakeManager):
-
-    def create(self):
-        return FakeGoal(self)
+    def get(self, resource_name):
+        for key in self.resources_order:
+            if self.cache[key].name == resource_name:
+                return self.cache[key]
 
 
 class FakePackageManager(FakeManager):
