@@ -526,6 +526,14 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         api.Verification.list_tempest_plugins(self.deployment_uuid)
         self.tempest.list_plugins.assert_called_once_with()
 
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_uninstall_tempest_plugin(self, mock_tempest, mock_deployment_get):
+        mock_tempest.return_value = self.tempest
+        api.Verification.uninstall_tempest_plugin(self.deployment_uuid,
+                                                  "fake-plugin")
+        self.tempest.uninstall_plugin.assert_called_once_with("fake-plugin")
+
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")

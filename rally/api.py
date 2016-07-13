@@ -527,6 +527,20 @@ class Verification(object):
         return verifier.list_plugins()
 
     @classmethod
+    def uninstall_tempest_plugin(cls, deployment, repo_name,
+                                 system_wide=False):
+        """Uninstall Tempest plugin.
+
+        :param deployment: UUID or name of a deployment
+        :param repo_name: Plugin repo name
+        :param system_wide: Uninstall plugin from Tempest virtual env or
+                            from the local env
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = tempest.Tempest(deployment_uuid, system_wide=system_wide)
+        verifier.uninstall_plugin(repo_name)
+
+    @classmethod
     def discover_tests(cls, deployment, pattern=""):
         """Get a list of discovered tests.
 

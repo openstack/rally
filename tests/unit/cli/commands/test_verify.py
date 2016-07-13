@@ -554,6 +554,14 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_list_tempest_plugins.assert_called_once_with(
             deployment_uuid, False)
 
+    @mock.patch("rally.api.Verification.uninstall_tempest_plugin")
+    def test_uninstallplugin(
+            self, mock_verification_uninstall_tempest_plugin):
+        deployment_uuid = "83514de2-a770-4e28-82dd-2826b725e733"
+        self.verify.uninstallplugin(deployment_uuid, "fake-plugin")
+        mock_verification_uninstall_tempest_plugin.assert_called_once_with(
+            deployment_uuid, "fake-plugin", False)
+
     @mock.patch("rally.api.Verification.discover_tests")
     def test_discover(self, mock_verification_discover_tests):
         deployment_uuid = "97725f22-1cd2-46a5-8c62-3cdc36ed6d2a"

@@ -61,6 +61,7 @@ _rally()
     OPTS["verify_showconfig"]="--deployment"
     OPTS["verify_start"]="--deployment --set --regex --tests-file --skip-list --tempest-config --xfails-file --no-use --system-wide --concurrency --failing"
     OPTS["verify_uninstall"]="--deployment"
+    OPTS["verify_uninstallplugin"]="--deployment --repo-name --system-wide"
     OPTS["verify_use"]="--uuid"
 
     for OPT in ${!OPTS[*]} ; do
