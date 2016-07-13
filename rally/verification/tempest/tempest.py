@@ -58,16 +58,20 @@ class Tempest(object):
                                  ".rally/tempest/base")
 
     def __init__(self, deployment, verification=None, tempest_config=None,
-                 source=None, version=None, system_wide=False):
-        self.tempest_source = source or TEMPEST_SOURCE
-        self.version = version
+                 source=None, version=None, plugin_source=None,
+                 plugin_version=None, system_wide=False):
         self.deployment = deployment
+        self.verification = verification
         self._path = os.path.join(os.path.expanduser("~"),
                                   ".rally/tempest",
                                   "for-deployment-%s" % deployment)
         self.config_file = tempest_config or self.path("tempest.conf")
+        self.tempest_source = source or TEMPEST_SOURCE
+        self.version = version
+        self.plugin_source = plugin_source
+        self.plugin_version = plugin_version
         self.log_file_raw = self.path("subunit.stream")
-        self.verification = verification
+
         self._env = None
         self._base_repo = None
         self._system_wide = system_wide
@@ -289,6 +293,17 @@ class Tempest(object):
         """
         if os.path.exists(self.path()):
             shutil.rmtree(self.path())
+
+    def install_plugin(self):
+        """Install Tempest plugin for local Tempest repo."""
+        LOG.info(_("Installing Tempest plugin from %s for "
+                   "deployment: %s") % (self.plugin_source, self.deployment))
+        egg = os.path.basename(self.plugin_source.strip("/"))
+        version = self.plugin_version or "master"
+        cmd = [self.venv_wrapper, "pip", "install", "-e",
+               "git+{0}@{1}#egg={2}".format(self.plugin_source, version, egg)]
+        check_output(cmd, cwd=self.path())
+        LOG.info(_("Tempest plugin has been successfully installed!"))
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
     def _prepare_and_run(self, set_name, regex, tests_file, concur, failing):
