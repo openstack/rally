@@ -170,6 +170,17 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(
             len(list(checks.assert_equal_none(line, line, "f"))), result)
 
+    @ddt.data(
+        {"line": "self.assertNotEqual(A, None)", "result": 1},
+        {"line": "self.assertNotEqual(None, A)", "result": 1},
+        {"line": "self.assertIsNotNone()", "result": 0}
+    )
+    @ddt.unpack
+    def test_assert_not_equal_none(self, line, result):
+
+        self.assertEqual(
+            len(list(checks.assert_not_equal_none(line, line, "f"))), result)
+
     def test_assert_true_or_false_with_in_or_not_in(self):
         good_lines = [
             "self.assertTrue(any(A > 5 for A in B))",

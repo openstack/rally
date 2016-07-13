@@ -36,6 +36,9 @@ re_assert_equal_type = re.compile(
     r"(\w|\.|\'|\"|\[|\])+\)")
 re_assert_equal_end_with_none = re.compile(r"assertEqual\(.*?,\s+None\)$")
 re_assert_equal_start_with_none = re.compile(r"assertEqual\(None,")
+re_assert_not_equal_end_with_none = re.compile(
+    r"assertNotEqual\(.*?,\s+None\)$")
+re_assert_not_equal_start_with_none = re.compile(r"assertNotEqual\(None,")
 re_assert_true_false_with_in_or_not_in = re.compile(
     r"assert(True|False)\("
     r"(\w|[][.'\"])+( not)? in (\w|[][.'\",])+(, .*)?\)")
@@ -275,6 +278,20 @@ def assert_equal_in(logical_line, physical_line, filename):
         yield (0, "N324: Use assertIn/NotIn(A, B) rather than "
                   "assertEqual(A in/not in B, True/False) when checking "
                   "collection contents.")
+
+
+@skip_ignored_lines
+def assert_not_equal_none(logical_line, physical_line, filename):
+    """Check for assertNotEqual(A, None) or assertEqual(None, A) sentences
+
+    N325
+    """
+    res = (re_assert_not_equal_start_with_none.search(logical_line) or
+           re_assert_not_equal_end_with_none.search(logical_line))
+    if res:
+        yield (0, "N325 assertNotEqual(A, None) or assertNotEqual(None, A) "
+                  "sentences not allowed, you should use assertIsNotNone(A) "
+                  "instead.")
 
 
 @skip_ignored_lines
