@@ -2,7 +2,7 @@
   Dummy.dummy_random_action:
     -
       args:
-        atomics_num: 5
+        actions_num: 5
         sleep_min: 0
         sleep_max: 2
       runner:
