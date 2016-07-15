@@ -86,6 +86,13 @@ class BenchmarkUtilsTestCase(test.TestCase):
         manager._cache(resource)
         self.assertEqual(get_from_manager(resource), resource)
 
+    def test_get_from_manager_with_uuid_field(self):
+        get_from_manager = utils.get_from_manager()
+        manager = fakes.FakeManager()
+        resource = fakes.FakeResource(manager=manager)
+        manager._cache(resource)
+        self.assertEqual(get_from_manager(resource, id_attr="uuid"), resource)
+
     def test_get_from_manager_in_error_state(self):
         get_from_manager = utils.get_from_manager()
         manager = fakes.FakeManager()
@@ -448,6 +455,28 @@ class WaitForStatusTestCase(test.TestCase):
                               mock.call({"status": "not_ready_yet"}),
                               mock.call({"status": "still_not_ready"}),
                               mock.call({"status": "almost_ready"})])
+
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", return_value=1)
+    def test_wait_successful_with_uuid(self, mock_time, mock_sleep):
+        res = {"status": "not_ready"}
+        upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
+                                          {"status": "not_ready_yet"},
+                                          {"status": "still_not_ready"},
+                                          {"status": "almost_ready"},
+                                          {"status": "ready"}])
+        utils.wait_for(resource=res, ready_statuses=["ready"],
+                       update_resource=upd, id_attr="uuid")
+        upd.assert_has_calls([mock.call({"status": "not_ready"},
+                                        id_attr="uuid"),
+                              mock.call({"status": "not_ready"},
+                                        id_attr="uuid"),
+                              mock.call({"status": "not_ready_yet"},
+                                        id_attr="uuid"),
+                              mock.call({"status": "still_not_ready"},
+                                        id_attr="uuid"),
+                              mock.call({"status": "almost_ready"},
+                                        id_attr="uuid")])
 
     @mock.patch("rally.task.utils.time.sleep")
     @mock.patch("rally.task.utils.time.time", return_value=1)
