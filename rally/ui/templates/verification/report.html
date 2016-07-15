@@ -1,0 +1,321 @@
+{% extends "/base.html" %}
+
+{% block html_attr %} ng-app="App" ng-controller="Controller" id="page-html"{% endblock %}
+
+{% block title_text %}{% raw %}{{title}}{% endraw %}{% endblock %}
+
+{% block libs %}
+  {% if include_libs %}
+  <script type="text/javascript">
+    {{ include_raw_file("/libs/angular.1.3.3.min.js") }}
+  </script>
+  {% else %}
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
+  {% endif %}
+{% endblock %}
+
+{% block js_before %}
+    "use strict";
+    {{ include_raw_file("/task/directive_widget.js") }}
+    var controllerFunction = function($scope, $location) {
+      $scope.data = {{ data }};
+
+      /* Calculate columns width in percent */
+      var td_ctr_width = 4;
+      var td_result_width = Math.round(1 / ($scope.data.uuids.length+3) * 100);
+
+      $scope.td_width_ = {
+        counter: td_ctr_width,
+        test_name: (100 - td_ctr_width - (td_result_width * $scope.data.uuids.length)),
+        test_result: td_result_width
+      }
+
+      $scope.td_width = (function(vers_num) {
+        var uuid_w = Math.round(1 / (vers_num+3) * 100);
+        return {test: 100 - (uuid_w * vers_num),
+                uuid: uuid_w}
+      })($scope.data.uuids.length)
+
+      var bitmask = {"success": 1,
+                     "x-fail": 2,
+                     "skip": 4,
+                     "ux-ok": 8,
+                     "fail": 16};
+
+      for (var i in $scope.data.tests) {
+        var t = $scope.data.tests[i];
+        var bits = 0;
+        for (var uuid in t.by_verification) {
+          var status = t.by_verification[uuid].status;
+          if (status in bitmask) {
+            bits |= bitmask[status]
+          }
+          $scope.data.tests[i].by_verification[uuid].show_duration = (
+            t.by_verification[uuid].duration > 0.0001)
+        }
+        $scope.data.tests[i].filter = bits;
+      }
+
+      $scope.set_filter = function(status) {
+        if (status in $scope.state) {
+          $scope.state[status] = !$scope.state[status];
+          $scope.filter_bits ^= bitmask[status]
+        }
+      }
+
+      $scope.state = {"success": true,
+                      "x-fail": true,
+                      "skip": true,
+                      "ux-ok": true,
+                      "fail": true};
+
+      $scope.filter_by_status = function(test, index, arr) {
+        return test.filter & $scope.filter_bits
+      }
+
+      $scope.filter_bits = (function(filter){
+        var bits = 0;
+        for (var status in $scope.state){
+          if ($scope.state[status]) { bits ^= bitmask[status] }
+        }
+        return bits
+      })();
+
+      $scope.toggle_filters_flag = true;
+      $scope.toggle_filters = function() {
+        if ($scope.toggle_filters_flag) {
+          $scope.toggle_filters_flag = false;
+          $scope.state = {"success": false,
+                          "x-fail": false,
+                          "skip": false,
+                          "ux-ok": false,
+                          "fail": false};
+          $scope.filter_bits = 0
+        } else {
+          $scope.toggle_filters_flag = true
+          $scope.state = {"success": true,
+                          "x-fail": true,
+                          "skip": true,
+                          "ux-ok": true,
+                          "fail": true};
+          $scope.filter_bits = 31
+        }
+      }
+
+      var title = "verification result";
+
+      if ($scope.data.uuids.length > 1) {
+        title = "verifications results"
+      }
+
+      $scope.title = title;
+
+      $scope.srt_dir = false;
+
+      $scope.get_tests_count = function() {
+        var ctr = 0;
+        for (var i in $scope.data.tests) {
+          if ($scope.data.tests[i].filter & $scope.filter_bits) {
+            ctr++
+          }
+        }
+        return ctr
+      }
+
+      var title = angular.element(document.getElementById("page-header"));
+      var header = angular.element(document.getElementById("content-header"));
+      var tests = angular.element(document.getElementById("tests"));
+      var sync_positions = function() {
+        var title_h = title[0].offsetHeight;
+        var header_h = header[0].offsetHeight;
+        header.css({top:title_h+"px"})
+        tests.css({"margin-top": (title_h+header_h)+"px"});
+      }
+
+      /* Make page head sticky */
+      window.onload = function() {
+        title.css({position:"fixed", top:0, width:"100%"});
+        header.css({position:"fixed", width:"100%", background:"#fff"});
+
+        sync_positions();
+        window.onresize = sync_positions;
+
+        var gotop = document.getElementById("button-gotop");
+        gotop.onclick = function () { scrollTo(0, 0) };
+        window.onscroll = function() {
+          if (window.scrollY > 50) {
+            gotop.style.display = "block";
+          } else {
+            gotop.style.display = "none";
+          }
+        }
+      }
+
+      $scope.toggle_header = (function(e) {
+        return function() {
+          e.style.display = (e.style.display === "none") ? "table" : "none";
+          sync_positions()
+        }
+      })(document.getElementById("verifications"))
+
+    };
+
+    if (typeof angular === "object") {
+      angular.module("App", [])
+        .controller("Controller", ["$scope", "$location", controllerFunction])
+        .directive("widget", widgetDirective)
+    }
+{% endblock %}
+
+{% block css %}
+    div.header {margin:0 !important}
+    div.header .content-wrap { padding-left:10px }
+    .status.status-success { background: #cfc; color: #333 }
+    .status.status-ux-ok { background: #ffd7af; color: #333 }
+    .status.status-fail { background: #fbb; color: #333 }
+    .status.status-x-fail { background: #ccf5ff; color: #333 }
+    .status.status-skip { background: #ffb; color: #333 }
+    .status.checkbox { font-size:18px; text-align:center; cursor:pointer; padding:0 }
+    .column { display:block; float:left; padding:4px 0 4px 8px; box-sizing:border-box;
+              background:#fff; font-size:12px; font-weight:bold;
+              border:#ccc solid; border-width:0 0 1px }
+    .button { margin:0 5px; padding:0 8px 1px; background:#47a; color:#fff; cursor:pointer;
+              border:1px #036 solid; border-radius:11px; font-size:12px; font-weight:normal;
+              line-height:12px; opacity:.8}
+    .button:hover { opacity:1 }
+    #button-gotop { padding:3px 10px 5px; text-align:center; cursor:pointer;
+                    background:#fff; color:#036; line-height:14px; font-size:14px;
+                    position:fixed; bottom:0; right:10px;
+                    border:#ccc solid; border-width:1px 1px 0; border-radius:15px 15px 0 0}
+{% endblock %}
+
+{% block css_content_wrap %}width:100%; padding:0{% endblock %}
+
+{% block body_attr %} id="page-body" style="position:relative"{% endblock %}
+
+{% block header_text %}{% raw %}{{title}}{% endraw %}{% endblock %}
+
+{% block content %}
+
+  {% raw %}
+  <h3 ng-hide="true" style="padding-left:10px">processing ...</h3>
+
+  <div id="content-header" ng-cloak>
+    <table class="compact" id="verifications"
+           style="border:#fff solid; border-width:2px 0 15px; margin:0">
+      <thead>
+        <tr>
+          <th>UUID
+          <th>Set name
+          <th>Status
+          <th>Started at
+          <th>Duration, s
+          <th>Total tests
+          <th style="width:9%">success
+          <th style="width:9%">expected failures
+          <th style="width:9%">skipped
+          <th style="width:9%">unexpected success
+          <th style="width:9%">failures
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="uuid in data.uuids">
+          <td>{{uuid}}
+          <td>{{data.verifications[uuid].set_name}}
+          <td>{{data.verifications[uuid].status}}
+          <td>{{data.verifications[uuid].started_at}}
+          <td>{{data.verifications[uuid].duration}}
+          <td>{{data.verifications[uuid].total}}
+          <td class="status status-success">{{data.verifications[uuid].success}}
+          <td class="status status-x-fail">{{data.verifications[uuid].expected_failures}}
+          <td class="status status-skip">{{data.verifications[uuid].skipped}}
+          <td class="status status-ux-ok">{{data.verifications[uuid].unexpected_success}}
+          <td class="status status-fail">{{data.verifications[uuid].failures}}
+        </tr>
+        <tr>
+          <td colspan="6" style="text-align:right; font-weight:bold">
+            <span ng-click="toggle_filters()" class="button" style="margin-right:10px">
+              toggle all filters
+            </span>
+            Filter tests by status:
+          <td class="checkbox status status-success" ng-click="set_filter('success')">
+            <span ng-hide="state.success">&#x2610;</span>
+            <span ng-show="state.success">&#x2611;</span>
+          <td class="checkbox status status-x-fail" ng-click="set_filter('x-fail')">
+            <span ng-hide="state['x-fail']">&#x2610;</span>
+            <span ng-show="state['x-fail']">&#x2611;</span>
+          <td class="checkbox status status-skip" ng-click="set_filter('skip')">
+            <span ng-hide="state.skip">&#x2610;</span>
+            <span ng-show="state.skip">&#x2611;</span>
+          <td class="checkbox status status-ux-ok" ng-click="set_filter('ux-ok')">
+            <span ng-hide="state['ux-ok']">&#x2610;</span>
+            <span ng-show="state['ux-ok']">&#x2611;</span>
+          <td class="checkbox status status-fail" ng-click="set_filter('fail')">
+            <span ng-hide="state.fail">&#x2610;</span>
+            <span ng-show="state.fail">&#x2611;</span>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="text-align:left; padding:6px 3px; background:#fff">
+      <span class="button" ng-click="show_tags=!show_tags">
+        toggle tags
+      </span>
+      <span class="button" ng-click="toggle_header()">
+        toggle header
+      </span>
+    </div>
+    <div style="clear:both"></div>
+
+    <div style="width:{{td_width.test}}%" class="column">
+      <span ng-click="srt_dir=!srt_dir" class="pointer">
+        Test name
+        <span style="color:#777">(shown {{get_tests_count()}})</span>
+        <span style="color:orange">
+          <span ng-hide="srt_dir">&#x25be;</span>
+          <span ng-show="srt_dir">&#x25b4;</span>
+        </span>
+      </span>
+    </div>
+    <div ng-repeat="uuid in data.uuids"
+         class="column"
+        style="width:{{td_width.uuid}}%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+      {{uuid}}
+    </div>
+    <div style="clear:both"></div>
+  </div>
+
+  <table class="compact" id="tests" style="margin:0; width:100%" ng-cloak>
+    <tbody ng-repeat="t in data.tests | orderBy:'name':srt_dir track by $index" ng-show="filter_by_status(t)">
+      <tr ng-click="t.expanded=!t.expanded" ng-class="{pointer:t.has_details}">
+        <td style="width:{{td_width.test}}%; word-break:break-all">
+          {{t.name}}
+          <div ng-show="show_tags" style="font-size:12px; color:#999; word-break:normal">
+            <span ng-repeat="tag in t.tags"> {{tag}}</span>
+          </div>
+        <td ng-repeat="uuid in data.uuids"
+            class="status status-{{t.by_verification[uuid].status}}"
+            style="width:{{td_width.uuid}}%">
+          <div ng-if="t.by_verification[uuid]">
+            {{t.by_verification[uuid].status}}
+            <span ng-if="t.by_verification[uuid].show_duration">{{t.by_verification[uuid].duration}}</span>
+          </div>
+          <div ng-if="!t.by_verification[uuid]" style="color:#999">
+            &ndash;
+          </div>
+      </tr>
+      <tr ng-if="t.has_details" ng-show="t.expanded" style="width:100%">
+        <td colspan="{{3+data.uuids.length}}" style="padding:0">
+          <div ng-repeat="uuid in data.uuids" ng-if="t.by_verification[uuid].details"
+               class="status status-{{t.by_verification[uuid].status}}"
+               style="padding:5px">
+            <div style="font-weight:bold; color:#333">{{uuid}}</div>
+            <pre style="text-overflow:hidden">{{t.by_verification[uuid].details}}</pre>
+          </div>
+      </tr>
+    </tbody>
+  </table>
+  <span id="button-gotop" style="display:none">go top</span>
+  {% endraw %}
+
+{% endblock %}

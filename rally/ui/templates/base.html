@@ -24,6 +24,7 @@
     table.compact td { padding:4px 8px }
     table.striped tr:nth-child(odd) td { background:#f9f9f9 }
     table.linked tbody tr:hover { background:#f9f9f9; cursor:pointer }
+    .pointer { cursor:pointer }
     .rich, .rich td { font-weight:bold }
     .code { padding:10px; font-size:13px; color:#333; background:#f6f6f6; border:1px solid #e5e5e5; border-radius:4px }
 
@@ -36,20 +37,20 @@
     .status-fail, .status-fail td { color:red }
     .capitalize { text-transform:capitalize }
     {% block css %}{% endblock %}
-    .content-wrap { {% block css_content_wrap %}{% endblock %} margin:0 auto; padding:0 5px }
+    .content-wrap {  margin:0 auto; padding:0 5px; {% block css_content_wrap %}{% endblock %} }
     {% block media_queries %}{% endblock %}
   </style>
 </head>
 <body{% block body_attr %}{% endblock %}>
 
-  <div class="header">
+  <div class="header" id="page-header">
     <div class="content-wrap">
       <a href="https://github.com/openstack/rally">Rally</a>&nbsp;
       <span>{% block header_text %}{% endblock %}</span>
     </div>
   </div>
 
-  <div class="content-wrap">
+  <div class="content-wrap" id="page-content">
     {% block content %}{% endblock %}
   </div>
 

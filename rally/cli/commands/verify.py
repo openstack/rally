@@ -15,8 +15,8 @@
 
 """Rally command: verify"""
 
-import csv
-import json
+from __future__ import print_function
+
 import os
 
 import six
@@ -31,9 +31,7 @@ from rally.common.i18n import _
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally.verification.tempest import diff
-from rally.verification.tempest import json2html
-
+from rally.ui import report
 
 AVAILABLE_SETS = list(consts.TempestTestsSets) + list(consts.TempestTestsAPI)
 
@@ -223,40 +221,88 @@ class VerifyCommands(object):
             print(_("No verification was started yet. "
                     "To start verification use:\nrally verify start"))
 
-    @cliutils.args("--uuid", type=str, dest="verification",
-                   help="UUID of a verification.")
+    @cliutils.args("--uuid", nargs="+", dest="uuids",
+                   help="UUIDs of verifications.")
     @cliutils.args("--html", action="store_true", dest="output_html",
                    help="Display results in HTML format.")
     @cliutils.args("--json", action="store_true", dest="output_json",
                    help="Display results in JSON format.")
+    @cliutils.args("--csv", action="store_true", dest="output_csv",
+                   help="Display results in CSV format")
     @cliutils.args("--output-file", type=str, required=False,
                    dest="output_file", metavar="<path>",
                    help="Path to a file to save results to.")
-    @envutils.with_default_verification_id
     @cliutils.suppress_warnings
-    def results(self, verification=None, output_file=None,
-                output_html=None, output_json=None):
+    def results(self, uuids=None, output_file=None,
+                output_html=False, output_json=False, output_csv=False):
         """Display results of a verification.
 
         :param verification: UUID of a verification
         :param output_file: Path to a file to save results
-        :param output_html: Display results in HTML format
         :param output_json: Display results in JSON format (Default)
+        :param output_html: Display results in HTML format
+        :param output_csv: Display results in CSV format
         """
-        try:
-            results = api.Verification.get(verification).get_results()
-        except exceptions.NotFoundException as e:
-            print(six.text_type(e))
+        if not uuids:
+            uuid = envutils.get_global(envutils.ENV_VERIFICATION)
+            if not uuid:
+                raise exceptions.InvalidArgumentsException(
+                    "Verification UUID is missing")
+            uuids = [uuid]
+        data = []
+        for uuid in uuids:
+            try:
+                verification = api.Verification.get(uuid)
+            except exceptions.NotFoundException as e:
+                print(six.text_type(e))
+                return 1
+            data.append(verification)
+
+        if output_json + output_html + output_csv > 1:
+            print(_("Please specify only one format option from %s.")
+                  % "--json, --html, --csv")
             return 1
 
-        result = ""
-        if output_json + output_html > 1:
-            print(_("Please specify only one "
-                    "output format: --json or --html."))
-        elif output_html:
-            result = json2html.generate_report(results)
+        verifications = {}
+        for ver in data:
+            uuid = ver.db_object["uuid"]
+            res = ver.get_results() or {}
+            tests = {}
+            for test in list(res.get("test_cases", {}).values()):
+                name = test["name"]
+                if name in tests:
+                    mesg = ("Duplicated test in verification "
+                            "%(uuid)s: %(test)s" % {"uuid": uuid,
+                                                    "test": name})
+                    raise exceptions.RallyException(mesg)
+                tests[name] = {"tags": test["tags"],
+                               "status": test["status"],
+                               "duration": test["time"],
+                               "details": (test.get("traceback", "").strip()
+                                           or test.get("reason"))}
+            verifications[uuid] = {
+                "tests": tests,
+                "duration": res.get("time", 0),
+                "total": res.get("tests", 0),
+                "skipped": res.get("skipped", 0),
+                "success": res.get("success", 0),
+                "expected_failures": res.get("expected_failures", 0),
+                "unexpected_success": res.get("unexpected_success", 0),
+                "failures": res.get("failures", 0),
+                "started_at": ver.db_object[
+                    "created_at"].strftime("%Y-%d-%m %H:%M:%S"),
+                "finished_at": ver.db_object[
+                    "updated_at"].strftime("%Y-%d-%m %H:%M:%S"),
+                "status": ver.db_object["status"],
+                "set_name": ver.db_object["set_name"]
+            }
+
+        if output_html:
+            result = report.VerificationReport(verifications).to_html()
+        elif output_csv:
+            result = report.VerificationReport(verifications).to_csv()
         else:
-            result = json.dumps(results, sort_keys=True, indent=4)
+            result = report.VerificationReport(verifications).to_json()
 
         if output_file:
             output_file = os.path.expanduser(output_file)
@@ -328,66 +374,12 @@ class VerifyCommands(object):
         """
         self.show(verification, sort_by, True)
 
-    @cliutils.args("--uuid-1", type=str, required=True, dest="verification1",
-                   help="UUID of the first verification")
-    @cliutils.args("--uuid-2", type=str, required=True, dest="verification2",
-                   help="UUID of the second verification")
-    @cliutils.args("--csv", action="store_true", dest="output_csv",
-                   help="Display results in CSV format")
-    @cliutils.args("--html", action="store_true", dest="output_html",
-                   help="Display results in HTML format")
-    @cliutils.args("--json", action="store_true", dest="output_json",
-                   help="Display results in JSON format")
-    @cliutils.args("--output-file", type=str, required=False,
-                   dest="output_file", help="Path to a file to save results")
-    @cliutils.args("--threshold", type=int, required=False,
-                   dest="threshold", default=0,
-                   help="If specified, timing differences must exceed this "
-                   "percentage threshold to be included in output")
-    def compare(self, verification1=None, verification2=None,
-                output_file=None, output_csv=None, output_html=None,
-                output_json=None, threshold=0):
-        """Compare two verification results.
-
-        :param verification1: UUID of the first verification
-        :param verification2: UUID of the second verification
-        :param output_file: Path to a file to save results
-        :param output_csv: Display results in CSV format
-        :param output_html: Display results in HTML format
-        :param output_json: Display results in JSON format (Default)
-        :param threshold: Timing difference threshold percentage
-        """
-        try:
-            res_1 = api.Verification.get(
-                verification1).get_results()["test_cases"]
-            res_2 = api.Verification.get(
-                verification2).get_results()["test_cases"]
-            _diff = diff.Diff(res_1, res_2, threshold)
-        except exceptions.NotFoundException as e:
-            print(six.text_type(e))
-            return 1
-
-        result = ""
-        if output_json + output_html + output_csv > 1:
-            print(_("Please specify only one output "
-                    "format: --json, --html or --csv."))
-            return 1
-        elif output_html:
-            result = _diff.to_html()
-        elif output_csv:
-            result = _diff.to_csv()
-        else:
-            result = _diff.to_json()
-
-        if output_file:
-            with open(output_file, "wb") as f:
-                if output_csv:
-                    writer = csv.writer(f, dialect="excel")
-                    writer.writerows(result)
-                else:
-                    f.write(result)
-        else:
-            print(result)
+    def compare(self, *args, **kwargs):
+        """Deprecated."""
+        # NOTE(amaretskiy): this command is deprecated in favor of
+        #                   improved 'rally task results'
+        print("This command is deprecated. Use 'rally task results' instead.")
+        return 1
 
     @cliutils.args("--uuid", type=str, dest="verification",
                    required=False, help="UUID of a verification")
