@@ -15,6 +15,7 @@
 
 from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
+from novaclient import exceptions as nova_exc
 from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
@@ -145,6 +146,14 @@ class NovaFlavors(base.ResourceManager):
     def list(self):
         return [r for r in self._manager().list()
                 if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+
+    def is_deleted(self):
+        try:
+            self._manager().get(self.name())
+        except nova_exc.NotFound:
+            return True
+
+        return False
 
 
 @base.resource("nova", "floating_ips_bulk", order=next(_nova_order),

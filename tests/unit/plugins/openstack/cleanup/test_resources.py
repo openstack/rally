@@ -17,6 +17,7 @@ from boto import exception as boto_exception
 import ddt
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
+from novaclient import exceptions as nova_exc
 
 from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
@@ -131,6 +132,21 @@ class NovaFlavorsTestCase(test.TestCase):
         self.assertEqual(flavors[1:], resources.NovaFlavors().list())
         mock_name_matches_object.assert_has_calls(
             [mock.call(r.name, nutils.NovaScenario) for r in flavors])
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    def test_is_deleted(self, mock_resource_manager__manager):
+        exc = nova_exc.NotFound(404)
+        mock_resource_manager__manager().get.side_effect = exc
+        flavor = resources.NovaFlavors()
+        flavor.raw_resource = mock.MagicMock()
+        self.assertEqual(True, flavor.is_deleted())
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    def test_is_deleted_fail(self, mock_resource_manager__manager):
+        mock_resource_manager__manager().get.side_effect = TypeError()
+        flavor = resources.NovaFlavors()
+        flavor.raw_resource = mock.MagicMock()
+        self.assertRaises(TypeError, flavor.is_deleted)
 
 
 class NovaSecurityGroupTestCase(test.TestCase):
