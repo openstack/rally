@@ -495,6 +495,22 @@ class VerifyCommands(object):
         api.Verification.install_tempest_plugin(deployment, source,
                                                 version, system_wide)
 
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--system-wide", dest="system_wide",
+                   help="List all plugins installed in the local env, "
+                        "not in Tempest virtual env",
+                   required=False, action="store_true")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def listplugins(self, deployment=None, system_wide=False):
+        """List all installed Tempest plugins.
+
+        :param deployment: UUID or name of a deployment
+        :param system_wide: List all plugins installed in the local env or
+                            in Tempest virtual env
+        """
+        print(api.Verification.list_tempest_plugins(deployment, system_wide))
+
     @cliutils.args("--deployment", dest="deployment", type=str, required=False,
                    metavar="<uuid>", help="UUID or name of a deployment")
     @cliutils.args("--pattern", dest="pattern", type=str,

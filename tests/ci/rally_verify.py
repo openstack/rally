@@ -255,6 +255,9 @@ def main():
     render_vars["installplugin"] = call_rally(
         "verify installplugin --source %s" % TEMPEST_PLUGIN)
 
+    # List installed Tempest plugins
+    render_vars["listplugins"] = call_rally("verify listplugins")
+
     # Discover tests depending on Tempest suite
     discover_cmd = "verify discover"
     if args.mode == "light":

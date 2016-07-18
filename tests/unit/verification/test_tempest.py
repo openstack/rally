@@ -341,6 +341,14 @@ class TempestInstallPluginsTestCase(BaseTestCase):
         mock_tempest_check_output.assert_called_with(cmd,
                                                      cwd=self.verifier.path())
 
+    @mock.patch(TEMPEST_PATH + ".tempest.check_output")
+    def test_list_plugins(self, mock_tempest_check_output):
+        self.verifier.list_plugins()
+
+        cmd = [self.verifier.venv_wrapper, "tempest", "list-plugins"]
+        mock_tempest_check_output.assert_called_with(
+            cmd, cwd=self.verifier.path(), print_debug_output=False)
+
 
 class TempestVerifyTestCase(BaseTestCase):
     def _get_fake_call(self, testr_args,
