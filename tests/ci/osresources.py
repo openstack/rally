@@ -208,6 +208,26 @@ class Cinder(ResourceManager):
             search_opts={"all_tenants": True})
 
 
+class Watcher(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.WATCHER
+
+    def list_audits(self):
+        return self.client.audit.list()
+
+    def list_audit_templates(self):
+        return self.client.audit_template.list()
+
+    def list_goals(self):
+        return self.client.goal.list()
+
+    def list_action_plans(self):
+        return self.client.action_plan.list()
+
+    def list_actions(self):
+        return self.client.action.list()
+
+
 class CloudResources(object):
     """List and compare cloud resources.
 

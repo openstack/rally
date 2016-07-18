@@ -46,3 +46,6 @@ doc/source/_build/
 .idea
 .pydevproject
 *.swp
+
+# Mac Desktop Service Store
+*.DS_Store

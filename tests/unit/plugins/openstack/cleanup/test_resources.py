@@ -18,6 +18,7 @@ import ddt
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exc
+from watcherclient.common.apiclient import exceptions as watcher_exceptions
 
 from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
@@ -753,3 +754,29 @@ class FuelEnvironmentTestCase(test.TestCase):
 
         fres = resources.FuelEnvironment()
         self.assertEqual(envs[:-1], fres.list())
+
+
+class WatcherTemplateTestCase(test.TestCase):
+
+    def test_id(self):
+        watcher = resources.WatcherTemplate()
+        watcher.raw_resource = mock.MagicMock(uuid=100)
+        self.assertEqual(100, watcher.id())
+
+    @mock.patch("%s.WatcherTemplate._manager" % BASE)
+    def test_is_deleted(self, mock__manager):
+        mock__manager.return_value.get.return_value = None
+        watcher = resources.WatcherTemplate()
+        watcher.id = mock.Mock()
+        self.assertFalse(watcher.is_deleted())
+        mock__manager.side_effect = [watcher_exceptions.NotFound()]
+        self.assertTrue(watcher.is_deleted())
+
+    def test_list(self):
+        watcher = resources.WatcherTemplate()
+        watcher._manager = mock.MagicMock()
+
+        watcher.list()
+
+        self.assertEqual("audit_template", watcher._resource)
+        watcher._manager().list.assert_called_once_with(limit=0)

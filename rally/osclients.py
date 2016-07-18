@@ -744,6 +744,25 @@ class Magnum(OSClient):
         return magnum.Client(session=session, interface=endpoint_type[0])
 
 
+@configure("watcher", default_version="1", default_service_type="infra-optim",
+           supported_versions=["1"])
+class Watcher(OSClient):
+    def create_client(self, version=None, service_type=None):
+        """Return watcher client."""
+        from watcherclient import client as watcher_client
+        kc = self.keystone()
+        watcher_api_url = self._get_endpoint(
+            self.choose_service_type(service_type))
+        client = watcher_client.Client(
+            self.choose_version(version),
+            watcher_api_url,
+            token=kc.auth_token,
+            timeout=CONF.openstack_client_http_timeout,
+            insecure=self.credential.insecure,
+            ca_file=self.credential.cacert)
+        return client
+
+
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 

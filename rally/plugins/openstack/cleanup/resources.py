@@ -720,6 +720,27 @@ class FuelEnvironment(base.ResourceManager):
                                              futils.FuelScenario)]
 
 
+# WATCHER
+
+@base.resource("watcher", "audit_template", order=1500,
+               admin_required=True, tenant_resource=True)
+class WatcherTemplate(SynchronizedDeletion, base.ResourceManager):
+
+    def id(self):
+        return self.raw_resource.uuid
+
+    def is_deleted(self):
+        from watcherclient.common.apiclient import exceptions
+        try:
+            self._manager().get(self.id())
+            return False
+        except exceptions.NotFound:
+            return True
+
+    def list(self):
+        return self._manager().list(limit=0)
+
+
 # KEYSTONE
 
 _keystone_order = get_order(9000)

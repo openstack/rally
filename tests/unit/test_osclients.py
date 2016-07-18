@@ -856,3 +856,28 @@ class OSClientsTestCase(test.TestCase):
                 session=self.fake_keystone.session)
 
             self.assertEqual(fake_magnum, self.clients.cache["magnum"])
+
+    def test_watcher(self):
+        fake_watcher = fakes.FakeWatcherClient()
+        mock_watcher = mock.MagicMock()
+        mock_watcher.client.Client.return_value = fake_watcher
+        self.assertNotIn("watcher", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"watcherclient": mock_watcher}):
+            client = self.clients.watcher()
+
+            self.assertEqual(fake_watcher, client)
+
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="infra-optim",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.credential.region_name)
+
+            mock_watcher.client.Client.assert_called_once_with(
+                "1",
+                self.service_catalog.url_for.return_value,
+                token=self.fake_keystone.auth_token,
+                ca_file=None,
+                insecure=False,
+                timeout=180.0)
+
+            self.assertEqual(fake_watcher, self.clients.cache["watcher"])
