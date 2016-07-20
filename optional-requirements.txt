@@ -1,8 +1,8 @@
-python-mistralclient
+python-mistralclient>=2.0.0,<=2.0.0
 python-fuelclient==6.1.0                               # Apache Software License
-python-muranoclient>=0.5.5                             # Apache License, Version 2.0
-python-monascaclient>=1.0.22                           # Apache Software License
-python-cueclient>=1.0.0                                # Apache License, Version 2.0
-python-senlinclient>=0.3.0                             # Apache Software License
-python-magnumclient>=2.0.0                             # Apache Software License
-gnocchiclient>=2.2.0                                   # Apache Software License
+python-muranoclient>=0.8.2,<=0.9.0                     # Apache License, Version 2.0
+python-monascaclient>=1.1.0,<=1.2.0                    # Apache Software License
+python-cueclient>=1.0.0,<=1.0.0                        # Apache License, Version 2.0
+python-senlinclient>=0.3.0,<=0.5.0                     # Apache Software License
+python-magnumclient>=2.0.0,<=2.1.0                     # Apache Software License
+gnocchiclient>=2.2.0,<=2.3.1                           # Apache Software License
