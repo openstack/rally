@@ -15,6 +15,7 @@
 
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -298,10 +299,15 @@ class Tempest(object):
         """Install Tempest plugin for local Tempest repo."""
         LOG.info(_("Installing Tempest plugin from %s for "
                    "deployment: %s") % (self.plugin_source, self.deployment))
-        egg = os.path.basename(self.plugin_source.strip("/"))
+        egg = re.sub("\.git$", "",
+                     os.path.basename(self.plugin_source.strip("/")))
         version = self.plugin_version or "master"
-        cmd = [self.venv_wrapper, "pip", "install", "-e",
+        cmd = ["pip", "install", "--no-deps",
+               "--src", self.path("plugins"), "-e",
                "git+{0}@{1}#egg={2}".format(self.plugin_source, version, egg)]
+        if not self._system_wide:
+            cmd.insert(0, self.path("tools/with_venv.sh"))
+            cmd.remove("--no-deps")
         check_output(cmd, cwd=self.path())
         LOG.info(_("Tempest plugin has been successfully installed!"))
 

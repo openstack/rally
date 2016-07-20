@@ -331,12 +331,13 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 class TempestInstallPluginsTestCase(BaseTestCase):
 
     @mock.patch(TEMPEST_PATH + ".tempest.check_output")
-    @ddt.data("https://github.com/fake-plugin", "/tmp/fake-plugin")
+    @ddt.data("https://github.com/fake-plugin.git", "/tmp/fake-plugin")
     def test_install_plugin(self, plugin_source, mock_tempest_check_output):
         self.verifier.plugin_source = plugin_source
         self.verifier.install_plugin()
 
-        cmd = [self.verifier.venv_wrapper, "pip", "install", "-e",
+        cmd = [self.verifier.venv_wrapper, "pip", "install",
+               "--src", self.verifier.path("plugins"), "-e",
                "git+{0}@master#egg={1}".format(plugin_source, "fake-plugin")]
         mock_tempest_check_output.assert_called_with(cmd,
                                                      cwd=self.verifier.path())
