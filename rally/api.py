@@ -495,8 +495,8 @@ class Verification(object):
         :param source: Path/URL to repo to clone Tempest plugin from
         :param version: Branch, commit ID or tag to checkout before Tempest
                         plugin installation
-        :param system_wide: Whether or not to install plugin in Tempest
-                            virtual env
+        :param system_wide: Install plugin in Tempest virtual env or
+                            in the local env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid,
