@@ -208,10 +208,7 @@ class MigrationTestCase(rtest.DBTestCase,
 
 class MigrationWalkTestCase(rtest.DBTestCase,
                             test_migrations_base.BaseWalkMigrationMixin):
-    """Test case covers upgrade and downgrade methods in migrations."""
-
-    snake_walk = True
-    downgrade = True
+    """Test case covers upgrade method in migrations."""
 
     def setUp(self):
         super(MigrationWalkTestCase, self).setUp()
@@ -256,7 +253,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         self.assertEqual(sorted(members), sorted(index_columns))
 
     def test_walk_versions(self):
-        self.walk_versions(self.engine, self.snake_walk, self.downgrade)
+        self.walk_versions(self.engine)
 
     def _check_3177d36ea270(self, engine, data):
         self.assertEqual(

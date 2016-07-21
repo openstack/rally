@@ -59,13 +59,6 @@ class DBCommandsTestCase(test.TestCase):
         mock_db.assert_has_calls(calls)
 
     @mock.patch("rally.cli.manage.db")
-    def test_downgrade(self, mock_db):
-        revision = mock.MagicMock()
-        self.db_commands.downgrade(revision)
-        calls = [mock.call.schema_downgrade(revision)]
-        mock_db.assert_has_calls(calls)
-
-    @mock.patch("rally.cli.manage.db")
     def test_revision(self, mock_db):
         self.db_commands.revision()
         calls = [mock.call.schema_revision()]

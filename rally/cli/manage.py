@@ -62,15 +62,6 @@ class DBCommands(object):
         with output_migration_result("upgrade"):
             db.schema_upgrade()
 
-    @cliutils.args("--revision",
-                   help=("Downgrade to specified revision UUID. "
-                         "Current revision of DB could be found by calling "
-                         "'rally-manage db revision'"))
-    def downgrade(self, revision):
-        """Downgrade Rally database."""
-        with output_migration_result("downgrade"):
-            db.schema_downgrade(revision)
-
     def revision(self):
         """Print current Rally database revision UUID."""
         print(db.schema_revision())

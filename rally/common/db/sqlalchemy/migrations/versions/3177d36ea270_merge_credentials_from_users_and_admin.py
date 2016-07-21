@@ -31,6 +31,8 @@ depends_on = None
 from alembic import op
 import sqlalchemy as sa
 
+from rally import exceptions
+
 
 deployments_helper = sa.Table(
     "deployments",
@@ -71,30 +73,4 @@ def upgrade():
 
 
 def downgrade():
-    with op.batch_alter_table("deployments", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("users", sa.PickleType(),
-                      nullable=True))
-        batch_op.add_column(
-            sa.Column("admin", sa.PickleType(), nullable=True))
-
-    connection = op.get_bind()
-    for deployment in connection.execute(deployments_helper.select()):
-        admin = None
-        users = []
-        for credentials in deployment.credentials:
-            if credentials[0] == "openstack":
-                admin = credentials[1].get("admin")
-                users = credentials[1].get("users", [])
-
-        connection.execute(
-            deployments_helper.update().where(
-                deployments_helper.c.id == deployment.id).values(
-                admin=admin, users=users))
-
-    with op.batch_alter_table("deployments", schema=None) as batch_op:
-        batch_op.alter_column("users",
-                              existing_type=sa.PickleType,
-                              existing_nullable=True,
-                              nullable=False)
-        batch_op.drop_column("credentials")
+    raise exceptions.DowngradeNotSupported()

@@ -22,7 +22,7 @@ Information for users
 ---------------------
 
 Rally supports DB schema versioning (schema versions are called *revisions*)
-and migration (upgrade to later and downgrade to earlier revisions).
+and migration (upgrade to the latest revision).
 
 End user is provided with the following possibilities:
 
@@ -44,17 +44,8 @@ End user is provided with the following possibilities:
   **AFTER** upgrading Rally package. DB schema
   will get upgraded to the latest state and all existing data will be kept.
 
-- Downgrade existing DB to a previous revision.
-
-  This command could be useful if user wants to return to an earlier version
-  of Rally. This could be done by issuing command
-
-  .. code-block:: shell
-
-    rally-manage db downgrade --revision <UUID>
-
-  Database schema downgrade **MUST** be done **BEFORE** Rally package is downgraded.
-  User must  provide revision UUID to which the schema must be downgraded.
+  **WARNING** Rally does NOT support DB schema downgrade. One should consider
+  backing up existing database in order to be able to rollback the change.
 
 Information for developers
 --------------------------
@@ -87,3 +78,7 @@ for example it makes some SQLite compatible batch expressions for migrations.
 
 Generated script should then be checked, edited if it is needed to be
 and added to Rally source tree.
+
+**WARNING** Even though alembic supports schema downgrade, migration
+scripts provided along with Rally do not contain actual code for
+downgrade.
