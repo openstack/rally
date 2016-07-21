@@ -23,7 +23,7 @@ Rally Plugin Reference
 ----------------------
 
 Rally has a plugin oriented architecture - in other words Rally team is trying
-to make all places of code pluggable. Such architecture leds to the big amount
+to make all places of code pluggable. Such architecture leads to the big amount
 of plugins. :ref:`Rally Plugins Reference page <plugin_reference>` contains a
 full list with detailed descriptions of all official Rally plugins.
 
