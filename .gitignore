@@ -28,6 +28,7 @@ pip-log.txt
 .tox
 nosetests.xml
 cover
+cover-master
 .testrepository
 *.sqlite
 .venv
