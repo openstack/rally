@@ -30,7 +30,8 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @scenario.configure(context={"cleanup": ["sahara"]})
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
-                                             hadoop_version="1.2.1"):
+                                             hadoop_version="1.2.1",
+                                             use_autoconfig=True):
         """Create and list Sahara Node Group Templates.
 
         This scenario creates two Node Group Templates with different set of
@@ -48,14 +49,20 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
                                the specified plugin.
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         """
 
         self._create_master_node_group_template(flavor_id=flavor,
                                                 plugin_name=plugin_name,
-                                                hadoop_version=hadoop_version)
+                                                hadoop_version=hadoop_version,
+                                                use_autoconfig=use_autoconfig)
         self._create_worker_node_group_template(flavor_id=flavor,
                                                 plugin_name=plugin_name,
-                                                hadoop_version=hadoop_version)
+                                                hadoop_version=hadoop_version,
+                                                use_autoconfig=use_autoconfig)
         self._list_node_group_templates()
 
     @types.convert(flavor={"type": "nova_flavor"})
@@ -65,7 +72,8 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @scenario.configure(context={"cleanup": ["sahara"]})
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",
-                                           hadoop_version="1.2.1"):
+                                           hadoop_version="1.2.1",
+                                           use_autoconfig=True):
         """Create and delete Sahara Node Group Templates.
 
         This scenario creates and deletes two most common types of
@@ -79,17 +87,23 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
                                the specified plugin.
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         """
 
         master_ngt = self._create_master_node_group_template(
             flavor_id=flavor,
             plugin_name=plugin_name,
-            hadoop_version=hadoop_version)
+            hadoop_version=hadoop_version,
+            use_autoconfig=use_autoconfig)
 
         worker_ngt = self._create_worker_node_group_template(
             flavor_id=flavor,
             plugin_name=plugin_name,
-            hadoop_version=hadoop_version)
+            hadoop_version=hadoop_version,
+            use_autoconfig=use_autoconfig)
 
         self._delete_node_group_template(master_ngt)
         self._delete_node_group_template(worker_ngt)

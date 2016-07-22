@@ -48,11 +48,13 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
         mock__create_master_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version")
+            hadoop_version="test_version",
+            use_autoconfig=True)
         mock__create_worker_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version")
+            hadoop_version="test_version",
+            use_autoconfig=True)
         mock__list_node_group_templates.assert_called_once_with()
 
     @mock.patch(SAHARA_NGTS + "._delete_node_group_template")
@@ -75,11 +77,13 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
         mock__create_master_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version")
+            hadoop_version="test_version",
+            use_autoconfig=True)
         mock__create_worker_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
-            hadoop_version="test_version")
+            hadoop_version="test_version",
+            use_autoconfig=True)
 
         mock__delete_node_group_template.assert_has_calls(calls=[
             mock.call(mock__create_master_node_group_template.return_value),

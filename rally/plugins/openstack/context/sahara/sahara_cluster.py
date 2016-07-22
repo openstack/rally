@@ -88,7 +88,10 @@ class SaharaCluster(context.Context):
             },
             "enable_proxy": {
                 "type": "boolean"
-            }
+            },
+            "use_autoconfig": {
+                "type": "boolean"
+            },
         },
         "additionalProperties": False,
         "required": ["plugin_name", "hadoop_version", "workers_count",
@@ -135,7 +138,8 @@ class SaharaCluster(context.Context):
                 enable_anti_affinity=self.config.get("enable_anti_affinity",
                                                      False),
                 enable_proxy=self.config.get("enable_proxy", False),
-                wait_active=False
+                wait_active=False,
+                use_autoconfig=self.config.get("use_autoconfig", True)
             )
 
             self.context["tenants"][tenant_id]["sahara"]["cluster"] = (

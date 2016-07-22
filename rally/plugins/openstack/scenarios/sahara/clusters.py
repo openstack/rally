@@ -48,7 +48,8 @@ class SaharaClusters(utils.SaharaScenario):
                                   security_groups=None, node_configs=None,
                                   cluster_configs=None,
                                   enable_anti_affinity=False,
-                                  enable_proxy=False):
+                                  enable_proxy=False,
+                                  use_autoconfig=True):
         """Launch and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -87,6 +88,10 @@ class SaharaClusters(utils.SaharaScenario):
                                      one per compute node.
         :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
                              do not assign floating ips to workers.
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         """
 
         image_id = self.context["tenant"]["sahara"]["image"]
@@ -109,7 +114,8 @@ class SaharaClusters(utils.SaharaScenario):
             node_configs=node_configs,
             cluster_configs=cluster_configs,
             enable_anti_affinity=enable_anti_affinity,
-            enable_proxy=enable_proxy)
+            enable_proxy=enable_proxy,
+            use_autoconfig=use_autoconfig)
 
         self._delete_cluster(cluster)
 
@@ -132,7 +138,8 @@ class SaharaClusters(utils.SaharaScenario):
                                     security_groups=None, node_configs=None,
                                     cluster_configs=None,
                                     enable_anti_affinity=False,
-                                    enable_proxy=False):
+                                    enable_proxy=False,
+                                    use_autoconfig=True):
         """Launch, scale and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -179,6 +186,10 @@ class SaharaClusters(utils.SaharaScenario):
                                      one per compute node.
         :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
                              do not assign floating ips to workers.
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         """
 
         image_id = self.context["tenant"]["sahara"]["image"]
@@ -201,7 +212,8 @@ class SaharaClusters(utils.SaharaScenario):
             node_configs=node_configs,
             cluster_configs=cluster_configs,
             enable_anti_affinity=enable_anti_affinity,
-            enable_proxy=enable_proxy)
+            enable_proxy=enable_proxy,
+            use_autoconfig=use_autoconfig)
 
         for delta in deltas:
             # The Cluster is fetched every time so that its node groups have

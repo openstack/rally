@@ -70,13 +70,18 @@ class SaharaScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("sahara.create_master_node_group_template")
     def _create_master_node_group_template(self, flavor_id, plugin_name,
-                                           hadoop_version):
+                                           hadoop_version,
+                                           use_autoconfig=True):
         """Create a master Node Group Template with a random name.
 
         :param flavor_id: The required argument for the Template
         :param plugin_name: Sahara provisioning plugin name
         :param hadoop_version: The version of Hadoop distribution supported by
                                the plugin
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         :returns: The created Template
         """
         name = self.generate_random_name()
@@ -87,17 +92,22 @@ class SaharaScenario(scenario.OpenStackScenario):
             hadoop_version=hadoop_version,
             flavor_id=flavor_id,
             node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
-            [hadoop_version]["master"])
+            [hadoop_version]["master"],
+            use_autoconfig=use_autoconfig)
 
     @atomic.action_timer("sahara.create_worker_node_group_template")
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
-                                           hadoop_version):
+                                           hadoop_version, use_autoconfig):
         """Create a worker Node Group Template with a random name.
 
         :param flavor_id: The required argument for the Template
         :param plugin_name: Sahara provisioning plugin name
         :param hadoop_version: The version of Hadoop distribution supported by
                                the plugin
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         :returns: The created Template
         """
         name = self.generate_random_name()
@@ -108,7 +118,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             hadoop_version=hadoop_version,
             flavor_id=flavor_id,
             node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
-            [hadoop_version]["worker"])
+            [hadoop_version]["worker"],
+            use_autoconfig=use_autoconfig)
 
     @atomic.action_timer("sahara.delete_node_group_template")
     def _delete_node_group_template(self, node_group):
@@ -231,6 +242,13 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         return node_groups
 
+    def _setup_node_autoconfig(self, node_groups, node_autoconfig):
+        LOG.debug("Adding auto-config par to Node Groups")
+        for ng in node_groups:
+            ng["use_autoconfig"] = node_autoconfig
+
+        return node_groups
+
     def _setup_replication_config(self, hadoop_version, workers_count,
                                   plugin_name):
         replication_value = min(workers_count, 3)
@@ -257,7 +275,8 @@ class SaharaScenario(scenario.OpenStackScenario):
                         security_groups=None, node_configs=None,
                         cluster_configs=None, enable_anti_affinity=False,
                         enable_proxy=False,
-                        wait_active=True):
+                        wait_active=True,
+                        use_autoconfig=True):
         """Create a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
@@ -293,6 +312,10 @@ class SaharaScenario(scenario.OpenStackScenario):
         :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
                              do not assign floating ips to workers.
         :param wait_active: Wait until a Cluster gets int "Active" state
+        :param use_autoconfig: If True, instances of the node group will be
+                               automatically configured during cluster
+                               creation. If False, the configuration values
+                               should be specify manually
         :returns: created cluster
         """
 
@@ -361,6 +384,8 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         node_groups = self._setup_node_configs(node_groups, node_configs)
 
+        node_groups = self._setup_node_autoconfig(node_groups, use_autoconfig)
+
         replication_config = self._setup_replication_config(hadoop_version,
                                                             workers_count,
                                                             plugin_name)
@@ -385,7 +410,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             default_image_id=image_id,
             net_id=neutron_net_id,
             cluster_configs=merged_cluster_configs,
-            anti_affinity=aa_processes
+            anti_affinity=aa_processes,
+            use_autoconfig=use_autoconfig
         )
 
         if wait_active:

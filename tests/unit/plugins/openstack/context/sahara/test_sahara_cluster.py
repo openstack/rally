@@ -94,7 +94,8 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 cluster_configs=None,
                 enable_anti_affinity=False,
                 enable_proxy=False,
-                wait_active=False
+                wait_active=False,
+                use_autoconfig=True
             ))
 
         self.clients("sahara").clusters.get.side_effect = [
@@ -132,7 +133,8 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 security_groups=None,
                 node_configs=None,
                 cluster_configs=None,
-                wait_active=False
+                wait_active=False,
+                use_autoconfig=True
             ))
 
         self.clients("sahara").clusters.get.side_effect = [
