@@ -120,11 +120,6 @@ def schema_create():
     return get_impl().schema_create()
 
 
-def schema_downgrade(revision):
-    """Downgrade DB schema to specified revision."""
-    return get_impl().schema_downgrade(revision)
-
-
 def schema_revision():
     """Return the schema revision."""
     return get_impl().schema_revision()

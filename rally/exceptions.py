@@ -256,3 +256,7 @@ class SSHError(RallyException):
 class InvalidConnectionString(RallyException):
     msg_fmt = _("The connection string is not valid: %(message)s. Please "
                 "check your connection string.")
+
+
+class DowngradeNotSupported(RallyException):
+    msg_fmt = _("Database schema downgrade is not supported.")

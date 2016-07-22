@@ -162,16 +162,6 @@ class Connection(object):
         models.BASE.metadata.create_all(engine)
         self.schema_stamp("head", config=config)
 
-    def schema_downgrade(self, revision, config=None):
-        """Used for downgrading database.
-
-        :param revision: Desired database revision
-        :type revision: string
-        :param config: Instance of alembic config
-        """
-        config = config or _alembic_config()
-        return alembic.command.downgrade(config, revision)
-
     def schema_stamp(self, revision, config=None):
         """Stamps database with provided revision.
 
