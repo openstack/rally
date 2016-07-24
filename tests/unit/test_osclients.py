@@ -72,11 +72,6 @@ class OSClientTestCaseUtils(object):
 @ddt.ddt
 class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
 
-    def setUp(self):
-        super(OSClientTestCase, self).setUp()
-        self.credential = objects.Credential("http://auth_url/v2.0", "user",
-                                             "pass", "tenant")
-
     def test_choose_service_type(self):
         default_service_type = "default_service_type"
 
@@ -99,10 +94,11 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
     )
     @ddt.unpack
     def test__get_session(self, auth_url):
+        credential = objects.Credential("http://auth_url/v2.0", "user",
+                                        "pass", "tenant")
         mock_keystoneauth1 = mock.MagicMock()
         self.set_up_keystone_mocks()
-        osclient = osclients.OSClient(
-            self.credential, {}, mock.MagicMock())
+        osclient = osclients.OSClient(credential, {}, mock.MagicMock())
         with mock.patch.dict(
                 "sys.modules", {
                     "keystoneauth1": mock_keystoneauth1}):
@@ -129,6 +125,30 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
                 [mock.call(timeout=180.0, verify=True),
                  mock.call(auth=self.ksc_identity_plugin, timeout=180.0,
                            verify=True)])
+
+    @ddt.data(
+        {"endpoint_type": None, "service_type": None, "region_name": None},
+        {"endpoint_type": "et", "service_type": "st", "region_name": "rn"}
+    )
+    @ddt.unpack
+    def test__get_endpoint(self, endpoint_type, service_type, region_name):
+        credential = objects.Credential("http://auth_url/v2.0", "user", "pass",
+                                        endpoint_type=endpoint_type,
+                                        region_name=region_name)
+        mock_choose_service_type = mock.MagicMock()
+        osclient = osclients.OSClient(credential, {}, mock.MagicMock())
+        osclient.choose_service_type = mock_choose_service_type
+        with mock.patch.object(osclient, "keystone") as ks:
+            mock_url_for = ks.return_value.service_catalog.url_for
+            self.assertEqual(mock_url_for.return_value,
+                             osclient._get_endpoint(service_type))
+            call_args = {
+                "service_type": mock_choose_service_type.return_value,
+                "region_name": region_name}
+            if endpoint_type:
+                call_args["endpoint_type"] = endpoint_type
+            mock_url_for.assert_called_once_with(**call_args)
+        mock_choose_service_type.assert_called_once_with(service_type)
 
 
 class CachedTestCase(test.TestCase):
@@ -305,7 +325,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_nova, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="compute",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_nova.client.Client.assert_called_once_with(
                 "2",
@@ -343,7 +362,6 @@ class OSClientsTestCase(test.TestCase):
             }
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="network",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
@@ -362,7 +380,6 @@ class OSClientsTestCase(test.TestCase):
                   "insecure": False, "cacert": None}
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="image",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_glance, self.clients.cache["glance"])
@@ -377,7 +394,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_cinder, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="volumev2",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_cinder.client.Client.assert_called_once_with(
                 "2",
@@ -402,7 +418,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(mock_manila.client.Client.return_value, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="share",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             mock_manila.client.Client.assert_called_once_with(
                 "1",
@@ -436,7 +451,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_ceilometer, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="metering",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             kw = {"os_endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
@@ -485,7 +499,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_monasca, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="monitoring",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             os_endpoint = self.service_catalog.url_for.return_value
             kw = {"token": self.fake_keystone.auth_token,
@@ -513,14 +526,14 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_ironic, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="baremetal",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             kw = {
                 "os_auth_token": self.fake_keystone.auth_token,
                 "ironic_url": self.service_catalog.url_for.return_value,
                 "timeout": cfg.CONF.openstack_client_http_timeout,
                 "insecure": self.credential.insecure,
-                "cacert": self.credential.cacert
+                "cacert": self.credential.cacert,
+                "interface": self.credential.endpoint_type
             }
             mock_ironic.client.get_client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_ironic, self.clients.cache["ironic"])
@@ -535,7 +548,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_sahara, client)
             kw = {
                 "service_type": "data-processing",
-                "endpoint_type": self.credential.endpoint_type,
                 "insecure": False,
                 "username": self.credential.username,
                 "api_key": self.credential.password,
@@ -558,7 +570,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_zaqar, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="messaging",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             fake_zaqar_url = self.service_catalog.url_for.return_value
             conf = {"auth_opts": {"backend": "keystone", "options": {
@@ -607,7 +618,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_mistral, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="workflowv2",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name
             )
             fake_mistral_url = self.service_catalog.url_for.return_value
@@ -628,7 +638,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(client, fake_swift)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="object-store",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
             kw = {"retries": 1,
                   "preauthurl": self.service_catalog.url_for.return_value,
@@ -691,7 +700,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_murano, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="application-catalog",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name
             )
             kw = {"endpoint": self.service_catalog.url_for.return_value,
@@ -725,7 +733,6 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_designate, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="dns",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name
             )
 
@@ -766,7 +773,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.cue()
             self.assertEqual(fake_cue, client)
             mock_cue.client.Client.assert_called_once_with(
-                interface=consts.EndpointType.PUBLIC,
+                interface=self.credential.endpoint_type,
                 session="fake_session")
             self.assertEqual(fake_cue, self.clients.cache["cue"])
 
@@ -805,11 +812,10 @@ class OSClientsTestCase(test.TestCase):
 
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="container-infra",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
 
             mock_magnum.client.Client.assert_called_once_with(
-                interface=consts.EndpointType.PUBLIC,
+                interface=self.credential.endpoint_type,
                 session=self.fake_keystone.session,
                 magnum_url="http://fakeurl/")
 
@@ -827,7 +833,6 @@ class OSClientsTestCase(test.TestCase):
 
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="infra-optim",
-                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.credential.region_name)
 
             mock_watcher.client.Client.assert_called_once_with(
@@ -836,6 +841,7 @@ class OSClientsTestCase(test.TestCase):
                 token=self.fake_keystone.auth_token,
                 ca_file=None,
                 insecure=False,
-                timeout=180.0)
+                timeout=180.0,
+                endpoint_type=self.credential.endpoint_type)
 
             self.assertEqual(fake_watcher, self.clients.cache["watcher"])

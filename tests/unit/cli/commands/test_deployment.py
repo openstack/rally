@@ -50,6 +50,38 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
                                   "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
+                                  "OS_ENDPOINT": "fake_endpoint",
+                                  "OS_INSECURE": "True",
+                                  "OS_CACERT": "fake_cacert",
+                                  "RALLY_DEPLOYMENT": "fake_deployment_id"})
+    @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
+    @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
+    def test_createfromenv_keystonev2(self, mock_list, mock_deployment_create):
+        self.deployment.create("from_env", True)
+        mock_deployment_create.assert_called_once_with(
+            {
+                "type": "ExistingCloud",
+                "auth_url": "fake_auth_url",
+                "region_name": "fake_region_name",
+                "endpoint_type": "fake_endpoint_type",
+                "endpoint": "fake_endpoint",
+                "admin": {
+                    "username": "fake_username",
+                    "password": "fake_password",
+                    "tenant_name": "fake_tenant_name"
+                },
+                "https_insecure": True,
+                "https_cacert": "fake_cacert"
+            },
+            "from_env"
+        )
+
+    @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
+                                  "OS_USERNAME": "fake_username",
+                                  "OS_PASSWORD": "fake_password",
+                                  "OS_TENANT_NAME": "fake_tenant_name",
+                                  "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_PROJECT_DOMAIN_NAME": "fake_pdn",
                                   "OS_USER_DOMAIN_NAME": "fake_udn",
                                   "OS_ENDPOINT": "fake_endpoint",
@@ -58,7 +90,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "RALLY_DEPLOYMENT": "fake_deployment_id"})
     @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
-    def test_createfromenv(self, mock_list, mock_deployment_create):
+    def test_createfromenv_keystonev3(self, mock_list, mock_deployment_create):
         self.deployment.create("from_env", True)
         mock_deployment_create.assert_called_once_with(
             {
@@ -72,7 +104,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                     "password": "fake_password",
                     "user_domain_name": "fake_udn",
                     "project_domain_name": "fake_pdn",
-                    "tenant_name": "fake_tenant_name"
+                    "project_name": "fake_tenant_name"
                 },
                 "https_insecure": True,
                 "https_cacert": "fake_cacert"

@@ -19,8 +19,9 @@ from rally import consts
 class Credential(object):
 
     def __init__(self, auth_url, username, password, tenant_name=None,
+                 project_name=None,
                  permission=consts.EndpointPermission.USER,
-                 region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
+                 region_name=None, endpoint_type=None,
                  domain_name=None, endpoint=None,
                  user_domain_name=None, admin_domain_name="Default",
                  project_domain_name=None,
@@ -28,7 +29,7 @@ class Credential(object):
         self.auth_url = auth_url
         self.username = username
         self.password = password
-        self.tenant_name = tenant_name
+        self.tenant_name = tenant_name or project_name
         self.permission = permission
         self.region_name = region_name
         self.endpoint_type = endpoint_type

@@ -18,7 +18,7 @@ from rally import consts
 from tests.unit import test
 
 
-class EndpointTestCase(test.TestCase):
+class CredentialTestCase(test.TestCase):
 
     def test_to_dict(self):
         credential = objects.Credential(
@@ -33,7 +33,7 @@ class EndpointTestCase(test.TestCase):
                           "region_name": None,
                           "domain_name": None,
                           "endpoint": None,
-                          "endpoint_type": consts.EndpointType.PUBLIC,
+                          "endpoint_type": None,
                           "https_insecure": False,
                           "https_cacert": None,
                           "project_domain_name": None,
@@ -54,7 +54,7 @@ class EndpointTestCase(test.TestCase):
                           "domain_name": None,
                           "endpoint": None,
                           "permission": consts.EndpointPermission.ADMIN,
-                          "endpoint_type": consts.EndpointType.PUBLIC,
+                          "endpoint_type": None,
                           "https_insecure": False,
                           "https_cacert": None,
                           "project_domain_name": None,
@@ -66,7 +66,8 @@ class EndpointTestCase(test.TestCase):
             "foo_url", "foo_user", "foo_password",
             tenant_name="foo_tenant",
             permission=consts.EndpointPermission.ADMIN,
-            endpoint="foo_endpoint")
+            endpoint="foo_endpoint",
+            endpoint_type=consts.EndpointType.PUBLIC)
         self.assertEqual(credential.to_dict(),
                          {"auth_url": "foo_url",
                           "username": "foo_user",

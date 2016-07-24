@@ -96,10 +96,7 @@ def get_creds_from_env_vars():
         "admin": {
             "username": os.environ["OS_USERNAME"],
             "password": os.environ["OS_PASSWORD"],
-            "tenant_name": get_project_name_from_env(),
-            "user_domain_name": os.environ.get("OS_USER_DOMAIN_NAME", ""),
-            "project_domain_name": os.environ.get("OS_PROJECT_DOMAIN_NAME",
-                                                  ""),
+            "tenant_name": get_project_name_from_env()
         },
         "endpoint_type": get_endpoint_type_from_env(),
         "endpoint": os.environ.get("OS_ENDPOINT"),
@@ -108,6 +105,14 @@ def get_creds_from_env_vars():
         "https_insecure": strutils.bool_from_string(
             os.environ.get("OS_INSECURE"))
     }
+
+    user_domain_name = os.environ.get("OS_USER_DOMAIN_NAME")
+    project_domain_name = os.environ.get("OS_PROJECT_DOMAIN_NAME")
+    if user_domain_name or project_domain_name:
+        # it is Keystone v3 and it has another config schem
+        creds["admin"]["project_name"] = creds["admin"].pop("tenant_name")
+        creds["admin"]["user_domain_name"] = user_domain_name or ""
+        creds["admin"]["project_domain_name"] = project_domain_name or ""
 
     return creds
 
@@ -125,8 +130,8 @@ def get_project_name_from_env():
 
 def get_endpoint_type_from_env():
     endpoint_type = os.environ.get("OS_ENDPOINT_TYPE",
-                                   os.environ.get("OS_INTERFACE", "public"))
-    if "URL" in endpoint_type:
+                                   os.environ.get("OS_INTERFACE"))
+    if endpoint_type and "URL" in endpoint_type:
         endpoint_type = endpoint_type.replace("URL", "")
 
     return endpoint_type

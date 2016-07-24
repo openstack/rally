@@ -67,28 +67,31 @@ class ExistingCloud(engine.Engine):
         "definitions": {
             "user": {
                 "type": "object",
-                "properties": {
-                    "username": {"type": "string"},
-                    "password": {"type": "string"},
-                },
                 "oneOf": [
                     {
                         # v2.0 authentication
                         "properties": {
+                            "username": {"type": "string"},
+                            "password": {"type": "string"},
                             "tenant_name": {"type": "string"},
                         },
                         "required": ["username", "password", "tenant_name"],
+                        "additionalProperties": False
                     },
                     {
                         # Authentication in project scope
                         "properties": {
+                            "username": {"type": "string"},
+                            "password": {"type": "string"},
                             "user_domain_name": {"type": "string"},
+                            "admin_domain_name": {"type": "string"},
                             "project_name": {"type": "string"},
                             "project_domain_name": {"type": "string"},
                         },
                         "required": ["username", "password", "project_name"],
+                        "additionalProperties": False
                     }
-                ]
+                ],
             }
         },
 
@@ -96,28 +99,21 @@ class ExistingCloud(engine.Engine):
             "type": {"type": "string"},
             "auth_url": {"type": "string"},
             "region_name": {"type": "string"},
-            "endpoint_type": {"type": "string",
-                              "enum": [consts.EndpointType.ADMIN,
+            "endpoint": {"type": ["string", "null"]},
+            "endpoint_type": {"enum": [consts.EndpointType.ADMIN,
                                        consts.EndpointType.INTERNAL,
-                                       consts.EndpointType.PUBLIC]},
+                                       consts.EndpointType.PUBLIC,
+                                       None]},
             "https_insecure": {"type": "boolean"},
             "https_cacert": {"type": "string"},
-        },
-        "anyOf": [
-            {
-                "properties": {
-                    "admin": {"$ref": "#/definitions/user"}
-                },
-                "required": ["type", "auth_url", "admin"]
-            },
-            {
-                "users": {
-                    "type": "array",
-                    "items": {"$ref": "#/definitions/user"}
-                },
-                "required": ["type", "auth_url", "users"]
+            "admin": {"$ref": "#/definitions/user"},
+            "users": {
+                "type": "array",
+                "items": {"$ref": "#/definitions/user"}
             }
-        ]
+        },
+        "required": ["type", "auth_url", "admin"],
+        "additionalProperties": False
     }
 
     def _create_credential(self, common, user, permission):
@@ -126,8 +122,7 @@ class ExistingCloud(engine.Engine):
             tenant_name=user.get("project_name", user.get("tenant_name")),
             permission=permission,
             region_name=common.get("region_name"),
-            endpoint_type=common.get("endpoint_type",
-                                     consts.EndpointType.PUBLIC),
+            endpoint_type=common.get("endpoint_type"),
             endpoint=common.get("endpoint"),
             domain_name=user.get("domain_name"),
             user_domain_name=user.get("user_domain_name", None),
