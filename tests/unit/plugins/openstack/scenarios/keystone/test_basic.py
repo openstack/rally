@@ -270,3 +270,22 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
             "fake_user_id", "fake_tenant_id")
         scenario._delete_ec2credential.assert_called_once_with(
             "fake_user_id", fake_creds.access)
+
+    def test_add_and_remove_user_role(self):
+        context = self._get_context()
+        tenant_id = context["tenant"]["id"]
+        user_id = context["user"]["id"]
+
+        scenario = basic.KeystoneBasic(context)
+        fake_role = mock.MagicMock()
+        scenario._role_create = mock.MagicMock(return_value=fake_role)
+        scenario._role_add = mock.MagicMock()
+        scenario._role_remove = mock.MagicMock()
+
+        scenario.add_and_remove_user_role()
+
+        scenario._role_create.assert_called_once_with()
+        scenario._role_add.assert_called_once_with(
+            user_id, fake_role, tenant_id)
+        scenario._role_remove.assert_called_once_with(
+            user_id, fake_role, tenant_id)
