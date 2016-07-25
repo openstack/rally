@@ -55,7 +55,7 @@ class KeystoneWrapper(object):
 
     @abc.abstractmethod
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name="Default"):
+                    domain_name="Default", default_role="member"):
         """Create user.
 
         :param username: name of user
@@ -64,6 +64,7 @@ class KeystoneWrapper(object):
         :param domain_name: Name or id of domain where to create project, for
                             implementations that don't support domains this
                             argument must be None or 'Default'.
+        :param default_role: user's default role
         """
 
     @abc.abstractmethod
@@ -136,7 +137,8 @@ class KeystoneV2Wrapper(KeystoneWrapper):
         self.client.tenants.delete(project_id)
 
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name="Default"):
+                    domain_name="Default", default_role="member"):
+        # NOTE(liuyulong): For v2 wrapper the `default_role` here is not used.
         self._check_domain(domain_name)
         user = self.client.users.create(username, password, email, project_id)
         return KeystoneV2Wrapper._wrap_v2_user(user)
@@ -194,18 +196,19 @@ class KeystoneV3Wrapper(KeystoneWrapper):
         self.client.projects.delete(project_id)
 
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name="Default"):
+                    domain_name="Default", default_role="member"):
         domain_id = self._get_domain_id(domain_name)
         user = self.client.users.create(name=username, password=password,
                                         default_project=project_id,
                                         email=email, domain=domain_id)
         for role in self.client.roles.list():
-            if "member" in role.name.lower():
+            if default_role in role.name.lower():
                 self.client.roles.grant(role.id, user=user.id,
                                         project=project_id)
                 break
         else:
-            LOG.warning("Unable to set member role to created user.")
+            LOG.warning(
+                "Unable to set %s role to created user." % default_role)
         return KeystoneV3Wrapper._wrap_v3_user(user)
 
     def delete_user(self, user_id):
