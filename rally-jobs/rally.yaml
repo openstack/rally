@@ -404,6 +404,8 @@
           max: 1
           min_iterations: 10
           sigmas: 10
+        performance_degradation:
+          max_degradation: 50
 
     -
       args:

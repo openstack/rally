@@ -980,3 +980,50 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
                                    "times": 5,
                                    "rps": 3,
                                    "timeout": 6})
+
+
+class SLAPerfDegrTestCase(unittest.TestCase):
+
+    def _get_sample_task_config(self, max_degradation=500):
+        return {
+            "Dummy.dummy_random_action": [
+                {
+                    "args": {
+                        "actions_num": 5,
+                        "sleep_min": 0.5,
+                        "sleep_max": 2
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 10,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "performance_degradation": {
+                            "max_degradation": max_degradation
+                        }
+                    }
+                }
+            ]
+        }
+
+    def test_sla_fail(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(max_degradation=1)
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        self.assertRaises(utils.RallyCliError, rally, "task sla_check")
+
+    def test_sla_success(self):
+        rally = utils.Rally()
+        config = utils.TaskConfig(self._get_sample_task_config())
+        rally("task start --task %s" % config.filename)
+        rally("task sla_check")
+        expected = [
+            {"benchmark": "Dummy.dummy_random_action",
+             "criterion": "performance_degradation",
+             "detail": mock.ANY,
+             "pos": 0, "status": "PASS"},
+        ]
+        data = rally("task sla_check --json", getjson=True)
+        self.assertEqual(expected, data)
