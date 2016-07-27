@@ -20,10 +20,9 @@ from tests.unit import test
 
 class DesignateQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_update(self, mock_clients):
-        quotas = designate_quotas.DesignateQuotas(mock_clients)
+    def test_update(self):
+        clients = mock.MagicMock()
+        quotas = designate_quotas.DesignateQuotas(clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "domains": 5,
@@ -32,14 +31,23 @@ class DesignateQuotasTestCase(test.TestCase):
             "recordset_records": 20,
         }
         quotas.update(tenant_id, **quotas_values)
-        mock_clients.designate().quotas.update.assert_called_once_with(
+        clients.designate().quotas.update.assert_called_once_with(
             tenant_id, quotas_values)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_delete(self, mock_clients):
-        quotas = designate_quotas.DesignateQuotas(mock_clients)
+    def test_delete(self):
+        clients = mock.MagicMock()
+        quotas = designate_quotas.DesignateQuotas(clients)
         tenant_id = mock.MagicMock()
         quotas.delete(tenant_id)
-        mock_clients.designate().quotas.reset.assert_called_once_with(
-            tenant_id)
+        clients.designate().quotas.reset.assert_called_once_with(tenant_id)
+
+    def test_get(self):
+        tenant_id = "tenant_id"
+        quotas = {"domains": -1, "domain_recordsets": 2, "domain_records": 3,
+                  "recordset_records": 3}
+        clients = mock.MagicMock()
+        clients.designate.return_value.quotas.get.return_value = quotas
+        designate_quo = designate_quotas.DesignateQuotas(clients)
+
+        self.assertEqual(quotas, designate_quo.get(tenant_id))
+        clients.designate().quotas.get.assert_called_once_with(tenant_id)

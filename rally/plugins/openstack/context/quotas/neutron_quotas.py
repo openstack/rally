@@ -73,3 +73,6 @@ class NeutronQuotas(object):
     def delete(self, tenant_id):
         # Reset quotas to defaults and tag database objects as deleted
         self.clients.neutron().delete_quota(tenant_id)
+
+    def get(self, tenant_id):
+        return self.clients.neutron().show_quota(tenant_id)["quota"]

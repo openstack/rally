@@ -58,6 +58,7 @@ class Quotas(context.Context):
             "designate": designate_quotas.DesignateQuotas(self.clients),
             "neutron": neutron_quotas.NeutronQuotas(self.clients)
         }
+        self.original_quotas = []
 
     def _service_has_quotas(self, service):
         return len(self.config.get(service, {})) > 0
@@ -67,11 +68,27 @@ class Quotas(context.Context):
         for tenant_id in self.context["tenants"]:
             for service in self.manager:
                 if self._service_has_quotas(service):
+                    # NOTE(andreykurilin): in case of existing users it is
+                    #   required to restore original quotas instead of reset
+                    #   to default ones.
+                    if "existing_users" in self.context:
+                        self.original_quotas.append(
+                            (service, tenant_id,
+                             self.manager[service].get(tenant_id)))
                     self.manager[service].update(tenant_id,
                                                  **self.config[service])
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
-    def cleanup(self):
+    def _restore_quotas(self):
+        for service, tenant_id, quotas in self.original_quotas:
+            try:
+                self.manager[service].update(tenant_id, **quotas)
+            except Exception as e:
+                LOG.warning("Failed to restore quotas for tenant %(tenant_id)s"
+                            " in service %(service)s \n reason: %(exc)s" %
+                            {"tenant_id": tenant_id, "service": service,
+                             "exc": e})
+
+    def _delete_quotas(self):
         for service in self.manager:
             if self._service_has_quotas(service):
                 for tenant_id in self.context["tenants"]:
@@ -83,3 +100,11 @@ class Quotas(context.Context):
                                     "\n reason: %(exc)s"
                                     % {"tenant_id": tenant_id,
                                        "service": service, "exc": e})
+
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
+    def cleanup(self):
+        if self.original_quotas:
+            # existing users
+            self._restore_quotas()
+        else:
+            self._delete_quotas()

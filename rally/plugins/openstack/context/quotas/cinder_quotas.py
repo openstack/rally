@@ -43,3 +43,8 @@ class CinderQuotas(object):
 
     def delete(self, tenant_id):
         self.clients.cinder().quotas.delete(tenant_id)
+
+    def get(self, tenant_id):
+        response = self.clients.cinder().quotas.get(tenant_id)
+        return dict([(k, getattr(response, k))
+                     for k in self.QUOTAS_SCHEMA["properties"]])

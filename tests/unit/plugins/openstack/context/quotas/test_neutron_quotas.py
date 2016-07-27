@@ -14,18 +14,14 @@
 
 import mock
 
-from rally.plugins.openstack.context.quotas import neutron_quotas as quotas
+from rally.plugins.openstack.context.quotas import neutron_quotas
 from tests.unit import test
 
 
 class NeutronQuotasTestCase(test.TestCase):
-
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_update(self, mock_clients):
-        neutron_quotas = quotas.NeutronQuotas(mock_clients)
-        tenant_id = mock.MagicMock()
-        quotas_values = {
+    def setUp(self):
+        super(NeutronQuotasTestCase, self).setUp()
+        self.quotas = {
             "network": 20,
             "subnet": 20,
             "port": 100,
@@ -34,15 +30,29 @@ class NeutronQuotasTestCase(test.TestCase):
             "security_group": 100,
             "security_group_rule": 100
         }
-        neutron_quotas.update(tenant_id, **quotas_values)
-        body = {"quota": quotas_values}
-        mock_clients.neutron().update_quota.assert_called_once_with(tenant_id,
-                                                                    body=body)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_delete(self, mock_clients):
-        neutron_quotas = quotas.NeutronQuotas(mock_clients)
+    def test_update(self):
+        clients = mock.MagicMock()
+        neutron_quo = neutron_quotas.NeutronQuotas(clients)
         tenant_id = mock.MagicMock()
-        neutron_quotas.delete(tenant_id)
-        mock_clients.neutron().delete_quota.assert_called_once_with(tenant_id)
+        neutron_quo.update(tenant_id, **self.quotas)
+        body = {"quota": self.quotas}
+        clients.neutron().update_quota.assert_called_once_with(tenant_id,
+                                                               body=body)
+
+    def test_delete(self):
+        clients = mock.MagicMock()
+        neutron_quo = neutron_quotas.NeutronQuotas(clients)
+        tenant_id = mock.MagicMock()
+        neutron_quo.delete(tenant_id)
+        clients.neutron().delete_quota.assert_called_once_with(tenant_id)
+
+    def test_get(self):
+        tenant_id = "tenant_id"
+        clients = mock.MagicMock()
+        clients.neutron.return_value.show_quota.return_value = {
+            "quota": self.quotas}
+        neutron_quo = neutron_quotas.NeutronQuotas(clients)
+
+        self.assertEqual(self.quotas, neutron_quo.get(tenant_id))
+        clients.neutron().show_quota.assert_called_once_with(tenant_id)

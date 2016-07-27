@@ -39,3 +39,14 @@ class CinderQuotasTestCase(test.TestCase):
         tenant_id = mock.MagicMock()
         cinder_quo.delete(tenant_id)
         mock_clients.cinder().quotas.delete.assert_called_once_with(tenant_id)
+
+    def test_get(self):
+        tenant_id = "tenant_id"
+        quotas = {"gigabytes": "gb", "snapshots": "ss", "volumes": "v"}
+        quota_set = mock.MagicMock(**quotas)
+        clients = mock.MagicMock()
+        clients.cinder.return_value.quotas.get.return_value = quota_set
+        cinder_quo = cinder_quotas.CinderQuotas(clients)
+
+        self.assertEqual(quotas, cinder_quo.get(tenant_id))
+        clients.cinder().quotas.get.assert_called_once_with(tenant_id)

@@ -18,15 +18,12 @@ import mock
 from rally.plugins.openstack.context.quotas import manila_quotas
 from tests.unit import test
 
-CLIENTS_CLASS = (
-    "rally.plugins.openstack.context.quotas.quotas.osclients.Clients")
-
 
 class ManilaQuotasTestCase(test.TestCase):
 
-    @mock.patch(CLIENTS_CLASS)
-    def test_update(self, mock_clients):
-        instance = manila_quotas.ManilaQuotas(mock_clients)
+    def test_update(self):
+        clients = mock.MagicMock()
+        instance = manila_quotas.ManilaQuotas(clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "shares": 10,
@@ -38,15 +35,27 @@ class ManilaQuotasTestCase(test.TestCase):
 
         instance.update(tenant_id, **quotas_values)
 
-        mock_clients.manila.return_value.quotas.update.assert_called_once_with(
+        clients.manila.return_value.quotas.update.assert_called_once_with(
             tenant_id, **quotas_values)
 
-    @mock.patch(CLIENTS_CLASS)
-    def test_delete(self, mock_clients):
-        instance = manila_quotas.ManilaQuotas(mock_clients)
+    def test_delete(self):
+        clients = mock.MagicMock()
+        instance = manila_quotas.ManilaQuotas(clients)
         tenant_id = mock.MagicMock()
 
         instance.delete(tenant_id)
 
-        mock_clients.manila.return_value.quotas.delete.assert_called_once_with(
+        clients.manila.return_value.quotas.delete.assert_called_once_with(
             tenant_id)
+
+    def test_get(self):
+        tenant_id = "tenant_id"
+        quotas = {"gigabytes": "gb", "snapshots": "ss", "shares": "v",
+                  "snapshot_gigabytes": "sg", "share_networks": "sn"}
+        quota_set = mock.MagicMock(**quotas)
+        clients = mock.MagicMock()
+        clients.manila.return_value.quotas.get.return_value = quota_set
+        manila_quo = manila_quotas.ManilaQuotas(clients)
+
+        self.assertEqual(quotas, manila_quo.get(tenant_id))
+        clients.manila().quotas.get.assert_called_once_with(tenant_id)

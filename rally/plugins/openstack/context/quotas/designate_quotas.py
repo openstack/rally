@@ -47,3 +47,10 @@ class DesignateQuotas(object):
 
     def delete(self, tenant_id):
         self.clients.designate().quotas.reset(tenant_id)
+
+    def get(self, tenant_id):
+        # NOTE(andreykurilin): we have broken designate jobs, so I can't check
+        #   that this method is right :(
+        response = self.clients.designate().quotas.get(tenant_id)
+        return dict([(k, response.get(k))
+                     for k in self.QUOTAS_SCHEMA["properties"]])

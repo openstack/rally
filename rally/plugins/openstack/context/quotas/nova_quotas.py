@@ -88,3 +88,8 @@ class NovaQuotas(object):
     def delete(self, tenant_id):
         # Reset quotas to defaults and tag database objects as deleted
         self.clients.nova().quotas.delete(tenant_id)
+
+    def get(self, tenant_id):
+        response = self.clients.nova().quotas.get(tenant_id)
+        return dict([(k, getattr(response, k))
+                     for k in self.QUOTAS_SCHEMA["properties"]])
