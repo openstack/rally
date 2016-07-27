@@ -21,6 +21,7 @@ Rally Specific Commandments
  * [N322] - Ensure that ``assertEqual(A, None)`` and ``assertEqual(None, A)`` are not used
  * [N323] - Ensure that ``assertTrue/assertFalse(A in/not in B)`` are not used with collection contents
  * [N324] - Ensure that ``assertEqual(A in/not in B, True/False)`` and ``assertEqual(True/False, A in/not in B)`` are not used with collection contents
+ * [N325] - Ensure that ``assertNotEqual(A, None)`` and ``assertNotEqual(None, A)`` are not used
 * [N340] - Ensure that we are importing always ``from rally import objects``
 * [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones
 * [N350] - Ensure that single quotes are not used
