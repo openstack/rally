@@ -85,8 +85,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         {"kwargs": {"auto_assign_nic": True}},
         {"kwargs": {"auto_assign_nic": True, "nics": [{"net-id": "baz_id"}]}},
         {"context": {"user": {"secgroup": {"name": "test"}}}},
-        {"context": {"user": {"secgroup": {"name": "new"}}},
-         "kwargs": {"security_groups": ["test"]}},
+        {"context": {"user": {"secgroup": {"name": "new8"}}},
+         "kwargs": {"security_groups": ["test8"]}},
         {"context": {"user": {"secgroup": {"name": "test1"}}},
          "kwargs": {"security_groups": ["test1"]}},
     )
