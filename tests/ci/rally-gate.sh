@@ -55,7 +55,7 @@ rally deployment use --deployment devstack
 
 # NOTE(ikhudoshyn): Create additional users and register a new env
 # so that we could run scenarios using 'existing_users' context
-if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" -eq "1" ]; then
+if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" = "1" ]; then
     source ~/.rally/openrc admin admin
     openstack --version
 
