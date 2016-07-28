@@ -312,7 +312,8 @@ class Tempest(object):
         LOG.info(_("Tempest plugin has been successfully installed!"))
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
-    def _prepare_and_run(self, set_name, regex, tests_file, concur, failing):
+    def _prepare_and_run(self, set_name, regex, tests_file,
+                         tests_file_to_skip, concur, failing):
         if not self.is_configured():
             self.generate_config_file()
 
@@ -332,6 +333,18 @@ class Tempest(object):
             testr_args = regex
         elif tests_file:
             testr_args = "--load-list %s" % os.path.abspath(tests_file)
+
+        if tests_file_to_skip and not tests_file:
+            tests_to_run = set(self.discover_tests(testr_args))
+            with open(os.path.abspath(tests_file_to_skip), "rb") as f:
+                tests_to_skip = set([line.strip() for line in f])
+            tests_to_run -= tests_to_skip
+
+            temp_file = tempfile.NamedTemporaryFile()
+            with open(temp_file.name, "wb") as f:
+                f.writelines("\n".join(tests_to_run))
+
+            testr_args = "--load-list %s" % temp_file.name
 
         self.verification.start_verifying(set_name)
         try:
@@ -415,9 +428,10 @@ class Tempest(object):
         else:
             self.verification.set_failed()
 
-    def verify(self, set_name, regex, tests_file, expected_failures, concur,
-               failing):
-        self._prepare_and_run(set_name, regex, tests_file, concur, failing)
+    def verify(self, set_name, regex, tests_file,
+               tests_file_to_skip, expected_failures, concur, failing):
+        self._prepare_and_run(set_name, regex, tests_file,
+                              tests_file_to_skip, concur, failing)
         self._save_results(expected_failures=expected_failures)
 
     def import_results(self, set_name, log_file):

@@ -54,14 +54,19 @@ class VerifyCommands(object):
                    help="Test name regular expression")
     @cliutils.args("--tests-file", metavar="<path>", dest="tests_file",
                    type=str, required=False,
-                   help="Path to a file with a list of Tempest tests")
+                   help="Path to a file with a list of Tempest tests "
+                        "to run them")
+    @cliutils.args("--skip-list", metavar="<path>", dest="tests_file_to_skip",
+                   type=str, required=False,
+                   help="Path to a file with a list of Tempest tests "
+                        "to skip them")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False, metavar="<path>",
                    help="User-specified Tempest config file location")
     @cliutils.args("--xfails-file", dest="xfails_file", type=str,
                    required=False, metavar="<path>",
-                   help="Path to a YAML file with a list of Tempest "
-                        "tests that are expected to fail")
+                   help="Path to a YAML file with a list of Tempest tests "
+                        "that are expected to fail")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set the task as default for future operations")
     @cliutils.args("--system-wide", dest="system_wide",
@@ -79,8 +84,8 @@ class VerifyCommands(object):
                    help="Re-run the tests that failed in the last execution",
                    action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def start(self, deployment=None, set_name="", regex=None,
-              tests_file=None, tempest_config=None, xfails_file=None,
+    def start(self, deployment=None, set_name="", regex=None, tests_file=None,
+              tests_file_to_skip=None, tempest_config=None, xfails_file=None,
               do_use=True, system_wide=False, concur=0, failing=False):
         """Start verification (run Tempest tests).
 
@@ -88,9 +93,12 @@ class VerifyCommands(object):
         :param set_name: Name of a Tempest test set
         :param regex: Regular expression of test
         :param tests_file: Path to a file with a list of Tempest tests
+                           to run them
+        :param tests_file_to_skip: Path to a file with a list of Tempest tests
+                                   to skip them
         :param tempest_config: User specified Tempest config file location
-        :param xfails_file: Path to a file in YAML format with a list of
-                            Tempest tests that are expected to fail
+        :param xfails_file: Path to a YAML file with a list of Tempest tests
+                            that are expected to fail
         :param do_use: Use new task as default for future operations
         :param system_wide: Whether or not to create a virtual env when
                             installing Tempest; whether or not to use
@@ -101,21 +109,26 @@ class VerifyCommands(object):
         :param failing: Re-run tests that failed during the last execution
         """
 
-        msg = _("Arguments '%s' and '%s' are not compatible. "
+        msg = _("Arguments '%s' and '%s' are incompatible. "
                 "You can use only one of the mentioned arguments.")
-        if regex and set_name:
-            print(msg % ("regex", "set"))
-            return 1
-        if tests_file and set_name:
-            print(msg % ("tests_file", "set"))
-            return 1
-        if tests_file and regex:
-            print(msg % ("tests_file", "regex"))
-            return 1
+        incompatible_args_map = [
+            {"regex": regex, "set": set_name},
+            {"tests-file": tests_file, "set": set_name},
+            {"tests-file": tests_file, "regex": regex},
+            {"tests-file": tests_file, "skip-list": tests_file_to_skip},
+            {"failing": failing, "set": set_name},
+            {"failing": failing, "regex": regex},
+            {"failing": failing, "tests-file": tests_file},
+            {"failing": failing, "skip-list": tests_file_to_skip}
+        ]
+        for args in incompatible_args_map:
+            arg_keys = list(args)
+            if args[arg_keys[0]] and args[arg_keys[1]]:
+                print(msg % (arg_keys[0], arg_keys[1]))
+                return 1
 
         if not (regex or set_name or tests_file or failing):
             set_name = "full"
-
         if set_name and set_name not in AVAILABLE_SETS:
             print(_("Tempest test set '%s' not found "
                     "in available test sets. Available sets are %s.")
@@ -125,13 +138,8 @@ class VerifyCommands(object):
         if tests_file and not os.path.exists(tests_file):
             print(_("File '%s' not found.") % tests_file)
             return 1
-
-        if failing and set_name:
-            print(msg % ("failing", "set"))
-            return 1
-
-        if failing and tests_file:
-            print(msg % ("failing", "tests_file"))
+        if tests_file_to_skip and not os.path.exists(tests_file_to_skip):
+            print(_("File '%s' not found.") % tests_file_to_skip)
             return 1
 
         expected_failures = None
@@ -144,7 +152,8 @@ class VerifyCommands(object):
                 return 1
 
         verification = api.Verification.verify(
-            deployment, set_name=set_name, regex=regex, tests_file=tests_file,
+            deployment, set_name=set_name, regex=regex,
+            tests_file=tests_file, tests_file_to_skip=tests_file_to_skip,
             tempest_config=tempest_config, expected_failures=expected_failures,
             system_wide=system_wide, concur=concur, failing=failing)
 

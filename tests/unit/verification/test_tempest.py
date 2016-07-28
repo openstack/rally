@@ -358,7 +358,7 @@ class TempestVerifyTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".config.TempestConfig")
     def test_verify_no_tempest_config_exists(self, mock_tempest_config):
         self.assertRaises(exceptions.NotFoundException, self.verifier.verify,
-                          "compute", None, None, None, 0, False)
+                          "compute", None, None, None, None, 0, False)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
                 return_value=None)
@@ -372,7 +372,7 @@ class TempestVerifyTestCase(BaseTestCase):
         set_name = "identity"
         fake_call = self._get_fake_call("tempest.api.%s" % set_name)
 
-        self.verifier.verify(set_name, None, None, None, 0, False)
+        self.verifier.verify(set_name, None, None, None, None, 0, False)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 
@@ -394,7 +394,7 @@ class TempestVerifyTestCase(BaseTestCase):
         fake_call = self._get_fake_call("tempest.api.%s" % set_name)
         mock_subprocess.side_effect = subprocess.CalledProcessError
 
-        self.verifier.verify(set_name, None, None, None, 0, False)
+        self.verifier.verify(set_name, None, None, None, None, 0, False)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 
@@ -416,7 +416,32 @@ class TempestVerifyTestCase(BaseTestCase):
         tests_file = "/path/to/tests/file"
         fake_call = self._get_fake_call("--load-list %s" % tests_file)
 
-        self.verifier.verify("", None, tests_file, None, 0, False)
+        self.verifier.verify("", None, tests_file, None, None, 0, False)
+        self.verifier.verification.start_verifying.assert_called_once_with("")
+
+        mock_subprocess.check_call.assert_called_once_with(
+            fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
+            shell=True)
+        mock_tempest_parse_results.assert_called_once_with(None, None)
+
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
+                return_value=None)
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
+    @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch("os.path.isfile", return_value=True)
+    @mock.patch("tempfile.NamedTemporaryFile", return_value=mock.MagicMock())
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_verify_tests_file_to_skip_specified(
+            self, mock_open, mock_named_temporary_file, mock_isfile,
+            mock_tempest_resources_context, mock_subprocess, mock_tempest_env,
+            mock_tempest_parse_results):
+        mock_named_temporary_file.return_value.name = "some-file-name"
+        fake_call = self._get_fake_call("--load-list some-file-name")
+
+        tests_file_to_skip = "/path/to/tests/file"
+        self.verifier.verify(
+            "", None, None, tests_file_to_skip, None, 0, False)
         self.verifier.verification.start_verifying.assert_called_once_with("")
 
         mock_subprocess.check_call.assert_called_once_with(
@@ -437,7 +462,7 @@ class TempestVerifyTestCase(BaseTestCase):
         fake_call = self._get_fake_call(
             "tempest.api.%s" % set_name, "--concurrency 1")
 
-        self.verifier.verify("identity", None, None, None, 1, False)
+        self.verifier.verify("identity", None, None, None, None, 1, False)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 
@@ -458,7 +483,7 @@ class TempestVerifyTestCase(BaseTestCase):
         set_name = "identity"
         fake_call = self._get_fake_call("tempest.api.%s" % set_name)
 
-        self.verifier.verify("identity", None, None, None, 0, False)
+        self.verifier.verify("identity", None, None, None, None, 0, False)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 
@@ -478,7 +503,7 @@ class TempestVerifyTestCase(BaseTestCase):
                                       mock_subprocess, mock_tempest_env,
                                       mock_tempest_parse_results):
         fake_call = self._get_fake_call("--failing")
-        self.verifier.verify("", None, None, None, 0, True)
+        self.verifier.verify("", None, None, None, None, 0, True)
 
         self.verifier.verification.start_verifying.assert_called_once_with(
             "re-run-failed")
