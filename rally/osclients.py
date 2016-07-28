@@ -561,8 +561,12 @@ class Designate(OSClient):
         api_url = self._get_endpoint(service_type)
         api_url += "/v%s" % version
 
-        session = self._get_session(auth_url=api_url)[0]
-        return client.Client(version, session=session)
+        session = self._get_session()[0]
+        if version == "2":
+            return client.Client(version, session=session,
+                                 endpoint_override=api_url)
+        return client.Client(version, session=session,
+                             endpoint=api_url)
 
 
 @configure("trove", default_version="1.0", supported_versions=["1.0"])
