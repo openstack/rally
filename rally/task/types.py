@@ -52,9 +52,6 @@ def _get_preprocessor_loader(plugin_name):
 def convert(**kwargs):
     """Decorator to define resource transformation(s) on scenario parameters.
 
-    This will eventually replace set(). For the time being, set()
-    should be preferred.
-
     The ``kwargs`` passed as arguments are used to map a key in the
     scenario config to the resource type plugin used to perform a
     transformation on the value of the key. For instance:
