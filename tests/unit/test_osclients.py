@@ -735,11 +735,18 @@ class OSClientsTestCase(test.TestCase):
             url = self.service_catalog.url_for.return_value
             url.__iadd__.assert_called_once_with("/v%s" % default)
 
-            mock_designate__get_session.assert_called_once_with(
-                auth_url=url.__iadd__.return_value)
+            mock_designate__get_session.assert_called_once_with()
 
-            mock_designate.client.Client.assert_called_once_with(
-                default, session="fake_session")
+            if version == "2":
+                mock_designate.client.Client.assert_called_once_with(
+                    version,
+                    endpoint_override=url.__iadd__.return_value,
+                    session="fake_session")
+            elif version == "1":
+                mock_designate.client.Client.assert_called_once_with(
+                    version,
+                    endpoint=url.__iadd__.return_value,
+                    session="fake_session")
 
             key = "designate"
             if version is not None:
