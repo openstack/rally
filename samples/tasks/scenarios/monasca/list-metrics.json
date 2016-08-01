@@ -1,0 +1,33 @@
+{
+    "MonascaMetrics.list_metrics": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "roles": [
+                    "monasca-user"
+                ],
+                "monasca_metrics": {
+                    "dimensions": {
+                      "region": "RegionOne",
+                      "service": "identity",
+                      "hostname": "fake_host",
+                      "url": "http://fake_host:5000/v2.0"
+                    },
+                    "metrics_per_tenant": 10
+                }
+            },
+            "args": {
+                "region": "RegionOne",
+                "limit": 5
+            }
+        }
+    ]
+}

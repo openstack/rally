@@ -1,7 +1,6 @@
 python-mistralclient>=2.0.0
 python-fuelclient==6.1.0                               # Apache Software License
 python-muranoclient>=0.8.2                             # Apache License, Version 2.0
-python-monascaclient>=1.1.0                            # Apache Software License
 python-cueclient>=1.0.0,<=1.0.0                        # Apache License, Version 2.0
 python-senlinclient>=0.3.0                             # Apache Software License
 python-magnumclient>=2.0.0                             # Apache Software License

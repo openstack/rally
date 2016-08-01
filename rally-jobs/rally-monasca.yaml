@@ -1,0 +1,39 @@
+---
+  MonascaMetrics.list_metrics:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        roles:
+         - "monasca-user"
+        monasca_metrics:
+          "dimensions":
+              "region": "RegionOne"
+              "service": "identity"
+              "hostname": "fake_host"
+              "url": "http://fake_host:5000/v2.0"
+          "metrics_per_tenant": 10
+      sla:
+        failure_rate:
+          max: 0
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        roles:
+         - "monasca-user"
+        monasca_metrics:
+          "metrics_per_tenant": 10
+      sla:
+        failure_rate:
+          max: 0

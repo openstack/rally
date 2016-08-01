@@ -27,6 +27,7 @@ python-novaclient!=2.33.0,>=2.29.0                     # Apache License, Version
 python-neutronclient>=4.2.0                            # Apache Software License
 python-cinderclient!=1.7.0,!=1.7.1,>=1.6.0             # Apache Software License
 python-manilaclient>=1.10.0                            # Apache Software License
+python-monascaclient>=1.2.0                            # Apache Software License
 python-heatclient>=1.1.0                               # Apache Software License
 python-ceilometerclient>=2.2.1                         # Apache Software License
 python-ironicclient>=1.1.0                             # Apache Software License
