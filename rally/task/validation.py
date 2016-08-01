@@ -215,7 +215,7 @@ def valid_command(config, clients, deployment, param_name, required=True):
     command = config.get("args", {}).get(param_name)
     if command is None:
         return ValidationResult(not required,
-                                "Command dicitionary is required")
+                                "Command dictionary is required")
     try:
         check_command_dict(command)
     except ValueError as e:
