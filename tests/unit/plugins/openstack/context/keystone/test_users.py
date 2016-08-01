@@ -120,7 +120,7 @@ class UserContextMixinTestCase(test.TestCase):
         }
         expected_ids = ["0_0", "1_0", "0_1", "1_1"] * 4
         mapped_ids = []
-        for i in range(16):
+        for i in range(1, 17):
             context["iteration"] = i
             user = self.mixin.map_for_scenario(context)
             mapped_ids.append(user["user"]["id"])

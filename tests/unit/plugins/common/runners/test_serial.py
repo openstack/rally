@@ -43,7 +43,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         expected_calls = []
         for i in range(times):
             ctxt = fakes.FakeContext().context
-            ctxt["iteration"] = i
+            ctxt["iteration"] = i + 1
             ctxt["task"] = mock.ANY
             expected_calls.append(
                 mock.call(fakes.FakeScenario, "do_it", ctxt, {})

@@ -59,7 +59,7 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             result
         )
 
-        mock_context_manager.assert_called_once_with({"iteration": 13})
+        mock_context_manager.assert_called_once_with({"iteration": 14})
         mock_map_for_scenario.assert_called_once_with()
 
     def test_run_scenario_once_internal_logic(self):

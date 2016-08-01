@@ -468,10 +468,12 @@ class Task(object):
                 "tstamp_start": tstamp_start,
                 "full_duration": scenario["data"]["full_duration"],
                 "load_duration": scenario["data"]["load_duration"]}
+            iterations = sorted(scenario["data"]["raw"],
+                                key=lambda itr: itr["timestamp"])
             if serializable:
-                scenario["iterations"] = scenario["data"]["raw"]
+                scenario["iterations"] = list(iterations)
             else:
-                scenario["iterations"] = iter(scenario["data"]["raw"])
+                scenario["iterations"] = iter(iterations)
             scenario["sla"] = scenario["data"]["sla"]
             del scenario["data"]
             del scenario["task_uuid"]
