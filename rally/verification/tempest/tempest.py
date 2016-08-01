@@ -41,6 +41,7 @@ class TempestSetupFailure(exceptions.RallyException):
 
 
 def check_output(*args, **kwargs):
+    print_debug_output = kwargs.pop("print_debug_output", True)
     kwargs["stderr"] = subprocess.STDOUT
     try:
         output = subprocess.check_output(*args, **kwargs)
@@ -49,7 +50,8 @@ def check_output(*args, **kwargs):
         LOG.error("Error output: '%s'" % encodeutils.safe_decode(e.output))
         raise
 
-    LOG.debug("subprocess output: '%s'" % encodeutils.safe_decode(output))
+    if print_debug_output:
+        LOG.debug("Subprocess output: '%s'" % encodeutils.safe_decode(output))
     return output
 
 
@@ -310,6 +312,13 @@ class Tempest(object):
             cmd.remove("--no-deps")
         check_output(cmd, cwd=self.path())
         LOG.info(_("Tempest plugin has been successfully installed!"))
+
+    def list_plugins(self):
+        """List all installed Tempest plugins for local Tempest repo."""
+        cmd = ["tempest", "list-plugins"]
+        if not self._system_wide:
+            cmd.insert(0, self.path("tools/with_venv.sh"))
+        return check_output(cmd, cwd=self.path(), print_debug_output=False)
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
     def _prepare_and_run(self, set_name, regex, tests_file,

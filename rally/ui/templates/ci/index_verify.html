@@ -53,10 +53,6 @@
     <a href="{{ install.stdout_file }}">Tempest installation</a>
     <code>$ {{ install.cmd }}</code>
 
-    <span class="{{ discover.status }}">[{{ discover.status }}]</span>
-    <a href="{{ discover.stdout_file }}">Discovering tests</a>
-    <code>$ {{ discover.cmd }}</code>
-
     <span class="{{ reinstall.status }}">[{{ reinstall.status }}]</span>
     <a href="{{ reinstall.stdout_file }}">Tempest re-installation</a>
     <code>$ {{ reinstall.cmd }}</code>
@@ -64,6 +60,14 @@
     <span class="{{ installplugin.status }}">[{{ installplugin.status }}]</span>
     <a href="{{ installplugin.stdout_file }}">Tempest plugin installation</a>
     <code>$ {{ installplugin.cmd }}</code>
+
+    <span class="{{ listplugins.status }}">[{{ listplugins.status }}]</span>
+    <a href="{{ listplugins.stdout_file }}">List installed Tempest plugins</a>
+    <code>$ {{ listplugins.cmd }}</code>
+
+    <span class="{{ discover.status }}">[{{ discover.status }}]</span>
+    <a href="{{ discover.stdout_file }}">Discovering tests</a>
+    <code>$ {{ discover.cmd }}</code>
 
     <span class="{{ genconfig.status }}">[{{ genconfig.status }}]</span>
     <a href="{{ genconfig.stdout_file }}">Tempest config generation</a>

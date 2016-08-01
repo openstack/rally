@@ -520,6 +520,15 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_list_tempest_plugins(
+            self, mock_tempest, mock_deployment_get, mock_exists):
+        mock_tempest.return_value = self.tempest
+        api.Verification.list_tempest_plugins(self.deployment_uuid)
+        self.tempest.list_plugins.assert_called_once_with()
+
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_discover_tests(
             self, mock_tempest, mock_deployment_get, mock_exists):
         mock_tempest.return_value = self.tempest
