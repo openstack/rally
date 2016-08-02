@@ -795,6 +795,7 @@ class OSClientsTestCase(test.TestCase):
 
         mock_magnum__get_session.return_value = (self.fake_keystone.session,
                                                  "fake_auth_plugin")
+        self.service_catalog.url_for.return_value = "http://fakeurl/"
 
         self.assertNotIn("magnum", self.clients.cache)
         with mock.patch.dict("sys.modules", {"magnumclient": mock_magnum}):
@@ -809,7 +810,8 @@ class OSClientsTestCase(test.TestCase):
 
             mock_magnum.client.Client.assert_called_once_with(
                 interface=consts.EndpointType.PUBLIC,
-                session=self.fake_keystone.session)
+                session=self.fake_keystone.session,
+                magnum_url="http://fakeurl/")
 
             self.assertEqual(fake_magnum, self.clients.cache["magnum"])
 
