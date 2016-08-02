@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.keystone import utils
@@ -22,6 +23,7 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.keystone.utils."
 
 
+@ddt.ddt
 class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("uuid.uuid4", return_value="pwd")
@@ -130,21 +132,30 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_tenant")
 
-    def test_service_create(self):
-        service_type = "service_type"
-        description = "description"
+    @ddt.data(
+        {"service_type": "service_type"},
+        {"service_type": None}
+    )
+    def test_service_create(self, service_type):
         scenario = utils.KeystoneScenario(self.context)
         scenario.generate_random_name = mock.Mock()
 
-        result = scenario._service_create(service_type=service_type,
-                                          description=description)
+        result = scenario._service_create(
+            service_type=service_type, description="description")
 
         self.assertEqual(
             self.admin_clients("keystone").services.create.return_value,
             result)
-        self.admin_clients("keystone").services.create.assert_called_once_with(
-            scenario.generate_random_name.return_value,
-            service_type, description=description)
+        if service_type == "service_type":
+            self.admin_clients(
+                "keystone").services.create.assert_called_once_with(
+                scenario.generate_random_name.return_value,
+                service_type, description="description")
+        elif service_type is None:
+            self.admin_clients(
+                "keystone").services.create.assert_called_once_with(
+                scenario.generate_random_name.return_value,
+                "rally_test_type", description="description")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_service")
 

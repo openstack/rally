@@ -66,7 +66,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
     @atomic.action_timer("keystone.create_service")
-    def _service_create(self, service_type="rally_test_type",
+    def _service_create(self, service_type=None,
                         description=None):
         """Creates keystone service with random name.
 
@@ -74,6 +74,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         :param description: description of the service
         :returns: keystone service instance
         """
+        service_type = service_type or "rally_test_type"
         description = description or self.generate_random_name()
         return self.admin_clients("keystone").services.create(
             self.generate_random_name(),
