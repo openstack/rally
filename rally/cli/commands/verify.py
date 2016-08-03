@@ -520,6 +520,27 @@ class VerifyCommands(object):
         """
         print(api.Verification.list_tempest_plugins(deployment, system_wide))
 
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--repo-name", type=str, dest="repo_name",
+                   required=True, help="Plugin repo name")
+    @cliutils.args("--system-wide", dest="system_wide",
+                   help="Uninstall plugin from the local env, "
+                        "not from Tempest virtual env",
+                   required=False, action="store_true")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def uninstallplugin(self, deployment=None, repo_name=None,
+                        system_wide=False):
+        """Uninstall Tempest plugin.
+
+        :param deployment: UUID or name of a deployment
+        :param repo_name: Plugin repo name
+        :param system_wide: Uninstall plugin from Tempest virtual env or
+                            from the local env
+        """
+        api.Verification.uninstall_tempest_plugin(deployment,
+                                                  repo_name, system_wide)
+
     @cliutils.args("--deployment", dest="deployment", type=str, required=False,
                    metavar="<uuid>", help="UUID or name of a deployment")
     @cliutils.args("--pattern", dest="pattern", type=str,

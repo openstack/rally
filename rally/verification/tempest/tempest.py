@@ -191,22 +191,16 @@ class Tempest(object):
             try:
                 check_output(["virtualenv", "-p", sys.executable, ".venv"],
                              cwd=self.path())
-                # NOTE(kun): Using develop mode installation is for run
-                #            multiple tempest instance. However, dependency
-                #            from tempest(os-testr) has issues here, before
-                #            https://review.openstack.org/#/c/207691/ being
-                #            merged, we have to install dependency manually and
-                #            run setup.py with -N(install package without
-                #            dependency)
-                check_output([self.venv_wrapper, "pip", "install", "-r",
+                # NOTE(kun): Using develop mode installation is for running
+                #            multiple Tempest instances.
+                check_output([self.venv_wrapper,
+                              "pip", "install", "-r",
                               "requirements.txt", "-r",
                               "test-requirements.txt"], cwd=self.path())
-                check_output([self.venv_wrapper, "pip", "install",
-                              "-e", "./"], cwd=self.path())
             except subprocess.CalledProcessError:
                 if os.path.exists(self.path(".venv")):
                     shutil.rmtree(self.path(".venv"))
-                raise TempestSetupFailure(_("failed to install virtualenv"))
+                raise TempestSetupFailure(_("Failed to install virtualenv."))
 
     def is_configured(self):
         return os.path.isfile(self.config_file)
@@ -277,15 +271,17 @@ class Tempest(object):
                     if self.version:
                         cmd = ["git", "checkout", self.version]
                         subprocess.check_call(cmd, cwd=self.path("tempest"))
+                cmd = ["pip", "install", "--no-deps", "-e", "./"]
                 if not self._system_wide:
                     self._install_venv()
+                    cmd.insert(0, self.path("tools/with_venv.sh"))
+                check_output(cmd, cwd=self.path())
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
                 self.uninstall()
-                raise TempestSetupFailure("failed cmd: '%s'" % e.cmd)
+                raise TempestSetupFailure("Failed cmd: '%s'" % e.cmd)
             else:
                 LOG.info(_("Tempest has been successfully installed!"))
-
         else:
             LOG.info(_("Tempest is already installed."))
 
@@ -305,11 +301,13 @@ class Tempest(object):
                      os.path.basename(self.plugin_source.strip("/")))
         version = self.plugin_version or "master"
         cmd = ["pip", "install", "--no-deps",
-               "--src", self.path("plugins"), "-e",
+               "--src", self.path("plugins/system-wide"), "-e",
                "git+{0}@{1}#egg={2}".format(self.plugin_source, version, egg)]
         if not self._system_wide:
-            cmd.insert(0, self.path("tools/with_venv.sh"))
             cmd.remove("--no-deps")
+            cmd.remove(self.path("plugins/system-wide"))
+            cmd.insert(0, self.path("tools/with_venv.sh"))
+            cmd.insert(4, self.path("plugins"))
         check_output(cmd, cwd=self.path())
         LOG.info(_("Tempest plugin has been successfully installed!"))
 
@@ -319,6 +317,14 @@ class Tempest(object):
         if not self._system_wide:
             cmd.insert(0, self.path("tools/with_venv.sh"))
         return check_output(cmd, cwd=self.path(), print_debug_output=False)
+
+    def uninstall_plugin(self, repo_name):
+        """Uninstall Tempest plugin for local Tempest repo."""
+        repo_path = self.path("plugins/system-wide/%s" % repo_name)
+        if not self._system_wide:
+            repo_path = self.path("plugins/%s" % repo_name)
+        if os.path.exists(repo_path):
+            shutil.rmtree(repo_path)
 
     @logging.log_verification_wrapper(LOG.info, _("Run verification."))
     def _prepare_and_run(self, set_name, regex, tests_file,

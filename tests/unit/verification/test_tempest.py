@@ -109,9 +109,7 @@ class TempestUtilsTestCase(BaseTestCase):
                       cwd="/tmp"),
             mock.call(["/tmp/tools/with_venv.sh", "pip", "install", "-r",
                        "requirements.txt", "-r", "test-requirements.txt"],
-                      cwd="/tmp"),
-            mock.call(["/tmp/tools/with_venv.sh", "pip", "install",
-                       "-e", "./"], cwd="/tmp"),
+                      cwd="/tmp")
         ])
 
     @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
@@ -235,6 +233,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.base_repo")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._install_venv")
+    @mock.patch(TEMPEST_PATH + ".tempest.check_output")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
     @mock.patch("shutil.copytree")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._clone")
@@ -242,8 +241,8 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._is_git_repo",
                 return_value=False)
     def test_install_successful(self, mock_tempest__is_git_repo, mock_exists,
-                                mock_tempest__clone,
-                                mock_copytree, mock_check_call,
+                                mock_tempest__clone, mock_copytree,
+                                mock_check_call, mock_check_output,
                                 mock_tempest__install_venv,
                                 mock_tempest__initialize_testr,
                                 mock_tempest_base_repo):
@@ -349,6 +348,13 @@ class TempestInstallPluginsTestCase(BaseTestCase):
         cmd = [self.verifier.venv_wrapper, "tempest", "list-plugins"]
         mock_tempest_check_output.assert_called_with(
             cmd, cwd=self.verifier.path(), print_debug_output=False)
+
+    @mock.patch("shutil.rmtree")
+    @mock.patch("os.path.exists")
+    def test_uninstall_plugin(self, mock_exists, mock_rmtree):
+        self.verifier.uninstall_plugin("fake-plugin")
+        mock_rmtree.assert_called_once_with(
+            self.verifier.path("plugins/fake-plugin"))
 
 
 class TempestVerifyTestCase(BaseTestCase):
