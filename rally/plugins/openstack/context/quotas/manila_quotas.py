@@ -52,3 +52,8 @@ class ManilaQuotas(object):
 
     def delete(self, tenant_id):
         self.clients.manila().quotas.delete(tenant_id)
+
+    def get(self, tenant_id):
+        response = self.clients.manila().quotas.get(tenant_id)
+        return dict([(k, getattr(response, k))
+                     for k in self.QUOTAS_SCHEMA["properties"]])

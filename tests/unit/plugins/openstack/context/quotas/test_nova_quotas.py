@@ -14,18 +14,15 @@
 
 import mock
 
-from rally.plugins.openstack.context.quotas import nova_quotas as quotas
+from rally.plugins.openstack.context.quotas import nova_quotas
 from tests.unit import test
 
 
 class NovaQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_update(self, mock_clients):
-        nova_quotas = quotas.NovaQuotas(mock_clients)
-        tenant_id = mock.MagicMock()
-        quotas_values = {
+    def setUp(self):
+        super(NovaQuotasTestCase, self).setUp()
+        self.quotas = {
             "instances": 10,
             "cores": 100,
             "ram": 100000,
@@ -37,16 +34,32 @@ class NovaQuotasTestCase(test.TestCase):
             "injected_file_path_bytes": 1024,
             "key_pairs": 50,
             "security_groups": 50,
-            "security_group_rules": 50
+            "security_group_rules": 50,
+            "server_group_members": 777,
+            "server_groups": 33
         }
-        nova_quotas.update(tenant_id, **quotas_values)
-        mock_clients.nova().quotas.update.assert_called_once_with(
-            tenant_id, **quotas_values)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_delete(self, mock_clients):
-        nova_quotas = quotas.NovaQuotas(mock_clients)
+    def test_update(self):
+        clients = mock.MagicMock()
+        nova_quo = nova_quotas.NovaQuotas(clients)
         tenant_id = mock.MagicMock()
-        nova_quotas.delete(tenant_id)
-        mock_clients.nova().quotas.delete.assert_called_once_with(tenant_id)
+        nova_quo.update(tenant_id, **self.quotas)
+        clients.nova().quotas.update.assert_called_once_with(tenant_id,
+                                                             **self.quotas)
+
+    def test_delete(self):
+        clients = mock.MagicMock()
+        nova_quo = nova_quotas.NovaQuotas(clients)
+        tenant_id = mock.MagicMock()
+        nova_quo.delete(tenant_id)
+        clients.nova().quotas.delete.assert_called_once_with(tenant_id)
+
+    def test_get(self):
+        tenant_id = "tenant_id"
+        quota_set = mock.MagicMock(**self.quotas)
+        clients = mock.MagicMock()
+        clients.nova.return_value.quotas.get.return_value = quota_set
+        nova_quo = nova_quotas.NovaQuotas(clients)
+
+        self.assertEqual(self.quotas, nova_quo.get(tenant_id))
+        clients.nova().quotas.get.assert_called_once_with(tenant_id)

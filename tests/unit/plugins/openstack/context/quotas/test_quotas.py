@@ -20,10 +20,11 @@ import ddt
 import jsonschema
 import mock
 
+from rally.common import logging
 from rally.plugins.openstack.context.quotas import quotas
 from tests.unit import test
 
-QUOTAS_PATH = "rally.plugins.openstack.context.quotas."
+QUOTAS_PATH = "rally.plugins.openstack.context.quotas"
 
 
 @ddt.ddt
@@ -135,12 +136,14 @@ class QuotasTestCase(test.TestCase):
             except jsonschema.ValidationError:
                 self.fail("Valid quota keys are optional")
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.cinder_quotas.CinderQuotas")
-    def test_cinder_quotas(self, mock_cinder_quotas, mock_clients):
+    @mock.patch("%s.quotas.osclients.Clients" % QUOTAS_PATH)
+    @mock.patch("%s.cinder_quotas.CinderQuotas" % QUOTAS_PATH)
+    @ddt.data(True, False)
+    def test_cinder_quotas(self, ex_users, mock_cinder_quotas, mock_clients):
+        cinder_quo = mock_cinder_quotas.return_value
         ctx = copy.deepcopy(self.context)
+        if ex_users:
+            ctx["existing_users"] = None
         ctx["config"]["quotas"] = {
             "cinder": {
                 "volumes": self.unlimited,
@@ -151,29 +154,33 @@ class QuotasTestCase(test.TestCase):
 
         tenants = ctx["tenants"]
         cinder_quotas = ctx["config"]["quotas"]["cinder"]
+        cinder_quo.get.return_value = cinder_quotas
         with quotas.Quotas(ctx) as quotas_ctx:
             quotas_ctx.setup()
-            expected_setup_calls = []
-            for tenant in tenants:
-                expected_setup_calls.append(mock.call()
-                                                .update(tenant,
-                                                        **cinder_quotas))
-            mock_cinder_quotas.assert_has_calls(
-                expected_setup_calls, any_order=True)
+            if ex_users:
+                self.assertEqual([mock.call(tenant) for tenant in tenants],
+                                 cinder_quo.get.call_args_list)
+            self.assertEqual([mock.call(tenant, **cinder_quotas)
+                              for tenant in tenants],
+                             cinder_quo.update.call_args_list)
             mock_cinder_quotas.reset_mock()
 
-        expected_cleanup_calls = []
-        for tenant in tenants:
-            expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_cinder_quotas.assert_has_calls(
-            expected_cleanup_calls, any_order=True)
+        if ex_users:
+            self.assertEqual([mock.call(tenant, **cinder_quotas)
+                              for tenant in tenants],
+                             cinder_quo.update.call_args_list)
+        else:
+            self.assertEqual([mock.call(tenant) for tenant in tenants],
+                             cinder_quo.delete.call_args_list)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.nova_quotas.NovaQuotas")
-    def test_nova_quotas(self, mock_nova_quotas, mock_clients):
+    @mock.patch("%s.quotas.osclients.Clients" % QUOTAS_PATH)
+    @mock.patch("%s.nova_quotas.NovaQuotas" % QUOTAS_PATH)
+    @ddt.data(True, False)
+    def test_nova_quotas(self, ex_users, mock_nova_quotas, mock_clients):
+        nova_quo = mock_nova_quotas.return_value
         ctx = copy.deepcopy(self.context)
+        if ex_users:
+            ctx["existing_users"] = None
 
         ctx["config"]["quotas"] = {
             "nova": {
@@ -192,30 +199,35 @@ class QuotasTestCase(test.TestCase):
             }
         }
 
+        tenants = ctx["tenants"]
         nova_quotas = ctx["config"]["quotas"]["nova"]
+        nova_quo.get.return_value = nova_quotas
         with quotas.Quotas(ctx) as quotas_ctx:
             quotas_ctx.setup()
-            expected_setup_calls = []
-            for tenant in ctx["tenants"]:
-                expected_setup_calls.append(mock.call()
-                                                .update(tenant,
-                                                        **nova_quotas))
-            mock_nova_quotas.assert_has_calls(
-                expected_setup_calls, any_order=True)
+            if ex_users:
+                self.assertEqual([mock.call(tenant) for tenant in tenants],
+                                 nova_quo.get.call_args_list)
+            self.assertEqual([mock.call(tenant, **nova_quotas)
+                              for tenant in tenants],
+                             nova_quo.update.call_args_list)
             mock_nova_quotas.reset_mock()
 
-        expected_cleanup_calls = []
-        for tenant in ctx["tenants"]:
-            expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_nova_quotas.assert_has_calls(
-            expected_cleanup_calls, any_order=True)
+        if ex_users:
+            self.assertEqual([mock.call(tenant, **nova_quotas)
+                              for tenant in tenants],
+                             nova_quo.update.call_args_list)
+        else:
+            self.assertEqual([mock.call(tenant) for tenant in tenants],
+                             nova_quo.delete.call_args_list)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.neutron_quotas.NeutronQuotas")
-    def test_neutron_quotas(self, mock_neutron_quotas, mock_clients):
+    @mock.patch("%s.quotas.osclients.Clients" % QUOTAS_PATH)
+    @mock.patch("%s.neutron_quotas.NeutronQuotas" % QUOTAS_PATH)
+    @ddt.data(True, False)
+    def test_neutron_quotas(self, ex_users, mock_neutron_quotas, mock_clients):
+        neutron_quo = mock_neutron_quotas.return_value
         ctx = copy.deepcopy(self.context)
+        if ex_users:
+            ctx["existing_users"] = None
 
         ctx["config"]["quotas"] = {
             "neutron": {
@@ -229,23 +241,26 @@ class QuotasTestCase(test.TestCase):
             }
         }
 
+        tenants = ctx["tenants"]
         neutron_quotas = ctx["config"]["quotas"]["neutron"]
+        neutron_quo.get.return_value = neutron_quotas
         with quotas.Quotas(ctx) as quotas_ctx:
             quotas_ctx.setup()
-            expected_setup_calls = []
-            for tenant in ctx["tenants"]:
-                expected_setup_calls.append(mock.call()
-                                                .update(tenant,
-                                                        **neutron_quotas))
-            mock_neutron_quotas.assert_has_calls(
-                expected_setup_calls, any_order=True)
-            mock_neutron_quotas.reset_mock()
+            if ex_users:
+                self.assertEqual([mock.call(tenant) for tenant in tenants],
+                                 neutron_quo.get.call_args_list)
+            self.assertEqual([mock.call(tenant, **neutron_quotas)
+                              for tenant in tenants],
+                             neutron_quo.update.call_args_list)
+            neutron_quo.reset_mock()
 
-        expected_cleanup_calls = []
-        for tenant in ctx["tenants"]:
-            expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_neutron_quotas.assert_has_calls(
-            expected_cleanup_calls, any_order=True)
+        if ex_users:
+            self.assertEqual([mock.call(tenant, **neutron_quotas)
+                              for tenant in tenants],
+                             neutron_quo.update.call_args_list)
+        else:
+            self.assertEqual([mock.call(tenant) for tenant in tenants],
+                             neutron_quo.delete.call_args_list)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
@@ -285,15 +300,24 @@ class QuotasTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_exception_during_cleanup(self, quotas_ctxt, quotas_class_path):
-        with mock.patch(QUOTAS_PATH + quotas_class_path) as mock_quotas:
-            mock_quotas.delete.side_effect = type(
-                "ExceptionDuringCleanup", (Exception, ), {})
+        quotas_path = "%s.%s" % (QUOTAS_PATH, quotas_class_path)
+        with mock.patch(quotas_path) as mock_quotas:
+            mock_quotas.return_value.update.side_effect = Exception
 
             ctx = copy.deepcopy(self.context)
             ctx["config"]["quotas"] = quotas_ctxt
 
+            quotas_instance = quotas.Quotas(ctx)
+            quotas_instance.original_quotas = []
+            for service in quotas_ctxt:
+                for tenant in self.context["tenants"]:
+                    quotas_instance.original_quotas.append(
+                        (service, tenant, quotas_ctxt[service]))
             # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
-            quotas.Quotas(ctx).cleanup()
+            with logging.LogCatcher(quotas.LOG) as log:
+                quotas_instance.cleanup()
 
-            self.assertEqual(mock_quotas.return_value.delete.call_count,
+                log.assertInLogs("Failed to restore quotas for tenant")
+
+            self.assertEqual(mock_quotas.return_value.update.call_count,
                              len(self.context["tenants"]))
