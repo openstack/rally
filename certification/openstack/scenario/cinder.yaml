@@ -162,9 +162,7 @@
   CinderVolumes.create_nested_snapshots_and_attach_volume:
     -
       args:
-        nested_level:
-          max: 1
-          min: 1
+        nested_level: 1
         size:
           max: 1
           min: 1
