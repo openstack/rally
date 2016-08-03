@@ -567,7 +567,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_uuid = "97725f22-1cd2-46a5-8c62-3cdc36ed6d2a"
         self.verify.discover(deployment_uuid, "some_pattern")
         mock_verification_discover_tests.assert_called_once_with(
-            deployment_uuid, "some_pattern")
+            deployment_uuid, "some_pattern", False)
 
     @mock.patch("rally.api.Verification.show_config_info")
     def test_showconfig(self, mock_verification_show_config_info):

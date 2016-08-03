@@ -416,7 +416,9 @@ class Tempest(object):
 
         :param pattern: Test name pattern which can be used to match
         """
-        cmd = [self.venv_wrapper, "testr", "list-tests", pattern]
+        cmd = ["testr", "list-tests", pattern]
+        if not self._system_wide:
+            cmd.insert(0, self.path("tools/with_venv.sh"))
         raw_results = subprocess.Popen(
             cmd, cwd=self.path(), env=self.env,
             stdout=subprocess.PIPE).communicate()[0]

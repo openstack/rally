@@ -48,7 +48,7 @@ _rally()
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["verify_compare"]="--uuid-1 --uuid-2 --csv --html --json --output-file --threshold"
     OPTS["verify_detailed"]="--uuid --sort-by"
-    OPTS["verify_discover"]="--deployment --pattern"
+    OPTS["verify_discover"]="--deployment --pattern --system-wide"
     OPTS["verify_genconfig"]="--deployment --tempest-config --override"
     OPTS["verify_import"]="--deployment --set --file --no-use"
     OPTS["verify_install"]="--deployment --source --version --system-wide"

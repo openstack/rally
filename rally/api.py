@@ -541,14 +541,16 @@ class Verification(object):
         verifier.uninstall_plugin(repo_name)
 
     @classmethod
-    def discover_tests(cls, deployment, pattern=""):
+    def discover_tests(cls, deployment, pattern="", system_wide=False):
         """Get a list of discovered tests.
 
         :param deployment: UUID or name of a deployment
         :param pattern: Test name pattern which can be used to match
+        :param system_wide: Discover tests for system-wide or venv
+                            Tempest installation
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        verifier = tempest.Tempest(deployment_uuid)
+        verifier = tempest.Tempest(deployment_uuid, system_wide=system_wide)
 
         cls._check_tempest_tree_existence(verifier)
 
