@@ -685,7 +685,7 @@ class Senlin(OSClient):
                                   cacert_key="cert"))
 
 
-@configure("magnum", default_version="1",
+@configure("magnum", default_version="1", supported_versions=["1"],
            default_service_type="container-infra",)
 class Magnum(OSClient):
     def create_client(self, version=None, service_type=None):
@@ -693,10 +693,11 @@ class Magnum(OSClient):
         from magnumclient import client as magnum
 
         api_url = self._get_endpoint(service_type)
-        session = self._get_session(auth_url=api_url)[0]
+        session = self._get_session()[0]
         endpoint_type = self.credential.endpoint_type
 
-        return magnum.Client(session=session, interface=endpoint_type)
+        return magnum.Client(session=session, interface=endpoint_type,
+                             magnum_url=api_url)
 
 
 @configure("watcher", default_version="1", default_service_type="infra-optim",
