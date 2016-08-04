@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {%- if version %}
+  <meta name="generator" content="Rally version {{ version }}">
+  {%- endif %}
   <title>Rally | {% block title_text %}{% endblock %}</title>
   {% block libs %}{% endblock %}
   <script type="text/javascript">{% block js_before %}{% endblock %}</script>

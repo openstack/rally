@@ -21,6 +21,7 @@ import six
 
 from rally.common import objects
 from rally.common.plugin import plugin
+from rally.common import version
 from rally.task.processing import charts
 from rally.ui import utils as ui_utils
 
@@ -150,7 +151,9 @@ def plot(tasks_results, include_libs=False):
     extended_results = _extend_results(tasks_results)
     template = ui_utils.get_template("task/report.html")
     source, data = _process_tasks(extended_results)
-    return template.render(source=json.dumps(source), data=json.dumps(data),
+    return template.render(version=version.version_string(),
+                           source=json.dumps(source),
+                           data=json.dumps(data),
                            include_libs=include_libs)
 
 
@@ -159,7 +162,8 @@ def trends(tasks_results):
     for i, scenario in enumerate(_extend_results(tasks_results), 1):
         trends.add_result(scenario)
     template = ui_utils.get_template("task/trends.html")
-    return template.render(data=json.dumps(trends.get_data()))
+    return template.render(version=version.version_string(),
+                           data=json.dumps(trends.get_data()))
 
 
 class Trends(object):

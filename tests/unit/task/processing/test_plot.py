@@ -106,8 +106,9 @@ class PlotTestCase(test.TestCase):
     @mock.patch(PLOT + "_extend_results")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch(PLOT + "json.dumps", side_effect=lambda s: "json_" + s)
-    def test_plot(self, mock_dumps, mock_get_template, mock__extend_results,
-                  mock__process_tasks, **ddt_kwargs):
+    @mock.patch("rally.common.version.version_string", return_value="42.0")
+    def test_plot(self, mock_version_string, mock_dumps, mock_get_template,
+                  mock__extend_results, mock__process_tasks, **ddt_kwargs):
         mock__process_tasks.return_value = "source", "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
         mock__extend_results.return_value = ["extended_result"]
@@ -118,11 +119,11 @@ class PlotTestCase(test.TestCase):
         mock__process_tasks.assert_called_once_with(["extended_result"])
         if "include_libs" in ddt_kwargs:
             mock_get_template.return_value.render.assert_called_once_with(
-                data="json_scenarios", source="json_source",
+                version="42.0", data="json_scenarios", source="json_source",
                 include_libs=ddt_kwargs["include_libs"])
         else:
             mock_get_template.return_value.render.assert_called_once_with(
-                data="json_scenarios", source="json_source",
+                version="42.0", data="json_scenarios", source="json_source",
                 include_libs=False)
 
     @mock.patch(PLOT + "objects.Task.extend_results")
@@ -153,8 +154,9 @@ class PlotTestCase(test.TestCase):
     @mock.patch(PLOT + "Trends")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch(PLOT + "_extend_results")
-    def test_trends(self, mock__extend_results, mock_get_template,
-                    mock_trends):
+    @mock.patch("rally.common.version.version_string", return_value="42.0")
+    def test_trends(self, mock_version_string, mock__extend_results,
+                    mock_get_template, mock_trends):
         mock__extend_results.return_value = ["foo", "bar"]
         trends = mock.Mock()
         trends.get_data.return_value = ["foo", "bar"]
@@ -167,7 +169,8 @@ class PlotTestCase(test.TestCase):
         self.assertEqual([mock.call("foo"), mock.call("bar")],
                          trends.add_result.mock_calls)
         mock_get_template.assert_called_once_with("task/trends.html")
-        template.render.assert_called_once_with(data="[\"foo\", \"bar\"]")
+        template.render.assert_called_once_with(version="42.0",
+                                                data="[\"foo\", \"bar\"]")
 
 
 @ddt.ddt
