@@ -274,3 +274,47 @@ class IncrementComputationTestCase(test.TestCase):
 
         self.assertEqual(single_inc._count, merged_inc._count)
         self.assertEqual(single_inc.result(), merged_inc.result())
+
+
+@ddt.ddt
+class DegradationComputationTestCase(test.TestCase):
+
+    @ddt.data(
+        ([], None, None, 0.0),
+        ([30.0, 30.0, 30.0, 30.0], 30.0, 30.0, 0.0),
+        ([45.0, 45.0, 45.0, 30.0], 30.0, 45.0, 50.0),
+        ([15.0, 10.0, 20.0, 19.0], 10.0, 20.0, 100.0),
+        ([30.0, 56.0, 90.0, 73.0], 30.0, 90.0, 200.0))
+    @ddt.unpack
+    def test_add(self, stream, min_value, max_value, result):
+        comp = algo.DegradationComputation()
+        for value in stream:
+            comp.add(value)
+        self.assertEqual(min_value, comp.min_value.result())
+        self.assertEqual(max_value, comp.max_value.result())
+        self.assertEqual(result, comp.result())
+
+    @ddt.data(-10.0, -1.0, -1, 0.0, 0)
+    def test_add_raise(self, value):
+        comp = algo.DegradationComputation()
+        self.assertRaises(ValueError, comp.add, value)
+
+    @ddt.data(([39.0, 30.0, 32.0], [49.0, 40.0, 51.0], 30.0, 51.0, 70.0),
+              ([31.0, 30.0, 32.0], [39.0, 45.0, 43.0], 30.0, 45.0, 50.0),
+              ([], [31.0, 30.0, 45.0], 30.0, 45.0, 50.0),
+              ([31.0, 30.0, 45.0], [], 30.0, 45.0, 50.0),
+              ([], [], None, None, 0.0))
+    @ddt.unpack
+    def test_merge(self, stream1, stream2, min_value, max_value, result):
+        comp1 = algo.DegradationComputation()
+        for value in stream1:
+            comp1.add(value)
+
+        comp2 = algo.DegradationComputation()
+        for value in stream2:
+            comp2.add(value)
+
+        comp1.merge(comp2)
+        self.assertEqual(min_value, comp1.min_value.result())
+        self.assertEqual(max_value, comp1.max_value.result())
+        self.assertEqual(result, comp1.result())

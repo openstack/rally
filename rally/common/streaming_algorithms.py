@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import division
+
 import abc
 import math
 
@@ -204,3 +206,36 @@ class IncrementComputation(StreamingAlgorithm):
 
     def result(self):
         return self._count
+
+
+class DegradationComputation(StreamingAlgorithm):
+    """Calculates degradation from a stream of numbers
+
+    Finds min and max values from a stream and then calculates
+    ratio between them in percentage. Works only with positive numbers.
+    """
+
+    def __init__(self):
+        self.min_value = MinComputation()
+        self.max_value = MaxComputation()
+
+    def add(self, value):
+        if value <= 0.0:
+            raise ValueError("Unexpected value: %s" % value)
+        self.min_value.add(value)
+        self.max_value.add(value)
+
+    def merge(self, other):
+        min_result = other.min_value.result()
+        if min_result is not None:
+            self.min_value.add(min_result)
+        max_result = other.max_value.result()
+        if max_result is not None:
+            self.max_value.add(max_result)
+
+    def result(self):
+        min_result = self.min_value.result()
+        max_result = self.max_value.result()
+        if min_result is None or max_result is None:
+            return 0.0
+        return (max_result / min_result - 1) * 100.0
