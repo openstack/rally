@@ -53,8 +53,7 @@ from rally.common.i18n import _
 CONF = cfg.CONF
 
 
-db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite",
-                        sqlite_db="rally.sqlite")
+db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite")
 
 
 IMPL = None
