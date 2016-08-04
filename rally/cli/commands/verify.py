@@ -546,14 +546,20 @@ class VerifyCommands(object):
     @cliutils.args("--pattern", dest="pattern", type=str,
                    required=False, metavar="<pattern>",
                    help="Test name pattern which can be used to match")
+    @cliutils.args("--system-wide", dest="system_wide",
+                   help="Discover tests for system-wide Tempest installation",
+                   required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def discover(self, deployment=None, pattern=""):
+    def discover(self, deployment=None, pattern="", system_wide=False):
         """Show a list of discovered tests.
 
         :param deployment: UUID or name of a deployment
         :param pattern: Test name pattern which can be used to match
+        :param system_wide: Discover tests for system-wide or venv
+                            Tempest installation
         """
-        discovered_tests = api.Verification.discover_tests(deployment, pattern)
+        discovered_tests = api.Verification.discover_tests(deployment, pattern,
+                                                           system_wide)
         p_str = (_(" matching pattern '%s'") % pattern) if pattern else ""
         if discovered_tests:
             print(_("Discovered tests%s:\n") % p_str)
@@ -567,7 +573,7 @@ class VerifyCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def showconfig(self, deployment=None):
-        """Show configuration file of Tempest.
+        """Show Tempest configuration file.
 
         :param deployment: UUID or name of a deployment
         """
