@@ -756,6 +756,39 @@ class FuelEnvironmentTestCase(test.TestCase):
         self.assertEqual(envs[:-1], fres.list())
 
 
+class SenlinMixinTestCase(test.TestCase):
+
+    def test__manager(self):
+        senlin = resources.SenlinMixin()
+        senlin._service = "senlin"
+        senlin.user = mock.MagicMock()
+        self.assertEqual(senlin.user.senlin.return_value, senlin._manager())
+
+    def test_list(self):
+        senlin = resources.SenlinMixin()
+        senlin._service = "senlin"
+        senlin.user = mock.MagicMock()
+        senlin._resource = "some_resources"
+
+        some_resources = [{"name": "resource1"}, {"name": "resource2"}]
+        senlin.user.senlin().some_resources.return_value = some_resources
+
+        self.assertEqual(some_resources, senlin.list())
+        senlin.user.senlin().some_resources.assert_called_once_with()
+
+    def test_delete(self):
+        senlin = resources.SenlinMixin()
+        senlin._service = "senlin"
+        senlin.user = mock.MagicMock()
+        senlin._resource = "some_resources"
+        senlin.id = "TEST_ID"
+        senlin.user.senlin().delete_some_resource.return_value = None
+
+        senlin.delete()
+        senlin.user.senlin().delete_some_resource.assert_called_once_with(
+            "TEST_ID")
+
+
 class WatcherTemplateTestCase(test.TestCase):
 
     def test_id(self):

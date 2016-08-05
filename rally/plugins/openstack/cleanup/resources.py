@@ -74,6 +74,37 @@ class HeatStack(base.ResourceManager):
         return self.raw_resource.stack_name
 
 
+# SENLIN
+
+_senlin_order = get_order(150)
+
+
+@base.resource(service=None, resource=None, admin_required=True)
+class SenlinMixin(base.ResourceManager):
+
+    def _manager(self):
+        client = self._admin_required and self.admin or self.user
+        return getattr(client, self._service)()
+
+    def list(self):
+        return getattr(self._manager(), self._resource)()
+
+    def delete(self):
+        # make singular form of resource name from plural form
+        res_name = self._resource[:-1]
+        return getattr(self._manager(), "delete_%s" % res_name)(self.id)
+
+
+@base.resource("senlin", "clusters", order=next(_senlin_order))
+class SenlinCluster(SenlinMixin):
+    """Resource class for Senlin Cluster."""
+
+
+@base.resource("senlin", "profiles", order=next(_senlin_order))
+class SenlinProfile(SenlinMixin):
+    """Resource class for Senlin Profile."""
+
+
 # NOVA
 
 _nova_order = get_order(200)

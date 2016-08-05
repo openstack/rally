@@ -208,6 +208,17 @@ class Cinder(ResourceManager):
             search_opts={"all_tenants": True})
 
 
+class Senlin(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.SENLIN
+
+    def list_clusters(self):
+        return self.client.clusters()
+
+    def list_profiles(self):
+        return self.client.profiles()
+
+
 class Watcher(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.WATCHER
