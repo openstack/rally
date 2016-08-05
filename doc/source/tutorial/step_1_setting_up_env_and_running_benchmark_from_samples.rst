@@ -225,7 +225,7 @@ By navigating in the left panel, you can switch to the detailed view of the benc
 .. image:: ../images/Report-Scenario-Overview.png
    :align: center
 
-This page, along with the description of the success criteria used to check the outcome of this scenario, shows some more detailed information and statistics about the duration of its iterations. Now, the *"Total durations"* table splits the duration of our scenario into the so-called **"atomic actions"**: in our case, the **"boot_and_delete_server"** scenario consists of two actions - **"boot_server"** and **"delete_server"**. You can also see how the scenario duration changed throughout is iterations in the *"Charts for the total duration"* section. Similar charts, but with atomic actions detalization, will arise if you switch to the *"Details"* tab of this page:
+This page, along with the description of the success criteria used to check the outcome of this scenario, shows more detailed information and statistics about the duration of its iterations. Now, the *"Total durations"* table splits the duration of our scenario into the so-called **"atomic actions"**: in our case, the **"boot_and_delete_server"** scenario consists of two actions - **"boot_server"** and **"delete_server"**. You can also see how the scenario duration changed throughout its iterations in the *"Charts for the total duration"* section. Similar charts, but with atomic actions detailed are on the *"Details"* tab of this page:
 
 .. image:: ../images/Report-Scenario-Atomic.png
    :align: center
