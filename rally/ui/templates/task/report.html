@@ -73,6 +73,12 @@
 
       $scope.route = function(uri) {
         if (! $scope.scenarios_map) { return }
+
+        // Expand menu if there is only one menu group
+        if ($scope.nav.length === 1) {
+          $scope.nav_idx = $scope.nav[0].idx;
+        }
+
         if (uri.path in $scope.scenarios_map) {
           $scope.view = {is_scenario:true};
           $scope.scenario = $scope.scenarios_map[uri.path];
