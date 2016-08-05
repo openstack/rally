@@ -122,41 +122,35 @@ class ValidatorsTestCase(test.TestCase):
         mock__file_access_ok.assert_called_once_with(
             "test_file", os.R_OK, "p", False)
 
-    def test_check_command_valid(self):
-
-        e = self.assertRaises(
-            ValueError, validation.check_command_dict,
-            {
-                "interpreter": "foobar", "script_file": "foo",
-                "script_inline": "bar"
-            })
-        self.assertIn("Exactly one of ", str(e))
-
-        e = self.assertRaises(
-            ValueError, validation.check_command_dict,
-            {"script_file": "foobar"})
-        self.assertIn("Supplied dict specifies no", str(e))
-
-        command = {"script_inline": "foobar", "interpreter": "foo"}
-        result = validation.check_command_dict(command)
-        self.assertIsNone(result)
-
-        e = self.assertRaises(
-            ValueError, validation.check_command_dict,
-            {
-                "script_inline": "foobar",
-                "interpreter": "foo",
-                "local_path": "bar"
-            })
-        self.assertIn("When uploading an interpreter its path", str(e))
-
-        result = validation.check_command_dict({
-            "script_inline": "foobar",
-            "interpreter": ["ENV=bar", "/bin/foo"],
-            "local_path": "bar",
-            "remote_path": "/bin/foo"
-        })
-        self.assertIsNone(result)
+    @ddt.data({"raises_message": "Command must be a dictionary"},
+              {"command": "foo",
+               "raises_message": "Command must be a dictionary"},
+              {"command": {"interpreter": "foobar", "script_file": "foo",
+                           "script_inline": "bar"},
+               "raises_message": "Exactly one of "},
+              {"command": {"script_file": "foobar"},
+               "raises_message": "Supplied dict specifies no"},
+              {"command": {"script_inline": "foobar",
+                           "interpreter": "foo",
+                           "local_path": "bar"},
+               "raises_message": "When uploading an interpreter its path"},
+              {"command": {"interpreter": "/bin/bash",
+                           "script_path": "foo"},
+               "raises_message": ("Unexpected command parameters: "
+                                  "script_path")},
+              {"command": {"script_inline": "foobar",
+                           "interpreter": ["ENV=bar", "/bin/foo"],
+                           "local_path": "bar",
+                           "remote_path": "/bin/foo"}},
+              {"command": {"script_inline": "foobar", "interpreter": "foo"}})
+    @ddt.unpack
+    def test_check_command_dict(self, command=None, raises_message=None):
+        if raises_message:
+            e = self.assertRaises(
+                ValueError, validation.check_command_dict, command)
+            self.assertIn(raises_message, str(e))
+        else:
+            self.assertIsNone(validation.check_command_dict(command))
 
     @mock.patch("rally.task.validation._file_access_ok")
     def test_valid_command(self, mock__file_access_ok):
@@ -170,6 +164,12 @@ class ValidatorsTestCase(test.TestCase):
         mock__file_access_ok.assert_called_once_with(
             filename="foobar", mode=os.R_OK, param_name="p.script_file",
             required=True)
+
+    def test_valid_command_not_required(self):
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p", required=False)
+        result = validator({"args": {"p": None}}, None, None)
+        self.assertTrue(result.is_valid)
 
     def test_valid_command_required(self):
         validator = self._unwrap_validator(validation.valid_command,

@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os.path
 import subprocess
 import sys
 
@@ -28,7 +29,6 @@ from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
 from rally.task import utils
-from rally.task import validation
 
 LOG = logging.getLogger(__name__)
 
@@ -113,33 +113,36 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
 
         :returns: tuple (exit_status, stdout, stderr)
         """
-        validation.check_command_dict(command)
+        cmd, stdin = [], None
 
-        # NOTE(pboldin): Here we `get' the values and not check for the keys
-        # due to template-driven configuration generation that can leave keys
-        # defined but values empty.
-        if command.get("script_file") or command.get("script_inline"):
-            cmd = command["interpreter"]
-            if command.get("script_file"):
-                stdin = open(command["script_file"], "rb")
-            elif command.get("script_inline"):
-                stdin = six.moves.StringIO(command["script_inline"])
-        elif command.get("remote_path"):
-            cmd = command["remote_path"]
-            stdin = None
+        interpreter = command.get("interpreter") or []
+        if interpreter:
+            if isinstance(interpreter, six.string_types):
+                interpreter = [interpreter]
+            elif type(interpreter) != list:
+                raise ValueError("command 'interpreter' value must be str "
+                                 "or list type")
+            cmd.extend(interpreter)
 
-        if command.get("local_path"):
-            remote_path = cmd[-1] if isinstance(cmd, (tuple, list)) else cmd
-            ssh.put_file(command["local_path"], remote_path,
-                         mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
+        remote_path = command.get("remote_path") or []
+        if remote_path:
+            if isinstance(remote_path, six.string_types):
+                remote_path = [remote_path]
+            elif type(remote_path) != list:
+                raise ValueError("command 'remote_path' value must be str "
+                                 "or list type")
+            cmd.extend(remote_path)
+            if command.get("local_path"):
+                ssh.put_file(command["local_path"], remote_path[-1],
+                             mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
 
-        if command.get("command_args"):
-            if not isinstance(cmd, (list, tuple)):
-                cmd = [cmd]
-            # NOTE(pboldin): `ssh.execute' accepts either a string interpreted
-            # as a command name or the list of strings that are converted into
-            # single-line command with arguments.
-            cmd = cmd + list(command["command_args"])
+        if command.get("script_file"):
+            stdin = open(os.path.expanduser(command["script_file"]), "rb")
+
+        elif command.get("script_inline"):
+            stdin = six.moves.StringIO(command["script_inline"])
+
+        cmd.extend(command.get("command_args") or [])
 
         return ssh.execute(cmd, stdin=stdin)
 

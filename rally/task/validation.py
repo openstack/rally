@@ -171,13 +171,15 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
 def check_command_dict(command):
     """Check command-specifying dict `command', raise ValueError on error."""
 
+    if type(command) != dict:
+        raise ValueError("Command must be a dictionary")
+
     # NOTE(pboldin): Here we check for the values not for presence of the keys
     # due to template-driven configuration generation that can leave keys
     # defined but values empty.
     if command.get("interpreter"):
         script_file = command.get("script_file")
         if script_file:
-            command["script_file"] = os.path.expanduser(script_file)
             if "script_inline" in command:
                 raise ValueError(
                     "Exactly one of script_inline or script_file with "
@@ -198,6 +200,13 @@ def check_command_dict(command):
             "Supplied dict specifies no command to execute,"
             " either interpreter or remote_path is required: %r" % command)
 
+    unexpected_keys = set(command) - set(["script_file", "script_inline",
+                                          "interpreter", "remote_path",
+                                          "local_path", "command_args"])
+    if unexpected_keys:
+        raise ValueError(
+            "Unexpected command parameters: %s" % ", ".join(unexpected_keys))
+
 
 @validator
 def valid_command(config, clients, deployment, param_name, required=True):
@@ -209,13 +218,13 @@ def valid_command(config, clients, deployment, param_name, required=True):
     :param param_name: Name of parameter to validate
     :param required: Boolean indicating that the command dictionary is required
     """
-    # TODO(pboldin): Make that a `jsonschema' check once generic validator
-    # is available.
+    # TODO(amaretskiy): rework this validator into ResourceType, so this
+    #                   will allow to validate parameters values as well
 
     command = config.get("args", {}).get(param_name)
-    if command is None:
-        return ValidationResult(not required,
-                                "Command dictionary is required")
+    if command is None and not required:
+        return ValidationResult(True)
+
     try:
         check_command_dict(command)
     except ValueError as e:
