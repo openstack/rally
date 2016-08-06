@@ -58,7 +58,7 @@ class MuranoEnvironments(utils.MuranoScenario):
         session = self._create_session(environment.id)
         package = self.context["tenant"]["packages"][0]
 
-        with atomic.ActionTimer(self, "murano.create_service"):
+        with atomic.ActionTimer(self, "murano.create_services"):
             for i in range(packages_per_env):
                 self._create_service(environment, session,
                                      package.fully_qualified_name,
