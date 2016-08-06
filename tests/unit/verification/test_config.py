@@ -19,6 +19,7 @@ import ddt
 import mock
 from oslo_config import cfg
 import requests
+import six
 from six.moves.urllib import parse
 
 from rally import exceptions
@@ -95,35 +96,17 @@ class TempestConfigTestCase(test.TestCase):
         self.assertEqual(
             self.tempest_conf._get_service_url("test_service"), "test_url")
 
-    @mock.patch("rally.verification.tempest.config."
-                "TempestConfig._get_service_url", return_value="test_url")
-    def test__configure_boto(self, mock__get_service_url):
-        self.tempest_conf._configure_boto()
+    def test__configure_auth(self):
+        self.tempest_conf._configure_auth()
 
-        expected = (("ec2_url", "test_url"),
-                    ("s3_url", "test_url"),
-                    ("http_socket_timeout", "30"),
-                    ("s3_materials_path", os.path.join(
-                        self.tempest_conf.data_dir, "s3materials")))
-        result = self.tempest_conf.conf.items("boto")
+        expected = (
+            ("admin_username", CREDS["admin"]["username"]),
+            ("admin_password", CREDS["admin"]["password"]),
+            ("admin_project_name", CREDS["admin"]["tenant_name"]),
+            ("admin_domain_name", CREDS["admin"]["admin_domain_name"]))
+        result = self.tempest_conf.conf.items("auth")
         for item in expected:
             self.assertIn(item, result)
-
-    def test__configure_default(self):
-        self.tempest_conf._configure_default()
-
-        expected = (("debug", "True"),
-                    ("log_file", "tempest.log"),
-                    ("use_stderr", "False"))
-        results = self.tempest_conf.conf.items("DEFAULT")
-        self.assertEqual(sorted(expected), sorted(results))
-
-    def test__configure_dashboard(self):
-        self.tempest_conf._configure_dashboard()
-        url = "http://%s/" % parse.urlparse(
-            CREDS["admin"]["auth_url"]).hostname
-        self.assertEqual(
-            self.tempest_conf.conf.get("dashboard", "dashboard_url"), url)
 
     @ddt.data("data_processing", "data-processing")
     def test__configure_data_processing(self, service_type):
@@ -140,13 +123,6 @@ class TempestConfigTestCase(test.TestCase):
         self.tempest_conf._configure_identity()
 
         expected = (
-            ("username", CREDS["admin"]["username"]),
-            ("password", CREDS["admin"]["password"]),
-            ("tenant_name", CREDS["admin"]["tenant_name"]),
-            ("admin_username", CREDS["admin"]["username"]),
-            ("admin_password", CREDS["admin"]["password"]),
-            ("admin_tenant_name", CREDS["admin"]["username"]),
-            ("admin_domain_name", CREDS["admin"]["admin_domain_name"]),
             ("region", CREDS["admin"]["region_name"]),
             ("auth_version", "v2"),
             ("uri", CREDS["admin"]["auth_url"][:-1]),
@@ -184,11 +160,11 @@ class TempestConfigTestCase(test.TestCase):
 
         self.tempest_conf._configure_network()
 
-        expected = (("network_for_ssh", "fake-network"),
-                    ("fixed_network_name", "fake-network"))
-        result = self.tempest_conf.conf.items("compute")
-        for item in expected:
-            self.assertIn(item, result)
+        expected = {"compute": ("fixed_network_name", "fake-network"),
+                    "validation": ("network_for_ssh", "fake-network")}
+        for section, option in six.iteritems(expected):
+            result = self.tempest_conf.conf.items(section)
+            self.assertIn(option, result)
 
     @ddt.data({}, {"version": "4.1.0", "args": ("extensions", "/extensions"),
                    "kwargs": {"retrieve_all": True}})
@@ -256,45 +232,17 @@ class TempestConfigTestCase(test.TestCase):
             self.assertIn(item, result)
 
     def test__configure_service_available(self):
-        available_services = ("aodh", "nova", "cinder", "glance", "sahara")
+        available_services = ("nova", "cinder", "glance", "sahara")
         self.tempest_conf.available_services = available_services
         self.tempest_conf._configure_service_available()
 
         expected = (
             ("neutron", "False"), ("heat", "False"), ("nova", "True"),
             ("swift", "False"), ("cinder", "True"), ("sahara", "True"),
-            ("glance", "True"), ("ceilometer", "False"), ("aodh", "True"))
+            ("glance", "True"))
         result = self.tempest_conf.conf.items("service_available")
         for item in expected:
             self.assertIn(item, result)
-
-    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
-    def test__configure_horizon_available(self, mock_get):
-        self.tempest_conf._configure_horizon_available()
-
-        expected_horizon_url = "http://test"
-        expected_timeout = CONF.openstack_client_http_timeout
-        mock_get.assert_called_once_with(expected_horizon_url,
-                                         timeout=expected_timeout)
-        self.assertEqual(
-            self.tempest_conf.conf.get(
-                "service_available", "horizon"), "True")
-
-    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=404))
-    def test__configure_horizon_not_available(
-            self, mock_get):
-        self.tempest_conf._configure_horizon_available()
-        self.assertEqual(
-            self.tempest_conf.conf.get(
-                "service_available", "horizon"), "False")
-
-    @mock.patch("requests.get", side_effect=requests.Timeout())
-    def test__configure_service_available_horizon_request_timeout(
-            self, mock_get):
-        self.tempest_conf._configure_horizon_available()
-        self.assertEqual(
-            self.tempest_conf.conf.get(
-                "service_available", "horizon"), "False")
 
     @ddt.data({}, {"service": "neutron", "connect_method": "floating"})
     @ddt.unpack

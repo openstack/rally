@@ -187,21 +187,15 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             if s_name == service_name:
                 return s_type
 
-    def _configure_boto(self, section_name="boto"):
-        self.conf.set(section_name, "ec2_url", self._get_service_url("ec2"))
-        self.conf.set(section_name, "s3_url", self._get_service_url("s3"))
-        self.conf.set(section_name, "s3_materials_path",
-                      os.path.join(self.data_dir, "s3materials"))
-        # TODO(olkonami): find out how can we get ami, ari, aki manifest files
-
-    def _configure_default(self, section_name="DEFAULT"):
-        # Nothing to configure in this section for now
-        pass
-
-    def _configure_dashboard(self, section_name="dashboard"):
-        url = "http://%s/" % parse.urlparse(
-            self.credential["auth_url"]).hostname
-        self.conf.set(section_name, "dashboard_url", url)
+    def _configure_auth(self, section_name="auth"):
+        self.conf.set(section_name, "admin_username",
+                      self.credential["username"])
+        self.conf.set(section_name, "admin_password",
+                      self.credential["password"])
+        self.conf.set(section_name, "admin_project_name",
+                      self.credential["tenant_name"])
+        self.conf.set(section_name, "admin_domain_name",
+                      self.credential["admin_domain_name"])
 
     # Sahara has two service types: 'data_processing' and 'data-processing'.
     # 'data_processing' is deprecated, but it can be used in previous OpenStack
@@ -213,18 +207,6 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
                           self._get_service_type_by_service_name("sahara"))
 
     def _configure_identity(self, section_name="identity"):
-        self.conf.set(section_name, "username", self.credential["username"])
-        self.conf.set(section_name, "password", self.credential["password"])
-        self.conf.set(section_name, "tenant_name",
-                      self.credential["tenant_name"])
-
-        self.conf.set(section_name, "admin_username",
-                      self.credential["username"])
-        self.conf.set(section_name, "admin_password",
-                      self.credential["password"])
-        self.conf.set(section_name, "admin_tenant_name",
-                      self.credential["tenant_name"])
-
         self.conf.set(section_name, "region",
                       self.credential["region_name"])
 
@@ -240,9 +222,6 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "uri", auth_url_v2)
         self.conf.set(section_name, "uri_v3",
                       auth_url_v2.replace("/v2.0", "/v3"))
-
-        self.conf.set(section_name, "admin_domain_name",
-                      self.credential["admin_domain_name"])
 
         self.conf.set(section_name, "disable_ssl_certificate_validation",
                       str(self.credential["https_insecure"]))
@@ -268,7 +247,7 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             net_name = next(net.human_id for net in novaclient.networks.list()
                             if net.human_id is not None)
             self.conf.set("compute", "fixed_network_name", net_name)
-            self.conf.set("compute", "network_for_ssh", net_name)
+            self.conf.set("validation", "network_for_ssh", net_name)
 
     def _configure_network_feature_enabled(
             self, section_name="network-feature-enabled"):
@@ -307,29 +286,13 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "img_file", self.image_name)
 
     def _configure_service_available(self, section_name="service_available"):
-        services = ["aodh", "ceilometer", "cinder", "glance", "heat",
-                    "ironic", "neutron", "nova", "sahara", "swift"]
+        services = ["cinder", "glance", "heat", "ironic", "neutron", "nova",
+                    "sahara", "swift"]
         for service in services:
             # Convert boolean to string because ConfigParser fails
             # on attempt to get option with boolean value
             self.conf.set(section_name, service,
                           str(service in self.available_services))
-
-    def _configure_horizon_available(self, section_name="service_available"):
-        horizon_url = ("http://" +
-                       parse.urlparse(self.credential["auth_url"]).hostname)
-        try:
-            horizon_req = requests.get(
-                horizon_url,
-                timeout=CONF.openstack_client_http_timeout)
-        except requests.RequestException as e:
-            LOG.debug("Failed to connect to Horizon: %s" % e)
-            horizon_availability = False
-        else:
-            horizon_availability = (horizon_req.status_code == 200)
-        # Convert boolean to string because ConfigParser fails
-        # on attempt to get option with boolean value
-        self.conf.set(section_name, "horizon", str(horizon_availability))
 
     def _configure_validation(self, section_name="validation"):
         if "neutron" in self.available_services:
