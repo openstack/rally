@@ -443,7 +443,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_id = "14377d10-ca77-4104-aba8-36edebcfc120"
         self.verify.genconfig(deployment_id)
         mock_verification_configure_tempest.assert_called_once_with(
-            deployment_id, None, False)
+            deployment_id, None, None, False)
 
     @mock.patch("rally.api.Verification.configure_tempest")
     def test_genconfig_with_config_specified(
@@ -452,7 +452,19 @@ class VerifyCommandsTestCase(test.TestCase):
         tempest_conf = "/tmp/tempest.conf"
         self.verify.genconfig(deployment_id, tempest_config=tempest_conf)
         mock_verification_configure_tempest.assert_called_once_with(
-            deployment_id, tempest_conf, False)
+            deployment_id, tempest_conf, None, False)
+
+    @mock.patch("rally.api.Verification.configure_tempest")
+    @mock.patch("six.moves.configparser.ConfigParser")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_genconfig_with_extra_conf_path_specified(
+            self, mock_exists, mock_config_parser,
+            mock_verification_configure_tempest):
+        deployment_id = "68b501af-a553-431c-83ac-30f93a112231"
+        extra_conf_path = "/tmp/extra.conf"
+        self.verify.genconfig(deployment_id, extra_conf_path=extra_conf_path)
+        mock_verification_configure_tempest.assert_called_once_with(
+            deployment_id, None, mock_config_parser(), False)
 
     @mock.patch("rally.api.Verification.configure_tempest")
     def test_genconfig_override_config(
@@ -460,17 +472,21 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_id = "cd5b64ad-c12f-4781-a89e-95535b145a11"
         self.verify.genconfig(deployment_id, override=True)
         mock_verification_configure_tempest.assert_called_once_with(
-            deployment_id, None, True)
+            deployment_id, None, None, True)
 
     @mock.patch("rally.api.Verification.configure_tempest")
-    def test_genconfig_with_config_specified_and_override_config(
-            self, mock_verification_configure_tempest):
+    @mock.patch("six.moves.configparser.ConfigParser")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_genconfig_with_all_args_specified(
+            self, mock_exists, mock_config_parser,
+            mock_verification_configure_tempest):
         deployment_id = "89982aba-efef-48cb-8d94-ca893b4e78a6"
-        tempest_conf = "/tmp/tempest.conf"
-        self.verify.genconfig(deployment_id,
-                              tempest_config=tempest_conf, override=True)
+        tempest_conf_path = "/tmp/tempest.conf"
+        extra_conf_path = "/tmp/extra-tempest.conf"
+        self.verify.genconfig(deployment_id, tempest_config=tempest_conf_path,
+                              extra_conf_path=extra_conf_path, override=True)
         mock_verification_configure_tempest.assert_called_once_with(
-            deployment_id, tempest_conf, True)
+            deployment_id, tempest_conf_path, mock_config_parser(), True)
 
     @mock.patch("rally.api.Verification.install_tempest")
     def test_install(self, mock_verification_install_tempest):
