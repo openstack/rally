@@ -20,6 +20,7 @@ import multiprocessing
 import time
 
 import jsonschema
+import six
 
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -99,6 +100,7 @@ def _log_worker_info(**info):
 
 
 @plugin.base()
+@six.add_metaclass(abc.ABCMeta)
 class ScenarioRunner(plugin.Plugin):
     """Base class for all scenario runners.
 

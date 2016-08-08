@@ -52,6 +52,7 @@ def configure(name, order, hidden=False):
 
 
 @plugin.base()
+@six.add_metaclass(abc.ABCMeta)
 class Context(plugin.Plugin, functional.FunctionalMixin,
               utils.RandomNameGeneratorMixin):
     """This class is a factory for context classes.

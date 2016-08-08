@@ -18,6 +18,8 @@ import copy
 import operator
 import re
 
+import six
+
 from rally.common.plugin import plugin
 from rally import exceptions
 from rally import osclients
@@ -99,6 +101,7 @@ def preprocess(name, context, args):
 
 
 @plugin.base()
+@six.add_metaclass(abc.ABCMeta)
 class ResourceType(plugin.Plugin):
 
     @classmethod
