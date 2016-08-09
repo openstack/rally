@@ -41,7 +41,7 @@ class TempestSetupFailure(exceptions.RallyException):
 
 
 def check_output(*args, **kwargs):
-    print_debug_output = kwargs.pop("print_debug_output", True)
+    debug = kwargs.pop("debug", True)
     kwargs["stderr"] = subprocess.STDOUT
     try:
         output = subprocess.check_output(*args, **kwargs)
@@ -50,8 +50,9 @@ def check_output(*args, **kwargs):
         LOG.error("Error output: '%s'" % encodeutils.safe_decode(e.output))
         raise
 
-    if print_debug_output:
+    if debug:
         LOG.debug("Subprocess output: '%s'" % encodeutils.safe_decode(output))
+
     return output
 
 
@@ -193,10 +194,8 @@ class Tempest(object):
                              cwd=self.path())
                 # NOTE(kun): Using develop mode installation is for running
                 #            multiple Tempest instances.
-                check_output([self.venv_wrapper,
-                              "pip", "install", "-r",
-                              "requirements.txt", "-r",
-                              "test-requirements.txt"], cwd=self.path())
+                check_output([self.venv_wrapper, "pip", "install", "-e", "./"],
+                             cwd=self.path())
             except subprocess.CalledProcessError:
                 if os.path.exists(self.path(".venv")):
                     shutil.rmtree(self.path(".venv"))
@@ -268,14 +267,14 @@ class Tempest(object):
                     if not self._is_git_repo(self.base_repo):
                         self._clone()
                     shutil.copytree(self.base_repo, self.path())
-                    if self.version:
-                        cmd = ["git", "checkout", self.version]
-                        subprocess.check_call(cmd, cwd=self.path("tempest"))
-                cmd = ["pip", "install", "--no-deps", "-e", "./"]
+
+                if self.version:
+                    check_output(["git", "checkout", self.version],
+                                 cwd=self.path())
+
                 if not self._system_wide:
                     self._install_venv()
-                    cmd.insert(0, self.path("tools/with_venv.sh"))
-                check_output(cmd, cwd=self.path())
+
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
                 self.uninstall()
@@ -313,10 +312,18 @@ class Tempest(object):
 
     def list_plugins(self):
         """List all installed Tempest plugins for local Tempest repo."""
-        cmd = ["tempest", "list-plugins"]
+        cmd_list_plugins = ["tempest", "list-plugins"]
         if not self._system_wide:
-            cmd.insert(0, self.path("tools/with_venv.sh"))
-        return check_output(cmd, cwd=self.path(), print_debug_output=False)
+            cmd_list_plugins.insert(0, self.path("tools/with_venv.sh"))
+        else:
+            cmd_pip_list = ["pip", "list"]
+            if "tempest" not in check_output(cmd_pip_list,
+                                             cwd=self.path(), debug=False):
+                return _("Cannot list Tempest plugins because Tempest "
+                         "package is not installed in your environment. "
+                         "Please, install Tempest package and try again.")
+
+        return check_output(cmd_list_plugins, cwd=self.path(), debug=False)
 
     def uninstall_plugin(self, repo_name):
         """Uninstall Tempest plugin for local Tempest repo."""

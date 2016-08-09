@@ -455,7 +455,8 @@ class Verification(object):
         :param source: Path/URL to repo to clone Tempest from
         :param version: Commit ID or tag to checkout before Tempest
                         installation
-        :param system_wide: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to install Tempest package and
+                            create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
@@ -481,7 +482,8 @@ class Verification(object):
         :param source: Path/URL to repo to clone Tempest from
         :param version: Commit ID or tag to checkout before Tempest
                         installation
-        :param system_wide: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to install Tempest package and
+                            create a Tempest virtual env
         """
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source,
