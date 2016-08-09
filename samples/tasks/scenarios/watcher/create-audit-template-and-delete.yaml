@@ -1,0 +1,13 @@
+---
+  Watcher.create_audit_template_and_delete:
+    -
+      args:
+        goal:
+          name: "dummy"
+        strategy:
+          name: "dummy"
+        extra: {}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2

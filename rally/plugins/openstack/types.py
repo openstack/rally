@@ -166,3 +166,51 @@ class NeutronNetwork(types.ResourceType):
         raise exceptions.InvalidScenarioArgument(
             "Neutron network with name '{name}' not found".format(
                 name=resource_config.get("name")))
+
+
+@plugin.configure(name="watcher_strategy")
+class WatcherStrategy(types.ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to id.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: id matching resource
+        """
+        resource_id = resource_config.get("id")
+        if not resource_id:
+            watcherclient = clients.watcher()
+            resource_id = types._id_from_name(
+                resource_config=resource_config,
+                resources=[watcherclient.strategy.get(
+                    resource_config.get("name"))],
+                typename="strategy",
+                id_attr="uuid")
+        return resource_id
+
+
+@plugin.configure(name="watcher_goal")
+class WatcherGoal(types.ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to id.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: id matching resource
+        """
+        resource_id = resource_config.get("id")
+        if not resource_id:
+            watcherclient = clients.watcher()
+            resource_id = types._id_from_name(
+                resource_config=resource_config,
+                resources=[watcherclient.goal.get(
+                    resource_config.get("name"))],
+                typename="goal",
+                id_attr="uuid")
+        return resource_id

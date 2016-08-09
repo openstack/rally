@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally import exceptions
@@ -324,4 +325,52 @@ class NeutronNetworkTestCase(test.TestCase):
         resource_config = {"name": "nomatch-1"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.NeutronNetwork.transform,
+                          self.clients, resource_config)
+
+
+@ddt.ddt
+class WatcherStrategyTestCase(test.TestCase):
+
+    def setUp(self):
+        super(WatcherStrategyTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        self.strategy = self.clients.watcher().strategy._cache(
+            fakes.FakeResource(name="dummy", id="1"))
+
+    @ddt.data({"resource_config": {"name": "dummy"}})
+    @ddt.unpack
+    def test_transform_by_name(self, resource_config=None):
+        strategy_id = types.WatcherStrategy.transform(self.clients,
+                                                      resource_config)
+        self.assertEqual(self.strategy.uuid, strategy_id)
+
+    @ddt.data({"resource_config": {"name": "dummy-1"}})
+    @ddt.unpack
+    def test_transform_by_name_no_match(self, resource_config=None):
+        self.assertRaises(exceptions.RallyException,
+                          types.WatcherStrategy.transform,
+                          self.clients, resource_config)
+
+
+@ddt.ddt
+class WatcherGoalTestCase(test.TestCase):
+
+    def setUp(self):
+        super(WatcherGoalTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        self.goal = self.clients.watcher().goal._cache(
+            fakes.FakeResource(name="dummy", id="1"))
+
+    @ddt.data({"resource_config": {"name": "dummy"}})
+    @ddt.unpack
+    def test_transform_by_name(self, resource_config=None):
+        goal_id = types.WatcherGoal.transform(self.clients,
+                                              resource_config)
+        self.assertEqual(self.goal.uuid, goal_id)
+
+    @ddt.data({"resource_config": {"name": "dummy-1"}})
+    @ddt.unpack
+    def test_transform_by_name_no_match(self, resource_config=None):
+        self.assertRaises(exceptions.RallyException,
+                          types.WatcherGoal.transform,
                           self.clients, resource_config)
