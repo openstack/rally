@@ -52,25 +52,34 @@ class VerifyCommands(object):
                         "Available sets are %s" % ", ".join(AVAILABLE_SETS))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
                    help="Test name regular expression")
-    @cliutils.args("--tests-file", metavar="<path>", dest="tests_file",
+    @cliutils.args("--load-list", metavar="<path>", dest="tests_file",
                    type=str, required=False,
                    help="Path to a file with a list of Tempest tests "
-                        "to run them")
+                        "to run only them")
+    @cliutils.deprecated_args("--tests-file", metavar="<path>",
+                              dest="tests_file", type=str, required=False,
+                              help="Path to a file with a list of Tempest "
+                                   "tests to run only them", release="0.6.0")
     @cliutils.args("--skip-list", metavar="<path>", dest="tests_file_to_skip",
                    type=str, required=False,
                    help="Path to a file with a list of Tempest tests "
-                        "to skip them")
+                        "to skip their run")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False, metavar="<path>",
                    help="User-specified Tempest config file location")
-    @cliutils.args("--xfails-file", dest="xfails_file", type=str,
+    @cliutils.args("--xfail-list", dest="xfails_file", type=str,
                    required=False, metavar="<path>",
                    help="Path to a YAML file with a list of Tempest tests "
                         "that are expected to fail")
+    @cliutils.deprecated_args("--xfails-file", dest="xfails_file", type=str,
+                              required=False, metavar="<path>",
+                              help="Path to a YAML file with a list of Tempest"
+                                   " tests that are expected to fail",
+                              release="0.6.0")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
-                   help="Don't set the task as default for future operations")
+                   help="Not to set the task as default for future operations")
     @cliutils.args("--system-wide", dest="system_wide",
-                   help="Don't create a virtual env when installing Tempest; "
+                   help="Not to create a virtual env when installing Tempest; "
                         "use the local env instead of the Tempest virtual env "
                         "when running the tests. Note that all Tempest "
                         "requirements have to be already installed in "
@@ -175,7 +184,7 @@ class VerifyCommands(object):
                         "Note, Tempest log file needs to be in subunit format")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    required=False,
-                   help="Don't set new task as default for future operations")
+                   help="Not to set new task as default for future operations")
     @cliutils.alias("import")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def import_results(self, deployment=None, set_name="", log_file=None,
