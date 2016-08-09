@@ -26,6 +26,7 @@ from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
+LOG = logging.getLogger(__name__)
 
 """Scenarios for Cinder Volumes."""
 
@@ -378,11 +379,7 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderScenario,
     def run(self, volume_type=False, size=None, **kwargs):
         """Create volume, snapshot and attach/detach volume.
 
-        This scenario is based on the standalone qaStressTest.py
-        (https://github.com/WaltHP/cinder-stress).
-
-        :param volume_type: Whether or not to specify volume type when creating
-                            volumes.
+        :param volume_type: Name of volume type to use
         :param size: Volume size - dictionary, contains two values:
                         min - minimum size volumes will be created as;
                         max - maximum size volumes will be created as.
@@ -392,16 +389,17 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderScenario,
         """
         if size is None:
             size = {"min": 1, "max": 5}
-        selected_type = None
-        volume_types = [None]
 
-        if volume_type:
+        if isinstance(volume_type, bool):
+            LOG.warning("Selecting a random volume type is deprecated"
+                        "as of Rally 0.7.0")
+            volume_types = [None]
             volume_types_list = self.clients("cinder").volume_types.list()
             for s in volume_types_list:
                 volume_types.append(s.name)
-            selected_type = random.choice(volume_types)
+            volume_type = random.choice(volume_types)
 
-        volume = self._create_volume(size, volume_type=selected_type)
+        volume = self._create_volume(size, volume_type=volume_type)
         snapshot = self._create_snapshot(volume.id, False, **kwargs)
 
         server = self.get_random_server()
