@@ -24,7 +24,7 @@
 
 {% block js_before %}
     "use strict";
-    {% include "/task/directive_widget.js" %}
+    {{ include_raw_file("/task/directive_widget.js") }}
     var controllerFunction = function($scope, $location) {
       $scope.data = {{ data }};
 {% raw %}
@@ -380,7 +380,14 @@
           <div ng-if="!wload.single">
             <h2>Total durations</h2>
             <div widget="Lines"
-                 data="wload.total"
+                 data="wload.total.values"
+                 name-x="Task run sequence number"
+                 controls="true"
+                 guide="true">
+            </div>
+            <h2>Total success rate</h2>
+            <div widget="Lines"
+                 data="wload.total.success"
                  name-x="Task run sequence number"
                  controls="true"
                  guide="true">
@@ -389,12 +396,18 @@
         </script>
 
         <script type="text/ng-template" id="atomic">
-          <h2>Atomic actions durations</h2>
+          <h2>Atomic actions durations / success rate</h2>
           <div ng-repeat="chart in wload.atomic track by $index">
             <span id="{{chart.name}}"></span>
             <div class="chart-title">{{chart.name}}</div>
             <div widget="Lines"
                  data="chart.values"
+                 name-x="Task run sequence number"
+                 controls="true"
+                 guide="true">
+            </div>
+            <div widget="Lines"
+                 data="chart.success"
                  name-x="Task run sequence number"
                  controls="true"
                  guide="true">

@@ -237,27 +237,35 @@ class Trends(object):
                                                    "90%ile": [],
                                                    "95%ile": [],
                                                    "max": [],
-                                                   "avg": []}
+                                                   "avg": [],
+                                                   "success": []}
                 self._tasks[key]["data"][k][tgt].append(
                     (self._tasks[key]["seq"], task[k][src]))
+
+            success = float(task[k]["Success"].rstrip("%"))
+            self._tasks[key]["data"][k]["success"].append(
+                (self._tasks[key]["seq"], success))
 
     def get_data(self):
         for key, value in self._tasks.items():
             total = None
             for k, v in value["data"].items():
+                success = [("success", v.pop("success"))]
                 if k == "total":
-                    total = v
+                    total = {"values": v, "success": success}
                 else:
                     self._tasks[key]["atomic"].append(
-                        {"name": k, "values": list(v.items())})
+                        {"name": k, "values": list(v.items()),
+                         "success": success})
             for stat, comp in (("min", charts.streaming.MinComputation()),
                                ("max", charts.streaming.MaxComputation()),
                                ("avg", charts.streaming.MeanComputation())):
-                for k, v in total[stat]:
+                for k, v in total["values"][stat]:
                     if isinstance(v, (float,) + six.integer_types):
                         comp.add(v)
                 self._tasks[key]["stat"][stat] = comp.result()
             del self._tasks[key]["data"]
-            self._tasks[key]["total"] = list(total.items())
+            total["values"] = list(total["values"].items())
+            self._tasks[key]["total"] = total
             self._tasks[key]["single"] = self._tasks[key]["seq"] < 2
         return sorted(self._tasks.values(), key=lambda s: s["name"])
