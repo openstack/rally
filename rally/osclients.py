@@ -273,6 +273,7 @@ class Keystone(OSClient):
         If this object was constructed with a version in the api_info
         then that will be used unless the version parameter is passed.
         """
+        import keystoneclient
         from keystoneclient import client
 
         # Use the version in the api_info if provided, otherwise fall
@@ -295,8 +296,15 @@ class Keystone(OSClient):
         # list which is why we need to ensure service_catalog is still
         # present.
         auth_ref = plugin.get_access(sess)
-        ks = client.Client(version=version, session=sess,
-                           timeout=CONF.openstack_client_http_timeout)
+        kw = {"version": version, "session": sess,
+              "timeout": CONF.openstack_client_http_timeout}
+        if keystoneclient.__version__[0] == "1":
+            # NOTE(andreykurilin): let's leave this hack for envs which uses
+            #  old(<2.0.0) keystoneclient version. Upstream fix:
+            #  https://github.com/openstack/python-keystoneclient/commit/d9031c252848d89270a543b67109a46f9c505c86
+            from keystoneclient import base
+            kw["auth_url"] = sess.get_endpoint(interface=base.AUTH_INTERFACE)
+        ks = client.Client(**kw)
         ks.auth_ref = auth_ref
         return ks
 

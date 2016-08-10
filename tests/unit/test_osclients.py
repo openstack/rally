@@ -35,7 +35,7 @@ class DummyClient(osclients.OSClient):
 class OSClientTestCaseUtils(object):
 
     def set_up_keystone_mocks(self):
-        self.ksc_module = mock.MagicMock()
+        self.ksc_module = mock.MagicMock(__version__="2.0.0")
         self.ksc_client = mock.MagicMock()
         self.ksc_identity = mock.MagicMock()
         self.ksc_identity_plugin = mock.MagicMock()
