@@ -98,8 +98,8 @@ class TempestUtilsTestCase(BaseTestCase):
     @mock.patch("os.path.isdir", return_value=False)
     @mock.patch("%s.tempest.check_output" % TEMPEST_PATH,
                 return_value="some_output")
-    def test__venv_install_when_venv_not_exist(self, mock_check_output,
-                                               mock_isdir, mock_sys):
+    def test__venv_install_when_venv_does_not_exist(self, mock_check_output,
+                                                    mock_isdir, mock_sys):
         mock_sys.version_info = "not_py27_env"
         self.verifier._install_venv()
 
@@ -107,9 +107,8 @@ class TempestUtilsTestCase(BaseTestCase):
         mock_check_output.assert_has_calls([
             mock.call(["virtualenv", "-p", mock_sys.executable, ".venv"],
                       cwd="/tmp"),
-            mock.call(["/tmp/tools/with_venv.sh", "pip", "install", "-r",
-                       "requirements.txt", "-r", "test-requirements.txt"],
-                      cwd="/tmp")
+            mock.call(["/tmp/tools/with_venv.sh", "pip",
+                       "install", "-e", "./"], cwd="/tmp")
         ])
 
     @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
@@ -234,7 +233,6 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._install_venv")
     @mock.patch(TEMPEST_PATH + ".tempest.check_output")
-    @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
     @mock.patch("shutil.copytree")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._clone")
     @mock.patch("os.path.exists", return_value=False)
@@ -242,8 +240,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
                 return_value=False)
     def test_install_successful(self, mock_tempest__is_git_repo, mock_exists,
                                 mock_tempest__clone, mock_copytree,
-                                mock_check_call, mock_check_output,
-                                mock_tempest__install_venv,
+                                mock_check_output, mock_tempest__install_venv,
                                 mock_tempest__initialize_testr,
                                 mock_tempest_base_repo):
         mock_tempest_base_repo.__get__ = mock.Mock(return_value="fake_dir")
@@ -258,9 +255,9 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         mock_copytree.assert_called_once_with(
             self.verifier.base_repo,
             self.verifier.path())
-        cwd = self.verifier.path("tempest")
+        cwd = self.verifier.path()
         expected = [mock.call(["git", "checkout", "3f4c8d44"], cwd=cwd)]
-        self.assertEqual(expected, mock_check_call.mock_calls)
+        self.assertEqual(expected, mock_check_output.mock_calls)
         mock_tempest__install_venv.assert_called_once_with()
         mock_tempest__initialize_testr.assert_called_once_with()
 
@@ -347,7 +344,7 @@ class TempestInstallPluginsTestCase(BaseTestCase):
 
         cmd = [self.verifier.venv_wrapper, "tempest", "list-plugins"]
         mock_tempest_check_output.assert_called_with(
-            cmd, cwd=self.verifier.path(), print_debug_output=False)
+            cmd, cwd=self.verifier.path(), debug=False)
 
     @mock.patch("shutil.rmtree")
     @mock.patch("os.path.exists")

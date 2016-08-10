@@ -420,8 +420,9 @@ class VerifyCommands(object):
                    help="Commit ID or tag to checkout before Tempest "
                         "installation")
     @cliutils.args("--system-wide", dest="system_wide",
-                   help="Don't create a virtual env for Tempest. Note "
-                        "that all Tempest requirements have to be already "
+                   help="Not to install Tempest package and not to create "
+                        "a virtual env for Tempest. Note that Tempest package "
+                        "and all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -433,7 +434,8 @@ class VerifyCommands(object):
         :param source: Path/URL to repo to clone Tempest from
         :param version: Commit ID or tag to checkout before Tempest
                         installation
-        :param system_wide: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to install Tempest package and
+                            create a Tempest virtual env
         """
         api.Verification.install_tempest(deployment, source,
                                          version, system_wide)
@@ -458,8 +460,9 @@ class VerifyCommands(object):
                    help="Commit ID or tag to checkout before Tempest "
                         "installation")
     @cliutils.args("--system-wide", dest="system_wide",
-                   help="Don't create a virtual env for Tempest. Note "
-                        "that all Tempest requirements have to be already "
+                   help="Not to install Tempest package and not to create "
+                        "a virtual env for Tempest. Note that Tempest package "
+                        "and all Tempest requirements have to be already "
                         "installed in the local env!",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -471,7 +474,8 @@ class VerifyCommands(object):
         :param source: Path/URL to repo to clone Tempest from
         :param version: Commit ID or tag to checkout before Tempest
                         installation
-        :param system_wide: Whether or not to create a Tempest virtual env
+        :param system_wide: Whether or not to install Tempest package and
+                            create a Tempest virtual env
         """
         api.Verification.reinstall_tempest(deployment, source,
                                            version, system_wide)
