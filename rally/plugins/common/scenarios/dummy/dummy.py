@@ -47,11 +47,11 @@ class DummyFailure(scenario.Scenario):
                 raise DummyScenarioException(_("Expected failure"))
 
 
+@scenario.configure(name="Dummy.dummy")
 class Dummy(scenario.Scenario):
     """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
-    @scenario.configure()
-    def dummy(self, sleep=0):
+    def run(self, sleep=0):
         """Do nothing and sleep for the given number of seconds (0 by default).
 
         Dummy.dummy can be used for testing performance of different
@@ -62,10 +62,14 @@ class Dummy(scenario.Scenario):
         """
         utils.interruptable_sleep(sleep)
 
-    @validation.number("size_of_message",
-                       minval=1, integer_only=True, nullable=True)
-    @scenario.configure()
-    def dummy_exception(self, size_of_message=1, sleep=0, message=""):
+
+@validation.number("size_of_message",
+                   minval=1, integer_only=True, nullable=True)
+@scenario.configure(name="Dummy.dummy_exception")
+class DummyException(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine."""
+
+    def run(self, size_of_message=1, sleep=1, message=""):
         """Throw an exception.
 
         Dummy.dummy_exception can be used for test if exceptions are processed
@@ -82,10 +86,14 @@ class Dummy(scenario.Scenario):
         message = message or "M" * size_of_message
         raise DummyScenarioException(message)
 
-    @validation.number("exception_probability",
-                       minval=0, maxval=1, integer_only=False, nullable=True)
-    @scenario.configure()
-    def dummy_exception_probability(self, exception_probability=0.5):
+
+@validation.number("exception_probability",
+                   minval=0, maxval=1, integer_only=False, nullable=True)
+@scenario.configure(name="Dummy.dummy_exception_probability")
+class DummyExceptionProbability(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine."""
+
+    def run(self, exception_probability=0.5):
         """Throw an exception with given probability.
 
         Dummy.dummy_exception_probability can be used to test if exceptions
@@ -96,15 +104,17 @@ class Dummy(scenario.Scenario):
                                       will be thrown. Float between 0 and 1
                                       0=never 1=always.
         """
-
         if random.random() < exception_probability:
             raise DummyScenarioException(
                 "Dummy Scenario Exception: Probability: %s"
-                % exception_probability
-            )
+                % exception_probability)
 
-    @scenario.configure()
-    def dummy_output(self, random_range=25):
+
+@scenario.configure(name="Dummy.dummy_output")
+class DummyOutput(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine at scale."""
+
+    def run(self, random_range=25):
         """Generate dummy output.
 
         This scenario generates example of output data.
@@ -171,10 +181,14 @@ class Dummy(scenario.Scenario):
                                   "chart_plugin": "Table",
                                   "data": data})
 
-    @logging.log_deprecated("Use Dummy.dummy_output() instead.", "0.4.1",
-                            once=True)
-    @scenario.configure()
-    def dummy_with_scenario_output(self):
+
+@logging.log_deprecated("Use Dummy.dummy_output() instead.", "0.4.1",
+                        once=True)
+@scenario.configure(name="Dummy.dummy_with_scenario_output")
+class DummyWithScenarioOutput(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine."""
+
+    def run(self):
         """Return a dummy scenario output.
 
         Dummy.dummy_with_scenario_output can be used to test the scenario
@@ -187,6 +201,11 @@ class Dummy(scenario.Scenario):
         err = ""
         return {"data": out, "errors": err}
 
+
+@scenario.configure(name="Dummy.dummy_random_fail_in_atomic")
+class DummyRandomFailInAtomic(scenario.Scenario):
+    """Randomly throw exceptions in atomic actions."""
+
     @atomic.action_timer("dummy_fail_test")
     def _random_fail_emitter(self, exception_probability):
         """Throw an exception with given probability.
@@ -196,11 +215,10 @@ class Dummy(scenario.Scenario):
         if random.random() < exception_probability:
             raise KeyError("Dummy test exception")
 
-    @scenario.configure()
-    def dummy_random_fail_in_atomic(self, exception_probability=0.5):
-        """Randomly throw exceptions in atomic actions.
+    def run(self, exception_probability=0.5):
+        """Dummy.dummy_random_fail_in_atomic in dummy actions.
 
-        Dummy.dummy_random_fail_in_atomic can be used to test atomic actions
+        Can be used to test atomic actions
         failures processing.
 
         :param exception_probability: Probability with which atomic actions
@@ -209,8 +227,12 @@ class Dummy(scenario.Scenario):
         self._random_fail_emitter(exception_probability)
         self._random_fail_emitter(exception_probability)
 
-    @scenario.configure()
-    def dummy_random_action(self, actions_num=5, sleep_min=0, sleep_max=2):
+
+@scenario.configure(name="Dummy.dummy_random_action")
+class DummyRandomAction(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine."""
+
+    def run(self, actions_num=5, sleep_min=0, sleep_max=2):
         """Sleep random time in dummy actions.
 
         :param actions_num: int number of actions to generate
@@ -222,8 +244,12 @@ class Dummy(scenario.Scenario):
             with atomic.ActionTimer(self, "action_%d" % idx):
                 utils.interruptable_sleep(duration)
 
-    @scenario.configure()
-    def dummy_timed_atomic_actions(self, number_of_actions=5, sleep_factor=1):
+
+@scenario.configure(name="Dummy.dummy_timed_atomic_actions")
+class DummyTimedAtomicAction(scenario.Scenario):
+    """Dummy benchmarks for testing Rally benchmark engine."""
+
+    def run(self, number_of_actions=5, sleep_factor=1):
         """Run some sleepy atomic actions for SLA atomic action tests.
 
         :param number_of_actions: int number of atomic actions to create
