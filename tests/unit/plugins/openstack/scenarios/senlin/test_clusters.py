@@ -19,25 +19,17 @@ from tests.unit import test
 class SenlinClustersTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_cluster(self):
-        profile_spec = {"k1": "v1"}
-        mock_profile = mock.Mock(id="fake_profile_id")
         mock_cluster = mock.Mock()
+        self.context["tenant"] = {"profile": "fake_profile_id"}
         scenario = clusters.SenlinClusters(self.context)
         scenario._create_cluster = mock.Mock(return_value=mock_cluster)
-        scenario._create_profile = mock.Mock(return_value=mock_profile)
         scenario._delete_cluster = mock.Mock()
-        scenario._delete_profile = mock.Mock()
 
-        scenario.create_and_delete_profile_cluster(profile_spec,
-                                                   desired_capacity=1,
-                                                   min_size=0,
-                                                   max_size=3,
-                                                   timeout=60,
-                                                   metadata={"k2": "v2"})
+        scenario.create_and_delete_cluster(desired_capacity=1, min_size=0,
+                                           max_size=3, timeout=60,
+                                           metadata={"k2": "v2"})
 
-        scenario._create_profile.assert_called_once_with(profile_spec)
         scenario._create_cluster.assert_called_once_with("fake_profile_id",
                                                          1, 0, 3, 60,
                                                          {"k2": "v2"})
         scenario._delete_cluster.assert_called_once_with(mock_cluster)
-        scenario._delete_profile.assert_called_once_with(mock_profile)

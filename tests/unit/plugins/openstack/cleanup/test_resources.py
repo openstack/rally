@@ -758,6 +758,11 @@ class FuelEnvironmentTestCase(test.TestCase):
 
 class SenlinMixinTestCase(test.TestCase):
 
+    def test_id(self):
+        senlin = resources.SenlinMixin()
+        senlin.raw_resource = {"id": "TEST_ID"}
+        self.assertEqual("TEST_ID", senlin.id())
+
     def test__manager(self):
         senlin = resources.SenlinMixin()
         senlin._service = "senlin"
@@ -781,7 +786,7 @@ class SenlinMixinTestCase(test.TestCase):
         senlin._service = "senlin"
         senlin.user = mock.MagicMock()
         senlin._resource = "some_resources"
-        senlin.id = "TEST_ID"
+        senlin.raw_resource = {"id": "TEST_ID"}
         senlin.user.senlin().delete_some_resource.return_value = None
 
         senlin.delete()

@@ -134,8 +134,8 @@ class SenlinScenarioTestCase(test.ScenarioTestCase):
         result = scenario._create_profile(test_spec, metadata={"k2": "v2"})
 
         self.assertEqual(
-            self.admin_clients("senlin").create_profile.return_value, result)
-        self.admin_clients("senlin").create_profile.assert_called_once_with(
+            self.clients("senlin").create_profile.return_value, result)
+        self.clients("senlin").create_profile.assert_called_once_with(
             spec=test_spec, name="test_profile", metadata={"k2": "v2"})
         mock_generate_random_name.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -146,7 +146,7 @@ class SenlinScenarioTestCase(test.ScenarioTestCase):
         scenario = utils.SenlinScenario(context=self.context)
         scenario._delete_profile(fake_profile)
 
-        self.admin_clients("senlin").delete_profile.assert_called_once_with(
+        self.clients("senlin").delete_profile.assert_called_once_with(
             fake_profile)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "senlin.delete_profile")

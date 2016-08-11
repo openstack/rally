@@ -1,16 +1,7 @@
 ---
-  SenlinClusters.create_and_delete_profile_cluster:
+  SenlinClusters.create_and_delete_cluster:
     -
       args:
-        profile_spec:
-          type: os.nova.server
-          version: 1.0
-          properties:
-            name: cirros_server
-            flavor: 1
-            image: "cirros-0.3.4-x86_64-uec"
-            networks:
-              - network: private
         desired_capacity: 3
         min_size: 0
         max_size: 5
@@ -22,6 +13,15 @@
         users:
           tenants: 2
           users_per_tenant: 2
+        profiles:
+          type: os.nova.server
+          version: "1.0"
+          properties:
+            name: cirros_server
+            flavor: 1
+            image: "cirros-0.3.4-x86_64-uec"
+            networks:
+              - network: private
       sla:
         failure_rate:
           max: 0

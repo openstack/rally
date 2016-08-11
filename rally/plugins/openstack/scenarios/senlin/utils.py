@@ -140,7 +140,7 @@ class SenlinScenario(scenario.OpenStackScenario):
         if metadata:
             attrs["metadata"] = metadata
 
-        return self.admin_clients("senlin").create_profile(**attrs)
+        return self.clients("senlin").create_profile(**attrs)
 
     @atomic.action_timer("senlin.delete_profile")
     def _delete_profile(self, profile):
@@ -150,4 +150,4 @@ class SenlinScenario(scenario.OpenStackScenario):
 
         :param profile: profile object to be deleted
         """
-        self.admin_clients("senlin").delete_profile(profile)
+        self.clients("senlin").delete_profile(profile)

@@ -82,6 +82,9 @@ _senlin_order = get_order(150)
 @base.resource(service=None, resource=None, admin_required=True)
 class SenlinMixin(base.ResourceManager):
 
+    def id(self):
+        return self.raw_resource["id"]
+
     def _manager(self):
         client = self._admin_required and self.admin or self.user
         return getattr(client, self._service)()
@@ -92,7 +95,7 @@ class SenlinMixin(base.ResourceManager):
     def delete(self):
         # make singular form of resource name from plural form
         res_name = self._resource[:-1]
-        return getattr(self._manager(), "delete_%s" % res_name)(self.id)
+        return getattr(self._manager(), "delete_%s" % res_name)(self.id())
 
 
 @base.resource("senlin", "clusters", order=next(_senlin_order))
@@ -100,7 +103,8 @@ class SenlinCluster(SenlinMixin):
     """Resource class for Senlin Cluster."""
 
 
-@base.resource("senlin", "profiles", order=next(_senlin_order))
+@base.resource("senlin", "profiles", order=next(_senlin_order),
+               admin_required=False, tenant_resource=True)
 class SenlinProfile(SenlinMixin):
     """Resource class for Senlin Profile."""
 
