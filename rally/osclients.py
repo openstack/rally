@@ -190,10 +190,11 @@ class OSClient(plugin.Plugin):
 
     def _get_endpoint(self, service_type=None):
         kc = self.keystone()
-        api_url = kc.service_catalog.url_for(
-            service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
-            region_name=self.credential.region_name)
+        kw = {"service_type": self.choose_service_type(service_type),
+              "region_name": self.credential.region_name}
+        if self.credential.endpoint_type:
+            kw["endpoint_type"] = self.credential.endpoint_type
+        api_url = kc.service_catalog.url_for(**kw)
         return api_url
 
     def _get_auth_info(self, user_key="username",
@@ -204,6 +205,7 @@ class OSClient(plugin.Plugin):
                        user_domain_name_key="user_domain_name",
                        project_domain_name_key="project_domain_name",
                        cacert_key="cacert",
+                       endpoint_type="endpoint_type",
                        ):
         kw = {
             user_key: self.credential.username,
@@ -223,7 +225,8 @@ class OSClient(plugin.Plugin):
             kw.update({
                 project_domain_name_key:
                 self.credential.project_domain_name or "Default"})
-
+        if self.credential.endpoint_type:
+            kw[endpoint_type] = self.credential.endpoint_type
         return kw
 
     @abc.abstractmethod
@@ -304,6 +307,8 @@ class Keystone(OSClient):
             #  https://github.com/openstack/python-keystoneclient/commit/d9031c252848d89270a543b67109a46f9c505c86
             from keystoneclient import base
             kw["auth_url"] = sess.get_endpoint(interface=base.AUTH_INTERFACE)
+        if self.credential.endpoint_type:
+            kw["endpoint_type"] = self.credential.endpoint_type
         ks = client.Client(**kw)
         ks.auth_ref = auth_ref
         return ks
@@ -448,7 +453,8 @@ class Ceilometer(OSClient):
             token=auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
-            **self._get_auth_info(project_name_key="tenant_name"))
+            **self._get_auth_info(project_name_key="tenant_name",
+                                  endpoint_type="interface"))
         return client
 
 
@@ -483,7 +489,10 @@ class Ironic(OSClient):
                                    ironic_url=self._get_endpoint(service_type),
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=self.credential.insecure,
-                                   cacert=self.credential.cacert)
+                                   cacert=self.credential.cacert,
+                                   interface=self._get_auth_info().get(
+                                       "endpoint_type")
+                                   )
         return client
 
 
@@ -508,7 +517,6 @@ class Sahara(OSClient):
         client = sahara.Client(
             self.choose_version(version),
             service_type=self.choose_service_type(service_type),
-            endpoint_type=self.credential.endpoint_type,
             insecure=self.credential.insecure,
             **self._get_auth_info(password_key="api_key",
                                   project_name_key="project_name"))
@@ -596,10 +604,10 @@ class Trove(OSClient):
 class Mistral(OSClient):
     def create_client(self, service_type=None):
         """Return Mistral client."""
-        from mistralclient.api import client
+        from mistralclient.api import client as mistral
 
         kc = self.keystone()
-        client = client.client(
+        client = mistral.client(
             mistral_url=self._get_endpoint(service_type),
             service_type=self.choose_service_type(service_type),
             auth_token=kc.auth_token)
@@ -690,7 +698,8 @@ class Senlin(OSClient):
         return senlin.Client(
             self.choose_version(version),
             **self._get_auth_info(project_name_key="project_name",
-                                  cacert_key="cert"))
+                                  cacert_key="cert",
+                                  endpoint_type="interface"))
 
 
 @configure("magnum", default_version="1", supported_versions=["1"],
@@ -702,10 +711,11 @@ class Magnum(OSClient):
 
         api_url = self._get_endpoint(service_type)
         session = self._get_session()[0]
-        endpoint_type = self.credential.endpoint_type
 
-        return magnum.Client(session=session, interface=endpoint_type,
-                             magnum_url=api_url)
+        return magnum.Client(
+            session=session,
+            interface=self.credential.endpoint_type,
+            magnum_url=api_url)
 
 
 @configure("watcher", default_version="1", default_service_type="infra-optim",
@@ -723,7 +733,8 @@ class Watcher(OSClient):
             token=kc.auth_token,
             timeout=CONF.openstack_client_http_timeout,
             insecure=self.credential.insecure,
-            ca_file=self.credential.cacert)
+            ca_file=self.credential.cacert,
+            endpoint_type=self.credential.endpoint_type)
         return client
 
 

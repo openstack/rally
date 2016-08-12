@@ -30,7 +30,7 @@ from alembic import migration
 from alembic import script as alembic_script
 from oslo_config import cfg
 
-import rally.common.db.sqlalchemy.api
+from rally.common.db.sqlalchemy import api as s_api
 from rally.common.i18n import _LE
 from rally.common import logging
 
@@ -41,8 +41,7 @@ CONF = cfg.CONF
 class BaseWalkMigrationMixin(object):
 
     ALEMBIC_CONFIG = alembic_config.Config(
-        os.path.join(os.path.dirname(rally.common.db.sqlalchemy.api.__file__),
-                     "alembic.ini")
+        os.path.join(os.path.dirname(s_api.__file__), "alembic.ini")
     )
 
     ALEMBIC_CONFIG.rally_config = CONF
@@ -84,8 +83,7 @@ class BaseWalkMigrationMixin(object):
         env = alembic_script.ScriptDirectory.from_config(self.ALEMBIC_CONFIG)
         versions = []
         for rev in env.walk_revisions():
-            if (rev.revision ==
-                    rally.common.db.sqlalchemy.api.INITIAL_REVISION_UUID):
+            if rev.revision == s_api.INITIAL_REVISION_UUID:
                 # NOTE(rpromyshlennikov): we skip initial migration here
                 continue
             versions.append((rev.revision, rev.down_revision or "-1"))
@@ -103,6 +101,10 @@ class BaseWalkMigrationMixin(object):
         """
 
         self._configure(engine)
+        # NOTE(ikhudoshyn): Now DB contains certain schema
+        # so we can not execute all migrations starting from
+        # init. So we cleanup the DB.
+        s_api.get_backend().schema_cleanup()
         up_and_down_versions = self._up_and_down_versions()
         for ver_up, ver_down in up_and_down_versions:
             self._migrate_up(engine, ver_up, with_data=True)

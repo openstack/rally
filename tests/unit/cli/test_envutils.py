@@ -112,10 +112,36 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
+                                  "OS_CACERT": "fake_cacert"})
+    def test_get_creds_from_env_vars_keystone_v2(self):
+        expected_creds = {
+            "auth_url": "fake_auth_url",
+            "admin": {
+                "username": "fake_username",
+                "password": "fake_password",
+                "tenant_name": "fake_tenant_name"
+            },
+            "endpoint_type": "fake_endpoint_type",
+            "endpoint": "fake_endpoint",
+            "region_name": "fake_region_name",
+            "https_cacert": "fake_cacert",
+            "https_insecure": True
+        }
+        creds = envutils.get_creds_from_env_vars()
+        self.assertEqual(expected_creds, creds)
+
+    @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
+                                  "OS_USERNAME": "fake_username",
+                                  "OS_PASSWORD": "fake_password",
+                                  "OS_TENANT_NAME": "fake_tenant_name",
+                                  "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
+                                  "OS_ENDPOINT": "fake_endpoint",
+                                  "OS_INSECURE": "True",
                                   "OS_PROJECT_DOMAIN_NAME": "fake_pdn",
                                   "OS_USER_DOMAIN_NAME": "fake_udn",
                                   "OS_CACERT": "fake_cacert"})
-    def test_get_creds_from_env_vars(self):
+    def test_get_creds_from_env_vars_keystone_v3(self):
         expected_creds = {
             "auth_url": "fake_auth_url",
             "admin": {
@@ -123,7 +149,7 @@ class EnvUtilsTestCase(test.TestCase):
                 "password": "fake_password",
                 "user_domain_name": "fake_udn",
                 "project_domain_name": "fake_pdn",
-                "tenant_name": "fake_tenant_name"
+                "project_name": "fake_tenant_name"
             },
             "endpoint_type": "fake_endpoint_type",
             "endpoint": "fake_endpoint",
@@ -190,4 +216,4 @@ class EnvUtilsTestCase(test.TestCase):
     @mock.patch.dict(os.environ, values={}, clear=True)
     def test_get_endpoint_type_from_env_when_neither(self):
         endpoint_type = envutils.get_endpoint_type_from_env()
-        self.assertEqual("public", endpoint_type)
+        self.assertIsNone(endpoint_type)

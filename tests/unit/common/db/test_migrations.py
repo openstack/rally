@@ -15,7 +15,7 @@
 
 """Tests for DB migration."""
 
-
+import json
 import pprint
 
 import alembic
@@ -29,6 +29,8 @@ import rally
 from rally.common import db
 from rally.common.db.sqlalchemy import api
 from rally.common.db.sqlalchemy import models
+from rally import consts
+from rally.deployment.engines import existing
 from tests.unit.common.db import test_migrations_base
 from tests.unit import test as rtest
 
@@ -261,3 +263,123 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         self.assertColumnExists(engine, "deployments", "credentials")
         self.assertColumnNotExists(engine, "deployments", "admin")
         self.assertColumnNotExists(engine, "deployments", "users")
+
+    def _pre_upgrade_54e844ebfbc3(self, engine):
+        self._54e844ebfbc3_deployments = {
+            # right config which should not be changed after migration
+            "should-not-be-changed-1": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "project_name": "admin"},
+                "auth_url": "http://example.com:5000/v3",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+            # right config which should not be changed after migration
+            "should-not-be-changed-2": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "tenant_name": "admin"},
+                "users": [{"username": "admin",
+                           "password": "passwd",
+                          "tenant_name": "admin"}],
+                "auth_url": "http://example.com:5000/v2.0",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+            # not ExistingCloud config which should not be changed
+            "should-not-be-changed-3": {
+                "url": "example.com",
+                "type": "Something"},
+            # normal config created with "fromenv" feature
+            "from-env": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "tenant_name": "admin",
+                          "project_domain_name": "",
+                          "user_domain_name": ""},
+                "auth_url": "http://example.com:5000/v2.0",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"},
+            # public endpoint + keystone v3 config with tenant_name
+            "ksv3_public": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "tenant_name": "admin",
+                          "user_domain_name": "bla",
+                          "project_domain_name": "foo"},
+                "auth_url": "http://example.com:5000/v3",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud",
+                "endpoint_type": "public"},
+            # internal endpoint + existing_users
+            "existing_internal": {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "tenant_name": "admin"},
+                "users": [{"username": "admin",
+                           "password": "passwd",
+                           "tenant_name": "admin",
+                           "project_domain_name": "",
+                           "user_domain_name": ""}],
+                "auth_url": "http://example.com:5000/v2.0",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud",
+                "endpoint_type": "internal"}
+        }
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+        with engine.connect() as conn:
+            for deployment in self._54e844ebfbc3_deployments:
+                conf = json.dumps(self._54e844ebfbc3_deployments[deployment])
+                conn.execute(
+                    deployment_table.insert(),
+                    [{"uuid": deployment, "name": deployment,
+                      "config": conf,
+                      "enum_deployments_status": deployment_status,
+                      "credentials": six.b(json.dumps([])),
+                      "users": six.b(json.dumps([]))
+                      }])
+
+    def _check_54e844ebfbc3(self, engine, data):
+        self.assertEqual("54e844ebfbc3",
+                         api.get_backend().schema_revision(engine=engine))
+
+        original_deployments = self._54e844ebfbc3_deployments
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.connect() as conn:
+            deployments_found = conn.execute(
+                deployment_table.select()).fetchall()
+            for deployment in deployments_found:
+                # check deployment
+                self.assertIn(deployment.uuid, original_deployments)
+                self.assertIn(deployment.name, original_deployments)
+
+                config = json.loads(deployment.config)
+                if config != original_deployments[deployment.uuid]:
+                    if deployment.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is changes, but "
+                                  "should not." % deployment.uuid)
+
+                    endpoint_type = (original_deployments[
+                                     deployment.uuid].get("endpoint_type"))
+                    if endpoint_type in (None, "public"):
+                        self.assertNotIn("endpoint_type", config)
+                    else:
+                        self.assertIn("endpoint_type", config)
+                        self.assertEqual(endpoint_type,
+                                         config["endpoint_type"])
+
+                    existing.ExistingCloud({"config": config}).validate()
+                else:
+                    if not deployment.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is not changes, "
+                                  "but should." % deployment.uuid)
+
+                # this deployment created at _pre_upgrade step is not needed
+                # anymore and we can remove it
+                conn.execute(
+                    deployment_table.delete().where(
+                        deployment_table.c.uuid == deployment.uuid)
+                )
