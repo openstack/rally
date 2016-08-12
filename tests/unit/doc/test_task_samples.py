@@ -33,6 +33,11 @@ class TaskSampleTestCase(test.TestCase):
         os.pardir, os.pardir, os.pardir,
         "samples", "tasks")
 
+    def setUp(self):
+        super(TaskSampleTestCase, self).setUp()
+        if os.environ.get("TOX_ENV_NAME") == "cover":
+            self.skipTest("There is no need to check samples in coverage job.")
+
     @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self,
