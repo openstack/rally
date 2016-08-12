@@ -22,28 +22,26 @@ from tests.unit import test
 
 class CeilometerQueriesTestCase(test.ScenarioTestCase):
     def test_create_and_query_alarms(self):
-        scenario = queries.CeilometerQueries(self.context)
+        scenario = queries.CeilometerQueriesCreateAndQueryAlarms(self.context)
+
         scenario._create_alarm = mock.MagicMock()
         scenario._query_alarms = mock.MagicMock()
 
-        scenario.create_and_query_alarms("fake_meter_name",
-                                         100, "fake_filter",
-                                         "fake_orderby_attribute", 10,
-                                         fakearg="f")
+        scenario.run("fake_meter_name", 100, "fake_filter",
+                     "fake_orderby_attribute", 10, fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        100, {"fakearg": "f"})
         scenario._query_alarms.assert_called_once_with(
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
 
     def test_create_and_query_alarms_no_filter(self):
-        scenario = queries.CeilometerQueries(self.context)
+        scenario = queries.CeilometerQueriesCreateAndQueryAlarms(self.context)
+
         scenario._create_alarm = mock.MagicMock()
         scenario._query_alarms = mock.MagicMock()
 
-        scenario.create_and_query_alarms("fake_meter_name",
-                                         100, None,
-                                         "fake_orderby_attribute", 10,
-                                         fakearg="f")
+        scenario.run("fake_meter_name", 100, None, "fake_orderby_attribute",
+                     10, fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        100, {"fakearg": "f"})
         scenario._query_alarms.assert_called_once_with(
@@ -52,33 +50,30 @@ class CeilometerQueriesTestCase(test.ScenarioTestCase):
     def test_create_and_query_alarm_history(self):
         fake_alarm = mock.MagicMock()
         fake_alarm.alarm_id = "fake_alarm_id"
-        scenario = queries.CeilometerQueries(self.context)
+        scenario = queries.CeilometerQueriesCreateAndQueryAlarmHistory(
+            self.context)
+
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._query_alarm_history = mock.MagicMock()
 
         fake_filter = json.dumps({"=": {"alarm_id": fake_alarm.alarm_id}})
-        scenario.create_and_query_alarm_history("fake_meter_name", 100,
-                                                "fake_orderby_attribute", 10,
-                                                fakearg="f")
+        scenario.run("fake_meter_name", 100, "fake_orderby_attribute",
+                     10, fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name", 100,
                                                        {"fakearg": "f"})
         scenario._query_alarm_history.assert_called_once_with(
             fake_filter, "fake_orderby_attribute", 10)
 
     def test_create_and_query_samples(self):
-        scenario = queries.CeilometerQueries(self.context)
+        scenario = queries.CeilometerQueriesCreateAndQuerySamples(self.context)
+
         scenario._create_sample = mock.MagicMock()
         scenario._query_samples = mock.MagicMock()
 
-        scenario.create_and_query_samples("fake_counter_name",
-                                          "fake_counter_type",
-                                          "fake_counter_unit",
-                                          "fake_counter_volume",
-                                          "fake_resource_id",
-                                          "fake_filter",
-                                          "fake_orderby_attribute",
-                                          10,
-                                          fakearg="f")
+        scenario.run("fake_counter_name", "fake_counter_type",
+                     "fake_counter_unit", "fake_counter_volume",
+                     "fake_resource_id", "fake_filter",
+                     "fake_orderby_attribute", 10, fakearg="f")
         scenario._create_sample.assert_called_once_with("fake_counter_name",
                                                         "fake_counter_type",
                                                         "fake_counter_unit",
@@ -89,19 +84,15 @@ class CeilometerQueriesTestCase(test.ScenarioTestCase):
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
 
     def test_create_and_query_samples_no_filter(self):
-        scenario = queries.CeilometerQueries(self.context)
+        scenario = queries.CeilometerQueriesCreateAndQuerySamples(self.context)
+
         scenario._create_sample = mock.MagicMock()
         scenario._query_samples = mock.MagicMock()
 
-        scenario.create_and_query_samples("fake_counter_name",
-                                          "fake_counter_type",
-                                          "fake_counter_unit",
-                                          "fake_counter_volume",
-                                          "fake_resource_id",
-                                          None,
-                                          "fake_orderby_attribute",
-                                          10,
-                                          fakearg="f")
+        scenario.run("fake_counter_name", "fake_counter_type",
+                     "fake_counter_unit", "fake_counter_volume",
+                     "fake_resource_id", None,
+                     "fake_orderby_attribute", 10, fakearg="f")
         scenario._create_sample.assert_called_once_with("fake_counter_name",
                                                         "fake_counter_type",
                                                         "fake_counter_unit",
