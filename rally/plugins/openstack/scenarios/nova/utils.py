@@ -675,9 +675,8 @@ class NovaScenario(scenario.OpenStackScenario):
     def _attach_volume(self, server, volume, device=None):
         server_id = server.id
         volume_id = volume.id
-        self.clients("nova").volumes.create_server_volume(server_id,
-                                                          volume_id,
-                                                          device)
+        attachment = self.clients("nova").volumes.create_server_volume(
+            server_id, volume_id, device)
         utils.wait_for(
             volume,
             ready_statuses=["in-use"],
@@ -686,13 +685,17 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=(
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
+        return attachment
 
     @atomic.action_timer("nova.detach_volume")
-    def _detach_volume(self, server, volume):
+    def _detach_volume(self, server, volume, attachment=None):
         server_id = server.id
-        volume_id = volume.id
+        # NOTE(chenhb): Recommend the use of attachment.The use of
+        # volume.id is retained mainly for backwoard compatible.
+        attachment_id = attachment.id if attachment else volume.id
+
         self.clients("nova").volumes.delete_server_volume(server_id,
-                                                          volume_id)
+                                                          attachment_id)
         utils.wait_for(
             volume,
             ready_statuses=["available"],

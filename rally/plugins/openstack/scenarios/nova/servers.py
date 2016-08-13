@@ -480,7 +480,7 @@ class NovaServers(utils.NovaScenario,
         server = self._boot_server(image, flavor, **boot_server_kwargs)
         volume = self._create_volume(volume_size, **create_volume_kwargs)
 
-        self._attach_volume(server, volume)
+        attachment = self._attach_volume(server, volume)
         self.sleep_between(min_sleep, max_sleep)
         self._resize(server, to_flavor)
 
@@ -490,7 +490,7 @@ class NovaServers(utils.NovaScenario,
             self._resize_revert(server)
 
         if do_delete:
-            self._detach_volume(server, volume)
+            self._detach_volume(server, volume, attachment)
             self._delete_volume(volume)
             self._delete_server(server, force=force_delete)
 
@@ -747,7 +747,7 @@ class NovaServers(utils.NovaScenario,
         server = self._boot_server(image, flavor, **boot_server_kwargs)
         volume = self._create_volume(size, **create_volume_kwargs)
 
-        self._attach_volume(server, volume)
+        attachment = self._attach_volume(server, volume)
 
         self.sleep_between(min_sleep, max_sleep)
 
@@ -755,7 +755,7 @@ class NovaServers(utils.NovaScenario,
         self._live_migrate(server, new_host,
                            block_migration, disk_over_commit)
 
-        self._detach_volume(server, volume)
+        self._detach_volume(server, volume, attachment)
 
         self._delete_volume(volume)
         self._delete_server(server)

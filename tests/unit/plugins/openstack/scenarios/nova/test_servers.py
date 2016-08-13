@@ -461,12 +461,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
         flavor = mock.MagicMock()
         to_flavor = mock.MagicMock()
+        fake_attachment = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
-        scenario._attach_volume = mock.MagicMock()
+        scenario._attach_volume = mock.MagicMock(return_value=fake_attachment)
         scenario._resize_confirm = mock.MagicMock()
         scenario._resize_revert = mock.MagicMock()
         scenario._resize = mock.MagicMock()
@@ -485,7 +486,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
-                                                        fake_volume)
+                                                        fake_volume,
+                                                        fake_attachment)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._resize.assert_called_once_with(fake_server, to_flavor)
 
@@ -496,7 +498,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         if do_delete:
             scenario._detach_volume.assert_called_once_with(fake_server,
-                                                            fake_volume)
+                                                            fake_volume,
+                                                            fake_attachment)
             scenario._delete_volume.assert_called_once_with(fake_volume)
             scenario._delete_server.assert_called_once_with(fake_server,
                                                             force=False)
@@ -613,10 +616,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_boot_server_attach_created_volume_and_live_migrate(self):
         fake_volume = mock.MagicMock()
         fake_server = mock.MagicMock()
+        fake_attachment = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
 
-        scenario._attach_volume = mock.MagicMock()
+        scenario._attach_volume = mock.MagicMock(return_value=fake_attachment)
         scenario._detach_volume = mock.MagicMock()
 
         scenario.sleep_between = mock.MagicMock()
@@ -643,7 +647,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
-                                                        fake_volume)
+                                                        fake_volume,
+                                                        fake_attachment)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._live_migrate.assert_called_once_with(fake_server,
                                                        "host_name",

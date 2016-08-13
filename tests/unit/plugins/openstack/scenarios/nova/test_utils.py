@@ -595,16 +595,34 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.resize_revert")
 
     def test__attach_volume(self):
-        self.clients("nova").volumes.create_server_volume.return_value = None
+        expect_attach = mock.MagicMock()
+        device = None
+        (self.clients("nova").volumes.create_server_volume
+         .return_value) = expect_attach
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._attach_volume(self.server, self.volume)
+        attach = nova_scenario._attach_volume(self.server, self.volume, device)
+        (self.clients("nova").volumes.create_server_volume
+         .assert_called_once_with(self.server.id, self.volume.id, device))
+        self.assertEqual(expect_attach, attach)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.attach_volume")
 
     def test__detach_volume(self):
+        attach = mock.MagicMock(id="attach_id")
         self.clients("nova").volumes.delete_server_volume.return_value = None
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._detach_volume(self.server, self.volume)
+        nova_scenario._detach_volume(self.server, self.volume, attach)
+        (self.clients("nova").volumes.delete_server_volume
+         .assert_called_once_with(self.server.id, attach.id))
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.detach_volume")
+
+    def test__detach_volume_no_attach(self):
+        self.clients("nova").volumes.delete_server_volume.return_value = None
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._detach_volume(self.server, self.volume, None)
+        (self.clients("nova").volumes.delete_server_volume
+         .assert_called_once_with(self.server.id, self.volume.id))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.detach_volume")
 

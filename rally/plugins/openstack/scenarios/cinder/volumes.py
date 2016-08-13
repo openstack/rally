@@ -311,8 +311,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
         server = self._boot_server(image, flavor, **create_vm_params)
         volume = self._create_volume(size, **create_volume_params)
 
-        self._attach_volume(server, volume)
-        self._detach_volume(server, volume)
+        attachment = self._attach_volume(server, volume)
+        self._detach_volume(server, volume, attachment)
 
         self._delete_volume(volume)
         self._delete_server(server)
@@ -354,8 +354,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
 
         server = self.get_random_server()
 
-        self._attach_volume(server, volume)
-        self._detach_volume(server, volume)
+        attachment = self._attach_volume(server, volume)
+        self._detach_volume(server, volume, attachment)
 
         self._delete_snapshot(snapshot)
         self._delete_volume(volume)
@@ -400,29 +400,27 @@ class CinderVolumes(cinder_utils.CinderScenario,
         size = random.randint(size["min"], size["max"])
 
         create_volume_kwargs = create_volume_kwargs or {}
-
         create_snapshot_kwargs = create_snapshot_kwargs or kwargs or {}
+        server = self.get_random_server()
 
         source_vol = self._create_volume(size, **create_volume_kwargs)
-        nes_objs = [(self.get_random_server(), source_vol,
-                     self._create_snapshot(source_vol.id, False,
-                                           **create_snapshot_kwargs))]
+        snapshot = self._create_snapshot(source_vol.id, False,
+                                         **create_snapshot_kwargs)
+        attachment = self._attach_volume(server, source_vol)
 
-        self._attach_volume(nes_objs[0][0], nes_objs[0][1])
-        snapshot = nes_objs[0][2]
-
+        nes_objs = [(server, source_vol, snapshot, attachment)]
         for i in range(nested_level - 1):
             volume = self._create_volume(size, snapshot_id=snapshot.id)
             snapshot = self._create_snapshot(volume.id, False,
                                              **create_snapshot_kwargs)
             server = self.get_random_server()
-            self._attach_volume(server, volume)
+            attachment = self._attach_volume(server, volume)
 
-            nes_objs.append((server, volume, snapshot))
+            nes_objs.append((server, volume, snapshot, attachment))
 
         nes_objs.reverse()
-        for server, volume, snapshot in nes_objs:
-            self._detach_volume(server, volume)
+        for server, volume, snapshot, attachment in nes_objs:
+            self._detach_volume(server, volume, attachment)
             self._delete_snapshot(snapshot)
             self._delete_volume(volume)
 
