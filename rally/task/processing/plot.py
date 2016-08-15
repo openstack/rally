@@ -242,7 +242,11 @@ class Trends(object):
                 self._tasks[key]["data"][k][tgt].append(
                     (self._tasks[key]["seq"], task[k][src]))
 
-            success = float(task[k]["Success"].rstrip("%"))
+            try:
+                success = float(task[k]["Success"].rstrip("%"))
+            except ValueError:
+                # Got "n/a" for some reason
+                success = 0
             self._tasks[key]["data"][k]["success"].append(
                 (self._tasks[key]["seq"], success))
 
