@@ -216,18 +216,23 @@ class TrendsTestCase(test.TestCase):
         trends._to_str.return_value.encode.assert_called_once_with("utf8")
         mock_hashlib.md5.assert_called_once_with("foo_str")
 
-    def _make_result(self, salt, sla_success=True):
+    def _make_result(self, salt, sla_success=True, with_na=False):
+        if with_na:
+            atomic = {"a": "n/a", "b": "n/a"}
+            stat_rows = [
+                ["a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4],
+                ["b", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4],
+                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4]]
+        else:
+            atomic = {"a": 123, "b": 456}
+            stat_rows = [["a", 0.7, 0.85, 0.9, 0.87, 1.25, 0.67, "100.0%", 4],
+                         ["b", 0.5, 0.75, 0.85, 0.9, 1.1, 0.58, "100.0%", 4],
+                         ["total", 1.2, 1.55, 1.7, 1.9, 1.5, 1.6, "100.0%", 4]]
         return {
             "key": {"kw": salt + "_kw", "name": "Scenario.name_%s" % salt},
             "sla": [{"success": sla_success}],
-            "info": {"iterations_count": 4,
-                     "atomic": {"a": 123, "b": 456},
-                     "stat": {"rows": [["a", 0.7, 0.85, 0.9, 0.87,
-                                        1.25, 0.67, "100.0%", 4],
-                                       ["b", 0.5, 0.75, 0.85, 0.9,
-                                        1.1, 0.58, "100.0%", 4],
-                                       ["total", 1.2, 1.55, 1.7, 1.9,
-                                        1.5, 1.6, "100.0%", 4]],
+            "info": {"iterations_count": 4, "atomic": atomic,
+                     "stat": {"rows": stat_rows,
                               "cols": ["Action", "Min (sec)", "Median (sec)",
                                        "90%ile (sec)", "95%ile (sec)",
                                        "Max (sec)", "Avg (sec)", "Success",
@@ -315,6 +320,40 @@ class TrendsTestCase(test.TestCase):
                                   ("max", [(1, 1.5)]),
                                   ("median", [(1, 1.55)]),
                                   ("min", [(1, 1.2)])]}}]
+        self.assertEqual(expected, self._sort_trends(trends.get_data()))
+
+    def test_add_result_with_na_and_get_data(self):
+        trends = plot.Trends()
+        trends.add_result(self._make_result("foo",
+                                            sla_success=False, with_na=True))
+        expected = [
+            {"atomic": [{"name": "a",
+                         "success": [("success", [(1, 0)])],
+                         "values": [("90%ile", [(1, "n/a")]),
+                                    ("95%ile", [(1, "n/a")]),
+                                    ("avg", [(1, "n/a")]),
+                                    ("max", [(1, "n/a")]),
+                                    ("median", [(1, "n/a")]),
+                                    ("min", [(1, "n/a")])]},
+                        {"name": "b",
+                         "success": [("success", [(1, 0)])],
+                         "values": [("90%ile", [(1, "n/a")]),
+                                    ("95%ile", [(1, "n/a")]),
+                                    ("avg", [(1, "n/a")]),
+                                    ("max", [(1, "n/a")]),
+                                    ("median", [(1, "n/a")]),
+                                    ("min", [(1, "n/a")])]}],
+             "cls": "Scenario", "config": "\"foo_kw\"", "met": "name_foo",
+             "name": "Scenario.name_foo", "seq": 1, "single": True,
+             "sla_failures": 1, "stat": {"avg": None, "max": None,
+                                         "min": None},
+             "total": {"success": [("success", [(1, 0)])],
+                       "values": [("90%ile", [(1, "n/a")]),
+                                  ("95%ile", [(1, "n/a")]),
+                                  ("avg", [(1, "n/a")]),
+                                  ("max", [(1, "n/a")]),
+                                  ("median", [(1, "n/a")]),
+                                  ("min", [(1, "n/a")])]}}]
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
     def test_get_data_no_results_added(self):
