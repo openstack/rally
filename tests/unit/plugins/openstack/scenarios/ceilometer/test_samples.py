@@ -18,38 +18,44 @@ from rally.plugins.openstack.scenarios.ceilometer import samples
 from tests.unit import test
 
 
+BASE = "rally.plugins.openstack.scenarios.ceilometer"
+
+
 class CeilometerSamplesTestCase(test.ScenarioTestCase):
 
-    def test_all_list_samples(self):
-        scenario = samples.CeilometerSamples(self.context)
-        scenario.list_matched_samples = mock.MagicMock()
+    @mock.patch("%s.samples.ListMatchedSamples.run" % BASE)
+    def test_all_list_samples(self, mock_list_matched_samples_run):
         metadata_query = {"a": "test"}
         limit = 10
-        scenario.list_samples(metadata_query, limit)
-        scenario.list_matched_samples.assert_any_call(limit=10)
-        scenario.list_matched_samples.assert_any_call(
+        scenario = samples.ListSamples(self.context)
+        scenario.run(metadata_query, limit)
+        mock_list_matched_samples_run.assert_any_call(limit=10)
+        mock_list_matched_samples_run.assert_any_call(
             metadata_query=metadata_query)
-        scenario.list_matched_samples.assert_any_call(
+        mock_list_matched_samples_run.assert_any_call(
             filter_by_resource_id=True)
-        scenario.list_matched_samples.assert_any_call(
+        mock_list_matched_samples_run.assert_any_call(
             filter_by_user_id=True)
-        scenario.list_matched_samples.assert_any_call(
+        mock_list_matched_samples_run.assert_any_call(
             filter_by_project_id=True)
 
-    def test_list_samples_without_limit_and_metadata(self):
-        scenario = samples.CeilometerSamples(self.context)
-        scenario.list_matched_samples = mock.MagicMock()
-        scenario.list_samples()
+    @mock.patch("%s.samples.ListMatchedSamples.run" % BASE)
+    def test_list_samples_without_limit_and_metadata(
+            self,
+            mock_list_matched_samples_run):
+        scenario = samples.ListSamples()
+        scenario.run()
         expected_call_args_list = [
             mock.call(filter_by_project_id=True),
             mock.call(filter_by_user_id=True),
             mock.call(filter_by_resource_id=True)
         ]
-        self.assertSequenceEqual(expected_call_args_list,
-                                 scenario.list_matched_samples.call_args_list)
+        self.assertSequenceEqual(
+            expected_call_args_list,
+            mock_list_matched_samples_run.call_args_list)
 
     def test_list_matched_samples(self):
-        scenario = samples.CeilometerSamples(self.context)
+        scenario = samples.ListMatchedSamples()
         scenario._list_samples = mock.MagicMock()
         context = {"user": {"tenant_id": "fake", "id": "fake_id"},
                    "tenant": {"id": "fake_id",
@@ -57,7 +63,7 @@ class CeilometerSamplesTestCase(test.ScenarioTestCase):
         scenario.context = context
         metadata_query = {"a": "test"}
         limit = 10
-        scenario.list_matched_samples(True, True, True, metadata_query, limit)
+        scenario.run(True, True, True, metadata_query, limit)
         scenario._list_samples.assert_called_once_with(
             [{"field": "user_id", "value": "fake_id", "op": "eq"},
              {"field": "project_id", "value": "fake_id", "op": "eq"},

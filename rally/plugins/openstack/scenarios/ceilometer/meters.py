@@ -18,37 +18,40 @@ from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 from rally.task import validation
 
 
-class CeilometerMeters(ceiloutils.CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Meters API."""
+"""Scenarios for Ceilometer Meters API."""
 
-    @validation.required_services(consts.Service.CEILOMETER)
-    @validation.required_contexts("ceilometer")
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def list_meters(self, metadata_query=None, limit=None):
+
+@validation.required_services(consts.Service.CEILOMETER)
+@validation.required_contexts("ceilometer")
+@validation.required_openstack(users=True)
+@scenario.configure(name="CeilometerMeters.list_meters")
+class ListMeters(ceiloutils.CeilometerScenario):
+
+    def run(self, metadata_query=None, limit=None):
         """Check all available queries for list resource request.
 
         :param metadata_query: dict with metadata fields and values
         :param limit: limit of meters in response
         """
 
-        self.list_matched_meters(filter_by_project_id=True)
-        self.list_matched_meters(filter_by_user_id=True)
-        self.list_matched_meters(filter_by_resource_id=True)
+        scenario = ListMatchedMeters(self.context)
+        scenario.run(filter_by_project_id=True)
+        scenario.run(filter_by_user_id=True)
+        scenario.run(filter_by_resource_id=True)
         if metadata_query:
-            self.list_matched_meters(metadata_query=metadata_query)
+            scenario.run(metadata_query=metadata_query)
         if limit:
-            self.list_matched_meters(limit=limit)
+            scenario.run(limit=limit)
 
-    @validation.required_services(consts.Service.CEILOMETER)
-    @validation.required_contexts("ceilometer")
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def list_matched_meters(self, filter_by_user_id=False,
-                            filter_by_project_id=False,
-                            filter_by_resource_id=False,
-                            metadata_query=None,
-                            limit=None):
+
+@validation.required_services(consts.Service.CEILOMETER)
+@validation.required_contexts("ceilometer")
+@validation.required_openstack(users=True)
+@scenario.configure(name="CeilometerMeters.list_matched_meters")
+class ListMatchedMeters(ceiloutils.CeilometerScenario):
+
+    def run(self, filter_by_user_id=False, filter_by_project_id=False,
+            filter_by_resource_id=False, metadata_query=None, limit=None):
         """Get meters that matched fields from context and args.
 
         :param filter_by_user_id: flag for query by user_id
@@ -57,6 +60,7 @@ class CeilometerMeters(ceiloutils.CeilometerScenario):
         :param metadata_query: dict with metadata fields and values for query
         :param limit: count of resources in response
         """
+
         query = self._make_general_query(filter_by_project_id,
                                          filter_by_user_id,
                                          filter_by_resource_id,
