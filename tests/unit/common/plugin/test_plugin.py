@@ -178,7 +178,7 @@ class PluginTestCase(test.TestCase):
         self.assertRaises(exceptions.PluginNotFound,
                           BasePlugin.get, "non_existing")
 
-    def test_get_multple_found(self):
+    def test_get_multiple_found(self):
 
         @plugin.configure("test_2_plugins_with_same_name")
         class A(plugin.Plugin):
