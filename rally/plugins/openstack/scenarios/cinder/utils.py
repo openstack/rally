@@ -14,7 +14,6 @@
 #    under the License.
 
 import random
-import time
 
 from oslo_config import cfg
 
@@ -140,7 +139,11 @@ class CinderScenario(scenario.OpenStackScenario):
 
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
-        time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        self.sleep_between(CONF.benchmark.
+                           cinder_volume_create_prepoll_delay,
+                           CONF.benchmark.
+                           cinder_volume_create_prepoll_delay)
+
         volume = bench_utils.wait_for(
             volume,
             ready_statuses=["available"],
@@ -266,7 +269,8 @@ class CinderScenario(scenario.OpenStackScenario):
         client = cinder_wrapper.wrap(self._clients.cinder, self)
         snapshot = client.create_snapshot(volume_id, **kwargs)
 
-        time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        self.sleep_between(CONF.benchmark.cinder_volume_create_prepoll_delay,
+                           CONF.benchmark.cinder_volume_create_prepoll_delay)
         snapshot = bench_utils.wait_for(
             snapshot,
             ready_statuses=["available"],

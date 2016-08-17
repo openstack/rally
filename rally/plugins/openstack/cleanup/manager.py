@@ -114,7 +114,7 @@ class SeekAndDestroy(object):
                         break
 
                 finally:
-                    time.sleep(resource._interval)
+                    rutils.interruptable_sleep(resource._interval)
 
             LOG.warning(_("Resource deletion failed, timeout occurred for "
                           "%(service)s.%(resource)s: %(uuid)s.")
