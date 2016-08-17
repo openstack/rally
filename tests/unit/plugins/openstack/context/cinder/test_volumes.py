@@ -12,9 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 import copy
 
+import ddt
+import jsonschema
 import mock
 
 from rally.plugins.openstack.context.cinder import volumes
@@ -25,6 +26,7 @@ CTX = "rally.plugins.openstack.context"
 SCN = "rally.plugins.openstack.scenarios"
 
 
+@ddt.ddt
 class VolumeGeneratorTestCase(test.ScenarioTestCase):
 
     def _gen_tenants(self, count):
@@ -46,16 +48,26 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         inst = volumes.VolumeGenerator(self.context)
         self.assertEqual(inst.config, self.context["config"]["volumes"])
 
+    @ddt.data({"config": {"size": 1, "volumes_per_tenant": 5}},
+              {"config": {"size": 1, "type": None, "volumes_per_tenant": 5}},
+              {"config": {"size": 1, "type": -1, "volumes_per_tenant": 5},
+               "validation_raises": jsonschema.exceptions.ValidationError})
+    @ddt.unpack
     @mock.patch("%s.cinder.utils.CinderScenario._create_volume" % SCN,
                 return_value=fakes.FakeVolume(id="uuid"))
-    def test_setup(self, mock_cinder_scenario__create_volume):
-        tenants_count = 2
-        users_per_tenant = 5
-        volumes_per_tenant = 5
+    def test_setup(self, mock_cinder_scenario__create_volume, config,
+                   validation_raises=None):
+        try:
+            volumes.VolumeGenerator.validate(config)
+        except Exception as e:
+            if not isinstance(e, validation_raises):
+                raise
 
-        tenants = self._gen_tenants(tenants_count)
+        users_per_tenant = 5
+        volumes_per_tenant = config.get("volumes_per_tenant", 5)
+        tenants = self._gen_tenants(2)
         users = []
-        for id_ in tenants.keys():
+        for id_ in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
                               "credential": mock.MagicMock()})
@@ -67,10 +79,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
                     "users_per_tenant": 5,
                     "concurrent": 10,
                 },
-                "volumes": {
-                    "size": 1,
-                    "volumes_per_tenant": volumes_per_tenant,
-                }
+                "volumes": config
             },
             "admin": {
                 "credential": mock.MagicMock()
@@ -91,7 +100,6 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
-
         tenants_count = 2
         users_per_tenant = 5
         volumes_per_tenant = 5
