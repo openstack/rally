@@ -2,6 +2,15 @@
 # Load server and output JSON results ready to be processed
 # by Rally scenario
 
+for ex in awk top grep free tr df dc dd gzip
+do
+    if ! type ${ex} >/dev/null
+    then
+        echo "Executable is required by script but not available on a server: ${ex}" >&2
+        return 1
+    fi
+done
+
 get_used_cpu_percent() {
     echo 100 $(top -b -n 1 | grep -i CPU | head -n 1 | awk '{print $8}' | tr -d %) - p | dc
 }
