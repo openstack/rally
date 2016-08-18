@@ -67,29 +67,29 @@ class DummyTestCase(test.TestCase):
         scenario = dummy.Dummy(test.get_test_context())
         scenario.sleep_between = mock.MagicMock()
 
-        scenario.dummy(sleep=10)
+        scenario.run(sleep=10)
         mock_interruptable_sleep.assert_called_once_with(10)
 
     @mock.patch(DUMMY + "utils.interruptable_sleep")
     def test_dummy_exception(self, mock_interruptable_sleep):
-        scenario = dummy.Dummy(test.get_test_context())
+        scenario = dummy.DummyException(test.get_test_context())
 
         size_of_message = 5
         self.assertRaises(dummy.DummyScenarioException,
-                          scenario.dummy_exception, size_of_message, sleep=10)
+                          scenario.run, size_of_message, sleep=10)
         mock_interruptable_sleep.assert_called_once_with(10)
 
     def test_dummy_exception_probability(self):
-        scenario = dummy.Dummy(test.get_test_context())
+        scenario = dummy.DummyExceptionProbability(test.get_test_context())
 
         # should not raise an exception as probability is 0
         for i in range(100):
-            scenario.dummy_exception_probability(exception_probability=0)
+            scenario.run(exception_probability=0)
 
         # should always raise an exception as probability is 1
         for i in range(100):
             self.assertRaises(dummy.DummyScenarioException,
-                              scenario.dummy_exception_probability,
+                              scenario.run,
                               exception_probability=1)
 
     @mock.patch(DUMMY + "random")
@@ -97,11 +97,11 @@ class DummyTestCase(test.TestCase):
         mock_random.randint.side_effect = lambda min_, max_: max_
         desc = "This is a description text for %s"
         for random_range, exp in (None, 25), (1, 1), (42, 42):
-            scenario = dummy.Dummy(test.get_test_context())
+            scenario = dummy.DummyOutput(test.get_test_context())
             if random_range is None:
-                scenario.dummy_output()
+                scenario.run()
             else:
-                scenario.dummy_output(random_range=random_range)
+                scenario.run(random_range=random_range)
             expected = {
                 "additive": [
                     {"chart_plugin": "StatsTable",
@@ -156,22 +156,21 @@ class DummyTestCase(test.TestCase):
         self.assertEqual(expected, scenario._output)
 
     def test_dummy_dummy_with_scenario_output(self):
-        scenario = dummy.Dummy(test.get_test_context())
-        result = scenario.dummy_with_scenario_output()
+        scenario = dummy.DummyWithScenarioOutput(test.get_test_context())
+        result = scenario.run()
         self.assertEqual(result["errors"], "")
         # Since the data is generated in random,
         # checking for not None
         self.assertIsNotNone(result["data"])
 
     def test_dummy_random_fail_in_atomic(self):
-        scenario = dummy.Dummy(test.get_test_context())
+        scenario = dummy.DummyRandomFailInAtomic(test.get_test_context())
 
         for i in range(10):
-            scenario.dummy_random_fail_in_atomic(exception_probability=0)
-
+            scenario.run(exception_probability=0)
         for i in range(10):
             self.assertRaises(KeyError,
-                              scenario.dummy_random_fail_in_atomic,
+                              scenario.run,
                               exception_probability=1)
 
     @ddt.data({},
@@ -186,8 +185,8 @@ class DummyTestCase(test.TestCase):
                                  **kwargs):
         mock_random.uniform.side_effect = range(100)
 
-        scenario = dummy.Dummy(test.get_test_context())
-        scenario.dummy_random_action(**kwargs)
+        scenario = dummy.DummyRandomAction(test.get_test_context())
+        scenario.run(**kwargs)
         actions_num = kwargs.get("actions_num", 5)
         calls = [mock.call(i) for i in range(actions_num)]
         self.assertEqual(calls, mock_interruptable_sleep.mock_calls)
@@ -207,9 +206,10 @@ class DummyTestCase(test.TestCase):
     @mock.patch(DUMMY + "utils.interruptable_sleep")
     def test_dummy_timed_atomic_actions(self, mock_interruptable_sleep,
                                         number_of_actions, sleep_factor):
-        scenario = dummy.Dummy(test.get_test_context())
-        scenario.dummy_random_action(number_of_actions, sleep_factor)
-        scenario.dummy_timed_atomic_actions(number_of_actions, sleep_factor)
+        dummy.DummyRandomAction(test.get_test_context()).run(
+            number_of_actions, sleep_factor)
+        scenario = dummy.DummyTimedAtomicAction(test.get_test_context())
+        scenario.run(number_of_actions, sleep_factor)
         for i in range(number_of_actions):
             self._test_atomic_action_timer(scenario.atomic_actions(),
                                            "action_%d" % i)
