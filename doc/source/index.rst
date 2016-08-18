@@ -32,6 +32,7 @@ Contents
    install
    tutorial
    cli/cli_reference
+   reports
    user_stories
    plugins
    plugin/plugin_reference
