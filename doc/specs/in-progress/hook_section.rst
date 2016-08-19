@@ -35,48 +35,64 @@ of hook plugins that should be executed on this iteration.
                     "times": 100,
                     "concurrency": 10
                 },
-                "hook": {                     # new section
-                    "iterations": {
-                        "20": [               # iteration number
-                            {
-                                "example_hook": {
-                                    "cmd": "bash enable_factor_1"
-                                }
-                            },
-                            {
-                                "example_hook": {
-                                    "cmd": "bash enable_factor_2"
-                                }
+                "hook": [       # new section
+                    {
+                        "name": "example_hook",
+                        "args": {
+                            "cmd": "bash enable_factor_1"
+                        },
+                        "trigger: {
+                            "name": "event",
+                            "args": {
+                                "unit": "seconds",
+                                "on": [1, 50, 100]  # seconds since start
                             }
-                        ],
-                        "40": [               # iteration number
-                            {
-                                "example_hook": {
-                                    "cmd": "bash disable_factor_1"
-                                }
-                            },
-                            {
-                                "example_hook": {
-                                    "cmd": "bash disable_factor_2"
-                                }
+                        }
+                    },
+                    {
+                        "name": "example_hook",
+                        "args": {
+                            "cmd": "bash enable_factor_2"
+                        },
+                        "trigger: {
+                            "name": "event",
+                            "args": {
+                                "unit": "iteration",
+                                "on": [35, 40, 45]  # iteration numbers
                             }
-                        ],
-                        "pereodic": {
-                            "10": [          # execute hook each 10 iterations
-                                {
-                                    "example_hook": {
-                                        "cmd": "bash disable_factor_3"
-                                    }
-                                },
-                                {
-                                    "example_hook": {
-                                        "cmd": "bash disable_factor_4"
-                                    }
-                                }
-                            ]
+                        }
+                    },
+                    {
+                        "name": "example_hook",
+                        "args": {
+                            "cmd": "bash enable_factor_3"
+                        },
+                        "trigger: {
+                            "name": "periodic",
+                            "args": {
+                                "unit": "iteration",
+                                "step": 20,   # execute hook each 20 iterations
+                                "start": 0,
+                                "end": 1000
+                            }
+                        }
+                    },
+                    {
+                        "name": "example_hook",
+                        "args": {
+                            "cmd": "bash enable_factor_4"
+                        },
+                        "trigger: {
+                            "name": "periodic",
+                            "args": {
+                                "unit": "seconds",
+                                "step": 15,   # execute hook each 15 seconds
+                                "start": 100,
+                                "end": 200
+                            }
                         }
                     }
-                }
+                ]
             }
         ]
     }
@@ -84,6 +100,7 @@ of hook plugins that should be executed on this iteration.
 
 Add a new base class for such plugins, that should:
     - contain common logic for schema validation
+    - save timestamps when "run" method started/finished
     - provide abstract method 'run' which should be implemented in plugins
       this method should be called after specified iteration has been executed
 
@@ -97,11 +114,18 @@ Hook plugin classes should:
                "status": "success"
             }
 
+Add a new base class for trigger plugins, that should:
+    - contain validation schema for its configuration
+    - contain abstract method "on_time" and "on_iteration" to check whether
+      the trigger is active on specified time/iteration
+
+Trigger plugin classes should:
+    - implement "on_time" and "on_iteration" methods and return True if
+      the trigger is active on specified time/iteration, False otherwise
+
 
 Add HookExecuter class to run hook plugins, that should:
     - controll when to run a hook specified in config
-    - save timestamps when hook method started
-    - save duration of execution of hook method
     - recieve result of hook execution from hook plugin
     - return a full result of hook execution in the following format:
 
@@ -109,7 +133,7 @@ Add HookExecuter class to run hook plugins, that should:
 
             {
                 "hook": "example_hook",
-                "iteration": 20,
+                "triggered_on": {"iteration": 20}
                 "started_at": 1470331269.134323,
                 "finished_at": 1470331319.761103,
                 "action": "my action",
@@ -182,7 +206,7 @@ Example of hook result that goes to TaskResult (list of dicts):
     [
         {
             "hook": "example_hook",
-            "iteration": 20,
+            "triggered_on": {"iteration": 20}
             "started_at": 1470331269.134323,
             "finished_at": 1470331319.761103,
             "action": "my action",
@@ -190,7 +214,7 @@ Example of hook result that goes to TaskResult (list of dicts):
         },
         {
             "hook": "example_hook",
-            "iteration": 40,
+            "triggered_on": {"time": 150.0}     # time in seconds since start
             "started_at": 1470331270.352342,
             "finished_at": 1470331333.623303,
             "action": "my action",
@@ -222,7 +246,9 @@ Work Items
 ----------
 
 - Implement new section in task config
-- Add example of hook plugin
+- Add example of hook plugin that runs specified command as subprocess
+- Add trigger plugins for iterations
+- Add trigger plugins for time
 - Add hooks results into HTML report
 
 Dependencies
