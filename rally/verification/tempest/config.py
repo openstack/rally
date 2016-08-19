@@ -91,7 +91,7 @@ TEMPEST_OPTS = [
     cfg.IntOpt("flavor_ref_alt_ram",
                default="128",
                help="Alternate reference flavor RAM size used by test that"
-               "need two flavors, like those that resize an instnace"),
+               "need two flavors, like those that resize an instance"),
     cfg.IntOpt("heat_instance_type_ram",
                default="64",
                help="RAM size flavor used for orchestration test cases")
