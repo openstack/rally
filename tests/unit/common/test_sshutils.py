@@ -14,7 +14,9 @@
 #    under the License.
 
 import os
+import socket
 
+import ddt
 import mock
 
 from rally.common import sshutils
@@ -152,6 +154,7 @@ class SSHTestCase(test.TestCase):
         self.assertEqual([mock.call("uname")] * 3, self.ssh.execute.mock_calls)
 
 
+@ddt.ddt
 class SSHRunTestCase(test.TestCase):
     """Test SSH.run method in different aspects.
 
@@ -305,9 +308,9 @@ class SSHRunTestCase(test.TestCase):
         sftp.chmod.assert_called_once_with("remotefile", 0o753)
         sftp.__exit__.assert_called_once_with(None, None, None)
 
-    def test_put_file(self):
-        self.ssh._put_file_sftp = mock.Mock(
-            side_effect=sshutils.paramiko.SSHException())
+    @ddt.data(sshutils.paramiko.SSHException, socket.error)
+    def test_put_file(self, exc):
+        self.ssh._put_file_sftp = mock.Mock(side_effect=exc())
         self.ssh._put_file_shell = mock.Mock()
 
         self.ssh.put_file("foo", "bar", 42)

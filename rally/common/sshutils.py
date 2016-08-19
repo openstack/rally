@@ -283,8 +283,8 @@ class SSH(object):
         :param remotepath:  Remote filename.
         :param mode:        Permissions to set after upload
         """
-
+        import socket
         try:
             self._put_file_sftp(localpath, remotepath, mode=mode)
-        except paramiko.SSHException:
+        except (paramiko.SSHException, socket.error):
             self._put_file_shell(localpath, remotepath, mode=mode)
