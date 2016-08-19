@@ -21,31 +21,32 @@ from tests.unit import test
 class CeilometerEventsTestCase(test.ScenarioTestCase):
 
     def test_list_events(self):
-        scenario = events.CeilometerEvents(self.context)
+        scenario = events.CeilometerEventsCreateUserAndListEvents(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
-        scenario.create_user_and_list_events()
+        scenario.run()
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_once_with()
 
     def test_list_event_types(self):
-        scenario = events.CeilometerEvents(self.context)
+        scenario = events.CeilometerEventsCreateUserAndListEventTypes(
+            self.context)
 
         scenario._list_event_types = mock.MagicMock()
         scenario._user_create = mock.MagicMock()
-        scenario.create_user_and_list_event_types()
+        scenario.run()
         scenario._user_create.assert_called_once_with()
         scenario._list_event_types.assert_called_once_with()
 
     def test_get_event(self):
-        scenario = events.CeilometerEvents(self.context)
+        scenario = events.CeilometerEventsCreateUserAndGetEvent(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
         scenario._get_event = mock.MagicMock()
         scenario._list_events.return_value = [mock.Mock(message_id="fake_id")]
-        scenario.create_user_and_get_event()
+        scenario.run()
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._get_event.assert_called_with(event_id="fake_id")
