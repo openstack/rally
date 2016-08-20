@@ -19,22 +19,18 @@ from tests.unit import test
 import mock
 
 
-AUTHENTICATE_MODULE = (
-    "rally.plugins.openstack.scenarios.authenticate.authenticate")
-
-
 class AuthenticateTestCase(test.ScenarioTestCase):
 
     def test_keystone(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.keystone()
+        scenario_inst = authenticate.Keystone()
+        scenario_inst.run()
         self.assertTrue(self.client_created("keystone"))
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
                                        "authenticate.keystone")
 
     def test_validate_glance(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_glance(5)
+        scenario_inst = authenticate.ValidateGlance()
+        scenario_inst.run(5)
 
         # NOTE(stpierre): We can't use assert_has_calls() here because
         # that includes calls on the return values of the mock object
@@ -50,15 +46,15 @@ class AuthenticateTestCase(test.ScenarioTestCase):
                                        "authenticate.validate_glance_5_times")
 
     def test_validate_nova(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_nova(5)
+        scenario_inst = authenticate.ValidateNova()
+        scenario_inst.run(5)
         self.clients("nova").flavors.list.assert_has_calls([mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
                                        "authenticate.validate_nova_5_times")
 
     def test_validate_ceilometer(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_ceilometer(5)
+        scenario_inst = authenticate.ValidateCeilometer()
+        scenario_inst.run(5)
         self.clients("ceilometer").meters.list.assert_has_calls(
             [mock.call()] * 5)
         self._test_atomic_action_timer(
@@ -66,24 +62,24 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             "authenticate.validate_ceilometer_5_times")
 
     def test_validate_cinder(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_cinder(5)
+        scenario_inst = authenticate.ValidateCinder()
+        scenario_inst.run(5)
         self.clients("cinder").volume_types.list.assert_has_calls(
             [mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
                                        "authenticate.validate_cinder_5_times")
 
     def test_validate_neutron(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_neutron(5)
+        scenario_inst = authenticate.ValidateNeutron()
+        scenario_inst.run(5)
         self.clients("neutron").list_networks.assert_has_calls(
             [mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
                                        "authenticate.validate_neutron_5_times")
 
     def test_validate_heat(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_heat(5)
+        scenario_inst = authenticate.ValidateHeat()
+        scenario_inst.run(5)
         self.assertItemsEqual(
             self.clients("heat").stacks.list.call_args_list,
             [mock.call(limit=0)] * 5)
@@ -91,8 +87,8 @@ class AuthenticateTestCase(test.ScenarioTestCase):
                                        "authenticate.validate_heat_5_times")
 
     def test_validate_monasca(self):
-        scenario_inst = authenticate.Authenticate()
-        scenario_inst.validate_monasca(5)
+        scenario_inst = authenticate.ValidateMonasca()
+        scenario_inst.run(5)
         self.assertItemsEqual(
             self.clients("monasca").metrics.list.call_args_list,
             [mock.call(limit=0)] * 5)

@@ -22,13 +22,16 @@ from rally.task import atomic
 from rally.task import validation
 
 
-class DesignateBasic(utils.DesignateScenario):
-    """Basic benchmark scenarios for Designate."""
+"""Basic scenarios for Designate."""
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_list_domains(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_list_domains")
+class CreateAndListDomains(utils.DesignateScenario):
+
+    def run(self):
         """Create a domain and list all domains.
 
         Measure the "designate domain-list" command performance.
@@ -42,10 +45,14 @@ class DesignateBasic(utils.DesignateScenario):
         self._create_domain()
         self._list_domains()
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def list_domains(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.list_domains")
+class ListDomains(utils.DesignateScenario):
+
+    def run(self):
         """List Designate domains.
 
         This simple scenario tests the designate domain-list command by listing
@@ -55,13 +62,16 @@ class DesignateBasic(utils.DesignateScenario):
         uploaded for them we will be able to test the performance of
         designate domain-list command in this case.
         """
-
         self._list_domains()
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_delete_domain(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_delete_domain")
+class CreateAndDeleteDomain(utils.DesignateScenario):
+
+    def run(self):
         """Create and then delete a domain.
 
         Measure the performance of creating and deleting domains
@@ -70,10 +80,14 @@ class DesignateBasic(utils.DesignateScenario):
         domain = self._create_domain()
         self._delete_domain(domain["id"])
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_update_domain(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_update_domain")
+class CreateAndUpdateDomain(utils.DesignateScenario):
+
+    def run(self):
         """Create and then update a domain.
 
         Measure the performance of creating and updating domains
@@ -82,10 +96,14 @@ class DesignateBasic(utils.DesignateScenario):
         domain = self._create_domain()
         self._update_domain(domain)
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_delete_records(self, records_per_domain=5):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_delete_records")
+class CreateAndDeleteRecords(utils.DesignateScenario):
+
+    def run(self, records_per_domain=5):
         """Create and then delete records.
 
         Measure the performance of creating and deleting records
@@ -109,10 +127,14 @@ class DesignateBasic(utils.DesignateScenario):
                 self._delete_record(
                     domain["id"], record["id"], atomic_action=False)
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def list_records(self, domain_id):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.list_records")
+class ListRecords(utils.DesignateScenario):
+
+    def run(self, domain_id):
         """List Designate records.
 
         This simple scenario tests the designate record-list command by listing
@@ -127,10 +149,14 @@ class DesignateBasic(utils.DesignateScenario):
 
         self._list_records(domain_id)
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_list_records(self, records_per_domain=5):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_list_records")
+class CreateAndListRecords(utils.DesignateScenario):
+
+    def run(self, records_per_domain=5):
         """Create and then list records.
 
         If you have only 1 user in your context, you will
@@ -150,10 +176,14 @@ class DesignateBasic(utils.DesignateScenario):
 
         self._list_records(domain["id"])
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_list_servers(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_list_servers")
+class CreateAndListServers(utils.DesignateScenario):
+
+    def run(self):
         """Create a Designate server and list all servers.
 
         If you have only 1 user in your context, you will
@@ -165,10 +195,14 @@ class DesignateBasic(utils.DesignateScenario):
         self._create_server()
         self._list_servers()
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_delete_server(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_delete_server")
+class CreateAndDeleteServer(utils.DesignateScenario):
+
+    def run(self):
         """Create and then delete a server.
 
         Measure the performance of creating and deleting servers
@@ -177,10 +211,14 @@ class DesignateBasic(utils.DesignateScenario):
         server = self._create_server()
         self._delete_server(server["id"])
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def list_servers(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.list_servers")
+class ListServers(utils.DesignateScenario):
+
+    def run(self):
         """List Designate servers.
 
         This simple scenario tests the designate server-list command by listing
@@ -188,11 +226,15 @@ class DesignateBasic(utils.DesignateScenario):
         """
         self._list_servers()
 
-    # NOTE: API V2
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_list_zones(self):
+
+# NOTE: API V2
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_list_zones")
+class CreateAndListZones(utils.DesignateScenario):
+
+    def run(self):
         """Create a zone and list all zones.
 
         Measure the "openstack zone list" command performance.
@@ -206,10 +248,14 @@ class DesignateBasic(utils.DesignateScenario):
         self._create_zone()
         self._list_zones()
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def list_zones(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.list_zones")
+class ListZones(utils.DesignateScenario):
+
+    def run(self):
         """List Designate zones.
 
         This simple scenario tests the openstack zone list command by listing
@@ -218,10 +264,14 @@ class DesignateBasic(utils.DesignateScenario):
 
         self._list_zones()
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_delete_zone(self):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_delete_zone")
+class CreateAndDeleteZone(utils.DesignateScenario):
+
+    def run(self):
         """Create and then delete a zone.
 
         Measure the performance of creating and deleting zones
@@ -230,10 +280,14 @@ class DesignateBasic(utils.DesignateScenario):
         zone = self._create_zone()
         self._delete_zone(zone["id"])
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def list_recordsets(self, zone_id):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.list_recordsets")
+class ListRecordsets(utils.DesignateScenario):
+
+    def run(self, zone_id):
         """List Designate recordsets.
 
         This simple scenario tests the openstack recordset list command by
@@ -244,11 +298,15 @@ class DesignateBasic(utils.DesignateScenario):
 
         self._list_recordsets(zone_id)
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("zones")
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_delete_recordsets(self, recordsets_per_zone=5):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@validation.required_contexts("zones")
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_delete_recordsets")
+class CreateAndDeleteRecordsets(utils.DesignateScenario):
+
+    def run(self, recordsets_per_zone=5):
         """Create and then delete recordsets.
 
         Measure the performance of creating and deleting recordsets
@@ -272,11 +330,15 @@ class DesignateBasic(utils.DesignateScenario):
                 self._delete_recordset(
                     zone["id"], recordset["id"], atomic_action=False)
 
-    @validation.required_services(consts.Service.DESIGNATE)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("zones")
-    @scenario.configure(context={"cleanup": ["designate"]})
-    def create_and_list_recordsets(self, recordsets_per_zone=5):
+
+@validation.required_services(consts.Service.DESIGNATE)
+@validation.required_openstack(users=True)
+@validation.required_contexts("zones")
+@scenario.configure(context={"cleanup": ["designate"]},
+                    name="DesignateBasic.create_and_list_recordsets")
+class CreateAndListRecordsets(utils.DesignateScenario):
+
+    def run(self, recordsets_per_zone=5):
         """Create and then list recordsets.
 
         If you have only 1 user in your context, you will
