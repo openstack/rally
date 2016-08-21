@@ -38,9 +38,9 @@ class ListWorkbooks(utils.MistralScenario):
         self._list_workbooks()
 
 
-@types.convert(definition={"type": "file"})
-@validation.file_exists("definition")
 @validation.required_parameters("definition")
+@validation.file_exists("definition")
+@types.convert(definition={"type": "file"})
 @validation.required_clients("mistral")
 @validation.required_openstack(users=True)
 @validation.required_services(consts.Service.MISTRAL)
