@@ -11,13 +11,6 @@ var widgetDirective = function($compile) {
         nv.utils.windowResize(chart.update);
       })
     },
-    /* NOTE(amaretskiy): this is actually a result of
-       d3.scale.category20().range(), excluding red color (#d62728)
-       which is reserved for errors */
-    _colors: ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
-              "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
-              "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
-              "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"],
     _widgets: {
       Pie: "pie",
       StackedArea: "stack",
@@ -43,17 +36,34 @@ var widgetDirective = function($compile) {
         .color(function(d){
           if (d.data && d.data.color) { return d.data.color }
         });
-
-      var data_ = [], colors = [], colors_map = {errors: "#d62728"};
+      var colorizer = new Chart.colorizer("errors"), data_ = [];
       for (var i in data) {
-        var key = data[i][0];
-        if (! (key in colors_map)) {
-          if (! colors.length) { colors = Chart._colors.slice() }
-          colors_map[key] = colors.shift()
-        }
-        data_.push({key:key, values:data[i][1], color:colors_map[key]})
+        data_.push({key:data[i][0], values:data[i][1], color:colorizer.get_color(data[i][0])})
       }
       Chart._render(node, data_, chart)
+    },
+    colorizer: function(failure_key, failure_color) {
+      this.failure_key = failure_key || "failed_duration";
+      this.failure_color = failure_color || "#d62728";  // red
+      this.color_idx = -1;
+      /* NOTE(amaretskiy): this is actually a result of
+         d3.scale.category20().range(), excluding red color (#d62728)
+         which is reserved for errors */
+      this.colors = ["#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78", "#2ca02c",
+                     "#98df8a", "#ff9896", "#9467bd", "#c5b0d5", "#8c564b",
+                     "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+                     "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"];
+      this.get_color = function(key) {
+        if (key === this.failure_key) {
+          return this.failure_color
+        }
+        if (this.color_idx > (this.colors.length - 2)) {
+          this.color_idx = 0
+        } else {
+          this.color_idx++
+        }
+        return this.colors[this.color_idx]
+      }
     },
     stack: function(node, data, opts, do_after) {
       var chart = nv.models.stackedAreaChart()
@@ -69,13 +79,9 @@ var widgetDirective = function($compile) {
       chart.yAxis
         .orient("left")
         .tickFormat(d3.format(opts.yformat || ",.3f"));
-      var data_ = [];
+      var colorizer = new Chart.colorizer(), data_ = [];
       for (var i in data) {
-        var d = {key:data[i][0], values:data[i][1]};
-        if (d.key === "failed_duration") {
-          d.color = "#d62728"
-        }
-        data_.push(d);
+        data_.push({key:data[i][0], values:data[i][1], color:colorizer.get_color(data[i][0])})
       }
       Chart._render(node, data_, chart, do_after);
     },
@@ -92,13 +98,9 @@ var widgetDirective = function($compile) {
       chart.yAxis
         .orient("left")
         .tickFormat(d3.format(opts.yformat || ",.3f"));
-      var data_ = [];
+      var colorizer = new Chart.colorizer(), data_ = [];
       for (var i in data) {
-        var d = {key:data[i][0], values:data[i][1]};
-        if (d.key === "failed_duration") {
-          d.color = "#d62728"
-        }
-        data_.push(d)
+        data_.push({key:data[i][0], values:data[i][1], color:colorizer.get_color(data[i][0])})
       }
       Chart._render(node, data_, chart, do_after)
     },
