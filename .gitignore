@@ -33,7 +33,7 @@ cover-master
 *.sqlite
 .venv
 .cache
-pytest_results.html
+.test_results/
 
 # Docs
 doc/source/_build/
