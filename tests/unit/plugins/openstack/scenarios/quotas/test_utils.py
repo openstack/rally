@@ -76,14 +76,16 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
         scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "nova")
         for k, v in six.iteritems(quotas):
-            self.assertTrue(-1 <= v <= max_quota)
+            self.assertGreaterEqual(v, -1)
+            self.assertLessEqual(v, max_quota)
 
     def test__generate_quota_values_cinder(self):
         max_quota = 1024
         scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "cinder")
         for k, v in six.iteritems(quotas):
-            self.assertTrue(-1 <= v <= max_quota)
+            self.assertGreaterEqual(v, -1)
+            self.assertLessEqual(v, max_quota)
 
     def test__generate_quota_values_neutron(self):
         max_quota = 1024
@@ -92,7 +94,8 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
         for v in six.itervalues(quotas):
             for v1 in six.itervalues(v):
                 for v2 in six.itervalues(v1):
-                    self.assertTrue(-1 <= v2 <= max_quota)
+                    self.assertGreaterEqual(v2, -1)
+                    self.assertLessEqual(v2, max_quota)
 
     def test__delete_quotas(self):
         tenant_id = "fake_tenant"

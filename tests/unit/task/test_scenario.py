@@ -237,7 +237,8 @@ class ScenarioTestCase(test.TestCase):
     def test_sleep_between(self):
         scenario_inst = scenario.Scenario()
         scenario_inst.sleep_between(0.001, 0.002)
-        self.assertTrue(0.001 <= scenario_inst.idle_duration() <= 0.002)
+        self.assertGreaterEqual(scenario_inst.idle_duration(), 0.001)
+        self.assertLessEqual(scenario_inst.idle_duration(), 0.002)
 
     def test_sleep_beetween_multi(self):
         scenario_inst = scenario.Scenario()

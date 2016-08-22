@@ -482,7 +482,7 @@ class TimeoutThreadTestCase(test.TestCase):
         # NOTE(sskripnick): Killing thread with PyThreadState_SetAsyncExc
         # works with sinificant delay. Make sure this delay is less
         # than 10 seconds.
-        self.assertTrue(time_elapsed < 11,
+        self.assertLess(time_elapsed, 11,
                         "Thread killed too late (%s seconds)" % time_elapsed)
 
 
