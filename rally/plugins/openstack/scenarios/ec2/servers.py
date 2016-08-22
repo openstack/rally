@@ -19,13 +19,16 @@ from rally.task import types
 from rally.task import validation
 
 
-class EC2Servers(utils.EC2Scenario):
-    """Benchmark scenarios for servers using EC2."""
+"""Scenarios for servers using EC2."""
 
-    @validation.required_services(consts.Service.EC2)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["ec2"]})
-    def list_servers(self):
+
+@validation.required_services(consts.Service.EC2)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["ec2"]},
+                    name="EC2Servers.list_servers")
+class ListServers(utils.EC2Scenario):
+
+    def run(self):
         """List all servers.
 
         This simple scenario tests the EC2 API list function by listing
@@ -33,13 +36,17 @@ class EC2Servers(utils.EC2Scenario):
         """
         self._list_servers()
 
-    @types.convert(image={"type": "ec2_image"},
-                   flavor={"type": "ec2_flavor"})
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_services(consts.Service.EC2)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["ec2"]})
-    def boot_server(self, image, flavor, **kwargs):
+
+@types.convert(image={"type": "ec2_image"},
+               flavor={"type": "ec2_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.EC2)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["ec2"]},
+                    name="EC2Servers.boot_server")
+class BootServer(utils.EC2Scenario):
+
+    def run(self, image, flavor, **kwargs):
         """Boot a server.
 
         Assumes that cleanup is done elsewhere.

@@ -19,15 +19,17 @@ from rally.plugins.openstack.scenarios.fuel import utils
 from rally.task import validation
 
 
-class FuelNodes(utils.FuelScenario):
-    """Benchmark scenarios for Fuel nodes."""
+"""Scenarios for Fuel nodes."""
 
-    @validation.required_clients("fuel", admin=True)
-    @validation.required_openstack(admin=True)
-    @validation.required_contexts("fuel_environments")
-    @scenario.configure()
-    def add_and_remove_node(self, node_roles=None):
-        """Add node to environment and remove
+
+@validation.required_clients("fuel", admin=True)
+@validation.required_openstack(admin=True)
+@validation.required_contexts("fuel_environments")
+@scenario.configure(name="FuelNodes.add_and_remove_node")
+class AddAndRemoveNode(utils.FuelScenario):
+
+    def run(self, node_roles=None):
+        """Add node to environment and remove.
 
         :param node_roles: list. Roles, which node should be assigned to
             env with

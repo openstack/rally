@@ -17,24 +17,18 @@ from rally.plugins.openstack.scenarios.fuel import utils
 from rally.task import validation
 
 
-class FuelEnvironments(utils.FuelScenario):
-    """Benchmark scenarios for Fuel environments.
+"""Scenarios for Fuel environments."""
 
-    Scenarios take Fuel related parameters:
-    release_id: OpenStack release available in Fuel
-    deployment_mode: accepts 'ha_compact' or 'multinode'
-    network_provider: accepts 'nova' or 'neutron'
-    net_segment_type: accepts 'gre' or 'vlan'
-    """
 
-    @validation.required_clients("fuel", admin=True)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["fuel"]})
-    def create_and_delete_environment(self, release_id=1,
-                                      network_provider="neutron",
-                                      deployment_mode="ha_compact",
-                                      net_segment_type="vlan",
-                                      delete_retries=5):
+@validation.required_clients("fuel", admin=True)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["fuel"]},
+                    name="FuelEnvironments.create_and_delete_environment")
+class CreateAndDeleteEnvironment(utils.FuelScenario):
+
+    def run(self, release_id=1, network_provider="neutron",
+            deployment_mode="ha_compact", net_segment_type="vlan",
+            delete_retries=5):
         """Create and delete Fuel environments.
 
         :param release_id: release id (default 1)
@@ -50,14 +44,16 @@ class FuelEnvironments(utils.FuelScenario):
                                           net_segment_type=net_segment_type)
         self._delete_environment(env_id, delete_retries)
 
-    @validation.required_clients("fuel", admin=True)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["fuel"]})
-    def create_and_list_environments(self, release_id=1,
-                                     network_provider="neutron",
-                                     deployment_mode="ha_compact",
-                                     net_segment_type="vlan"):
-        """Create and list Fuel environments
+
+@validation.required_clients("fuel", admin=True)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["fuel"]},
+                    name="FuelEnvironments.create_and_list_environments")
+class CreateAndListEnvironments(utils.FuelScenario):
+
+    def run(self, release_id=1, network_provider="neutron",
+            deployment_mode="ha_compact", net_segment_type="vlan"):
+        """Create and list Fuel environments.
 
         :param release_id: release id (default 1)
         :param network_provider: network provider (default 'neutron')

@@ -21,12 +21,12 @@ from tests.unit import test
 class FuelEnvironmentsTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_environments(self):
-        scenario = environments.FuelEnvironments(self.context)
+        scenario = environments.CreateAndListEnvironments(self.context)
 
         scenario._create_environment = mock.Mock()
         scenario._list_environments = mock.Mock()
 
-        scenario.create_and_list_environments(
+        scenario.run(
             release_id=2, network_provider="test_neutron",
             deployment_mode="test_mode", net_segment_type="test_type")
         scenario._create_environment.assert_called_once_with(
@@ -35,12 +35,12 @@ class FuelEnvironmentsTestCase(test.ScenarioTestCase):
         scenario._list_environments.assert_called_once_with()
 
     def test_create_and_delete_environments(self):
-        scenario = environments.FuelEnvironments()
+        scenario = environments.CreateAndDeleteEnvironment(self.context)
 
         scenario._create_environment = mock.Mock(return_value=42)
         scenario._delete_environment = mock.Mock()
 
-        scenario.create_and_delete_environment(
+        scenario.run(
             release_id=2, network_provider="test_neutron",
             deployment_mode="test_mode", net_segment_type="test_type")
 

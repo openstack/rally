@@ -21,15 +21,17 @@ from rally.task import types
 from rally.task import validation
 
 
-class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
-    """Benchmark scenarios for Glance images."""
+"""Scenarios for Glance images."""
 
-    @types.convert(image_location={"type": "path_or_url"})
-    @validation.required_services(consts.Service.GLANCE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["glance"]})
-    def create_and_list_image(self, container_format,
-                              image_location, disk_format, **kwargs):
+
+@types.convert(image_location={"type": "path_or_url"})
+@validation.required_services(consts.Service.GLANCE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_list_image")
+class CreateAndListImage(utils.GlanceScenario, nova_utils.NovaScenario):
+
+    def run(self, container_format, image_location, disk_format, **kwargs):
         """Create an image and then list all images.
 
         Measure the "glance image-list" command performance.
@@ -53,10 +55,14 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                            **kwargs)
         self._list_images()
 
-    @validation.required_services(consts.Service.GLANCE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["glance"]})
-    def list_images(self):
+
+@validation.required_services(consts.Service.GLANCE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.list_images")
+class ListImages(utils.GlanceScenario, nova_utils.NovaScenario):
+
+    def run(self):
         """List all images.
 
         This simple scenario tests the glance image-list command by listing
@@ -66,14 +72,16 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         uploaded for them we will be able to test the performance of
         glance image-list command in this case.
         """
-
         self._list_images()
 
-    @validation.required_services(consts.Service.GLANCE)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["glance"]})
-    def create_and_delete_image(self, container_format,
-                                image_location, disk_format, **kwargs):
+
+@validation.required_services(consts.Service.GLANCE)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_delete_image")
+class CreateAndDeleteImage(utils.GlanceScenario, nova_utils.NovaScenario):
+
+    def run(self, container_format, image_location, disk_format, **kwargs):
         """Create and then delete an image.
 
         :param container_format: container format of image. Acceptable
@@ -89,15 +97,18 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    **kwargs)
         self._delete_image(image)
 
-    @types.convert(flavor={"type": "nova_flavor"})
-    @validation.flavor_exists("flavor")
-    @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["glance", "nova"]})
-    def create_image_and_boot_instances(self, container_format,
-                                        image_location, disk_format,
-                                        flavor, number_instances,
-                                        **kwargs):
+
+@types.convert(flavor={"type": "nova_flavor"})
+@validation.flavor_exists("flavor")
+@validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["glance", "nova"]},
+                    name="GlanceImages.create_image_and_boot_instances")
+class CreateImageAndBootInstances(utils.GlanceScenario,
+                                  nova_utils.NovaScenario):
+
+    def run(self, container_format, image_location, disk_format,
+            flavor, number_instances, **kwargs):
         """Create an image and boot several instances from it.
 
         :param container_format: container format of image. Acceptable
