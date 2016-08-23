@@ -43,9 +43,6 @@ class CinderWrapper(object):
 
 
 class CinderV1Wrapper(CinderWrapper):
-    def __init__(self, *args, **kwargs):
-        super(CinderV1Wrapper, self).__init__(*args, **kwargs)
-
     def create_volume(self, size, **kwargs):
         kwargs["display_name"] = self.owner.generate_random_name()
         volume = self.client.volumes.create(size, **kwargs)
@@ -64,9 +61,6 @@ class CinderV1Wrapper(CinderWrapper):
 
 
 class CinderV2Wrapper(CinderWrapper):
-    def __init__(self, *args, **kwargs):
-        super(CinderV2Wrapper, self).__init__(*args, **kwargs)
-
     def create_volume(self, size, **kwargs):
         kwargs["name"] = self.owner.generate_random_name()
 
