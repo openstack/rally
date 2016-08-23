@@ -28,6 +28,9 @@ from rally.common.i18n import _
 from rally.common.plugin import plugin
 
 
+configure = plugin.configure
+
+
 def _format_result(criterion_name, success, detail):
     """Returns the SLA result dict corresponding to the current state."""
     return {"criterion": criterion_name,
@@ -108,10 +111,6 @@ class SLAChecker(object):
 
     def set_unexpected_failure(self, exc):
         self.unexpected_failure = exc
-
-
-def configure(name, namespace="default"):
-    return plugin.configure(name=name, namespace=namespace)
 
 
 @plugin.base()
