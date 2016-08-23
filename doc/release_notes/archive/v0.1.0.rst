@@ -301,7 +301,7 @@ New Features & API changes
 
 * **New Rally task reports**
 
-  * New code is based on OOP style which is base step to make plugable Reports
+  * New code is based on OOP style which is base step to make pluggable Reports
 
   * Reports are now generated for only one iteration over the resulting data
     which resolves scalability issues when we are working with large
@@ -329,7 +329,7 @@ Specs & Feature requests
 
   [feature request] Explicitly specify existing users for scenarios
 
-  [feature request] Improve install script and add --unistall and --version
+  [feature request] Improve install script and add --uninstall and --version
 
   [feature request] Allows specific repos & packages in install-rally.sh
 
