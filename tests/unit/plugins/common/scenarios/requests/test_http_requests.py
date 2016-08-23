@@ -23,17 +23,19 @@ class RequestScenarioTestCase(test.TestCase):
 
     @mock.patch("%s.requests.utils.RequestScenario._check_request" % SCN)
     def test_check_request(self, mock__check_request):
-        Requests = http_requests.HttpRequests(test.get_test_context())
-        Requests.check_request("sample_url", "GET", 200)
+        Requests = http_requests.HttpRequestsCheckRequest(
+            test.get_test_context())
+        Requests.run("sample_url", "GET", 200)
         mock__check_request.assert_called_once_with("sample_url", "GET", 200)
 
     @mock.patch("%s.requests.utils.RequestScenario._check_request" % SCN)
     @mock.patch("%s.requests.http_requests.random.choice" % SCN)
     def test_check_random_request(self, mock_choice, mock__check_request):
         mock_choice.return_value = {"url": "sample_url"}
-        Requests = http_requests.HttpRequests(test.get_test_context())
-        Requests.check_random_request(status_code=200,
-                                      requests=[{"url": "sample_url"}])
+        Requests = http_requests.HttpRequestsCheckRandomRequest(
+            test.get_test_context())
+        Requests.run(status_code=200,
+                     requests=[{"url": "sample_url"}])
         mock_choice.assert_called_once_with([{"url": "sample_url"}])
         mock__check_request.assert_called_once_with(
             status_code=200, url="sample_url")
