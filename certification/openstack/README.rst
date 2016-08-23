@@ -12,7 +12,7 @@ To validate task with your own parameters run:
   $ rally task validate task.yaml --task-args-file task_arguments.yaml
 
 
-Task start task with your own parameters run:
+To start task with your own parameters run:
 
 .. code-block:: console
 
