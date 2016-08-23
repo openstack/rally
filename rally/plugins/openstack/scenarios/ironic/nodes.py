@@ -19,15 +19,17 @@ from rally.plugins.openstack.scenarios.ironic import utils
 from rally.task import validation
 
 
-class IronicNodes(utils.IronicScenario):
-    """Base class for Ironic scenarios with basic atomic actions."""
+"""Scenarios for ironic nodes."""
 
-    @validation.required_parameters("driver")
-    @validation.required_services(consts.Service.IRONIC)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["ironic"]})
-    def create_and_list_node(
-            self, associated=None, maintenance=None,
+
+@validation.required_parameters("driver")
+@validation.required_services(consts.Service.IRONIC)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["ironic"]},
+                    name="IronicNodes.create_and_list_node")
+class CreateAndListNode(utils.IronicScenario):
+
+    def run(self, associated=None, maintenance=None,
             marker=None, limit=None, detail=False, sort_key=None,
             sort_dir=None, **kwargs):
         """Create and list nodes.
@@ -65,11 +67,15 @@ class IronicNodes(utils.IronicScenario):
             associated=associated, maintenance=maintenance, marker=marker,
             limit=limit, detail=detail, sort_key=sort_key, sort_dir=sort_dir)
 
-    @validation.required_parameters("driver")
-    @validation.required_services(consts.Service.IRONIC)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["ironic"]})
-    def create_and_delete_node(self, **kwargs):
+
+@validation.required_parameters("driver")
+@validation.required_services(consts.Service.IRONIC)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["ironic"]},
+                    name="IronicNodes.create_and_delete_node")
+class CreateAndDeleteNode(utils.IronicScenario):
+
+    def run(self, **kwargs):
         """Create and delete node.
 
         :param kwargs: Optional additional arguments for node creation
