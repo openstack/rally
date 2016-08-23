@@ -112,7 +112,7 @@ Here is proposed iterations results structure for output data:
               # existent Chart subclass that is responsible for processing
               # and displaying the data
               {"title": "How some durations changes during the scenario",
-               "description": "Some details explaind here",
+               "description": "Some details explained here",
                "chart": "OutputStackedAreaChart",
                "items": [[<str key>, <float value>], ...]  # Additive data
               },
