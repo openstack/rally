@@ -37,7 +37,7 @@ class VolumeGenerator(context.Context):
                 "minimum": 1
             },
             "type": {
-                "type": "string"
+                "type": ["string", "null"]
             },
             "volumes_per_tenant": {
                 "type": "integer",
