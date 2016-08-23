@@ -18,14 +18,16 @@ from rally.plugins.openstack.scenarios.monasca import utils as monascautils
 from rally.task import validation
 
 
-class MonascaMetrics(monascautils.MonascaScenario):
-    """Benchmark scenarios for monasca Metrics API."""
+"""Scenarios for monasca Metrics API."""
 
-    @validation.required_clients("monasca")
-    @validation.required_services(consts.Service.MONASCA)
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def list_metrics(self, **kwargs):
+
+@validation.required_clients("monasca")
+@validation.required_services(consts.Service.MONASCA)
+@validation.required_openstack(users=True)
+@scenario.configure(name="MonascaMetrics.list_metrics")
+class ListMetrics(monascautils.MonascaScenario):
+
+    def run(self, **kwargs):
         """Fetch user's metrics.
 
         :param kwargs: optional arguments for list query:

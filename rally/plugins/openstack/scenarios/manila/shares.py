@@ -20,15 +20,17 @@ from rally.plugins.openstack.scenarios.manila import utils
 from rally.task import validation
 
 
-class ManilaShares(utils.ManilaScenario):
-    """Benchmark scenarios for Manila shares."""
+"""Scenarios for Manila shares."""
 
-    @validation.validate_share_proto()
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["manila"]})
-    def create_and_delete_share(self, share_proto, size=1, min_sleep=0,
-                                max_sleep=0, **kwargs):
+
+@validation.validate_share_proto()
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_and_delete_share")
+class CreateAndDeleteShare(utils.ManilaScenario):
+
+    def run(self, share_proto, size=1, min_sleep=0, max_sleep=0, **kwargs):
         """Create and delete a share.
 
         Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
@@ -49,10 +51,13 @@ class ManilaShares(utils.ManilaScenario):
         self.sleep_between(min_sleep, max_sleep)
         self._delete_share(share)
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def list_shares(self, detailed=True, search_opts=None):
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(name="ManilaShares.list_shares")
+class ListShares(utils.ManilaScenario):
+
+    def run(self, detailed=True, search_opts=None):
         """Basic scenario for 'share list' operation.
 
         :param detailed: defines either to return detailed list of
@@ -62,18 +67,18 @@ class ManilaShares(utils.ManilaScenario):
         """
         self._list_shares(detailed=detailed, search_opts=search_opts)
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["manila"]})
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_share_network_and_delete")
+class CreateShareNetworkAndDelete(utils.ManilaScenario):
+
     @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
-    def create_share_network_and_delete(self,
-                                        neutron_net_id=None,
-                                        neutron_subnet_id=None,
-                                        nova_net_id=None,
-                                        name=None,
-                                        description=None):
+    def run(self, neutron_net_id=None, neutron_subnet_id=None,
+            nova_net_id=None, name=None, description=None):
         """Creates share network and then deletes.
 
         :param neutron_net_id: ID of Neutron network
@@ -89,20 +94,19 @@ class ManilaShares(utils.ManilaScenario):
         )
         self._delete_share_network(share_network)
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["manila"]})
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_share_network_and_list")
+class CreateShareNetworkAndList(utils.ManilaScenario):
+
     @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
-    def create_share_network_and_list(self,
-                                      neutron_net_id=None,
-                                      neutron_subnet_id=None,
-                                      nova_net_id=None,
-                                      name=None,
-                                      description=None,
-                                      detailed=True,
-                                      search_opts=None):
+    def run(self, neutron_net_id=None, neutron_subnet_id=None,
+            nova_net_id=None, name=None, description=None,
+            detailed=True, search_opts=None):
         """Creates share network and then lists it.
 
         :param neutron_net_id: ID of Neutron network
@@ -125,10 +129,13 @@ class ManilaShares(utils.ManilaScenario):
             search_opts=search_opts,
         )
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_share_servers(self, search_opts=None):
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="ManilaShares.list_share_servers")
+class ListShareServers(utils.ManilaScenario):
+
+    def run(self, search_opts=None):
         """Lists share servers.
 
         Requires admin creds.
@@ -138,17 +145,19 @@ class ManilaShares(utils.ManilaScenario):
         """
         self._list_share_servers(search_opts=search_opts)
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["manila"]})
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_security_service_and_delete")
+class CreateSecurityServiceAndDelete(utils.ManilaScenario):
+
     @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
-    def create_security_service_and_delete(self, security_service_type,
-                                           dns_ip=None, server=None,
-                                           domain=None, user=None,
-                                           password=None, name=None,
-                                           description=None):
+    def run(self, security_service_type, dns_ip=None, server=None,
+            domain=None, user=None, password=None,
+            name=None, description=None):
         """Creates security service and then deletes.
 
         :param security_service_type: security service type, permitted values
@@ -171,11 +180,15 @@ class ManilaShares(utils.ManilaScenario):
         )
         self._delete_security_service(security_service)
 
-    @validation.required_services(consts.Service.MANILA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["manila"]})
-    def attach_security_service_to_share_network(self,
-                                                 security_service_type="ldap"):
+
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name=("ManilaShares."
+                          "attach_security_service_to_share_network"))
+class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
+
+    def run(self, security_service_type="ldap"):
         """Attaches security service to share network.
 
         :param security_service_type: type of security service to use.

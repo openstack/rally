@@ -22,16 +22,19 @@ from rally.task import scenario
 from rally.task import validation
 
 
-class MuranoPackages(utils.MuranoScenario):
-    """Benchmark scenarios for Murano packages."""
+"""Scenarios for Murano packages."""
 
-    @validation.required_parameters("package")
-    @validation.file_exists(param_name="package", mode=os.F_OK)
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["murano.packages"]})
-    def import_and_list_packages(self, package, include_disabled=False):
+
+@validation.required_parameters("package")
+@validation.file_exists(param_name="package", mode=os.F_OK)
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["murano.packages"]},
+                    name="MuranoPackages.import_and_list_packages")
+class ImportAndListPackages(utils.MuranoScenario):
+
+    def run(self, package, include_disabled=False):
         """Import Murano package and get list of packages.
 
         Measure the "murano import-package" and "murano package-list" commands
@@ -53,13 +56,17 @@ class MuranoPackages(utils.MuranoScenario):
         finally:
             os.remove(package_path)
 
-    @validation.required_parameters("package")
-    @validation.file_exists(param_name="package", mode=os.F_OK)
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["murano.packages"]})
-    def import_and_delete_package(self, package):
+
+@validation.required_parameters("package")
+@validation.file_exists(param_name="package", mode=os.F_OK)
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["murano.packages"]},
+                    name="MuranoPackages.import_and_delete_package")
+class ImportAndDeletePackage(utils.MuranoScenario):
+
+    def run(self, package):
         """Import Murano package and then delete it.
 
         Measure the "murano import-package" and "murano package-delete"
@@ -78,13 +85,17 @@ class MuranoPackages(utils.MuranoScenario):
         finally:
             os.remove(package_path)
 
-    @validation.required_parameters("package", "body")
-    @validation.file_exists(param_name="package", mode=os.F_OK)
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["murano.packages"]})
-    def package_lifecycle(self, package, body, operation="replace"):
+
+@validation.required_parameters("package", "body")
+@validation.file_exists(param_name="package", mode=os.F_OK)
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["murano.packages"]},
+                    name="MuranoPackages.package_lifecycle")
+class PackageLifecycle(utils.MuranoScenario):
+
+    def run(self, package, body, operation="replace"):
         """Import Murano package, modify it and then delete it.
 
         Measure the Murano import, update and delete package
@@ -112,13 +123,17 @@ class MuranoPackages(utils.MuranoScenario):
         finally:
             os.remove(package_path)
 
-    @validation.required_parameters("package", "filter_query")
-    @validation.file_exists(param_name="package", mode=os.F_OK)
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["murano.packages"]})
-    def import_and_filter_applications(self, package, filter_query):
+
+@validation.required_parameters("package", "filter_query")
+@validation.file_exists(param_name="package", mode=os.F_OK)
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["murano.packages"]},
+                    name="MuranoPackages.import_and_filter_applications")
+class ImportAndFilterApplications(utils.MuranoScenario):
+
+    def run(self, package, filter_query):
         """Import Murano package and then filter packages by some criteria.
 
         Measure the performance of package import and package
