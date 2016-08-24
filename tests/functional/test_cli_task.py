@@ -564,7 +564,7 @@ class TaskTestCase(unittest.TestCase):
                "deployment_id": deployment_id})
         results = json.loads(rally("task results"))
         iterations_completed = len(results[0]["result"])
-        self.assertTrue(iterations_completed < times)
+        self.assertLess(iterations_completed, times)
 
     def test_start_abort_on_sla_failure_max_seconds_constant(self):
         times = 100
@@ -734,7 +734,7 @@ class TaskTestCase(unittest.TestCase):
         iterations_completed = len(results[0]["result"])
         # NOTE(msdubov): check that the task is really stopped before
         #                the specified number of iterations
-        self.assertTrue(iterations_completed < RUNNER_TIMES)
+        self.assertLess(iterations_completed, RUNNER_TIMES)
         self.assertIn("aborted", rally("task status"))
         report = rally.gen_report_path(extension="html")
         rally("task report --out %s" % report)
