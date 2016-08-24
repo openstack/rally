@@ -27,10 +27,7 @@ from rally import exceptions
 
 
 LOG = logging.getLogger(__name__)
-
-
-def configure(name, namespace="default"):
-    return plugin.configure(name, namespace=namespace)
+configure = plugin.configure
 
 
 # FIXME(boris-42): We should make decomposition of this class.

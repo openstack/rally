@@ -26,8 +26,7 @@ import six
 from rally.common.plugin import plugin
 
 
-def configure(name, namespace="default"):
-    return plugin.configure(name=name, namespace=namespace)
+configure = plugin.configure
 
 
 @plugin.base()
