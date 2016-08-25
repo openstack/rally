@@ -16,13 +16,17 @@ from rally.plugins.openstack.scenarios.neutron import utils
 from rally.task import validation
 
 
-class NeutronSecurityGroup(utils.NeutronScenario):
-    """Benchmark scenarios for Neutron Security Groups."""
+"""Scenarios for Neutron Security Groups."""
 
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_list_security_groups(self, security_group_create_args=None):
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronSecurityGroup"
+                          ".create_and_list_security_groups"))
+class CreateAndListSecurityGroups(utils.NeutronScenario):
+
+    def run(self, security_group_create_args=None):
         """Create and list Neutron security-groups.
 
         Measure the "neutron security-group-create" and "neutron
@@ -35,11 +39,15 @@ class NeutronSecurityGroup(utils.NeutronScenario):
         self._create_security_group(**security_group_create_args)
         self._list_security_groups()
 
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_delete_security_groups(self,
-                                          security_group_create_args=None):
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronSecurityGroup"
+                          ".create_and_delete_security_groups"))
+class CreateAndDeleteSecurityGroups(utils.NeutronScenario):
+
+    def run(self, security_group_create_args=None):
         """Create and delete Neutron security-groups.
 
         Measure the "neutron security-group-create" and "neutron
@@ -53,12 +61,16 @@ class NeutronSecurityGroup(utils.NeutronScenario):
             **security_group_create_args)
         self._delete_security_group(security_group)
 
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_update_security_groups(self,
-                                          security_group_create_args=None,
-                                          security_group_update_args=None):
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronSecurityGroup"
+                          ".create_and_update_security_groups"))
+class CreateAndUpdateSecurityGroups(utils.NeutronScenario):
+
+    def run(self, security_group_create_args=None,
+            security_group_update_args=None):
         """Create and update Neutron security-groups.
 
         Measure the "neutron security-group-create" and "neutron

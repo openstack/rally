@@ -41,17 +41,15 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     )
     @ddt.unpack
     def test_create_and_list_pools(self, pool_create_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
+        scenario = loadbalancer_v1.CreateAndListPools(self._get_context())
         pool_data = pool_create_args or {}
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario._create_v1_pools = mock.Mock()
-        neutron_scenario._list_v1_pools = mock.Mock()
-        neutron_scenario.create_and_list_pools(
-            pool_create_args=pool_create_args)
-        neutron_scenario._create_v1_pools.assert_called_once_with(
-            networks, **pool_data)
-        neutron_scenario._list_v1_pools.assert_called_once_with()
+        scenario._create_v1_pools = mock.Mock()
+        scenario._list_v1_pools = mock.Mock()
+        scenario.run(pool_create_args=pool_create_args)
+        scenario._create_v1_pools.assert_called_once_with(networks,
+                                                          **pool_data)
+        scenario._list_v1_pools.assert_called_once_with()
 
     @ddt.data(
         {},
@@ -61,8 +59,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     )
     @ddt.unpack
     def test_create_and_delete_pools(self, pool_create_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
+        scenario = loadbalancer_v1.CreateAndDeletePools(self._get_context())
         pools = [{
             "pool": {
                 "id": "pool-id"
@@ -70,14 +67,13 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         }]
         pool_data = pool_create_args or {}
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
-        neutron_scenario._delete_v1_pool = mock.Mock()
-        neutron_scenario.create_and_delete_pools(
-            pool_create_args=pool_create_args)
+        scenario._create_v1_pools = mock.Mock(return_value=pools)
+        scenario._delete_v1_pool = mock.Mock()
+        scenario.run(pool_create_args=pool_create_args)
         self.assertEqual([mock.call(networks, **pool_data)],
-                         neutron_scenario._create_v1_pools.mock_calls)
-        for pool in pools:
-            self.assertEqual(1, neutron_scenario._delete_v1_pool.call_count)
+                         scenario._create_v1_pools.mock_calls)
+        for _ in pools:
+            self.assertEqual(1, scenario._delete_v1_pool.call_count)
 
     @ddt.data(
         {},
@@ -98,8 +94,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     @ddt.unpack
     def test_create_and_update_pools(self, pool_create_args=None,
                                      pool_update_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
+        scenario = loadbalancer_v1.CreateAndUpdatePools(self._get_context())
         pools = [{
             "pool": {
                 "id": "pool-id"
@@ -115,17 +110,15 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         pool_data = pool_create_args or {}
         pool_update_args = pool_update_args or {}
         pool_update_args.update({"name": "_updated", "admin_state_up": True})
-        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
-        neutron_scenario._update_v1_pool = mock.Mock(
-            return_value=updated_pool)
+        scenario._create_v1_pools = mock.Mock(return_value=pools)
+        scenario._update_v1_pool = mock.Mock(return_value=updated_pool)
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario.create_and_update_pools(
-            pool_create_args=pool_data,
-            pool_update_args=pool_update_args)
+        scenario.run(pool_create_args=pool_data,
+                     pool_update_args=pool_update_args)
         self.assertEqual([mock.call(networks, **pool_data)],
-                         neutron_scenario._create_v1_pools.mock_calls)
+                         scenario._create_v1_pools.mock_calls)
         for pool in pools:
-            neutron_scenario._update_v1_pool.assert_called_once_with(
+            scenario._update_v1_pool.assert_called_once_with(
                 pool, **pool_update_args)
 
     @ddt.data(
@@ -140,8 +133,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     @ddt.unpack
     def test_create_and_list_vips(self, pool_create_args=None,
                                   vip_create_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
+        scenario = loadbalancer_v1.CreateAndListVips(self._get_context())
         pools = [{
             "pool": {
                 "id": "pool-id"
@@ -150,16 +142,16 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         vip_data = vip_create_args or {}
         pool_data = pool_create_args or {}
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
-        neutron_scenario._create_v1_vip = mock.Mock()
-        neutron_scenario._list_v1_vips = mock.Mock()
-        neutron_scenario.create_and_list_vips(
-            pool_create_args=pool_create_args, vip_create_args=vip_create_args)
-        neutron_scenario._create_v1_pools.assert_called_once_with(
-            networks, **pool_data)
-        neutron_scenario._create_v1_vip.assert_has_calls(
+        scenario._create_v1_pools = mock.Mock(return_value=pools)
+        scenario._create_v1_vip = mock.Mock()
+        scenario._list_v1_vips = mock.Mock()
+        scenario.run(pool_create_args=pool_create_args,
+                     vip_create_args=vip_create_args)
+        scenario._create_v1_pools.assert_called_once_with(networks,
+                                                          **pool_data)
+        scenario._create_v1_vip.assert_has_calls(
             [mock.call(pool, **vip_data) for pool in pools])
-        neutron_scenario._list_v1_vips.assert_called_once_with()
+        scenario._list_v1_vips.assert_called_once_with()
 
     @ddt.data(
         {},
@@ -173,6 +165,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     @ddt.unpack
     def test_create_and_delete_vips(self, pool_create_args=None,
                                     vip_create_args=None):
+        scenario = loadbalancer_v1.CreateAndDeleteVips(self._get_context())
         pools = [{
             "pool": {
                 "id": "pool-id"
@@ -183,23 +176,19 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                 "id": "vip-id"
             }
         }
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
         vip_data = vip_create_args or {}
         pool_data = pool_create_args or {}
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
-        neutron_scenario._create_v1_vip = mock.Mock(return_value=vip)
-        neutron_scenario._delete_v1_vip = mock.Mock()
-        neutron_scenario.create_and_delete_vips(
-            pool_create_args=pool_create_args,
-            vip_create_args=vip_create_args)
-        neutron_scenario._create_v1_pools.assert_called_once_with(
-            networks, **pool_data)
-        neutron_scenario._create_v1_vip.assert_has_calls(
+        scenario._create_v1_pools = mock.Mock(return_value=pools)
+        scenario._create_v1_vip = mock.Mock(return_value=vip)
+        scenario._delete_v1_vip = mock.Mock()
+        scenario.run(pool_create_args=pool_create_args,
+                     vip_create_args=vip_create_args)
+        scenario._create_v1_pools.assert_called_once_with(networks,
+                                                          **pool_data)
+        scenario._create_v1_vip.assert_has_calls(
             [mock.call(pool, **vip_data) for pool in pools])
-        neutron_scenario._delete_v1_vip.assert_has_calls(
-            [mock.call(vip["vip"])])
+        scenario._delete_v1_vip.assert_has_calls([mock.call(vip["vip"])])
 
     @ddt.data(
         {},
@@ -214,8 +203,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     def test_create_and_update_vips(self, pool_create_args=None,
                                     vip_create_args=None,
                                     vip_update_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context())
+        scenario = loadbalancer_v1.CreateAndUpdateVips(self._get_context())
         pools = [{
             "pool": {
                 "id": "pool-id",
@@ -238,17 +226,17 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         vip_update_data = vip_update_args or {}
         pool_data = pool_create_args or {}
         networks = self._get_context()["tenant"]["networks"]
-        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
-        neutron_scenario._create_v1_vip = mock.Mock(return_value=expected_vip)
-        neutron_scenario._update_v1_vip = mock.Mock(return_value=updated_vip)
-        neutron_scenario.create_and_update_vips(
-            pool_create_args=pool_create_args, vip_create_args=vip_create_args,
-            vip_update_args=vip_update_args)
-        neutron_scenario._create_v1_pools.assert_called_once_with(
-            networks, **pool_data)
-        neutron_scenario._create_v1_vip.assert_has_calls(
+        scenario._create_v1_pools = mock.Mock(return_value=pools)
+        scenario._create_v1_vip = mock.Mock(return_value=expected_vip)
+        scenario._update_v1_vip = mock.Mock(return_value=updated_vip)
+        scenario.run(pool_create_args=pool_create_args,
+                     vip_create_args=vip_create_args,
+                     vip_update_args=vip_update_args)
+        scenario._create_v1_pools.assert_called_once_with(networks,
+                                                          **pool_data)
+        scenario._create_v1_vip.assert_has_calls(
             [mock.call(pool, **vip_data) for pool in pools])
-        neutron_scenario._update_v1_vip.assert_has_calls(
+        scenario._update_v1_vip.assert_has_calls(
             [mock.call(vip, **vip_update_data) for vip in vips])
 
     @ddt.data(
@@ -260,16 +248,14 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     @ddt.unpack
     def test_create_and_list_healthmonitors(self,
                                             healthmonitor_create_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+        scenario = loadbalancer_v1.CreateAndListHealthmonitors(
             self._get_context())
         hm_data = healthmonitor_create_args or {}
-        neutron_scenario._create_v1_healthmonitor = mock.Mock()
-        neutron_scenario._list_v1_healthmonitors = mock.Mock()
-        neutron_scenario.create_and_list_healthmonitors(
-            healthmonitor_create_args=healthmonitor_create_args)
-        neutron_scenario._create_v1_healthmonitor.assert_called_once_with(
-            **hm_data)
-        neutron_scenario._list_v1_healthmonitors.assert_called_once_with()
+        scenario._create_v1_healthmonitor = mock.Mock()
+        scenario._list_v1_healthmonitors = mock.Mock()
+        scenario.run(healthmonitor_create_args=healthmonitor_create_args)
+        scenario._create_v1_healthmonitor.assert_called_once_with(**hm_data)
+        scenario._list_v1_healthmonitors.assert_called_once_with()
 
     @ddt.data(
         {},
@@ -280,19 +266,16 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     @ddt.unpack
     def test_create_and_delete_healthmonitors(self,
                                               healthmonitor_create_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+        scenario = loadbalancer_v1.CreateAndDeleteHealthmonitors(
             self._get_context())
         hm = {"health_monitor": {"id": "hm-id"}}
         hm_data = healthmonitor_create_args or {}
-        neutron_scenario._create_v1_healthmonitor = mock.Mock(return_value=hm)
-        neutron_scenario._delete_v1_healthmonitor = mock.Mock()
-        neutron_scenario.create_and_delete_healthmonitors(
-            healthmonitor_create_args=healthmonitor_create_args)
-        neutron_scenario._create_v1_healthmonitor.assert_called_once_with(
-            **hm_data)
-        neutron_scenario._delete_v1_healthmonitor.assert_called_once_with(
-            neutron_scenario._create_v1_healthmonitor.return_value[
-                "health_monitor"])
+        scenario._create_v1_healthmonitor = mock.Mock(return_value=hm)
+        scenario._delete_v1_healthmonitor = mock.Mock()
+        scenario.run(healthmonitor_create_args=healthmonitor_create_args)
+        scenario._create_v1_healthmonitor.assert_called_once_with(**hm_data)
+        scenario._delete_v1_healthmonitor.assert_called_once_with(
+            scenario._create_v1_healthmonitor.return_value["health_monitor"])
 
     @ddt.data(
         {},
@@ -304,20 +287,17 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     def test_create_and_update_healthmonitors(self,
                                               healthmonitor_create_args=None,
                                               healthmonitor_update_args=None):
-        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+        scenario = loadbalancer_v1.CreateAndUpdateHealthmonitors(
             self._get_context())
         mock_random = loadbalancer_v1.random = mock.Mock()
         hm = {"healthmonitor": {"id": "hm-id"}}
         hm_data = healthmonitor_create_args or {}
         hm_update_data = healthmonitor_update_args or {
             "max_retries": mock_random.choice.return_value}
-        neutron_scenario._create_v1_healthmonitor = mock.Mock(return_value=hm)
-        neutron_scenario._update_v1_healthmonitor = mock.Mock()
-        neutron_scenario.create_and_update_healthmonitors(
-            healthmonitor_create_args=healthmonitor_create_args,
-            healthmonitor_update_args=healthmonitor_update_args)
-        neutron_scenario._create_v1_healthmonitor.assert_called_once_with(
-            **hm_data)
-        neutron_scenario._update_v1_healthmonitor.assert_called_once_with(
-            neutron_scenario._create_v1_healthmonitor.return_value,
-            **hm_update_data)
+        scenario._create_v1_healthmonitor = mock.Mock(return_value=hm)
+        scenario._update_v1_healthmonitor = mock.Mock()
+        scenario.run(healthmonitor_create_args=healthmonitor_create_args,
+                     healthmonitor_update_args=healthmonitor_update_args)
+        scenario._create_v1_healthmonitor.assert_called_once_with(**hm_data)
+        scenario._update_v1_healthmonitor.assert_called_once_with(
+            scenario._create_v1_healthmonitor.return_value, **hm_update_data)

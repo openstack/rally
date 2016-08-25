@@ -28,15 +28,15 @@ class NeutronSecurityGroup(test.TestCase):
     @ddt.unpack
     def test_create_and_list_security_groups(
             self, security_group_create_args=None):
-        neutron_scenario = security_groups.NeutronSecurityGroup()
+        scenario = security_groups.CreateAndListSecurityGroups()
+
         security_group_data = security_group_create_args or {}
-        neutron_scenario._create_security_group = mock.Mock()
-        neutron_scenario._list_security_groups = mock.Mock()
-        neutron_scenario.create_and_list_security_groups(
-            security_group_create_args=security_group_create_args)
-        neutron_scenario._create_security_group.assert_called_once_with(
+        scenario._create_security_group = mock.Mock()
+        scenario._list_security_groups = mock.Mock()
+        scenario.run(security_group_create_args=security_group_create_args)
+        scenario._create_security_group.assert_called_once_with(
             **security_group_data)
-        neutron_scenario._list_security_groups.assert_called_once_with()
+        scenario._list_security_groups.assert_called_once_with()
 
     @ddt.data(
         {},
@@ -46,16 +46,15 @@ class NeutronSecurityGroup(test.TestCase):
     @ddt.unpack
     def test_create_and_delete_security_groups(
             self, security_group_create_args=None):
-        neutron_scenario = security_groups.NeutronSecurityGroup()
+        scenario = security_groups.CreateAndDeleteSecurityGroups()
         security_group_data = security_group_create_args or {}
-        neutron_scenario._create_security_group = mock.Mock()
-        neutron_scenario._delete_security_group = mock.Mock()
-        neutron_scenario.create_and_delete_security_groups(
-            security_group_create_args=security_group_create_args)
-        neutron_scenario._create_security_group.assert_called_once_with(
+        scenario._create_security_group = mock.Mock()
+        scenario._delete_security_group = mock.Mock()
+        scenario.run(security_group_create_args=security_group_create_args)
+        scenario._create_security_group.assert_called_once_with(
             **security_group_data)
-        neutron_scenario._delete_security_group.assert_called_once_with(
-            neutron_scenario._create_security_group.return_value)
+        scenario._delete_security_group.assert_called_once_with(
+            scenario._create_security_group.return_value)
 
     @ddt.data(
         {},
@@ -68,16 +67,15 @@ class NeutronSecurityGroup(test.TestCase):
     def test_create_and_update_security_groups(
             self, security_group_create_args=None,
             security_group_update_args=None):
-        neutron_scenario = security_groups.NeutronSecurityGroup()
+        scenario = security_groups.CreateAndUpdateSecurityGroups()
         security_group_data = security_group_create_args or {}
         security_group_update_data = security_group_update_args or {}
-        neutron_scenario._create_security_group = mock.Mock()
-        neutron_scenario._update_security_group = mock.Mock()
-        neutron_scenario.create_and_update_security_groups(
-            security_group_create_args=security_group_create_args,
-            security_group_update_args=security_group_update_args)
-        neutron_scenario._create_security_group.assert_called_once_with(
+        scenario._create_security_group = mock.Mock()
+        scenario._update_security_group = mock.Mock()
+        scenario.run(security_group_create_args=security_group_create_args,
+                     security_group_update_args=security_group_update_args)
+        scenario._create_security_group.assert_called_once_with(
             **security_group_data)
-        neutron_scenario._update_security_group.assert_called_once_with(
-            neutron_scenario._create_security_group.return_value,
+        scenario._update_security_group.assert_called_once_with(
+            scenario._create_security_group.return_value,
             **security_group_update_data)

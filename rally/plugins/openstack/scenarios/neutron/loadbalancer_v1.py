@@ -19,17 +19,20 @@ from rally.task import atomic
 from rally.task import validation
 
 
-class NeutronLoadbalancerV1(utils.NeutronScenario):
-    """Benchmark scenarios for Neutron Loadbalancer v1."""
+"""Scenarios for Neutron Loadbalancer v1."""
 
-    @validation.restricted_parameters("subnet_id",
-                                      subdict="pool_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_list_pools(self, pool_create_args=None):
+
+@validation.restricted_parameters("subnet_id",
+                                  subdict="pool_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_list_pools")
+class CreateAndListPools(utils.NeutronScenario):
+
+    def run(self, pool_create_args=None):
         """Create a pool(v1) and then list pools(v1).
 
         Measure the "neutron lb-pool-list" command performance.
@@ -42,14 +45,18 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         self._create_v1_pools(networks, **pool_create_args)
         self._list_v1_pools()
 
-    @validation.restricted_parameters("subnet_id",
-                                      subdict="pool_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_delete_pools(self, pool_create_args=None):
+
+@validation.restricted_parameters("subnet_id",
+                                  subdict="pool_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_delete_pools")
+class CreateAndDeletePools(utils.NeutronScenario):
+
+    def run(self, pool_create_args=None):
         """Create pools(v1) and delete pools(v1).
 
         Measure the "neutron lb-pool-create" and "neutron lb-pool-delete"
@@ -64,15 +71,18 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         for pool in pools:
             self._delete_v1_pool(pool["pool"])
 
-    @validation.restricted_parameters("subnet_id",
-                                      subdict="pool_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_update_pools(self, pool_update_args=None,
-                                pool_create_args=None):
+
+@validation.restricted_parameters("subnet_id",
+                                  subdict="pool_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_update_pools")
+class CreateAndUpdatePools(utils.NeutronScenario):
+
+    def run(self, pool_update_args=None, pool_create_args=None):
         """Create pools(v1) and update pools(v1).
 
         Measure the "neutron lb-pool-create" and "neutron lb-pool-update"
@@ -89,15 +99,18 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         for pool in pools:
             self._update_v1_pool(pool, **pool_update_args)
 
-    @validation.restricted_parameters(["pool_id", "subnet_id"],
-                                      subdict="vip_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_list_vips(self, pool_create_args=None,
-                             vip_create_args=None):
+
+@validation.restricted_parameters(["pool_id", "subnet_id"],
+                                  subdict="vip_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_list_vips")
+class CreateAndListVips(utils.NeutronScenario):
+
+    def run(self, pool_create_args=None, vip_create_args=None):
         """Create a vip(v1) and then list vips(v1).
 
         Measure the "neutron lb-vip-create" and "neutron lb-vip-list" command
@@ -116,15 +129,18 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
                 self._create_v1_vip(pool, **vip_create_args)
         self._list_v1_vips()
 
-    @validation.restricted_parameters(["pool_id", "subnet_id"],
-                                      subdict="vip_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_delete_vips(self, pool_create_args=None,
-                               vip_create_args=None):
+
+@validation.restricted_parameters(["pool_id", "subnet_id"],
+                                  subdict="vip_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_delete_vips")
+class CreateAndDeleteVips(utils.NeutronScenario):
+
+    def run(self, pool_create_args=None, vip_create_args=None):
         """Create a vip(v1) and then delete vips(v1).
 
         Measure the "neutron lb-vip-create" and "neutron lb-vip-delete"
@@ -145,16 +161,19 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         for vip in vips:
             self._delete_v1_vip(vip["vip"])
 
-    @validation.restricted_parameters(["pool_id", "subnet_id"],
-                                      subdict="vip_create_args")
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("network")
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_update_vips(self, pool_create_args=None,
-                               vip_update_args=None,
-                               vip_create_args=None):
+
+@validation.restricted_parameters(["pool_id", "subnet_id"],
+                                  subdict="vip_create_args")
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronLoadbalancerV1.create_and_update_vips")
+class CreateAndUpdateVips(utils.NeutronScenario):
+
+    def run(self, pool_create_args=None,
+            vip_update_args=None, vip_create_args=None):
         """Create vips(v1) and update vips(v1).
 
         Measure the "neutron lb-vip-create" and "neutron lb-vip-update"
@@ -177,11 +196,16 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         for vip in vips:
             self._update_v1_vip(vip, **vip_update_args)
 
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_list_healthmonitors(self, healthmonitor_create_args=None):
+
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronLoadbalancerV1"
+                          ".create_and_list_healthmonitors"))
+class CreateAndListHealthmonitors(utils.NeutronScenario):
+
+    def run(self, healthmonitor_create_args=None):
         """Create healthmonitors(v1) and list healthmonitors(v1).
 
         Measure the "neutron lb-healthmonitor-list" command performance. This
@@ -194,11 +218,16 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         self._create_v1_healthmonitor(**healthmonitor_create_args)
         self._list_v1_healthmonitors()
 
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_delete_healthmonitors(self, healthmonitor_create_args=None):
+
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronLoadbalancerV1"
+                          ".create_and_delete_healthmonitors"))
+class CreateAndDeleteHealthmonitors(utils.NeutronScenario):
+
+    def run(self, healthmonitor_create_args=None):
         """Create a healthmonitor(v1) and delete healthmonitors(v1).
 
         Measure the "neutron lb-healthmonitor-create" and "neutron
@@ -213,13 +242,17 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
             **healthmonitor_create_args)
         self._delete_v1_healthmonitor(healthmonitor["health_monitor"])
 
-    @validation.required_neutron_extensions("lbaas")
-    @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_update_healthmonitors(self,
-                                         healthmonitor_create_args=None,
-                                         healthmonitor_update_args=None):
+
+@validation.required_neutron_extensions("lbaas")
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronLoadbalancerV1"
+                          ".create_and_update_healthmonitors"))
+class CreateAndUpdateHealthmonitors(utils.NeutronScenario):
+
+    def run(self, healthmonitor_create_args=None,
+            healthmonitor_update_args=None):
         """Create a healthmonitor(v1) and update healthmonitors(v1).
 
         Measure the "neutron lb-healthmonitor-create" and "neutron
