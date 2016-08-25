@@ -65,10 +65,6 @@ Project Core maintainers
 | | liyingjun (irc)            |                                                |
 | | yingjun.li@kylin-cloud.com |                                                |
 +------------------------------+------------------------------------------------+
-| | Pavel Boldin               |  * VM workloads                                |
-| | pboldin (irc)              |                                                |
-| | pboldin@mirantis.com       |                                                |
-+------------------------------+------------------------------------------------+
 | | Roman Vasilets             |  * Rally task & benchmark                      |
 | | rvasilets (irc)            |                                                |
 | | rvasilets@mirantis.com     |                                                |
