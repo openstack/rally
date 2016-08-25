@@ -21,16 +21,16 @@ Step 10. Verifying cloud via Tempest
 .. contents::
    :local:
 
-In this guide, we are going to show how to use Tempest and Rally together.
+In this guide, we show how to use Tempest and Rally together.
 We assume that you have a :ref:`Rally installation <tutorial_step_0_installation>`
-and an already :ref:`registered OpenStack deployment <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
-in Rally. So let's get started!
+and have already :ref:`registered an OpenStack deployment <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
+in Rally. So, let's get started!
 
 
 Tempest installation (rally verify install/uninstall/reinstall)
 ---------------------------------------------------------------
 
-In order to install Tempest execute the following command:
+Execute the following command to install Tempest:
 
 .. code-block:: console
 
@@ -48,18 +48,20 @@ In order to install Tempest execute the following command:
     2016-05-09 13:24:11.180 21850 INFO rally.verification.tempest.tempest [-] Installing the virtual environment for Tempest.
     2016-05-09 13:24:25.596 21850 INFO rally.verification.tempest.tempest [-] Tempest has been successfully installed!
 
-By default, the command clones Tempest from the **https://git.openstack.org/openstack/tempest**
-repository and installs it for the current deployment. But it is possible to
-install Tempest for any registered deployment in Rally, using the **--deployment**
-argument.
+The command clones Tempest from the
+**https://git.openstack.org/openstack/tempest** repository and installs it in
+a Python virtual environment for the current deployment by default. The
+arguments below allow these default behaviors to be overridden.
+
+Use the **--deployment** argument to specify any deployment registered in Rally.
 
 .. code-block:: console
 
     $ rally verify install --deployment <UUID or name of a deployment>
 
-Also, Rally allows users to specify a source to clone Tempest from, using the
-**--source** argument. The source can be both the path to a local Tempest
-repository and a URL, e.g. to some GitHub repository.
+Use the **--source** argument to specify an alternate git repository location.
+The path to a local Tempest repository or a URL of a remote repository are
+both valid values.
 
 .. code-block:: console
 
@@ -88,8 +90,7 @@ repository and a URL, e.g. to some GitHub repository.
     2016-05-09 13:30:37.602 22541 INFO rally.verification.tempest.tempest [-] Installing the virtual environment for Tempest.
     2016-05-09 13:30:49.432 22541 INFO rally.verification.tempest.tempest [-] Tempest has been successfully installed!
 
-Moreover, it is possible to specify a Tempest commit ID or tag, using the
-**--version** argument, to install a certain version of Tempest.
+Use the **--version** argument to specify a Tempest commit ID or tag.
 
 .. code-block:: console
 
@@ -153,9 +154,9 @@ Moreover, it is possible to specify a Tempest commit ID or tag, using the
     2016-05-09 13:50:42.903 23870 INFO rally.verification.tempest.tempest [-] Installing the virtual environment for Tempest.
     2016-05-09 13:50:55.827 23870 INFO rally.verification.tempest.tempest [-] Tempest has been successfully installed!
 
-Finally, users can specify the **--system-wide** argument that will tell Rally
-not to create a virtual environment for Tempest. In this case, it is assumed
-that all Tempest requirements are already installed in the local environment.
+Use the **--system-wide** argument to install Tempest in the system Python path.
+In this case, it is assumed that all Tempest requirements are already installed
+in the local environment.
 
 .. code-block:: console
 
@@ -194,33 +195,28 @@ following command:
 
     $ rally verify uninstall
 
-Also, it is possible to remove the local Tempest installation for any
-registered deployment in Rally, using the **--deployment** argument.
+Use the **--deployment** argument to remove the Tempest installation for any
+registered deployment in Rally.
 
 .. code-block:: console
 
     $ rally verify uninstall --deployment <UUID or name of a deployment>
 
-In addition, there is the
+Execute the following command to reinstall Tempest:
 
 .. code-block:: console
 
     $ rally verify reinstall
 
-command that combines two commands:
-
-.. code-block:: console
-
-    $ rally verify uninstall
-    $ rally verify install
-
-Arguments for **rally verify reinstall** are the same like for **rally verify install**.
+This command combines the operations of the uninstall and install commands and
+takes the same arguments as **rally verify install**.
 
 
 Tempest config generation (rally verify genconfig/showconfig)
 -------------------------------------------------------------
 
-In order to generate a Tempest config file execute the following command:
+Execute the following command to generate a Tempest config file for the
+current deployment:
 
 .. code-block:: console
 
@@ -229,17 +225,16 @@ In order to generate a Tempest config file execute the following command:
     2016-05-09 14:31:48.050 25906 INFO rally.verification.tempest.tempest [-] Creating Tempest configuration file for deployment: 452f3c6b-119a-4054-a6aa-e4e3347824de
     2016-05-09 14:31:56.738 25906 INFO rally.verification.tempest.tempest [-] Tempest configuration file has been successfully created!
 
-By default, the command generates the config file for the current deployment,
-but it is possible to generate the config file for any registered deployment
-in Rally, using the **--deployment** argument.
+Use the **--deployment** argument to generate the config file for any
+deployment registered in Rally
 
 .. code-block:: console
 
     $ rally verify genconfig --deployment <UUID or name of a deployment>
 
-Also, Rally allows users to specify any local path to the future config file,
-e.g. */home/ubuntu/tempest.conf*, and in this case, Rally will generate the
-*tempest.conf* file in the */home/ubuntu/* directory.
+Provide a file path argument to specify the path of the generated config file.
+In the example below, the config file will be written to
+``/home/ubuntu/tempest.conf``.
 
 .. code-block:: console
 
