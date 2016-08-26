@@ -170,12 +170,13 @@ class ScenarioRunnerTestCase(test.TestCase):
                          mock_timer_duration.return_value)
         self.assertEqual(list(runner_obj.result_queue), [])
 
-        cls_name, method_name = scenario_name.split(".", 1)
-        cls = scenario.Scenario.get(scenario_name)._meta_get("cls_ref")
+        plugin_cls, method_name = scenario.Scenario.get(scenario_name), "run"
+
+        self.assertTrue(plugin_cls.is_classbased)
 
         expected_config_kwargs = {"image": 1, "flavor": 1}
         runner_obj._run_scenario.assert_called_once_with(
-            cls, method_name, context_obj, expected_config_kwargs)
+            plugin_cls, method_name, context_obj, expected_config_kwargs)
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run_classbased(self, mock_timer_duration):

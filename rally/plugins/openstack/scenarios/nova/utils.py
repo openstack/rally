@@ -1015,3 +1015,119 @@ class NovaScenario(scenario.OpenStackScenario):
         :returns: An instance of novaclient.base.TupleWithMeta
         """
         return self.admin_clients("nova").aggregates.delete(aggregate)
+
+    @atomic.action_timer("nova.bind_actions")
+    def _bind_actions(self):
+        actions = ["hard_reboot", "soft_reboot", "stop_start",
+                   "rescue_unrescue", "pause_unpause", "suspend_resume",
+                   "lock_unlock", "shelve_unshelve"]
+        action_builder = utils.ActionBuilder(actions)
+        action_builder.bind_action("hard_reboot", self._reboot_server)
+        action_builder.bind_action("soft_reboot", self._soft_reboot_server)
+        action_builder.bind_action("stop_start",
+                                   self._stop_and_start_server)
+        action_builder.bind_action("rescue_unrescue",
+                                   self._rescue_and_unrescue_server)
+        action_builder.bind_action("pause_unpause",
+                                   self._pause_and_unpause_server)
+        action_builder.bind_action("suspend_resume",
+                                   self._suspend_and_resume_server)
+        action_builder.bind_action("lock_unlock",
+                                   self._lock_and_unlock_server)
+        action_builder.bind_action("shelve_unshelve",
+                                   self._shelve_and_unshelve_server)
+
+        return action_builder
+
+    @atomic.action_timer("nova.stop_and_start_server")
+    def _stop_and_start_server(self, server):
+        """Stop and then start the given server.
+
+        A stop will be issued on the given server upon which time
+        this method will wait for the server to become 'SHUTOFF'.
+        Once the server is SHUTOFF a start will be issued and this
+        method will wait for the server to become 'ACTIVE' again.
+
+        :param server: The server to stop and then start.
+
+        """
+        self._stop_server(server)
+        self._start_server(server)
+
+    @atomic.action_timer("nova.rescue_and_unrescue_server")
+    def _rescue_and_unrescue_server(self, server):
+        """Rescue and then unrescue the given server.
+
+        A rescue will be issued on the given server upon which time
+        this method will wait for the server to become 'RESCUE'.
+        Once the server is RESCUE an unrescue will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to rescue and then unrescue.
+
+        """
+        self._rescue_server(server)
+        self._unrescue_server(server)
+
+    @atomic.action_timer("nova.pause_and_unpause_server")
+    def _pause_and_unpause_server(self, server):
+        """Pause and then unpause the given server.
+
+        A pause will be issued on the given server upon which time
+        this method will wait for the server to become 'PAUSED'.
+        Once the server is PAUSED an unpause will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to pause and then unpause.
+
+        """
+        self._pause_server(server)
+        self._unpause_server(server)
+
+    @atomic.action_timer("nova.suspend_and_resume_server")
+    def _suspend_and_resume_server(self, server):
+        """Suspend and then resume the given server.
+
+        A suspend will be issued on the given server upon which time
+        this method will wait for the server to become 'SUSPENDED'.
+        Once the server is SUSPENDED an resume will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to suspend and then resume.
+
+        """
+        self._suspend_server(server)
+        self._resume_server(server)
+
+    @atomic.action_timer("nova.lock_and_unlock_server")
+    def _lock_and_unlock_server(self, server):
+        """Lock and then unlock the given server.
+
+        A lock will be issued on the given server upon which time
+        this method will wait for the server to become locked'.
+        Once the server is locked an unlock will be issued.
+
+        :param server: The server to lock and then unlock.
+
+        """
+        self._lock_server(server)
+        self._unlock_server(server)
+
+    @atomic.action_timer("nova.shelve_and_unshelve_server")
+    def _shelve_and_unshelve_server(self, server):
+        """Shelve and then unshelve the given server.
+
+        A shelve will be issued on the given server upon which time
+        this method will wait for the server to become 'SHELVED'.
+        Once the server is SHELVED an unshelve will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to shelve and then unshelve.
+
+        """
+        self._shelve_server(server)
+        self._unshelve_server(server)

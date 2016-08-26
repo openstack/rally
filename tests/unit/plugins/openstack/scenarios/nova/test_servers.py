@@ -39,14 +39,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_action_pair(self, action_pair, methods, nof_calls):
         actions = [{action_pair: nof_calls}]
         fake_server = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndBounceServer(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         for method in methods:
             setattr(scenario, method, mock.MagicMock())
 
-        scenario.boot_and_bounce_server("img", 1, actions=actions)
+        scenario.run("img", 1, actions=actions)
 
         scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
@@ -66,7 +66,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
                    {"suspend_resume": 4}, {"lock_unlock": 6},
                    {"shelve_unshelve": 7}]
         fake_server = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndBounceServer(self.context)
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
@@ -79,7 +79,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._shelve_and_unshelve_server = mock.MagicMock()
         scenario.generate_random_name = mock.MagicMock(return_value="name")
 
-        scenario.boot_and_bounce_server("img", 1, actions=actions)
+        scenario.run("img", 1, actions=actions)
         scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
         for i in range(5):
@@ -131,7 +131,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         image = fakes.FakeImage()
         flavor = fakes.FakeFlavor()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootLockUnlockAndDelete(self.context)
         scenario._boot_server = mock.Mock(return_value=server)
         scenario._lock_server = mock.Mock(side_effect=lambda s: s.lock())
         scenario._unlock_server = mock.Mock(side_effect=lambda s: s.unlock())
@@ -139,7 +139,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
             side_effect=lambda s, **kwargs:
                 self.assertFalse(getattr(s, "OS-EXT-STS:locked", False)))
 
-        scenario.boot_lock_unlock_and_delete(image, flavor, fakearg="fakearg")
+        scenario.run(image, flavor, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       fakearg="fakearg")
@@ -151,34 +151,34 @@ class NovaServersTestCase(test.ScenarioTestCase):
               "rescue_unrescue", "pause_unpause", "suspend_resume",
               "lock_unlock", "shelve_unshelve")
     def test_validate_actions(self, action):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndBounceServer(self.context)
 
         self.assertRaises(rally_exceptions.InvalidConfigException,
-                          scenario.boot_and_bounce_server,
+                          scenario.run,
                           1, 1, actions=[{action: "no"}])
         self.assertRaises(rally_exceptions.InvalidConfigException,
-                          scenario.boot_and_bounce_server,
+                          scenario.run,
                           1, 1, actions=[{action: -1}])
         self.assertRaises(rally_exceptions.InvalidConfigException,
-                          scenario.boot_and_bounce_server,
+                          scenario.run,
                           1, 1, actions=[{action: 0}])
 
     def test_validate_actions_additional(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndBounceServer(self.context)
 
         self.assertRaises(rally_exceptions.InvalidConfigException,
-                          scenario.boot_and_bounce_server,
+                          scenario.run,
                           1, 1, actions=[{"not_existing_action": "no"}])
         # NOTE: next should fail because actions parameter is a just a
         # dictionary, not an array of dictionaries
         self.assertRaises(rally_exceptions.InvalidConfigException,
-                          scenario.boot_and_bounce_server,
+                          scenario.run,
                           1, 1, actions={"hard_reboot": 1})
 
     def _verify_reboot(self, soft=True):
         actions = [{"soft_reboot" if soft else "hard_reboot": 5}]
         fake_server = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndBounceServer(self.context)
 
         scenario._reboot_server = mock.MagicMock()
         scenario._soft_reboot_server = mock.MagicMock()
@@ -186,7 +186,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
         scenario.generate_random_name = mock.MagicMock(return_value="name")
 
-        scenario.boot_and_bounce_server("img", 1, actions=actions)
+        scenario.run("img", 1, actions=actions)
 
         scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
@@ -212,13 +212,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_boot_and_delete_server(self):
         fake_server = object()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndDeleteServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
         scenario.sleep_between = mock.MagicMock()
 
-        scenario.boot_and_delete_server("img", 0, 10, 20, fakearg="fakearg")
+        scenario.run("img", 0, 10, 20, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -227,15 +227,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                         force=False)
 
     def test_boot_and_delete_multiple_servers(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndDeleteMultipleServers(self.context)
         scenario._boot_servers = mock.Mock()
         scenario._delete_servers = mock.Mock()
         scenario.sleep_between = mock.Mock()
 
-        scenario.boot_and_delete_multiple_servers("img", "flavor", count=15,
-                                                  min_sleep=10,
-                                                  max_sleep=20,
-                                                  fakearg="fakearg")
+        scenario.run("img", "flavor", count=15, min_sleep=10,
+                     max_sleep=20, fakearg="fakearg")
 
         scenario._boot_servers.assert_called_once_with("img", "flavor", 1,
                                                        instances_amount=15,
@@ -245,12 +243,12 @@ class NovaServersTestCase(test.ScenarioTestCase):
             scenario._boot_servers.return_value, force=False)
 
     def test_boot_and_list_server(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndListServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock()
         scenario._list_servers = mock.MagicMock()
 
-        scenario.boot_and_list_server("img", 0, fakearg="fakearg")
+        scenario.run("img", 0, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -259,14 +257,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_suspend_and_resume_server(self):
         fake_server = object()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.SuspendAndResumeServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._suspend_server = mock.MagicMock()
         scenario._resume_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
-        scenario.suspend_and_resume_server("img", 0, fakearg="fakearg")
+        scenario.run("img", 0, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -279,14 +277,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_pause_and_unpause_server(self):
         fake_server = object()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.PauseAndUnpauseServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._pause_server = mock.MagicMock()
         scenario._unpause_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
-        scenario.pause_and_unpause_server("img", 0, fakearg="fakearg")
+        scenario.run("img", 0, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -298,13 +296,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
     def test_shelve_and_unshelve_server(self):
         fake_server = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.ShelveAndUnshelveServer(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._shelve_server = mock.MagicMock()
         scenario._unshelve_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
-        scenario.shelve_and_unshelve_server("img", 0, fakearg="fakearg")
+        scenario.run("img", 0, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -315,23 +313,22 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                         force=False)
 
     def test_list_servers(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.ListServers(self.context)
         scenario._list_servers = mock.MagicMock()
-        scenario.list_servers(True)
+        scenario.run(True)
         scenario._list_servers.assert_called_once_with(True)
 
     def test_boot_server_from_volume(self):
         fake_server = object()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerFromVolume(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
-        scenario.boot_server_from_volume("img", 0, 5, volume_type=None,
-                                         auto_assign_nic=False,
-                                         fakearg="f")
+        scenario.run("img", 0, 5, volume_type=None,
+                     auto_assign_nic=False, fakearg="f")
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img",
                                                         volume_type=None)
@@ -342,7 +339,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
     def test_boot_server_from_volume_and_delete(self):
         fake_server = object()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerFromVolumeAndDelete(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
@@ -351,8 +348,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_volume.id = "volume_id"
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
-        scenario.boot_server_from_volume_and_delete("img", 0, 5, None, 10, 20,
-                                                    fakearg="f")
+        scenario.run("img", 0, 5, None, 10, 20, fakearg="f")
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img",
                                                         volume_type=None)
@@ -367,7 +363,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def _prepare_boot(self, nic=None, assert_nic=False):
         fake_server = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServer(self.context)
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
@@ -388,7 +384,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario, kwargs, expected_kwargs = self._prepare_boot(
             nic=nic, assert_nic=assert_nic)
 
-        scenario.boot_server("img", 0, **kwargs)
+        scenario.run("img", 0, **kwargs)
         scenario._boot_server.assert_called_once_with(
             "img", 0, auto_assign_nic=False, **expected_kwargs)
 
@@ -403,14 +399,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_image = fakes.FakeImageManager()._create()
         fake_image.id = "image_id"
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.SnapshotServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._create_image = mock.MagicMock(return_value=fake_image)
         scenario._delete_server = mock.MagicMock()
         scenario._delete_image = mock.MagicMock()
 
-        scenario.snapshot_server("i", 0, fakearg=2)
+        scenario.run("i", 0, fakearg=2)
 
         scenario._boot_server.assert_has_calls([
             mock.call("i", 0, fakearg=2),
@@ -428,7 +424,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         flavor = mock.MagicMock()
         to_flavor = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.ResizeServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._resize_confirm = mock.MagicMock()
@@ -437,7 +433,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
 
         kwargs = {"confirm": confirm}
-        scenario.resize_server(fake_image, flavor, to_flavor, **kwargs)
+        scenario.run(fake_image, flavor, to_flavor, **kwargs)
 
         scenario._resize.assert_called_once_with(fake_server, to_flavor)
 
@@ -463,7 +459,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         to_flavor = mock.MagicMock()
         fake_attachment = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerAttachCreatedVolumeAndResize(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
@@ -477,9 +473,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario.sleep_between = mock.MagicMock()
 
         volume_size = 10
-        scenario.boot_server_attach_created_volume_and_resize(
-            "img", flavor, to_flavor, volume_size, min_sleep=10,
-            max_sleep=20, confirm=confirm, do_delete=do_delete)
+        scenario.run("img", flavor, to_flavor, volume_size, min_sleep=10,
+                     max_sleep=20, confirm=confirm, do_delete=do_delete)
 
         scenario._boot_server.assert_called_once_with("img", flavor)
         scenario._create_volume.assert_called_once_with(volume_size)
@@ -512,7 +507,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
         flavor = mock.MagicMock()
         to_flavor = mock.MagicMock()
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerFromVolumeAndResize(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._resize_confirm = mock.MagicMock()
@@ -526,9 +521,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
         volume_size = 10
-        scenario.boot_server_from_volume_and_resize(
-            "img", flavor, to_flavor, volume_size, min_sleep=10,
-            max_sleep=20, confirm=confirm, do_delete=do_delete)
+        scenario.run("img", flavor, to_flavor, volume_size, min_sleep=10,
+                     max_sleep=20, confirm=confirm, do_delete=do_delete)
 
         scenario._create_volume.assert_called_once_with(10, imageRef="img")
         scenario._boot_server.assert_called_once_with(
@@ -549,7 +543,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_boot_and_live_migrate_server(self):
         fake_server = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndLiveMigrateServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
@@ -558,8 +552,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._live_migrate = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
-        scenario.boot_and_live_migrate_server("img", 0, min_sleep=10,
-                                              max_sleep=20, fakearg="fakearg")
+        scenario.run("img", 0, min_sleep=10, max_sleep=20, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
@@ -576,7 +569,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_boot_server_from_volume_and_live_migrate(self):
         fake_server = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerFromVolumeAndLiveMigrate(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
@@ -589,11 +582,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_volume.id = "volume_id"
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
-        scenario.boot_server_from_volume_and_live_migrate("img", 0, 5,
-                                                          volume_type=None,
-                                                          min_sleep=10,
-                                                          max_sleep=20,
-                                                          fakearg="f")
+        scenario.run("img", 0, 5, volume_type=None,
+                     min_sleep=10, max_sleep=20, fakearg="f")
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img",
                                                         volume_type=None)
@@ -618,7 +608,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
         fake_attachment = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerAttachCreatedVolumeAndLiveMigrate(
+            self.context)
 
         scenario._attach_volume = mock.MagicMock(return_value=fake_attachment)
         scenario._detach_volume = mock.MagicMock()
@@ -638,9 +629,8 @@ class NovaServersTestCase(test.ScenarioTestCase):
         flavor = "flavor"
         size = 5
         boot_kwargs = {"some_var": "asd"}
-        scenario.boot_server_attach_created_volume_and_live_migrate(
-            image, flavor, size, min_sleep=10, max_sleep=20,
-            boot_server_kwargs=boot_kwargs)
+        scenario.run(image, flavor, size, min_sleep=10, max_sleep=20,
+                     boot_server_kwargs=boot_kwargs)
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       **boot_kwargs)
         scenario._create_volume.assert_called_once_with(size)
@@ -660,7 +650,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def _test_boot_and_migrate_server(self, confirm=False):
         fake_server = mock.MagicMock()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndMigrateServer(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._migrate = mock.MagicMock()
@@ -669,8 +659,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
 
         kwargs = {"confirm": confirm}
-        scenario.boot_and_migrate_server("img", 0,
-                                         fakearg="fakearg", **kwargs)
+        scenario.run("img", 0, fakearg="fakearg", **kwargs)
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg",
@@ -694,7 +683,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         self._test_boot_and_migrate_server(confirm=False)
 
     def test_boot_and_rebuild_server(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndRebuildServer(self.context)
         scenario._boot_server = mock.Mock()
         scenario._rebuild_server = mock.Mock()
         scenario._delete_server = mock.Mock()
@@ -702,8 +691,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         from_image = "img1"
         to_image = "img2"
         flavor = "flavor"
-        scenario.boot_and_rebuild_server(from_image, to_image, flavor,
-                                         fakearg="fakearg")
+        scenario.run(from_image, to_image, flavor, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with(from_image, flavor,
                                                       fakearg="fakearg")
@@ -716,11 +704,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
         image = fakes.FakeImage()
         flavor = fakes.FakeFlavor()
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndShowServer(self.context)
         scenario._boot_server = mock.MagicMock(return_value=server)
         scenario._show_server = mock.MagicMock()
 
-        scenario.boot_and_show_server(image, flavor, fakearg="fakearg")
+        scenario.run(image, flavor, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       fakearg="fakearg")
@@ -735,12 +723,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
         flavor = fakes.FakeFlavor()
         kwargs = {"fakearg": "fakearg"}
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndGetConsoleOutput(self.context)
         scenario._boot_server = mock.MagicMock(return_value=server)
         scenario._get_server_console_output = mock.MagicMock()
 
-        scenario.boot_and_get_console_output(image, flavor, length,
-                                             **kwargs)
+        scenario.run(image, flavor, length, **kwargs)
 
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       **kwargs)
@@ -749,15 +736,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
     @mock.patch(NOVA_SERVERS_MODULE + ".network_wrapper.wrap")
     def test_boot_and_associate_floating_ip(self, mock_wrap):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndAssociateFloatingIp(self.context)
         server = mock.Mock()
         scenario._boot_server = mock.Mock(return_value=server)
         scenario._associate_floating_ip = mock.Mock()
 
         image = "img"
         flavor = "flavor"
-        scenario.boot_and_associate_floating_ip(image, flavor,
-                                                fakearg="fakearg")
+        scenario.run(image, flavor, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       fakearg="fakearg")
@@ -791,13 +777,11 @@ class NovaServersTestCase(test.ScenarioTestCase):
             server, net_wrap.create_floating_ip.return_value["ip"])
 
     def test_boot_and_update_server(self):
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootAndUpdateServer(self.context)
         scenario._boot_server = mock.Mock()
         scenario._update_server = mock.Mock()
 
-        scenario.boot_and_update_server("img", "flavor",
-                                        "desp",
-                                        fakearg="fakearg")
+        scenario.run("img", "flavor", "desp", fakearg="fakearg")
         scenario._boot_server.assert_called_once_with("img", "flavor",
                                                       fakearg="fakearg")
         scenario._update_server.assert_called_once_with(
@@ -807,15 +791,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_volume = mock.MagicMock(id="volume_id")
         fake_snapshot = mock.MagicMock(id="snapshot_id")
 
-        scenario = servers.NovaServers(self.context)
+        scenario = servers.BootServerFromVolumeSnapshot(self.context)
         scenario._boot_server = mock.MagicMock()
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
 
-        scenario.boot_server_from_volume_snapshot("img", "flavor", 1,
-                                                  volume_type=None,
-                                                  auto_assign_nic=False,
-                                                  fakearg="f")
+        scenario.run("img", "flavor", 1, volume_type=None,
+                     auto_assign_nic=False, fakearg="f")
 
         scenario._create_volume.assert_called_once_with(1, imageRef="img",
                                                         volume_type=None)
