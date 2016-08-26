@@ -20,16 +20,19 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
+
+"""Scenarios for Nova flavors."""
+
+
 LOG = logging.getLogger(__name__)
 
 
-class NovaFlavors(utils.NovaScenario):
-    """Benchmark scenarios for Nova flavors."""
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(name="NovaFlavors.list_flavors")
+class ListFlavors(utils.NovaScenario):
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def list_flavors(self, detailed=True, **kwargs):
+    def run(self, detailed=True, **kwargs):
         """List all flavors.
 
         Measure the "nova flavor-list" command performance.
@@ -41,10 +44,14 @@ class NovaFlavors(utils.NovaScenario):
         """
         self._list_flavors(detailed, **kwargs)
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova"]})
-    def create_and_list_flavor_access(self, ram, vcpus, disk, **kwargs):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_and_list_flavor_access")
+class CreateAndListFlavorAccess(utils.NovaScenario):
+
+    def run(self, ram, vcpus, disk, **kwargs):
         """Create a non-public flavor and list its access rules
 
         :param ram: Memory in MB for the flavor
@@ -61,10 +68,14 @@ class NovaFlavors(utils.NovaScenario):
         flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
         self._list_flavor_access(flavor.id)
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova"]})
-    def create_flavor(self, ram, vcpus, disk, **kwargs):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_flavor")
+class CreateFlavor(utils.NovaScenario):
+
+    def run(self, ram, vcpus, disk, **kwargs):
         """Create a flavor.
 
         :param ram: Memory in MB for the flavor

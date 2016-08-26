@@ -22,9 +22,9 @@ from tests.unit import test
 class NovaAggregatesTestCase(test.TestCase):
 
     def test_list_aggregates(self):
-        scenario = aggregates.NovaAggregates()
+        scenario = aggregates.ListAggregates()
         scenario._list_aggregates = mock.Mock()
-        scenario.list_aggregates()
+        scenario.run()
         scenario._list_aggregates.assert_called_once_with()
 
     def test_create_and_list_aggregates(self):

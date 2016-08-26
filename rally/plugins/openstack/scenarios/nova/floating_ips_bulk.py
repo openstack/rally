@@ -19,15 +19,19 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaFloatingIpsBulk(utils.NovaScenario):
-    """Benchmark scenarios for create nova floating IP by range."""
+"""Scenarios for create nova floating IP by range."""
 
-    @validation.restricted_parameters("pool")
-    @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova"]})
-    def create_and_list_floating_ips_bulk(self, start_cidr, **kwargs):
+
+@validation.restricted_parameters("pool")
+@validation.required_parameters("start_cidr")
+@validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name=("NovaFloatingIpsBulk"
+                          ".create_and_list_floating_ips_bulk"))
+class CreateAndListFloatingIpsBulk(utils.NovaScenario):
+
+    def run(self, start_cidr, **kwargs):
         """Create nova floating IP by range and list it.
 
         This scenario creates a floating IP by range and then lists all.
@@ -39,12 +43,17 @@ class NovaFloatingIpsBulk(utils.NovaScenario):
         self._create_floating_ips_bulk(start_cidr, **kwargs)
         self._list_floating_ips_bulk()
 
-    @validation.restricted_parameters("pool")
-    @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova"]})
-    def create_and_delete_floating_ips_bulk(self, start_cidr, **kwargs):
+
+@validation.restricted_parameters("pool")
+@validation.required_parameters("start_cidr")
+@validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name=("NovaFloatingIpsBulk"
+                          ".create_and_delete_floating_ips_bulk"))
+class CreateAndDeleteFloatingIpsBulk(utils.NovaScenario):
+
+    def run(self, start_cidr, **kwargs):
         """Create nova floating IP by range and delete it.
 
         This scenario creates a floating IP by range and then delete it.

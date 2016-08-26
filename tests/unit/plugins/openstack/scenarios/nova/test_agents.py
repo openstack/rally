@@ -22,7 +22,7 @@ from tests.unit import test
 class NovaAgentsTestCase(test.TestCase):
 
     def test_list_agents(self):
-        scenario = agents.NovaAgents()
+        scenario = agents.ListAgents()
         scenario._list_agents = mock.Mock()
-        scenario.list_agents(hypervisor=None)
+        scenario.run(hypervisor=None)
         scenario._list_agents.assert_called_once_with(None)

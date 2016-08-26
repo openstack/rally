@@ -19,13 +19,15 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaHosts(utils.NovaScenario):
-    """Benchmark scenarios for Nova hosts."""
+"""Scenarios for Nova hosts."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_hosts(self, zone=None):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHosts.list_hosts")
+class ListHosts(utils.NovaScenario):
+
+    def run(self, zone=None):
         """List all nova hosts.
 
         Measure the "nova host-list" command performance.

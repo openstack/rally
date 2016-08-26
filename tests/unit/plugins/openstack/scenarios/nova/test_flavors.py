@@ -24,9 +24,9 @@ from tests.unit import test
 class NovaFlavorsTestCase(test.TestCase):
 
     def test_list_flavors(self):
-        scenario = flavors.NovaFlavors()
+        scenario = flavors.ListFlavors()
         scenario._list_flavors = mock.Mock()
-        scenario.list_flavors(detailed=True, fakearg="fakearg")
+        scenario.run(detailed=True, fakearg="fakearg")
         scenario._list_flavors.assert_called_once_with(True, fakearg="fakearg")
 
     @ddt.data({},
@@ -36,11 +36,10 @@ class NovaFlavorsTestCase(test.TestCase):
               {"is_public": False, "fakeargs": "fakeargs"})
     @ddt.unpack
     def test_create_and_list_flavor_access(self, **kwargs):
-        scenario = flavors.NovaFlavors()
+        scenario = flavors.CreateAndListFlavorAccess()
         scenario._create_flavor = mock.Mock()
         scenario._list_flavor_access = mock.Mock()
-        scenario.create_and_list_flavor_access(ram=100, vcpus=1, disk=1,
-                                               **kwargs)
+        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
         kwargs.pop("is_public", None)
         scenario._create_flavor.assert_called_once_with(100, 1, 1,
                                                         is_public=False,
@@ -49,9 +48,9 @@ class NovaFlavorsTestCase(test.TestCase):
             scenario._create_flavor.return_value.id)
 
     def test_create_flavor(self):
-        scenario = flavors.NovaFlavors()
+        scenario = flavors.CreateFlavor()
         scenario._create_flavor = mock.MagicMock()
-        scenario.create_flavor(ram=100, vcpus=1, disk=1, fakeargs="fakeargs")
+        scenario.run(ram=100, vcpus=1, disk=1, fakeargs="fakeargs")
         scenario._create_flavor.assert_called_once_with(100, 1, 1,
                                                         fakeargs="fakeargs")
 

@@ -22,26 +22,24 @@ from tests.unit import test
 class NovaNetworksTestCase(test.TestCase):
 
     def test_create_and_list_networks(self):
-        scenario = networks.NovaNetworks()
+        scenario = networks.CreateAndListNetworks()
         scenario._create_network = mock.MagicMock()
         scenario._list_networks = mock.MagicMock()
         start_cidr = "10.2.0.0/24"
-        scenario.create_and_list_networks(start_cidr=start_cidr,
-                                          fakearg="fakearg")
+        scenario.run(start_cidr=start_cidr, fakearg="fakearg")
 
         scenario._create_network.assert_called_once_with(
             start_cidr, fakearg="fakearg")
         scenario._list_networks.assert_called_once_with()
 
     def test_create_and_delete_network(self):
-        scenario = networks.NovaNetworks()
+        scenario = networks.CreateAndDeleteNetwork()
         fake_network = mock.MagicMock()
         fake_network.cidr = "10.2.0.0/24"
         start_cidr = "10.2.0.0/24"
         scenario._create_network = mock.MagicMock(return_value=fake_network)
         scenario._delete_network = mock.MagicMock()
-        scenario.create_and_delete_network(start_cidr=start_cidr,
-                                           fakearg="fakearg")
+        scenario.run(start_cidr=start_cidr, fakearg="fakearg")
 
         scenario._create_network.assert_called_once_with(
             start_cidr, fakearg="fakearg")

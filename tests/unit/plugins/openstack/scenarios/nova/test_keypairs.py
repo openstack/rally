@@ -22,29 +22,29 @@ from tests.unit import test
 class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_keypairs(self):
-        scenario = keypairs.NovaKeypair(self.context)
+        scenario = keypairs.CreateAndListKeypairs(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._list_keypairs = mock.MagicMock()
 
-        scenario.create_and_list_keypairs(fakearg="fakearg")
+        scenario.run(fakearg="fakearg")
 
         scenario._create_keypair.assert_called_once_with(fakearg="fakearg")
         scenario._list_keypairs.assert_called_once_with()
 
     def test_create_and_delete_keypair(self):
-        scenario = keypairs.NovaKeypair(self.context)
+        scenario = keypairs.CreateAndDeleteKeypair(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._delete_keypair = mock.MagicMock()
 
-        scenario.create_and_delete_keypair(fakearg="fakearg")
+        scenario.run(fakearg="fakearg")
 
         scenario._create_keypair.assert_called_once_with(fakearg="fakearg")
         scenario._delete_keypair.assert_called_once_with("foo_keypair")
 
     def test_boot_and_delete_server_with_keypair(self):
-        scenario = keypairs.NovaKeypair(self.context)
+        scenario = keypairs.BootAndDeleteServerWithKeypair(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._boot_server = mock.MagicMock(return_value="foo_server")
@@ -56,9 +56,8 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
             "bar": 2,
         }
 
-        scenario.boot_and_delete_server_with_keypair(
-            "img", 1, boot_server_kwargs=fake_server_args,
-            fake_arg1="foo", fake_arg2="bar")
+        scenario.run("img", 1, boot_server_kwargs=fake_server_args,
+                     fake_arg1="foo", fake_arg2="bar")
 
         scenario._create_keypair.assert_called_once_with(
             fake_arg1="foo", fake_arg2="bar")

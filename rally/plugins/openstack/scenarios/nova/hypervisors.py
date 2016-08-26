@@ -19,13 +19,15 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaHypervisors(utils.NovaScenario):
-    """Benchmark scenarios for Nova hypervisors."""
+"""Scenarios for Nova hypervisors."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_hypervisors(self, detailed=True):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHypervisors.list_hypervisors")
+class ListHypervisors(utils.NovaScenario):
+
+    def run(self, detailed=True):
         """List hypervisors.
 
         Measure the "nova hypervisor-list" command performance.

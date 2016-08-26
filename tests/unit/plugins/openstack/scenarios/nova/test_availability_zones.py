@@ -22,7 +22,7 @@ from tests.unit import test
 class NovaAvailabilityZonesTestCase(test.TestCase):
 
     def test_list_availability_zones(self):
-        scenario = availability_zones.NovaAvailabilityZones()
+        scenario = availability_zones.ListAvailabilityZones()
         scenario._list_availability_zones = mock.Mock()
-        scenario.list_availability_zones(detailed=False)
+        scenario.run(detailed=False)
         scenario._list_availability_zones.assert_called_once_with(False)
