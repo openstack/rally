@@ -377,8 +377,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
+    @mock.patch("rally.osclients.Clients.services")
     @mock.patch("rally.osclients.Keystone.create_client")
-    def test_deployment_check(self, mock_keystone_create_client):
+    def test_deployment_check(self, mock_keystone_create_client,
+                              mock_clients_services):
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
                                                "admin",
                                                "adminpass").to_dict()
@@ -386,6 +388,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                       "users": [sample_credential]}
         api.Deployment.check(deployment)
         mock_keystone_create_client.assert_called_with()
+        mock_clients_services.assert_called_once_with()
 
     def test_deployment_check_raise(self):
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",

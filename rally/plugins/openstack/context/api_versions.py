@@ -191,7 +191,7 @@ class OpenStackAPIVersions(context.Context):
             self.context.get("admin", {}).get("credential"))
         clients = osclients.Clients(random.choice(
             self.context["users"])["credential"])
-        services = clients.keystone().service_catalog.get_endpoints()
+        services = clients.keystone.service_catalog.get_endpoints()
         services_from_admin = None
         for client_name, conf in six.iteritems(self.config):
             if "service_type" in conf and conf["service_type"] not in services:

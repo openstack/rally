@@ -50,17 +50,15 @@ class ExistingUsers(users.UserContextMixin, context.Context):
 
         for user in self.config:
             user_credential = objects.Credential(**user)
-            user_kclient = osclients.Clients(user_credential).keystone()
+            user_clients = osclients.Clients(user_credential)
 
-            user_name = user_kclient.username
-            tenant_name = user_kclient.project_name
-            user_id = user_kclient.get_user_id(user_name)
-            tenant_id = user_kclient.get_project_id(tenant_name)
+            user_id = user_clients.keystone.auth_ref.user_id
+            tenant_id = user_clients.keystone.auth_ref.project_id
 
             if tenant_id not in self.context["tenants"]:
                 self.context["tenants"][tenant_id] = {
                     "id": tenant_id,
-                    "name": tenant_name
+                    "name": user_credential.tenant_name
                 }
 
             self.context["users"].append({
