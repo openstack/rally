@@ -69,11 +69,11 @@ if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" = "1" ]; then
     NEUTRON_EXISTS=$(openstack --os-interface admin service list | grep neutron)
     set -e
     if [ "$NEUTRON_EXISTS" ]; then
-        OS_QUOTA_STR="--networks -1 --subnets -1 --routers -1 --vips -1 --floating-ips -1 --subnetpools -1 --secgroups -1 --secgroup-rules -1 --ports -1 --health-monitors -1"
-        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-1 
-        openstack --os-interface admin quota show rally-test-project-1 
-        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-2 
-        openstack --os-interface admin quota show rally-test-project-2 
+        OS_QUOTA_STR="--networks -1 --subnets -1 --routers -1 --floating-ips -1 --subnetpools -1 --secgroups -1 --secgroup-rules -1 --ports -1"
+        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-1
+        openstack --os-interface admin quota show rally-test-project-1
+        openstack --os-interface admin quota set $OS_QUOTA_STR rally-test-project-2
+        openstack --os-interface admin quota show rally-test-project-2
     fi
 
     DEPLOYMENT_CONFIG_FILE=~/.rally/with-existing-users-config
