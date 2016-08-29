@@ -32,39 +32,38 @@ class QuotasTestCase(test.ScenarioTestCase):
         })
 
     def test_nova_update(self):
-        scenario = quotas.Quotas(self.context)
+        scenario = quotas.NovaUpdate(self.context)
         scenario._update_quotas = mock.MagicMock()
-        scenario.nova_update(max_quota=1024)
+        scenario.run(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("nova", "fake", 1024)
 
     def test_nova_update_and_delete(self):
-        scenario = quotas.Quotas(self.context)
+        scenario = quotas.NovaUpdateAndDelete(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario._delete_quotas = mock.MagicMock()
-        scenario.nova_update_and_delete(max_quota=1024)
+        scenario.run(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("nova", "fake", 1024)
         scenario._delete_quotas.assert_called_once_with("nova", "fake")
 
     def test_cinder_update(self):
-        scenario = quotas.Quotas(self.context)
+        scenario = quotas.CinderUpdate(self.context)
         scenario._update_quotas = mock.MagicMock()
-        scenario.cinder_update(max_quota=1024)
+        scenario.run(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("cinder", "fake", 1024)
 
     def test_cinder_update_and_delete(self):
-        scenario = quotas.Quotas(self.context)
+        scenario = quotas.CinderUpdateAndDelete(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario._delete_quotas = mock.MagicMock()
-        scenario.cinder_update_and_delete(max_quota=1024)
+        scenario.run(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("cinder", "fake", 1024)
         scenario._delete_quotas.assert_called_once_with("cinder", "fake")
 
     def test_neutron_update(self):
-        scenario = quotas.Quotas(self.context)
-
+        scenario = quotas.NeutronUpdate(self.context)
         scenario._update_quotas = mock.MagicMock()
         mock_quota_update_fn = self.admin_clients("neutron").update_quota
-        scenario.neutron_update(max_quota=1024)
+        scenario.run(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("neutron", "fake",
                                                         1024,
                                                         mock_quota_update_fn)
