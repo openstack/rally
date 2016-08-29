@@ -323,7 +323,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 "auth_url": "http://example.com:5000/v2.0",
                 "region_name": "RegionOne",
                 "type": "ExistingCloud",
-                "endpoint_type": "internal"}
+                "endpoint_type": "internal"},
         }
         deployment_table = db_utils.get_table(engine, "deployments")
 
@@ -532,3 +532,102 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.delete().where(
                     deployment_table.c.uuid == "my_deployment")
             )
+
+    def _pre_upgrade_32fada9b2fde(self, engine):
+            self._32fada9b2fde_deployments = {
+                # right config which should not be changed after migration
+                "should-not-be-changed-1": {
+                    "admin": {"username": "admin",
+                              "password": "passwd",
+                              "project_name": "admin"},
+                    "auth_url": "http://example.com:5000/v3",
+                    "region_name": "RegionOne",
+                    "type": "ExistingCloud"},
+                # right config which should not be changed after migration
+                "should-not-be-changed-2": {
+                    "admin": {"username": "admin",
+                              "password": "passwd",
+                              "tenant_name": "admin"},
+                    "users": [{"username": "admin",
+                               "password": "passwd",
+                              "tenant_name": "admin"}],
+                    "auth_url": "http://example.com:5000/v2.0",
+                    "region_name": "RegionOne",
+                    "type": "ExistingCloud"},
+                # not ExistingCloud config which should not be changed
+                "should-not-be-changed-3": {
+                    "url": "example.com",
+                    "type": "Something"},
+                # with `admin_domain_name` field
+                "with_admin_domain_name": {
+                    "admin": {"username": "admin",
+                              "password": "passwd",
+                              "project_name": "admin",
+                              "admin_domain_name": "admin"},
+                    "auth_url": "http://example.com:5000/v3",
+                    "region_name": "RegionOne",
+                    "type": "ExistingCloud"},
+            }
+            deployment_table = db_utils.get_table(engine, "deployments")
+
+            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+            with engine.connect() as conn:
+                for deployment in self._32fada9b2fde_deployments:
+                    conf = json.dumps(
+                        self._32fada9b2fde_deployments[deployment])
+                    conn.execute(
+                        deployment_table.insert(),
+                        [{"uuid": deployment, "name": deployment,
+                          "config": conf,
+                          "enum_deployments_status": deployment_status,
+                          "credentials": six.b(json.dumps([])),
+                          "users": six.b(json.dumps([]))
+                          }])
+
+    def _check_32fada9b2fde(self, engine, data):
+        self.assertEqual("32fada9b2fde",
+                         api.get_backend().schema_revision(engine=engine))
+
+        original_deployments = self._32fada9b2fde_deployments
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.connect() as conn:
+            deployments_found = conn.execute(
+                deployment_table.select()).fetchall()
+            for deployment in deployments_found:
+                # check deployment
+                self.assertIn(deployment.uuid, original_deployments)
+                self.assertIn(deployment.name, original_deployments)
+
+                config = json.loads(deployment.config)
+                if config != original_deployments[deployment.uuid]:
+                    if deployment.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is changes, but "
+                                  "should not." % deployment.uuid)
+                    if "admin_domain_name" in deployment.config:
+                        self.fail("Config of deployment '%s' should not "
+                                  "contain `admin_domain_name` field." %
+                                  deployment.uuid)
+
+                    endpoint_type = (original_deployments[
+                                     deployment.uuid].get("endpoint_type"))
+                    if endpoint_type in (None, "public"):
+                        self.assertNotIn("endpoint_type", config)
+                    else:
+                        self.assertIn("endpoint_type", config)
+                        self.assertEqual(endpoint_type,
+                                         config["endpoint_type"])
+
+                    existing.ExistingCloud({"config": config}).validate()
+                else:
+                    if not deployment.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is not changes, "
+                                  "but should." % deployment.uuid)
+
+                # this deployment created at _pre_upgrade step is not needed
+                # anymore and we can remove it
+                conn.execute(
+                    deployment_table.delete().where(
+                        deployment_table.c.uuid == deployment.uuid)
+                )
