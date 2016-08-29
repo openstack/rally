@@ -1,0 +1,37 @@
+{
+    "Watcher.list_audit_templates": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 1
+            },
+            "context": {
+                "audit_templates": {
+                    "audit_templates_per_admin": 5,
+                    "fill_strategy": "random",
+                    "params": [
+                        {
+                            "goal": {
+                                "name": "workload_balancing"
+                            },
+                            "strategy": {
+                                "name": "workload_stabilization"
+                            },
+                            "extra": {}
+                        },
+                        {
+                            "goal": {
+                                "name": "dummy"
+                            },
+                            "strategy": {
+                                "name": "dummy"
+                            },
+                            "extra": {}
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

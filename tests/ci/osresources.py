@@ -223,6 +223,8 @@ class Watcher(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.WATCHER
 
+    REPR_KEYS = ("uuid", "name")
+
     def list_audits(self):
         return self.client.audit.list()
 
@@ -232,11 +234,11 @@ class Watcher(ResourceManager):
     def list_goals(self):
         return self.client.goal.list()
 
+    def list_strategies(self):
+        return self.client.strategy.list()
+
     def list_action_plans(self):
         return self.client.action_plan.list()
-
-    def list_actions(self):
-        return self.client.action.list()
 
 
 class CloudResources(object):

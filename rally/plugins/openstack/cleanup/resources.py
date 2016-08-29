@@ -753,12 +753,16 @@ class FuelEnvironment(base.ResourceManager):
 
 # WATCHER
 
-@base.resource("watcher", "audit_template", order=1500,
-               admin_required=True, tenant_resource=True)
-class WatcherTemplate(SynchronizedDeletion, base.ResourceManager):
+_watcher_order = get_order(1500)
+
+
+class WatcherMixin(SynchronizedDeletion, base.ResourceManager):
 
     def id(self):
         return self.raw_resource.uuid
+
+    def list(self):
+        return self._manager().list(limit=0)
 
     def is_deleted(self):
         from watcherclient.common.apiclient import exceptions
@@ -768,8 +772,27 @@ class WatcherTemplate(SynchronizedDeletion, base.ResourceManager):
         except exceptions.NotFound:
             return True
 
-    def list(self):
-        return self._manager().list(limit=0)
+
+@base.resource("watcher", "audit_template", order=next(_watcher_order),
+               admin_required=True, perform_for_admin_only=True)
+class WatcherTemplate(WatcherMixin):
+    pass
+
+
+@base.resource("watcher", "action_plan", order=next(_watcher_order),
+               admin_required=True, perform_for_admin_only=True)
+class WatcherActionPlan(WatcherMixin):
+
+    def name(self):
+        return self.raw_resource.uuid
+
+
+@base.resource("watcher", "audit", order=next(_watcher_order),
+               admin_required=True, perform_for_admin_only=True)
+class WatcherAudit(WatcherMixin):
+
+    def name(self):
+        return self.raw_resource.uuid
 
 
 # KEYSTONE

@@ -14,9 +14,12 @@
 #    under the License.
 
 import mock
+from oslo_config import cfg
 
 from rally.plugins.openstack.scenarios.watcher import utils
 from tests.unit import test
+
+CONF = cfg.CONF
 
 
 class WatcherScenarioTestCase(test.ScenarioTestCase):
@@ -37,6 +40,16 @@ class WatcherScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
                                        "watcher.create_audit_template")
 
+    def test_list_audit_templates(self):
+        audit_templates_list = []
+        watcher_scenario = utils.WatcherScenario(self.context)
+        self.admin_clients(
+            "watcher").audit_template.list.return_value = audit_templates_list
+        return_audit_templates_list = watcher_scenario._list_audit_templates()
+        self.assertEqual(audit_templates_list, return_audit_templates_list)
+        self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
+                                       "watcher.list_audit_templates")
+
     def test_delete_audit_template(self):
         watcher_scenario = utils.WatcherScenario(self.context)
         watcher_scenario._delete_audit_template("fake_audit_template")
@@ -45,3 +58,31 @@ class WatcherScenarioTestCase(test.ScenarioTestCase):
             "fake_audit_template")
         self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
                                        "watcher.delete_audit_template")
+
+    def test_create_audit(self):
+        mock_audit_template = mock.Mock()
+        watcher_scenario = utils.WatcherScenario(self.context)
+        audit = watcher_scenario._create_audit(mock_audit_template)
+        self.mock_wait_for_status.mock.assert_called_once_with(
+            audit,
+            ready_statuses=["SUCCEEDED"],
+            failure_statuses=["FAILED"],
+            status_attr="state",
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            check_interval=CONF.benchmark.watcher_audit_launch_poll_interval,
+            timeout=CONF.benchmark.watcher_audit_launch_timeout,
+            id_attr="uuid")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.admin_clients("watcher").audit.create.assert_called_once_with(
+            audit_template_uuid=mock_audit_template, audit_type="ONESHOT")
+        self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
+                                       "watcher.create_audit")
+
+    def test_delete_audit(self):
+        mock_audit = mock.Mock()
+        watcher_scenario = utils.WatcherScenario(self.context)
+        watcher_scenario._delete_audit(mock_audit)
+        self.admin_clients("watcher").audit.delete.assert_called_once_with(
+            mock_audit.uuid)
+        self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
+                                       "watcher.delete_audit")
