@@ -263,27 +263,3 @@
       sla:
         failure_rate:
           max: 0
-
-  NeutronLoadbalancerV1.create_and_delete_vips:
-    -
-      args:
-        pool_create_args: {}
-        vip_create_args: {}
-      runner:
-        type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
-      context:
-        users:
-          tenants: {{smoke or 5}}
-          users_per_tenant: {{smoke or 2}}
-        network: {}
-        quotas:
-          neutron:
-            network: -1
-            subnet: -1
-            pool: -1
-            vip: -1
-      sla:
-        failure_rate:
-          max: 0
