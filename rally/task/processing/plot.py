@@ -167,15 +167,15 @@ def trends(tasks_results):
 
 
 class Trends(object):
-    """Process tasks results and make trends data.
+    """Process workloads results and make trends data.
 
-    Group tasks results by their input configuration,
+    Group workloads results by their input configuration,
     calculate statistics for these groups and prepare it
     for displaying in trends HTML report.
     """
 
     def __init__(self):
-        self._tasks = {}
+        self._data = {}
 
     def _to_str(self, obj):
         """Convert object into string."""
@@ -197,29 +197,39 @@ class Trends(object):
 
     def add_result(self, result):
         key = self._make_hash(result["key"]["kw"])
-        if key not in self._tasks:
-            name = result["key"]["name"]
-            self._tasks[key] = {"seq": 1,
-                                "name": name,
-                                "cls": name.split(".")[0],
-                                "met": name.split(".")[1],
-                                "data": {},
-                                "total": None,
-                                "atomic": [],
-                                "stat": {},
-                                "sla_failures": 0,
-                                "config": json.dumps(result["key"]["kw"],
-                                                     indent=2)}
-        else:
-            self._tasks[key]["seq"] += 1
+        if key not in self._data:
+            self._data[key] = {
+                "actions": {},
+                "sla_failures": 0,
+                "name": result["key"]["name"],
+                "config": json.dumps(result["key"]["kw"], indent=2)}
 
         for sla in result["sla"]:
-            self._tasks[key]["sla_failures"] += not sla["success"]
+            self._data[key]["sla_failures"] += not sla["success"]
 
-        task = {row[0]: dict(zip(result["info"]["stat"]["cols"], row))
+        stat = {row[0]: dict(zip(result["info"]["stat"]["cols"], row))
                 for row in result["info"]["stat"]["rows"]}
+        ts = int(result["info"]["tstamp_start"] * 1000)
 
-        for k in task:
+        for action in stat:
+            # NOTE(amaretskiy): some atomic actions can be missed due to
+            #   failures. We can ignore that because we use NVD3 lineChart()
+            #   for displaying trends, which is safe for missed points
+            if action not in self._data[key]["actions"]:
+                self._data[key]["actions"][action] = {
+                    "durations": {"min": [], "median": [], "90%ile": [],
+                                  "95%ile": [], "max": [], "avg": []},
+                    "success": []}
+
+            try:
+                success = float(stat[action]["Success"].rstrip("%"))
+            except ValueError:
+                # Got "n/a" for some reason
+                success = 0
+
+            self._data[key]["actions"][action]["success"].append(
+                (ts, success))
+
             for tgt, src in (("min", "Min (sec)"),
                              ("median", "Median (sec)"),
                              ("90%ile", "90%ile (sec)"),
@@ -227,49 +237,44 @@ class Trends(object):
                              ("max", "Max (sec)"),
                              ("avg", "Avg (sec)")):
 
-                # NOTE(amaretskiy): some atomic actions can be
-                #   missed due to failures. We can ignore that
-                #   because we use NVD3 lineChart() for displaying
-                #   trends, which is safe for missed points
-                if k not in self._tasks[key]["data"]:
-                    self._tasks[key]["data"][k] = {"min": [],
-                                                   "median": [],
-                                                   "90%ile": [],
-                                                   "95%ile": [],
-                                                   "max": [],
-                                                   "avg": [],
-                                                   "success": []}
-                self._tasks[key]["data"][k][tgt].append(
-                    (self._tasks[key]["seq"], task[k][src]))
-
-            try:
-                success = float(task[k]["Success"].rstrip("%"))
-            except ValueError:
-                # Got "n/a" for some reason
-                success = 0
-            self._tasks[key]["data"][k]["success"].append(
-                (self._tasks[key]["seq"], success))
+                self._data[key]["actions"][action]["durations"][tgt].append(
+                    (ts, stat[action][src]))
 
     def get_data(self):
-        for key, value in self._tasks.items():
-            total = None
-            for k, v in value["data"].items():
-                success = [("success", v.pop("success"))]
-                if k == "total":
-                    total = {"values": v, "success": success}
+        trends = []
+
+        for wload in self._data.values():
+            trend = {"stat": {},
+                     "name": wload["name"],
+                     "cls": wload["name"].split(".")[0],
+                     "met": wload["name"].split(".")[1],
+                     "sla_failures": wload["sla_failures"],
+                     "config": wload["config"],
+                     "actions": []}
+
+            for action, data in wload["actions"].items():
+                action_durs = [(k, sorted(v))
+                               for k, v in data["durations"].items()]
+                if action == "total":
+                    trend.update(
+                        {"length": len(data["success"]),
+                         "durations": action_durs,
+                         "success": [("success", sorted(data["success"]))]})
                 else:
-                    self._tasks[key]["atomic"].append(
-                        {"name": k, "values": list(v.items()),
-                         "success": success})
+                    trend["actions"].append(
+                        {"name": action,
+                         "durations": action_durs,
+                         "success": [("success", sorted(data["success"]))]})
+
             for stat, comp in (("min", charts.streaming.MinComputation()),
                                ("max", charts.streaming.MaxComputation()),
                                ("avg", charts.streaming.MeanComputation())):
-                for k, v in total["values"][stat]:
-                    if isinstance(v, (float,) + six.integer_types):
-                        comp.add(v)
-                self._tasks[key]["stat"][stat] = comp.result()
-            del self._tasks[key]["data"]
-            total["values"] = list(total["values"].items())
-            self._tasks[key]["total"] = total
-            self._tasks[key]["single"] = self._tasks[key]["seq"] < 2
-        return sorted(self._tasks.values(), key=lambda s: s["name"])
+                for k, v in trend["durations"]:
+                    for i in v:
+                        if isinstance(i[1], (float,) + six.integer_types):
+                            comp.add(i[1])
+                trend["stat"][stat] = comp.result()
+
+            trends.append(trend)
+
+        return sorted(trends, key=lambda i: i["name"])
