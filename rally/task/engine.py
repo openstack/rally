@@ -291,9 +291,10 @@ class TaskEngine(object):
             self._validate_config_syntax(self.config)
             self._validate_config_semantic(self.config)
         except Exception as e:
+            exception_info = json.dumps(traceback.format_exc(), indent=2)
             self.task.set_failed(type(e).__name__,
-                                 str(e),
-                                 json.dumps(traceback.format_exc()))
+                                 str(e), exception_info)
+            LOG.debug(exception_info)
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
@@ -351,6 +352,7 @@ class TaskEngine(object):
                             runner_obj.run(workload.name, context_obj,
                                            workload.args)
                 except Exception as e:
+                    LOG.debug(traceback.format_exc())
                     LOG.exception(e)
 
         if objects.Task.get_status(
