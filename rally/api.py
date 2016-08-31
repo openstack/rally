@@ -21,7 +21,7 @@ import jinja2
 import jinja2.meta
 import jsonschema
 
-from rally.common.i18n import _, _LI
+from rally.common.i18n import _, _LI, _LE
 from rally.common import logging
 from rally.common import objects
 from rally import consts
@@ -57,7 +57,7 @@ class Deployment(object):
         try:
             deployer.validate()
         except jsonschema.ValidationError:
-            LOG.error(_("Deployment %s: Schema validation error.") %
+            LOG.error(_LE("Deployment %s: Schema validation error.") %
                       deployment["uuid"])
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise

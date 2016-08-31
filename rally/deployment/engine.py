@@ -18,7 +18,7 @@ import abc
 import jsonschema
 import six
 
-from rally.common.i18n import _
+from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import consts
@@ -93,8 +93,8 @@ class Engine(plugin.Plugin):
             engine_cls = Engine.get(name)
             return engine_cls(deployment)
         except exceptions.PluginNotFound as e:
-            LOG.error(_("Deployment %(uuid)s: Deploy engine for %(name)s "
-                        "does not exist.") %
+            LOG.error(_LE("Deployment %(uuid)s: Deploy engine for %(name)s "
+                      "does not exist.") %
                       {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise exceptions.PluginNotFound(
@@ -133,8 +133,8 @@ class Engine(plugin.Plugin):
             exc_info = None
             if not issubclass(exc_type, exceptions.InvalidArgumentsException):
                 exc_info = (exc_type, exc_value, exc_traceback)
-            LOG.error(_("Deployment %(uuid)s: Error has occurred into context "
-                        "of the deployment"),
+            LOG.error(_LE("Deployment %(uuid)s: Error has occurred into "
+                      "context of the deployment"),
                       {"uuid": self.deployment["uuid"]},
                       exc_info=exc_info)
             status = self.deployment["status"]
