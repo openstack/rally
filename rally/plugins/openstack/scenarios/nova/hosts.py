@@ -30,8 +30,8 @@ class NovaHosts(utils.NovaScenario):
 
         Measure the "nova host-list" command performance.
 
-        :param zone: List nova hosts in an availibility-zone.
+        :param zone: List nova hosts in an availability-zone.
                      None (default value) means list hosts in all
-                     availibility-zones
+                     availability-zones
         """
         self._list_hosts(zone)
