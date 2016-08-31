@@ -70,7 +70,7 @@ then
     "admin": {
         "username": "admin",
         "password": "$ADMIN_PASSWORD",
-        "tenant_name": "admin",
+        "project_name": "admin",
         "user_domain_name": "Default",
         "project_domain_name": "Default"
     }
