@@ -54,8 +54,7 @@ class TestTaskSamples(unittest.TestCase):
         # In TestTaskSamples, Rally API will be called directly (not via
         # subprocess), so we need to change database options to temp database.
         db.db_options.set_defaults(
-            db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir,
-            sqlite_db="rally.sqlite")
+            db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir)
 
         # let's use pre-created users to make TestTaskSamples quicker
         deployment = api.Deployment.get("MAIN")
