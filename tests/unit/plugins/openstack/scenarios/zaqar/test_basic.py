@@ -17,22 +17,23 @@ import mock
 from rally.plugins.openstack.scenarios.zaqar import basic
 from tests.unit import test
 
-BASE = "rally.plugins.openstack.scenarios.zaqar."
-BASIC = BASE + "basic.ZaqarBasic."
+BASE = "rally.plugins.openstack.scenarios.zaqar.basic"
 
 
 class ZaqarBasicTestCase(test.ScenarioTestCase):
 
-    @mock.patch(BASIC + "generate_random_name", return_value="fizbit")
-    def test_create_queue(self, mock_generate_random_name):
-        scenario = basic.ZaqarBasic(self.context)
+    @mock.patch("%s.CreateQueue.generate_random_name" % BASE,
+                return_value="fizbit")
+    def test_create_queue(self, mock_random_name):
+        scenario = basic.CreateQueue(self.context)
         scenario._queue_create = mock.MagicMock()
-        scenario.create_queue(fakearg="fake")
+        scenario.run(fakearg="fake")
         scenario._queue_create.assert_called_once_with(fakearg="fake")
 
-    @mock.patch(BASIC + "generate_random_name", return_value="kitkat")
-    def test_producer_consumer(self, mock_generate_random_name):
-        scenario = basic.ZaqarBasic(self.context)
+    @mock.patch("%s.CreateQueue.generate_random_name" % BASE,
+                return_value="kitkat")
+    def test_producer_consumer(self, mock_random_name):
+        scenario = basic.ProducerConsumer(self.context)
         messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(20)]
         queue = mock.MagicMock()
@@ -42,8 +43,7 @@ class ZaqarBasicTestCase(test.ScenarioTestCase):
         scenario._messages_list = mock.MagicMock()
         scenario._queue_delete = mock.MagicMock()
 
-        scenario.producer_consumer(min_msg_count=20, max_msg_count=20,
-                                   fakearg="fake")
+        scenario.run(min_msg_count=20, max_msg_count=20, fakearg="fake")
 
         scenario._queue_create.assert_called_once_with(fakearg="fake")
         scenario._messages_post.assert_called_once_with(queue, messages,

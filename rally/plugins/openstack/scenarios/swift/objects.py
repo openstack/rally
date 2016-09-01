@@ -22,15 +22,17 @@ from rally.task import atomic
 from rally.task import validation
 
 
-class SwiftObjects(utils.SwiftScenario):
-    """Benchmark scenarios for Swift Objects."""
+"""Scenarios for Swift Objects."""
 
-    @validation.required_services(consts.Service.SWIFT)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["swift"]})
-    def create_container_and_object_then_list_objects(
-            self, objects_per_container=1,
-            object_size=1024, **kwargs):
+
+@validation.required_services(consts.Service.SWIFT)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["swift"]},
+                    name="SwiftObjects.create_container"
+                         "_and_object_then_list_objects")
+class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
+
+    def run(self, objects_per_container=1, object_size=1024, **kwargs):
         """Create container and objects then list all objects.
 
         :param objects_per_container: int, number of objects to upload
@@ -53,12 +55,15 @@ class SwiftObjects(utils.SwiftScenario):
                                         atomic_action=False)
         self._list_objects(container_name)
 
-    @validation.required_services(consts.Service.SWIFT)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["swift"]})
-    def create_container_and_object_then_delete_all(
-            self, objects_per_container=1,
-            object_size=1024, **kwargs):
+
+@validation.required_services(consts.Service.SWIFT)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["swift"]},
+                    name="SwiftObjects.create_container"
+                         "_and_object_then_delete_all")
+class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
+
+    def run(self, objects_per_container=1, object_size=1024, **kwargs):
         """Create container and objects then delete everything created.
 
         :param objects_per_container: int, number of objects to upload
@@ -89,12 +94,15 @@ class SwiftObjects(utils.SwiftScenario):
                                     atomic_action=False)
         self._delete_container(container_name)
 
-    @validation.required_services(consts.Service.SWIFT)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["swift"]})
-    def create_container_and_object_then_download_object(
-            self, objects_per_container=1,
-            object_size=1024, **kwargs):
+
+@validation.required_services(consts.Service.SWIFT)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["swift"]},
+                    name="SwiftObjects.create_container"
+                         "_and_object_then_download_object")
+class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
+
+    def run(self, objects_per_container=1, object_size=1024, **kwargs):
         """Create container and objects then download all objects.
 
         :param objects_per_container: int, number of objects to upload
@@ -124,11 +132,16 @@ class SwiftObjects(utils.SwiftScenario):
                 self._download_object(container_name, object_name,
                                       atomic_action=False)
 
-    @validation.required_services(consts.Service.SWIFT)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"swift_objects": {}})
-    def list_objects_in_containers(self):
+
+@validation.required_services(consts.Service.SWIFT)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"swift_objects": {}},
+                    name="SwiftObjects.list_objects_in_containers")
+class ListObjectsInContainers(utils.SwiftScenario):
+
+    def run(self):
         """List objects in all containers."""
+
         containers = self._list_containers()[1]
 
         key_suffix = "container"
@@ -139,11 +152,17 @@ class SwiftObjects(utils.SwiftScenario):
             for container in containers:
                 self._list_objects(container["name"], atomic_action=False)
 
-    @validation.required_services(consts.Service.SWIFT)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"swift_objects": {}})
-    def list_and_download_objects_in_containers(self):
+
+@validation.required_services(consts.Service.SWIFT)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"swift_objects": {}},
+                    name="SwiftObjects.list_and_"
+                         "download_objects_in_containers")
+class ListAndDownloadObjectsInContainers(utils.SwiftScenario):
+
+    def run(self):
         """List and download objects in all containers."""
+
         containers = self._list_containers()[1]
 
         list_key_suffix = "container"

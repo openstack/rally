@@ -32,7 +32,7 @@ class TempestLogWrappersTestCase(test.TestCase):
 
         context = test.get_test_context()
         context.update({"tmp_results_dir": "/tmp/dir", "verifier": verifier})
-        self.scenario = tempest.TempestScenario(context)
+        self.scenario = tempest.SingleTest(context)
         self.scenario._add_atomic_actions = mock.MagicMock()
 
     @mock.patch(TS + ".utils.tempfile")
@@ -65,7 +65,7 @@ class TempestLogWrappersTestCase(test.TestCase):
             total={"time": "0.1"}, tests={})
         context = test.get_test_context()
         context.update({"tmp_results_dir": "/tmp/dir", "verifier": verifier})
-        scenario = tempest.TempestScenario(context)
+        scenario = tempest.SingleTest(context)
 
         target_func = mock.MagicMock()
         target_func.__name__ = "target_func"

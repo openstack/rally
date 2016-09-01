@@ -19,14 +19,17 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
 
 
-class ZaqarBasic(zutils.ZaqarScenario):
-    """Benchmark scenarios for Zaqar."""
+"""Scenarios for Zaqar."""
 
-    @scenario.configure(context={"cleanup": ["zaqar"]})
+
+@scenario.configure(context={"cleanup": ["zaqar"]},
+                    name="ZaqarBasic.create_queue")
+class CreateQueue(zutils.ZaqarScenario):
+
     @logging.log_deprecated_args(
         "The 'name_length' argument to create_queue is ignored",
         "0.1.2", ["name_length"], once=True)
-    def create_queue(self, name_length=None, **kwargs):
+    def run(self, name_length=None, **kwargs):
         """Create a Zaqar queue with a random name.
 
         :param kwargs: other optional parameters to create queues like
@@ -34,12 +37,16 @@ class ZaqarBasic(zutils.ZaqarScenario):
         """
         self._queue_create(**kwargs)
 
-    @scenario.configure(context={"cleanup": ["zaqar"]})
+
+@scenario.configure(context={"cleanup": ["zaqar"]},
+                    name="ZaqarBasic.producer_consumer")
+class ProducerConsumer(zutils.ZaqarScenario):
+
     @logging.log_deprecated_args(
         "The 'name_length' argument to producer_consumer is ignored",
         "0.1.2", ["name_length"], once=True)
-    def producer_consumer(self, name_length=None,
-                          min_msg_count=50, max_msg_count=200, **kwargs):
+    def run(self, name_length=None,
+            min_msg_count=50, max_msg_count=200, **kwargs):
         """Serial message producer/consumer.
 
         Creates a Zaqar queue with random name, sends a set of messages

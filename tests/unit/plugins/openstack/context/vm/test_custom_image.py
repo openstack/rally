@@ -62,26 +62,26 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
             }
         })
 
-    @mock.patch("%s.vmtasks.VMTasks" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.types.GlanceImage.transform" % BASE, return_value="image")
     @mock.patch("%s.types.Flavor.transform" % BASE, return_value="flavor")
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    @mock.patch("%s.vmtasks.BootRuncommandDeleteCustomImage" % BASE)
     def test_create_one_image(
-            self, mock_glance_wrap, mock_flavor_transform,
-            mock_glance_image_transform, mock_clients, mock_vm_tasks):
+            self, mock_scenario, mock_glance_wrap, mock_flavor_transform,
+            mock_glance_image_transform, mock_clients
+    ):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
         fake_image = mock.MagicMock(
             to_dict=mock.MagicMock(return_value={"id": "image"}))
 
-        mock_vm_scenario = mock_vm_tasks.return_value = mock.MagicMock(
+        scenario = mock_scenario.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
                 return_value=(fake_server, ip))
         )
-
         generator_ctx = TestImageGenerator(self.context)
         generator_ctx._customize_image = mock.MagicMock()
 
@@ -103,47 +103,47 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         mock_glance_image_transform.assert_called_once_with(
             clients=mock_clients.return_value,
             resource_config={"name": "image"})
-        mock_vm_tasks.assert_called_once_with(
+        mock_scenario.assert_called_once_with(
             self.context, clients=mock_clients.return_value)
 
-        mock_vm_scenario._boot_server_with_fip.assert_called_once_with(
+        scenario._boot_server_with_fip.assert_called_once_with(
             image="image", flavor="flavor",
             floating_network="floating",
             key_name="keypair_name", security_groups=["secgroup_name"],
             userdata=None, foo_arg="foo_value")
 
-        mock_vm_scenario._stop_server.assert_called_once_with(fake_server)
+        scenario._stop_server.assert_called_once_with(fake_server)
 
         generator_ctx._customize_image.assert_called_once_with(
             fake_server, ip, user)
 
-        mock_vm_scenario._create_image.assert_called_once_with(fake_server)
+        scenario._create_image.assert_called_once_with(fake_server)
         mock_glance_wrap.return_value.set_visibility.assert_called_once_with(
             fake_image)
 
-        mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
+        scenario._delete_server_with_fip.assert_called_once_with(
             fake_server, ip)
 
         self.assertEqual({"id": "image"}, custom_image)
 
-    @mock.patch("%s.vmtasks.VMTasks" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.types.GlanceImage.transform" % BASE,
                 return_value="image")
     @mock.patch("%s.types.Flavor.transform" % BASE,
                 return_value="flavor")
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    @mock.patch("%s.vmtasks.BootRuncommandDeleteCustomImage" % BASE)
     def test_create_one_image_cleanup(
-            self, mock_glance_wrap, mock_flavor_transform,
-            mock_glance_image_transform, mock_clients,
-            mock_vm_tasks):
+            self, mock_scenario, mock_glance_wrap, mock_flavor_transform,
+            mock_glance_image_transform, mock_clients
+    ):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
         fake_image = mock.MagicMock(
             to_dict=mock.MagicMock(return_value={"id": "image"}))
 
-        mock_vm_scenario = mock_vm_tasks.return_value = mock.MagicMock(
+        scenario = mock_scenario.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
                 return_value=(fake_server, ip)),
@@ -167,7 +167,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         generator_ctx._customize_image.assert_called_once_with(
             fake_server, ip, user)
 
-        mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
+        scenario._delete_server_with_fip.assert_called_once_with(
             fake_server, ip)
 
     @mock.patch("%s.nova_utils.NovaScenario" % BASE)

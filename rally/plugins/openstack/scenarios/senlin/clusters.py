@@ -16,15 +16,18 @@ from rally.plugins.openstack.scenarios.senlin import utils
 from rally.task import validation
 
 
-class SenlinClusters(utils.SenlinScenario):
-    """Benchmark scenarios for Senlin clusters."""
+"""Scenarios for Senlin clusters."""
 
-    @validation.required_openstack(admin=True)
-    @validation.required_services(consts.Service.SENLIN)
-    @validation.required_contexts("profiles")
-    @scenario.configure(context={"cleanup": ["senlin"]})
-    def create_and_delete_cluster(self, desired_capacity=0, min_size=0,
-                                  max_size=-1, timeout=3600, metadata=None):
+
+@validation.required_openstack(admin=True)
+@validation.required_services(consts.Service.SENLIN)
+@validation.required_contexts("profiles")
+@scenario.configure(context={"cleanup": ["senlin"]},
+                    name="SenlinClusters.create_and_delete_cluster")
+class CreateAndDeleteCluster(utils.SenlinScenario):
+
+    def run(self, desired_capacity=0, min_size=0,
+            max_size=-1, timeout=3600, metadata=None):
         """Create a cluster and then delete it.
 
         Measure the "senlin cluster-create" and "senlin cluster-delete"
@@ -38,6 +41,7 @@ class SenlinClusters(utils.SenlinScenario):
         :param timeout: The timeout value in seconds for cluster creation
         :param metadata: A set of key value pairs to associate with the cluster
         """
+
         profile_id = self.context["tenant"]["profile"]
         cluster = self._create_cluster(profile_id, desired_capacity,
                                        min_size, max_size, timeout, metadata)
