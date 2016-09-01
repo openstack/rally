@@ -204,9 +204,11 @@ class Tempest(object):
     def is_configured(self):
         return os.path.isfile(self.config_file)
 
-    def generate_config_file(self, override=False):
-        """Generate configuration file of Tempest for current deployment.
+    def generate_config_file(self, extra_conf=None, override=False):
+        """Generate Tempest configuration file for the current deployment.
 
+        :param extra_conf: A ConfigParser() object with options to
+                           extend/update Tempest config file
         :param override: Whether or not to override existing Tempest
                          config file
         """
@@ -217,7 +219,8 @@ class Tempest(object):
 
             LOG.info(_("Creating Tempest configuration "
                        "file for deployment: %s") % self.deployment)
-            config.TempestConfig(self.deployment).generate(self.config_file)
+            conf = config.TempestConfig(self.deployment)
+            conf.generate(self.config_file, extra_conf)
             LOG.info(_("Tempest configuration file "
                        "has been successfully created!"))
         else:

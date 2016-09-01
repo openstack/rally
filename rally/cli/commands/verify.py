@@ -20,6 +20,7 @@ import json
 import os
 
 import six
+from six.moves import configparser
 import yaml
 
 from rally import api
@@ -405,20 +406,36 @@ class VerifyCommands(object):
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False, metavar="<path>",
                    help="User-specified Tempest config file location")
+    @cliutils.args("--add-options", dest="extra_conf_path", type=str,
+                   required=False, metavar="<path>",
+                   help="Path to a file with additional options "
+                        "to extend/update Tempest config file")
     @cliutils.args("--override", dest="override",
                    help="Override existing Tempest config file",
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def genconfig(self, deployment=None, tempest_config=None, override=False):
+    def genconfig(self, deployment=None, tempest_config=None,
+                  extra_conf_path=None, override=False):
         """Generate Tempest configuration file.
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User-specified Tempest config file location
+        :param extra_conf_path: Path to a file with additional options
+                                to extend/update Tempest config file
         :param override: Whether or not to override existing Tempest
                          config file
         """
+        extra_conf = None
+        if extra_conf_path:
+            if os.path.exists(extra_conf_path):
+                extra_conf = configparser.ConfigParser()
+                extra_conf.read(os.path.abspath(extra_conf_path))
+            else:
+                print(_("File '%s' not found.") % extra_conf_path)
+                return 1
+
         api.Verification.configure_tempest(deployment, tempest_config,
-                                           override)
+                                           extra_conf, override)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,

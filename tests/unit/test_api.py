@@ -553,7 +553,7 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
             self, mock_tempest, mock_deployment_get, mock_exists):
         mock_tempest.return_value = self.tempest
         api.Verification.configure_tempest(self.deployment_uuid)
-        self.tempest.generate_config_file.assert_called_once_with(False)
+        self.tempest.generate_config_file.assert_called_once_with(None, False)
 
     @mock.patch("os.path.exists", return_value=False)
     @mock.patch("rally.common.objects.Deployment.get")

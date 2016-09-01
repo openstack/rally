@@ -560,11 +560,13 @@ class Verification(object):
 
     @classmethod
     def configure_tempest(cls, deployment, tempest_config=None,
-                          override=False):
-        """Generate configuration file of Tempest.
+                          extra_conf=None, override=False):
+        """Generate Tempest configuration file.
 
         :param deployment: UUID or name of a deployment
         :param tempest_config: User specified Tempest config file location
+        :param extra_conf: A ConfigParser() object with options to
+                           extend/update Tempest config file
         :param override: Whether or not to override existing Tempest
                          config file
         """
@@ -574,11 +576,11 @@ class Verification(object):
 
         cls._check_tempest_tree_existence(verifier)
 
-        verifier.generate_config_file(override)
+        verifier.generate_config_file(extra_conf, override)
 
     @classmethod
     def show_config_info(cls, deployment):
-        """Get information about configuration file of Tempest.
+        """Get information about Tempest configuration file.
 
         :param deployment: UUID or name of a deployment
         """

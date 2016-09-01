@@ -306,13 +306,19 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "stack_user_role",
                       CONF.tempest.heat_stack_user_role)
 
-    def generate(self, conf_path=None):
+    def generate(self, conf_path, extra_conf=None):
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name.startswith("_configure_"):
                 method()
 
-        if conf_path:
-            _write_config(conf_path, self.conf)
+        if extra_conf:
+            for section in extra_conf.sections():
+                if section not in self.conf.sections():
+                    self.conf.add_section(section)
+                for option, value in extra_conf.items(section):
+                    self.conf.set(section, option, value)
+
+        _write_config(conf_path, self.conf)
 
 
 class TempestResourcesContext(utils.RandomNameGeneratorMixin):

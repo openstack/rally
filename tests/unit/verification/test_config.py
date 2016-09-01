@@ -264,8 +264,14 @@ class TempestConfigTestCase(test.TestCase):
         mock_inspect_getmembers.return_value = [("_configure_something",
                                                  configure_something_method)]
 
-        self.tempest_conf.generate("/path/to/fake/conf")
+        fake_extra_conf = mock.MagicMock()
+        fake_extra_conf.sections.return_value = ["section"]
+        fake_extra_conf.items.return_value = [("option", "value")]
+
+        self.tempest_conf.generate("/path/to/fake/conf", fake_extra_conf)
         self.assertEqual(configure_something_method.call_count, 1)
+        self.assertIn(("option", "value"),
+                      self.tempest_conf.conf.items("section"))
         self.assertEqual(mock__write_config.call_count, 1)
 
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
