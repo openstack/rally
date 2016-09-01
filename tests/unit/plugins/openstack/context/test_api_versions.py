@@ -24,8 +24,10 @@ class OpenStackServicesTestCase(test.TestCase):
     def setUp(self):
         super(OpenStackServicesTestCase, self).setUp()
         self.mock_clients = mock.patch("rally.osclients.Clients").start()
-        self.mock_kc = self.mock_clients.return_value.keystone.return_value
-        self.mock_kc.service_catalog.get_endpoints.return_value = []
+        osclient_kc = self.mock_clients.return_value.keystone
+        self.mock_kc = osclient_kc.return_value
+        self.service_catalog = osclient_kc.service_catalog
+        self.service_catalog.get_endpoints.return_value = []
         self.mock_kc.services.list.return_value = []
 
     def test_validate_correct_config(self):
@@ -85,7 +87,7 @@ class OpenStackServicesTestCase(test.TestCase):
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
-        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.service_catalog.get_endpoints.assert_called_once_with()
         self.mock_kc.services.list.assert_called_once_with()
 
     def test_setup_with_wrong_service_name_and_without_admin(self):
@@ -95,7 +97,7 @@ class OpenStackServicesTestCase(test.TestCase):
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.BenchmarkSetupFailure, ctx.setup)
-        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.service_catalog.get_endpoints.assert_called_once_with()
         self.assertFalse(self.mock_kc.services.list.called)
 
     def test_setup_with_wrong_service_type(self):
@@ -105,7 +107,7 @@ class OpenStackServicesTestCase(test.TestCase):
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
-        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.service_catalog.get_endpoints.assert_called_once_with()
 
     def test_setup_with_service_name(self):
         self.mock_kc.services.list.return_value = [
@@ -118,7 +120,7 @@ class OpenStackServicesTestCase(test.TestCase):
         ctx = api_versions.OpenStackAPIVersions(context)
         ctx.setup()
 
-        self.mock_kc.service_catalog.get_endpoints.assert_called_once_with()
+        self.service_catalog.get_endpoints.assert_called_once_with()
         self.mock_kc.services.list.assert_called_once_with()
 
         self.assertEqual(

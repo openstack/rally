@@ -158,7 +158,7 @@ class ChecksumMismatch(RallyException):
 
 
 class InvalidAdminException(InvalidArgumentsException):
-    msg_fmt = _("user %(username)s doesn't have 'admin' role")
+    msg_fmt = _("user '%(username)s' doesn't have 'admin' role")
 
 
 class InvalidEndpointsException(InvalidArgumentsException):
