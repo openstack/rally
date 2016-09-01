@@ -674,7 +674,7 @@
           action_3: 4.0
           action_4: 5.0
 
-  dummy.failure:
+  Dummy.failure:
     -
       args:
         sleep: 0.2

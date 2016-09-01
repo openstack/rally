@@ -25,7 +25,7 @@ class DummyScenarioException(exceptions.RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
-@scenario.configure(name="dummy.failure")
+@scenario.configure(name="Dummy.failure")
 class DummyFailure(scenario.Scenario):
     """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
