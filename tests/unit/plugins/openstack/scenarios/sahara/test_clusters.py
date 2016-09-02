@@ -18,35 +18,34 @@ import mock
 from rally.plugins.openstack.scenarios.sahara import clusters
 from tests.unit import test
 
-SAHARA_CLUSTERS = ("rally.plugins.openstack.scenarios.sahara.clusters"
-                   ".SaharaClusters")
-SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
+BASE = "rally.plugins.openstack.scenarios.sahara.clusters"
 
 
 class SaharaClustersTestCase(test.ScenarioTestCase):
 
-    @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
-    @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
+    @mock.patch("%s.CreateAndDeleteCluster._delete_cluster" % BASE)
+    @mock.patch("%s.CreateAndDeleteCluster._launch_cluster" % BASE,
                 return_value=mock.MagicMock(id=42))
-    def test_create_and_delete_cluster(
-            self, mock__launch_cluster, mock__delete_cluster):
-        clusters_scenario = clusters.SaharaClusters(self.context)
+    def test_create_and_delete_cluster(self,
+                                       mock_launch_cluster,
+                                       mock_delete_cluster):
+        scenario = clusters.CreateAndDeleteCluster(self.context)
 
-        clusters_scenario.context = {
+        scenario.context = {
             "tenant": {
                 "sahara": {
                     "image": "test_image",
                 }
             }
         }
-        clusters_scenario.create_and_delete_cluster(
-            master_flavor="test_flavor_m",
-            worker_flavor="test_flavor_w",
-            workers_count=5,
-            plugin_name="test_plugin",
-            hadoop_version="test_version")
 
-        mock__launch_cluster.assert_called_once_with(
+        scenario.run(master_flavor="test_flavor_m",
+                     worker_flavor="test_flavor_w",
+                     workers_count=5,
+                     plugin_name="test_plugin",
+                     hadoop_version="test_version")
+
+        mock_launch_cluster.assert_called_once_with(
             flavor_id=None,
             master_flavor_id="test_flavor_m",
             worker_flavor_id="test_flavor_w",
@@ -65,32 +64,32 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
             enable_proxy=False,
             use_autoconfig=True)
 
-        mock__delete_cluster.assert_called_once_with(
-            mock__launch_cluster.return_value)
+        mock_delete_cluster.assert_called_once_with(
+            mock_launch_cluster.return_value)
 
-    @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
-    @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
+    @mock.patch("%s.CreateAndDeleteCluster._delete_cluster" % BASE)
+    @mock.patch("%s.CreateAndDeleteCluster._launch_cluster" % BASE,
                 return_value=mock.MagicMock(id=42))
-    def test_create_and_delete_cluster_deprecated_flavor(
-            self, mock__launch_cluster, mock__delete_cluster):
-        clusters_scenario = clusters.SaharaClusters(self.context)
+    def test_create_and_delete_cluster_deprecated_flavor(self,
+                                                         mock_launch_cluster,
+                                                         mock_delete_cluster):
+        scenario = clusters.CreateAndDeleteCluster(self.context)
 
-        clusters_scenario.context = {
+        scenario.context = {
             "tenant": {
                 "sahara": {
                     "image": "test_image",
                 }
             }
         }
-        clusters_scenario.create_and_delete_cluster(
-            flavor="test_deprecated_arg",
-            master_flavor=None,
-            worker_flavor=None,
-            workers_count=5,
-            plugin_name="test_plugin",
-            hadoop_version="test_version")
+        scenario.run(flavor="test_deprecated_arg",
+                     master_flavor=None,
+                     worker_flavor=None,
+                     workers_count=5,
+                     plugin_name="test_plugin",
+                     hadoop_version="test_version")
 
-        mock__launch_cluster.assert_called_once_with(
+        mock_launch_cluster.assert_called_once_with(
             flavor_id="test_deprecated_arg",
             master_flavor_id=None,
             worker_flavor_id=None,
@@ -109,38 +108,37 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
             enable_proxy=False,
             use_autoconfig=True)
 
-        mock__delete_cluster.assert_called_once_with(
-            mock__launch_cluster.return_value)
+        mock_delete_cluster.assert_called_once_with(
+            mock_launch_cluster.return_value)
 
-    @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
-    @mock.patch(SAHARA_CLUSTERS + "._scale_cluster")
-    @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
+    @mock.patch("%s.CreateScaleDeleteCluster._delete_cluster" % BASE)
+    @mock.patch("%s.CreateScaleDeleteCluster._scale_cluster" % BASE)
+    @mock.patch("%s.CreateScaleDeleteCluster._launch_cluster" % BASE,
                 return_value=mock.MagicMock(id=42))
-    def test_create_scale_delete_cluster(
-            self, mock__launch_cluster, mock__scale_cluster,
-            mock__delete_cluster):
+    def test_create_scale_delete_cluster(self,
+                                         mock_launch_cluster,
+                                         mock_scale_cluster,
+                                         mock_delete_cluster):
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id=42, status="active"
         )
-        clusters_scenario = clusters.SaharaClusters(self.context)
+        scenario = clusters.CreateScaleDeleteCluster(self.context)
 
-        clusters_scenario.context = {
+        scenario.context = {
             "tenant": {
                 "sahara": {
                     "image": "test_image",
                 }
             }
         }
+        scenario.run(master_flavor="test_flavor_m",
+                     worker_flavor="test_flavor_w",
+                     workers_count=5,
+                     deltas=[1, -1],
+                     plugin_name="test_plugin",
+                     hadoop_version="test_version")
 
-        clusters_scenario.create_scale_delete_cluster(
-            master_flavor="test_flavor_m",
-            worker_flavor="test_flavor_w",
-            workers_count=5,
-            deltas=[1, -1],
-            plugin_name="test_plugin",
-            hadoop_version="test_version")
-
-        mock__launch_cluster.assert_called_once_with(
+        mock_launch_cluster.assert_called_once_with(
             flavor_id=None,
             master_flavor_id="test_flavor_m",
             worker_flavor_id="test_flavor_w",
@@ -159,10 +157,14 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
             enable_proxy=False,
             use_autoconfig=True)
 
-        mock__scale_cluster.assert_has_calls([
-            mock.call(self.clients("sahara").clusters.get.return_value, 1),
-            mock.call(self.clients("sahara").clusters.get.return_value, -1),
+        mock_scale_cluster.assert_has_calls([
+            mock.call(
+                self.clients("sahara").clusters.get.return_value,
+                1),
+            mock.call(
+                self.clients("sahara").clusters.get.return_value,
+                -1),
         ])
 
-        mock__delete_cluster.assert_called_once_with(
+        mock_delete_cluster.assert_called_once_with(
             self.clients("sahara").clusters.get.return_value)

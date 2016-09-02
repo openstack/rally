@@ -19,19 +19,20 @@ from rally.plugins.openstack.scenarios.sahara import utils
 from rally.task import types
 from rally.task import validation
 
+"""Scenarios for Sahara node group templates."""
 
-class SaharaNodeGroupTemplates(utils.SaharaScenario):
-    """Benchmark scenarios for Sahara node group templates."""
 
-    @types.convert(flavor={"type": "nova_flavor"})
-    @validation.flavor_exists("flavor")
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_and_list_node_group_templates(self, flavor,
-                                             plugin_name="vanilla",
-                                             hadoop_version="1.2.1",
-                                             use_autoconfig=True):
+@types.convert(flavor={"type": "nova_flavor"})
+@validation.flavor_exists("flavor")
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaNodeGroupTemplates"
+                         ".create_and_list_node_group_templates")
+class CreateAndListNodeGroupTemplates(utils.SaharaScenario):
+
+    def run(self, flavor, plugin_name="vanilla",
+            hadoop_version="1.2.1", use_autoconfig=True):
         """Create and list Sahara Node Group Templates.
 
         This scenario creates two Node Group Templates with different set of
@@ -65,15 +66,18 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
                                                 use_autoconfig=use_autoconfig)
         self._list_node_group_templates()
 
-    @types.convert(flavor={"type": "nova_flavor"})
-    @validation.flavor_exists("flavor")
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_delete_node_group_templates(self, flavor,
-                                           plugin_name="vanilla",
-                                           hadoop_version="1.2.1",
-                                           use_autoconfig=True):
+
+@types.convert(flavor={"type": "nova_flavor"})
+@validation.flavor_exists("flavor")
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaNodeGroupTemplates"
+                         ".create_delete_node_group_templates")
+class CreateDeleteNodeGroupTemplates(utils.SaharaScenario):
+
+    def run(self, flavor, plugin_name="vanilla",
+            hadoop_version="1.2.1", use_autoconfig=True):
         """Create and delete Sahara Node Group Templates.
 
         This scenario creates and deletes two most common types of

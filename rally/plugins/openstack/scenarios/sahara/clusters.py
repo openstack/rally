@@ -22,34 +22,31 @@ from rally.task import validation
 
 LOG = logging.getLogger(__name__)
 
+"""Scenarios for Sahara clusters."""
 
-class SaharaClusters(utils.SaharaScenario):
-    """Benchmark scenarios for Sahara clusters."""
 
-    @types.convert(flavor={"type": "nova_flavor"},
-                   master_flavor={"type": "nova_flavor"},
-                   worker_flavor={"type": "nova_flavor"},
-                   neutron_net={"type": "neutron_network"},
-                   floating_ip_pool={"type": "neutron_network"})
-    @validation.flavor_exists("master_flavor")
-    @validation.flavor_exists("worker_flavor")
-    @validation.required_contexts("users", "sahara_image")
-    @validation.number("workers_count", minval=1, integer_only=True)
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_and_delete_cluster(self, workers_count, plugin_name,
-                                  hadoop_version,
-                                  master_flavor=None, worker_flavor=None,
-                                  flavor=None,
-                                  floating_ip_pool=None,
-                                  volumes_per_node=None,
-                                  volumes_size=None, auto_security_group=None,
-                                  security_groups=None, node_configs=None,
-                                  cluster_configs=None,
-                                  enable_anti_affinity=False,
-                                  enable_proxy=False,
-                                  use_autoconfig=True):
+@types.convert(flavor={"type": "nova_flavor"},
+               master_flavor={"type": "nova_flavor"},
+               worker_flavor={"type": "nova_flavor"},
+               neutron_net={"type": "neutron_network"},
+               floating_ip_pool={"type": "neutron_network"})
+@validation.flavor_exists("master_flavor")
+@validation.flavor_exists("worker_flavor")
+@validation.required_contexts("users", "sahara_image")
+@validation.number("workers_count", minval=1, integer_only=True)
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaClusters.create_and_delete_cluster")
+class CreateAndDeleteCluster(utils.SaharaScenario):
+
+    def run(self, workers_count, plugin_name, hadoop_version,
+            master_flavor=None, worker_flavor=None, flavor=None,
+            floating_ip_pool=None, volumes_per_node=None,
+            volumes_size=None, auto_security_group=None,
+            security_groups=None, node_configs=None,
+            cluster_configs=None, enable_anti_affinity=False,
+            enable_proxy=False, use_autoconfig=True):
         """Launch and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -119,27 +116,26 @@ class SaharaClusters(utils.SaharaScenario):
 
         self._delete_cluster(cluster)
 
-    @types.convert(flavor={"type": "nova_flavor"},
-                   master_flavor={"type": "nova_flavor"},
-                   worker_flavor={"type": "nova_flavor"})
-    @validation.flavor_exists("master_flavor")
-    @validation.flavor_exists("worker_flavor")
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image")
-    @validation.number("workers_count", minval=1, integer_only=True)
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_scale_delete_cluster(self, master_flavor, worker_flavor,
-                                    workers_count, plugin_name,
-                                    hadoop_version, deltas,
-                                    flavor=None,
-                                    floating_ip_pool=None,
-                                    volumes_per_node=None, volumes_size=None,
-                                    auto_security_group=None,
-                                    security_groups=None, node_configs=None,
-                                    cluster_configs=None,
-                                    enable_anti_affinity=False,
-                                    enable_proxy=False,
-                                    use_autoconfig=True):
+
+@types.convert(flavor={"type": "nova_flavor"},
+               master_flavor={"type": "nova_flavor"},
+               worker_flavor={"type": "nova_flavor"})
+@validation.flavor_exists("master_flavor")
+@validation.flavor_exists("worker_flavor")
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_contexts("users", "sahara_image")
+@validation.number("workers_count", minval=1, integer_only=True)
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaClusters.create_scale_delete_cluster")
+class CreateScaleDeleteCluster(utils.SaharaScenario):
+
+    def run(self, master_flavor, worker_flavor, workers_count,
+            plugin_name, hadoop_version, deltas, flavor=None,
+            floating_ip_pool=None, volumes_per_node=None,
+            volumes_size=None, auto_security_group=None,
+            security_groups=None, node_configs=None,
+            cluster_configs=None, enable_anti_affinity=False,
+            enable_proxy=False, use_autoconfig=True):
         """Launch, scale and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes

@@ -21,8 +21,7 @@ from tests.unit import test
 
 CONF = cfg.CONF
 
-SAHARA_JOB = "rally.plugins.openstack.scenarios.sahara.jobs.SaharaJob"
-SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
+BASE = "rally.plugins.openstack.scenarios.sahara.jobs"
 
 
 class SaharaJobTestCase(test.ScenarioTestCase):
@@ -36,8 +35,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         CONF.set_override("sahara_job_check_interval", 0, "benchmark",
                           enforce_type=True)
 
-    @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_java(self, mock__run_job_execution):
+    @mock.patch("%s.CreateLaunchJob._run_job_execution" % BASE)
+    def test_create_launch_job_java(self, mock_run_job):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -52,23 +51,22 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }
             }
         })
-        jobs_scenario = jobs.SaharaJob(self.context)
-        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+        scenario = jobs.CreateLaunchJob(self.context)
+        scenario.generate_random_name = mock.Mock(
+            return_value="job_42")
 
-        jobs_scenario.create_launch_job(
-            job_type="java",
-            configs={"conf_key": "conf_val"},
-            job_idx=0
-        )
+        scenario.run(job_type="java",
+                     configs={"conf_key": "conf_val"},
+                     job_idx=0)
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=jobs_scenario.generate_random_name.return_value,
+            name="job_42",
             type="java",
             description="",
             mains=["main_42"],
             libs=["lib_42"]
         )
 
-        mock__run_job_execution.assert_called_once_with(
+        mock_run_job.assert_called_once_with(
             job_id="42",
             cluster_id="cl_42",
             input_id=None,
@@ -77,11 +75,12 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_JOB + "._run_job_execution")
-    @mock.patch(SAHARA_JOB + "._create_output_ds",
+    @mock.patch("%s.CreateLaunchJob._run_job_execution" % BASE)
+    @mock.patch("%s.CreateLaunchJob._create_output_ds" % BASE,
                 return_value=mock.MagicMock(id="out_42"))
-    def test_create_launch_job_pig(self, mock__create_output_ds,
-                                   mock__run_job_execution):
+    def test_create_launch_job_pig(self,
+                                   mock_create_output,
+                                   mock_run_job):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -96,23 +95,21 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }
             }
         })
-        jobs_scenario = jobs.SaharaJob(self.context)
-        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+        scenario = jobs.CreateLaunchJob(self.context)
+        scenario.generate_random_name = mock.Mock(return_value="job_42")
 
-        jobs_scenario.create_launch_job(
-            job_type="pig",
-            configs={"conf_key": "conf_val"},
-            job_idx=0
-        )
+        scenario.run(job_type="pig",
+                     configs={"conf_key": "conf_val"},
+                     job_idx=0)
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=jobs_scenario.generate_random_name.return_value,
+            name="job_42",
             type="pig",
             description="",
             mains=["main_42"],
             libs=["lib_42"]
         )
 
-        mock__run_job_execution.assert_called_once_with(
+        mock_run_job.assert_called_once_with(
             job_id="42",
             cluster_id="cl_42",
             input_id="in_42",
@@ -121,8 +118,12 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_sequence(self, mock__run_job_execution):
+    @mock.patch("%s.CreateLaunchJob._run_job_execution" % BASE)
+    @mock.patch("%s.CreateLaunchJob.generate_random_name" % BASE,
+                return_value="job_42")
+    def test_create_launch_job_sequence(self,
+                                        mock__random_name,
+                                        mock_run_job):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -137,10 +138,9 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }
             }
         })
-        jobs_scenario = jobs.SaharaJob(self.context)
-        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+        scenario = jobs.CreateLaunchJobSequence(self.context)
 
-        jobs_scenario.create_launch_job_sequence(
+        scenario.run(
             jobs=[
                 {
                     "job_type": "java",
@@ -150,38 +150,41 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                     "configs": {"conf_key2": "conf_val2"}
                 }])
 
-        jobs_create_call = mock.call(
-            name=jobs_scenario.generate_random_name.return_value,
-            type="java",
-            description="",
-            mains=["main_42"],
-            libs=["lib_42"])
+        jobs_create_call = mock.call(name="job_42",
+                                     type="java",
+                                     description="",
+                                     mains=["main_42"],
+                                     libs=["lib_42"])
 
-        self.clients("sahara").jobs.create.assert_has_calls([jobs_create_call,
-                                                             jobs_create_call])
+        self.clients("sahara").jobs.create.assert_has_calls(
+            [jobs_create_call, jobs_create_call])
 
-        mock__run_job_execution.assert_has_calls([
-            mock.call(
-                job_id="42",
-                cluster_id="cl_42",
-                input_id=None,
-                output_id=None,
-                configs={"conf_key": "conf_val"},
-                job_idx=0),
-            mock.call(
-                job_id="42",
-                cluster_id="cl_42",
-                input_id=None,
-                output_id=None,
-                configs={"conf_key2": "conf_val2"},
-                job_idx=1)]
-        )
+        mock_run_job.assert_has_calls([
+            mock.call(job_id="42",
+                      cluster_id="cl_42",
+                      input_id=None,
+                      output_id=None,
+                      configs={"conf_key": "conf_val"},
+                      job_idx=0),
+            mock.call(job_id="42",
+                      cluster_id="cl_42",
+                      input_id=None,
+                      output_id=None,
+                      configs={"conf_key2": "conf_val2"},
+                      job_idx=1)
+        ])
 
-    @mock.patch(SAHARA_JOB + "._run_job_execution")
-    @mock.patch(SAHARA_JOB + "._scale_cluster")
-    def test_create_launch_job_sequence_with_scaling(self,
-                                                     mock__scale_cluster,
-                                                     mock__run_job_execution):
+    @mock.patch("%s.CreateLaunchJob.generate_random_name" % BASE,
+                return_value="job_42")
+    @mock.patch("%s.CreateLaunchJobSequenceWithScaling"
+                "._scale_cluster" % BASE)
+    @mock.patch("%s.CreateLaunchJob._run_job_execution" % BASE)
+    def test_create_launch_job_sequence_with_scaling(
+            self,
+            mock_run_job,
+            mock_create_launch_job_sequence_with_scaling__scale_cluster,
+            mock_create_launch_job_generate_random_name
+    ):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
@@ -198,10 +201,9 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }
             }
         })
-        jobs_scenario = jobs.SaharaJob(self.context)
-        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+        scenario = jobs.CreateLaunchJobSequenceWithScaling(self.context)
 
-        jobs_scenario.create_launch_job_sequence_with_scaling(
+        scenario.run(
             jobs=[
                 {
                     "job_type": "java",
@@ -212,15 +214,14 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }],
             deltas=[1, -1])
 
-        jobs_create_call = mock.call(
-            name=jobs_scenario.generate_random_name.return_value,
-            type="java",
-            description="",
-            mains=["main_42"],
-            libs=["lib_42"])
+        jobs_create_call = mock.call(name="job_42",
+                                     type="java",
+                                     description="",
+                                     mains=["main_42"],
+                                     libs=["lib_42"])
 
-        self.clients("sahara").jobs.create.assert_has_calls([jobs_create_call,
-                                                             jobs_create_call])
+        self.clients("sahara").jobs.create.assert_has_calls(
+            [jobs_create_call, jobs_create_call])
 
         je_0 = mock.call(job_id="42", cluster_id="cl_42", input_id=None,
                          output_id=None, configs={"conf_key": "conf_val"},
@@ -228,5 +229,4 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         je_1 = mock.call(job_id="42", cluster_id="cl_42", input_id=None,
                          output_id=None,
                          configs={"conf_key2": "conf_val2"}, job_idx=1)
-        mock__run_job_execution.assert_has_calls(
-            [je_0, je_1, je_0, je_1, je_0, je_1])
+        mock_run_job.assert_has_calls([je_0, je_1, je_0, je_1, je_0, je_1])
