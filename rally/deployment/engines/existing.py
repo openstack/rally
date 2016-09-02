@@ -59,6 +59,25 @@ class ExistingCloud(engine.Engine):
             "https_insecure": False,
             "https_cacert": "",
         }
+
+    To specify extra options use can use special "extra" parameter:
+
+    .. code-block:: json
+
+        {
+            "type": "ExistingCloud",
+            "auth_url": "http://localhost:5000/v2.0/",
+            "region_name": "RegionOne",
+            "endpoint_type": "public",
+            "admin": {
+                "username": "admin",
+                "password": "password",
+                "tenant_name": "demo"
+            },
+            "https_insecure": False,
+            "https_cacert": "",
+            "extra": {"some_var": "some_value"}
+        }
     """
 
     CONFIG_SCHEMA = {
@@ -83,6 +102,7 @@ class ExistingCloud(engine.Engine):
                         "properties": {
                             "username": {"type": "string"},
                             "password": {"type": "string"},
+                            "domain_name": {"type": "string"},
                             "user_domain_name": {"type": "string"},
                             "admin_domain_name": {"type": "string"},
                             "project_name": {"type": "string"},
@@ -110,7 +130,8 @@ class ExistingCloud(engine.Engine):
             "users": {
                 "type": "array",
                 "items": {"$ref": "#/definitions/user"}
-            }
+            },
+            "extra": {"type": "object", "additionalProperties": True}
         },
         "required": ["type", "auth_url", "admin"],
         "additionalProperties": False
