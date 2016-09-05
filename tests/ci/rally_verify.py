@@ -205,12 +205,10 @@ def main():
             clients.nova().flavors.delete(flavor.id)
 
         LOG.info("Creating a shared network.")
-        tenant_name = clients.keystone().tenant_name
-        tenant_id = clients.keystone().get_project_id(tenant_name)
         net_body = {
             "network": {
                 "name": "shared-net-%s" % str(uuid.uuid4()),
-                "tenant_id": tenant_id,
+                "tenant_id": clients.keystone.auth_ref.project_id,
                 "shared": True
             }
         }

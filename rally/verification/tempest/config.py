@@ -485,8 +485,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
 
     def _create_network_resources(self):
         neutron_wrapper = network.NeutronWrapper(self.clients, self)
-        tenant_name = self.clients.keystone().tenant_name
-        tenant_id = self.clients.keystone().get_project_id(tenant_name)
+        tenant_id = self.clients.keystone.auth_ref.project_id
         LOG.debug("Creating network resources: network, subnet, router")
         net = neutron_wrapper.create_network(
             tenant_id, subnets_num=1, add_router=True,
