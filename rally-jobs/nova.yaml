@@ -1069,6 +1069,20 @@
         failure_rate:
           max: 0
 
+  NovaFlavors.create_and_get_flavor:
+    -
+      args:
+        ram: 500
+        vcpus: 1
+        disk: 1
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
+
   NovaFlavors.create_and_list_flavor_access:
     -
       args:

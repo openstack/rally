@@ -995,6 +995,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_flavor")
 
+    def test__get_flavor(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._get_flavor("foo_flavor_id")
+        self.assertEqual(
+            self.admin_clients("nova").flavors.get.return_value,
+            result)
+        self.admin_clients("nova").flavors.get.assert_called_once_with(
+            "foo_flavor_id")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_flavor")
+
     def test__update_server(self):
         server = mock.Mock()
         nova_scenario = utils.NovaScenario()
