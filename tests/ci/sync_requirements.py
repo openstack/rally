@@ -183,6 +183,9 @@ class Requirement(object):
         return (isinstance(other, self.__class__) and
                 self.package_name == other.package_name)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 def parse_data(raw_data, include_comments=True):
     # first elem is None to simplify checks of last elem in requirements
