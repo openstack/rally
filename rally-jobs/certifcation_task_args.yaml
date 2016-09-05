@@ -1,0 +1,20 @@
+---
+  service_list:
+    - authentication
+    - nova
+    - neutron
+    - keystone
+    - cinder
+    - glance
+  use_existing_users: false
+  image_name: "^(cirros.*uec|TestVM)$"
+  flavor_name: "m1.tiny"
+  glance_image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+  smoke: true
+  users_amount: 1
+  tenants_amount: 1
+  controllers_amount: 1
+  compute_amount: 1
+  storage_amount: 1
+  network_amount: 1
+
