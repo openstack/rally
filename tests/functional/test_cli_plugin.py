@@ -25,13 +25,6 @@ class PluginTestCase(unittest.TestCase):
         self.rally = utils.Rally()
 
     def test_show_one(self):
-        result = self.rally("plugin show Dummy.dummy_with_scenario_output")
-        self.assertIn("NAME", result)
-        self.assertIn("NAMESPACE", result)
-        self.assertIn("Dummy.dummy_with_scenario_output", result)
-        self.assertIn("MODULE", result)
-
-    def test_show_multiple_and_full_match(self):
         result = self.rally("plugin show Dummy.dummy")
         self.assertIn("NAME", result)
         self.assertIn("NAMESPACE", result)
@@ -43,7 +36,6 @@ class PluginTestCase(unittest.TestCase):
         self.assertIn("Multiple plugins found:", result)
         self.assertIn("Dummy.dummy", result)
         self.assertIn("Dummy.dummy_exception", result)
-        self.assertIn("Dummy.dummy_with_scenario_output", result)
         self.assertIn("Dummy.dummy_random_fail_in_atomic", result)
 
     def test_show_not_found(self):
@@ -66,7 +58,6 @@ class PluginTestCase(unittest.TestCase):
         result = self.rally("plugin list Dummy")
         self.assertIn("Dummy.dummy", result)
         self.assertIn("Dummy.dummy_exception", result)
-        self.assertIn("Dummy.dummy_with_scenario_output", result)
         self.assertIn("Dummy.dummy_random_fail_in_atomic", result)
 
     def test_list_not_found_namespace(self):

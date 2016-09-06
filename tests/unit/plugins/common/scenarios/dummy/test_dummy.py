@@ -155,14 +155,6 @@ class DummyTestCase(test.TestCase):
 
         self.assertEqual(expected, scenario._output)
 
-    def test_dummy_dummy_with_scenario_output(self):
-        scenario = dummy.DummyWithScenarioOutput(test.get_test_context())
-        result = scenario.run()
-        self.assertEqual(result["errors"], "")
-        # Since the data is generated in random,
-        # checking for not None
-        self.assertIsNotNone(result["data"])
-
     def test_dummy_random_fail_in_atomic(self):
         scenario = dummy.DummyRandomFailInAtomic(test.get_test_context())
 
