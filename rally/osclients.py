@@ -531,7 +531,7 @@ class Zaqar(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return Zaqar client."""
         from zaqarclient.queues import client as zaqar
-        tenant_id = self.keystone.auth_ref.get("token").get("tenant").get("id")
+        tenant_id = self.keystone.auth_ref.project_id
         conf = {"auth_opts": {"backend": "keystone", "options": {
             "os_username": self.credential.username,
             "os_password": self.credential.password,
