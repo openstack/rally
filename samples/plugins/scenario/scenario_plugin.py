@@ -17,8 +17,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 
 
-class ScenarioPlugin(scenario.OpenStackScenario):
-    """Sample plugin which lists flavors."""
+@scenario.configure(name="ScenarioPlugin.list_flavors")
+class ListFlavors(scenario.OpenStackScenario):
 
     @atomic.action_timer("list_flavors")
     def _list_flavors(self):
@@ -34,8 +34,7 @@ class ScenarioPlugin(scenario.OpenStackScenario):
         """The same with admin clients."""
         self.admin_clients("nova").flavors.list()
 
-    @scenario.configure()
-    def list_flavors(self):
+    def run(self):
         """List flavors."""
         self._list_flavors()
         self._list_flavors_as_admin()
