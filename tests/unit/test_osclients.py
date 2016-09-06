@@ -574,7 +574,7 @@ class OSClientsTestCase(test.TestCase):
         mock_zaqar = mock.MagicMock()
         mock_zaqar.client.Client = mock.MagicMock(return_value=fake_zaqar)
         self.assertNotIn("zaqar", self.clients.cache)
-        p_id = self.auth_ref.get("token").get("tenant").get("id")
+        p_id = self.auth_ref.project_id
         with mock.patch.dict("sys.modules", {"zaqarclient.queues":
                                              mock_zaqar}):
             client = self.clients.zaqar()
