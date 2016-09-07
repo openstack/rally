@@ -22,6 +22,17 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.authenticate_user_and_validate_token:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_user_set_enabled_and_delete:
     -
       args:
