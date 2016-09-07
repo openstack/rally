@@ -1,7 +1,8 @@
-python-mistralclient>=2.0.0,<=2.1.1
+python-mistralclient>=2.0.0
+# [do-not-touch] our plugins support only one version of fuelclient
 python-fuelclient==6.1.0                               # Apache Software License
-python-muranoclient>=0.8.2,<=0.11.0                    # Apache License, Version 2.0
-python-cueclient>=1.0.0,<=1.0.0                        # Apache License, Version 2.0
-python-senlinclient>=0.3.0,<=1.0.0                     # Apache Software License
-python-magnumclient>=2.0.0,<=2.3.0                     # Apache Software License
-gnocchiclient>=2.2.0,<=2.5.0                           # Apache Software License
+python-muranoclient>=0.8.2                             # Apache License, Version 2.0
+python-cueclient>=1.0.0                                # Apache License, Version 2.0
+python-senlinclient>=0.3.0                             # Apache Software License
+python-magnumclient>=2.0.0                             # Apache Software License
+gnocchiclient>=2.2.0                                   # Apache Software License

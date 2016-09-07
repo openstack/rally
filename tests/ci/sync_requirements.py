@@ -43,13 +43,13 @@ RALLY_REQUIREMENTS_FILES = (
     "test-requirements.txt",
     "optional-requirements.txt"
 )
-UPPER_LIMIT_TAG = "[constant-upper-limit]"
+DO_NOT_TOUCH_TAG = "[do-not-touch]"
 
 
 class Comment(object):
-    def __init__(self, s=None):
+    def __init__(self, s=None, finished=False):
         self._comments = []
-        self.is_finished = False
+        self.is_finished = finished
         if s:
             self.append(s)
 
@@ -82,7 +82,7 @@ class Requirement(object):
         self.version = version
         self._license = None
         self._pypy_info = None
-        self.upper_limit_flag = False
+        self.do_not_touch = False
 
     def sync_max_version_with_pypy(self):
         if isinstance(self.version, dict) and not self.upper_limit_flag:
@@ -151,26 +151,41 @@ class Requirement(object):
 
     def __str__(self):
         if isinstance(self.version, dict):
-            version = ""
-            if self.version["ne"]:
-                    version += ",".join(self.version["ne"])
-            if self.version["min"]:
-                if version:
-                    version += ","
-                version += self.version["min"]
-            if self.version["max"]:
-                if version:
-                    version += ","
-                    version += self.version["max"]
+            version = []
+
+            min_equal_to_max = False
+            if self.version["min"] and self.version["max"]:
+                if (self.version["min"].startswith(">=") and
+                        self.version["max"].startswith("<=") and
+                        self.version["min"][2:] == self.version["max"][2:]):
+                    # min and max versions are equal there is no need to write
+                    # both of them
+                    min_equal_to_max = True
+                    version.append("==%s" % self.version["min"][2:])
+
+            if not min_equal_to_max and self.version["min"]:
+                version.append(self.version["min"])
+
+            if not min_equal_to_max and self.version["ne"]:
+                version.extend(self.version["ne"])
+
+            if not min_equal_to_max and self.version["max"]:
+                version.append(self.version["max"])
+
+            version = ",".join(version)
         else:
-            version = self.version
+            if self.do_not_touch:
+                version = self.version
+            else:
+                # remove const version
+                version = ">=%s" % self.version[2:]
 
         string = "%s%s" % (self.package_name, version)
         if self.license:
             # NOTE(andreykurilin): When I start implementation of this script,
-            #   python-keystoneclient dependency took around ~45-55, so let's
-            #   use this length as indent. Feel free to modify it to lower or
-            #   greater value.
+            #   python-keystoneclient dependency string took around ~45-55
+            #   chars, so let's use this length as indent. Feel free to modify
+            #   it to lower or greater value.
             magic_number = 55
             if len(string) < magic_number:
                 indent = magic_number - len(string)
@@ -192,30 +207,33 @@ def parse_data(raw_data, include_comments=True):
             if not include_comments:
                 continue
 
-            if (isinstance(requirements[-1], Comment) and
-                    UPPER_LIMIT_TAG in line):
-                requirements[-1].is_finished = True
-
             if getattr(requirements[-1], "is_finished", True):
                 requirements.append(Comment())
 
             requirements[-1].append(line)
+        elif line == "":
+            # just empty line
+            if isinstance(requirements[-1], Comment):
+                requirements[-1].finish_him()
+            requirements.append(Comment(finished=True))
         else:
             if (isinstance(requirements[-1], Comment) and
                     not requirements[-1].is_finished):
                 requirements[-1].finish_him()
-            if line == "":
-                requirements.append("")
-            else:
-                # parse_line
-                req = Requirement.parse_line(line)
-                if req:
-                    if (isinstance(requirements[-1], Comment) and
-                            str(requirements[-1]).endswith(UPPER_LIMIT_TAG)):
-                        req.upper_limit_flag = True
-                    requirements.append(req)
-    if not requirements[-1]:
-        requirements.pop()
+            # parse_line
+            req = Requirement.parse_line(line)
+            if req:
+                if (isinstance(requirements[-1], Comment) and
+                        DO_NOT_TOUCH_TAG in str(requirements[-1])):
+                    req.do_not_touch = True
+                requirements.append(req)
+    for i in range(len(requirements) - 1, 0, -1):
+        # remove empty lines at the end of file
+        if isinstance(requirements[i], Comment):
+            if str(requirements[i]) == "":
+                requirements.pop(i)
+        else:
+            break
     return requirements[1:]
 
 
@@ -261,12 +279,14 @@ def _sync():
     gr = parse_data(raw_gr, include_comments=False)
     for filename, requirements in _read_requirements():
         for i in range(0, len(requirements)):
-            if isinstance(requirements[i], Requirement):
+            if (isinstance(requirements[i], Requirement) and
+                    not requirements[i].do_not_touch):
                 try:
                     gr_item = gr[gr.index(requirements[i])]
                 except ValueError:
                     # it not g-r requirements
-                    pass
+                    if isinstance(requirements[i].version, dict):
+                        requirements[i].version["max"] = None
                 else:
                     requirements[i].version = gr_item.version
         yield filename, requirements
@@ -290,7 +310,8 @@ def add_uppers():
         LOG.info("Obtaining latest versions of packages from %s." % filename)
         for req in requirements:
             if isinstance(req, Requirement):
-                req.sync_max_version_with_pypy()
+                if isinstance(req.version, dict) and not req.version["max"]:
+                    req.sync_max_version_with_pypy()
         _write_requirements(filename, requirements)
 
 
