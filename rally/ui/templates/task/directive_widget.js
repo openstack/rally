@@ -138,6 +138,9 @@ var widgetDirective = function($compile) {
             "<tr>" +
             "</tbody></table>";
           var el = element.empty().append($compile(template)(scope)).children()[0]
+        } else if (attrs.widget === "TextArea") {
+          var template = "<div style='padding:0 0 5px' ng-repeat='str in data track by $index'>{{str}}</div><div style='height:10px'></div>";
+          var el = element.empty().append($compile(template)(scope)).children()[0]
         } else {
 
           var el_chart = element.addClass("chart").css({display:"block"});
