@@ -56,7 +56,7 @@ class ShareNetworksTestCase(test.TestCase):
         for ss_type in ("ldap", "kerberos", "active_directory")
     ]
 
-    def _get_context(self, networks_per_tenant=2,
+    def _get_context(self, use_security_services=False, networks_per_tenant=2,
                      neutron_network_provider=True):
         tenants = {}
         for t_id in range(self.TENANTS_AMOUNT):
@@ -84,6 +84,11 @@ class ShareNetworksTestCase(test.TestCase):
                 consts.SHARE_NETWORKS_CONTEXT_NAME: {
                     "use_share_networks": True,
                     "share_networks": [],
+                },
+                consts.SECURITY_SERVICES_CONTEXT_NAME: {
+                    "security_services": (
+                        self.SECURITY_SERVICES
+                        if use_security_services else [])
                 },
                 "network": {
                     "networks_per_tenant": networks_per_tenant,
@@ -246,6 +251,64 @@ class ShareNetworksTestCase(test.TestCase):
     @mock.patch("rally.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
+    def test_setup_autocreate_share_networks_with_security_services(
+            self,
+            neutron,
+            mock_manila_scenario__add_security_service_to_share_network,
+            mock_manila_scenario__create_share_network,
+            mock_clients):
+        networks_per_tenant = 2
+        ctxt = self._get_context(
+            networks_per_tenant=networks_per_tenant,
+            neutron_network_provider=neutron,
+            use_security_services=True,
+        )
+        inst = manila_share_networks.ShareNetworks(ctxt)
+        for tenant_id in list(ctxt["tenants"].keys()):
+            inst.context["tenants"][tenant_id][
+                consts.SECURITY_SERVICES_CONTEXT_NAME] = {
+                    "security_services": [
+                        Fake(id="fake_id").to_dict() for i in (1, 2, 3)
+                    ]
+            }
+
+        inst.setup()
+
+        self.assertEqual(ctxt["task"], inst.context.get("task"))
+        self.assertEqual(ctxt["config"], inst.context.get("config"))
+        self.assertEqual(ctxt["users"], inst.context.get("users"))
+        self.assertEqual(ctxt["tenants"], inst.context.get("tenants"))
+        mock_add_security_service_to_share_network = (
+            mock_manila_scenario__add_security_service_to_share_network)
+        mock_add_security_service_to_share_network.assert_has_calls([
+            mock.call(mock.ANY, mock.ANY)
+            for i in range(
+                self.TENANTS_AMOUNT *
+                networks_per_tenant *
+                len(self.SECURITY_SERVICES))])
+        if neutron:
+            sn_args = {
+                "neutron_net_id": mock.ANY,
+                "neutron_subnet_id": mock.ANY,
+            }
+        else:
+            sn_args = {"nova_net_id": mock.ANY}
+        expected_calls = [
+            mock.call(**sn_args),
+            mock.call().to_dict(),
+            mock.ANY,
+            mock.ANY,
+            mock.ANY,
+        ]
+        mock_manila_scenario__create_share_network.assert_has_calls(
+            expected_calls * (self.TENANTS_AMOUNT * networks_per_tenant))
+        mock_clients.assert_has_calls([
+            mock.call("fake", {}) for i in range(self.TENANTS_AMOUNT)])
+
+    @ddt.data(True, False)
+    @mock.patch("rally.osclients.Clients")
+    @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
+    @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
     def test_setup_autocreate_share_networks_wo_security_services(
             self,
             neutron,
@@ -329,6 +392,7 @@ class ShareNetworksTestCase(test.TestCase):
             self.assertIn(mock.call(user["credential"], {}),
                           mock_clients.mock_calls)
 
+    @ddt.data(True, False)
     @mock.patch("rally.task.utils.wait_for_status")
     @mock.patch("rally.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_delete_share_network")
@@ -336,7 +400,7 @@ class ShareNetworksTestCase(test.TestCase):
     @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_list_share_servers")
     def test_cleanup_autocreated_share_networks(
-            self,
+            self, use_security_services,
             mock_manila_scenario__list_share_servers,
             mock_manila_scenario__add_security_service_to_share_network,
             mock_manila_scenario__create_share_network,
@@ -349,8 +413,16 @@ class ShareNetworksTestCase(test.TestCase):
         networks_per_tenant = 2
         ctxt = self._get_context(
             networks_per_tenant=networks_per_tenant,
+            use_security_services=use_security_services,
         )
         inst = manila_share_networks.ShareNetworks(ctxt)
+        for tenant_id in list(ctxt["tenants"].keys()):
+            inst.context["tenants"][tenant_id][
+                consts.SECURITY_SERVICES_CONTEXT_NAME] = {
+                    "security_services": [
+                        Fake(id="fake_id").to_dict() for i in (1, 2, 3)
+                    ]
+            }
         inst.setup()
 
         mock_clients.assert_has_calls([

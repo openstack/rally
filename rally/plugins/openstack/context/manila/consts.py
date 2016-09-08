@@ -14,3 +14,4 @@
 #    under the License.
 
 SHARE_NETWORKS_CONTEXT_NAME = "manila_share_networks"
+SECURITY_SERVICES_CONTEXT_NAME = "manila_security_services"
