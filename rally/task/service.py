@@ -64,32 +64,6 @@ def should_be_overridden(func):
     return func
 
 
-# TODO(andreykurilin): remove _DevNullDict and _ServiceWithoutAtomic when we
-#   start support inner atomics
-class _DevNullDict(dict):
-    """Do not keep anything."""
-    def __setitem__(self, key, value):
-        pass
-
-
-class _ServiceWithoutAtomic(object):
-    def __init__(self, service):
-        self._service = service
-        self._atomic_actions = _DevNullDict()
-
-    def atomic_actions(self):
-        return self._atomic_actions
-
-    def __getattr__(self, name):
-        return getattr(self._service, name)
-
-    def __str__(self):
-        return "'%s' without atomic actions" % self._service.__name__
-
-    def __repr__(self):
-        return "<%s>" % str(self)
-
-
 def method_wrapper(func):
     """Wraps service's methods with some magic
 
@@ -138,9 +112,6 @@ def method_wrapper(func):
                                               "given": args_len})
 
             raise TypeError(message)
-
-        if kwargs.pop("no_atomic", False):
-            instance = _ServiceWithoutAtomic(instance)
 
         return func(instance, *args, **kwargs)
 

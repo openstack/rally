@@ -22,6 +22,7 @@ from oslotest import base
 from oslotest import mockpatch
 
 from rally.common import db
+from rally.common import objects
 from rally import plugins
 from tests.unit import fakes
 
@@ -46,7 +47,9 @@ class TestCase(base.BaseTestCase):
         plugins.load()
 
     def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
+        _old_atomic_actions = objects.Task.convert_atomic_actions(
+            atomic_actions)
+        action_duration = _old_atomic_actions.get(name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 

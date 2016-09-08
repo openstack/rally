@@ -229,12 +229,26 @@ class TaskTestCase(test.TestCase):
 
     @mock.patch("rally.common.objects.task.db.task_result_get_all_by_uuid",
                 return_value="foo_results")
-    def test_get_results(self, mock_task_result_get_all_by_uuid):
+    def test__get_results(self, mock_task_result_get_all_by_uuid):
         task = objects.Task(task=self.task)
-        results = task.get_results()
+        results = task._get_results()
         mock_task_result_get_all_by_uuid.assert_called_once_with(
             self.task["uuid"])
         self.assertEqual(results, "foo_results")
+
+    def test_get_results(self):
+        task = objects.Task(task=self.task)
+        task._get_results = mock.MagicMock()
+        return_value = [{"data": {"raw": [
+                                  {"atomic_actions": [
+                                   {"name": "some",
+                                    "started_at": 1.0,
+                                    "finished_at": 2.0,
+                                    "children": []}]}]}}]
+        task._get_results.return_value = return_value
+        self.assertEqual([{"data": {"raw": [
+                          {"atomic_actions": {"some": 1.0}}]}}],
+                         task.get_results())
 
     @mock.patch("rally.common.objects.task.db.task_update")
     def test_set_failed(self, mock_task_update):
@@ -309,6 +323,23 @@ class TaskTestCase(test.TestCase):
             allowed_statuses=(consts.TaskStatus.RUNNING,
                               consts.TaskStatus.SOFT_ABORTING)
         )
+
+    @ddt.data(
+        {"atomic_actions": [{"name": "some", "started_at": 1.0,
+                             "finished_at": 2.0, "children": []}],
+         "expected": {"some": 1.0}},
+        {"atomic_actions": [{"name": "some", "started_at": 1.0,
+                             "finished_at": 2.0, "children": []},
+                            {"name": "some", "started_at": 2.0,
+                             "finished_at": 3.0, "children": []}],
+         "expected": {"some": 1.0, "some (2)": 1.0}},
+        {"atomic_actions": {"some": 1.0},
+         "expected": {"some": 1.0}}
+    )
+    @ddt.unpack
+    def test_convert_atomic_actions(self, atomic_actions, expected):
+        self.assertEqual(expected,
+                         objects.Task.convert_atomic_actions(atomic_actions))
 
 
 class SubtaskTestCase(test.TestCase):

@@ -23,6 +23,7 @@ import six
 
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import objects
 from rally import consts
 from rally import exceptions
 
@@ -410,3 +411,38 @@ class ActionBuilder(object):
                 self._build(binding["action"], times,
                             *(binding["args"] + args), **dft_kwargs))
         return bound_actions
+
+
+# TODO(andreykurilin): We need to implement some wrapper for atomic actions,
+# we can use these wrapper to simulate new and old format.
+class WrapperForAtomicActions(list):
+
+    LOG_INFO = "Atomic actions format is changed. It is a list now."
+
+    def __init__(self, atomic_actions):
+        super(WrapperForAtomicActions, self).__init__(atomic_actions)
+        self.__atomic_actions = atomic_actions
+        self.__old_atomic_actions = objects.Task.convert_atomic_actions(
+            self.__atomic_actions)
+
+    def items(self):
+        LOG.warning(self.LOG_INFO)
+        return self.__old_atomic_actions.items()
+
+    def get(self, name, default=None):
+        LOG.warning(self.LOG_INFO)
+        return self.__old_atomic_actions.get(name, default)
+
+    def __iter__(self):
+        return iter(self.__atomic_actions)
+
+    def __len__(self):
+        return len(self.__atomic_actions)
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            # it is a call to list:
+            return self.__atomic_actions[item]
+        else:
+            LOG.warning(self.LOG_INFO)
+            return self.__old_atomic_actions[item]

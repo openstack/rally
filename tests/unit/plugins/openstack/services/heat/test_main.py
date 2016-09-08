@@ -58,7 +58,7 @@ class StackTestCase(test.ScenarioTestCase):
     @mock.patch("rally.plugins.openstack.services.heat.main.open")
     @mock.patch("rally.plugins.openstack.services.heat.main.Stack._wait")
     def test_create(self, mock_stack__wait, mock_open, mock_task_atomic):
-        mock_scenario = mock.MagicMock()
+        mock_scenario = mock.MagicMock(_atomic_actions=[])
         mock_scenario.generate_random_name.return_value = "fake_name"
         mock_open().read.return_value = "fake_content"
         mock_new_stack = {
@@ -87,7 +87,8 @@ class StackTestCase(test.ScenarioTestCase):
     @mock.patch("rally.plugins.openstack.services.heat.main.open")
     @mock.patch("rally.plugins.openstack.services.heat.main.Stack._wait")
     def test_update(self, mock_stack__wait, mock_open, mock_task_atomic):
-        mock_scenario = mock.MagicMock(stack_id="fake_id")
+        mock_scenario = mock.MagicMock(
+            stack_id="fake_id", _atomic_actions=[])
         mock_parameters = mock.Mock()
         mock_open().read.return_value = "fake_content"
         stack = main.Stack(

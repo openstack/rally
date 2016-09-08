@@ -410,8 +410,38 @@ class Task(object):
     def add_subtask(self, **subtask):
         return Subtask(self.task["uuid"], **subtask)
 
-    def get_results(self):
+    def _get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
+
+    def get_results(self):
+        results = self._get_results()
+        for result in results:
+            for itr in result["data"]["raw"]:
+                itr["atomic_actions"] = self.convert_atomic_actions(
+                    itr["atomic_actions"])
+        return results
+
+    """TODO(chenhb): Remove this method after replacing old format.
+    Now we do not convert children actions, because our output
+    string and report only show one layer actions.
+    """
+    @staticmethod
+    def convert_atomic_actions(atomic_actions):
+        """Convert atomic actions to old format. """
+        if isinstance(atomic_actions, dict):
+            return atomic_actions
+        old_style = collections.OrderedDict()
+        for action in atomic_actions:
+            duration = action["finished_at"] - action["started_at"]
+            if action["name"] in old_style:
+                name_template = action["name"] + " (%i)"
+                i = 2
+                while name_template % i in old_style:
+                    i += 1
+                old_style[name_template % i] = duration
+            else:
+                old_style[action["name"]] = duration
+        return old_style
 
     @classmethod
     def extend_results(cls, results, serializable=False):
@@ -461,6 +491,8 @@ class Task(object):
             atomic = collections.OrderedDict()
 
             for itr in scenario["data"]["raw"]:
+                itr["atomic_actions"] = cls.convert_atomic_actions(
+                    itr["atomic_actions"])
                 for atomic_name, duration in itr["atomic_actions"].items():
                     duration = duration or 0
                     if atomic_name not in atomic:
