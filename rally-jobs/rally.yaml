@@ -241,76 +241,76 @@
         failure_rate:
           max: 0
 
-  CeilometerEvents.create_user_and_get_event:
-    -
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CeilometerEvents.create_user_and_list_event_types:
-    -
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CeilometerEvents.create_user_and_list_events:
-    -
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CeilometerTraits.create_user_and_list_trait_descriptions:
-    -
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CeilometerTraits.create_user_and_list_traits:
-    -
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
+#  CeilometerEvents.create_user_and_get_event:
+#    -
+#      runner:
+#        type: "constant"
+#        times: 10
+#        concurrency: 10
+#      context:
+#        users:
+#          tenants: 2
+#          users_per_tenant: 2
+#      sla:
+#        failure_rate:
+#          max: 0
+#
+#  CeilometerEvents.create_user_and_list_event_types:
+#    -
+#      runner:
+#        type: "constant"
+#        times: 10
+#        concurrency: 10
+#      context:
+#        users:
+#          tenants: 2
+#          users_per_tenant: 2
+#      sla:
+#        failure_rate:
+#          max: 0
+#
+#  CeilometerEvents.create_user_and_list_events:
+#    -
+#      runner:
+#        type: "constant"
+#        times: 10
+#        concurrency: 10
+#      context:
+#        users:
+#          tenants: 2
+#          users_per_tenant: 2
+#      sla:
+#        failure_rate:
+#          max: 0
+#
+#  CeilometerTraits.create_user_and_list_trait_descriptions:
+#    -
+#      runner:
+#        type: "constant"
+#        times: 10
+#        concurrency: 10
+#      context:
+#        users:
+#          tenants: 2
+#          users_per_tenant: 2
+#      sla:
+#        failure_rate:
+#          max: 0
+#
+#  CeilometerTraits.create_user_and_list_traits:
+#    -
+#      runner:
+#        type: "constant"
+#        times: 10
+#        concurrency: 10
+#      context:
+#        users:
+#          tenants: 2
+#          users_per_tenant: 2
+#      sla:
+#        failure_rate:
+#          max: 0
+#
   CeilometerMeters.list_meters:
     -
       runner:
