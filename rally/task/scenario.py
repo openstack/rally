@@ -190,7 +190,7 @@ class Scenario(plugin.Plugin,
             for user in users:
                 cls._validate_helper(user_validators, user, config, deployment)
 
-    def sleep_between(self, min_sleep, max_sleep, atomic_delay=0.1):
+    def sleep_between(self, min_sleep, max_sleep=None, atomic_delay=0.1):
         """Call an interruptable_sleep() for a random amount of seconds.
 
         The exact time is chosen uniformly randomly from the interval
@@ -202,6 +202,9 @@ class Scenario(plugin.Plugin,
         :param atomic_delay: parameter with which  time.sleep would be called
                              int(sleep_time / atomic_delay) times.
         """
+        if max_sleep is None:
+            max_sleep = min_sleep
+
         if not 0 <= min_sleep <= max_sleep:
             raise exceptions.InvalidArgumentsException(
                 "0 <= min_sleep <= max_sleep")

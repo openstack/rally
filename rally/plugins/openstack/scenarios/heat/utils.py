@@ -142,8 +142,7 @@ class HeatScenario(scenario.OpenStackScenario):
         stack_id = self.clients("heat").stacks.create(**kw)["stack"]["id"]
         stack = self.clients("heat").stacks.get(stack_id)
 
-        self.sleep_between(CONF.benchmark.heat_stack_create_prepoll_delay,
-                           CONF.benchmark.heat_stack_create_prepoll_delay)
+        self.sleep_between(CONF.benchmark.heat_stack_create_prepoll_delay)
 
         stack = utils.wait_for(
             stack,
@@ -179,8 +178,7 @@ class HeatScenario(scenario.OpenStackScenario):
         }
         self.clients("heat").stacks.update(stack.id, **kw)
 
-        self.sleep_between(CONF.benchmark.heat_stack_update_prepoll_delay,
-                           CONF.benchmark.heat_stack_update_prepoll_delay)
+        self.sleep_between(CONF.benchmark.heat_stack_update_prepoll_delay)
 
         stack = utils.wait_for(
             stack,

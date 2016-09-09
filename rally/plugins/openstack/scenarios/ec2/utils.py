@@ -75,10 +75,7 @@ class EC2Scenario(scenario.OpenStackScenario):
             **kwargs)
         servers = [instance for instance in reservation.instances]
 
-        self.sleep_between(CONF.benchmark.
-                           ec2_server_boot_prepoll_delay,
-                           CONF.benchmark.
-                           ec2_server_boot_prepoll_delay)
+        self.sleep_between(CONF.benchmark.ec2_server_boot_prepoll_delay)
         servers = [utils.wait_for(
             server,
             ready_statuses=["RUNNING"],
