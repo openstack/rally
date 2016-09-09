@@ -63,27 +63,20 @@ class MuranoEnvironmentGeneratorTestCase(test.TestCase):
         }
 
     @mock.patch("%s.murano.utils.MuranoScenario._create_environment" % SCN)
-    def test_setup(self, mock_murano_scenario__create_environment):
-        mock_env = mock.MagicMock()
-        mock_murano_scenario__create_environment.return_value = mock_env
-
+    def test_setup(self, mock_create_env):
         murano_ctx = murano_environments.EnvironmentGenerator(
             self._get_context())
         murano_ctx.setup()
 
         self.assertEqual(2, len(murano_ctx.context["tenants"]))
         tenant_id = murano_ctx.context["users"][0]["tenant_id"]
-        self.assertEqual([mock_env],
+        self.assertEqual([mock_create_env.return_value],
                          murano_ctx.context["tenants"][tenant_id][
                              "environments"])
 
     @mock.patch("%s.murano.utils.MuranoScenario._create_environment" % SCN)
     @mock.patch("%s.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup,
-                     mock_murano_scenario__create_environment):
-        mock_env = mock.Mock()
-        mock_murano_scenario__create_environment.return_value = mock_env
-
+    def test_cleanup(self, mock_cleanup, mock_create_env):
         murano_ctx = murano_environments.EnvironmentGenerator(
             self._get_context())
         murano_ctx.setup()
