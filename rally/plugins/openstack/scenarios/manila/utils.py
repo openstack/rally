@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import time
 
 from oslo_config import cfg
 
@@ -87,7 +86,10 @@ class ManilaScenario(scenario.OpenStackScenario):
         share = self.clients("manila").shares.create(
             share_proto, size, **kwargs)
 
-        time.sleep(CONF.benchmark.manila_share_create_prepoll_delay)
+        self.sleep_between(CONF.benchmark.
+                           manila_share_create_prepoll_delay,
+                           CONF.benchmark.
+                           manila_share_create_prepoll_delay)
         share = utils.wait_for(
             share,
             ready_statuses=["available"],

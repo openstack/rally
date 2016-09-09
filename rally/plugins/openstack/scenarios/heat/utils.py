@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import time
 
 from oslo_config import cfg
 import requests
@@ -143,7 +142,8 @@ class HeatScenario(scenario.OpenStackScenario):
         stack_id = self.clients("heat").stacks.create(**kw)["stack"]["id"]
         stack = self.clients("heat").stacks.get(stack_id)
 
-        time.sleep(CONF.benchmark.heat_stack_create_prepoll_delay)
+        self.sleep_between(CONF.benchmark.heat_stack_create_prepoll_delay,
+                           CONF.benchmark.heat_stack_create_prepoll_delay)
 
         stack = utils.wait_for(
             stack,
@@ -179,7 +179,9 @@ class HeatScenario(scenario.OpenStackScenario):
         }
         self.clients("heat").stacks.update(stack.id, **kw)
 
-        time.sleep(CONF.benchmark.heat_stack_update_prepoll_delay)
+        self.sleep_between(CONF.benchmark.heat_stack_update_prepoll_delay,
+                           CONF.benchmark.heat_stack_update_prepoll_delay)
+
         stack = utils.wait_for(
             stack,
             ready_statuses=["UPDATE_COMPLETE"],

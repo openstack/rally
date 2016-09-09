@@ -18,6 +18,7 @@ import os
 import time
 
 from rally.common import logging
+from rally.common import utils as rutils
 from rally import exceptions
 from rally.task import utils
 
@@ -113,7 +114,8 @@ class GlanceV1Wrapper(GlanceWrapper):
 
             image = self.client.images.create(**kw)
 
-            time.sleep(CONF.benchmark.glance_image_create_prepoll_delay)
+            rutils.interruptable_sleep(CONF.benchmark.
+                                       glance_image_create_prepoll_delay)
 
             image = utils.wait_for_status(
                 image, ["active"],
@@ -161,7 +163,8 @@ class GlanceV2Wrapper(GlanceWrapper):
 
         image = self.client.images.create(**kw)
 
-        time.sleep(CONF.benchmark.glance_image_create_prepoll_delay)
+        rutils.interruptable_sleep(CONF.benchmark.
+                                   glance_image_create_prepoll_delay)
 
         start = time.time()
         image = utils.wait_for_status(

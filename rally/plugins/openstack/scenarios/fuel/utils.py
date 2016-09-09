@@ -15,11 +15,11 @@
 
 import os
 import random
-import time
 
 import six
 
 from rally.common.i18n import _
+from rally.common import utils as rutils
 from rally import osclients
 from rally.plugins.openstack import scenario
 from rally.task import atomic
@@ -72,7 +72,7 @@ class FuelEnvManager(object):
             try:
                 self.client.delete_by_id(env_id)
             except BaseException:
-                time.sleep(retry_pause)
+                rutils.interruptable_sleep(retry_pause)
             env = self.get(env_id)
             retry_number += 1
 
