@@ -13,6 +13,7 @@
 #    under the License.
 
 from rally import consts
+from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as cutils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
@@ -39,7 +40,11 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
         fetches list of all events using GET /v2/events.
         """
         self._user_create()
-        self._list_events()
+        events = self._list_events()
+        if not events:
+            raise exceptions.RallyException(
+                "Events list is empty, but it should include at least one "
+                "event about user creation")
 
 
 @validation.required_services(consts.Service.CEILOMETER,
@@ -58,7 +63,11 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
         fetches list of all events types using GET /v2/event_types.
         """
         self._user_create()
-        self._list_event_types()
+        event_types = self._list_event_types()
+        if not event_types:
+            raise exceptions.RallyException(
+                "Event types list is empty, but it should include at least one"
+                " type about user creation")
 
 
 @validation.required_services(consts.Service.CEILOMETER,
@@ -77,5 +86,10 @@ class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
         fetches one event using GET /v2/events/<message_id>.
         """
         self._user_create()
-        event = self._list_events()[0]
+        events = self._list_events()
+        if not events:
+            raise exceptions.RallyException(
+                "Events list is empty, but it should include at least one "
+                "event about user creation")
+        event = events[0]
         self._get_event(event_id=event.message_id)

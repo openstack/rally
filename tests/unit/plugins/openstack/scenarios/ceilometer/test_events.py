@@ -14,6 +14,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.ceilometer import events
 from tests.unit import test
 
@@ -29,6 +30,16 @@ class CeilometerEventsTestCase(test.ScenarioTestCase):
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_once_with()
 
+    def test_list_events_fails(self):
+        scenario = events.CeilometerEventsCreateUserAndListEvents(self.context)
+
+        scenario._user_create = mock.MagicMock()
+        scenario._list_events = mock.MagicMock(return_value=[])
+
+        self.assertRaises(exceptions.RallyException, scenario.run)
+        scenario._user_create.assert_called_once_with()
+        scenario._list_events.assert_called_once_with()
+
     def test_list_event_types(self):
         scenario = events.CeilometerEventsCreateUserAndListEventTypes(
             self.context)
@@ -36,6 +47,17 @@ class CeilometerEventsTestCase(test.ScenarioTestCase):
         scenario._list_event_types = mock.MagicMock()
         scenario._user_create = mock.MagicMock()
         scenario.run()
+        scenario._user_create.assert_called_once_with()
+        scenario._list_event_types.assert_called_once_with()
+
+    def test_list_event_types_fails(self):
+        scenario = events.CeilometerEventsCreateUserAndListEventTypes(
+            self.context)
+
+        scenario._user_create = mock.MagicMock()
+        scenario._list_event_types = mock.MagicMock(return_value=[])
+
+        self.assertRaises(exceptions.RallyException, scenario.run)
         scenario._user_create.assert_called_once_with()
         scenario._list_event_types.assert_called_once_with()
 
@@ -50,3 +72,16 @@ class CeilometerEventsTestCase(test.ScenarioTestCase):
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._get_event.assert_called_with(event_id="fake_id")
+
+    def test_get_event_fails(self):
+        scenario = events.CeilometerEventsCreateUserAndGetEvent(self.context)
+
+        scenario._user_create = mock.MagicMock()
+        scenario._list_events = mock.MagicMock(return_value=[])
+        scenario._get_event = mock.MagicMock()
+
+        self.assertRaises(exceptions.RallyException, scenario.run)
+
+        scenario._user_create.assert_called_once_with()
+        scenario._list_events.assert_called_with()
+        self.assertFalse(scenario._get_event.called)
