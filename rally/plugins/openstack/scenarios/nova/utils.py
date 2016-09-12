@@ -138,8 +138,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server = self.clients("nova").servers.create(
             server_name, image_id, flavor_id, **kwargs)
 
-        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay,
-                           CONF.benchmark.nova_server_boot_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
         server = utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -151,8 +150,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
     def _do_server_reboot(self, server, reboottype):
         server.reboot(reboot_type=reboottype)
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay,
-                           CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -214,8 +212,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param kwargs: Optional additional arguments to pass to the rebuild
         """
         server.rebuild(image, **kwargs)
-        self.sleep_between(CONF.benchmark.nova_server_rebuild_prepoll_delay,
-                           CONF.benchmark.nova_server_rebuild_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_rebuild_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -270,8 +267,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.rescue()
-        self.sleep_between(CONF.benchmark.nova_server_rescue_prepoll_delay,
-                           CONF.benchmark.nova_server_rescue_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_rescue_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["RESCUE"],
@@ -289,8 +285,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.unrescue()
-        self.sleep_between(CONF.benchmark.nova_server_unrescue_prepoll_delay,
-                           CONF.benchmark.nova_server_unrescue_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_unrescue_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -309,8 +304,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.suspend()
-        self.sleep_between(CONF.benchmark.nova_server_suspend_prepoll_delay,
-                           CONF.benchmark.nova_server_suspend_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_suspend_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["SUSPENDED"],
@@ -329,8 +323,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.resume()
-        self.sleep_between(CONF.benchmark.nova_server_resume_prepoll_delay,
-                           CONF.benchmark.nova_server_resume_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_resume_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -349,8 +342,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.pause()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay,
-                           CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["PAUSED"],
@@ -369,8 +361,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.unpause()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay,
-                           CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -389,8 +380,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.shelve()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay,
-                           CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["SHELVED_OFFLOADED"],
@@ -409,8 +399,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.unshelve()
 
-        self.sleep_between(CONF.benchmark. nova_server_unshelve_prepoll_delay,
-                           CONF.benchmark. nova_server_unshelve_prepoll_delay)
+        self.sleep_between(CONF.benchmark. nova_server_unshelve_prepoll_delay)
         utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
@@ -581,8 +570,7 @@ class NovaScenario(scenario.OpenStackScenario):
         #                created servers manually.
         servers = [s for s in self.clients("nova").servers.list()
                    if s.name.startswith(name_prefix)]
-        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay,
-                           CONF.benchmark.nova_server_boot_prepoll_delay)
+        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
         servers = [utils.wait_for(
             server,
             ready_statuses=["ACTIVE"],
