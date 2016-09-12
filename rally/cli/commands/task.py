@@ -36,6 +36,7 @@ from rally.common.i18n import _
 from rally.common import junit
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import version
 from rally import consts
 from rally import exceptions
 from rally import plugins
@@ -236,6 +237,7 @@ class TaskCommands(object):
         task_instance = api.Task.create(deployment, tag)
 
         try:
+            print("Running Rally version", version.version_string())
             input_task = self._load_and_validate_task(
                 task, task_args, task_args_file, deployment,
                 task_instance=task_instance)
