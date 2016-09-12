@@ -90,6 +90,12 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         def test_foobar(self, mock_class_abc):
             # must match the python-styled class name + method name
     """
+
+    # NOTE(amaretskiy): Disable check if shortest variant is too long
+    #                   because long name is not convenient and could
+    #                   even be blocked by PEP8
+    SHORTEST_VARIANT_LEN_LIMIT = 25
+
     def __init__(self):
         self.errors = []
         self.globals_ = {}
@@ -252,12 +258,15 @@ class FuncMockArgsDecoratorsChecker(ast.NodeVisitor):
         for arg, dec_vars in six.moves.zip_longest(mock_args, mock_decs):
             if not self.check_name(arg, dec_vars):
                 if arg and dec_vars:
-                    error_msgs.append(
-                        ("Argument '%(arg)s' misnamed; should be either of "
-                         "%(dec)s that is derived from the mock decorator "
-                         "args.\n") % {
-                            "arg": arg, "dec": dec_vars}
-                    )
+                    sorted_by_len = sorted(
+                        dec_vars.variants, key=lambda i: len(i), reverse=True)
+                    shortest_name = sorted_by_len.pop()
+                    if len(shortest_name) <= self.SHORTEST_VARIANT_LEN_LIMIT:
+                        error_msgs.append(
+                            ("Argument '%(arg)s' misnamed; should be either "
+                             "of %(dec)s that is derived from the mock "
+                             "decorator args.\n") % {"arg": arg,
+                                                     "dec": dec_vars})
                 elif not arg:
                     error_msgs.append(
                         "Missing or malformed argument for %s decorator."
