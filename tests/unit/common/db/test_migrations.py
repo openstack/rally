@@ -383,3 +383,76 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     deployment_table.delete().where(
                         deployment_table.c.uuid == deployment.uuid)
                 )
+
+    def _pre_upgrade_08e1515a576c(self, engine):
+        self._08e1515a576c_logs = [
+            {"pre": "No such file name",
+             "post": {"etype": IOError.__name__, "msg": "No such file name"}},
+            {"pre": "Task config is invalid: bla",
+             "post": {"etype": "InvalidTaskException",
+                      "msg": "Task config is invalid: bla"}},
+            {"pre": "Failed to load task foo",
+             "post": {"etype": "FailedToLoadTask",
+                      "msg": "Failed to load task foo"}},
+            {"pre": ["SomeCls", "msg", json.dumps(
+                ["File some1.py, line ...\n",
+                 "File some2.py, line ...\n"])],
+             "post": {"etype": "SomeCls",
+                      "msg": "msg",
+                      "trace": "Traceback (most recent call last):\n"
+                               "File some1.py, line ...\n"
+                               "File some2.py, line ...\nSomeCls: msg"}},
+        ]
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+
+        self._08e1515a576c_deployment_uuid = "08e1515a576c-uuuu-uuuu-iiii-dddd"
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{"uuid": self._08e1515a576c_deployment_uuid,
+                  "name": self._08e1515a576c_deployment_uuid,
+                  "config": six.b("{}"),
+                  "enum_deployments_status":
+                      consts.DeployStatus.DEPLOY_FINISHED,
+                  "credentials": six.b(json.dumps([])),
+                  "users": six.b(json.dumps([]))
+                  }])
+            for i in range(0, len(self._08e1515a576c_logs)):
+                log = json.dumps(self._08e1515a576c_logs[i]["pre"])
+                conn.execute(
+                    task_table.insert(),
+                    [{"uuid": i,
+                      "verification_log": log,
+                      "status": consts.TaskStatus.FAILED,
+                      "enum_tasks_status": consts.TaskStatus.FAILED,
+                      "deployment_uuid": self._08e1515a576c_deployment_uuid
+                      }])
+
+    def _check_08e1515a576c(self, engine, data):
+        self.assertEqual("08e1515a576c",
+                         api.get_backend().schema_revision(engine=engine))
+
+        tasks = self._08e1515a576c_logs
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+
+        with engine.connect() as conn:
+            tasks_found = conn.execute(task_table.select()).fetchall()
+            for task in tasks_found:
+                actual_log = json.loads(task.verification_log)
+                self.assertIsInstance(actual_log, dict)
+                expected = tasks[int(task.uuid)]["post"]
+                for key in expected:
+                    self.assertEqual(expected[key], actual_log[key])
+
+                conn.execute(
+                    task_table.delete().where(task_table.c.uuid == task.uuid))
+
+            deployment_uuid = self._08e1515a576c_deployment_uuid
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == deployment_uuid)
+            )

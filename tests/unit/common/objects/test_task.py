@@ -249,8 +249,9 @@ class TaskTestCase(test.TestCase):
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
             {"status": consts.TaskStatus.FAILED,
-             "verification_log": "[\"foo_type\", \"foo_error_message\", "
-                                 "\"foo_trace\"]"},
+             "verification_log": json.dumps({"etype": "foo_type",
+                                             "msg": "foo_error_message",
+                                             "trace": "foo_trace"})},
         )
 
     @ddt.data(
