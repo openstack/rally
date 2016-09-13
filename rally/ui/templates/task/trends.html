@@ -97,9 +97,9 @@
           name: "Total",
           visible: function(){ return true }
         }, {
-          id: "atomic",
+          id: "actions",
           name: "Atomic actions",
-          visible: function(){ return (! $scope.wload.single) && $scope.wload.atomic.length }
+          visible: function(){ return ($scope.wload.length !== 1) && $scope.wload.actions.length }
         }, {
           id: "config",
           name: "Configuration",
@@ -133,6 +133,8 @@
           return false
         }
       }
+
+      /* Other helpers */
 
       $scope.showError = function(message) {
         return (function (e) {
@@ -173,8 +175,7 @@
           w.order_idx = itr > 1 ? " ["+itr+"]" : ""
           $scope.wload_map[w.ref] = w;
           $scope.nav_map[w.ref] = cls_idx;
-          met.push({name:w.met, itr:itr, idx:idx, order_idx:w.order_idx,
-                    ref:w.ref, single:w.single});
+          met.push({name:w.met, itr:itr, idx:idx, order_idx:w.order_idx, ref:w.ref});
           prev_met = w.met;
           itr += 1;
         }
@@ -271,7 +272,7 @@
         <div class="navmet"
              title="{{m.name}}{{m.order_idx}}"
              ng-show="n.idx==nav_idx"
-             ng-class="{active:wload && m.ref==wload.ref, single:m.single}"
+             ng-class="{active:wload && m.ref==wload.ref, single:m.length === 1}"
              ng-click="location.path(m.ref)"
              ng-repeat="m in n.met track by $index"
              ng-repeat-end>{{m.name}}{{m.order_idx}}</div>
@@ -336,18 +337,18 @@
           <tbody>
             <tr ng-repeat="w in data | orderBy:ov_srt:ov_dir"
                 ng-click="location.path(w.ref)"
-                ng-class="{single:w.single}">
+                ng-class="{single:w.length === 1}">
               <td>{{w.ref}}
-              <td>{{w.seq}}
+              <td>{{w.length}}
               <td>
-                <span ng-if="w.single">-</span>
-                <span ng-if="!w.single">{{w.stat.min | number:4}}</span>
+                <span ng-if="w.length === 1">-</span>
+                <span ng-if="w.length !== 1">{{w.stat.min | number:4}}</span>
               <td>
-                <span ng-if="w.single">-</span>
-                <span ng-if="!w.single">{{w.stat.max | number:4}}</span>
+                <span ng-if="w.length === 1">-</span>
+                <span ng-if="w.length !== 1">{{w.stat.max | number:4}}</span>
               <td>
-                <span ng-if="w.single">-</span>
-                <span ng-if="!w.single">{{w.stat.avg | number:4}}</span>
+                <span ng-if="w.length === 1">-</span>
+                <span ng-if="w.length !== 1">{{w.stat.avg | number:4}}</span>
               <td title="{{w.sla_failures ? 'Failures: ' + w.sla_failures : 'No failures'}}">
                 <span ng-hide="w.sla_failures" class="status-pass">&#x2714;</span>
                 <span ng-show="w.sla_failures" class="status-fail">&#x2716;</span>
@@ -371,46 +372,58 @@
         <div ng-include="tab"></div>
 
         <script type="text/ng-template" id="total">
-          <div ng-if="wload.single">
+          <div ng-if="wload.length === 1">
             <div style="margin:30px 0 10px; font-size:14px; color:#ff6622">
               This workload has single run so trends can not be displayed.<br>
               There should be at least two workload results with the same configuration
             </div>
           </div>
-          <div ng-if="!wload.single">
+          <div ng-if="wload.length !== 1">
             <h2>Total durations</h2>
             <div widget="Lines"
-                 data="wload.total.values"
-                 name-x="Task run sequence number"
+                 data="wload.durations"
                  controls="true"
-                 guide="true">
+                 guide="true"
+                 showmaxmin="true"
+                 rotate-x="-70"
+                 format-date-x="%Y-%m-%d %H:%M:%S"
+                 style="height:370px">
             </div>
             <h2>Total success rate</h2>
             <div widget="Lines"
-                 data="wload.total.success"
-                 name-x="Task run sequence number"
+                 data="wload.success"
                  controls="true"
-                 guide="true">
+                 guide="true"
+                 showmaxmin="true"
+                 rotate-x="-70"
+                 format-date-x="%Y-%m-%d %H:%M:%S"
+                 style="height:370px">
             </div>
           </div>
         </script>
 
-        <script type="text/ng-template" id="atomic">
+        <script type="text/ng-template" id="actions">
           <h2>Atomic actions durations / success rate</h2>
-          <div ng-repeat="chart in wload.atomic track by $index">
+          <div ng-repeat="chart in wload.actions track by $index">
             <span id="{{chart.name}}"></span>
             <div class="chart-title">{{chart.name}}</div>
             <div widget="Lines"
-                 data="chart.values"
-                 name-x="Task run sequence number"
+                 data="chart.durations"
                  controls="true"
-                 guide="true">
+                 guide="true"
+                 showmaxmin="true"
+                 rotate-x="-70"
+                 format-date-x="%Y-%m-%d %H:%M:%S"
+                 style="height:370px">
             </div>
             <div widget="Lines"
                  data="chart.success"
-                 name-x="Task run sequence number"
                  controls="true"
-                 guide="true">
+                 guide="true"
+                 showmaxmin="true"
+                 rotate-x="-70"
+                 format-date-x="%Y-%m-%d %H:%M:%S"
+                 style="height:400px">
             </div>
           </div>
         </script>

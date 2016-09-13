@@ -73,9 +73,9 @@ var widgetDirective = function($compile) {
         .showControls(opts.controls)
         .clipEdge(true);
       chart.xAxis
-        .tickFormat(d3.format(opts.xformat || "d"))
-        .axisLabel(opts.xname || "")
-        .showMaxMin(false);
+        .axisLabel(opts.xname)
+        .tickFormat(opts.xformat)
+        .showMaxMin(opts.showmaxmin);
       chart.yAxis
         .orient("left")
         .tickFormat(d3.format(opts.yformat || ",.3f"));
@@ -92,9 +92,10 @@ var widgetDirective = function($compile) {
         .useInteractiveGuideline(opts.guide)
         .clipEdge(true);
       chart.xAxis
-        .tickFormat(d3.format(opts.xformat || "d"))
-        .axisLabel(opts.xname || "")
-        .showMaxMin(false);
+        .axisLabel(opts.xname)
+        .tickFormat(opts.xformat)
+        .rotateLabels(opts.xrotate)
+        .showMaxMin(opts.showmaxmin);
       chart.yAxis
         .orient("left")
         .tickFormat(d3.format(opts.yformat || ",.3f"));
@@ -184,14 +185,20 @@ var widgetDirective = function($compile) {
             }
           }
 
-          var options = {
+          var opts = {
             xname: attrs.nameX || "",
-            xformat: attrs.formatX || "d",
+            xrotate: attrs.rotateX || 0,
             yformat: attrs.formatY || ",.3f",
             controls: attrs.controls === "true",
-            guide: attrs.guide === "true"
+            guide: attrs.guide === "true",
+            showmaxmin: attrs.showmaxmin === "true"
           };
-          Chart.get_chart(attrs.widget)(el, data, options, do_after);
+          if (attrs.formatDateX) {
+            opts.xformat = function(d) { return d3.time.format(attrs.formatDateX)(new Date(d)) }
+          } else {
+            opts.xformat = d3.format(attrs.formatX || "d")
+          }
+          Chart.get_chart(attrs.widget)(el, data, opts, do_after);
         }
 
         if (attrs.nameY) {

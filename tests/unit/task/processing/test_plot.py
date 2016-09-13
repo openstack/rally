@@ -178,7 +178,7 @@ class TrendsTestCase(test.TestCase):
 
     def test___init__(self):
         trends = plot.Trends()
-        self.assertEqual({}, trends._tasks)
+        self.assertEqual({}, trends._data)
         self.assertRaises(TypeError, plot.Trends, 42)
 
     @ddt.data({"args": [None], "result": "None"},
@@ -227,11 +227,12 @@ class TrendsTestCase(test.TestCase):
             atomic = {"a": 123, "b": 456}
             stat_rows = [["a", 0.7, 0.85, 0.9, 0.87, 1.25, 0.67, "100.0%", 4],
                          ["b", 0.5, 0.75, 0.85, 0.9, 1.1, 0.58, "100.0%", 4],
-                         ["total", 1.2, 1.55, 1.7, 1.9, 1.5, 1.6, "100.0%", 4]]
+                         ["total", 1.2, 1.55, 1.7, 1.8, 1.5, 0.8, "100.0%", 4]]
         return {
-            "key": {"kw": salt + "_kw", "name": "Scenario.name_%s" % salt},
+            "key": {"kw": "kw_%d" % salt, "name": "Scenario.name_%d" % salt},
             "sla": [{"success": sla_success}],
             "info": {"iterations_count": 4, "atomic": atomic,
+                     "tstamp_start": 123456.789 + salt,
                      "stat": {"rows": stat_rows,
                               "cols": ["Action", "Min (sec)", "Median (sec)",
                                        "90%ile (sec)", "95%ile (sec)",
@@ -240,120 +241,151 @@ class TrendsTestCase(test.TestCase):
             "iterations": ["<iter-0>", "<iter-1>", "<iter-2>", "<iter-3>"]}
 
     def _sort_trends(self, trends_result):
-        for r_idx, res in enumerate(trends_result):
-            trends_result[r_idx]["total"]["values"].sort()
-            for a_idx, dummy in enumerate(res["atomic"]):
-                trends_result[r_idx]["atomic"][a_idx]["values"].sort()
+        for idx in range(len(trends_result)):
+            trends_result[idx]["durations"].sort()
+            for a_idx in range(len(trends_result[idx]["actions"])):
+                trends_result[idx]["actions"][a_idx]["durations"].sort()
         return trends_result
 
     def test_add_result_and_get_data(self):
         trends = plot.Trends()
         for i in 0, 1:
-            trends.add_result(self._make_result(str(i)))
+            trends.add_result(self._make_result(i))
         expected = [
-            {"atomic": [
-                {"name": "a",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
-                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
-                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
-                {"name": "b",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
-                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
-                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
-             "cls": "Scenario", "config": "\"0_kw\"", "met": "name_0",
-             "name": "Scenario.name_0", "seq": 1, "single": True,
-             "sla_failures": 0, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
-             "total": {"success": [("success", [(1, 100.0)])],
-                       "values": [("90%ile", [(1, 1.7)]),
-                                  ("95%ile", [(1, 1.9)]),
-                                  ("avg", [(1, 1.6)]),
-                                  ("max", [(1, 1.5)]),
-                                  ("median", [(1, 1.55)]),
-                                  ("min", [(1, 1.2)])]}},
-            {"atomic": [
-                {"name": "a",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
-                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
-                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
-                {"name": "b",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
-                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
-                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
-             "cls": "Scenario", "config": "\"1_kw\"", "met": "name_1",
-             "name": "Scenario.name_1", "seq": 1, "single": True,
-             "sla_failures": 0, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
-             "total": {"success": [("success", [(1, 100.0)])],
-                       "values": [("90%ile", [(1, 1.7)]),
-                                  ("95%ile", [(1, 1.9)]),
-                                  ("avg", [(1, 1.6)]),
-                                  ("max", [(1, 1.5)]),
-                                  ("median", [(1, 1.55)]),
-                                  ("min", [(1, 1.2)])]}}]
+            {"actions": [{"durations": [("90%ile", [(123456789, 0.9)]),
+                                        ("95%ile", [(123456789, 0.87)]),
+                                        ("avg", [(123456789, 0.67)]),
+                                        ("max", [(123456789, 1.25)]),
+                                        ("median", [(123456789, 0.85)]),
+                                        ("min", [(123456789, 0.7)])],
+                          "name": "a",
+                          "success": [("success", [(123456789, 100.0)])]},
+                         {"durations": [("90%ile", [(123456789, 0.85)]),
+                                        ("95%ile", [(123456789, 0.9)]),
+                                        ("avg", [(123456789, 0.58)]),
+                                        ("max", [(123456789, 1.1)]),
+                                        ("median", [(123456789, 0.75)]),
+                                        ("min", [(123456789, 0.5)])],
+                          "name": "b",
+                          "success": [("success", [(123456789, 100.0)])]}],
+             "cls": "Scenario",
+             "config": "\"kw_0\"",
+             "durations": [("90%ile", [(123456789, 1.7)]),
+                           ("95%ile", [(123456789, 1.8)]),
+                           ("avg", [(123456789, 0.8)]),
+                           ("max", [(123456789, 1.5)]),
+                           ("median", [(123456789, 1.55)]),
+                           ("min", [(123456789, 1.2)])],
+             "length": 1,
+             "met": "name_0",
+             "name": "Scenario.name_0",
+             "sla_failures": 0,
+             "stat": {"avg": 1.425, "max": 1.8, "min": 0.8},
+             "success": [("success", [(123456789, 100.0)])]},
+            {"actions": [{"durations": [("90%ile", [(123457789, 0.9)]),
+                                        ("95%ile", [(123457789, 0.87)]),
+                                        ("avg", [(123457789, 0.67)]),
+                                        ("max", [(123457789, 1.25)]),
+                                        ("median", [(123457789, 0.85)]),
+                                        ("min", [(123457789, 0.7)])],
+                          "name": "a",
+                          "success": [("success", [(123457789, 100.0)])]},
+                         {"durations": [("90%ile", [(123457789, 0.85)]),
+                                        ("95%ile", [(123457789, 0.9)]),
+                                        ("avg", [(123457789, 0.58)]),
+                                        ("max", [(123457789, 1.1)]),
+                                        ("median", [(123457789, 0.75)]),
+                                        ("min", [(123457789, 0.5)])],
+                          "name": "b",
+                          "success": [("success", [(123457789, 100.0)])]}],
+             "cls": "Scenario",
+             "config": "\"kw_1\"",
+             "durations": [("90%ile", [(123457789, 1.7)]),
+                           ("95%ile", [(123457789, 1.8)]),
+                           ("avg", [(123457789, 0.8)]),
+                           ("max", [(123457789, 1.5)]),
+                           ("median", [(123457789, 1.55)]),
+                           ("min", [(123457789, 1.2)])],
+             "length": 1,
+             "met": "name_1",
+             "name": "Scenario.name_1",
+             "sla_failures": 0,
+             "stat": {"avg": 1.425, "max": 1.8, "min": 0.8},
+             "success": [("success", [(123457789, 100.0)])]}]
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
     def test_add_result_once_and_get_data(self):
         trends = plot.Trends()
-        trends.add_result(self._make_result("foo", sla_success=False))
+        trends.add_result(self._make_result(42, sla_success=False))
         expected = [
-            {"atomic": [
-                {"name": "a",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.9)]), ("95%ile", [(1, 0.87)]),
-                            ("avg", [(1, 0.67)]), ("max", [(1, 1.25)]),
-                            ("median", [(1, 0.85)]), ("min", [(1, 0.7)])]},
-                {"name": "b",
-                 "success": [("success", [(1, 100.0)])],
-                 "values": [("90%ile", [(1, 0.85)]), ("95%ile", [(1, 0.9)]),
-                            ("avg", [(1, 0.58)]), ("max", [(1, 1.1)]),
-                            ("median", [(1, 0.75)]), ("min", [(1, 0.5)])]}],
-             "cls": "Scenario", "config": "\"foo_kw\"", "met": "name_foo",
-             "name": "Scenario.name_foo", "seq": 1, "single": True,
-             "sla_failures": 1, "stat": {"avg": 1.6, "max": 1.5, "min": 1.2},
-             "total": {"success": [("success", [(1, 100.0)])],
-                       "values": [("90%ile", [(1, 1.7)]),
-                                  ("95%ile", [(1, 1.9)]),
-                                  ("avg", [(1, 1.6)]),
-                                  ("max", [(1, 1.5)]),
-                                  ("median", [(1, 1.55)]),
-                                  ("min", [(1, 1.2)])]}}]
+            {"actions": [{"durations": [("90%ile", [(123498789, 0.9)]),
+                                        ("95%ile", [(123498789, 0.87)]),
+                                        ("avg", [(123498789, 0.67)]),
+                                        ("max", [(123498789, 1.25)]),
+                                        ("median", [(123498789, 0.85)]),
+                                        ("min", [(123498789, 0.7)])],
+                          "name": "a",
+                          "success": [("success", [(123498789, 100.0)])]},
+                         {"durations": [("90%ile", [(123498789, 0.85)]),
+                                        ("95%ile", [(123498789, 0.9)]),
+                                        ("avg", [(123498789, 0.58)]),
+                                        ("max", [(123498789, 1.1)]),
+                                        ("median", [(123498789, 0.75)]),
+                                        ("min", [(123498789, 0.5)])],
+                          "name": "b",
+                          "success": [("success", [(123498789, 100.0)])]}],
+             "cls": "Scenario",
+             "config": "\"kw_42\"",
+             "durations": [("90%ile", [(123498789, 1.7)]),
+                           ("95%ile", [(123498789, 1.8)]),
+                           ("avg", [(123498789, 0.8)]),
+                           ("max", [(123498789, 1.5)]),
+                           ("median", [(123498789, 1.55)]),
+                           ("min", [(123498789, 1.2)])],
+             "length": 1,
+             "met": "name_42",
+             "name": "Scenario.name_42",
+             "sla_failures": 1,
+             "stat": {"avg": 1.425, "max": 1.8, "min": 0.8},
+             "success": [("success", [(123498789, 100.0)])]}]
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
     def test_add_result_with_na_and_get_data(self):
         trends = plot.Trends()
-        trends.add_result(self._make_result("foo",
-                                            sla_success=False, with_na=True))
+        trends.add_result(
+            self._make_result(42, sla_success=False, with_na=True))
         expected = [
-            {"atomic": [{"name": "a",
-                         "success": [("success", [(1, 0)])],
-                         "values": [("90%ile", [(1, "n/a")]),
-                                    ("95%ile", [(1, "n/a")]),
-                                    ("avg", [(1, "n/a")]),
-                                    ("max", [(1, "n/a")]),
-                                    ("median", [(1, "n/a")]),
-                                    ("min", [(1, "n/a")])]},
-                        {"name": "b",
-                         "success": [("success", [(1, 0)])],
-                         "values": [("90%ile", [(1, "n/a")]),
-                                    ("95%ile", [(1, "n/a")]),
-                                    ("avg", [(1, "n/a")]),
-                                    ("max", [(1, "n/a")]),
-                                    ("median", [(1, "n/a")]),
-                                    ("min", [(1, "n/a")])]}],
-             "cls": "Scenario", "config": "\"foo_kw\"", "met": "name_foo",
-             "name": "Scenario.name_foo", "seq": 1, "single": True,
-             "sla_failures": 1, "stat": {"avg": None, "max": None,
-                                         "min": None},
-             "total": {"success": [("success", [(1, 0)])],
-                       "values": [("90%ile", [(1, "n/a")]),
-                                  ("95%ile", [(1, "n/a")]),
-                                  ("avg", [(1, "n/a")]),
-                                  ("max", [(1, "n/a")]),
-                                  ("median", [(1, "n/a")]),
-                                  ("min", [(1, "n/a")])]}}]
+            {"actions": [{"durations": [("90%ile", [(123498789, "n/a")]),
+                                        ("95%ile", [(123498789, "n/a")]),
+                                        ("avg", [(123498789, "n/a")]),
+                                        ("max", [(123498789, "n/a")]),
+                                        ("median", [(123498789, "n/a")]),
+                                        ("min", [(123498789, "n/a")])],
+                          "name": "a",
+                          "success": [("success", [(123498789, 0)])]},
+                         {"durations": [("90%ile", [(123498789, "n/a")]),
+                                        ("95%ile", [(123498789, "n/a")]),
+                                        ("avg", [(123498789, "n/a")]),
+                                        ("max", [(123498789, "n/a")]),
+                                        ("median", [(123498789, "n/a")]),
+                                        ("min", [(123498789, "n/a")])],
+                          "name": "b",
+                          "success": [("success", [(123498789, 0)])]}],
+             "cls": "Scenario",
+             "config": "\"kw_42\"",
+             "durations": [("90%ile", [(123498789, "n/a")]),
+                           ("95%ile", [(123498789, "n/a")]),
+                           ("avg", [(123498789, "n/a")]),
+                           ("max", [(123498789, "n/a")]),
+                           ("median", [(123498789, "n/a")]),
+                           ("min", [(123498789, "n/a")])],
+             "length": 1,
+             "met": "name_42",
+             "name": "Scenario.name_42",
+             "sla_failures": 1,
+             "stat": {"avg": None, "max": None, "min": None},
+             "success": [("success", [(123498789, 0)])]}]
+
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
     def test_get_data_no_results_added(self):
