@@ -1,8 +1,12 @@
-python-mistralclient>=2.0.0
+# Purpose of optional-requirements is simple - list requirements which cannot
+# be placed in main requirements.txt .
+#
+# Reasons:
+#  - package doesn't support the same Python versions as Rally package
+#    supports (see classifiers from setup.cfg)
+#  - package doesn't have releases
+# If these rules do not relate to your package, feel free to propose it as main
+# requirement to Rally (requirements.txt file).
+
 # [do-not-touch] our plugins support only one version of fuelclient
 python-fuelclient==6.1.0                               # Apache Software License
-python-muranoclient>=0.8.2                             # Apache License, Version 2.0
-python-cueclient>=1.0.0                                # Apache License, Version 2.0
-python-senlinclient>=0.3.0                             # Apache Software License
-python-magnumclient>=2.0.0                             # Apache Software License
-gnocchiclient>=2.2.0                                   # Apache Software License
