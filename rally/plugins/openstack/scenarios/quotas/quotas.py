@@ -18,7 +18,7 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.quotas import utils
 from rally.task import validation
 
-"""Benchmark scenarios for quotas."""
+"""Scenarios for quotas."""
 
 
 @validation.required_services(consts.Service.NOVA)
@@ -26,10 +26,13 @@ from rally.task import validation
 @scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
                     name="Quotas.nova_update")
 class NovaUpdate(utils.QuotasScenario):
-    """Update quotas for Nova."""
 
     def run(self, max_quota=1024):
-        """:param max_quota: Max value to be updated for quota."""
+        """Update quotas for Nova.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+
         self._update_quotas("nova", self.context["tenant"]["id"],
                             max_quota)
 
@@ -39,10 +42,12 @@ class NovaUpdate(utils.QuotasScenario):
 @scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
                     name="Quotas.nova_update_and_delete")
 class NovaUpdateAndDelete(utils.QuotasScenario):
-    """Update and delete quotas for Nova."""
 
     def run(self, max_quota=1024):
-        """:param max_quota: Max value to be updated for quota."""
+        """Update and delete quotas for Nova.
+
+        :param max_quota: Max value to be updated for quota.
+        """
 
         self._update_quotas("nova", self.context["tenant"]["id"],
                             max_quota)
@@ -54,10 +59,13 @@ class NovaUpdateAndDelete(utils.QuotasScenario):
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
                     name="Quotas.cinder_update")
 class CinderUpdate(utils.QuotasScenario):
-    """Update quotas for Cinder."""
 
     def run(self, max_quota=1024):
-        """:param max_quota: Max value to be updated for quota."""
+        """Update quotas for Cinder.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+
         self._update_quotas("cinder", self.context["tenant"]["id"],
                             max_quota)
 
@@ -67,10 +75,13 @@ class CinderUpdate(utils.QuotasScenario):
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
                     name="Quotas.cinder_update_and_delete")
 class CinderUpdateAndDelete(utils.QuotasScenario):
-    """Update and Delete quotas for Cinder."""
 
     def run(self, max_quota=1024):
-        """:param max_quota: Max value to be updated for quota."""
+        """Update and Delete quotas for Cinder.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+
         self._update_quotas("cinder", self.context["tenant"]["id"],
                             max_quota)
         self._delete_quotas("cinder", self.context["tenant"]["id"])
@@ -81,10 +92,13 @@ class CinderUpdateAndDelete(utils.QuotasScenario):
 @scenario.configure(context={"admin_cleanup": ["neutron.quota"]},
                     name="Quotas.neutron_update")
 class NeutronUpdate(utils.QuotasScenario):
-    """Update quotas for neutron."""
 
     def run(self, max_quota=1024):
-        """:param max_quota: Max value to be updated for quota."""
+        """Update quotas for neutron.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+
         quota_update_fn = self.admin_clients("neutron").update_quota
         self._update_quotas("neutron", self.context["tenant"]["id"],
                             max_quota, quota_update_fn)

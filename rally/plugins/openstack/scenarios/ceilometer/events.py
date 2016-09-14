@@ -20,6 +20,9 @@ from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.task import validation
 
 
+"""Scenarios for Ceilometer Events API."""
+
+
 # NOTE(idegtiarov): to work with event we need to create it, there are
 # no other way except emit suitable notification from one of services,
 # for example create new user in keystone.
@@ -32,7 +35,7 @@ from rally.task import validation
                     name="CeilometerEvents.create_user_and_list_events")
 class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
                                               kutils.KeystoneScenario):
-    """Benchmark scenarios for Ceilometer Events API."""
+
     def run(self):
         """Create user and fetch all events.
 
@@ -55,7 +58,7 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
                     name="CeilometerEvents.create_user_and_list_event_types")
 class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
                                                   kutils.KeystoneScenario):
-    """Benchmark scenarios for Ceilometer Events API."""
+
     def run(self):
         """Create user and fetch all event types.
 
@@ -78,7 +81,7 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
                     name="CeilometerEvents.create_user_and_get_event")
 class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
                                             kutils.KeystoneScenario):
-    """Benchmark scenarios for Ceilometer Events API."""
+
     def run(self):
         """Create user and gets event.
 

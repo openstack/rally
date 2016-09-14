@@ -20,12 +20,14 @@ from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 from rally.task import validation
 
 
+"""Scenarios for Ceilometer Queries API."""
+
+
 @validation.required_services(consts.Service.CEILOMETER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerQueries.create_and_query_alarms")
 class CeilometerQueriesCreateAndQueryAlarms(ceiloutils.CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Queries API."""
 
     def run(self, meter_name, threshold, filter=None, orderby=None,
             limit=None, **kwargs):
@@ -54,7 +56,6 @@ class CeilometerQueriesCreateAndQueryAlarms(ceiloutils.CeilometerScenario):
                     name="CeilometerQueries.create_and_query_alarm_history")
 class CeilometerQueriesCreateAndQueryAlarmHistory(ceiloutils
                                                   .CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Queries API."""
 
     def run(self, meter_name, threshold, orderby=None, limit=None, **kwargs):
         """Create an alarm and then query for its history.
@@ -79,7 +80,6 @@ class CeilometerQueriesCreateAndQueryAlarmHistory(ceiloutils
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerQueries.create_and_query_samples")
 class CeilometerQueriesCreateAndQuerySamples(ceiloutils.CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Queries API."""
 
     def run(self, counter_name, counter_type, counter_unit, counter_volume,
             resource_id, filter=None, orderby=None, limit=None, **kwargs):

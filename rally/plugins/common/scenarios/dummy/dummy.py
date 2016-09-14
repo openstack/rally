@@ -20,13 +20,15 @@ from rally.task import scenario
 from rally.task import validation
 
 
+"""Dummy scenarios for testing Rally engine at scale."""
+
+
 class DummyScenarioException(exceptions.RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
 @scenario.configure(name="Dummy.failure")
 class DummyFailure(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
     def run(self, sleep=0.1, from_iteration=0, to_iteration=0, each=1):
         """Raise errors in some iterations.
@@ -48,7 +50,6 @@ class DummyFailure(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy")
 class Dummy(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
     def run(self, sleep=0):
         """Do nothing and sleep for the given number of seconds (0 by default).
@@ -66,7 +67,6 @@ class Dummy(scenario.Scenario):
                    minval=1, integer_only=True, nullable=True)
 @scenario.configure(name="Dummy.dummy_exception")
 class DummyException(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine."""
 
     def run(self, size_of_message=1, sleep=1, message=""):
         """Throw an exception.
@@ -90,7 +90,6 @@ class DummyException(scenario.Scenario):
                    minval=0, maxval=1, integer_only=False, nullable=True)
 @scenario.configure(name="Dummy.dummy_exception_probability")
 class DummyExceptionProbability(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine."""
 
     def run(self, exception_probability=0.5):
         """Throw an exception with given probability.
@@ -111,7 +110,6 @@ class DummyExceptionProbability(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy_output")
 class DummyOutput(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
     def run(self, random_range=25):
         """Generate dummy output.
@@ -216,7 +214,6 @@ class DummyRandomFailInAtomic(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy_random_action")
 class DummyRandomAction(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine."""
 
     def run(self, actions_num=5, sleep_min=0, sleep_max=2):
         """Sleep random time in dummy actions.
@@ -233,7 +230,6 @@ class DummyRandomAction(scenario.Scenario):
 
 @scenario.configure(name="Dummy.dummy_timed_atomic_actions")
 class DummyTimedAtomicAction(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine."""
 
     def run(self, number_of_actions=5, sleep_factor=1):
         """Run some sleepy atomic actions for SLA atomic action tests.
