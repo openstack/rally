@@ -995,3 +995,14 @@ class NovaScenario(scenario.OpenStackScenario):
         :param flavor_id: The flavor ID to get
         """
         return self.admin_clients("nova").flavors.get(flavor_id)
+
+    @atomic.action_timer("nova.create_aggregate")
+    def _create_aggregate(self, availability_zone):
+        """Create a new aggregate.
+
+        :param availability_zone: The availability zone of the aggregate
+        :returns: The created aggregate
+        """
+        aggregate_name = self.generate_random_name()
+        return self.admin_clients("nova").aggregates.create(aggregate_name,
+                                                            availability_zone)

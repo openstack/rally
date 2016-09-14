@@ -26,3 +26,11 @@ class NovaAggregatesTestCase(test.TestCase):
         scenario._list_aggregates = mock.Mock()
         scenario.list_aggregates()
         scenario._list_aggregates.assert_called_once_with()
+
+    def test_create_and_list_aggregates(self):
+        scenario = aggregates.CreateAndListAggregates()
+        scenario._create_aggregate = mock.Mock()
+        scenario._list_aggregates = mock.Mock()
+        scenario.run(availability_zone="nova")
+        scenario._create_aggregate.assert_called_once_with("nova")
+        scenario._list_aggregates.assert_called_once_with()
