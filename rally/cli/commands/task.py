@@ -138,7 +138,7 @@ class TaskCommands(object):
             if task_instance:
                 task_instance.set_failed(err.__class__.__name__,
                                          str(err),
-                                         json.dumps(traceback.format_stack()))
+                                         json.dumps(traceback.format_exc()))
             raise
         api.Task.validate(deployment, input_task, task_instance)
         print(_("Task config is valid :)"))
@@ -325,11 +325,11 @@ class TaskCommands(object):
             print("-" * 80)
             verification = yaml.safe_load(task["verification_log"])
             if logging.is_debug():
-                print(yaml.safe_load(verification[2]))
+                print(yaml.safe_load(verification["trace"]))
             else:
-                print(verification[0])
-                print(verification[1])
-                print(_("\nFor more details run:\nrally -vd task detailed %s")
+                print(verification["etype"])
+                print(verification["msg"])
+                print(_("\nFor more details run:\nrally -d task detailed %s")
                       % task["uuid"])
             return 0
         elif task["status"] not in [consts.TaskStatus.FINISHED,

@@ -324,8 +324,9 @@ class TaskCommandsTestCase(test.TestCase):
             "uuid": test_uuid,
             "status": consts.TaskStatus.FAILED,
             "results": [],
-            "verification_log": json.dumps(["error_type", "error_message",
-                                            "error_traceback"])
+            "verification_log": json.dumps({"etype": "error_type",
+                                            "msg": "error_message",
+                                            "trace": "error_traceback"})
         }
         mock_task.get_detailed = mock.MagicMock(return_value=value)
 
@@ -334,14 +335,14 @@ class TaskCommandsTestCase(test.TestCase):
         verification = yaml.safe_load(value["verification_log"])
         if debug:
             expected_calls = [mock.call("Task test_task_id: failed"),
-                              mock.call("%s" % verification[2])]
+                              mock.call("%s" % verification["trace"])]
             mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
         else:
             expected_calls = [mock.call("Task test_task_id: failed"),
-                              mock.call("%s" % verification[0]),
-                              mock.call("%s" % verification[1]),
+                              mock.call("%s" % verification["etype"]),
+                              mock.call("%s" % verification["msg"]),
                               mock.call("\nFor more details run:\nrally "
-                                        "-vd task detailed %s" % test_uuid)]
+                                        "-d task detailed %s" % test_uuid)]
             mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch("rally.cli.commands.task.api.Task")

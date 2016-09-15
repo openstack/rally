@@ -350,10 +350,8 @@ class Task(object):
 
     def set_failed(self, etype, msg, etraceback):
         self._update({"status": consts.TaskStatus.FAILED,
-                      "verification_log": json.dumps([etype,
-                                                      msg,
-                                                      etraceback
-                                                      ])})
+                      "verification_log": json.dumps(
+                          {"etype": etype, "msg": msg, "trace": etraceback})})
 
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
