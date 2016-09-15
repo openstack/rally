@@ -17,15 +17,18 @@ from rally.task import types
 from rally.task import validation
 
 
-class Watcher(utils.WatcherScenario):
-    """Benchmark scenarios for Watcher servers."""
+"""Scenarios for Watcher servers."""
 
-    @types.convert(strategy={"type": "watcher_strategy"},
-                   goal={"type": "watcher_goal"})
-    @validation.required_services(consts.Service.WATCHER)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["watcher"]})
-    def create_audit_template_and_delete(self, goal, strategy, extra=None):
+
+@types.convert(strategy={"type": "watcher_strategy"},
+               goal={"type": "watcher_goal"})
+@validation.required_services(consts.Service.WATCHER)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["watcher"]},
+                    name="Watcher.create_audit_template_and_delete")
+class CreateAuditTemplateAndDelete(utils.WatcherScenario):
+
+    def run(self, goal, strategy, extra=None):
         """Create audit template and delete it.
 
         :param goal: The goal audit template is based on
@@ -39,11 +42,14 @@ class Watcher(utils.WatcherScenario):
         audit_template = self._create_audit_template(goal, strategy, extra)
         self._delete_audit_template(audit_template.uuid)
 
-    @validation.required_services(consts.Service.WATCHER)
-    @scenario.configure()
-    def list_audit_templates(self, name=None, goal=None, strategy=None,
-                             limit=None, sort_key=None, sort_dir=None,
-                             detail=False):
+
+@validation.required_services(consts.Service.WATCHER)
+@scenario.configure(name="Watcher.list_audit_templates")
+class ListAuditTemplates(utils.WatcherScenario):
+
+    def run(self, name=None, goal=None, strategy=None,
+            limit=None, sort_key=None, sort_dir=None,
+            detail=False):
         """List existing audit templates.
 
         Audit templates are being created by Audit Template Context.
@@ -69,10 +75,14 @@ class Watcher(utils.WatcherScenario):
                                    limit=limit, sort_key=sort_key,
                                    sort_dir=sort_dir, detail=detail)
 
-    @validation.required_services(consts.Service.WATCHER)
-    @validation.required_contexts("audit_templates")
-    @scenario.configure(context={"admin_cleanup": ["watcher"]})
-    def create_audit_and_delete(self):
+
+@validation.required_services(consts.Service.WATCHER)
+@validation.required_contexts("audit_templates")
+@scenario.configure(context={"admin_cleanup": ["watcher"]},
+                    name="Watcher.create_audit_and_delete")
+class CreateAuditAndDelete(utils.WatcherScenario):
+
+    def run(self):
         """Create and delete audit.
 
         Create Audit, wait until whether Audit is in SUCCEEDED state or in

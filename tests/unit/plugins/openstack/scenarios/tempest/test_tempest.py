@@ -36,8 +36,6 @@ class TempestScenarioTestCase(test.TestCase):
         self.context = test.get_test_context()
         self.context.update({"verifier": self.verifier,
                              "tmp_results_dir": "/dev"})
-        self.scenario = tempest.TempestScenario(self.context)
-        self.scenario._add_atomic_actions = mock.MagicMock()
 
     def get_tests_launcher_cmd(self, tests):
         return ("%(venv)s testr run --subunit --parallel --concurrency 0 "
@@ -55,10 +53,13 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_single_test(self, mock_tempest_resources_context,
                          mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.SingleTest(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_test = "tempest.api.fake.test"
 
-        self.scenario.single_test(test_name=fake_test)
+        scenario.run(test_name=fake_test)
 
         expected_call = self.get_tests_launcher_cmd([fake_test])
         mock_subprocess.check_call.assert_called_once_with(
@@ -71,10 +72,13 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_single_test_negative(self, mock_tempest_resources_context,
                                   mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.SingleTest(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_test = "tempest.api.network"
 
-        self.scenario.single_test(test_name=fake_test)
+        scenario.run(test_name=fake_test)
 
         expected_call = self.get_tests_launcher_cmd([fake_test])
         mock_subprocess.check_call.assert_called_once_with(
@@ -88,9 +92,12 @@ class TempestScenarioTestCase(test.TestCase):
     def test_single_test_without_prefix(self, mock_tempest_resources_context,
                                         mock_subprocess, mock_tempfile,
                                         mock_isfile):
+        scenario = tempest.SingleTest(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
-        self.scenario.single_test("network")
+        scenario.run("network")
 
         expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
         mock_subprocess.check_call.assert_called_once_with(
@@ -103,9 +110,12 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_all(self, mock_tempest_resources_context,
                  mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.All(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
-        self.scenario.all()
+        scenario.run()
 
         expected_call = self.get_tests_launcher_cmd([])
         mock_subprocess.check_call.assert_called_once_with(
@@ -118,9 +128,12 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_set_smoke(self, mock_tempest_resources_context,
                        mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.Set(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
-        self.scenario.set("smoke")
+        scenario.run("smoke")
 
         expected_call = self.get_tests_launcher_cmd(["smoke"])
         mock_subprocess.check_call.assert_called_once_with(
@@ -133,9 +146,12 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_set_full(self, mock_tempest_resources_context,
                       mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.Set(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
-        self.scenario.set("full")
+        scenario.run("full")
 
         expected_call = self.get_tests_launcher_cmd([])
         mock_subprocess.check_call.assert_called_once_with(
@@ -147,6 +163,9 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_set_from_list(self, mock_tempest_resources_context,
                            mock_tempfile, mock_isfile):
+        scenario = tempest.Set(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         fake_scenarios = ["network", "volume", "baremetal",
@@ -155,7 +174,7 @@ class TempestScenarioTestCase(test.TestCase):
                           "telemetry", "queuing", "orchestration"]
         for fake_scenario in fake_scenarios:
             with mock.patch(VERIFIER + ".subprocess") as mock_subprocess:
-                self.scenario.set(fake_scenario)
+                scenario.run(fake_scenario)
                 fake_test = "tempest.api." + fake_scenario
 
                 expected_call = self.get_tests_launcher_cmd([fake_test])
@@ -169,9 +188,12 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_set_selective(self, mock_tempest_resources_context,
                            mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.Set(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
-        self.scenario.set("network")
+        scenario.run("network")
 
         expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
         mock_subprocess.check_call.assert_called_once_with(
@@ -184,10 +206,13 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_list_of_tests(self, mock_tempest_resources_context,
                            mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.ListOfTests(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_tests = ["tempest.fake.test1", "tempest.fake.test2"]
 
-        self.scenario.list_of_tests(fake_tests)
+        scenario.run(fake_tests)
 
         expected_call = self.get_tests_launcher_cmd(fake_tests)
         mock_subprocess.check_call.assert_called_once_with(
@@ -200,10 +225,13 @@ class TempestScenarioTestCase(test.TestCase):
     @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
     def test_specific_regex(self, mock_tempest_resources_context,
                             mock_subprocess, mock_tempfile, mock_isfile):
+        scenario = tempest.SpecificRegex(self.context)
+        scenario._add_atomic_actions = mock.MagicMock()
+
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         regex = "tempest.fake.test1"
 
-        self.scenario.specific_regex(regex)
+        scenario.run(regex)
 
         expected_call = self.get_tests_launcher_cmd([regex])
         mock_subprocess.check_call.assert_called_once_with(

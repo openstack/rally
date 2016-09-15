@@ -22,12 +22,12 @@ from tests.unit import test
 class WatcherTestCase(test.ScenarioTestCase):
 
     def test_create_audit_template_and_delete(self):
-        scenario = basic.Watcher(self.context)
+        scenario = basic.CreateAuditTemplateAndDelete(self.context)
         audit_template = mock.Mock()
         scenario._create_audit_template = mock.MagicMock(
             return_value=audit_template)
         scenario._delete_audit_template = mock.MagicMock()
-        scenario.create_audit_template_and_delete("goal", "strategy", {})
+        scenario.run("goal", "strategy", {})
         scenario._create_audit_template.assert_called_once_with("goal",
                                                                 "strategy",
                                                                 {})
@@ -35,20 +35,20 @@ class WatcherTestCase(test.ScenarioTestCase):
             audit_template.uuid)
 
     def test_list_audit_template(self):
-        scenario = basic.Watcher(self.context)
+        scenario = basic.ListAuditTemplates(self.context)
         scenario._list_audit_templates = mock.MagicMock()
-        scenario.list_audit_templates()
+        scenario.run()
         scenario._list_audit_templates.assert_called_once_with(
             detail=False, goal=None, limit=None, name=None, sort_dir=None,
             sort_key=None, strategy=None)
 
     def test_create_audit_and_delete(self):
         mock_audit = mock.MagicMock()
-        scenario = basic.Watcher(self.context)
+        scenario = basic.CreateAuditAndDelete(self.context)
         scenario.context = mock.MagicMock()
         scenario._create_audit = mock.MagicMock(return_value=mock_audit)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_audit = mock.MagicMock()
-        scenario.create_audit_and_delete()
+        scenario.run()
         scenario._create_audit.assert_called_once_with(mock.ANY)
         scenario._delete_audit.assert_called_once_with(mock_audit)

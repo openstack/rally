@@ -27,45 +27,35 @@ from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
+
+"""Scenarios that are to be run inside VM instances."""
+
+
 LOG = logging.getLogger(__name__)
 
 
-class VMTasks(vm_utils.VMScenario):
-    """Benchmark scenarios that are to be run inside VM instances."""
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.valid_command("command")
+@validation.number("port", minval=1, maxval=65535, nullable=True,
+                   integer_only=True)
+@validation.external_network_exists("floating_network")
+@validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova", "cinder"],
+                             "keypair": {}, "allow_ssh": {}},
+                    name="VMTasks.boot_runcommand_delete")
+class BootRuncommandDelete(vm_utils.VMScenario):
 
     def __init__(self, *args, **kwargs):
-        super(VMTasks, self).__init__(*args, **kwargs)
+        super(BootRuncommandDelete, self).__init__(*args, **kwargs)
 
-    @types.convert(image={"type": "glance_image"},
-                   flavor={"type": "nova_flavor"})
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.valid_command("command")
-    @validation.number("port", minval=1, maxval=65535, nullable=True,
-                       integer_only=True)
-    @validation.external_network_exists("floating_network")
-    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova", "cinder"],
-                                 "keypair": {}, "allow_ssh": {}})
-    def boot_runcommand_delete(self, image, flavor,
-                               username,
-                               password=None,
-                               command=None,
-                               volume_args=None,
-                               floating_network=None,
-                               port=22,
-                               use_floating_ip=True,
-                               force_delete=False,
-                               wait_for_ping=True,
-                               max_log_length=None,
-                               **kwargs):
+    def run(self, image, flavor, username, password=None, command=None,
+            volume_args=None, floating_network=None, port=22,
+            use_floating_ip=True, force_delete=False, wait_for_ping=True,
+            max_log_length=None, **kwargs):
         """Boot a server, run script specified in command and delete server.
-
-        Example Script in samples/tasks/support/instance_dd_test.sh
-
-        The script to be executed is provided like command['remote_path'] or
-        command['local_path'] and interpreter in command['interpreter']
-        respectively.
 
         :param image: glance image name to use for the vm
         :param flavor: VM flavor name
@@ -223,46 +213,60 @@ class VMTasks(vm_utils.VMScenario):
                 for chart in charts:
                     self.add_output(**{chart_type: chart})
 
-    @types.convert(image={"type": "glance_image"},
-                   flavor={"type": "nova_flavor"})
-    @validation.number("port", minval=1, maxval=65535, nullable=True,
-                       integer_only=True)
-    @validation.valid_command("command")
-    @validation.external_network_exists("floating_network")
-    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-    @validation.required_openstack(users=True)
-    @validation.required_contexts("image_command_customizer")
-    @scenario.configure(context={"cleanup": ["nova", "cinder"],
-                                 "keypair": {}, "allow_ssh": {}})
-    def boot_runcommand_delete_custom_image(self, **kwargs):
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.number("port", minval=1, maxval=65535, nullable=True,
+                   integer_only=True)
+@validation.valid_command("command")
+@validation.external_network_exists("floating_network")
+@validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@validation.required_contexts("image_command_customizer")
+@scenario.configure(context={"cleanup": ["nova", "cinder"],
+                             "keypair": {}, "allow_ssh": {}},
+                    name="VMTasks.boot_runcommand_delete_custom_image")
+class BootRuncommandDeleteCustomImage(vm_utils.VMScenario):
+
+    def __init__(self, *args, **kwargs):
+        super(BootRuncommandDeleteCustomImage, self).__init__(*args, **kwargs)
+
+    def run(self, **kwargs):
         """Boot a server from a custom image, run a command that outputs JSON.
 
         Example Script in rally-jobs/extra/install_benchmark.sh
         """
-
-        return self.boot_runcommand_delete(
+        boot_runcommand_delete = BootRuncommandDelete(self.context)
+        return boot_runcommand_delete.run(
             image=self.context["tenant"]["custom_image"]["id"], **kwargs)
 
-    @scenario.configure(context={"cleanup": ["nova", "heat"],
-                                 "keypair": {}, "network": {}})
-    def runcommand_heat(self, workload, template, files, parameters):
+
+@scenario.configure(context={"cleanup": ["nova", "heat"],
+                             "keypair": {}, "network": {}},
+                    name="VMTasks.runcommand_heat")
+class RuncommandHeat(vm_utils.VMScenario):
+
+    def __init__(self, *args, **kwargs):
+        super(RuncommandHeat, self).__init__(*args, **kwargs)
+
+    def run(self, workload, template, files, parameters):
         """Run workload on stack deployed by heat.
 
-        Workload can be either file or resource:
+         Workload can be either file or resource:
 
-        .. code-block: json
+         .. code-block: json
 
-            {"file": "/path/to/file.sh"}
-            {"resource": ["package.module", "workload.py"]}
+             {"file": "/path/to/file.sh"}
+             {"resource": ["package.module", "workload.py"]}
 
-        Also it should contain "username" key.
+         Also it should contain "username" key.
 
-        Given file will be uploaded to `gate_node` and started. This script
-        should print `key` `value` pairs separated by colon. These pairs will
-        be presented in results.
+         Given file will be uploaded to `gate_node` and started. This script
+         should print `key` `value` pairs separated by colon. These pairs will
+         be presented in results.
 
-        Gate node should be accessible via ssh with keypair `key_name`, so
-        heat template should accept parameter `key_name`.
+         Gate node should be accessible via ssh with keypair `key_name`, so
+         heat template should accept parameter `key_name`.
 
         :param workload: workload to run
         :param template: path to heat template file

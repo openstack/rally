@@ -43,9 +43,20 @@ class DocstringsTestCase(test.TestCase):
     def test_all_scenarios_have_docstrings(self):
         ignored_params = ["self", "scenario_obj"]
         for scenario_inst in scenario.Scenario.get_all():
-            self.assertIsNotNone(scenario_inst.__doc__,
-                                 "%s doensn't have a docstring." %
-                                 scenario_inst.get_name())
+            try:
+                self.assertIsNotNone(scenario_inst.__doc__,
+                                     "%s doensn't have a docstring." %
+                                     scenario_inst.get_name())
+            except Exception:
+                msg = ("'{}.run' doesn't have a docstring. "
+                       "At least class '{}' or method '{}.run' "
+                       "should contain a docstring")
+                inst_name = scenario_inst.__name__
+                if scenario_inst.is_classbased:
+                    self.assertIsNotNone(scenario_inst.run.__doc__,
+                                         msg.format(inst_name,
+                                                    inst_name,
+                                                    inst_name))
             doc = info.parse_docstring(scenario_inst.__doc__)
             short_description = doc["short_description"]
             self.assertIsNotNone(short_description,
