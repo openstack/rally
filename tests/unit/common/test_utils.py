@@ -13,6 +13,7 @@
 #    under the License.
 
 from __future__ import print_function
+import collections
 import string
 import sys
 import threading
@@ -104,6 +105,8 @@ class TimerTestCase(test.TestCase):
                 mock_time.time = mock.MagicMock(return_value=end_time)
 
         self.assertIsNone(timer.error)
+        self.assertEqual(start_time, timer.timestamp())
+        self.assertEqual(end_time, timer.finish_timestamp())
         self.assertEqual(end_time - start_time, timer.duration())
 
     def test_timer_exception(self):
@@ -586,4 +589,78 @@ class FloatFormatterTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_format_float_to_str(self, num_float, num_str):
-        self.assertEquals(num_str, utils.format_float_to_str(num_float))
+        self.assertEqual(num_str, utils.format_float_to_str(num_float))
+
+
+class DequeAsQueueTestCase(test.TestCase):
+
+    def setUp(self):
+        super(DequeAsQueueTestCase, self).setUp()
+        self.deque = collections.deque()
+        self.deque_as_queue = utils.DequeAsQueue(self.deque)
+
+    def test_qsize(self):
+        self.assertEqual(0, self.deque_as_queue.qsize())
+        self.deque.append(10)
+        self.assertEqual(1, self.deque_as_queue.qsize())
+
+    def test_put(self):
+        self.deque_as_queue.put(10)
+        self.assertEqual(10, self.deque.popleft())
+
+    def test_get(self):
+        self.deque.append(33)
+        self.assertEqual(33, self.deque_as_queue.get())
+
+    def test_empty(self):
+        self.assertFalse(self.deque_as_queue.empty())
+        self.deque.append(10)
+        self.assertTrue(self.deque_as_queue.empty())
+
+
+class StopwatchTestCase(test.TestCase):
+
+    @mock.patch("rally.common.utils.interruptable_sleep")
+    @mock.patch("rally.common.utils.time")
+    def test_stopwatch(self, mock_time, mock_interruptable_sleep):
+        mock_time.time.side_effect = [0, 0, 1, 2, 3]
+
+        sw = utils.Stopwatch()
+        sw.start()
+        sw.sleep(1)
+        sw.sleep(2)
+        sw.sleep(3)
+
+        mock_interruptable_sleep.assert_has_calls([
+            mock.call(1),
+            mock.call(1),
+            mock.call(1),
+        ])
+
+    @mock.patch("rally.common.utils.interruptable_sleep")
+    @mock.patch("rally.common.utils.time")
+    def test_no_sleep(self, mock_time, mock_interruptable_sleep):
+        mock_time.time.side_effect = [0, 1]
+
+        sw = utils.Stopwatch()
+        sw.start()
+        sw.sleep(1)
+
+        self.assertFalse(mock_interruptable_sleep.called)
+
+    @mock.patch("rally.common.utils.time")
+    def test_stopwatch_with_event(self, mock_time):
+        mock_time.time.side_effect = [0, 0, 1, 2, 3]
+        event = mock.Mock(spec=threading.Event)()
+
+        sw = utils.Stopwatch(stop_event=event)
+        sw.start()
+        sw.sleep(1)
+        sw.sleep(2)
+        sw.sleep(3)
+
+        event.wait.assert_has_calls([
+            mock.call(1),
+            mock.call(1),
+            mock.call(1),
+        ])
