@@ -167,6 +167,13 @@ class DummyOutput(scenario.Scenario):
                                   "axis_label": ("This is a custom "
                                                  "X-axis label")})
         self.add_output(
+            complete={"title": "Arbitrary Text",
+                      "chart_plugin": "TextArea",
+                      "data": ["Lorem ipsum dolor sit amet, consectetur "
+                               "adipiscing elit, sed do eiusmod tempor "
+                               "incididunt ut labore et dolore magna "
+                               "aliqua." * 2] * 4})
+        self.add_output(
             complete={"title": "Complete Pie (no description)",
                       "chart_plugin": "Pie",
                       "data": [rand("delta"), rand("epsilon"), rand("zeta"),

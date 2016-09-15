@@ -573,6 +573,13 @@ class OutputStatsTable(OutputTable):
                 self._data[name][idx][0].add(value)
 
 
+@plugin.configure(name="TextArea")
+class OutputTextArea(OutputChart):
+    """Arbitrary text."""
+
+    widget = "TextArea"
+
+
 _OUTPUT_SCHEMA = {
     "key_types": {
         "title": six.string_types,

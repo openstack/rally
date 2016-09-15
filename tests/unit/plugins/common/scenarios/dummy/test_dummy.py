@@ -139,6 +139,12 @@ class DummyTestCase(test.TestCase):
                      "description": desc % "Complete StackedArea",
                      "label": "Yet another measurement units",
                      "title": "Complete StackedArea"},
+                    {"title": "Arbitrary Text",
+                     "chart_plugin": "TextArea",
+                     "data": ["Lorem ipsum dolor sit amet, consectetur "
+                              "adipiscing elit, sed do eiusmod tempor "
+                              "incididunt ut labore et dolore magna "
+                              "aliqua." * 2] * 4},
                     {"chart_plugin": "Pie",
                      "data": [[s, exp] for s in ("delta", "epsilon", "zeta",
                                                  "theta", "lambda", "omega")],

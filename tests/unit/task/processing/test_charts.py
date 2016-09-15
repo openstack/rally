@@ -644,6 +644,13 @@ class OutputStatsTableTestCase(test.TestCase):
                          table.render())
 
 
+class OutputTextAreaTestCase(test.TestCase):
+
+    def test_class(self):
+        self.assertTrue(issubclass(charts.OutputTextArea, charts.OutputChart))
+        self.assertEqual("TextArea", charts.OutputTextArea.widget)
+
+
 @ddt.ddt
 class ModuleTestCase(test.TestCase):
 
