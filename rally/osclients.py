@@ -20,7 +20,6 @@ from six.moves.urllib import parse
 
 from rally.cli import envutils
 from rally.common.i18n import _
-from rally.common import logging
 from rally.common import objects
 from rally.common.plugin import plugin
 from rally import consts
@@ -340,13 +339,10 @@ class Nova(OSClient):
         """Return nova client."""
         from novaclient import client as nova
 
-        client = nova.Client(self.choose_version(version),
-                             auth_token=self.keystone.auth_ref.auth_token,
-                             http_log_debug=logging.is_debug(),
-                             timeout=CONF.openstack_client_http_timeout,
-                             insecure=self.credential.insecure,
-                             **self._get_auth_info(password_key="api_key"))
-        client.set_management_url(self._get_endpoint(service_type))
+        client = nova.Client(
+            session=self.keystone.get_session()[0],
+            version=self.choose_version(version),
+            endpoint_override=self._get_endpoint(service_type))
         return client
 
 
@@ -358,13 +354,8 @@ class Neutron(OSClient):
         from neutronclient.neutron import client as neutron
 
         client = neutron.Client(self.choose_version(version),
-                                token=self.keystone.auth_ref.auth_token,
-                                endpoint_url=self._get_endpoint(service_type),
-                                timeout=CONF.openstack_client_http_timeout,
-                                insecure=self.credential.insecure,
-                                **self._get_auth_info(
-                                    project_name_key="tenant_name",
-                                    cacert_key="ca_cert"))
+                                session=self.keystone.get_session()[0],
+                                endpoint_url=self._get_endpoint(service_type))
         return client
 
 
@@ -375,12 +366,11 @@ class Glance(OSClient):
         """Return glance client."""
         import glanceclient as glance
 
-        client = glance.Client(self.choose_version(version),
-                               endpoint=self._get_endpoint(service_type),
-                               token=self.keystone.auth_ref.auth_token,
-                               timeout=CONF.openstack_client_http_timeout,
-                               insecure=self.credential.insecure,
-                               cacert=self.credential.cacert)
+        session = self.keystone.get_session()[0]
+        client = glance.Client(
+            version=self.choose_version(version),
+            endpoint_override=self._get_endpoint(service_type),
+            session=session)
         return client
 
 
@@ -392,12 +382,8 @@ class Heat(OSClient):
         from heatclient import client as heat
 
         client = heat.Client(self.choose_version(version),
-                             endpoint=self._get_endpoint(service_type),
-                             token=self.keystone.auth_ref.auth_token,
-                             timeout=CONF.openstack_client_http_timeout,
-                             insecure=self.credential.insecure,
-                             **self._get_auth_info(project_name_key=None,
-                                                   cacert_key="ca_file"))
+                             session=self.keystone.get_session()[0],
+                             endpoint=self._get_endpoint(service_type))
         return client
 
 
@@ -408,13 +394,10 @@ class Cinder(OSClient):
         """Return cinder client."""
         from cinderclient import client as cinder
 
-        client = cinder.Client(self.choose_version(version),
-                               http_log_debug=logging.is_debug(),
-                               timeout=CONF.openstack_client_http_timeout,
-                               insecure=self.credential.insecure,
-                               **self._get_auth_info(password_key="api_key"))
-        client.client.management_url = self._get_endpoint(service_type)
-        client.client.auth_token = self.keystone.auth_ref.auth_token
+        client = cinder.Client(
+            self.choose_version(version),
+            session=self.keystone.get_session()[0],
+            endpoint_override=self._get_endpoint(service_type))
         return client
 
 
@@ -426,14 +409,8 @@ class Manila(OSClient):
         from manilaclient import client as manila
         manila_client = manila.Client(
             self.choose_version(version),
-            region_name=self.credential.region_name,
-            http_log_debug=logging.is_debug(),
-            timeout=CONF.openstack_client_http_timeout,
-            insecure=self.credential.insecure,
-            **self._get_auth_info(password_key="api_key",
-                                  project_name_key="project_name"))
-        manila_client.client.management_url = self._get_endpoint(service_type)
-        manila_client.client.auth_token = self.keystone.auth_ref.auth_token
+            session=self.keystone.get_session()[0],
+            service_catalog_url=self._get_endpoint(service_type))
         return manila_client
 
 
@@ -446,12 +423,8 @@ class Ceilometer(OSClient):
 
         client = ceilometer.get_client(
             self.choose_version(version),
-            os_endpoint=self._get_endpoint(service_type),
-            token=self.keystone.auth_ref.auth_token,
-            timeout=CONF.openstack_client_http_timeout,
-            insecure=self.credential.insecure,
-            **self._get_auth_info(project_name_key="tenant_name",
-                                  endpoint_type="interface"))
+            session=self.keystone.get_session()[0],
+            endpoint_override=self._get_endpoint(service_type))
         return client
 
 
@@ -480,16 +453,10 @@ class Ironic(OSClient):
         """Return Ironic client."""
         from ironicclient import client as ironic
 
-        auth_token = self.keystone.auth_ref.auth_token
-        client = ironic.get_client(self.choose_version(version),
-                                   os_auth_token=auth_token,
-                                   ironic_url=self._get_endpoint(service_type),
-                                   timeout=CONF.openstack_client_http_timeout,
-                                   insecure=self.credential.insecure,
-                                   cacert=self.credential.cacert,
-                                   interface=self._get_auth_info().get(
-                                       "endpoint_type")
-                                   )
+        client = ironic.get_client(
+            self.choose_version(version),
+            session=self.keystone.get_session()[0],
+            endpoint=self._get_endpoint(service_type))
         return client
 
 
@@ -513,10 +480,8 @@ class Sahara(OSClient):
 
         client = sahara.Client(
             self.choose_version(version),
-            service_type=self.choose_service_type(service_type),
-            insecure=self.credential.insecure,
-            **self._get_auth_info(password_key="api_key",
-                                  project_name_key="project_name"))
+            session=self.keystone.get_session()[0],
+            sahara_url=self._get_endpoint(service_type))
 
         return client
 
@@ -581,18 +546,16 @@ class Designate(OSClient):
                              endpoint=api_url)
 
 
-@configure("trove", default_version="1.0", supported_versions=["1.0"])
+@configure("trove", default_version="1.0", supported_versions=["1.0"],
+           default_service_type="database")
 class Trove(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Returns trove client."""
         from troveclient import client as trove
 
         client = trove.Client(self.choose_version(version),
-                              region_name=self.credential.region_name,
-                              timeout=CONF.openstack_client_http_timeout,
-                              insecure=self.credential.insecure,
-                              **self._get_auth_info(password_key="api_key")
-                              )
+                              session=self.keystone.get_session()[0],
+                              endpoint=self._get_endpoint(service_type))
         return client
 
 
@@ -656,6 +619,7 @@ class Monasca(OSClient):
         """Return monasca client."""
         from monascaclient import client as monasca
 
+        # Change this to use session once it's supported by monascaclient
         client = monasca.Client(
             self.choose_version(version),
             self._get_endpoint(service_type),
@@ -722,12 +686,8 @@ class Watcher(OSClient):
             self.choose_service_type(service_type))
         client = watcher_client.Client(
             self.choose_version(version),
-            watcher_api_url,
-            token=self.keystone.auth_ref.auth_token,
-            timeout=CONF.openstack_client_http_timeout,
-            insecure=self.credential.insecure,
-            ca_file=self.credential.cacert,
-            endpoint_type=self.credential.endpoint_type)
+            endpoint=watcher_api_url,
+            session=self.keystone.get_session()[0])
         return client
 
 

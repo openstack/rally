@@ -326,152 +326,127 @@ class OSClientsTestCase(test.TestCase):
         self.assertRaises(exceptions.HostUnreachableException,
                           self.clients.verified_keystone)
 
-    def test_nova(self):
+    @mock.patch("rally.osclients.Nova._get_endpoint")
+    def test_nova(self, mock_nova__get_endpoint):
         fake_nova = fakes.FakeNovaClient()
+        mock_nova__get_endpoint.return_value = "http://fake.to:2/fake"
         mock_nova = mock.MagicMock()
         mock_nova.client.Client.return_value = fake_nova
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("nova", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
+        with mock.patch.dict("sys.modules",
+                             {"novaclient": mock_nova,
+                              "keystoneauth1": mock_keystoneauth1}):
+            mock_keystoneauth1.discover.Discover.return_value = (
+                mock.Mock(version_data=mock.Mock(return_value=[
+                    {"version": (2, 0)}]))
+            )
             client = self.clients.nova()
             self.assertEqual(fake_nova, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="compute",
-                region_name=self.credential.region_name)
-            mock_nova.client.Client.assert_called_once_with(
-                "2",
-                auth_token=self.auth_ref.auth_token,
-                http_log_debug=False,
-                timeout=cfg.CONF.openstack_client_http_timeout,
-                insecure=False, cacert=None,
-                username=self.credential.username,
-                api_key=self.credential.password,
-                project_id=self.credential.tenant_name,
-                auth_url=self.credential.auth_url)
-            client.set_management_url.assert_called_once_with(
-                self.service_catalog.url_for.return_value)
+            kw = {
+                "version": "2",
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_override": mock_nova__get_endpoint.return_value}
+            mock_nova.client.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_nova, self.clients.cache["nova"])
 
-    def test_neutron(self):
+    @mock.patch("rally.osclients.Neutron._get_endpoint")
+    def test_neutron(self, mock_neutron__get_endpoint):
         fake_neutron = fakes.FakeNeutronClient()
+        mock_neutron__get_endpoint.return_value = "http://fake.to:2/fake"
         mock_neutron = mock.MagicMock()
+        mock_keystoneauth1 = mock.MagicMock()
         mock_neutron.client.Client.return_value = fake_neutron
         self.assertNotIn("neutron", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"neutronclient.neutron":
-                                             mock_neutron}):
+        with mock.patch.dict("sys.modules",
+                             {"neutronclient.neutron": mock_neutron,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.neutron()
             self.assertEqual(fake_neutron, client)
             kw = {
-                "token": self.auth_ref.auth_token,
-                "endpoint_url": self.service_catalog.url_for.return_value,
-                "timeout": cfg.CONF.openstack_client_http_timeout,
-                "insecure": self.credential.insecure,
-                "ca_cert": self.credential.cacert,
-                "username": self.credential.username,
-                "password": self.credential.password,
-                "tenant_name": self.credential.tenant_name,
-                "auth_url": self.credential.auth_url
-            }
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="network",
-                region_name=self.credential.region_name)
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_url": mock_neutron__get_endpoint.return_value}
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
-    def test_glance(self):
+    @mock.patch("rally.osclients.Glance._get_endpoint")
+    def test_glance(self, mock_glance__get_endpoint):
         fake_glance = fakes.FakeGlanceClient()
         mock_glance = mock.MagicMock()
+        mock_glance__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         mock_glance.Client = mock.MagicMock(return_value=fake_glance)
-        with mock.patch.dict("sys.modules", {"glanceclient": mock_glance}):
+        with mock.patch.dict("sys.modules",
+                             {"glanceclient": mock_glance,
+                              "keystoneauth1": mock_keystoneauth1}):
             self.assertNotIn("glance", self.clients.cache)
             client = self.clients.glance()
             self.assertEqual(fake_glance, client)
-            kw = {"endpoint": self.service_catalog.url_for.return_value,
-                  "token": self.auth_ref.auth_token,
-                  "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None}
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="image",
-                region_name=self.credential.region_name)
-            mock_glance.Client.assert_called_once_with("1", **kw)
+            kw = {
+                "version": "1",
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_override": mock_glance__get_endpoint.return_value}
+            mock_glance.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_glance, self.clients.cache["glance"])
 
-    def test_cinder(self):
+    @mock.patch("rally.osclients.Cinder._get_endpoint")
+    def test_cinder(self, mock_cinder__get_endpoint):
         fake_cinder = mock.MagicMock(client=fakes.FakeCinderClient())
         mock_cinder = mock.MagicMock()
         mock_cinder.client.Client.return_value = fake_cinder
+        mock_cinder__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("cinder", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"cinderclient": mock_cinder}):
+        with mock.patch.dict("sys.modules",
+                             {"cinderclient": mock_cinder,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.cinder()
             self.assertEqual(fake_cinder, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="volumev2",
-                region_name=self.credential.region_name)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_override": mock_cinder__get_endpoint.return_value}
             mock_cinder.client.Client.assert_called_once_with(
-                "2",
-                http_log_debug=False,
-                timeout=cfg.CONF.openstack_client_http_timeout,
-                insecure=False, cacert=None,
-                username=self.credential.username,
-                api_key=self.credential.password,
-                project_id=self.credential.tenant_name,
-                auth_url=self.credential.auth_url)
-            self.assertEqual(fake_cinder.client.management_url,
-                             self.service_catalog.url_for.return_value)
-            self.assertEqual(fake_cinder.client.auth_token,
-                             self.auth_ref.auth_token)
+                "2", **kw)
             self.assertEqual(fake_cinder, self.clients.cache["cinder"])
 
-    def test_manila(self):
+    @mock.patch("rally.osclients.Manila._get_endpoint")
+    def test_manila(self, mock_manila__get_endpoint):
         mock_manila = mock.MagicMock()
+        mock_manila__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("manila", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"manilaclient": mock_manila}):
+        with mock.patch.dict("sys.modules",
+                             {"manilaclient": mock_manila,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.manila()
             self.assertEqual(mock_manila.client.Client.return_value, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="share",
-                region_name=self.credential.region_name)
-            mock_manila.client.Client.assert_called_once_with(
-                "1",
-                http_log_debug=False,
-                timeout=cfg.CONF.openstack_client_http_timeout,
-                insecure=False, cacert=None,
-                username=self.credential.username,
-                api_key=self.credential.password,
-                region_name=self.credential.region_name,
-                project_name=self.credential.tenant_name,
-                auth_url=self.credential.auth_url)
-            self.assertEqual(
-                mock_manila.client.Client.return_value.client.management_url,
-                self.service_catalog.url_for.return_value)
-            self.assertEqual(
-                mock_manila.client.Client.return_value.client.auth_token,
-                self.auth_ref.auth_token)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "service_catalog_url": mock_manila__get_endpoint.return_value
+            }
+            mock_manila.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(
                 mock_manila.client.Client.return_value,
                 self.clients.cache["manila"])
 
-    def test_ceilometer(self):
+    @mock.patch("rally.osclients.Ceilometer._get_endpoint")
+    def test_ceilometer(self, mock_ceilometer__get_endpoint):
         fake_ceilometer = fakes.FakeCeilometerClient()
         mock_ceilometer = mock.MagicMock()
+        mock_ceilometer__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         mock_ceilometer.client.get_client = mock.MagicMock(
             return_value=fake_ceilometer)
         self.assertNotIn("ceilometer", self.clients.cache)
         with mock.patch.dict("sys.modules",
-                             {"ceilometerclient": mock_ceilometer}):
+                             {"ceilometerclient": mock_ceilometer,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.ceilometer()
             self.assertEqual(fake_ceilometer, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="metering",
-                region_name=self.credential.region_name)
-            kw = {"os_endpoint": self.service_catalog.url_for.return_value,
-                  "token": self.auth_ref.auth_token,
-                  "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None,
-                  "username": self.credential.username,
-                  "password": self.credential.password,
-                  "tenant_name": self.credential.tenant_name,
-                  "auth_url": self.credential.auth_url
-                  }
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_override": mock_ceilometer__get_endpoint.return_value
+            }
             mock_ceilometer.client.get_client.assert_called_once_with("2",
                                                                       **kw)
             self.assertEqual(fake_ceilometer,
@@ -526,46 +501,42 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(mock_monasca.client.Client.return_value,
                              self.clients.cache["monasca"])
 
-    def test_ironic(self):
+    @mock.patch("rally.osclients.Ironic._get_endpoint")
+    def test_ironic(self, mock_ironic__get_endpoint):
         fake_ironic = fakes.FakeIronicClient()
         mock_ironic = mock.MagicMock()
         mock_ironic.client.get_client = mock.MagicMock(
             return_value=fake_ironic)
+        mock_ironic__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("ironic", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"ironicclient": mock_ironic}):
+        with mock.patch.dict("sys.modules",
+                             {"ironicclient": mock_ironic,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.ironic()
             self.assertEqual(fake_ironic, client)
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="baremetal",
-                region_name=self.credential.region_name)
             kw = {
-                "os_auth_token": self.auth_ref.auth_token,
-                "ironic_url": self.service_catalog.url_for.return_value,
-                "timeout": cfg.CONF.openstack_client_http_timeout,
-                "insecure": self.credential.insecure,
-                "cacert": self.credential.cacert,
-                "interface": self.credential.endpoint_type
-            }
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint": mock_ironic__get_endpoint.return_value}
             mock_ironic.client.get_client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_ironic, self.clients.cache["ironic"])
 
-    def test_sahara(self):
+    @mock.patch("rally.osclients.Sahara._get_endpoint")
+    def test_sahara(self, mock_sahara__get_endpoint):
         fake_sahara = fakes.FakeSaharaClient()
         mock_sahara = mock.MagicMock()
         mock_sahara.client.Client = mock.MagicMock(return_value=fake_sahara)
+        mock_sahara__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("sahara", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"saharaclient": mock_sahara}):
+        with mock.patch.dict("sys.modules",
+                             {"saharaclient": mock_sahara,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.sahara()
             self.assertEqual(fake_sahara, client)
             kw = {
-                "service_type": "data-processing",
-                "insecure": False,
-                "username": self.credential.username,
-                "api_key": self.credential.password,
-                "project_name": self.credential.tenant_name,
-                "cacert": self.credential.cacert,
-                "auth_url": self.credential.auth_url
-            }
+                "session": mock_keystoneauth1.session.Session(),
+                "sahara_url": mock_sahara__get_endpoint.return_value}
             mock_sahara.client.Client.assert_called_once_with(1.1, **kw)
             self.assertEqual(fake_sahara, self.clients.cache["sahara"])
 
@@ -595,24 +566,22 @@ class OSClientsTestCase(test.TestCase):
                 url=fake_zaqar_url, version=1.1, conf=conf)
             self.assertEqual(fake_zaqar, self.clients.cache["zaqar"])
 
-    def test_trove(self):
+    @mock.patch("rally.osclients.Trove._get_endpoint")
+    def test_trove(self, mock_trove__get_endpoint):
         fake_trove = fakes.FakeTroveClient()
         mock_trove = mock.MagicMock()
         mock_trove.client.Client = mock.MagicMock(return_value=fake_trove)
+        mock_trove__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         self.assertNotIn("trove", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"troveclient": mock_trove}):
+        with mock.patch.dict("sys.modules",
+                             {"troveclient": mock_trove,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.trove()
             self.assertEqual(fake_trove, client)
             kw = {
-                "username": self.credential.username,
-                "api_key": self.credential.password,
-                "project_id": self.credential.tenant_name,
-                "auth_url": self.credential.auth_url,
-                "region_name": self.credential.region_name,
-                "timeout": cfg.CONF.openstack_client_http_timeout,
-                "insecure": self.credential.insecure,
-                "cacert": self.credential.cacert
-            }
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint": mock_trove__get_endpoint.return_value}
             mock_trove.client.Client.assert_called_once_with("1.0", **kw)
             self.assertEqual(fake_trove, self.clients.cache["trove"])
 
@@ -804,54 +773,47 @@ class OSClientsTestCase(test.TestCase):
                 mock_senlin.client.Client.return_value,
                 self.clients.cache["senlin"])
 
-    @mock.patch("rally.osclients.Keystone.get_session")
-    def test_magnum(self, mock_keystone_get_session):
+    @mock.patch("rally.osclients.Magnum._get_endpoint")
+    def test_magnum(self, mock_magnum__get_endpoint):
         fake_magnum = fakes.FakeMagnumClient()
         mock_magnum = mock.MagicMock()
         mock_magnum.client.Client.return_value = fake_magnum
 
-        mock_keystone_get_session.return_value = (self.fake_keystone.session,
-                                                  "fake_auth_plugin")
-        self.service_catalog.url_for.return_value = "http://fakeurl/"
+        mock_magnum__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
 
         self.assertNotIn("magnum", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"magnumclient": mock_magnum}):
+        with mock.patch.dict("sys.modules",
+                             {"magnumclient": mock_magnum,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.magnum()
 
             self.assertEqual(fake_magnum, client)
+            kw = {
+                "interface": self.credential.endpoint_type,
+                "session": mock_keystoneauth1.session.Session(),
+                "magnum_url": mock_magnum__get_endpoint.return_value}
 
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="container-infra",
-                region_name=self.credential.region_name)
-
-            mock_magnum.client.Client.assert_called_once_with(
-                interface=self.credential.endpoint_type,
-                session=self.fake_keystone.session,
-                magnum_url="http://fakeurl/")
-
+            mock_magnum.client.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_magnum, self.clients.cache["magnum"])
 
-    def test_watcher(self):
+    @mock.patch("rally.osclients.Watcher._get_endpoint")
+    def test_watcher(self, mock_watcher__get_endpoint):
         fake_watcher = fakes.FakeWatcherClient()
         mock_watcher = mock.MagicMock()
+        mock_watcher__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_keystoneauth1 = mock.MagicMock()
         mock_watcher.client.Client.return_value = fake_watcher
         self.assertNotIn("watcher", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"watcherclient": mock_watcher}):
+        with mock.patch.dict("sys.modules",
+                             {"watcherclient": mock_watcher,
+                              "keystoneauth1": mock_keystoneauth1}):
             client = self.clients.watcher()
 
             self.assertEqual(fake_watcher, client)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint": mock_watcher__get_endpoint.return_value}
 
-            self.service_catalog.url_for.assert_called_once_with(
-                service_type="infra-optim",
-                region_name=self.credential.region_name)
-
-            mock_watcher.client.Client.assert_called_once_with(
-                "1",
-                self.service_catalog.url_for.return_value,
-                token=self.auth_ref.auth_token,
-                ca_file=None,
-                insecure=False,
-                timeout=180.0,
-                endpoint_type=self.credential.endpoint_type)
-
+            mock_watcher.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_watcher, self.clients.cache["watcher"])
