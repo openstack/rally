@@ -105,7 +105,7 @@ class HookExecutorTestCase(test.TestCase):
               "finished_at": fakes.FakeTimer().finish_timestamp(),
               "error": ["Exception", "Description", "Traceback"],
               "output": {"additive": [], "complete": []},
-              "status": consts.HookStatus.SUCCESS}], hook_executor.results())
+              "status": consts.HookStatus.FAILED}], hook_executor.results())
 
     def test_empty_result(self):
         hook_executor = hook.HookExecutor(self.conf, self.task)
