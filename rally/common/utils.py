@@ -78,6 +78,8 @@ class StdErrCapture(object):
 
 
 class Timer(object):
+    """Timer based on context manager interface."""
+
     def __enter__(self):
         self.error = None
         self.start = time.time()
@@ -85,6 +87,9 @@ class Timer(object):
 
     def timestamp(self):
         return self.start
+
+    def finish_timestamp(self):
+        return self.finish
 
     def __exit__(self, type, value, tb):
         self.finish = time.time()
@@ -653,3 +658,53 @@ def format_float_to_str(num):
     num_str = "%f" % num
     float_part = num_str.split(".")[1].rstrip("0") or "0"
     return num_str.split(".")[0] + "." + float_part
+
+
+class DequeAsQueue(object):
+    """Allows to use some of Queue methods on collections.deque."""
+
+    def __init__(self, deque):
+        self.deque = deque
+
+    def qsize(self):
+        return len(self.deque)
+
+    def put(self, value):
+        self.deque.append(value)
+
+    def get(self):
+        return self.deque.popleft()
+
+    def empty(self):
+        return bool(self.deque)
+
+
+class Stopwatch(object):
+    """Allows to sleep till specified time since start."""
+
+    def __init__(self, stop_event=None):
+        """Creates Stopwatch.
+
+        :param stop_event: optional threading.Event to use for waiting
+            allows to interrupt sleep. If not provided time.sleep
+            will be used instead.
+        """
+        self._stop_event = stop_event
+
+    def start(self):
+        self._start_time = time.time()
+
+    def sleep(self, sec):
+        """Sleeps till specified second since start."""
+        target_time = self._start_time + sec
+        current_time = time.time()
+        if current_time >= target_time:
+            return
+        time_to_sleep = target_time - current_time
+        self._sleep(time_to_sleep)
+
+    def _sleep(self, sec):
+        if self._stop_event:
+            self._stop_event.wait(sec)
+        else:
+            interruptable_sleep(sec)
