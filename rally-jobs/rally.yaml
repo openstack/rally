@@ -581,6 +581,28 @@
 
     -
       args:
+        sleep: 0.25
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      hooks:
+        - name: sys_call
+          description: test hook
+          args: /bin/true
+          trigger:
+            name: periodic
+            args:
+              unit: iteration
+              step: 2
+              start: 4
+              end: 8
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
         sleep: 1
       runner:
         type: "constant"
@@ -595,6 +617,28 @@
             args:
               unit: time
               at: [0, 2, 4, 6, 8, 10]
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        sleep: 1
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      hooks:
+        - name: sys_call
+          description: test hook
+          args: /bin/true
+          trigger:
+            name: periodic
+            args:
+              unit: time
+              step: 2
+              start: 0
+              end: 6
       sla:
         failure_rate:
           max: 0
