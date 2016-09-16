@@ -1,8 +1,9 @@
 # The order of packages is significant, because pip processes them in the order
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
+
+# Rally core dependencies
 alembic>=0.8.4                                         # MIT
-boto>=2.32.1                                           # MIT
 decorator>=3.4.0                                       # new BSD License
 Jinja2>=2.8                                            # BSD
 jsonschema>=2.0.0,!=2.5.0,<3.0.0                       # MIT
@@ -17,25 +18,34 @@ paramiko>=2.0                                          # LGPL
 pbr>=1.6                                               # Apache Software License
 PrettyTable>=0.7,<0.8                                  # BSD
 PyYAML>=3.1.0                                          # MIT
-python-designateclient>=1.5.0                          # Apache License, Version 2.0
-python-glanceclient>=2.3.0,!=2.4.0                     # Apache License, Version 2.0
-python-keystoneclient>=2.0.0,!=2.1.0                   # Apache Software License
-keystoneauth1>=2.10.0                                  # Apache Software License
-python-novaclient>=2.29.0,!=2.33.0                     # Apache License, Version 2.0
-python-neutronclient>=5.1.0                            # Apache Software License
-python-cinderclient>=1.6.0,!=1.7.0,!=1.7.1             # Apache Software License
-python-manilaclient>=1.10.0                            # Apache Software License
-python-monascaclient>=1.1.0                            # Apache Software License
-python-heatclient>=1.4.0                               # Apache Software License
-python-ceilometerclient>=2.5.0                         # Apache Software License
-python-ironicclient>=1.6.0                             # Apache Software License
-python-saharaclient>=0.18.0                            # Apache License, Version 2.0
-python-troveclient>=2.2.0                              # Apache Software License
-python-zaqarclient>=1.0.0                              # Apache Software License
-python-swiftclient>=2.2.0                              # Apache Software License
-python-watcherclient>=0.23.0                           # Apache Software License
 python-subunit>=0.0.18
 requests>=2.10.0                                       # Apache License, Version 2.0
 SQLAlchemy>=1.0.10,<1.1.0                              # MIT
 sphinx>=1.2.1,!=1.3b1,<1.3                             # BSD
 six>=1.9.0                                             # MIT
+
+# OpenStack related
+boto>=2.32.1                                           # MIT
+gnocchiclient>=2.2.0                                   # Apache Software License
+keystoneauth1>=2.10.0                                  # Apache Software License
+python-ceilometerclient>=2.5.0                         # Apache Software License
+python-cinderclient>=1.6.0,!=1.7.0,!=1.7.1             # Apache Software License
+python-cueclient>=1.0.0                                # Apache License, Version 2.0
+python-designateclient>=1.5.0                          # Apache License, Version 2.0
+python-glanceclient>=2.3.0,!=2.4.0                     # Apache License, Version 2.0
+python-heatclient>=1.4.0                               # Apache Software License
+python-ironicclient>=1.6.0                             # Apache Software License
+python-keystoneclient>=2.0.0,!=2.1.0                   # Apache Software License
+python-magnumclient>=2.0.0                             # Apache Software License
+python-manilaclient>=1.10.0                            # Apache Software License
+python-mistralclient>=2.0.0
+python-monascaclient>=1.1.0                            # Apache Software License
+python-muranoclient>=0.8.2                             # Apache License, Version 2.0
+python-neutronclient>=5.1.0                            # Apache Software License
+python-novaclient>=2.29.0,!=2.33.0                     # Apache License, Version 2.0
+python-saharaclient>=0.18.0                            # Apache License, Version 2.0
+python-senlinclient>=0.3.0                             # Apache Software License
+python-swiftclient>=2.2.0                              # Apache Software License
+python-troveclient>=2.2.0                              # Apache Software License
+python-watcherclient>=0.23.0                           # Apache Software License
+python-zaqarclient>=1.0.0                              # Apache Software License
