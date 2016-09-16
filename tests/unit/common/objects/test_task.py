@@ -189,9 +189,11 @@ class TaskTestCase(test.TestCase):
              "id": 11, "key": {"kw": {"foo": 42},
                                "name": "Foo.bar", "pos": 0},
              "data": {"raw": iterations, "sla": [],
+                      "hooks": [],
                       "full_duration": 40, "load_duration": 32}}]
         expected = [
             {"iterations": "foo_iterations", "sla": [],
+             "hooks": [],
              "key": {"kw": {"foo": 42}, "name": "Foo.bar", "pos": 0},
              "info": {
                  "atomic": {"keystone.create_user": {"max_duration": 19,

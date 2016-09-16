@@ -72,7 +72,7 @@ class SysCallHookTestCase(test.TestCase):
                                              {"iteration": 1}, "dummy_action")
 
         sys_call_hook.run_sync()
-        sys_call_hook.validate_result_schema()
+        sys_call_hook._validate_result_schema()
 
         self.assertEqual(
             {
@@ -101,7 +101,7 @@ class SysCallHookTestCase(test.TestCase):
                                              {"iteration": 1}, "dummy_action")
 
         sys_call_hook.run_sync()
-        sys_call_hook.validate_result_schema()
+        sys_call_hook._validate_result_schema()
 
         self.assertEqual(
             {

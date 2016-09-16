@@ -52,8 +52,13 @@ def _get_scenario_context(iteration, context_obj):
     return context.ContextManager(context_obj).map_for_scenario()
 
 
-def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs):
+def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs,
+                       event_queue):
     iteration = context_obj["iteration"]
+    event_queue.put({
+        "type": "iteration",
+        "value": iteration,
+    })
 
     # provide arguments isolation between iterations
     scenario_kwargs = copy.deepcopy(scenario_kwargs)
@@ -84,9 +89,10 @@ def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs):
                 "atomic_actions": scenario_inst.atomic_actions()}
 
 
-def _worker_thread(queue, cls, method_name, context_obj, scenario_kwargs):
+def _worker_thread(queue, cls, method_name, context_obj, scenario_kwargs,
+                   event_queue):
     queue.put(_run_scenario_once(cls, method_name, context_obj,
-                                 scenario_kwargs))
+                                 scenario_kwargs, event_queue))
 
 
 def _log_worker_info(**info):
@@ -125,6 +131,7 @@ class ScenarioRunner(plugin.Plugin):
         self.task = task
         self.config = config
         self.result_queue = collections.deque()
+        self.event_queue = collections.deque()
         self.aborted = multiprocessing.Event()
         self.run_duration = 0
         self.batch_size = batch_size
@@ -194,25 +201,30 @@ class ScenarioRunner(plugin.Plugin):
 
         return process_pool
 
-    def _join_processes(self, process_pool, result_queue):
+    def _join_processes(self, process_pool, result_queue, event_queue):
         """Join the processes in the pool and send their results to the queue.
 
         :param process_pool: pool of processes to join
-        :result_queue: multiprocessing.Queue that receives the results
+        :param result_queue: multiprocessing.Queue that receives the results
+        :param event_queue: multiprocessing.Queue that receives the events
         """
         while process_pool:
             while process_pool and not process_pool[0].is_alive():
                 process_pool.popleft().join()
 
-            if result_queue.empty():
+            if result_queue.empty() and event_queue.empty():
                 # sleep a bit to avoid 100% usage of CPU by this method
-                time.sleep(0.001)
+                time.sleep(0.01)
+
+            while not event_queue.empty():
+                self._send_event(event_queue.get())
 
             while not result_queue.empty():
                 self._send_result(result_queue.get())
 
         self._flush_results()
         result_queue.close()
+        event_queue.close()
 
     def _flush_results(self):
         if self.result_batch:
@@ -310,6 +322,13 @@ class ScenarioRunner(plugin.Plugin):
                                   key=lambda r: result["timestamp"])
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
+
+    def _send_event(self, event):
+        """Store event to send it to consumer later.
+
+        :param event: Event dict to be sent.
+        """
+        self.event_queue.append(event)
 
     def _log_debug_info(self, **info):
         """Log runner parameters for debugging.

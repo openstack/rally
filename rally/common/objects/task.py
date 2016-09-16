@@ -228,7 +228,7 @@ TASK_RESULT_SCHEMA = {
             "type": "number",
         },
     },
-    "required": ["key", "sla", "result", "load_duration",
+    "required": ["key", "sla", "hooks", "result", "load_duration",
                  "full_duration"],
     "additionalProperties": False
 }
@@ -327,7 +327,7 @@ TASK_EXTENDED_RESULT_SCHEMA = {
             }
         }
     },
-    "required": ["key", "sla", "iterations", "info"],
+    "required": ["key", "sla", "hooks", "iterations", "info"],
     "additionalProperties": False
 }
 
@@ -527,6 +527,7 @@ class Task(object):
             else:
                 scenario["iterations"] = iter(iterations)
             scenario["sla"] = scenario["data"]["sla"]
+            scenario["hooks"] = scenario["data"]["hooks"]
             del scenario["data"]
             del scenario["task_uuid"]
             del scenario["id"]

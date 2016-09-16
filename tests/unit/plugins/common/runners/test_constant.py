@@ -69,6 +69,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         mock_event = mock.MagicMock(
             is_set=mock.MagicMock(return_value=False))
 
+        mock_event_queue = mock.MagicMock()
+
         times = 4
 
         fake_ram_int = iter(range(10))
@@ -78,8 +80,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         info = {"processes_to_start": 1, "processes_counter": 1}
 
         constant._worker_process(mock_queue, fake_ram_int, 1, 2, times,
-                                 context, "Dummy", "dummy", (), mock_event,
-                                 info)
+                                 context, "Dummy", "dummy", (),
+                                 mock_event_queue, mock_event, info)
 
         self.assertEqual(times + 1, mock_thread.call_count)
         self.assertEqual(times + 1, mock_thread_instance.start.call_count)
@@ -92,7 +94,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         for i in range(times):
             scenario_context = mock_runner._get_scenario_context(i, context)
             call = mock.call(
-                args=(mock_queue, "Dummy", "dummy", scenario_context, ()),
+                args=(mock_queue, "Dummy", "dummy", scenario_context, (),
+                      mock_event_queue),
                 target=mock_runner._worker_thread,
             )
             self.assertIn(call, mock_thread.mock_calls)
@@ -101,7 +104,10 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
     def test__worker_thread(self, mock__run_scenario_once):
         mock_queue = mock.MagicMock()
 
-        args = ("fake_cls", "fake_method_name", "fake_context_obj", {})
+        mock_event_queue = mock.MagicMock()
+
+        args = ("fake_cls", "fake_method_name", "fake_context_obj", {},
+                mock_event_queue)
 
         runner._worker_thread(mock_queue, *args)
 
@@ -233,7 +239,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
             self.assertIn(constant._worker_process, args)
             mock__join_processes.assert_called_once_with(
                 mock__create_process_pool.return_value,
-                mock_queue.return_value)
+                mock_queue.return_value, mock_queue.return_value)
 
     def test_abort(self):
         runner_obj = constant.ConstantScenarioRunner(self.task, self.config)

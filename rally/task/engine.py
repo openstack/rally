@@ -32,6 +32,7 @@ from rally import osclients
 from rally.plugins.openstack.context.keystone import existing_users
 from rally.plugins.openstack.context.keystone import users as users_ctx
 from rally.task import context
+from rally.task import hook
 from rally.task import runner
 from rally.task import scenario
 from rally.task import sla
@@ -41,7 +42,11 @@ LOG = logging.getLogger(__name__)
 
 
 class ResultConsumer(object):
-    """ResultConsumer class stores results from ScenarioRunner, checks SLA."""
+    """ResultConsumer class stores results from ScenarioRunner, checks SLA.
+
+    Also ResultConsumer listens for runner events and notifies HookExecutor
+    about started iterations.
+    """
 
     def __init__(self, key, task, runner, abort_on_sla_failure):
         """ResultConsumer constructor.
@@ -61,6 +66,7 @@ class ResultConsumer(object):
         self.load_finished_at = 0
 
         self.sla_checker = sla.SLAChecker(key["kw"])
+        self.hook_executor = hook.HookExecutor(key["kw"], self.task)
         self.abort_on_sla_failure = abort_on_sla_failure
         self.is_done = threading.Event()
         self.unexpected_failure = {}
@@ -69,10 +75,12 @@ class ResultConsumer(object):
             target=self._consume_results
         )
         self.aborting_checker = threading.Thread(target=self.wait_and_abort)
+        self.event_thread = threading.Thread(target=self._consume_events)
 
     def __enter__(self):
         self.thread.start()
         self.aborting_checker.start()
+        self.event_thread.start()
         self.start = time.time()
         return self
 
@@ -95,11 +103,21 @@ class ResultConsumer(object):
             else:
                 time.sleep(0.1)
 
+    def _consume_events(self):
+        while not self.is_done.isSet():
+            if self.runner.event_queue:
+                event = self.runner.event_queue.popleft()
+                self.hook_executor.on_event(
+                    event_type=event["type"], value=event["value"])
+            else:
+                time.sleep(0.01)
+
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.finish = time.time()
         self.is_done.set()
         self.aborting_checker.join()
         self.thread.join()
+        self.event_thread.join()
 
         if exc_type:
             self.sla_checker.set_unexpected_failure(exc_value)
@@ -124,7 +142,9 @@ class ResultConsumer(object):
             "raw": self.results,
             "load_duration": load_duration,
             "full_duration": self.finish - self.start,
-            "sla": self.sla_checker.results()})
+            "sla": self.sla_checker.results(),
+            "hooks": self.hook_executor.results(),
+        })
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):
@@ -231,6 +251,8 @@ class TaskEngine(object):
                     context.ContextManager.validate(
                         workload.context, non_hidden=True)
                     sla.SLA.validate(workload.sla)
+                    for hook_conf in workload.hooks:
+                        hook.Hook.validate(hook_conf)
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
 
@@ -363,6 +385,26 @@ class TaskConfig(object):
 
     """
 
+    HOOK_CONFIG = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "description": {"type": "string"},
+            "args": {},
+            "trigger": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "args": {},
+                },
+                "required": ["name", "args"],
+                "additionalProperties": False,
+            }
+        },
+        "required": ["name", "args", "trigger"],
+        "additionalProperties": False,
+    }
+
     CONFIG_SCHEMA_V1 = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
@@ -380,6 +422,10 @@ class TaskConfig(object):
                         },
                         "context": {"type": "object"},
                         "sla": {"type": "object"},
+                        "hooks": {
+                            "type": "array",
+                            "items": HOOK_CONFIG,
+                        }
                     },
                     "additionalProperties": False
                 }
@@ -433,6 +479,10 @@ class TaskConfig(object):
                                     },
 
                                     "sla": {"type": "object"},
+                                    "hooks": {
+                                        "type": "array",
+                                        "items": HOOK_CONFIG,
+                                    },
                                     "context": {"type": "object"}
                                 },
                                 "additionalProperties": False,
@@ -534,13 +584,14 @@ class Workload(object):
         self.name = config["name"]
         self.runner = config.get("runner", {})
         self.sla = config.get("sla", {})
+        self.hooks = config.get("hooks", [])
         self.context = config.get("context", {})
         self.args = config.get("args", {})
 
     def to_dict(self):
         workload = {"runner": self.runner}
 
-        for prop in "sla", "args", "context":
+        for prop in "sla", "args", "context", "hooks":
             value = getattr(self, prop)
             if value:
                 workload[prop] = value
