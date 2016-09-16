@@ -181,6 +181,14 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
         return self.__names[service_type]
 
 
+class _HookStatus(utils.ImmutableMixin, utils.EnumMixin):
+    """Hook result statuses."""
+    UNKNOWN = "n/a"
+    SUCCESS = "success"
+    FAILED = "failed"
+    VALIDATION_FAILED = "validation_failed"
+
+
 TaskStatus = _TaskStatus()
 DeployStatus = _DeployStatus()
 EndpointPermission = _EndpointPermission()
@@ -189,3 +197,4 @@ Service = _Service()
 EndpointType = _EndpointType()
 TempestTestsAPI = _TempestTestsAPI()
 TempestTestsSets = _TempestTestsSets()
+HookStatus = _HookStatus()

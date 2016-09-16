@@ -96,6 +96,52 @@ OUTPUT_SCHEMA = {
     "additionalProperties": False
 }
 
+HOOK_RESULT_SCHEMA = {
+    "type": "object",
+    "$schema": consts.JSON_SCHEMA,
+    "properties": {
+        "hook": {"type": "string"},
+        "started_at": {"type": "number"},
+        "finished_at": {"type": "number"},
+        "triggered_by": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "properties": {
+                        "iteration": {"type": "integer"},
+                    },
+                    "required": ["iteration"],
+                    "additionalProperties": False,
+                },
+                {
+                    "properties": {
+                        "time": {"type": "integer"},
+                    },
+                    "required": ["time"],
+                    "additionalProperties": False,
+                },
+            ]
+        },
+        "description": {"type": "string"},
+        "status": {"type": "string"},
+        "error": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {"type": "string"},
+        },
+        "output": OUTPUT_SCHEMA,
+    },
+    "required": [
+        "hook",
+        "started_at",
+        "finished_at",
+        "triggered_by",
+        "description",
+        "status",
+    ],
+    "additionalProperties": False,
+}
 
 TASK_RESULT_SCHEMA = {
     "type": "object",
@@ -132,6 +178,10 @@ TASK_RESULT_SCHEMA = {
                     }
                 }
             }
+        },
+        "hooks": {
+            "type": "array",
+            "items": HOOK_RESULT_SCHEMA,
         },
         "result": {
             "type": "array",
@@ -219,6 +269,10 @@ TASK_EXTENDED_RESULT_SCHEMA = {
                     }
                 }
             }
+        },
+        "hooks": {
+            "type": "array",
+            "items": HOOK_RESULT_SCHEMA,
         },
         "iterations": {
             "type": "array",

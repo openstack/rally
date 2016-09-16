@@ -1713,6 +1713,9 @@ class FakeTimer(rally_utils.Timer):
     def timestamp(self):
         return 0
 
+    def finish_timestamp(self):
+        return 3
+
 
 @context.configure(name="fake", order=1)
 class FakeContext(context.Context):
