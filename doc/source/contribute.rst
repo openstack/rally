@@ -142,7 +142,7 @@ To run a single unit test e.g. test_deployment
   $ tox -e <name> -- <test_name>
 
   #NOTE: <name> is one of py34, py27 or pep8
-  #      <test_name> is the unit test case name
+  #      <test_name> is the unit test case name, e.g tests.unit.test_osclients
 
 To debug issues on the unit test:
 

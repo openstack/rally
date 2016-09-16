@@ -25,28 +25,32 @@ To run unit tests locally::
   $ pip install tox
   $ tox
 
-To run py26, py27 or pep8 only::
+To run py27, py34, py35 or pep8 only::
 
   $ tox -e <name>
 
-  #NOTE: <name> is one of py26, py27 or pep8
+  # NOTE: <name> is one of py27, py34, py35 or pep8
 
-To run py26, py27 against mysql or psql
+To run py27/py34/py35 against mysql or psql
 
   $ export RALLY_UNITTEST_DB_URL="mysql://user:secret@localhost/rally"
   $ tox -epy27
+
+To run specific test of py27/py34/py35::
+
+  $ tox -e py27 -- tests.unit.test_osclients
 
 To get test coverage::
 
   $ tox -e cover
 
-  #NOTE: Results will be in /cover/index.html
+  # NOTE: Results will be in ./cover/index.html
 
 To generate docs::
 
   $ tox -e docs
 
-  #NOTE: Documentation will be in doc/source/_build/html/index.html
+  # NOTE: Documentation will be in doc/source/_build/html/index.html
 
 Functional tests
 ----------------
@@ -62,7 +66,7 @@ To run functional tests locally::
   $ rally deployment create --fromenv --name testing
   $ tox -e cli
 
-  #NOTE: openrc file with OpenStack admin credentials
+  # NOTE: openrc file with OpenStack admin credentials
 
 Output of every Rally execution will be collected under some reports root in
 directory structure like: reports_root/ClassName/MethodName_suffix.extension
