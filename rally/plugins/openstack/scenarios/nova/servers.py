@@ -925,3 +925,32 @@ class NovaServers(utils.NovaScenario,
         self._boot_server(None, flavor, auto_assign_nic=auto_assign_nic,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
+
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaServers.boot_server_associate_and"
+                         "_dissociate_floating_ip")
+class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
+    """"Benchmark scenarios for Nova FloatingIp API."""
+    def run(self, image, flavor, **kwargs):
+        """Boot a server associate and dissociate a floating IP from it.
+
+        The scenario first boot a server and create a floating IP. then
+        associate the floating IP to the server.Finally dissociate the floating
+        IP.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        address = network_wrapper.wrap(self.clients, self).create_floating_ip(
+            tenant_id=server.tenant_id)
+        self._associate_floating_ip(server, address["ip"])
+        self._dissociate_floating_ip(server, address["ip"])

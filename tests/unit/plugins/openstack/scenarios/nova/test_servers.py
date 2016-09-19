@@ -767,6 +767,29 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._associate_floating_ip.assert_called_once_with(
             server, net_wrap.create_floating_ip.return_value["ip"])
 
+    @mock.patch(NOVA_SERVERS_MODULE + ".network_wrapper.wrap")
+    def test_boot_server_associate_and_dissociate_floating_ip(self, mock_wrap):
+        scenario = servers.BootServerAssociateAndDissociateFloatingIP(
+            self.context)
+        server = mock.Mock()
+        scenario._boot_server = mock.Mock(return_value=server)
+        scenario._associate_floating_ip = mock.Mock()
+        scenario._dissociate_floating_ip = mock.Mock()
+
+        image = "img"
+        flavor = "flavor"
+        scenario.run(image, flavor, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      fakearg="fakearg")
+        net_wrap = mock_wrap.return_value
+        net_wrap.create_floating_ip.assert_called_once_with(
+            tenant_id=server.tenant_id)
+        scenario._associate_floating_ip.assert_called_once_with(
+            server, net_wrap.create_floating_ip.return_value["ip"])
+        scenario._dissociate_floating_ip.assert_called_once_with(
+            server, net_wrap.create_floating_ip.return_value["ip"])
+
     def test_boot_and_update_server(self):
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.Mock()
