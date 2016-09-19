@@ -46,7 +46,7 @@ EXPECTED_FAILURES = {
     "This test fails because 'novnc' console type is unavailable."
 }
 
-TEMPEST_PLUGIN = "https://github.com/MBonell/hello-world-tempest-plugin"
+TEMPEST_PLUGIN = "https://git.openstack.org/openstack/ceilometer"
 
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .
@@ -249,7 +249,7 @@ def main():
     render_vars["reinstall"] = call_rally(
         "verify reinstall --version %s" % tempest_commit_id)
 
-    # Install a simple Tempest plugin
+    # Install a Tempest plugin
     render_vars["installplugin"] = call_rally(
         "verify installplugin --source %s" % TEMPEST_PLUGIN)
 
