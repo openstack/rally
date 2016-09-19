@@ -45,7 +45,7 @@ class HookExecutor(object):
         self._timer_thread = threading.Thread(target=self._timer_method)
         self._timer_stop_event = threading.Event()
 
-        # map trigers to event types
+        # map triggers to event types
         self.triggers = collections.defaultdict(list)
         for hook in config.get("hooks", []):
             trigger_obj = trigger.Trigger.get(
@@ -95,9 +95,9 @@ class HookExecutor(object):
         triggers = self.triggers[event_type]
         for trigger_obj, hook_name, hook_args, hook_description in triggers:
             if trigger_obj.is_runnable(value=value):
-                hook = Hook.get(hook_name)(
-                    config=hook_args, triggered_by={event_type: value},
-                    description=hook_description)
+                hook = Hook.get(hook_name)(task=self.task, config=hook_args,
+                                           triggered_by={event_type: value},
+                                           description=hook_description)
                 self.hooks.append(hook)
                 hook.run_async()
                 LOG.info(_("Hook %s is trigged for Task %s by %s=%s")
@@ -121,7 +121,8 @@ class Hook(plugin.Plugin):
 
         trigger.Trigger.validate(config["trigger"])
 
-    def __init__(self, config, triggered_by, description):
+    def __init__(self, task, config, triggered_by, description):
+        self.task = task
         self.config = config
         self._triggered_by = triggered_by
         self._description = description
