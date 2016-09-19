@@ -841,6 +841,18 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hypervisors")
 
+    def test__get_hypervisor(self):
+        hypervisor = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._get_hypervisor(hypervisor)
+        self.assertEqual(
+            self.admin_clients("nova").hypervisors.get.return_value,
+            result)
+        self.admin_clients("nova").hypervisors.get.assert_called_once_with(
+            hypervisor)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_hypervisor")
+
     def test__list_images(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._list_images(detailed=False, fakearg="fakearg")

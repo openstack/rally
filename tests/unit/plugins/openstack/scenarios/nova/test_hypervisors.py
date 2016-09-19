@@ -29,3 +29,15 @@ class NovaHypervisorsTestCase(test.ScenarioTestCase):
         scenario._list_hypervisors = mock.Mock()
         scenario.list_hypervisors(detailed=False)
         scenario._list_hypervisors.assert_called_once_with(False)
+
+    def test_list_and_get_hypervisors(self):
+        scenario = hypervisors.ListAndGetHypervisors(self.context)
+        scenario._list_hypervisors = mock.MagicMock(detailed=False)
+        scenario._get_hypervisor = mock.MagicMock()
+        scenario.run(detailed=False)
+
+        scenario._list_hypervisors.assert_called_once_with(False)
+        for hypervisor in scenario._list_hypervisors.return_value:
+            scenario._get_hypervisor.assert_called_once_with(hypervisor)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "nova.get_hypervisor")
