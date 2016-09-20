@@ -24,9 +24,6 @@ CONF = cfg.CONF
 
 class WatcherScenarioTestCase(test.ScenarioTestCase):
 
-    def setUp(self):
-        super(WatcherScenarioTestCase, self).setUp()
-
     def test_create_audit_template(self):
         watcher_scenario = utils.WatcherScenario(self.context)
         watcher_scenario.generate_random_name = mock.MagicMock(

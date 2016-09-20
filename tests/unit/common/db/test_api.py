@@ -79,9 +79,6 @@ class SerializeTestCase(test.DBTestCase):
 
 
 class FixDeploymentTestCase(test.DBTestCase):
-    def setUp(self):
-        super(FixDeploymentTestCase, self).setUp()
-
     def test_fix_deployment(self):
         deployment = {
             "credentials": [("bong", {"admin": "foo", "users": "bar"})]}
