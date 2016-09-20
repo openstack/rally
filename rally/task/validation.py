@@ -574,9 +574,8 @@ def required_clients(config, clients, deployment, *components, **kwargs):
         except ImportError:
             return ValidationResult(
                 False,
-                _("Client for %s is not installed. To install it run "
-                  "`pip install -r"
-                  " optional-requirements.txt`") % client_component)
+                _("Client for {0} is not installed. To install it run "
+                  "`pip install python-{0}client`").format(client_component))
 
 
 @validator
