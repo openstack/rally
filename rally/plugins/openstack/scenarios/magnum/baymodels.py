@@ -18,13 +18,16 @@ from rally.plugins.openstack.scenarios.magnum import utils
 from rally.task import validation
 
 
-class MagnumBaymodels(utils.MagnumScenario):
-    """Benchmark scenarios for Magnum baymodel."""
+"""Scenarios for Magnum baymodels."""
 
-    @validation.required_services(consts.Service.MAGNUM)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["magnum"]})
-    def list_baymodels(self, **kwargs):
+
+@validation.required_services(consts.Service.MAGNUM)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["magnum"]},
+                    name="MagnumBaymodels.list_baymodels")
+class ListBaymodels(utils.MagnumScenario):
+
+    def run(self, **kwargs):
         """List all baymodels.
 
         Measure the "magnum baymodel-list" command performance.

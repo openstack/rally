@@ -27,9 +27,9 @@ class MagnumBaymodelsTestCase(test.TestCase):
         {"kwargs": {"fakearg": "f"}})
     @ddt.unpack
     def test_list_baymodels(self, kwargs):
-        scenario = baymodels.MagnumBaymodels()
+        scenario = baymodels.ListBaymodels()
         scenario._list_baymodels = mock.Mock()
 
-        scenario.list_baymodels(**kwargs)
+        scenario.run(**kwargs)
 
         scenario._list_baymodels.assert_called_once_with(**kwargs)
