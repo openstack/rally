@@ -909,6 +909,15 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.clients("nova").flavors.list(detailed, **kwargs)
 
+    @atomic.action_timer("nova.set_flavor_keys")
+    def _set_flavor_keys(self, flavor, extra_specs):
+        """set flavor keys
+
+        :param flavor: flavor to set keys
+        :param extra_specs: additional arguments for flavor set keys
+        """
+        return flavor.set_keys(extra_specs)
+
     @atomic.action_timer("nova.list_agents")
     def _list_agents(self, hypervisor=None):
         """List all nova-agent builds.

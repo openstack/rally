@@ -63,3 +63,16 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario._create_flavor.assert_called_once_with(100, 1, 1, **kwargs)
         scenario._get_flavor.assert_called_once_with(
             scenario._create_flavor.return_value.id)
+
+    def test_create_flavor_and_set_keys(self):
+        scenario = flavors.CreateFlavorAndSetKeys()
+        scenario._create_flavor = mock.MagicMock()
+        scenario._set_flavor_keys = mock.MagicMock()
+        specs_args = {"fakeargs": "foo"}
+        scenario.run(ram=100, vcpus=1, disk=1, extra_specs=specs_args,
+                     fakeargs="fakeargs")
+
+        scenario._create_flavor.assert_called_once_with(100, 1, 1,
+                                                        fakeargs="fakeargs")
+        scenario._set_flavor_keys.assert_called_once_with(
+            scenario._create_flavor.return_value, specs_args)

@@ -104,3 +104,24 @@ class CreateAndGetFlavor(utils.NovaScenario):
         """
         flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
         self._get_flavor(flavor.id)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_flavor_and_set_keys")
+class CreateFlavorAndSetKeys(utils.NovaScenario):
+    def run(self, ram, vcpus, disk, extra_specs, **kwargs):
+        """Create flavor and set keys to the flavor.
+
+        Measure the "nova flavor-key" command performance.
+        the scenario first create a flavor,then add the extra specs to it.
+
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param extra_specs: additional arguments for flavor set keys
+        :param kwargs: Optional additional arguments for flavor creation
+        """
+        flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
+        self._set_flavor_keys(flavor, extra_specs)
