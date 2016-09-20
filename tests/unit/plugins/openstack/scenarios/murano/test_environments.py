@@ -18,9 +18,8 @@ import mock
 from rally.plugins.openstack.scenarios.murano import environments
 from tests.unit import test
 
-CTX = "rally.task.context"
 MURANO_SCENARIO = ("rally.plugins.openstack.scenarios.murano."
-                   "environments.MuranoEnvironments")
+                   "environments")
 
 
 class MuranoEnvironmentsTestCase(test.ScenarioTestCase):
@@ -44,57 +43,88 @@ class MuranoEnvironmentsTestCase(test.ScenarioTestCase):
         })
         return self.context
 
-    @mock.patch(MURANO_SCENARIO + "._list_environments")
-    def test_list_environments(self, mock__list_environments):
-        scenario = environments.MuranoEnvironments(self.context)
-        scenario._list_environments()
-        mock__list_environments.assert_called_once_with()
+    def test_list_environments(self):
+        TEST_TARGET = "ListEnvironments"
+        list_env_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                              TEST_TARGET,
+                                              "_list_environments")
+        scenario = environments.ListEnvironments(self.context)
+        with mock.patch(list_env_module) as mock_list_env:
+            scenario.run()
+            mock_list_env.assert_called_once_with()
 
-    @mock.patch(MURANO_SCENARIO + "._create_session")
-    @mock.patch(MURANO_SCENARIO + "._delete_environment")
-    @mock.patch(MURANO_SCENARIO + "._create_environment")
-    @mock.patch(MURANO_SCENARIO + ".generate_random_name")
-    def test_create_and_delete_environment(
-            self, mock_generate_random_name, mock__create_environment,
-            mock__delete_environment, mock__create_session):
-        scenario = environments.MuranoEnvironments(self.context)
-        fake_environment = mock.Mock(id="fake_id")
-        mock__create_environment.return_value = fake_environment
-        mock_generate_random_name.return_value = "foo"
-        scenario.create_and_delete_environment()
-        mock__create_environment.assert_called_once_with()
-        mock__create_session.assert_called_once_with(fake_environment.id)
-        mock__delete_environment.assert_called_once_with(fake_environment)
+    def test_create_and_delete_environment(self):
+        TEST_TARGET = "CreateAndDeleteEnvironment"
+        generate_random_name_module = ("{}.{}.{}").format(
+            MURANO_SCENARIO, TEST_TARGET, "generate_random_name")
+        create_env_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                TEST_TARGET,
+                                                "_create_environment")
+        create_session_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                    TEST_TARGET,
+                                                    "_create_session")
+        delete_env_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                TEST_TARGET,
+                                                "_delete_environment")
+        scenario = environments.CreateAndDeleteEnvironment(self.context)
+        with mock.patch(generate_random_name_module) as mock_random_name:
+            with mock.patch(create_env_module) as mock_create_env:
+                with mock.patch(create_session_module) as mock_create_session:
+                    with mock.patch(delete_env_module) as mock_delete_env:
+                        fake_env = mock.Mock(id="fake_id")
+                        mock_create_env.return_value = fake_env
+                        mock_random_name.return_value = "foo"
+                        scenario.run()
+                        mock_create_env.assert_called_once_with()
+                        mock_create_session.assert_called_once_with(
+                            fake_env.id)
+                        mock_delete_env.assert_called_once_with(
+                            fake_env)
 
-    @mock.patch(MURANO_SCENARIO + "._create_environment")
-    @mock.patch(MURANO_SCENARIO + "._create_session")
-    @mock.patch(MURANO_SCENARIO + "._create_service")
-    @mock.patch(MURANO_SCENARIO + "._deploy_environment")
-    def test_create_and_deploy_environment(
-            self, mock__deploy_environment, mock__create_service,
-            mock__create_session, mock__create_environment):
+    def test_create_and_deploy_environment(self):
+        TEST_TARGET = "CreateAndDeployEnvironment"
+        create_env_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                TEST_TARGET,
+                                                "_create_environment")
+        create_session_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                    TEST_TARGET,
+                                                    "_create_session")
+        create_service_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                    TEST_TARGET,
+                                                    "_create_service")
+        deploy_env_module = ("{}.{}.{}").format(MURANO_SCENARIO,
+                                                TEST_TARGET,
+                                                "_deploy_environment")
+        scenario = environments.CreateAndDeployEnvironment(self.context)
+        with mock.patch(create_env_module) as mock_create_env:
+            with mock.patch(create_session_module) as mock_create_session:
+                with mock.patch(create_service_module) as mock_create_service:
+                    with mock.patch(deploy_env_module) as mock_deploy_env:
+                        fake_env = mock.MagicMock(id="fake_env_id")
+                        mock_create_env.return_value = fake_env
 
-        fake_environment = mock.MagicMock(id="fake_env_id")
-        mock__create_environment.return_value = fake_environment
+                        fake_session = mock.Mock(id="fake_session_id")
+                        mock_create_session.return_value = fake_session
 
-        fake_session = mock.Mock(id="fake_session_id")
-        mock__create_session.return_value = fake_session
+                        scenario.context = self._get_context()
+                        scenario.context["tenants"] = {
+                            "fake_tenant_id": {
+                                "packages": [mock.MagicMock()]
+                            }
+                        }
 
-        scenario = environments.MuranoEnvironments(self.context)
-        scenario.context = self._get_context()
-        scenario.context["tenants"] = {
-            "fake_tenant_id": {
-                "packages": [mock.MagicMock()]
-            }
-        }
+                        scenario.run(1)
 
-        scenario.create_and_deploy_environment(1)
-
-        mock__create_environment.assert_called_once_with()
-        mock__create_session.assert_called_once_with(fake_environment.id)
-        mock__create_service.assert_called_once_with(
-            fake_environment, fake_session, "fake", atomic_action=False)
-        mock__deploy_environment.assert_called_once_with(
-            fake_environment, fake_session)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "murano.create_services")
+                        mock_create_env.assert_called_once_with()
+                        mock_create_session.assert_called_once_with(
+                            fake_env.id)
+                        mock_create_service.assert_called_once_with(
+                            fake_env,
+                            fake_session,
+                            "fake",
+                            atomic_action=False)
+                        mock_deploy_env.assert_called_once_with(
+                            fake_env, fake_session)
+                        self._test_atomic_action_timer(
+                            scenario.atomic_actions(),
+                            "murano.create_services")

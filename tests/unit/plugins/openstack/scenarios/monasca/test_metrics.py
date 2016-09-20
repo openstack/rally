@@ -28,8 +28,8 @@ class MonascaMetricsTestCase(test.ScenarioTestCase):
     )
     @ddt.unpack
     def test_list_metrics(self, region=None):
-        scenario = metrics.MonascaMetrics()
+        scenario = metrics.ListMetrics(self.context)
         self.region = region
         scenario._list_metrics = mock.MagicMock()
-        scenario.list_metrics(region=self.region)
+        scenario.run(region=self.region)
         scenario._list_metrics.assert_called_once_with(region=self.region)

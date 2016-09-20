@@ -20,14 +20,16 @@ from rally.task import types
 from rally.task import validation
 
 
-class MistralWorkbooks(utils.MistralScenario):
-    """Benchmark scenarios for Mistral workbook."""
+"""Scenarios for Mistral workbook."""
 
-    @validation.required_clients("mistral")
-    @validation.required_openstack(users=True)
-    @validation.required_services(consts.Service.MISTRAL)
-    @scenario.configure()
-    def list_workbooks(self):
+
+@validation.required_clients("mistral")
+@validation.required_openstack(users=True)
+@validation.required_services(consts.Service.MISTRAL)
+@scenario.configure(name="MistralWorkbooks.list_workbooks")
+class ListWorkbooks(utils.MistralScenario):
+
+    def run(self):
         """Scenario test mistral workbook-list command.
 
         This simple scenario tests the Mistral workbook-list
@@ -35,14 +37,18 @@ class MistralWorkbooks(utils.MistralScenario):
         """
         self._list_workbooks()
 
-    @types.convert(definition={"type": "file"})
-    @validation.file_exists("definition")
-    @validation.required_parameters("definition")
-    @validation.required_clients("mistral")
-    @validation.required_openstack(users=True)
-    @validation.required_services(consts.Service.MISTRAL)
-    @scenario.configure(context={"cleanup": ["mistral"]})
-    def create_workbook(self, definition, do_delete=False):
+
+@types.convert(definition={"type": "file"})
+@validation.file_exists("definition")
+@validation.required_parameters("definition")
+@validation.required_clients("mistral")
+@validation.required_openstack(users=True)
+@validation.required_services(consts.Service.MISTRAL)
+@scenario.configure(context={"cleanup": ["mistral"]},
+                    name="MistralWorkbooks.create_workbook")
+class CreateWorkbook(utils.MistralScenario):
+
+    def run(self, definition, do_delete=False):
         """Scenario tests workbook creation and deletion.
 
         This scenario is a very useful tool to measure the

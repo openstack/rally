@@ -30,12 +30,12 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     def test_create_and_delete_share(self, params):
         fake_share = mock.MagicMock()
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.CreateAndDeleteShare(self.context)
         scenario._create_share = mock.MagicMock(return_value=fake_share)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_share = mock.MagicMock()
 
-        scenario.create_and_delete_share(min_sleep=3, max_sleep=4, **params)
+        scenario.run(min_sleep=3, max_sleep=4, **params)
 
         scenario._create_share.assert_called_once_with(**params)
         scenario.sleep_between.assert_called_once_with(3, 4)
@@ -55,10 +55,10 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     @ddt.unpack
     def test_list_shares(self, detailed=True, search_opts=None):
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.ListShares(self.context)
         scenario._list_shares = mock.MagicMock()
 
-        scenario.list_shares(detailed=detailed, search_opts=search_opts)
+        scenario.run(detailed=detailed, search_opts=search_opts)
 
         scenario._list_shares.assert_called_once_with(
             detailed=detailed, search_opts=search_opts)
@@ -76,7 +76,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     def test_create_share_network_and_delete(self, params):
         fake_sn = mock.MagicMock()
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.CreateShareNetworkAndDelete(self.context)
         scenario._create_share_network = mock.MagicMock(return_value=fake_sn)
         scenario._delete_share_network = mock.MagicMock()
         expected_params = {
@@ -87,7 +87,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         }
         expected_params.update(params)
 
-        scenario.create_share_network_and_delete(**params)
+        scenario.run(**params)
 
         scenario._create_share_network.assert_called_once_with(
             **expected_params)
@@ -105,7 +105,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
          "nova_net_id": "foo_nova_net_id"},
     )
     def test_create_share_network_and_list(self, params):
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.CreateShareNetworkAndList(self.context)
         scenario._create_share_network = mock.MagicMock()
         scenario._list_share_networks = mock.MagicMock()
         expected_create_params = {
@@ -120,7 +120,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         }
         expected_create_params.update(params)
 
-        scenario.create_share_network_and_list(**params)
+        scenario.run(**params)
 
         scenario._create_share_network.assert_called_once_with(
             **expected_create_params)
@@ -134,11 +134,11 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         {"search_opts": {"foo": "bar"}},
     )
     def test_list_share_servers(self, search_opts):
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.ListShareServers(self.context)
         scenario.context = {"admin": {"credential": "fake_credential"}}
         scenario._list_share_servers = mock.MagicMock()
 
-        scenario.list_share_servers(search_opts=search_opts)
+        scenario.run(search_opts=search_opts)
 
         scenario._list_share_servers.assert_called_once_with(
             search_opts=search_opts)
@@ -155,7 +155,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     def test_create_security_service_and_delete(self, params):
         fake_ss = mock.MagicMock()
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.CreateSecurityServiceAndDelete(self.context)
         scenario._create_security_service = mock.MagicMock(
             return_value=fake_ss)
         scenario._delete_security_service = mock.MagicMock()
@@ -169,7 +169,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
             "description": params.get("description"),
         }
 
-        scenario.create_security_service_and_delete(**params)
+        scenario.run(**params)
 
         scenario._create_security_service.assert_called_once_with(
             **expected_params)
@@ -178,13 +178,12 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     @ddt.data("ldap", "kerberos", "active_directory")
     def test_attach_security_service_to_share_network(self,
                                                       security_service_type):
-        scenario = shares.ManilaShares(self.context)
+        scenario = shares.AttachSecurityServiceToShareNetwork(self.context)
         scenario._create_share_network = mock.MagicMock()
         scenario._create_security_service = mock.MagicMock()
         scenario._add_security_service_to_share_network = mock.MagicMock()
 
-        scenario.attach_security_service_to_share_network(
-            security_service_type=security_service_type)
+        scenario.run(security_service_type=security_service_type)
 
         scenario._create_share_network.assert_called_once_with()
         scenario._create_security_service.assert_called_once_with(

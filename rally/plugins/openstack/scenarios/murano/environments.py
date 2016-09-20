@@ -20,33 +20,45 @@ from rally.task import atomic
 from rally.task import validation
 
 
-class MuranoEnvironments(utils.MuranoScenario):
-    """Benchmark scenarios for Murano environments."""
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @scenario.configure(context={"cleanup": ["murano.environments"]})
-    def list_environments(self):
+"""Scenarios for Murano environments."""
+
+
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@scenario.configure(context={"cleanup": ["murano.environments"]},
+                    name="MuranoEnvironments.list_environments")
+class ListEnvironments(utils.MuranoScenario):
+
+    def run(self):
         """List the murano environments.
 
         Run murano environment-list for listing all environments.
         """
         self._list_environments()
 
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @scenario.configure(context={"cleanup": ["murano.environments"]})
-    def create_and_delete_environment(self):
+
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@scenario.configure(context={"cleanup": ["murano.environments"]},
+                    name="MuranoEnvironments.create_and_delete_environment")
+class CreateAndDeleteEnvironment(utils.MuranoScenario):
+
+    def run(self):
         """Create environment, session and delete environment."""
         environment = self._create_environment()
 
         self._create_session(environment.id)
         self._delete_environment(environment)
 
-    @validation.required_clients("murano")
-    @validation.required_services(consts.Service.MURANO)
-    @validation.required_contexts("murano_packages")
-    @scenario.configure(context={"cleanup": ["murano"], "roles": ["admin"]})
-    def create_and_deploy_environment(self, packages_per_env=1):
+
+@validation.required_clients("murano")
+@validation.required_services(consts.Service.MURANO)
+@validation.required_contexts("murano_packages")
+@scenario.configure(context={"cleanup": ["murano"], "roles": ["admin"]},
+                    name="MuranoEnvironments.create_and_deploy_environment")
+class CreateAndDeployEnvironment(utils.MuranoScenario):
+
+    def run(self, packages_per_env=1):
         """Create environment, session and deploy environment.
 
         Create environment, create session, add app to environment

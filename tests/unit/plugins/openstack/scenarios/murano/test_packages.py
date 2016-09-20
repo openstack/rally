@@ -26,13 +26,6 @@ class MuranoPackagesTestCase(test.TestCase):
 
     def setUp(self):
         super(MuranoPackagesTestCase, self).setUp()
-        self.scenario = packages.MuranoPackages()
-        self.scenario._import_package = mock.Mock()
-        self.scenario._zip_package = mock.Mock()
-        self.scenario._list_packages = mock.Mock()
-        self.scenario._delete_package = mock.Mock()
-        self.scenario._update_package = mock.Mock()
-        self.scenario._filter_applications = mock.Mock()
         self.mock_remove = mock.patch("os.remove")
         self.mock_remove.start()
 
@@ -40,40 +33,54 @@ class MuranoPackagesTestCase(test.TestCase):
         super(MuranoPackagesTestCase, self).tearDown()
         self.mock_remove.stop()
 
+    def mock_modules(self, scenario):
+        scenario._import_package = mock.Mock()
+        scenario._zip_package = mock.Mock()
+        scenario._list_packages = mock.Mock()
+        scenario._delete_package = mock.Mock()
+        scenario._update_package = mock.Mock()
+        scenario._filter_applications = mock.Mock()
+
     def test_make_zip_import_and_list_packages(self):
-        self.scenario.import_and_list_packages("foo_package.zip")
-        self.scenario._import_package.assert_called_once_with(
-            self.scenario._zip_package.return_value)
-        self.scenario._zip_package.assert_called_once_with("foo_package.zip")
-        self.scenario._list_packages.assert_called_once_with(
+        scenario = packages.ImportAndListPackages()
+        self.mock_modules(scenario)
+        scenario.run("foo_package.zip")
+        scenario._import_package.assert_called_once_with(
+            scenario._zip_package.return_value)
+        scenario._zip_package.assert_called_once_with("foo_package.zip")
+        scenario._list_packages.assert_called_once_with(
             include_disabled=False)
 
     def test_import_and_delete_package(self):
+        scenario = packages.ImportAndDeletePackage()
+        self.mock_modules(scenario)
         fake_package = mock.Mock()
-        self.scenario._import_package.return_value = fake_package
-        self.scenario.import_and_delete_package("foo_package.zip")
-        self.scenario._import_package.assert_called_once_with(
-            self.scenario._zip_package.return_value)
-        self.scenario._delete_package.assert_called_once_with(fake_package)
+        scenario._import_package.return_value = fake_package
+        scenario.run("foo_package.zip")
+        scenario._import_package.assert_called_once_with(
+            scenario._zip_package.return_value)
+        scenario._delete_package.assert_called_once_with(fake_package)
 
     def test_package_lifecycle(self):
+        scenario = packages.PackageLifecycle()
+        self.mock_modules(scenario)
         fake_package = mock.Mock()
-        self.scenario._import_package.return_value = fake_package
-        self.scenario.package_lifecycle(
-            "foo_package.zip", {"category": "Web"}, "add")
-        self.scenario._import_package.assert_called_once_with(
-            self.scenario._zip_package.return_value)
-        self.scenario._update_package.assert_called_once_with(
+        scenario._import_package.return_value = fake_package
+        scenario.run("foo_package.zip", {"category": "Web"}, "add")
+        scenario._import_package.assert_called_once_with(
+            scenario._zip_package.return_value)
+        scenario._update_package.assert_called_once_with(
             fake_package, {"category": "Web"}, "add")
-        self.scenario._delete_package.assert_called_once_with(fake_package)
+        scenario._delete_package.assert_called_once_with(fake_package)
 
     def test_import_and_filter_applications(self):
+        scenario = packages.ImportAndFilterApplications()
+        self.mock_modules(scenario)
         fake_package = mock.Mock()
-        self.scenario._import_package.return_value = fake_package
-        self.scenario.import_and_filter_applications(
-            "foo_package.zip", {"category": "Web"})
-        self.scenario._import_package.assert_called_once_with(
-            self.scenario._zip_package.return_value)
-        self.scenario._filter_applications.assert_called_once_with(
+        scenario._import_package.return_value = fake_package
+        scenario.run("foo_package.zip", {"category": "Web"})
+        scenario._import_package.assert_called_once_with(
+            scenario._zip_package.return_value)
+        scenario._filter_applications.assert_called_once_with(
             {"category": "Web"}
         )
