@@ -134,6 +134,21 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.clients("nova").servers.get_console_output(server,
                                                                length=length)
 
+    @atomic.action_timer("nova.get_console_url_server")
+    def _get_console_url_server(self, server, console_type):
+        """Retrieve a console url of a server.
+
+        :param server: server to get console url for
+        :param console_type: type can be novnc/xvpvnc for protocol vnc;
+                             spice-html5 for protocol spice; rdp-html5 for
+                             protocol rdp; serial for protocol serial.
+                             webmks for protocol mks (since version 2.8).
+
+        :returns: An instance of novaclient.base.DictWithMeta
+        """
+        return self.clients("nova").servers.get_console_url(server,
+                                                            console_type)
+
     @atomic.action_timer("nova.reboot_server")
     def _reboot_server(self, server):
         """Reboot a server with hard reboot.

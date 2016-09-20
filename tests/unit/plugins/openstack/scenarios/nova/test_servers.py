@@ -829,6 +829,23 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._get_server_console_output.assert_called_once_with(server,
                                                                     length)
 
+    def test_boot_and_get_console_url(self):
+        server = fakes.FakeServer()
+        image = fakes.FakeImage()
+        flavor = fakes.FakeFlavor()
+        kwargs = {"fakearg": "fakearg"}
+
+        scenario = servers.BootAndGetConsoleUrl(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=server)
+        scenario._get_console_url_server = mock.MagicMock()
+
+        scenario.run(image, flavor, console_type="novnc", **kwargs)
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      **kwargs)
+        scenario._get_console_url_server.assert_called_once_with(
+            server, "novnc")
+
     @mock.patch(NOVA_SERVERS_MODULE + ".network_wrapper.wrap")
     def test_boot_and_associate_floating_ip(self, mock_wrap):
         scenario = servers.BootAndAssociateFloatingIp(self.context)

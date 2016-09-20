@@ -495,6 +495,15 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.get_console_output_server")
 
+    def test__get_console_url(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._get_console_url_server(self.server, "foo")
+        self.clients(
+            "nova").servers.get_console_url.assert_called_once_with(
+            self.server, "foo")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_console_url_server")
+
     def test__associate_floating_ip(self):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._associate_floating_ip(self.server, self.floating_ip)
