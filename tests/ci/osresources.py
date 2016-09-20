@@ -92,6 +92,14 @@ class Keystone(ResourceManager):
         return self.client.roles.list()
 
 
+class Magnum(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.MAGNUM
+
+    def list_baymodels(self):
+        return self.client.baymodels.list()
+
+
 class Nova(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.NOVA
