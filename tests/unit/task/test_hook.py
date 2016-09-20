@@ -232,7 +232,8 @@ class HookTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result(self, mock_timer):
-        dummy_hook = DummyHook({"status": consts.HookStatus.SUCCESS},
+        task = mock.MagicMock()
+        dummy_hook = DummyHook(task, {"status": consts.HookStatus.SUCCESS},
                                {"iteration": 1}, "dummy_action")
         dummy_hook.run_sync()
         dummy_hook.validate_result_schema()
@@ -246,7 +247,8 @@ class HookTestCase(test.TestCase):
              "status": consts.HookStatus.SUCCESS}, dummy_hook.result())
 
     def test_result_not_started(self):
-        dummy_hook = DummyHook({"status": consts.HookStatus.SUCCESS},
+        task = mock.MagicMock()
+        dummy_hook = DummyHook(task, {"status": consts.HookStatus.SUCCESS},
                                {"iteration": 1}, "dummy_action")
 
         self.assertEqual(
