@@ -20,32 +20,28 @@ from tests.unit import test
 
 class CeilometerAlarmsTestCase(test.ScenarioTestCase):
     def test_create_alarm(self):
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.CreateAlarm(self.context)
 
         scenario._create_alarm = mock.MagicMock()
-        scenario.create_alarm("fake_meter_name",
-                              "fake_threshold",
-                              fakearg="f")
+        scenario.run("fake_meter_name", "fake_threshold", fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
                                                        {"fakearg": "f"})
 
     def test_list_alarm(self):
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.ListAlarms(self.context)
 
         scenario._list_alarms = mock.MagicMock()
-        scenario.list_alarms()
+        scenario.run()
         scenario._list_alarms.assert_called_once_with()
 
     def test_create_and_list_alarm(self):
         fake_alarm = mock.MagicMock()
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.CreateAndListAlarm(self.context)
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._list_alarms = mock.MagicMock()
-        scenario.create_and_list_alarm("fake_meter_name",
-                                       "fake_threshold",
-                                       fakearg="f")
+        scenario.run("fake_meter_name", "fake_threshold", fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
                                                        {"fakearg": "f"})
@@ -54,13 +50,11 @@ class CeilometerAlarmsTestCase(test.ScenarioTestCase):
     def test_create_and_update_alarm(self):
         fake_alram_dict_diff = {"description": "Changed Test Description"}
         fake_alarm = mock.MagicMock()
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.CreateAndUpdateAlarm(self.context)
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._update_alarm = mock.MagicMock()
-        scenario.create_and_update_alarm("fake_meter_name",
-                                         "fake_threshold",
-                                         fakearg="f")
+        scenario.run("fake_meter_name", "fake_threshold", fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
                                                        {"fakearg": "f"})
@@ -69,13 +63,11 @@ class CeilometerAlarmsTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_alarm(self):
         fake_alarm = mock.MagicMock()
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.CreateAndDeleteAlarm(self.context)
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._delete_alarm = mock.MagicMock()
-        scenario.create_and_delete_alarm("fake_meter_name",
-                                         "fake_threshold",
-                                         fakearg="f")
+        scenario.run("fake_meter_name", "fake_threshold", fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
                                                        {"fakearg": "f"})
@@ -83,13 +75,14 @@ class CeilometerAlarmsTestCase(test.ScenarioTestCase):
 
     def test_create_and_get_alarm_history(self):
         alarm = mock.Mock(alarm_id="foo_id")
-        scenario = alarms.CeilometerAlarms(self.context)
+        scenario = alarms.CreateAlarmAndGetHistory(
+            self.context)
+
         scenario._create_alarm = mock.MagicMock(return_value=alarm)
         scenario._get_alarm_state = mock.MagicMock()
         scenario._get_alarm_history = mock.MagicMock()
         scenario._set_alarm_state = mock.MagicMock()
-        scenario.create_alarm_and_get_history(
-            "meter_name", "threshold", "state", 60, fakearg="f")
+        scenario.run("meter_name", "threshold", "state", 60, fakearg="f")
         scenario._create_alarm.assert_called_once_with(
             "meter_name", "threshold", {"fakearg": "f"})
         scenario._get_alarm_state.assert_called_once_with("foo_id")
