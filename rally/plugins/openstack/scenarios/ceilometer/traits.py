@@ -19,19 +19,23 @@ from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.task import validation
 
 
-class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
-    """Benchmark scenarios for Ceilometer Events API."""
+"""Scenarios for Ceilometer Events API."""
 
-    # NOTE(idegtiarov): to work with traits we need to create event firstly,
-    # there are no other way except emit suitable notification from one of
-    # services, for example create new user in keystone.
 
-    @validation.required_services(consts.Service.CEILOMETER,
-                                  consts.Service.KEYSTONE)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["keystone"],
-                                 "cleanup": ["ceilometer"]})
-    def create_user_and_list_traits(self):
+# NOTE(idegtiarov): to work with traits we need to create event firstly,
+# there are no other way except emit suitable notification from one of
+# services, for example create new user in keystone.
+
+@validation.required_services(consts.Service.CEILOMETER,
+                              consts.Service.KEYSTONE)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["keystone"],
+                             "cleanup": ["ceilometer"]},
+                    name="CeilometerTraits.create_user_and_list_traits")
+class CreateUserAndListTraits(cutils.CeilometerScenario,
+                              kutils.KeystoneScenario):
+
+    def run(self):
         """Create user and fetch all event traits.
 
         This scenario creates user to store new event and
@@ -44,12 +48,18 @@ class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
         self._list_event_traits(event_type=event.event_type,
                                 trait_name=trait_name)
 
-    @validation.required_services(consts.Service.CEILOMETER,
-                                  consts.Service.KEYSTONE)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["keystone"],
-                                 "cleanup": ["ceilometer"]})
-    def create_user_and_list_trait_descriptions(self):
+
+@validation.required_services(consts.Service.CEILOMETER,
+                              consts.Service.KEYSTONE)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["keystone"],
+                             "cleanup": ["ceilometer"]},
+                    name="CeilometerTraits.create_user_and"
+                         "_list_trait_descriptions")
+class CreateUserAndListTraitDescriptions(
+        cutils.CeilometerScenario, kutils.KeystoneScenario):
+
+    def run(self):
         """Create user and fetch all trait descriptions.
 
         This scenario creates user to store new event and

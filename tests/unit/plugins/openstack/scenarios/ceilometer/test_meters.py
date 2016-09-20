@@ -18,37 +18,47 @@ from rally.plugins.openstack.scenarios.ceilometer import meters
 from tests.unit import test
 
 
+BASE = "rally.plugins.openstack.scenarios.ceilometer"
+
+
 class CeilometerMetersTestCase(test.ScenarioTestCase):
-    def test_all_meter_list_queries(self):
-        scenario = meters.CeilometerMeters(self.context)
-        scenario.list_matched_meters = mock.MagicMock()
+    @mock.patch("%s.meters.ListMatchedMeters.run" % BASE)
+    def test_all_meter_list_queries(
+            self, mock_list_matched_meters_run):
+        scenario = meters.ListMeters(self.context)
         metadata_query = {"a": "test"}
         limit = 100
 
-        scenario.list_meters(metadata_query, limit)
-        scenario.list_matched_meters.assert_any_call(limit=100)
-        scenario.list_matched_meters.assert_any_call(
+        scenario.run(metadata_query, limit)
+
+        mock_list_matched_meters_run.assert_any_call(limit=100)
+        mock_list_matched_meters_run.assert_any_call(
             metadata_query=metadata_query)
-        scenario.list_matched_meters.assert_any_call(filter_by_user_id=True)
-        scenario.list_matched_meters.assert_any_call(filter_by_project_id=True)
-        scenario.list_matched_meters.assert_any_call(
+        mock_list_matched_meters_run.assert_any_call(filter_by_user_id=True)
+        mock_list_matched_meters_run.assert_any_call(filter_by_project_id=True)
+        mock_list_matched_meters_run.assert_any_call(
             filter_by_resource_id=True)
 
-    def test_meter_list_queries_without_limit_and_metadata(self):
-        scenario = meters.CeilometerMeters(self.context)
-        scenario.list_matched_meters = mock.MagicMock()
-        scenario.list_meters()
+    @mock.patch("%s.meters.ListMatchedMeters.run" % BASE)
+    def test_meter_list_queries_without_limit_and_metadata(
+            self, mock_list_matched_meters_run):
+
+        scenario = meters.ListMeters(self.context)
+        scenario.run()
         expected_call_args_list = [
             mock.call(filter_by_project_id=True),
             mock.call(filter_by_user_id=True),
             mock.call(filter_by_resource_id=True)
         ]
-        self.assertSequenceEqual(expected_call_args_list,
-                                 scenario.list_matched_meters.call_args_list)
+        self.assertSequenceEqual(
+            expected_call_args_list,
+            mock_list_matched_meters_run.call_args_list)
 
-    def test_list_matched_meters(self):
-        scenario = meters.CeilometerMeters(self.context)
-        scenario._list_meters = mock.MagicMock()
+    @mock.patch("%s.meters.ListMatchedMeters._list_meters" % BASE)
+    def test_list_matched_meters(
+            self, mock_list_matched_meters__list_meters):
+        mock_func = mock_list_matched_meters__list_meters
+        scenario = meters.ListMatchedMeters(self.context)
         context = {"user": {"tenant_id": "fake", "id": "fake_id"},
                    "tenant": {"id": "fake_id",
                               "resources": ["fake_resource"]}}
@@ -56,8 +66,8 @@ class CeilometerMetersTestCase(test.ScenarioTestCase):
 
         metadata_query = {"a": "test"}
         limit = 100
-        scenario.list_matched_meters(True, True, True, metadata_query, limit)
-        scenario._list_meters.assert_called_once_with(
+        scenario.run(True, True, True, metadata_query, limit)
+        mock_func.assert_called_once_with(
             [{"field": "user_id", "value": "fake_id", "op": "eq"},
              {"field": "project_id", "value": "fake_id", "op": "eq"},
              {"field": "resource_id", "value": "fake_resource", "op": "eq"},

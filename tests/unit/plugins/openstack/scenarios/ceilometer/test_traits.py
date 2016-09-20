@@ -21,7 +21,7 @@ from tests.unit import test
 class CeilometerTraitsTestCase(test.ScenarioTestCase):
 
     def test_list_traits(self):
-        scenario = traits.CeilometerTraits(self.context)
+        scenario = traits.CreateUserAndListTraits(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
@@ -30,14 +30,15 @@ class CeilometerTraitsTestCase(test.ScenarioTestCase):
             event_type="fake_event_type",
             traits=[{"name": "fake_trait_name"}])
         ]
-        scenario.create_user_and_list_traits()
+        scenario.run()
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._list_event_traits.assert_called_once_with(
             event_type="fake_event_type", trait_name="fake_trait_name")
 
     def test_list_trait_descriptions(self):
-        scenario = traits.CeilometerTraits(self.context)
+        scenario = traits.CreateUserAndListTraitDescriptions(
+            self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
@@ -45,7 +46,7 @@ class CeilometerTraitsTestCase(test.ScenarioTestCase):
         scenario._list_events.return_value = [mock.Mock(
             event_type="fake_event_type")
         ]
-        scenario.create_user_and_list_trait_descriptions()
+        scenario.run()
         scenario._user_create.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._list_event_trait_descriptions.assert_called_once_with(

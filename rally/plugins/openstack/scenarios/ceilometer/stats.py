@@ -19,15 +19,17 @@ from rally.plugins.openstack.scenarios.ceilometer import utils
 from rally.task import validation
 
 
-class CeilometerStats(utils.CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Stats API."""
+"""Scenarios for Ceilometer Stats API."""
+
+
+@validation.required_services(consts.Service.CEILOMETER)
+@validation.required_openstack(users=True)
+@scenario.configure(name="CeilometerStats.create_meter_and_get_stats")
+class CreateMeterAndGetStats(utils.CeilometerScenario):
 
     @logging.log_deprecated("Use 'get_stats' method, now samples are created"
                             "in context", "0.1.2")
-    @validation.required_services(consts.Service.CEILOMETER)
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def create_meter_and_get_stats(self, **kwargs):
+    def run(self, **kwargs):
         """Create a meter and fetch its statistics.
 
         Meter is first created and then statistics is fetched for the same
@@ -38,14 +40,16 @@ class CeilometerStats(utils.CeilometerScenario):
         meter = self._create_meter(**kwargs)
         self._get_stats(meter.counter_name)
 
-    @validation.required_services(consts.Service.CEILOMETER)
-    @validation.required_contexts("ceilometer")
-    @validation.required_openstack(users=True)
-    @scenario.configure()
-    def get_stats(self, meter_name, filter_by_user_id=False,
-                  filter_by_project_id=False, filter_by_resource_id=False,
-                  metadata_query=None, period=None, groupby=None,
-                  aggregates=None):
+
+@validation.required_services(consts.Service.CEILOMETER)
+@validation.required_contexts("ceilometer")
+@validation.required_openstack(users=True)
+@scenario.configure(name="CeilometerStats.get_stats")
+class GetStats(utils.CeilometerScenario):
+
+    def run(self, meter_name, filter_by_user_id=False,
+            filter_by_project_id=False, filter_by_resource_id=False,
+            metadata_query=None, period=None, groupby=None, aggregates=None):
         """Fetch statistics for certain meter.
 
         Statistics is fetched for the using
