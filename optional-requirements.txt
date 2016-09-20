@@ -7,6 +7,3 @@
 #  - package doesn't have releases
 # If these rules do not relate to your package, feel free to propose it as main
 # requirement to Rally (requirements.txt file).
-
-# [do-not-touch] our plugins support only one version of fuelclient
-python-fuelclient==6.1.0                               # Apache Software License

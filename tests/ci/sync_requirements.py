@@ -40,8 +40,7 @@ GLOBAL_REQUIREMENTS_LOCATIONS = (
 GLOBAL_REQUIREMENTS_FILENAME = "global-requirements.txt"
 RALLY_REQUIREMENTS_FILES = (
     "requirements.txt",
-    "test-requirements.txt",
-    "optional-requirements.txt"
+    "test-requirements.txt"
 )
 DO_NOT_TOUCH_TAG = "[do-not-touch]"
 
