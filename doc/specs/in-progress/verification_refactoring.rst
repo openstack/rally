@@ -69,7 +69,7 @@ specific application.
 
   In case of several deployments and one type of verifier(one repo), Rally
   creates several directories in ``~/.rally/tempest`` (``for-tempest-<uuid>``
-  where <uuid> is an UUID of deployment). Each of these directories will
+  where <uuid> is a UUID of deployment). Each of these directories will
   include same files. The difference only in config files which can be stored
   wherever we want.
   Also, we have one more directory with the same data - cache directory
