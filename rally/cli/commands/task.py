@@ -350,7 +350,7 @@ class TaskCommands(object):
             print()
 
             iterations = []
-            iterations_headers = ["iteration", "full duration"]
+            iterations_headers = ["iteration", "duration"]
             iterations_actions = []
             output = []
             task_errors = []
@@ -363,8 +363,7 @@ class TaskCommands(object):
             for idx, itr in enumerate(result["iterations"], 1):
 
                 if iterations_data:
-                    row = {"iteration": idx,
-                           "full duration": itr["duration"]}
+                    row = {"iteration": idx, "duration": itr["duration"]}
                     for name, action in iterations_actions:
                         row[action] = itr["atomic_actions"].get(name, 0)
                     iterations.append(row)
