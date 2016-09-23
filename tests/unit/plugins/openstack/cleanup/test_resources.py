@@ -65,25 +65,27 @@ class QuotaMixinTestCase(test.TestCase):
         self.assertEqual([quota.tenant_uuid], quota.list())
 
 
-class MagnumBaymodelTestCase(test.TestCase):
+class MagnumMixinTestCase(test.TestCase):
 
     def test_id(self):
-        baymodel = resources.MagnumBaymodel()
-        baymodel.raw_resource = mock.MagicMock()
-        self.assertEqual(baymodel.raw_resource.uuid, baymodel.id())
+        magnum = resources.MagnumMixin()
+        magnum._service = "magnum"
+        magnum.raw_resource = mock.MagicMock()
+        self.assertEqual(magnum.raw_resource.uuid, magnum.id())
 
     def test_list(self):
-        baymodels = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(),
-                     mock.MagicMock()]
-        baymodel = resources.MagnumBaymodel()
-        baymodel._manager = mock.MagicMock()
-        baymodel._manager.return_value.list.side_effect = (
-            baymodels[:2], baymodels[2:4], [])
-        self.assertEqual(baymodels, baymodel.list())
+        magnum = resources.MagnumMixin()
+        magnum._service = "magnum"
+        some_resources = [mock.MagicMock(), mock.MagicMock(),
+                          mock.MagicMock(), mock.MagicMock()]
+        magnum._manager = mock.MagicMock()
+        magnum._manager.return_value.list.side_effect = (
+            some_resources[:2], some_resources[2:4], [])
+        self.assertEqual(some_resources, magnum.list())
         self.assertEqual(
-            [mock.call(marker=None), mock.call(marker=baymodels[1].uuid),
-             mock.call(marker=baymodels[3].uuid)],
-            baymodel._manager.return_value.list.call_args_list)
+            [mock.call(marker=None), mock.call(marker=some_resources[1].uuid),
+             mock.call(marker=some_resources[3].uuid)],
+            magnum._manager.return_value.list.call_args_list)
 
 
 class NovaServerTestCase(test.TestCase):

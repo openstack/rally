@@ -97,7 +97,26 @@ class Magnum(ResourceManager):
     REQUIRED_SERVICE = consts.Service.MAGNUM
 
     def list_baymodels(self):
-        return self.client.baymodels.list()
+        result = []
+        marker = None
+        while True:
+            baymodels = self.client.baymodels.list(marker=marker)
+            if not baymodels:
+                break
+            result.extend(baymodels)
+            marker = baymodels[-1].uuid
+        return result
+
+    def list_bays(self):
+        result = []
+        marker = None
+        while True:
+            bays = self.client.bays.list(marker=marker)
+            if not bays:
+                break
+            result.extend(bays)
+            marker = bays[-1].uuid
+        return result
 
 
 class Nova(ResourceManager):

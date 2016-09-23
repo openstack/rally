@@ -68,8 +68,11 @@ class QuotaMixin(SynchronizedDeletion):
 
 # MAGNUM
 
-@base.resource("magnum", "baymodels", order=80, tenant_resource=True)
-class MagnumBaymodel(base.ResourceManager):
+_magnum_order = get_order(80)
+
+
+@base.resource(service=None, resource=None)
+class MagnumMixin(base.ResourceManager):
 
     def id(self):
         """Returns id of resource."""
@@ -79,12 +82,24 @@ class MagnumBaymodel(base.ResourceManager):
         result = []
         marker = None
         while True:
-            baymodels = self._manager().list(marker=marker)
-            if not baymodels:
+            resources = self._manager().list(marker=marker)
+            if not resources:
                 break
-            result.extend(baymodels)
-            marker = baymodels[-1].uuid
+            result.extend(resources)
+            marker = resources[-1].uuid
         return result
+
+
+@base.resource("magnum", "bays", order=next(_magnum_order),
+               tenant_resource=True)
+class MagnumBay(MagnumMixin):
+    """Resource class for Magnum bay."""
+
+
+@base.resource("magnum", "baymodels", order=next(_magnum_order),
+               tenant_resource=True)
+class MagnumBaymodel(MagnumMixin):
+    """Resource class for Magnum baymodel."""
 
 
 # HEAT
