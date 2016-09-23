@@ -22,6 +22,7 @@
 # configuration is set in the configuration file and other logging
 # configuration options are ignored (for example,
 # logging_context_format_string). (string value)
+# Note: This option can be changed without restarting.
 # Deprecated group/name - [DEFAULT]/log_config
 #log_config_append = <None>
 
@@ -267,12 +268,16 @@
 # (floating point value)
 #manila_share_delete_poll_interval = 2.0
 
+# Delay between creating Monasca metrics and polling for its elements.
+# (floating point value)
+#monasca_metric_create_prepoll_delay = 15.0
+
 # A timeout in seconds for an environment deploy (integer value)
-# Deprecated group/name - [DEFAULT]/deploy_environment_timeout
+# Deprecated group/name - [benchmark]/deploy_environment_timeout
 #murano_deploy_environment_timeout = 1200
 
 # Deploy environment check interval in seconds (integer value)
-# Deprecated group/name - [DEFAULT]/deploy_environment_check_interval
+# Deprecated group/name - [benchmark]/deploy_environment_check_interval
 #murano_deploy_environment_check_interval = 5
 
 # Time to sleep after start before polling for status (floating point
@@ -492,23 +497,23 @@
 #nova_detach_volume_poll_interval = 2.0
 
 # A timeout in seconds for a cluster create operation (integer value)
-# Deprecated group/name - [DEFAULT]/cluster_create_timeout
+# Deprecated group/name - [benchmark]/cluster_create_timeout
 #sahara_cluster_create_timeout = 1800
 
 # A timeout in seconds for a cluster delete operation (integer value)
-# Deprecated group/name - [DEFAULT]/cluster_delete_timeout
+# Deprecated group/name - [benchmark]/cluster_delete_timeout
 #sahara_cluster_delete_timeout = 900
 
 # Cluster status polling interval in seconds (integer value)
-# Deprecated group/name - [DEFAULT]/cluster_check_interval
+# Deprecated group/name - [benchmark]/cluster_check_interval
 #sahara_cluster_check_interval = 5
 
 # A timeout in seconds for a Job Execution to complete (integer value)
-# Deprecated group/name - [DEFAULT]/job_execution_timeout
+# Deprecated group/name - [benchmark]/job_execution_timeout
 #sahara_job_execution_timeout = 600
 
 # Job Execution status polling interval in seconds (integer value)
-# Deprecated group/name - [DEFAULT]/job_check_interval
+# Deprecated group/name - [benchmark]/job_check_interval
 #sahara_job_check_interval = 5
 
 # Amount of workers one proxy should serve to. (integer value)
@@ -526,6 +531,7 @@
 
 # Watcher audit launch timeout (integer value)
 #watcher_audit_launch_timeout = 300
+
 
 [cleanup]
 
@@ -546,8 +552,12 @@
 # From oslo.db
 #
 
-# The file name to use with SQLite. (string value)
+# DEPRECATED: The file name to use with SQLite. (string value)
 # Deprecated group/name - [DEFAULT]/sqlite_db
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
+# Reason: Should use config option connection or slave_connection to
+# connect the database.
 #sqlite_db = oslo.sqlite
 
 # If True, SQLite uses synchronous mode. (boolean value)
@@ -587,11 +597,11 @@
 # Deprecated group/name - [DATABASE]/sql_min_pool_size
 #min_pool_size = 1
 
-# Maximum number of SQL connections to keep open in a pool. (integer
-# value)
+# Maximum number of SQL connections to keep open in a pool. Setting a
+# value of 0 indicates no limit. (integer value)
 # Deprecated group/name - [DEFAULT]/sql_max_pool_size
 # Deprecated group/name - [DATABASE]/sql_max_pool_size
-#max_pool_size = <None>
+#max_pool_size = 5
 
 # Maximum number of database connection retries during startup. Set to
 # -1 to specify an infinite retry count. (integer value)
@@ -613,6 +623,8 @@
 
 # Verbosity of SQL debugging information: 0=None, 100=Everything.
 # (integer value)
+# Minimum value: 0
+# Maximum value: 100
 # Deprecated group/name - [DEFAULT]/sql_connection_debug
 #connection_debug = 0
 
@@ -708,7 +720,7 @@
 #flavor_ref_ram = 64
 
 # Alternate reference flavor RAM size used by test thatneed two
-# flavors, like those that resize an instnace (integer value)
+# flavors, like those that resize an instance (integer value)
 #flavor_ref_alt_ram = 128
 
 # RAM size flavor used for orchestration test cases (integer value)
@@ -730,3 +742,6 @@
 
 # ID of domain in which users will be created. (string value)
 #user_domain = default
+
+# The default role name of the keystone. (string value)
+#keystone_default_role = member
