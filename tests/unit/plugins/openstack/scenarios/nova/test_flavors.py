@@ -54,3 +54,13 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario.create_flavor(ram=100, vcpus=1, disk=1, fakeargs="fakeargs")
         scenario._create_flavor.assert_called_once_with(100, 1, 1,
                                                         fakeargs="fakeargs")
+
+    def test_create_and_get_flavor(self, **kwargs):
+        scenario = flavors.CreateAndGetFlavor()
+        scenario._create_flavor = mock.Mock()
+        scenario._get_flavor = mock.Mock()
+        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+
+        scenario._create_flavor.assert_called_once_with(100, 1, 1, **kwargs)
+        scenario._get_flavor.assert_called_once_with(
+            scenario._create_flavor.return_value.id)

@@ -987,3 +987,11 @@ class NovaScenario(scenario.OpenStackScenario):
                                  description=description)
         else:
             return server.update(name=new_name)
+
+    @atomic.action_timer("nova.get_flavor")
+    def _get_flavor(self, flavor_id):
+        """Show a flavor
+
+        :param flavor_id: The flavor ID to get
+        """
+        return self.admin_clients("nova").flavors.get(flavor_id)

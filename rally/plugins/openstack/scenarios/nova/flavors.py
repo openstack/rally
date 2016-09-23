@@ -73,3 +73,23 @@ class NovaFlavors(utils.NovaScenario):
         :param kwargs: Optional additional arguments for flavor creation
         """
         self._create_flavor(ram, vcpus, disk, **kwargs)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_and_get_flavor")
+class CreateAndGetFlavor(utils.NovaScenario):
+    """Scenario for create and get flavor."""
+
+    def run(self, ram, vcpus, disk, **kwargs):
+        """Create flavor and get detailed information of the flavor.
+
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param kwargs: Optional additional arguments for flavor creation
+
+        """
+        flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
+        self._get_flavor(flavor.id)

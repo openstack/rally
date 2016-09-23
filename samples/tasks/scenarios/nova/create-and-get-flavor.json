@@ -1,0 +1,27 @@
+{
+  "NovaFlavors.create_and_get_flavor": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      },
+      "args": {
+        "ram": 500,
+        "vcpus" : 1,
+        "disk": 1
+      },
+      "context": {
+        "users": {
+          "tenants": 1,
+          "users_per_tenant": 1
+        }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
+        }
+      }
+    }
+  ]
+}
