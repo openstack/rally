@@ -22,7 +22,7 @@ from tests.unit import test
 class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_node(self):
-        scenario = nodes.IronicNodes(self.context)
+        scenario = nodes.CreateAndListNode(self.context)
         scenario._create_node = mock.Mock()
         scenario._list_nodes = mock.Mock()
         fake_params = {
@@ -35,7 +35,7 @@ class IronicNodesTestCase(test.ScenarioTestCase):
             "marker": "foo6",
             "fake_parameter1": "foo7"
         }
-        scenario.create_and_list_node(**fake_params)
+        scenario.run(**fake_params)
 
         scenario._create_node.assert_called_once_with(fake_parameter1="foo7")
         scenario._list_nodes.assert_called_once_with(
@@ -44,12 +44,11 @@ class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_node(self):
         fake_node = mock.Mock(uuid="fake_uuid")
-        scenario = nodes.IronicNodes(self.context)
+        scenario = nodes.CreateAndDeleteNode(self.context)
         scenario._create_node = mock.Mock(return_value=fake_node)
         scenario._delete_node = mock.Mock()
 
-        scenario.create_and_delete_node(fake_parameter1="fake1",
-                                        fake_parameter2="fake2")
+        scenario.run(fake_parameter1="fake1", fake_parameter2="fake2")
         scenario._create_node.assert_called_once_with(fake_parameter1="fake1",
                                                       fake_parameter2="fake2")
 
