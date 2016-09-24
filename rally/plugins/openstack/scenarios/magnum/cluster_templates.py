@@ -18,27 +18,28 @@ from rally.plugins.openstack.scenarios.magnum import utils
 from rally.task import validation
 
 
-"""Scenarios for Magnum baymodels."""
+"""Scenarios for Magnum cluster_templates."""
 
 
 @validation.required_services(consts.Service.MAGNUM)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["magnum"]},
-                    name="MagnumBaymodels.list_baymodels")
-class ListBaymodels(utils.MagnumScenario):
+                    name="MagnumClusterTemplates.list_cluster_templates")
+class ListClusterTemplates(utils.MagnumScenario):
 
     def run(self, **kwargs):
-        """List all baymodels.
+        """List all cluster_templates.
 
-        Measure the "magnum baymodel-list" command performance.
+        Measure the "magnum cluster_template-list" command performance.
 
         :param limit: (Optional) The maximum number of results to return
                       per request, if:
 
-            1) limit > 0, the maximum number of baymodels to return.
+            1) limit > 0, the maximum number of cluster_templates to return.
             2) limit param is NOT specified (None), the number of items
                returned respect the maximum imposed by the Magnum API
                (see Magnum's api.max_limit option).
-        :param kwargs: optional additional arguments for baymodels listing
+        :param kwargs: optional additional arguments for cluster_templates
+                       listing
         """
-        self._list_baymodels(**kwargs)
+        self._list_cluster_templates(**kwargs)

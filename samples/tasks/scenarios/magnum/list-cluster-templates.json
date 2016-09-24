@@ -1,5 +1,5 @@
 {
-  "MagnumBaymodels.list_baymodels": [
+  "MagnumClusterTemplates.list_cluster_templates": [
      {
         "runner": {
            "type": "constant",
@@ -7,7 +7,7 @@
            "times": 1
         },
         "context": {
-           "baymodels": {
+           "cluster_templates": {
               "dns_nameserver": "8.8.8.8",
               "external_network_id": "public",
               "flavor_id": "m1.small",
@@ -29,7 +29,7 @@
            "times": 1
         },
         "context": {
-           "baymodels": {
+           "cluster_templates": {
               "dns_nameserver": "8.8.8.8",
               "external_network_id": "public",
               "flavor_id": "m1.small",
@@ -51,7 +51,7 @@
            "times": 1
         },
         "context": {
-           "baymodels": {
+           "cluster_templates": {
               "dns_nameserver": "8.8.8.8",
               "external_network_id": "public",
               "flavor_id": "m1.small",

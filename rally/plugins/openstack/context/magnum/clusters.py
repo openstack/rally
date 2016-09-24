@@ -24,15 +24,15 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="bays", order=480)
-class BayGenerator(context.Context):
-    """Context class for generating temporary bay for benchmarks."""
+@context.configure(name="clusters", order=480)
+class ClusterGenerator(context.Context):
+    """Context class for generating temporary cluster for benchmarks."""
 
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
-            "baymodel_uuid": {
+            "cluster_template_uuid": {
                 "type": "string"
             },
             "node_count": {
@@ -44,7 +44,7 @@ class BayGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Bay`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Cluster`"))
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -56,18 +56,18 @@ class BayGenerator(context.Context):
                     "api_versions", [])}
             })
 
-            # create a bay
-            baymodel_uuid = self.config.get("baymodel_uuid", None)
-            if baymodel_uuid is None:
+            # create a cluster
+            ct_uuid = self.config.get("cluster_template_uuid", None)
+            if ct_uuid is None:
                 ctx = self.context["tenants"][tenant_id]
-                baymodel_uuid = ctx.get("baymodel")
-            bay = magnum_scenario._create_bay(
-                baymodel=baymodel_uuid,
+                ct_uuid = ctx.get("cluster_template")
+            cluster = magnum_scenario._create_cluster(
+                cluster_template=ct_uuid,
                 node_count=self.config.get("node_count"))
-            self.context["tenants"][tenant_id]["bay"] = bay.uuid
+            self.context["tenants"][tenant_id]["cluster"] = cluster.uuid
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Bay`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Cluster`"))
     def cleanup(self):
         resource_manager.cleanup(
-            names=["magnum.bays"],
+            names=["magnum.clusters"],
             users=self.context.get("users", []))

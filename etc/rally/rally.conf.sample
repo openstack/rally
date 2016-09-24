@@ -240,15 +240,15 @@
 
 # Time(in sec) to sleep after creating a resource before polling for
 # the status. (floating point value)
-#magnum_bay_create_prepoll_delay = 5.0
+#magnum_cluster_create_prepoll_delay = 5.0
 
-# Time(in sec) to wait for magnum bay to be created. (floating point
+# Time(in sec) to wait for magnum cluster to be created. (floating point
 # value)
-#magnum_bay_create_timeout = 1200.0
+#magnum_cluster_create_timeout = 1200.0
 
-# Time interval(in sec) between checks when waiting for bay creation.
+# Time interval(in sec) between checks when waiting for cluster creation.
 # (floating point value)
-#magnum_bay_create_poll_interval = 1.0
+#magnum_cluster_create_poll_interval = 1.0
 
 # Delay between creating Manila share and polling for its status.
 # (floating point value)

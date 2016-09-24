@@ -23,28 +23,28 @@ CONF = utils.CONF
 class MagnumScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(MagnumScenarioTestCase, self).setUp()
-        self.baymodel = mock.Mock()
-        self.bay = mock.Mock()
+        self.cluster_template = mock.Mock()
+        self.cluster = mock.Mock()
         self.scenario = utils.MagnumScenario(self.context)
 
-    def test_list_baymodels(self):
-        fake_baymodel_list = [self.baymodel]
+    def test_list_cluster_templates(self):
+        fake_list = [self.cluster_template]
 
-        self.clients("magnum").baymodels.list.return_value = fake_baymodel_list
-        return_baymodels_list = self.scenario._list_baymodels()
-        self.assertEqual(fake_baymodel_list, return_baymodels_list)
+        self.clients("magnum").cluster_templates.list.return_value = fake_list
+        return_ct_list = self.scenario._list_cluster_templates()
+        self.assertEqual(fake_list, return_ct_list)
 
-        self.clients("magnum").baymodels.list.assert_called_once_with()
+        self.clients("magnum").cluster_templates.list.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
-                                       "magnum.list_baymodels")
+                                       "magnum.list_cluster_templates")
 
-    def test_create_baymodel(self):
+    def test_create_cluster_template(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="generated_name")
-        fake_baymodel = self.baymodel
-        self.clients("magnum").baymodels.create.return_value = fake_baymodel
+        fake_ct = self.cluster_template
+        self.clients("magnum").cluster_templates.create.return_value = fake_ct
 
-        return_baymodel = self.scenario._create_baymodel(
+        return_cluster_template = self.scenario._create_cluster_template(
             image="test_image",
             keypair="test_key",
             external_network="public",
@@ -54,40 +54,41 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
             network_driver="docker",
             coe="swarm")
 
-        self.assertEqual(fake_baymodel, return_baymodel)
-        args, kwargs = self.clients("magnum").baymodels.create.call_args
+        self.assertEqual(fake_ct, return_cluster_template)
+        _, kwargs = self.clients("magnum").cluster_templates.create.call_args
         self.assertEqual("generated_name", kwargs["name"])
 
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
-                                       "magnum.create_baymodel")
+                                       "magnum.create_cluster_template")
 
-    def test_list_bays(self):
-        return_bays_list = self.scenario._list_bays(limit="foo1")
-        self.clients("magnum").bays.list.assert_called_once_with(limit="foo1")
-        self.assertEqual(self.clients("magnum").bays.list.return_value,
-                         return_bays_list)
+    def test_list_clusters(self):
+        return_clusters_list = self.scenario._list_clusters(limit="foo1")
+        client = self.clients("magnum")
+        client.clusters.list.assert_called_once_with(limit="foo1")
+        self.assertEqual(client.clusters.list.return_value,
+                         return_clusters_list)
         self._test_atomic_action_timer(
-            self.scenario.atomic_actions(), "magnum.list_bays")
+            self.scenario.atomic_actions(), "magnum.list_clusters")
 
-    def test_create_bay(self):
+    def test_create_cluster(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="generated_name")
-        self.clients("magnum").bays.create.return_value = self.bay
-        return_bay = self.scenario._create_bay(
-            baymodel="generated_uuid", node_count=2)
+        self.clients("magnum").clusters.create.return_value = self.cluster
+        return_cluster = self.scenario._create_cluster(
+            cluster_template="generated_uuid", node_count=2)
         self.mock_wait_for_status.mock.assert_called_once_with(
-            self.bay,
+            self.cluster,
             ready_statuses=["CREATE_COMPLETE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.
-            magnum_bay_create_poll_interval,
-            timeout=CONF.benchmark.magnum_bay_create_timeout,
+            magnum_cluster_create_poll_interval,
+            timeout=CONF.benchmark.magnum_cluster_create_timeout,
             id_attr="uuid")
-        args, kwargs = self.clients("magnum").bays.create.call_args
+        _, kwargs = self.clients("magnum").clusters.create.call_args
         self.assertEqual("generated_name", kwargs["name"])
-        self.assertEqual("generated_uuid", kwargs["baymodel_id"])
+        self.assertEqual("generated_uuid", kwargs["cluster_template_id"])
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(
-            self.mock_wait_for_status.mock.return_value, return_bay)
+            self.mock_wait_for_status.mock.return_value, return_cluster)
         self._test_atomic_action_timer(
-            self.scenario.atomic_actions(), "magnum.create_bay")
+            self.scenario.atomic_actions(), "magnum.create_cluster")

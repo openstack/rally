@@ -15,21 +15,21 @@
 import ddt
 import mock
 
-from rally.plugins.openstack.scenarios.magnum import baymodels
+from rally.plugins.openstack.scenarios.magnum import cluster_templates
 from tests.unit import test
 
 
 @ddt.ddt
-class MagnumBaymodelsTestCase(test.TestCase):
+class MagnumClusterTemplatesTestCase(test.TestCase):
 
     @ddt.data(
         {"kwargs": {}},
         {"kwargs": {"fakearg": "f"}})
     @ddt.unpack
-    def test_list_baymodels(self, kwargs):
-        scenario = baymodels.ListBaymodels()
-        scenario._list_baymodels = mock.Mock()
+    def test_list_cluster_templates(self, kwargs):
+        scenario = cluster_templates.ListClusterTemplates()
+        scenario._list_cluster_templates = mock.Mock()
 
         scenario.run(**kwargs)
 
-        scenario._list_baymodels.assert_called_once_with(**kwargs)
+        scenario._list_cluster_templates.assert_called_once_with(**kwargs)

@@ -90,16 +90,16 @@ class MagnumMixin(base.ResourceManager):
         return result
 
 
-@base.resource("magnum", "bays", order=next(_magnum_order),
+@base.resource("magnum", "clusters", order=next(_magnum_order),
                tenant_resource=True)
-class MagnumBay(MagnumMixin):
-    """Resource class for Magnum bay."""
+class MagnumCluster(MagnumMixin):
+    """Resource class for Magnum cluster."""
 
 
-@base.resource("magnum", "baymodels", order=next(_magnum_order),
+@base.resource("magnum", "cluster_templates", order=next(_magnum_order),
                tenant_resource=True)
-class MagnumBaymodel(MagnumMixin):
-    """Resource class for Magnum baymodel."""
+class MagnumClusterTemplate(MagnumMixin):
+    """Resource class for Magnum cluster_template."""
 
 
 # HEAT

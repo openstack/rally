@@ -1,5 +1,5 @@
 {
-  "MagnumBays.create_and_list_bays": [
+  "MagnumClusters.create_and_list_clusters": [
     {
       "runner": {
         "type": "constant",
@@ -10,7 +10,7 @@
         "node_count": 1
       },
       "context": {
-        "baymodels": {
+        "cluster_templates": {
           "dns_nameserver": "8.8.8.8",
           "external_network_id": "public",
           "flavor_id": "m1.small",
@@ -35,7 +35,7 @@
         "node_count": 1
       },
       "context": {
-        "baymodels": {
+        "cluster_templates": {
           "dns_nameserver": "8.8.8.8",
           "external_network_id": "public",
           "flavor_id": "m1.small",
@@ -60,7 +60,7 @@
         "node_count": 1
       },
       "context": {
-        "baymodels": {
+        "cluster_templates": {
           "dns_nameserver": "8.8.8.8",
           "external_network_id": "public",
           "flavor_id": "m1.small",

@@ -25,9 +25,9 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="baymodels", order=470)
-class BaymodelGenerator(context.Context):
-    """Context class for generating temporary bay model for benchmarks."""
+@context.configure(name="cluster_templates", order=470)
+class ClusterTemplateGenerator(context.Context):
+    """Context class for generating temporary cluster model for benchmarks."""
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -101,7 +101,7 @@ class BaymodelGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Baymodel`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `ClusterTemplate`"))
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -121,13 +121,14 @@ class BaymodelGenerator(context.Context):
                     "api_versions", [])}
             })
 
-            baymodel = magnum_scenario._create_baymodel(
+            cluster_template = magnum_scenario._create_cluster_template(
                 keypair_id=keypair, **self.config)
 
-            self.context["tenants"][tenant_id]["baymodel"] = baymodel.uuid
+            ct_uuid = cluster_template.uuid
+            self.context["tenants"][tenant_id]["cluster_template"] = ct_uuid
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Baymodel`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `ClusterTemplate`"))
     def cleanup(self):
         resource_manager.cleanup(
-            names=["magnum.baymodels", "nova.keypairs"],
+            names=["magnum.cluster_templates", "nova.keypairs"],
             users=self.context.get("users", []))
