@@ -21,7 +21,6 @@ import re
 from neutronclient import version as nc_version
 from oslo_config import cfg
 import requests
-import six
 from six.moves import configparser
 from six.moves.urllib import parse
 
@@ -185,7 +184,7 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
                 return endpoint["url"]
 
     def _get_service_type_by_service_name(self, service_name):
-        for s_type, s_name in six.iteritems(self.clients.services()):
+        for s_type, s_name in self.clients.services().items():
             if s_name == service_name:
                 return s_type
 

@@ -350,7 +350,7 @@ class VerifyCommands(object):
         cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
-            for test in six.itervalues(tests["test_cases"]):
+            for test in tests["test_cases"].values():
                 if test["status"] == "fail":
                     header = cliutils.make_header(
                         "FAIL: %(name)s\n"

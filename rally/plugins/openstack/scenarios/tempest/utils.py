@@ -18,8 +18,6 @@ import os
 import subprocess
 import tempfile
 
-import six
-
 from rally.common.i18n import _
 from rally import exceptions
 
@@ -52,7 +50,7 @@ def tempest_log_wrapper(func):
             scenario_obj._atomic_actions["test_execution"] = test_execution
             if total.get("failures") or total.get("unexpected_success"):
                 raise TempestBenchmarkFailure([
-                    test["name"] for test in six.itervalues(results.tests)
+                    test["name"] for test in results.tests.values()
                     if test["status"] in ("fail", "uxsuccess")])
         else:
             raise TempestBenchmarkFailure(_("No information"))

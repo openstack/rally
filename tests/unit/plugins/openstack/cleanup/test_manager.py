@@ -14,7 +14,6 @@
 #    under the License.
 
 import mock
-import six
 
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.cleanup import manager
@@ -167,7 +166,7 @@ class SeekAndDestroyTestCase(test.TestCase):
         mock_mgr().list.side_effect = list_side_effect
         mock_mgr.reset_mock()
 
-        for k, v in six.iteritems(kw):
+        for k, v in kw.items():
             setattr(mock_mgr, k, v)
 
         return mock_mgr
@@ -342,7 +341,7 @@ class ResourceManagerTestCase(test.TestCase):
 
     def _get_res_mock(self, **kw):
         _mock = mock.MagicMock()
-        for k, v in six.iteritems(kw):
+        for k, v in kw.items():
             setattr(_mock, k, v)
         return _mock
 

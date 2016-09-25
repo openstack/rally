@@ -554,7 +554,7 @@ class TaskConfig(object):
             return [SubTask(s) for s in config["subtasks"]]
         elif self.version == 1:
             subtasks = []
-            for name, v1_workloads in six.iteritems(config):
+            for name, v1_workloads in config.items():
                 for v1_workload in v1_workloads:
                     v2_workload = copy.deepcopy(v1_workload)
                     v2_workload["name"] = name

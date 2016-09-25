@@ -18,7 +18,6 @@ import re
 import time
 
 import netaddr
-import six
 from six import moves
 
 from rally.common.i18n import _
@@ -97,7 +96,7 @@ class LxcHost(object):
                 "LXC_DHCP_MAX": self.network.size - 3,
             }
             config = moves.StringIO()
-            for name, value in six.iteritems(values):
+            for name, value in values.items():
                 config.write("%(name)s=\"%(value)s\"\n" % {"name": name,
                                                            "value": value})
             config.seek(0)

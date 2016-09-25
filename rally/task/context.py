@@ -169,7 +169,7 @@ class ContextManager(object):
 
     @staticmethod
     def validate(ctx, non_hidden=False):
-        for name, config in six.iteritems(ctx):
+        for name, config in ctx.items():
             Context.get(name).validate(config, non_hidden=non_hidden)
 
     def _get_sorted_context_lst(self):

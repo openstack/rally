@@ -12,8 +12,6 @@
 
 import random
 
-import six
-
 from rally.common.i18n import _, _LE
 from rally import consts
 from rally import exceptions
@@ -193,7 +191,7 @@ class OpenStackAPIVersions(context.Context):
             self.context["users"])["credential"])
         services = clients.keystone.service_catalog.get_endpoints()
         services_from_admin = None
-        for client_name, conf in six.iteritems(self.config):
+        for client_name, conf in self.config.items():
             if "service_type" in conf and conf["service_type"] not in services:
                 raise exceptions.ValidationError(_(
                     "There is no service with '%s' type in your environment.")

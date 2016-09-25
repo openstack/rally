@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
@@ -81,7 +79,7 @@ class Lbaas(context.Context):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["credential"]),
             self, config=self.config)
-        for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
+        for tenant_id, tenant_ctx in self.context["tenants"].items():
             for network in tenant_ctx.get("networks", []):
                 for pool in network.get("lb_pools", []):
                     with logging.ExceptionLogger(
