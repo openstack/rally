@@ -456,3 +456,79 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid)
             )
+
+    def _pre_upgrade_6ad4f426f005(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        task_result_table = db_utils.get_table(engine, "task_results")
+        with engine.connect() as conn:
+            # create deployment
+            conf = {
+                "admin": {"username": "admin",
+                          "password": "passwd",
+                          "project_name": "admin"},
+                "auth_url": "http://example.com:5000/v3",
+                "region_name": "RegionOne",
+                "type": "ExistingCloud"
+            }
+            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": "my_deployment",
+                    "name": "my_deployment",
+                    "config": json.dumps(conf),
+                    "enum_deployments_status": deployment_status,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }])
+
+            # create task
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": "my_task",
+                    "deployment_uuid": "my_deployment",
+                    "status": consts.TaskStatus.INIT,
+                }])
+
+            # create task result with empty data
+            conn.execute(
+                task_result_table.insert(),
+                [{
+                    "task_uuid": "my_task",
+                    "key": json.dumps({}),
+                    "data": json.dumps({}),
+                }]
+            )
+
+    def _check_6ad4f426f005(self, engine, data):
+        self.assertEqual("6ad4f426f005",
+                         api.get_backend().schema_revision(engine=engine))
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        task_result_table = db_utils.get_table(engine, "task_results")
+        with engine.connect() as conn:
+            task_results = conn.execute(task_result_table.select()).fetchall()
+            self.assertEqual(1, len(task_results))
+            task_result = task_results[0]
+
+            # check that "hooks" field added
+            self.assertEqual({"hooks": []}, json.loads(task_result.data))
+
+            # Remove task result
+            conn.execute(
+                task_result_table.delete().where(
+                    task_result_table.c.id == task_result.id)
+            )
+
+            # Remove task
+            conn.execute(
+                task_table.delete().where(task_table.c.uuid == "my_task"))
+
+            # Remove deployment
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == "my_deployment")
+            )

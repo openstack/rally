@@ -66,8 +66,10 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         context = runner._get_scenario_context(
             12, fakes.FakeContext({}).context)
         scenario_cls = mock.MagicMock()
+        event_queue = mock.MagicMock()
 
-        runner._run_scenario_once(scenario_cls, "test", context, {})
+        runner._run_scenario_once(
+            scenario_cls, "test", context, {}, event_queue)
 
         expected_calls = [
             mock.call(context),
@@ -78,10 +80,14 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
         ]
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
 
+        event_queue.put.assert_called_once_with(
+            {"type": "iteration", "value": 13})
+
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_without_scenario_output(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "do_it", mock.MagicMock(), {})
+            fakes.FakeScenario, "do_it", mock.MagicMock(), {},
+            mock.MagicMock())
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -96,7 +102,8 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_with_added_scenario_output(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "with_add_output", mock.MagicMock(), {})
+            fakes.FakeScenario, "with_add_output", mock.MagicMock(), {},
+            mock.MagicMock())
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -118,7 +125,8 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_exception(self, mock_timer):
         result = runner._run_scenario_once(
-            fakes.FakeScenario, "something_went_wrong", mock.MagicMock(), {})
+            fakes.FakeScenario, "something_went_wrong", mock.MagicMock(), {},
+            mock.MagicMock())
         expected_error = result.pop("error")
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -225,12 +233,15 @@ class ScenarioRunnerTestCase(test.TestCase):
         process_pool = collections.deque([process] * processes)
         mock_result_queue = mock.MagicMock(
             empty=mock.MagicMock(return_value=True))
+        mock_event_queue = mock.MagicMock(
+            empty=mock.MagicMock(return_value=True))
 
         runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
 
-        runner_obj._join_processes(process_pool, mock_result_queue)
+        runner_obj._join_processes(
+            process_pool, mock_result_queue, mock_event_queue)
 
         self.assertEqual(processes, process.join.call_count)
         mock_result_queue.close.assert_called_once_with()

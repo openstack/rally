@@ -559,6 +559,46 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        sleep: 0.25
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      hooks:
+        - name: sys_call
+          description: test hook
+          args: /bin/true
+          trigger:
+            name: event
+            args:
+              unit: iteration
+              at: [2, 4, 6, 8, 10]
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        sleep: 1
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      hooks:
+        - name: sys_call
+          description: test hook
+          args: /bin/true
+          trigger:
+            name: event
+            args:
+              unit: time
+              at: [0, 2, 4, 6, 8, 10]
+      sla:
+        failure_rate:
+          max: 0
+
   Dummy.dummy_exception:
     -
       args:

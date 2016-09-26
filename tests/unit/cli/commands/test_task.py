@@ -385,6 +385,7 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
         data = [
             {"key": "foo_key", "data": {"raw": "foo_raw", "sla": [],
+                                        "hooks": [],
                                         "load_duration": 1.0,
                                         "full_duration": 2.0}}
         ]
@@ -392,6 +393,7 @@ class TaskCommandsTestCase(test.TestCase):
                                 "result": x["data"]["raw"],
                                 "load_duration": x["data"]["load_duration"],
                                 "full_duration": x["data"]["full_duration"],
+                                "hooks": x["data"]["hooks"],
                                 "sla": x["data"]["sla"]}, data)
         fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED})
         fake_task.get_results = mock.MagicMock(return_value=data)
@@ -427,6 +429,7 @@ class TaskCommandsTestCase(test.TestCase):
         return [{"key": {"name": key, "pos": 0},
                  "data": {"raw": key + "_raw",
                           "sla": key + "_sla",
+                          "hooks": key + "_hooks",
                           "load_duration": 1.2,
                           "full_duration": 2.3}} for key in keys]
 
@@ -455,8 +458,10 @@ class TaskCommandsTestCase(test.TestCase):
                                out="output.html", out_format="html")
         expected = [
             {"load_duration": 1.2, "full_duration": 2.3, "sla": "bar_sla",
+             "hooks": "bar_hooks",
              "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
             {"load_duration": 1.2, "full_duration": 2.3, "sla": "spam_sla",
+             "hooks": "spam_hooks",
              "key": {"name": "spam", "pos": 0}, "result": "spam_raw"},
             "result_1_from_file", "result_2_from_file"]
         mock_plot.trends.assert_called_once_with(expected)
@@ -553,16 +558,19 @@ class TaskCommandsTestCase(test.TestCase):
         data = [
             {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "hooks": "foo_hooks",
                       "load_duration": 0.1,
                       "full_duration": 1.2}},
             {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
+                      "hooks": "bar_hooks",
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
 
         results = [{"key": x["key"],
                     "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
+                    "hooks": x["data"]["hooks"],
                     "load_duration": x["data"]["load_duration"],
                     "full_duration": x["data"]["full_duration"]}
                    for x in data]
@@ -619,10 +627,12 @@ class TaskCommandsTestCase(test.TestCase):
         data = [
             {"key": {"name": "test", "pos": 0},
              "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "hooks": "foo_hooks",
                       "load_duration": 0.1,
                       "full_duration": 1.2}},
             {"key": {"name": "test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
+                      "hooks": "bar_hooks",
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
 
@@ -632,6 +642,7 @@ class TaskCommandsTestCase(test.TestCase):
                 map(lambda x: {"key": x["key"],
                                "result": x["data"]["raw"],
                                "sla": x["data"]["sla"],
+                               "hooks": x["data"]["hooks"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
                     data))

@@ -137,6 +137,7 @@ def _extend_results(results):
                    "task_uuid": None,
                    "key": result["key"],
                    "data": {"sla": result["sla"],
+                            "hooks": result["hooks"],
                             "raw": result["result"],
                             "full_duration": result["full_duration"],
                             "load_duration": result["load_duration"]},

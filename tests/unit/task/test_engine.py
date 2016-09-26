@@ -17,6 +17,7 @@
 
 import collections
 import copy
+import threading
 
 import jsonschema
 import mock
@@ -155,19 +156,22 @@ class TaskEngineTestCase(test.TestCase):
                           eng._validate_config_scenarios_name,
                           mock_task_instance)
 
+    @mock.patch("rally.task.hook.Hook.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
     @mock.patch("rally.task.engine.context.ContextManager.validate")
     def test__validate_config_syntax(
             self, mock_context_manager_validate,
             mock_scenario_runner_validate,
-            mock_task_config
+            mock_task_config,
+            mock_hook_validate
     ):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
             engine.Workload({"name": "sca", "context": "a"}),
-            engine.Workload({"name": "sca", "runner": "b"})
+            engine.Workload({"name": "sca", "runner": "b"}),
+            engine.Workload({"name": "sca", "hooks": ["c"]}),
         ]
         mock_task_instance.subtasks = [mock_subtask]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
@@ -177,6 +181,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_context_manager_validate.assert_has_calls(
             [mock.call("a", non_hidden=True), mock.call({}, non_hidden=True)],
             any_order=True)
+        mock_hook_validate.assert_called_once_with("c")
 
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
@@ -501,6 +506,7 @@ class ResultConsumerTestCase(test.TestCase):
         ]
 
         runner.result_queue = collections.deque(results)
+        runner.event_queue = collections.deque()
         with engine.ResultConsumer(
                 key, task, runner, False) as consumer_obj:
             pass
@@ -513,6 +519,7 @@ class ResultConsumerTestCase(test.TestCase):
                           {"duration": 1, "timestamp": 3}],
                          consumer_obj.results)
 
+    @mock.patch("rally.task.hook.HookExecutor")
     @mock.patch("rally.task.engine.LOG")
     @mock.patch("rally.task.engine.time.time")
     @mock.patch("rally.common.objects.Task.get_status")
@@ -520,12 +527,14 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results_no_iteration(
             self, mock_sla_checker, mock_result_consumer_wait_and_abort,
-            mock_task_get_status, mock_time, mock_log):
+            mock_task_get_status, mock_time, mock_log, mock_hook_executor):
         mock_time.side_effect = [0, 1]
         mock_sla_instance = mock.MagicMock()
         mock_sla_results = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
         mock_sla_instance.results.return_value = mock_sla_results
+        mock_hook_executor_instance = mock_hook_executor.return_value
+        mock_hook_results = mock_hook_executor_instance.results.return_value
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
@@ -533,6 +542,7 @@ class ResultConsumerTestCase(test.TestCase):
 
         results = []
         runner.result_queue = collections.deque(results)
+        runner.event_queue = collections.deque()
         with engine.ResultConsumer(
                 key, task, runner, False):
             pass
@@ -541,6 +551,7 @@ class ResultConsumerTestCase(test.TestCase):
                 "raw": [],
                 "full_duration": 1,
                 "sla": mock_sla_results,
+                "hooks": mock_hook_results,
                 "load_duration": 0
             }
         )], any_order=True)
@@ -568,13 +579,15 @@ class ResultConsumerTestCase(test.TestCase):
 
         self.assertTrue(runner.abort.called)
 
+    @mock.patch("rally.task.hook.HookExecutor")
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
     @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results_abort_manually(self, mock_sla_checker,
                                             mock_event, mock_thread,
-                                            mock_task_get_status):
+                                            mock_task_get_status,
+                                            mock_hook_executor):
         runner = mock.MagicMock(result_queue=False)
 
         is_done = mock.MagicMock()
@@ -589,10 +602,14 @@ class ResultConsumerTestCase(test.TestCase):
         eng.duration = 123
         eng.full_duration = 456
 
+        mock_hook_executor_instance = mock_hook_executor.return_value
+
         with engine.ResultConsumer(key, task, runner, True):
             pass
 
         mock_sla_checker.assert_called_once_with(key["kw"])
+        mock_hook_executor.assert_called_once_with(key["kw"], task)
+        self.assertFalse(mock_hook_executor_instance.on_iteration.called)
         mocked_set_aborted = mock_sla_checker.return_value.set_aborted_manually
         mocked_set_aborted.assert_called_once_with()
 
@@ -610,6 +627,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock()
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 4}]] * 4)
+        runner.event_queue = collections.deque()
 
         with engine.ResultConsumer(key, task, runner, False):
             pass
@@ -629,6 +647,7 @@ class ResultConsumerTestCase(test.TestCase):
         task = mock.MagicMock()
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1])
+        runner.event_queue = collections.deque()
         exc = TestException()
         try:
             with engine.ResultConsumer(key, task, runner, False):
@@ -638,6 +657,61 @@ class ResultConsumerTestCase(test.TestCase):
 
         mock_sla_instance.set_unexpected_failure.assert_has_calls(
             [mock.call(exc)])
+
+    @mock.patch("rally.task.engine.LOG")
+    @mock.patch("rally.task.hook.HookExecutor")
+    @mock.patch("rally.task.engine.time.time")
+    @mock.patch("rally.common.objects.Task.get_status")
+    @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
+    @mock.patch("rally.task.sla.SLAChecker")
+    def test_consume_events(
+            self, mock_sla_checker, mock_result_consumer_wait_and_abort,
+            mock_task_get_status, mock_time, mock_hook_executor, mock_log):
+        mock_time.side_effect = [0, 1]
+        mock_sla_instance = mock_sla_checker.return_value
+        mock_sla_results = mock_sla_instance.results.return_value
+        mock_hook_executor_instance = mock_hook_executor.return_value
+        mock_hook_results = mock_hook_executor_instance.results.return_value
+
+        mock_task_get_status.return_value = consts.TaskStatus.RUNNING
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        runner = mock.MagicMock()
+        events = [
+            {"type": "iteration", "value": 1},
+            {"type": "iteration", "value": 2},
+            {"type": "iteration", "value": 3}
+        ]
+        runner.result_queue = collections.deque()
+        runner.event_queue = collections.deque(events)
+
+        consumer_obj = engine.ResultConsumer(key, task, runner, False)
+        stop_event = threading.Event()
+
+        def set_stop_event(event_type, value):
+            if not runner.event_queue:
+                stop_event.set()
+
+        mock_hook_executor_instance.on_event.side_effect = set_stop_event
+
+        with consumer_obj:
+            stop_event.wait(1)
+
+        mock_hook_executor_instance.on_event.assert_has_calls([
+            mock.call(event_type="iteration", value=1),
+            mock.call(event_type="iteration", value=2),
+            mock.call(event_type="iteration", value=3)
+        ])
+
+        task.append_results.assert_called_once_with(
+            key, {
+                "raw": [],
+                "full_duration": 1,
+                "sla": mock_sla_results,
+                "hooks": mock_hook_results,
+                "load_duration": 0
+            }
+        )
 
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
@@ -781,6 +855,7 @@ class WorkloadTestCase(test.TestCase):
             "runner": "r",
             "context": "c",
             "sla": "s",
+            "hooks": "h",
             "args": "a"
         })
 
@@ -789,6 +864,7 @@ class WorkloadTestCase(test.TestCase):
             "runner": "r",
             "context": "c",
             "sla": "s",
+            "hooks": "h",
             "args": "a"
         }
 
@@ -799,6 +875,7 @@ class WorkloadTestCase(test.TestCase):
             "runner": "r",
             "context": "c",
             "sla": "s",
+            "hooks": "h",
             "args": "a"
         }
 
@@ -812,6 +889,7 @@ class WorkloadTestCase(test.TestCase):
                 "runner": "r",
                 "context": "c",
                 "sla": "s",
+                "hooks": "h",
                 "args": "a"
             }
         }
@@ -827,6 +905,7 @@ class WorkloadTestCase(test.TestCase):
                 "runner": "r",
                 "context": "c",
                 "sla": "s",
+                "hooks": "h",
                 "args": "a"
             }
         }

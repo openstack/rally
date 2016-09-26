@@ -69,6 +69,7 @@ class FileExporter(exporter.Exporter):
 
         task_results = [{"key": x["key"], "result": x["data"]["raw"],
                          "sla": x["data"]["sla"],
+                         "hooks": x["data"]["hooks"],
                          "load_duration": x["data"]["load_duration"],
                          "full_duration": x["data"]["full_duration"]}
                         for x in task.get_results()]

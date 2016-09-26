@@ -88,6 +88,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         mock_event = mock.MagicMock(
             is_set=mock.MagicMock(return_value=False))
 
+        mock_event_queue = mock.MagicMock()
+
         times = 4
         max_concurrent = 3
 
@@ -99,7 +101,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         rps._worker_process(mock_queue, fake_ram_int, 1, 10, times,
                             max_concurrent, context, "Dummy", "dummy",
-                            (), mock_event, info)
+                            (), mock_event_queue, mock_event, info)
 
         self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times + 1, mock_thread.call_count)
@@ -118,7 +120,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         for i in range(times):
             scenario_context = mock_runner._get_scenario_context(i, context)
             call = mock.call(
-                args=(mock_queue, "Dummy", "dummy", scenario_context, ()),
+                args=(mock_queue, "Dummy", "dummy", scenario_context, (),
+                      mock_event_queue),
                 target=mock_runner._worker_thread,
             )
             self.assertIn(call, mock_thread.mock_calls)
@@ -126,7 +129,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch(RUNNERS + "rps.runner._run_scenario_once")
     def test__worker_thread(self, mock__run_scenario_once):
         mock_queue = mock.MagicMock()
-        args = ("fake_cls", "fake_method_name", "fake_context_obj", {})
+        mock_event_queue = mock.MagicMock()
+        args = ("fake_cls", "fake_method_name", "fake_context_obj", {},
+                mock_event_queue)
 
         runner._worker_thread(mock_queue, *args)
 
@@ -279,7 +284,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             self.assertIn(rps._worker_process, args)
             mock__join_processes.assert_called_once_with(
                 mock__create_process_pool.return_value,
-                mock_queue.return_value)
+                mock_queue.return_value, mock_queue.return_value)
 
     def test_abort(self):
         config = {"times": 4, "rps": 10}

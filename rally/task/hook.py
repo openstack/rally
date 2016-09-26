@@ -52,7 +52,8 @@ class HookExecutor(object):
                 hook["trigger"]["name"])(hook["trigger"]["args"])
             trigger_event_type = trigger_obj.get_configured_event_type()
             self.triggers[trigger_event_type].append(
-                (trigger_obj, hook["name"], hook["args"], hook["description"])
+                (trigger_obj, hook["name"], hook["args"],
+                 hook.get("description", "n/a"))
             )
 
         # list of executed hooks
@@ -84,7 +85,7 @@ class HookExecutor(object):
         """Notify about event.
 
         This method should be called to inform HookExecutor that
-        particular event occured.
+        particular event occurred.
         It runs hooks configured for event.
         """
         # start timer on first iteration
@@ -145,6 +146,25 @@ class Hook(plugin.Plugin):
             result["error"] = error
         return result
 
+    def _thread_method(self):
+        # Run hook synchronously
+        self.run_sync()
+        self._validate_result_schema()
+
+    def _validate_result_schema(self):
+        """Validates result format."""
+        try:
+            jsonschema.validate(self._result, objects.task.HOOK_RESULT_SCHEMA)
+        except jsonschema.ValidationError as validation_error:
+            LOG.error(_LE("Hook %s returned result "
+                          "in wrong format.") % self.get_name())
+            LOG.exception(validation_error)
+
+            self._result = self._format_result(
+                status=consts.HookStatus.VALIDATION_FAILED,
+                error=utils.format_exc(validation_error),
+            )
+
     def set_error(self, exception_name, description, details):
         """Set error related information to result.
 
@@ -165,26 +185,6 @@ class Hook(plugin.Plugin):
         :param output: Diagram data in task.OUTPUT_SCHEMA format
         """
         self._result["output"] = output
-
-    def _thread_method(self):
-        # Run hook synchronously
-        self.run_sync()
-
-        try:
-            self.validate_result_schema()
-        except jsonschema.ValidationError as validation_error:
-            LOG.error(_LE("Hook %s returned result "
-                          "in wrong format.") % self.get_name())
-            LOG.exception(validation_error)
-
-            self._result = self._format_result(
-                status=consts.HookStatus.VALIDATION_FAILED,
-                error=utils.format_exc(validation_error),
-            )
-
-    def validate_result_schema(self):
-        """Validates result format."""
-        jsonschema.validate(self._result, objects.task.HOOK_RESULT_SCHEMA)
 
     def run_async(self):
         """Run hook asynchronously."""
@@ -211,16 +211,17 @@ class Hook(plugin.Plugin):
 
         This method should be implemented in plugin.
 
-        Hook plugin shoud call following methods to set result:
-            set_status - to set success/failed status
-        Optionally the following methods should be colled:
-            set_error - to indicate that there was an error
+        Hook plugin should call following methods to set result:
+            set_status - to set hook execution status
+        Optionally the following methods should be called:
+            set_error - to indicate that there was an error;
+                        automatically sets hook execution status to 'failed'
             set_output - to provide diagram data
         """
 
     def result(self):
         """Wait and return result of hook."""
         if self._thread.ident is not None:
-            # hook is stil running, wait for result
+            # hook is still running, wait for result
             self._thread.join()
         return self._result

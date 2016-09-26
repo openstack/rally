@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import utils as rutils
 from rally import consts
 from rally.task import runner
 
@@ -65,12 +66,14 @@ class SerialScenarioRunner(runner.ScenarioRunner):
         """
         times = self.config.get("times", 1)
 
+        event_queue = rutils.DequeAsQueue(self.event_queue)
+
         for i in range(times):
             if self.aborted.is_set():
                 break
             result = runner._run_scenario_once(
                 cls, method_name, runner._get_scenario_context(i, context),
-                args)
+                args, event_queue)
             self._send_result(result)
 
         self._flush_results()

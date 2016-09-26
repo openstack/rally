@@ -22,14 +22,16 @@ from tests.unit import test
 
 class SerialScenarioRunnerTestCase(test.TestCase):
 
+    @mock.patch("rally.common.utils.DequeAsQueue")
     @mock.patch("rally.task.runner._run_scenario_once")
-    def test__run_scenario(self, mock__run_scenario_once):
+    def test__run_scenario(self, mock__run_scenario_once, mock_deque_as_queue):
         times = 5
         result = {"duration": 10., "idle_duration": 0., "error": [],
                   "output": {"additive": [], "complete": []},
                   "atomic_actions": {},
                   "timestamp": 1.}
         mock__run_scenario_once.return_value = result
+        deque_as_queue_inst = mock_deque_as_queue.return_value
         expected_results = [[result] for i in range(times)]
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": times})
@@ -46,9 +48,11 @@ class SerialScenarioRunnerTestCase(test.TestCase):
             ctxt["iteration"] = i + 1
             ctxt["task"] = mock.ANY
             expected_calls.append(
-                mock.call(fakes.FakeScenario, "do_it", ctxt, {})
+                mock.call(fakes.FakeScenario, "do_it", ctxt, {},
+                          deque_as_queue_inst)
             )
         mock__run_scenario_once.assert_has_calls(expected_calls)
+        mock_deque_as_queue.assert_called_once_with(runner.event_queue)
 
     def test__run_scenario_aborted(self):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),

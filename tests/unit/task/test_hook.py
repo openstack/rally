@@ -236,7 +236,7 @@ class HookTestCase(test.TestCase):
         dummy_hook = DummyHook(task, {"status": consts.HookStatus.SUCCESS},
                                {"iteration": 1}, "dummy_action")
         dummy_hook.run_sync()
-        dummy_hook.validate_result_schema()
+        dummy_hook._validate_result_schema()
 
         self.assertEqual(
             {"description": "dummy_action",

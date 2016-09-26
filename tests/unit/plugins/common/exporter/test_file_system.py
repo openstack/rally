@@ -44,6 +44,7 @@ class FileExporterTestCase(test.TestCase):
             "data": {
                 "raw": "bar_raw",
                 "sla": "baz_sla",
+                "hooks": "baz_hooks",
                 "load_duration": "foo_load_duration",
                 "full_duration": "foo_full_duration",
             }
@@ -63,6 +64,7 @@ class FileExporterTestCase(test.TestCase):
                 "full_duration": "foo_full_duration",
                 "result": "bar_raw",
                 "key": "fake_key",
+                "hooks": "baz_hooks",
                 "sla": "baz_sla"
             }
         ]

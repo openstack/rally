@@ -132,6 +132,7 @@ class PlotTestCase(test.TestCase):
             [["extended_foo"], ["extended_bar"], ["extended_spam"]])
         tasks_results = [
             {"key": "%s_key" % k, "sla": "%s_sla" % k,
+             "hooks": "%s_hooks" % k,
              "full_duration": "%s_full_duration" % k,
              "load_duration": "%s_load_duration" % k,
              "result": "%s_result" % k} for k in ("foo", "bar", "spam")]
@@ -141,6 +142,7 @@ class PlotTestCase(test.TestCase):
              "data": {"raw": "%s_result" % k,
                       "full_duration": "%s_full_duration" % k,
                       "load_duration": "%s_load_duration" % k,
+                      "hooks": "%s_hooks" % k,
                       "sla": "%s_sla" % k}} for k in ("foo", "bar", "spam")]
         results = plot._extend_results(tasks_results)
         self.assertEqual([mock.call([r]) for r in generic_results],

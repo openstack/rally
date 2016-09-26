@@ -1027,3 +1027,184 @@ class SLAPerfDegrTestCase(unittest.TestCase):
         ]
         data = rally("task sla_check --json", getjson=True)
         self.assertEqual(expected, data)
+
+
+class HookTestCase(unittest.TestCase):
+
+    def setUp(self):
+        super(HookTestCase, self).setUp()
+        self.started = time.time()
+
+    def _assert_results_time(self, results):
+        for result in results:
+            started_at = result["started_at"]
+            finished_at = result["finished_at"]
+            self.assertIsInstance(started_at, float)
+            self.assertGreater(started_at, self.started)
+            self.assertIsInstance(finished_at, float)
+            self.assertGreater(finished_at, self.started)
+            self.assertGreater(finished_at, started_at)
+
+    def _get_sample_task_config(self, cmd, description, runner):
+        return {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1,
+                    },
+                    "runner": runner,
+                    "hooks": [
+                        {
+                            "name": "sys_call",
+                            "description": description,
+                            "args": cmd,
+                            "trigger": {
+                                "name": "event",
+                                "args": {
+                                    "unit": "iteration",
+                                    "at": [5],
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+
+    def _get_result(self, description, iteration=None, second=None):
+        triggered_by = {}
+        if iteration is not None:
+            triggered_by["iteration"] = iteration
+        elif second is not None:
+            triggered_by["time"] = second
+        result = {
+            "hook": "sys_call",
+            "description": description,
+            "finished_at": mock.ANY,
+            "started_at": mock.ANY,
+            "triggered_by": triggered_by,
+            "status": "success",
+        }
+        return result
+
+    def test_hook_result_with_constant_runner(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "constant", "times": 10, "concurrency": 3})
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            self._get_result("event_hook", iteration=5)
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)
+
+    def test_hook_result_with_constant_for_duration_runner(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "constant_for_duration",
+                    "concurrency": 3, "duration": 10})
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            self._get_result("event_hook", iteration=5)
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)
+
+    def test_hook_result_with_rps_runner(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "rps", "rps": 3, "times": 10})
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            self._get_result("event_hook", iteration=5)
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)
+
+    def test_hook_result_with_serial_runner(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "serial", "times": 10})
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            self._get_result("event_hook", iteration=5)
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)
+
+    def test_hook_result_error(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/false",
+            description="event_hook",
+            runner={"type": "constant", "times": 20, "concurrency": 3})
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            {
+                "description": "event_hook",
+                "finished_at": mock.ANY,
+                "started_at": mock.ANY,
+                "hook": "sys_call",
+                "triggered_by": {"iteration": 5},
+                "status": "failed",
+                "error": ["n/a", "Subprocess returned 1", ""],
+            }
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)
+
+    def test_time_hook(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "constant_for_duration",
+                    "concurrency": 3, "duration": 10})
+        cfg["Dummy.dummy"][0]["hooks"].append({
+            "name": "sys_call",
+            "description": "time_hook",
+            "args": "/bin/true",
+            "trigger": {
+                "name": "event",
+                "args": {
+                    "unit": "time",
+                    "at": [3, 6, 9],
+                }
+            }
+        })
+
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        results = json.loads(rally("task results"))
+        hook_results = results[0]["hooks"]
+        expected = [
+            self._get_result("event_hook", iteration=5),
+            self._get_result("time_hook", second=3),
+            self._get_result("time_hook", second=6),
+            self._get_result("time_hook", second=9),
+        ]
+        self.assertEqual(expected, hook_results)
+        self._assert_results_time(hook_results)

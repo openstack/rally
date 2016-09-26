@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 
 def _worker_process(queue, iteration_gen, timeout, rps, times,
                     max_concurrent, context, cls, method_name,
-                    args, aborted, info):
+                    args, event_queue, aborted, info):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs the scenario once, and appends
@@ -75,7 +75,8 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     while i < times and not aborted.is_set():
         scenario_context = runner._get_scenario_context(next(iteration_gen),
                                                         context)
-        worker_args = (queue, cls, method_name, scenario_context, args)
+        worker_args = (
+            queue, cls, method_name, scenario_context, args, event_queue)
         thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
 
@@ -198,6 +199,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                              concurrency_overhead=concurrency_overhead)
 
         result_queue = multiprocessing.Queue()
+        event_queue = multiprocessing.Queue()
 
         def worker_args_gen(times_overhead, concurrency_overhead):
             """Generate arguments for process worker.
@@ -216,7 +218,8 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                 yield (result_queue, iteration_gen, timeout, rps_per_worker,
                        times_per_worker + (times_overhead and 1),
                        concurrency_per_worker + (concurrency_overhead and 1),
-                       context, cls, method_name, args, self.aborted)
+                       context, cls, method_name, args, event_queue,
+                       self.aborted)
                 if times_overhead:
                     times_overhead -= 1
                 if concurrency_overhead:
@@ -225,4 +228,4 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         process_pool = self._create_process_pool(
             processes_to_start, _worker_process,
             worker_args_gen(times_overhead, concurrency_overhead))
-        self._join_processes(process_pool, result_queue)
+        self._join_processes(process_pool, result_queue, event_queue)
