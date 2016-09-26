@@ -244,18 +244,56 @@ class TaskAPITestCase(test.TestCase):
         self.assertFalse(mock_task.get_status.called)
         self.assertFalse(mock_time.sleep.called)
 
-    @mock.patch("rally.common.objects.task.db.task_delete")
-    def test_delete(self, mock_task_delete):
-        api.Task.delete(self.task_uuid)
-        mock_task_delete.assert_called_once_with(
+    @ddt.data({"task_status": "strange value",
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.INIT,
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.VERIFYING,
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.ABORTING,
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.SOFT_ABORTING,
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.RUNNING,
+               "expected_status": consts.TaskStatus.FINISHED},
+              {"task_status": consts.TaskStatus.ABORTED,
+               "expected_status": None},
+              {"task_status": consts.TaskStatus.FINISHED,
+               "expected_status": None},
+              {"task_status": consts.TaskStatus.FAILED,
+               "expected_status": None},
+              {"task_status": "strange value",
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.INIT,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.VERIFYING,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.RUNNING,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.ABORTING,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.SOFT_ABORTING,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.ABORTED,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.FINISHED,
+               "force": True, "expected_status": None},
+              {"task_status": consts.TaskStatus.FAILED,
+               "force": True, "expected_status": None})
+    @ddt.unpack
+    @mock.patch("rally.api.objects.Task.get_status")
+    @mock.patch("rally.api.objects.Task.delete_by_uuid")
+    def test_delete(self, mock_task_delete_by_uuid, mock_task_get_status,
+                    task_status, expected_status, force=False, raises=None):
+        mock_task_get_status.return_value = task_status
+        api.Task.delete(self.task_uuid, force=force)
+        if force:
+            self.assertFalse(mock_task_get_status.called)
+        else:
+            mock_task_get_status.assert_called_once_with(self.task_uuid)
+        mock_task_delete_by_uuid.assert_called_once_with(
             self.task_uuid,
-            status=consts.TaskStatus.FINISHED)
-
-    @mock.patch("rally.common.objects.task.db.task_delete")
-    def test_delete_force(self, mock_task_delete):
-        api.Task.delete(self.task_uuid, force=True)
-        mock_task_delete.assert_called_once_with(
-            self.task_uuid, status=None)
+            status=expected_status)
 
     @mock.patch("rally.api.objects.Task")
     def test_get_detailed(self, mock_task):

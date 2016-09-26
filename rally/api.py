@@ -361,11 +361,19 @@ class Task(object):
         :param force: If set to True, then delete the task despite to the
                       status
         :raises TaskInvalidStatus: when the status of the task is not
-                                   FINISHED and the force argument
-                                   is not True
+                                   in FINISHED, FAILED or ABORTED and
+                                   the force argument is not True
         """
-        status = None if force else consts.TaskStatus.FINISHED
-        objects.Task.delete_by_uuid(task_uuid, status=status)
+        if force:
+            objects.Task.delete_by_uuid(task_uuid, status=None)
+        elif objects.Task.get_status(task_uuid) in (
+                consts.TaskStatus.ABORTED,
+                consts.TaskStatus.FINISHED,
+                consts.TaskStatus.FAILED):
+            objects.Task.delete_by_uuid(task_uuid, status=None)
+        else:
+            objects.Task.delete_by_uuid(
+                task_uuid, status=consts.TaskStatus.FINISHED)
 
 
 class Verification(object):
