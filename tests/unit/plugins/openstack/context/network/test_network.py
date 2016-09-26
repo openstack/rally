@@ -55,8 +55,8 @@ class NetworkTestCase(test.TestCase):
                              dns_nameservers=["1.2.3.4", "5.6.7.8"]))
         self.assertEqual(context.config["networks_per_tenant"], 42)
         self.assertEqual(context.config["start_cidr"], "foo_cidr")
-        self.assertDictEqual(context.config["network_create_args"],
-                             {"fakearg": "fake"})
+        self.assertEqual(context.config["network_create_args"],
+                         {"fakearg": "fake"})
         self.assertEqual(context.config["dns_nameservers"],
                          ("1.2.3.4", "5.6.7.8"))
 
