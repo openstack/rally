@@ -840,6 +840,21 @@ class NovaScenario(scenario.OpenStackScenario):
         with atomic.ActionTimer(self, "nova.list_security_groups"):
             return self.clients("nova").security_groups.list()
 
+    @atomic.optional_action_timer("nova.add_server_secgroups")
+    def _add_server_secgroups(self, server, security_group,
+                              atomic_action=False):
+        """add security group to a server.
+
+        :param server: Server object
+        :param security_groups: The name of security group to add.
+        :param atomic_action: True if this is atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator.
+        :returns: An instance of novaclient.base.DictWithMeta
+        """
+        return self.clients("nova").servers.add_security_group(server,
+                                                               security_group)
+
     @atomic.action_timer("nova.list_floating_ips_bulk")
     def _list_floating_ips_bulk(self):
         """List all floating IPs."""
