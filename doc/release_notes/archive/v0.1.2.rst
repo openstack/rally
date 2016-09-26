@@ -88,7 +88,7 @@ Rally Task
 
 * Move rally.osclients.Clients to plugin base
 
-  Rally OSclients is plugable now and it is very easy to extend OSClients for
+  Rally OSclients is pluggable now and it is very easy to extend OSClient for
   your cloud out of Rally tree.
 
 * Add 'merge' functionality to SLA
