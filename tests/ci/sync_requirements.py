@@ -337,4 +337,4 @@ def main():
     parser.parse_args(sys.argv[1:]).action()
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
