@@ -48,9 +48,6 @@ LOG = logging.getLogger(__name__)
                     name="VMTasks.boot_runcommand_delete")
 class BootRuncommandDelete(vm_utils.VMScenario):
 
-    def __init__(self, *args, **kwargs):
-        super(BootRuncommandDelete, self).__init__(*args, **kwargs)
-
     def run(self, image, flavor, username, password=None, command=None,
             volume_args=None, floating_network=None, port=22,
             use_floating_ip=True, force_delete=False, wait_for_ping=True,
@@ -228,9 +225,6 @@ class BootRuncommandDelete(vm_utils.VMScenario):
                     name="VMTasks.boot_runcommand_delete_custom_image")
 class BootRuncommandDeleteCustomImage(vm_utils.VMScenario):
 
-    def __init__(self, *args, **kwargs):
-        super(BootRuncommandDeleteCustomImage, self).__init__(*args, **kwargs)
-
     def run(self, **kwargs):
         """Boot a server from a custom image, run a command that outputs JSON.
 
@@ -245,9 +239,6 @@ class BootRuncommandDeleteCustomImage(vm_utils.VMScenario):
                              "keypair": {}, "network": {}},
                     name="VMTasks.runcommand_heat")
 class RuncommandHeat(vm_utils.VMScenario):
-
-    def __init__(self, *args, **kwargs):
-        super(RuncommandHeat, self).__init__(*args, **kwargs)
 
     def run(self, workload, template, files, parameters):
         """Run workload on stack deployed by heat.
