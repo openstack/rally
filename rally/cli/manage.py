@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-""" CLI interface for Rally DB management. """
+"""CLI interface for Rally DB management."""
 
 from __future__ import print_function
 

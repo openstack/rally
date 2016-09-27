@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-""" Rally command: verify """
+"""Rally command: verify"""
 
 import csv
 import json
