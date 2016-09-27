@@ -13,12 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import logging
 from rally.common.objects import credential
+
+LOG = logging.getLogger(__name__)
 
 
 class Endpoint(credential.Credential):
     def __init__(self, *args, **kwargs):
         super(Endpoint, self).__init__(*args, **kwargs)
-        import warnings  # import this library only when it required
-        warnings.warn("Endpoint is deprecated since Rally 0.1.2. "
-                      "Please use rally.common.objects.credentials instead")
+        LOG.warning("Endpoint is deprecated since Rally 0.1.2. "
+                    "Please use rally.common.objects.credentials instead")
