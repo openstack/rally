@@ -69,7 +69,7 @@ class ExistingNetworkTestCase(test.TestCase):
         for net_wrapper in net_wrappers.values():
             net_wrapper.list_networks.assert_called_once_with()
 
-        self.assertDictEqual(
+        self.assertEqual(
             self.context["tenants"],
             {
                 "tenant1": {"networks": networks[0:2]},

@@ -122,7 +122,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             name=self.scenario.generate_random_name.return_value)
         # ensure that _create_alarm() doesn't modify the alarm dict as
         # a side-effect
-        self.assertDictEqual(alarm_dict, orig_alarm_dict)
+        self.assertEqual(alarm_dict, orig_alarm_dict)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.create_alarm")
 
@@ -141,7 +141,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             "alarm-id", **alarm_diff)
         # ensure that _create_alarm() doesn't modify the alarm dict as
         # a side-effect
-        self.assertDictEqual(alarm_diff, orig_alarm_diff)
+        self.assertEqual(alarm_diff, orig_alarm_diff)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.update_alarm")
 
