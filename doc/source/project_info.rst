@@ -28,10 +28,10 @@ Project Team Lead (PTL)
 +------------------------------+------------------------------------------------+
 |       Contact                |             Area of interest                   |
 +------------------------------+------------------------------------------------+
-| | Boris Pavlovic             |  * Road Map                                    |
-| | boris-42 (irc)             |  * Release management                          |
-| | boris@pavlovic.me          |  * Community management                        |
-|                              |  * Core team management                        |
+| | Andrey Kurilin             |  * Road Map                                    |
+| | andreykurilin (irc)        |  * Release management                          |
+| | andr.kurilin@gmail.com     |  * Community management                        |
+| | akurilin@mirantis.com      |  * Core team management                        |
 |                              |  * Chief Architect                             |
 +------------------------------+------------------------------------------------+
 
@@ -49,13 +49,17 @@ Project Core maintainers
 | | amaretskiy (irc)           |  * Front-end                                   |
 | | amaretskiy@mirantis.com    |                                                |
 +------------------------------+------------------------------------------------+
-| | Andrey Kurilin             |  * Rally-Tempest Integration                   |
-| | andreykurilin (irc)        |  * Rally verify                                |
-| | andr.kurilin@gmail.com     |  * Nova plugins                                |
+| | Boris Pavlovic             |  * Founder and ideological leader              |
+| | boris-42 (irc)             |  * Architect                                   |
+| | boris@pavlovic.me          |  * Rally task & benchmark                      |
 +------------------------------+------------------------------------------------+
 | | Chris St. Pierre           |  * Rally task & benchmark                      |
 | | stpierre (irc)             |  * Bash guru ;)                                |
 | | cstpierr@cisco.com         |                                                |
++------------------------------+------------------------------------------------+
+| | Illia Khudoshyn            |  * Rally task & benchmark                      |
+| | ikhudoshyn (irc)           |                                                |
+| | ikhudoshyn@mirantis.com    |                                                |
 +------------------------------+------------------------------------------------+
 | | Kun Huang                  |  * Rally task & benchmark                      |
 | | kun_huang (irc)            |                                                |
@@ -101,6 +105,10 @@ Plugin Core reviewers
 | | skraynev (irc)             |                                                |
 | | skraynev@mirantis.com      |                                                |
 +------------------------------+------------------------------------------------+
+| | Yaroslav Lobankov          |  * Rally Verification                          |
+| | ylobankov (irc)            |                                                |
+| | ylobankov@mirantis.com     |                                                |
++------------------------------+------------------------------------------------+
 
 
 
@@ -116,8 +124,7 @@ Useful links
 - `Project space <http://launchpad.net/rally>`_
 - `Bugs <https://bugs.launchpad.net/rally>`_
 - `Patches on review <https://review.openstack.org/#/q/status:open+rally,n,z>`_
-- `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
-- `Release meeting logs <http://eavesdrop.openstack.org/meetings/rallyrelease/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
+- `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2016/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
 - `IRC logs <http://irclog.perlgeek.de/openstack-rally>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
 
 
@@ -125,6 +132,5 @@ Where can I discuss and propose changes?
 ----------------------------------------
 - Our IRC channel: **#openstack-rally** on **irc.freenode.net**;
 - Weekly Rally team meeting (in IRC): **#openstack-meeting** on **irc.freenode.net**, held on Mondays at 14:00 UTC;
-- Weekly release meeting (in IRC): **#openstack-rally** on **irc.freenode.net**, held on Mondays at 13:00 UTC;
 - OpenStack mailing list: **openstack-dev@lists.openstack.org** (see `subscription and usage instructions <http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev>`_);
 - `Rally team on Launchpad <https://launchpad.net/rally>`_: Answers/Bugs/Blueprints.
