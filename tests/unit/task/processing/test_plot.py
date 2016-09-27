@@ -54,27 +54,107 @@ class PlotTestCase(test.TestCase):
                          "iterations_count": 10, "iterations_passed": 10,
                          "max_duration": 14, "min_duration": 5,
                          "output_names": [],
-                         "tstamp_end": 25, "tstamp_start": 2}}
+                         "tstamp_end": 25, "tstamp_start": 2},
+                "hooks": []}
 
-        task_data = plot._process_scenario(data, 1)
+        result = plot._process_scenario(data, 1)
         self.assertEqual(
-            task_data, {
-                "cls": "Foo", "met": "bar", "name": "bar [2]", "pos": "1",
-                "runner": "constant", "config": json.dumps(
-                    {"Foo.bar": [{"runner": {"type": "constant"}}]},
-                    indent=2),
-                "full_duration": 40, "load_duration": 32,
-                "atomic": {"histogram": "atomic_histogram",
-                           "iter": "atomic_stacked", "pie": "atomic_avg"},
-                "iterations": {"histogram": "main_histogram",
-                               "iter": "main_stacked",
-                               "pie": [("success", 10), ("errors", 0)]},
-                "iterations_count": 10, "errors": [],
-                "load_profile": "load_profile",
-                "additive_output": [],
-                "complete_output": [[], [], [], [], [], [], [], [], [], []],
-                "output_errors": [],
-                "sla": [], "sla_success": True, "table": "main_stats"})
+            {"cls": "Foo", "met": "bar", "name": "bar [2]", "pos": "1",
+             "runner": "constant", "config": json.dumps(
+                 {"Foo.bar": [{"runner": {"type": "constant"}}]},
+                 indent=2),
+             "full_duration": 40, "load_duration": 32, "hooks": [],
+             "atomic": {"histogram": "atomic_histogram",
+                        "iter": "atomic_stacked", "pie": "atomic_avg"},
+             "iterations": {"histogram": "main_histogram",
+                            "iter": "main_stacked",
+                            "pie": [("success", 10), ("errors", 0)]},
+             "iterations_count": 10, "errors": [],
+             "load_profile": "load_profile",
+             "additive_output": [],
+             "complete_output": [[], [], [], [], [], [], [], [], [], []],
+             "has_output": False,
+             "output_errors": [],
+             "sla": [], "sla_success": True, "table": "main_stats"},
+            result)
+
+    @ddt.data(
+        {"hooks": [], "expected": []},
+        {"hooks": [
+            {"config": {
+                "trigger": {"args": {"at": [2, 5], "unit": "iteration"},
+                            "name": "event"},
+                "args": "foo cmd", "description": "Foo", "name": "sys_call"},
+             "results": [
+                 {"status": "success", "finished_at": 1475589987.525735,
+                  "triggered_by": {"event_type": "iteration", "value": 2},
+                  "started_at": 1475589987.433399,
+                  "output": {
+                      "additive": [
+                          {"chart_plugin": "StatsTable", "title": "Foo table",
+                           "data": [["A", 158], ["B", 177]]}],
+                      "complete": []}},
+                 {"status": "success", "finished_at": 1475589993.457818,
+                  "triggered_by": {"event_type": "iteration", "value": 5},
+                  "started_at": 1475589993.432734,
+                  "output": {
+                      "additive": [
+                          {"chart_plugin": "StatsTable", "title": "Foo table",
+                           "data": [["A", 243], ["B", 179]]}],
+                      "complete": []}}],
+             "summary": {"success": 2}},
+            {"config": {"trigger": {"args": {"at": [1, 2, 4], "unit": "time"},
+                                    "name": "event"},
+                        "args": "bar cmd", "description": "Bar hook",
+                        "name": "sys_call"},
+             "results": [
+                 {"status": "success", "finished_at": 1475589988.437791,
+                  "triggered_by": {"event_type": "time", "value": 1},
+                  "started_at": 1475589988.434244,
+                  "output": {"additive": [],
+                             "complete": [
+                                 {"chart_plugin": "Pie", "title": "Bar Pie",
+                                  "data": [["F", 4], ["G", 2]]}]}},
+                 {"status": "success",
+                  "finished_at": 1475589989.437589,
+                  "triggered_by": {"event_type": "time", "value": 2},
+                  "started_at": 1475589989.433964,
+                  "output": {"additive": [],
+                             "complete": [
+                                 {"chart_plugin": "Pie", "title": "Bar Pie",
+                                  "data": [["F", 42], ["G", 24]]}]}}],
+             "summary": {"success": 2}}],
+         "expected": [
+             {"additive": [
+                 {"data": {"cols": ["Action", "Min (sec)", "Median (sec)",
+                                    "90%ile (sec)", "95%ile (sec)",
+                                    "Max (sec)", "Avg (sec)", "Count"],
+                           "rows": [["A", 158.0, 200.5, 234.5, 238.75, 243.0,
+                                     100.75, 2],
+                                    ["B", 177.0, 178.0, 178.8, 178.9, 179.0,
+                                     89.5, 2]]},
+                  "axis_label": "", "description": "", "label": "",
+                  "title": "Foo table", "widget": "Table"}],
+              "complete": [], "desc": "Foo", "name": "sys_call"},
+             {"additive": [],
+              "complete": [
+                  {"charts": [{"data": [["F", 4], ["G", 2]],
+                               "title": "Bar Pie", "widget": "Pie"}],
+                   "finished_at": "2016-10-04 14:06:28",
+                   "started_at": "2016-10-04 14:06:28",
+                   "status": "success",
+                   "triggered_by": "time: 1"},
+                  {"charts": [{"data": [["F", 42], ["G", 24]],
+                               "title": "Bar Pie", "widget": "Pie"}],
+                   "finished_at": "2016-10-04 14:06:29",
+                   "started_at": "2016-10-04 14:06:29",
+                   "status": "success",
+                   "triggered_by": "time: 2"}],
+              "desc": "Bar hook",
+              "name": "sys_call"}]})
+    @ddt.unpack
+    def test__process_hooks(self, hooks, expected):
+        self.assertEqual(expected, plot._process_hooks(hooks))
 
     @mock.patch(PLOT + "_process_scenario")
     @mock.patch(PLOT + "json.dumps", return_value="json_data")

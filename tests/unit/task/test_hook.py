@@ -46,7 +46,7 @@ class DummyHook(hook.Hook):
 
         output = self.config.get("output")
         if output:
-            self.set_output(output)
+            self.add_output(**output)
 
 
 class HookExecutorTestCase(test.TestCase):
@@ -94,7 +94,7 @@ class HookExecutorTestCase(test.TestCase):
     def test_result_optional(self, mock_timer, mock__timer_method):
         hook_args = self.conf["hooks"][0]["args"]
         hook_args["error"] = ["Exception", "Description", "Traceback"]
-        hook_args["output"] = {"additive": [], "complete": []}
+        hook_args["output"] = {"additive": None, "complete": None}
 
         hook_executor = hook.HookExecutor(self.conf, self.task)
         hook_executor.on_event(event_type="iteration", value=1)

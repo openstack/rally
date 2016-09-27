@@ -13,11 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import shlex
 import subprocess
 
 from rally.common import logging
 from rally import consts
+from rally import exceptions
 from rally.task import hook
 
 
@@ -37,15 +39,28 @@ class SysCallHook(hook.Hook):
         LOG.debug("sys_call hook: Running command %s", self.config)
         proc = subprocess.Popen(shlex.split(self.config),
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        proc.wait()
+                                stderr=subprocess.PIPE)
+        out, err = proc.communicate()
         LOG.debug("sys_call hook: Command %s returned %s",
                   self.config, proc.returncode)
-        if proc.returncode == 0:
-            self.set_output(proc.stdout.read().decode())
-        else:
+        if proc.returncode:
             self.set_error(
                 exception_name="n/a",  # no exception class
                 description="Subprocess returned {}".format(proc.returncode),
-                details=proc.stdout.read().decode(),
-            )
+                details=(err or "stdout: %s" % out))
+
+        # NOTE(amaretskiy): Try to load JSON for charts,
+        #                   otherwise save output as-is
+        try:
+            output = json.loads(out)
+            for arg in ("additive", "complete"):
+                for out_ in output.get(arg, []):
+                    self.add_output(**{arg: out_})
+        except (TypeError, ValueError, exceptions.RallyException):
+            self.add_output(
+                complete={"title": "System call",
+                          "chart_plugin": "TextArea",
+                          "description": "Args: %s" % self.config,
+                          "data": ["RetCode: %i" % proc.returncode,
+                                   "StdOut: %s" % (out or "(empty)"),
+                                   "StdErr: %s" % (err or "(empty)")]})

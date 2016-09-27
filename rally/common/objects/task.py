@@ -82,7 +82,8 @@ OUTPUT_SCHEMA = {
                              }
                          },
                          "required": ["cols", "rows"],
-                         "additionalProperties": False}
+                         "additionalProperties": False},
+                        {"type": "array", "items": {"type": "string"}},
                     ]},
                     "label": {"type": "string"},
                     "axis_label": {"type": "string"}
