@@ -15,8 +15,9 @@
 
 import ddt
 import jsonschema
+import mock
 
-from rally.task import trigger
+from rally.plugins.common.trigger import event
 from tests.unit import test
 
 
@@ -29,8 +30,10 @@ class EventTriggerTestCase(test.TestCase):
 
     def setUp(self):
         super(EventTriggerTestCase, self).setUp()
-        self.trigger = trigger.Trigger.get("event")({"unit": "iteration",
-                                                     "at": [1, 4, 5]})
+        self.hook_cls = mock.MagicMock(__name__="name")
+        self.trigger = event.EventTrigger({"trigger": {"args": {
+            "unit": "iteration", "at": [1, 4, 5]}}},
+            mock.MagicMock(), self.hook_cls)
 
     @ddt.data((create_config(unit="time", at=[0, 3, 5]), True),
               (create_config(unit="time", at=[2, 2]), False),
@@ -52,18 +55,18 @@ class EventTriggerTestCase(test.TestCase):
     @ddt.unpack
     def test_config_schema(self, config, valid):
         if valid:
-            trigger.Trigger.validate(config)
+            event.EventTrigger.validate(config)
         else:
             self.assertRaises(jsonschema.ValidationError,
-                              trigger.Trigger.validate, config)
+                              event.EventTrigger.validate, config)
 
-    def test_get_configured_event_type(self):
-        event_type = self.trigger.get_configured_event_type()
+    def test_get_listening_event(self):
+        event_type = self.trigger.get_listening_event()
         self.assertEqual("iteration", event_type)
 
     @ddt.data((1, True), (4, True), (5, True),
               (0, False), (2, False), (3, False), (6, False), (7, False))
     @ddt.unpack
-    def test_is_runnable(self, value, expected_result):
-        result = self.trigger.is_runnable(value)
-        self.assertIs(result, expected_result)
+    def test_on_event(self, value, should_call):
+        self.trigger.on_event("iteration", value)
+        self.assertEqual(should_call, self.hook_cls.called)

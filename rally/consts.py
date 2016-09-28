@@ -183,7 +183,6 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
 
 class _HookStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Hook result statuses."""
-    UNKNOWN = "n/a"
     SUCCESS = "success"
     FAILED = "failed"
     VALIDATION_FAILED = "validation_failed"

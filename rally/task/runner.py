@@ -217,7 +217,7 @@ class ScenarioRunner(plugin.Plugin):
                 time.sleep(0.01)
 
             while not event_queue.empty():
-                self._send_event(event_queue.get())
+                self.send_event(**event_queue.get())
 
             while not result_queue.empty():
                 self._send_result(result_queue.get())
@@ -323,12 +323,14 @@ class ScenarioRunner(plugin.Plugin):
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
-    def _send_event(self, event):
+    def send_event(self, type, value=None):
         """Store event to send it to consumer later.
 
-        :param event: Event dict to be sent.
+        :param type: Event type
+        :param value: Optional event data
         """
-        self.event_queue.append(event)
+        self.event_queue.append({"type": type,
+                                 "value": value})
 
     def _log_debug_info(self, **info):
         """Log runner parameters for debugging.

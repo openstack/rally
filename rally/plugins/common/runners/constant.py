@@ -296,7 +296,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         def event_listener():
             while not stop_event_listener.isSet():
                 while not event_queue.empty():
-                    self._send_event(event_queue.get())
+                    self.send_event(**event_queue.get())
                 else:
                     time.sleep(0.01)
 

@@ -22,7 +22,6 @@ import six
 
 from rally.common.i18n import _, _LE
 from rally.common import logging
-from rally.common import objects
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
@@ -42,22 +41,18 @@ class HookExecutor(object):
     def __init__(self, config, task):
         self.config = config
         self.task = task
-        self._timer_thread = threading.Thread(target=self._timer_method)
-        self._timer_stop_event = threading.Event()
 
-        # map triggers to event types
         self.triggers = collections.defaultdict(list)
         for hook in config.get("hooks", []):
+            hook_cls = Hook.get(hook["name"])
             trigger_obj = trigger.Trigger.get(
-                hook["trigger"]["name"])(hook["trigger"]["args"])
-            trigger_event_type = trigger_obj.get_configured_event_type()
-            self.triggers[trigger_event_type].append(
-                (trigger_obj, hook["name"], hook["args"],
-                 hook.get("description", "n/a"))
-            )
+                hook["trigger"]["name"])(hook, self.task, hook_cls)
+            event_type = trigger_obj.get_listening_event()
+            self.triggers[event_type].append(trigger_obj)
 
-        # list of executed hooks
-        self.hooks = []
+        if "time" in self.triggers:
+            self._timer_thread = threading.Thread(target=self._timer_method)
+            self._timer_stop_event = threading.Event()
 
     def _timer_method(self):
         """Timer thread method.
@@ -88,26 +83,27 @@ class HookExecutor(object):
         particular event occurred.
         It runs hooks configured for event.
         """
-        # start timer on first iteration
-        if self.triggers["time"]:
+        if "time" in self.triggers:
+            # start timer on first iteration
             if event_type == "iteration" and value == 1:
                 self._start_timer()
 
-        triggers = self.triggers[event_type]
-        for trigger_obj, hook_name, hook_args, hook_description in triggers:
-            if trigger_obj.is_runnable(value=value):
-                hook = Hook.get(hook_name)(task=self.task, config=hook_args,
-                                           triggered_by={event_type: value},
-                                           description=hook_description)
-                self.hooks.append(hook)
-                hook.run_async()
+        for trigger_obj in self.triggers[event_type]:
+            started = trigger_obj.on_event(event_type, value)
+            if started:
                 LOG.info(_("Hook %s is trigged for Task %s by %s=%s")
-                         % (hook_name, self.task["uuid"], event_type, value))
+                         % (trigger_obj.hook_cls.__name__, self.task["uuid"],
+                            event_type, value))
 
     def results(self):
         """Returns list of dicts with hook results."""
-        self._stop_timer()
-        return [hook.result() for hook in self.hooks]
+        if "time" in self.triggers:
+            self._stop_timer()
+        results = []
+        for triggers_group in self.triggers.values():
+            for trigger_obj in triggers_group:
+                results.append(trigger_obj.get_results())
+        return results
 
 
 @plugin.base()
@@ -115,55 +111,31 @@ class HookExecutor(object):
 class Hook(plugin.Plugin):
     """Factory for hook classes."""
 
-    @classmethod
-    def validate(cls, config):
-        hook_schema = cls.get(config["name"]).CONFIG_SCHEMA
-        jsonschema.validate(config["args"], hook_schema)
+    CONFIG_SCHEMA = {}
 
-        trigger.Trigger.validate(config["trigger"])
-
-    def __init__(self, task, config, triggered_by, description):
+    def __init__(self, task, config, triggered_by):
         self.task = task
         self.config = config
         self._triggered_by = triggered_by
-        self._description = description
         self._thread = threading.Thread(target=self._thread_method)
         self._started_at = 0.0
         self._finished_at = 0.0
-        self._result = self._format_result(status=consts.HookStatus.UNKNOWN)
-
-    def _format_result(self, status, error=None):
-        """Returns hook result dict."""
-        result = {
-            "hook": self.get_name(),
-            "status": status,
-            "description": self._description,
+        self._result = {
+            "status": consts.HookStatus.SUCCESS,
             "started_at": self._started_at,
             "finished_at": self._finished_at,
             "triggered_by": self._triggered_by,
         }
-        if error is not None:
-            result["error"] = error
-        return result
+
+    @classmethod
+    def validate(cls, config):
+        jsonschema.validate(config["args"], cls.CONFIG_SCHEMA)
+
+        trigger.Trigger.validate(config["trigger"])
 
     def _thread_method(self):
         # Run hook synchronously
         self.run_sync()
-        self._validate_result_schema()
-
-    def _validate_result_schema(self):
-        """Validates result format."""
-        try:
-            jsonschema.validate(self._result, objects.task.HOOK_RESULT_SCHEMA)
-        except jsonschema.ValidationError as validation_error:
-            LOG.error(_LE("Hook %s returned result "
-                          "in wrong format.") % self.get_name())
-            LOG.exception(validation_error)
-
-            self._result = self._format_result(
-                status=consts.HookStatus.VALIDATION_FAILED,
-                error=utils.format_exc(validation_error),
-            )
 
     def set_error(self, exception_name, description, details):
         """Set error related information to result.
@@ -173,7 +145,8 @@ class Hook(plugin.Plugin):
         :param details: any details as string
         """
         self.set_status(consts.HookStatus.FAILED)
-        self._result["error"] = [exception_name, description, details]
+        self._result["error"] = {"etype": exception_name,
+                                 "msg": description, "details": details}
 
     def set_status(self, status):
         """Set status to result."""
@@ -184,7 +157,8 @@ class Hook(plugin.Plugin):
 
         :param output: Diagram data in task.OUTPUT_SCHEMA format
         """
-        self._result["output"] = output
+        if output:
+            self._result["output"] = output
 
     def run_async(self):
         """Run hook asynchronously."""

@@ -1036,14 +1036,15 @@ class HookTestCase(unittest.TestCase):
         self.started = time.time()
 
     def _assert_results_time(self, results):
-        for result in results:
-            started_at = result["started_at"]
-            finished_at = result["finished_at"]
-            self.assertIsInstance(started_at, float)
-            self.assertGreater(started_at, self.started)
-            self.assertIsInstance(finished_at, float)
-            self.assertGreater(finished_at, self.started)
-            self.assertGreater(finished_at, started_at)
+        for trigger_results in results:
+            for result in trigger_results["results"]:
+                started_at = result["started_at"]
+                finished_at = result["finished_at"]
+                self.assertIsInstance(started_at, float)
+                self.assertGreater(started_at, self.started)
+                self.assertIsInstance(finished_at, float)
+                self.assertGreater(finished_at, self.started)
+                self.assertGreater(finished_at, started_at)
 
     def _get_sample_task_config(self, cmd, description, runner):
         return {
@@ -1071,20 +1072,23 @@ class HookTestCase(unittest.TestCase):
             ]
         }
 
-    def _get_result(self, description, iteration=None, second=None):
-        triggered_by = {}
-        if iteration is not None:
-            triggered_by["iteration"] = iteration
-        elif second is not None:
-            triggered_by["time"] = second
+    def _get_result(self, config, iterations=None, seconds=None):
         result = {
-            "hook": "sys_call",
-            "description": description,
-            "finished_at": mock.ANY,
-            "started_at": mock.ANY,
-            "triggered_by": triggered_by,
-            "status": "success",
+            "config": config,
+            "results": [],
+            "summary": {"success": 0}
         }
+        events = iterations if iterations else seconds
+        event_type = "iteration" if iterations else "time"
+
+        for i in range(len(events)):
+            result["results"].append({
+                "finished_at": mock.ANY,
+                "started_at": mock.ANY,
+                "triggered_by": {"event_type": event_type, "value": events[i]},
+                "status": "success"})
+            result["summary"]["success"] += 1
+
         return result
 
     def test_hook_result_with_constant_runner(self):
@@ -1097,9 +1101,8 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            self._get_result("event_hook", iteration=5)
-        ]
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
@@ -1114,9 +1117,8 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            self._get_result("event_hook", iteration=5)
-        ]
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
@@ -1130,9 +1132,8 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            self._get_result("event_hook", iteration=5)
-        ]
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
@@ -1146,9 +1147,8 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            self._get_result("event_hook", iteration=5)
-        ]
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
@@ -1162,17 +1162,13 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            {
-                "description": "event_hook",
-                "finished_at": mock.ANY,
-                "started_at": mock.ANY,
-                "hook": "sys_call",
-                "triggered_by": {"iteration": 5},
-                "status": "failed",
-                "error": ["n/a", "Subprocess returned 1", ""],
-            }
-        ]
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
+        expected[0]["results"][0]["status"] = "failed"
+        expected[0]["summary"] = {"failed": 1}
+        expected[0]["results"][0]["error"] = {"etype": "n/a",
+                                              "msg": "Subprocess returned 1",
+                                              "details": ""}
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
@@ -1200,11 +1196,9 @@ class HookTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        expected = [
-            self._get_result("event_hook", iteration=5),
-            self._get_result("time_hook", second=3),
-            self._get_result("time_hook", second=6),
-            self._get_result("time_hook", second=9),
-        ]
+
+        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        expected = [self._get_result(hooks_cfg[0], iterations=[5]),
+                    self._get_result(hooks_cfg[1], seconds=[3, 6, 9])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)

@@ -80,12 +80,14 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"iteration": 1},
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "status": consts.HookStatus.SUCCESS}], hook_executor.results())
+            [{"config": self.conf["hooks"][0],
+              "results": [{
+                  "triggered_by": {"event_type": "iteration", "value": 1},
+                  "started_at": fakes.FakeTimer().timestamp(),
+                  "finished_at": fakes.FakeTimer().finish_timestamp(),
+                  "status": consts.HookStatus.SUCCESS}],
+              "summary": {consts.HookStatus.SUCCESS: 1}}],
+            hook_executor.results())
 
     @mock.patch("rally.task.hook.HookExecutor._timer_method")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
@@ -98,18 +100,23 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"iteration": 1},
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "error": ["Exception", "Description", "Traceback"],
-              "output": {"additive": [], "complete": []},
-              "status": consts.HookStatus.FAILED}], hook_executor.results())
+            [{"config": self.conf["hooks"][0],
+              "results": [{
+                  "triggered_by": {"event_type": "iteration", "value": 1},
+                  "started_at": fakes.FakeTimer().timestamp(),
+                  "finished_at": fakes.FakeTimer().finish_timestamp(),
+                  "error": {"details": "Traceback", "etype": "Exception",
+                            "msg": "Description"},
+                  "output": {"additive": [], "complete": []},
+                  "status": consts.HookStatus.FAILED}],
+              "summary": {consts.HookStatus.FAILED: 1}}],
+            hook_executor.results())
 
     def test_empty_result(self):
         hook_executor = hook.HookExecutor(self.conf, self.task)
-        self.assertEqual([], hook_executor.results())
+        self.assertEqual([{"config": self.conf["hooks"][0], "results": [],
+                           "summary": {}}],
+                         hook_executor.results())
 
     @mock.patch("rally.task.hook.HookExecutor._timer_method")
     @mock.patch.object(DummyHook, "run", side_effect=Exception("My err msg"))
@@ -120,30 +127,15 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"iteration": 1},
-              "error": ["Exception", "My err msg", mock.ANY],
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "status": consts.HookStatus.FAILED}], hook_executor.results())
-
-    @mock.patch("rally.task.hook.HookExecutor._timer_method")
-    @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
-    def test_result_wrong_format(self, mock_timer, mock__timer_method):
-        hook_args = self.conf["hooks"][0]["args"]
-        hook_args["status"] = 10
-        hook_executor = hook.HookExecutor(self.conf, self.task)
-        hook_executor.on_event(event_type="iteration", value=1)
-
-        self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"iteration": 1},
-              "error": ["ValidationError", mock.ANY, mock.ANY],
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "status": consts.HookStatus.VALIDATION_FAILED}],
+            [{"config": self.conf["hooks"][0],
+              "results": [{
+                  "triggered_by": {"event_type": "iteration", "value": 1},
+                  "error": {"etype": "Exception",
+                            "msg": mock.ANY, "details": mock.ANY},
+                  "started_at": fakes.FakeTimer().timestamp(),
+                  "finished_at": fakes.FakeTimer().finish_timestamp(),
+                  "status": consts.HookStatus.FAILED}],
+              "summary": {consts.HookStatus.FAILED: 1}}],
             hook_executor.results())
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
@@ -155,12 +147,14 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="time", value=1)
 
         self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"time": 1},
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "status": consts.HookStatus.SUCCESS}], hook_executor.results())
+            [{"config": self.conf["hooks"][0],
+              "results": [{
+                  "triggered_by": {"event_type": "time", "value": 1},
+                  "started_at": fakes.FakeTimer().timestamp(),
+                  "finished_at": fakes.FakeTimer().finish_timestamp(),
+                  "status": consts.HookStatus.SUCCESS}],
+              "summary": {consts.HookStatus.SUCCESS: 1}}],
+            hook_executor.results())
 
     @mock.patch("rally.common.utils.Stopwatch", autospec=True)
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
@@ -180,12 +174,15 @@ class HookExecutorTestCase(test.TestCase):
         self.assertTrue(hook_executor._timer_stop_event.wait(1))
 
         self.assertEqual(
-            [{"description": "dummy_action",
-              "hook": "dummy_hook",
-              "triggered_by": {"time": 1},
-              "started_at": fakes.FakeTimer().timestamp(),
-              "finished_at": fakes.FakeTimer().finish_timestamp(),
-              "status": consts.HookStatus.SUCCESS}], hook_executor.results())
+            [{"config": self.conf["hooks"][0],
+              "results": [{
+                  "triggered_by": {"event_type": "time", "value": 1},
+                  "started_at": fakes.FakeTimer().timestamp(),
+                  "finished_at": fakes.FakeTimer().finish_timestamp(),
+                  "status": consts.HookStatus.SUCCESS}],
+              "summary": {consts.HookStatus.SUCCESS: 1}
+              }],
+            hook_executor.results())
 
         stopwatch_inst.start.assert_called_once_with()
         stopwatch_inst.sleep.assert_has_calls([
@@ -198,7 +195,7 @@ class HookExecutorTestCase(test.TestCase):
 class HookTestCase(test.TestCase):
 
     def test_validate(self):
-        hook.Hook.validate(
+        DummyHook.validate(
             {
                 "name": "dummy_hook",
                 "description": "dummy_action",
@@ -228,33 +225,30 @@ class HookTestCase(test.TestCase):
                 }
             }
         }
-        self.assertRaises(jsonschema.ValidationError, hook.Hook.validate, conf)
+        self.assertRaises(jsonschema.ValidationError, DummyHook.validate, conf)
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result(self, mock_timer):
         task = mock.MagicMock()
+        triggered_by = {"event_type": "iteration", "value": 1}
         dummy_hook = DummyHook(task, {"status": consts.HookStatus.SUCCESS},
-                               {"iteration": 1}, "dummy_action")
+                               triggered_by)
         dummy_hook.run_sync()
-        dummy_hook._validate_result_schema()
 
         self.assertEqual(
-            {"description": "dummy_action",
-             "hook": "dummy_hook",
-             "started_at": fakes.FakeTimer().timestamp(),
+            {"started_at": fakes.FakeTimer().timestamp(),
              "finished_at": fakes.FakeTimer().finish_timestamp(),
-             "triggered_by": {"iteration": 1},
+             "triggered_by": triggered_by,
              "status": consts.HookStatus.SUCCESS}, dummy_hook.result())
 
     def test_result_not_started(self):
         task = mock.MagicMock()
+        triggered_by = {"event_type": "iteration", "value": 1}
         dummy_hook = DummyHook(task, {"status": consts.HookStatus.SUCCESS},
-                               {"iteration": 1}, "dummy_action")
+                               triggered_by)
 
         self.assertEqual(
-            {"description": "dummy_action",
-             "hook": "dummy_hook",
-             "started_at": 0.0,
+            {"started_at": 0.0,
              "finished_at": 0.0,
-             "triggered_by": {"iteration": 1},
-             "status": consts.HookStatus.UNKNOWN}, dummy_hook.result())
+             "triggered_by": triggered_by,
+             "status": consts.HookStatus.SUCCESS}, dummy_hook.result())

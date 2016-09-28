@@ -533,8 +533,6 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_results = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
         mock_sla_instance.results.return_value = mock_sla_results
-        mock_hook_executor_instance = mock_hook_executor.return_value
-        mock_hook_results = mock_hook_executor_instance.results.return_value
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
@@ -551,7 +549,6 @@ class ResultConsumerTestCase(test.TestCase):
                 "raw": [],
                 "full_duration": 1,
                 "sla": mock_sla_results,
-                "hooks": mock_hook_results,
                 "load_duration": 0
             }
         )], any_order=True)
@@ -674,7 +671,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_hook_results = mock_hook_executor_instance.results.return_value
 
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        key = {"kw": {"fake": 2, "hooks": []}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
         runner = mock.MagicMock()
         events = [

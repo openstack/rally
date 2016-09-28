@@ -41,9 +41,8 @@ class SysCallHook(hook.Hook):
         proc.wait()
         LOG.debug("sys_call hook: Command %s returned %s",
                   self.config, proc.returncode)
-
         if proc.returncode == 0:
-            self.set_status(consts.HookStatus.SUCCESS)
+            self.set_output(proc.stdout.read().decode())
         else:
             self.set_error(
                 exception_name="n/a",  # no exception class
