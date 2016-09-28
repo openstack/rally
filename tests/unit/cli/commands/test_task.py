@@ -145,6 +145,7 @@ class TaskCommandsTestCase(test.TestCase):
                           "some_task", "task_args",
                           "task_args_file", deployment)
 
+    @mock.patch("rally.cli.commands.task.version")
     @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
     @mock.patch("rally.cli.commands.task.api.Task.create",
                 return_value=fakes.FakeTask(uuid="some_new_uuid", tag="tag"))
@@ -158,10 +159,11 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.api.Task.start")
     def test_start(self, mock_task_start, mock_task_validate, mock__load_task,
                    mock_detailed, mock_use, mock_task_create,
-                   mock_os_path_isfile):
+                   mock_os_path_isfile, mock_version):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
         self.task.start(task_path, deployment_id, do_use=True)
+        mock_version.version_string.assert_called_once_with()
         mock_task_create.assert_called_once_with(
             deployment_id, None)
         mock_task_start.assert_called_once_with(
