@@ -416,7 +416,6 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 excluded_keys = ["auth_url", "username", "password",
                                  "tenant_name", "region_name",
                                  "project_domain_name",
-                                 "admin_domain_name",
                                  "user_domain_name"]
                 for key in (set(credential_dict.keys()) - set(excluded_keys)):
                     self.assertEqual(credential_dict[key],

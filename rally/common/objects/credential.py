@@ -22,8 +22,7 @@ class Credential(object):
                  project_name=None,
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=None,
-                 domain_name=None, endpoint=None,
-                 user_domain_name=None, admin_domain_name="Default",
+                 domain_name=None, endpoint=None, user_domain_name=None,
                  project_domain_name=None,
                  https_insecure=False, https_cacert=None):
         self.auth_url = auth_url
@@ -35,7 +34,6 @@ class Credential(object):
         self.endpoint_type = endpoint_type
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
-        self.admin_domain_name = admin_domain_name
         self.project_domain_name = project_domain_name
         self.endpoint = endpoint
         self.insecure = https_insecure
@@ -51,7 +49,6 @@ class Credential(object):
                "https_insecure": self.insecure,
                "https_cacert": self.cacert,
                "user_domain_name": self.user_domain_name,
-               "admin_domain_name": self.admin_domain_name,
                "project_domain_name": self.project_domain_name}
         if include_permission:
             dct["permission"] = self.permission

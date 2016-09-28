@@ -104,7 +104,6 @@ class ExistingCloud(engine.Engine):
                             "password": {"type": "string"},
                             "domain_name": {"type": "string"},
                             "user_domain_name": {"type": "string"},
-                            "admin_domain_name": {"type": "string"},
                             "project_name": {"type": "string"},
                             "project_domain_name": {"type": "string"},
                         },
@@ -147,7 +146,6 @@ class ExistingCloud(engine.Engine):
             endpoint=common.get("endpoint"),
             domain_name=user.get("domain_name"),
             user_domain_name=user.get("user_domain_name", None),
-            admin_domain_name=user.get("admin_domain_name", "Default"),
             project_domain_name=user.get("project_domain_name", None),
             https_insecure=common.get("https_insecure", False),
             https_cacert=common.get("https_cacert")

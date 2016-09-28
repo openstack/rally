@@ -59,7 +59,6 @@ class TestExistingCloud(test.TestCase):
                         "project_name": "demo",
                         "project_domain_name": "Default",
                         "user_domain_name": "Default",
-                        "admin_domain_name": "Default",
                     }
                 }
             }
@@ -116,7 +115,6 @@ class TestExistingCloud(test.TestCase):
             #   so we need to pop them from credentials.to_dict()
             actual_credentials.pop("domain_name")
             actual_credentials.pop("user_domain_name")
-            actual_credentials.pop("admin_domain_name")
             actual_credentials.pop("project_domain_name")
 
         self.assertEqual(admin_credential, actual_credentials)
