@@ -106,3 +106,13 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
             tenant_id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "quotas.delete_quotas")
+
+    def test__get_quotas(self):
+        tenant_id = "fake_tenant"
+        scenario = utils.QuotasScenario(self.context)
+        scenario._get_quotas("nova", tenant_id)
+
+        self.admin_clients("nova").quotas.get.assert_called_once_with(
+            tenant_id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "quotas.get_quotas")

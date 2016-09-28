@@ -102,3 +102,15 @@ class NeutronUpdate(utils.QuotasScenario):
         quota_update_fn = self.admin_clients("neutron").update_quota
         self._update_quotas("neutron", self.context["tenant"]["id"],
                             max_quota, quota_update_fn)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True, users=True)
+@scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
+                    name="Quotas.nova_get")
+class NovaGet(utils.QuotasScenario):
+
+    def run(self):
+        """Get quotas for nova."""
+
+        self._get_quotas("nova", self.context["tenant"]["id"])

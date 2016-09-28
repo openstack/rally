@@ -77,3 +77,13 @@ class QuotasScenario(scenario.OpenStackScenario):
                 quota[key] = random.randint(-1, max_quota)
             quotas = {"body": {"quota": quota}}
         return quotas
+
+    @atomic.action_timer("quotas.get_quotas")
+    def _get_quotas(self, component, tenant_id):
+        """Get quotas for a project.
+
+        :param component: Openstack component for the quotas.
+        :param tenant_id: The project_id for the quotas to show.
+        :return: Get quotas for a project.
+        """
+        return self.admin_clients(component).quotas.get(tenant_id)
