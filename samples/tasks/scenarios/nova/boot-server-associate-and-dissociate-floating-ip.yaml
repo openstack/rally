@@ -1,0 +1,22 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+---
+  NovaServers.boot_server_associate_and_dissociate_floating_ip:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: "^cirros.*uec$"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+
