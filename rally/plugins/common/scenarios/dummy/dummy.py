@@ -13,7 +13,6 @@
 import random
 
 from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils
 from rally import exceptions
 from rally.task import atomic
@@ -187,26 +186,6 @@ class DummyOutput(scenario.Scenario):
                                   "description": desc % "Complete Table",
                                   "chart_plugin": "Table",
                                   "data": data})
-
-
-@logging.log_deprecated("Use Dummy.dummy_output() instead.", "0.4.1",
-                        once=True)
-@scenario.configure(name="Dummy.dummy_with_scenario_output")
-class DummyWithScenarioOutput(scenario.Scenario):
-    """Dummy benchmarks for testing Rally benchmark engine."""
-
-    def run(self):
-        """Return a dummy scenario output.
-
-        Dummy.dummy_with_scenario_output can be used to test the scenario
-        output processing.
-        """
-        out = {
-            "value_1": random.randint(1, 100),
-            "value_2": random.random()
-        }
-        err = ""
-        return {"data": out, "errors": err}
 
 
 @scenario.configure(name="Dummy.dummy_random_fail_in_atomic")
