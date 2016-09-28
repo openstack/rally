@@ -1,0 +1,25 @@
+{
+    "NovaAggregates.create_and_list_aggregates": [
+        {
+            "args": {
+                "availability_zone": "nova"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

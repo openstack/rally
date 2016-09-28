@@ -262,6 +262,14 @@ class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
                 if utils.name_matches_object(net.label, *classes)]
 
 
+@base.resource("nova", "aggregates", order=next(_nova_order),
+               admin_required=True, perform_for_admin_only=True)
+class NovaAggregate(SynchronizedDeletion, base.ResourceManager):
+    def list(self):
+        return [r for r in self._manager().list()
+                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+
+
 # EC2
 
 _ec2_order = get_order(250)

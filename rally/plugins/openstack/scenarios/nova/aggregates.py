@@ -31,3 +31,20 @@ class NovaAggregates(utils.NovaScenario):
         Measure the "nova aggregate-list" command performance.
         """
         self._list_aggregates()
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaAggregates.create_and_list_aggregates")
+class CreateAndListAggregates(utils.NovaScenario):
+    """scenario for create and list aggregate."""
+
+    def run(self, availability_zone):
+        """Create a aggregate and then list all aggregates.
+
+        This scenario creates a aggregate and then lists all aggregates.
+        :param availability_zone: The availability zone of the aggregate
+        """
+        self._create_aggregate(availability_zone)
+        self._list_aggregates()

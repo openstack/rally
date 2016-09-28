@@ -1030,3 +1030,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.update_server")
+
+    def test_create_aggregate(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        random_name = "random_name"
+        nova_scenario.generate_random_name = mock.Mock(
+            return_value=random_name)
+        result = nova_scenario._create_aggregate("nova")
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.create.return_value,
+            result)
+        self.admin_clients("nova").aggregates.create.assert_called_once_with(
+            random_name, "nova")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_aggregate")
