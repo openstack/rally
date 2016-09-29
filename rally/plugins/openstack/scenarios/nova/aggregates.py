@@ -48,3 +48,19 @@ class CreateAndListAggregates(utils.NovaScenario):
         """
         self._create_aggregate(availability_zone)
         self._list_aggregates()
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaAggregates.create_and_delete_aggregate")
+class CreateAndDeleteAggregate(utils.NovaScenario):
+    """Scenario for create and delete aggregate."""
+
+    def run(self, availability_zone):
+        """Create an aggregate and then delete it.
+
+        This scenario first creates an aggregate and then delete it.
+        """
+        aggregate = self._create_aggregate(availability_zone)
+        self._delete_aggregate(aggregate)

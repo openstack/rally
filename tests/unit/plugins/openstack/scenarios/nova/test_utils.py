@@ -1044,3 +1044,14 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             random_name, "nova")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_aggregate")
+
+    def test_delete_aggregate(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        result = nova_scenario._delete_aggregate("fake_aggregate")
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.delete.return_value,
+            result)
+        self.admin_clients("nova").aggregates.delete.assert_called_once_with(
+            "fake_aggregate")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_aggregate")
