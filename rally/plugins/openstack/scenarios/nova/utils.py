@@ -1131,3 +1131,17 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         self._shelve_server(server)
         self._unshelve_server(server)
+
+    @atomic.action_timer("nova.update_aggregate")
+    def _update_aggregate(self, aggregate):
+        """Update the aggregate's name and availability_zone.
+
+        :param aggregate: The aggregate to update
+        :return: The updated aggregate
+        """
+        aggregate_name = self.generate_random_name()
+        availability_zone = self.generate_random_name()
+        values = {"name": aggregate_name,
+                  "availability_zone": availability_zone}
+        return self.admin_clients("nova").aggregates.update(aggregate,
+                                                            values)
