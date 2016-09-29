@@ -160,8 +160,10 @@ class KeystoneV3Service(service.Service, keystone_common.KeystoneMixin):
             name, type=service_type, description=description, enabled=enabled)
 
     @atomic.action_timer("keystone_v3.create_role")
-    def create_role(self, name=None, domain_name="Default"):
-        domain_id = self._get_domain_id(domain_name)
+    def create_role(self, name=None, domain_name=None):
+        domain_id = None
+        if domain_name:
+            domain_id = self._get_domain_id(domain_name)
         name = name or self.generate_random_name()
         return self._clients.keystone("3").roles.create(name, domain=domain_id)
 
@@ -298,7 +300,7 @@ class UnifiedKeystoneV3Service(keystone_common.UnifiedKeystoneMixin,
         """List all services."""
         return [self._unify_service(s) for s in self._impl.list_services()]
 
-    def create_role(self, name=None, domain_name="Default"):
+    def create_role(self, name=None, domain_name=None):
         """Add role to user."""
         return self._unify_role(self._impl.create_role(
             name, domain_name=domain_name))

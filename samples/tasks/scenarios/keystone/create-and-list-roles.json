@@ -1,0 +1,26 @@
+{
+    "KeystoneBasic.create_and_list_roles": [
+        {
+            "args": {
+                "create_role_kwargs": {},
+                "list_role_kwargs": {}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

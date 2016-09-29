@@ -274,9 +274,12 @@ class UnifiedKeystoneV2Service(keystone_common.UnifiedKeystoneMixin,
         """List all services."""
         return [self._unify_service(s) for s in self._impl.list_services()]
 
-    def create_role(self, name=None, domain_name="Default"):
+    def create_role(self, name=None, domain_name=None):
         """Add role to user."""
-        self._check_domain(domain_name)
+        if domain_name is not None:
+            raise NotImplementedError("Domain functionality not implemented "
+                                      "in Keystone v2")
+
         return self._unify_role(self._impl.create_role(name))
 
     def add_role(self, role_id, user_id, project_id):

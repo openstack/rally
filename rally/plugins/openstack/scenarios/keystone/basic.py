@@ -364,3 +364,27 @@ class CreateAndGetRole(KeystoneBasic):
         """
         role = self.admin_keystone.create_role(**kwargs)
         self.admin_keystone.get_role(role.id)
+
+
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["keystone"]},
+                    name="KeystoneBasic.create_and_list_roles")
+class CreateAddListRoles(KeystoneBasic):
+
+    def run(self, create_role_kwargs=None, list_role_kwargs=None):
+        """Create a role, then list all roles.
+
+        :param create_role_kwargs: Optional additional arguments for
+                                   roles create
+        :param list_role_kwargs: Optional additional arguments for roles list
+        """
+        create_role_kwargs = create_role_kwargs or {}
+        list_role_kwargs = list_role_kwargs or {}
+
+        role = self.admin_keystone.create_role(**create_role_kwargs)
+        msg = "Role isn't created"
+        self.assertTrue(role, err_msg=msg)
+        all_roles = self.admin_keystone.list_roles(**list_role_kwargs)
+        msg = ("Created role is not in the"
+               " list of all available roles")
+        self.assertIn(role, all_roles, err_msg=msg)

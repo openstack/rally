@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.keystone import basic
 from tests.unit import test
 
@@ -186,6 +187,40 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
             user_id=fake_user, role_id=fake_role.id, project_id=fake_tenant)
         self.mock_identity.return_value.list_roles.assert_called_once_with(
             user_id=fake_user, project_id=fake_tenant)
+
+    def test_create_and_list_roles(self):
+        # Positive case
+        scenario = basic.CreateAddListRoles(self.context)
+        create_kwargs = {"fakewargs": "name"}
+        list_kwargs = {"fakewargs": "f"}
+        self.mock_identity.return_value.create_role = mock.Mock(
+            return_value="role1")
+        self.mock_identity.return_value.list_roles = mock.Mock(
+            return_value=("role1", "role2"))
+        scenario.run(create_role_kwargs=create_kwargs,
+                     list_role_kwargs=list_kwargs)
+        self.mock_identity.return_value.create_role.assert_called_once_with(
+            **create_kwargs)
+        self.mock_identity.return_value.list_roles.assert_called_once_with(
+            **list_kwargs)
+
+        # Negative case 1: role isn't created
+        self.mock_identity.return_value.create_role.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, create_role_kwargs=create_kwargs,
+                          list_role_kwargs=list_kwargs)
+        self.mock_identity.return_value.create_role.assert_called_with(
+            **create_kwargs)
+
+        # Negative case 2: role was created but included into list
+        self.mock_identity.return_value.create_role.return_value = "role3"
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, create_role_kwargs=create_kwargs,
+                          list_role_kwargs=list_kwargs)
+        self.mock_identity.return_value.create_role.assert_called_with(
+            **create_kwargs)
+        self.mock_identity.return_value.list_roles.assert_called_with(
+            **list_kwargs)
 
     @ddt.data(None, "keystone", "fooservice")
     def test_get_entities(self, service_name):

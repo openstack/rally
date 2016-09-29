@@ -169,7 +169,7 @@ class IdentityTestCase(test.TestCase):
         name = "name"
         service.create_role(name)
         service._impl.create_role.assert_called_once_with(
-            name=name, domain_name="Default")
+            name=name, domain_name=None)
 
     def test_add_role(self):
         service = self.get_service_with_fake_impl()

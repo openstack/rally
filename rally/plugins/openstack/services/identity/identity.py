@@ -153,7 +153,7 @@ class Identity(service.UnifiedOpenStackService):
         return self._impl.get_service(service_id)
 
     @service.should_be_overridden
-    def create_role(self, name=None, domain_name="Default"):
+    def create_role(self, name=None, domain_name=None):
         """Create role with specific name
 
         :param name: role name
