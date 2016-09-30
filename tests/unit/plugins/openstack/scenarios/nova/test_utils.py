@@ -1084,3 +1084,26 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             aggregate, values)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.update_aggregate")
+
+    def test_aggregate_add_host(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        result = nova_scenario._aggregate_add_host("fake_agg", "fake_host")
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.add_host.return_value,
+            result)
+        self.admin_clients("nova").aggregates.add_host.assert_called_once_with(
+            "fake_agg", "fake_host")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.aggregate_add_host")
+
+    def test_aggregate_remove_host(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        result = nova_scenario._aggregate_remove_host("fake_agg", "fake_host")
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.remove_host.return_value,
+            result)
+        self.admin_clients(
+            "nova").aggregates.remove_host.assert_called_once_with(
+            "fake_agg", "fake_host")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.aggregate_remove_host")
