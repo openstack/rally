@@ -20,6 +20,13 @@ import sys
 PYTEST_REPORT = os.environ.get("PYTEST_REPORT",
                                ".test_results/pytest_results.html")
 TESTR_REPORT = "testr_results.html"
+PYTEST_ARGUMENTS = ("py.test"  # base command
+                    " --html=%(html_report)s"  # html report
+                    " --durations=10"  # get a list of the slowest 10 tests
+                    " -n auto"  # launch tests in parallel
+                    " --timeout=%(timeout)s"  # timeout for individual test
+                    " %(path)s"
+                    )
 
 
 def error(msg):
@@ -34,6 +41,9 @@ def main(args):
     parser.add_argument("--posargs", metavar="<str>", type=str, default="",
                         help="TOX posargs. Currently supported only string to "
                              "partial test or tests group to launch.")
+    parser.add_argument("--timeout", metavar="<seconds>", type=int, default=60,
+                        help="Timeout for individual test execution. "
+                             "Defaults to 60")
     args = parser.parse_args(args[1:])
 
     # We allow only one parameter - path to partial test or tests group
@@ -86,9 +96,11 @@ def main(args):
     else:
         pytest_report = PYTEST_REPORT
 
+    args = PYTEST_ARGUMENTS % {"html_report": pytest_report,
+                               "path": path,
+                               "timeout": args.timeout}
     try:
-        subprocess.check_call(["py.test", "--html=%s" % pytest_report,
-                              "--durations=10", "-n", "auto", path],
+        subprocess.check_call(args.split(" "),
                               stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
         # NOTE(andreykurilin): it is ok, since tests can fail.

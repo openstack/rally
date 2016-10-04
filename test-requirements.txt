@@ -2,14 +2,18 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
-# [do-not-touch] we need to modify our code to support latest release of this
-# lib
+# [do-not-touch] we need to modify our code to support latest release
 hacking>=0.9.2,<0.10                                   # Apache Software License
 
 pytest>=2.7                                            # MIT
+# py.test plugin for measuring coverage.
 pytest-cov>=2.2.1                                      # MIT
+# py.test plugin for generating HTML reports
 pytest-html>=1.10.0                                    # Mozilla Public License 2.0 (MPL 2.0)
+# py.test xdist plugin for distributed testing and loop-on-failing modes
 pytest-xdist                                           # MIT
+# py.test plugin to abort hanging tests
+pytest-timeout                                         # MIT
 
 coverage>=3.6                                          # Apache License, Version 2.0
 ddt>=1.0.1
