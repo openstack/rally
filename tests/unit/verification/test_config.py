@@ -39,6 +39,8 @@ CREDS = {
         "region_name": "test",
         "https_insecure": False,
         "https_cacert": "/path/to/cacert/file",
+        "user_domain_name": "admin",
+        "project_domain_name": "admin"
     }
 }
 
@@ -75,8 +77,7 @@ class TempestConfigTestCase(test.TestCase):
             ("admin_username", CREDS["admin"]["username"]),
             ("admin_password", CREDS["admin"]["password"]),
             ("admin_project_name", CREDS["admin"]["tenant_name"]),
-            ("admin_domain_name",
-             CREDS["admin"].get("user_domain_name", "Default")))
+            ("admin_domain_name", CREDS["admin"]["user_domain_name"]))
         result = self.tempest_conf.conf.items("auth")
         for item in expected:
             self.assertIn(item, result)
