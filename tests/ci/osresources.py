@@ -96,26 +96,26 @@ class Magnum(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.MAGNUM
 
-    def list_baymodels(self):
+    def list_cluster_templates(self):
         result = []
         marker = None
         while True:
-            baymodels = self.client.baymodels.list(marker=marker)
-            if not baymodels:
+            ct_list = self.client.cluster_templates.list(marker=marker)
+            if not ct_list:
                 break
-            result.extend(baymodels)
-            marker = baymodels[-1].uuid
+            result.extend(ct_list)
+            marker = ct_list[-1].uuid
         return result
 
-    def list_bays(self):
+    def list_clusters(self):
         result = []
         marker = None
         while True:
-            bays = self.client.bays.list(marker=marker)
-            if not bays:
+            clusters = self.client.clusters.list(marker=marker)
+            if not clusters:
                 break
-            result.extend(bays)
-            marker = bays[-1].uuid
+            result.extend(clusters)
+            marker = clusters[-1].uuid
         return result
 
 

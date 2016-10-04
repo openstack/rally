@@ -322,7 +322,7 @@ class FakeObject(FakeResource):
     pass
 
 
-class FakeBaymodel(FakeResource):
+class FakeClusterTemplate(FakeResource):
     pass
 
 
@@ -518,12 +518,12 @@ class FakeKeypairManager(FakeManager):
             self.resources_order.remove(resource)
 
 
-class FakeBaymodelManager(FakeManager):
+class FakeClusterTemplateManager(FakeManager):
 
     def create(self, name):
-        baymodel = FakeBaymodel(self)
-        baymodel.name = name or baymodel.name
-        return self._cache(baymodel)
+        cluster_template = FakeClusterTemplate(self)
+        cluster_template.name = name or cluster_template.name
+        return self._cache(cluster_template)
 
     def delete(self, resource):
         if not isinstance(resource, six.string_types):
@@ -1533,7 +1533,7 @@ class FakeSenlinClient(object):
 class FakeMagnumClient(object):
 
     def __init__(self):
-        self.baymodels = FakeBaymodelManager()
+        self.cluster_templates = FakeClusterTemplateManager()
 
 
 class FakeWatcherClient(object):

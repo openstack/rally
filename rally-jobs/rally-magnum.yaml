@@ -1,5 +1,5 @@
 ---
-  MagnumBaymodels.list_baymodels:
+  MagnumClusterTemplates.list_cluster_templates:
     -
       runner:
         type: "constant"
@@ -9,7 +9,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "fedora-atomic-latest"
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"
@@ -33,7 +33,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "fedora-atomic-latest"
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"
@@ -48,7 +48,7 @@
         failure_rate:
           max: 0
 
-  MagnumBays.create_and_list_bays:
+  MagnumClusters.create_and_list_clusters:
     -
       args:
         node_count: 1
@@ -60,7 +60,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "fedora-atomic-latest"
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"

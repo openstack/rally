@@ -12,7 +12,7 @@
 
 import mock
 
-from rally.plugins.openstack.context.magnum import baymodels
+from rally.plugins.openstack.context.magnum import cluster_templates
 from tests.unit import fakes
 from tests.unit import test
 
@@ -23,7 +23,7 @@ BASE_SCN = "rally.task.scenarios"
 SCN = "rally.plugins.openstack.scenarios"
 
 
-class BaymodelsGeneratorTestCase(test.ScenarioTestCase):
+class ClusterTemplatesGeneratorTestCase(test.ScenarioTestCase):
 
     """Generate tenants."""
     def _gen_tenants(self, count):
@@ -32,12 +32,13 @@ class BaymodelsGeneratorTestCase(test.ScenarioTestCase):
             tenants[str(id_)] = dict(name=str(id_))
         return tenants
 
-    @mock.patch("%s.magnum.utils.MagnumScenario._create_baymodel" % SCN,
-                return_value=fakes.FakeBaymodel(id="uuid"))
+    @mock.patch("%s.magnum.utils.MagnumScenario."
+                "_create_cluster_template" % SCN,
+                return_value=fakes.FakeClusterTemplate(id="uuid"))
     @mock.patch("%s.nova.utils.NovaScenario._create_keypair" % SCN,
                 return_value="key1")
     def test_setup(self, mock_nova_scenario__create_keypair,
-                   mock_magnum_scenario__create_baymodel):
+                   mock__create_cluster_template):
         tenants_count = 2
         users_per_tenant = 5
 
@@ -55,7 +56,7 @@ class BaymodelsGeneratorTestCase(test.ScenarioTestCase):
                     "users_per_tenant": users_per_tenant,
                     "concurrent": 10,
                 },
-                "baymodels": {
+                "cluster_templates": {
                     "dns_nameserver": "8.8.8.8",
                     "external_network_id": "public",
                     "flavor_id": "m1.small",
@@ -69,18 +70,18 @@ class BaymodelsGeneratorTestCase(test.ScenarioTestCase):
             "tenants": tenants
         })
 
-        baymodel_ctx = baymodels.BaymodelGenerator(self.context)
-        baymodel_ctx.setup()
+        ct_ctx = cluster_templates.ClusterTemplateGenerator(self.context)
+        ct_ctx.setup()
 
-        baymodel_ctx_config = self.context["config"]["baymodels"]
-        image_id = baymodel_ctx_config.get("image_id")
-        external_network_id = baymodel_ctx_config.get(
+        ct_ctx_config = self.context["config"]["cluster_templates"]
+        image_id = ct_ctx_config.get("image_id")
+        external_network_id = ct_ctx_config.get(
             "external_network_id")
-        dns_nameserver = baymodel_ctx_config.get("dns_nameserver")
-        flavor_id = baymodel_ctx_config.get("flavor_id")
-        docker_volume_size = baymodel_ctx_config.get("docker_volume_size")
-        network_driver = baymodel_ctx_config.get("network_driver")
-        coe = baymodel_ctx_config.get("coe")
+        dns_nameserver = ct_ctx_config.get("dns_nameserver")
+        flavor_id = ct_ctx_config.get("flavor_id")
+        docker_volume_size = ct_ctx_config.get("docker_volume_size")
+        network_driver = ct_ctx_config.get("network_driver")
+        coe = ct_ctx_config.get("coe")
         mock_calls = [mock.call(image_id=image_id, keypair_id="key1",
                                 external_network_id=external_network_id,
                                 dns_nameserver=dns_nameserver,
@@ -88,19 +89,20 @@ class BaymodelsGeneratorTestCase(test.ScenarioTestCase):
                                 docker_volume_size=docker_volume_size,
                                 network_driver=network_driver, coe=coe)
                       for i in range(tenants_count)]
-        mock_magnum_scenario__create_baymodel.assert_has_calls(mock_calls)
+        mock__create_cluster_template.assert_has_calls(mock_calls)
 
         # check that stack ids have been saved in context
         for ten_id in self.context["tenants"].keys():
-            self.assertIsNotNone(self.context["tenants"][ten_id]["baymodel"])
+            self.assertIsNotNone(
+                self.context["tenants"][ten_id]["cluster_template"])
 
-    @mock.patch("%s.magnum.baymodels.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.magnum.cluster_templates.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
         self.context.update({
             "users": mock.MagicMock()
         })
-        baymodel_ctx = baymodels.BaymodelGenerator(self.context)
-        baymodel_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["magnum.baymodels",
+        ct_ctx = cluster_templates.ClusterTemplateGenerator(self.context)
+        ct_ctx.cleanup()
+        mock_cleanup.assert_called_once_with(names=["magnum.cluster_templates",
                                                     "nova.keypairs"],
                                              users=self.context["users"])

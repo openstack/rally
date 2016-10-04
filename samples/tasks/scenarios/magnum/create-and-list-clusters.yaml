@@ -1,6 +1,8 @@
 ---
-  MagnumBays.list_bays:
+  MagnumClusters.create_and_list_clusters:
     -
+      args:
+        node_count: 1
       runner:
         type: "constant"
         times: 1
@@ -9,7 +11,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "fedora-atomic-latest"
           external_network_id: "public"
           dns_nameserver: "8.8.8.8"
@@ -17,9 +19,9 @@
           docker_volume_size: 5
           network_driver: "flannel"
           coe: "kubernetes"
-        bays:
-          node_count: 2
     -
+      args:
+        node_count: 1
       runner:
         type: "constant"
         times: 1
@@ -28,7 +30,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "fedora-atomic-latest"
           external_network_id: "public"
           dns_nameserver: "8.8.8.8"
@@ -36,9 +38,9 @@
           docker_volume_size: 5
           network_driver: "docker"
           coe: "swarm"
-        bays:
-          node_count: 2
     -
+      args:
+        node_count: 1
       runner:
         type: "constant"
         times: 1
@@ -47,12 +49,10 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        baymodels:
+        cluster_templates:
           image_id: "ubuntu-mesos"
           external_network_id: "public"
           dns_nameserver: "8.8.8.8"
           flavor_id: "m1.small"
           network_driver: "docker"
           coe: "mesos"
-        bays:
-          node_count: 2
