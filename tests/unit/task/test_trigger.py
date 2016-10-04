@@ -17,6 +17,7 @@
 
 import ddt
 import jsonschema
+import mock
 
 from rally.task import trigger
 from tests.unit import test
@@ -24,38 +25,59 @@ from tests.unit import test
 
 @trigger.configure(name="dummy_trigger")
 class DummyTrigger(trigger.Trigger):
-    CONFIG_SCHEMA = {"type": "integer"}
+    CONFIG_SCHEMA = {"type": "array",
+                     "minItems": 1,
+                     "uniqueItems": True,
+                     "items": {
+                         "type": "integer",
+                         "minimum": 0,
+                     }}
 
-    def get_configured_event_type(self):
+    def get_listening_event(self):
         return "dummy"
 
-    def is_runnable(self, value):
-        return value == self.config
+    def on_event(self, event_type, value=None):
+        if value not in self.config:
+            return
+        super(DummyTrigger, self).on_event(event_type, value)
 
 
 @ddt.ddt
 class TriggerTestCase(test.TestCase):
 
-    def setUp(self):
-        super(TriggerTestCase, self).setUp()
-        self.trigger = DummyTrigger(10)
-
-    @ddt.data(({"name": "dummy_trigger", "args": 5}, True),
-              ({"name": "dummy_trigger", "args": "str"}, False))
+    @ddt.data(({"name": "dummy_trigger", "args": [5]}, True),
+              ({"name": "dummy_trigger", "args": ["str"]}, False))
     @ddt.unpack
     def test_validate(self, config, valid):
         if valid:
-            trigger.Trigger.validate(config)
+            DummyTrigger.validate(config)
         else:
             self.assertRaises(jsonschema.ValidationError,
-                              trigger.Trigger.validate, config)
+                              DummyTrigger.validate, config)
 
-    def test_get_configured_event_type(self):
-        event_type = self.trigger.get_configured_event_type()
-        self.assertEqual("dummy", event_type)
+    def test_on_event_and_get_results(self):
+        # get_results requires launched hooks, so if we want to test it, we
+        # need to duplicate all calls on_event. It is redundant, so let's merge
+        # test_on_event and test_get_results in one test.
+        right_values = [5, 7, 12, 13]
 
-    @ddt.data((10, True), (1, False))
-    @ddt.unpack
-    def test_is_runnable(self, value, expected_result):
-        result = self.trigger.is_runnable(value)
-        self.assertIs(result, expected_result)
+        cfg = {"trigger": {"args": right_values}}
+        task = mock.MagicMock()
+        hook_cls = mock.MagicMock(__name__="fake")
+        dummy_trigger = DummyTrigger(cfg, task, hook_cls)
+        for i in range(0, 20):
+            dummy_trigger.on_event("fake", i)
+
+        self.assertEqual(
+            [mock.call(task, {}, {"event_type": "fake", "value": i})
+             for i in right_values],
+            hook_cls.call_args_list)
+        self.assertEqual(len(right_values),
+                         hook_cls.return_value.run_async.call_count)
+        hook_status = hook_cls.return_value.result.return_value["status"]
+        self.assertEqual(
+            {"config": cfg,
+             "results": [hook_cls.return_value.result.return_value] *
+                len(right_values),
+             "summary": {hook_status: len(right_values)}},
+            dummy_trigger.get_results())

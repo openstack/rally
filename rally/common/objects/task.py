@@ -96,33 +96,18 @@ OUTPUT_SCHEMA = {
     "additionalProperties": False
 }
 
-HOOK_RESULT_SCHEMA = {
+HOOK_RUN_RESULT_SCHEMA = {
     "type": "object",
-    "$schema": consts.JSON_SCHEMA,
     "properties": {
-        "hook": {"type": "string"},
         "started_at": {"type": "number"},
         "finished_at": {"type": "number"},
         "triggered_by": {
             "type": "object",
-            "oneOf": [
-                {
-                    "properties": {
-                        "iteration": {"type": "integer"},
-                    },
-                    "required": ["iteration"],
-                    "additionalProperties": False,
-                },
-                {
-                    "properties": {
-                        "time": {"type": "integer"},
-                    },
-                    "required": ["time"],
-                    "additionalProperties": False,
-                },
-            ]
+            "properties": {"event_type": {"type": "string"},
+                           "value": {}},
+            "required": ["event_type", "value"],
+            "additionalProperties": False
         },
-        "description": {"type": "string"},
         "status": {"type": "string"},
         "error": {
             "type": "array",
@@ -132,14 +117,19 @@ HOOK_RESULT_SCHEMA = {
         },
         "output": OUTPUT_SCHEMA,
     },
-    "required": [
-        "hook",
-        "started_at",
-        "finished_at",
-        "triggered_by",
-        "description",
-        "status",
-    ],
+    "required": ["finished_at", "triggered_by", "status"],
+    "additionalProperties": False
+}
+
+HOOK_RESULTS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "config": {"type": "object"},
+        "results": {"type": "array",
+                    "items": HOOK_RUN_RESULT_SCHEMA},
+        "summary": {"type": "object"}
+    },
+    "required": ["config", "results", "summary"],
     "additionalProperties": False,
 }
 
@@ -179,10 +169,7 @@ TASK_RESULT_SCHEMA = {
                 }
             }
         },
-        "hooks": {
-            "type": "array",
-            "items": HOOK_RESULT_SCHEMA,
-        },
+        "hooks": {"type": "array", "items": HOOK_RESULTS_SCHEMA},
         "result": {
             "type": "array",
             "items": {
@@ -228,8 +215,7 @@ TASK_RESULT_SCHEMA = {
             "type": "number",
         },
     },
-    "required": ["key", "sla", "hooks", "result", "load_duration",
-                 "full_duration"],
+    "required": ["key", "sla", "result", "load_duration", "full_duration"],
     "additionalProperties": False
 }
 
@@ -270,10 +256,7 @@ TASK_EXTENDED_RESULT_SCHEMA = {
                 }
             }
         },
-        "hooks": {
-            "type": "array",
-            "items": HOOK_RESULT_SCHEMA,
-        },
+        "hooks": {"type": "array", "items": HOOK_RESULTS_SCHEMA},
         "iterations": {
             "type": "array",
             "items": {
@@ -327,7 +310,7 @@ TASK_EXTENDED_RESULT_SCHEMA = {
             }
         }
     },
-    "required": ["key", "sla", "hooks", "iterations", "info"],
+    "required": ["key", "sla", "iterations", "info"],
     "additionalProperties": False
 }
 
@@ -527,7 +510,7 @@ class Task(object):
             else:
                 scenario["iterations"] = iter(iterations)
             scenario["sla"] = scenario["data"]["sla"]
-            scenario["hooks"] = scenario["data"]["hooks"]
+            scenario["hooks"] = scenario["data"].get("hooks", [])
             del scenario["data"]
             del scenario["task_uuid"]
             del scenario["id"]

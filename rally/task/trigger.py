@@ -18,9 +18,13 @@ import abc
 import jsonschema
 import six
 
+from rally.common.i18n import _
+from rally.common import logging
 from rally.common.plugin import plugin
 
 configure = plugin.configure
+
+LOG = logging.getLogger(__name__)
 
 
 @plugin.base()
@@ -28,18 +32,40 @@ configure = plugin.configure
 class Trigger(plugin.Plugin):
     """Factory for trigger classes."""
 
+    CONFIG_SCHEMA = {}
+
+    def __init__(self, context, task, hook_cls):
+        self.context = context
+        self.config = self.context["trigger"]["args"]
+        self.task = task
+        self.hook_cls = hook_cls
+        self._runs = []
+
     @classmethod
     def validate(cls, config):
-        trigger_schema = cls.get(config["name"]).CONFIG_SCHEMA
-        jsonschema.validate(config["args"], trigger_schema)
-
-    def __init__(self, config):
-        self.config = config
+        jsonschema.validate(config["args"], cls.CONFIG_SCHEMA)
 
     @abc.abstractmethod
-    def get_configured_event_type(self):
-        """Returns supported event type."""
+    def get_listening_event(self):
+        """Returns event type to listen."""
 
-    @abc.abstractmethod
-    def is_runnable(self, value):
-        """Returns True if trigger is active on specified event value."""
+    def on_event(self, event_type, value=None):
+        """Launch hook on specified event."""
+        LOG.info(_("Hook %s is trigged for Task %s by %s=%s")
+                 % (self.hook_cls.__name__, self.task["uuid"],
+                    event_type, value))
+        hook = self.hook_cls(self.task, self.context.get("args", {}),
+                             {"event_type": event_type, "value": value})
+        hook.run_async()
+        self._runs.append(hook)
+
+    def get_results(self):
+        results = {"config": self.context,
+                   "results": [],
+                   "summary": {}}
+        for hook in self._runs:
+            hook_result = hook.result()
+            results["results"].append(hook_result)
+            results["summary"].setdefault(hook_result["status"], 0)
+            results["summary"][hook_result["status"]] += 1
+        return results

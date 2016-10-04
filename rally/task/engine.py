@@ -71,16 +71,16 @@ class ResultConsumer(object):
         self.is_done = threading.Event()
         self.unexpected_failure = {}
         self.results = []
-        self.thread = threading.Thread(
-            target=self._consume_results
-        )
+        self.thread = threading.Thread(target=self._consume_results)
         self.aborting_checker = threading.Thread(target=self.wait_and_abort)
-        self.event_thread = threading.Thread(target=self._consume_events)
+        if "hooks" in self.key["kw"]:
+            self.event_thread = threading.Thread(target=self._consume_events)
 
     def __enter__(self):
         self.thread.start()
         self.aborting_checker.start()
-        self.event_thread.start()
+        if "hooks" in self.key["kw"]:
+            self.event_thread.start()
         self.start = time.time()
         return self
 
@@ -104,7 +104,7 @@ class ResultConsumer(object):
                 time.sleep(0.1)
 
     def _consume_events(self):
-        while not self.is_done.isSet():
+        while not self.is_done.isSet() or self.runner.event_queue:
             if self.runner.event_queue:
                 event = self.runner.event_queue.popleft()
                 self.hook_executor.on_event(
@@ -117,7 +117,6 @@ class ResultConsumer(object):
         self.is_done.set()
         self.aborting_checker.join()
         self.thread.join()
-        self.event_thread.join()
 
         if exc_type:
             self.sla_checker.set_unexpected_failure(exc_value)
@@ -138,13 +137,18 @@ class ResultConsumer(object):
         LOG.info("Full duration is %s" % utils.format_float_to_str(
             self.finish - self.start))
 
-        self.task.append_results(self.key, {
+        results = {
             "raw": self.results,
             "load_duration": load_duration,
             "full_duration": self.finish - self.start,
             "sla": self.sla_checker.results(),
-            "hooks": self.hook_executor.results(),
-        })
+        }
+        self.runner.send_event(type="load_finished", value=results)
+        if "hooks" in self.key["kw"]:
+            self.event_thread.join()
+            results["hooks"] = self.hook_executor.results()
+
+        self.task.append_results(self.key, results)
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):

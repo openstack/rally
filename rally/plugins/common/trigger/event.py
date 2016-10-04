@@ -60,8 +60,12 @@ class EventTrigger(trigger.Trigger):
         ]
     }
 
-    def get_configured_event_type(self):
+    def get_listening_event(self):
         return self.config["unit"]
 
-    def is_runnable(self, value):
-        return value in self.config["at"]
+    def on_event(self, event_type, value=None):
+        if not (event_type == self.get_listening_event()
+                and value in self.config["at"]):
+            # do nothing
+            return
+        super(EventTrigger, self).on_event(event_type, value)
