@@ -19,63 +19,61 @@ from rally.plugins.openstack.scenarios.glance import images
 from tests.unit import fakes
 from tests.unit import test
 
-GLANCE_IMAGES = "rally.plugins.openstack.scenarios.glance.images.GlanceImages"
+BASE = "rally.plugins.openstack.scenarios.glance.images"
 
 
 class GlanceImagesTestCase(test.ScenarioTestCase):
 
-    @mock.patch(GLANCE_IMAGES + ".generate_random_name")
-    @mock.patch(GLANCE_IMAGES + "._list_images")
-    @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_and_list_image(self, mock__create_image,
-                                   mock__list_images,
-                                   mock_generate_random_name):
-        glance_scenario = images.GlanceImages(self.context)
-        mock_generate_random_name.return_value = "test-rally-image"
-        glance_scenario.create_and_list_image("cf", "url", "df",
-                                              fakearg="f")
-        mock__create_image.assert_called_once_with(
+    @mock.patch("%s.CreateAndListImage._list_images" % BASE)
+    @mock.patch("%s.CreateAndListImage._create_image" % BASE)
+    @mock.patch("%s.CreateAndListImage.generate_random_name" % BASE,
+                return_value="test-rally-image")
+    def test_create_and_list_image(self,
+                                   mock_random_name,
+                                   mock_create_image,
+                                   mock_list_images):
+        images.CreateAndListImage(self.context).run(
             "cf", "url", "df", fakearg="f")
-        mock__list_images.assert_called_once_with()
+        mock_create_image.assert_called_once_with(
+            "cf", "url", "df", fakearg="f")
+        mock_list_images.assert_called_once_with()
 
-    @mock.patch(GLANCE_IMAGES + "._list_images")
-    def test_list_images(self, mock__list_images):
-        glance_scenario = images.GlanceImages(self.context)
-        glance_scenario.list_images()
-        mock__list_images.assert_called_once_with()
+    @mock.patch("%s.ListImages._list_images" % BASE)
+    def test_list_images(self, mock_list_images__list_images):
+        images.ListImages(self.context).run()
+        mock_list_images__list_images.assert_called_once_with()
 
-    @mock.patch(GLANCE_IMAGES + ".generate_random_name")
-    @mock.patch(GLANCE_IMAGES + "._delete_image")
-    @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_and_delete_image(
-            self, mock__create_image, mock__delete_image,
-            mock_generate_random_name):
-        glance_scenario = images.GlanceImages(self.context)
+    @mock.patch("%s.CreateAndDeleteImage._delete_image" % BASE)
+    @mock.patch("%s.CreateAndDeleteImage._create_image" % BASE)
+    @mock.patch("%s.CreateAndDeleteImage.generate_random_name" % BASE,
+                return_value="test-rally-image")
+    def test_create_and_delete_image(self,
+                                     mock_random_name,
+                                     mock_create_image,
+                                     mock_delete_image):
         fake_image = object()
-        mock__create_image.return_value = fake_image
-        mock_generate_random_name.return_value = "test-rally-image"
-        glance_scenario.create_and_delete_image("cf", "url", "df",
-                                                fakearg="f")
+        mock_create_image.return_value = fake_image
 
-        mock__create_image.assert_called_once_with(
+        images.CreateAndDeleteImage(self.context).run(
             "cf", "url", "df", fakearg="f")
-        mock__delete_image.assert_called_once_with(fake_image)
 
-    @mock.patch(GLANCE_IMAGES + "._boot_servers")
-    @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_image_and_boot_instances(
-            self, mock__create_image, mock__boot_servers):
-        glance_scenario = images.GlanceImages(self.context)
+        mock_create_image.assert_called_once_with(
+            "cf", "url", "df", fakearg="f")
+        mock_delete_image.assert_called_once_with(fake_image)
+
+    @mock.patch("%s.CreateImageAndBootInstances._boot_servers" % BASE)
+    @mock.patch("%s.CreateImageAndBootInstances._create_image" % BASE)
+    def test_create_image_and_boot_instances(self,
+                                             mock_create_image,
+                                             mock_boot_servers):
         fake_image = fakes.FakeImage()
         fake_servers = [mock.Mock() for i in range(5)]
-        mock__create_image.return_value = fake_image
-        mock__boot_servers.return_value = fake_servers
+        mock_create_image.return_value = fake_image
+        mock_boot_servers.return_value = fake_servers
         kwargs = {"fakearg": "f"}
 
-        glance_scenario.create_image_and_boot_instances("cf", "url",
-                                                        "df", "fid",
-                                                        5, **kwargs)
-        mock__create_image.assert_called_once_with(
-            "cf", "url", "df")
-        mock__boot_servers.assert_called_once_with(
-            "image-id-0", "fid", 5, **kwargs)
+        images.CreateImageAndBootInstances(self.context).run(
+            "cf", "url", "df", "fid", 5, **kwargs)
+        mock_create_image.assert_called_once_with("cf", "url", "df")
+        mock_boot_servers.assert_called_once_with("image-id-0", "fid",
+                                                  5, **kwargs)

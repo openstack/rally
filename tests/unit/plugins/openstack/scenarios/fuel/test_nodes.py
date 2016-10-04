@@ -23,13 +23,13 @@ class FuelNodesTestCase(test.TestCase):
     context = {"fuel": {"environments": ["1"]}}
 
     def test_add_and_remove_node(self):
-        scenario = nodes.FuelNodes(self.context)
+        scenario = nodes.AddAndRemoveNode(self.context)
         scenario._list_node_ids = mock.Mock(return_value=["1"])
         scenario._node_is_assigned = mock.Mock(return_value=False)
         scenario._add_node = mock.Mock()
         scenario._remove_node = mock.Mock()
 
-        scenario.add_and_remove_node(node_roles="some_role")
+        scenario.run(node_roles="some_role")
 
         scenario._list_node_ids.assert_called_once_with()
         scenario._node_is_assigned.assert_called_once_with("1")
@@ -37,12 +37,10 @@ class FuelNodesTestCase(test.TestCase):
         scenario._remove_node.assert_called_once_with("1", "1")
 
     def test_add_and_remove_nodes_error(self):
-        scenario = nodes.FuelNodes(self.context)
+        scenario = nodes.AddAndRemoveNode(self.context)
         scenario._list_node_ids = mock.Mock(return_value=["1"])
         scenario._node_is_assigned = mock.Mock(return_value=True)
         scenario._add_node = mock.Mock()
         scenario._remove_node = mock.Mock()
 
-        self.assertRaises(RuntimeError,
-                          scenario.add_and_remove_node,
-                          node_roles="some_role")
+        self.assertRaises(RuntimeError, scenario.run, node_roles="some_role")

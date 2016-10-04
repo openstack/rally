@@ -21,14 +21,14 @@ from tests.unit import test
 class EC2ServersTestCase(test.ScenarioTestCase):
 
     def test_list_servers(self):
-        scenario = servers.EC2Servers()
+        scenario = servers.ListServers(self.context)
         scenario._list_servers = mock.MagicMock()
-        scenario.list_servers()
+        scenario.run()
         scenario._list_servers.assert_called_once_with()
 
     def test_boot_server(self):
-        scenario = servers.EC2Servers(self.context)
+        scenario = servers.BootServer(self.context)
         scenario._boot_servers = mock.Mock()
-        scenario.boot_server("foo_image", "foo_flavor", foo="bar")
+        scenario.run("foo_image", "foo_flavor", foo="bar")
         scenario._boot_servers.assert_called_once_with(
             "foo_image", "foo_flavor", foo="bar")
