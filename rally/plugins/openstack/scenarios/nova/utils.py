@@ -1006,3 +1006,12 @@ class NovaScenario(scenario.OpenStackScenario):
         aggregate_name = self.generate_random_name()
         return self.admin_clients("nova").aggregates.create(aggregate_name,
                                                             availability_zone)
+
+    @atomic.action_timer("nova.delete_aggregate")
+    def _delete_aggregate(self, aggregate):
+        """Delete the specified aggregate.
+
+        :param aggregate: The aggregate to delete
+        :returns: An instance of novaclient.base.TupleWithMeta
+        """
+        return self.admin_clients("nova").aggregates.delete(aggregate)

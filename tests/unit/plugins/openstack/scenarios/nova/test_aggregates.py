@@ -34,3 +34,12 @@ class NovaAggregatesTestCase(test.TestCase):
         scenario.run(availability_zone="nova")
         scenario._create_aggregate.assert_called_once_with("nova")
         scenario._list_aggregates.assert_called_once_with()
+
+    def test_create_and_delete_aggregate(self):
+        scenario = aggregates.CreateAndDeleteAggregate()
+        scenario._create_aggregate = mock.Mock()
+        scenario._delete_aggregate = mock.Mock()
+        scenario.run(availability_zone="nova")
+        scenario._create_aggregate.assert_called_once_with("nova")
+        aggregate = scenario._create_aggregate.return_value
+        scenario._delete_aggregate.assert_called_once_with(aggregate)
