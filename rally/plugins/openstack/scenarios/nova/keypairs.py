@@ -21,13 +21,16 @@ from rally.task import types
 from rally.task import validation
 
 
-class NovaKeypair(utils.NovaScenario):
-    """Benchmark scenarios for Nova keypairs."""
+"""Scenarios for Nova keypairs."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def create_and_list_keypairs(self, **kwargs):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaKeypair.create_and_list_keypairs")
+class CreateAndListKeypairs(utils.NovaScenario):
+
+    def run(self, **kwargs):
         """Create a keypair with random name and list keypairs.
 
         This scenario creates a keypair and then lists all keypairs.
@@ -38,10 +41,14 @@ class NovaKeypair(utils.NovaScenario):
         self._create_keypair(**kwargs)
         self._list_keypairs()
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def create_and_delete_keypair(self, **kwargs):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaKeypair.create_and_delete_keypair")
+class CreateAndDeleteKeypair(utils.NovaScenario):
+
+    def run(self, **kwargs):
         """Create a keypair with random name and delete keypair.
 
         This scenario creates a keypair and then delete that keypair.
@@ -52,19 +59,21 @@ class NovaKeypair(utils.NovaScenario):
         keypair = self._create_keypair(**kwargs)
         self._delete_keypair(keypair)
 
-    @types.convert(image={"type": "glance_image"},
-                   flavor={"type": "nova_flavor"})
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaKeypair.boot_and_delete_server_with_keypair")
+class BootAndDeleteServerWithKeypair(utils.NovaScenario):
+
     @logging.log_deprecated_args(
         "'server_kwargs' has been renamed 'boot_server_kwargs'",
         "0.3.2", ["server_kwargs"], once=True)
-    def boot_and_delete_server_with_keypair(self, image, flavor,
-                                            boot_server_kwargs=None,
-                                            server_kwargs=None,
-                                            **kwargs):
+    def run(self, image, flavor, boot_server_kwargs=None,
+            server_kwargs=None, **kwargs):
         """Boot and delete server with keypair.
 
         Plan of this scenario:

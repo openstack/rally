@@ -19,13 +19,15 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaAggregates(utils.NovaScenario):
-    """Benchmark scenarios for Nova aggregates."""
+"""Scenarios for Nova aggregates."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_aggregates(self):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaAggregates.list_aggregates")
+class ListAggregates(utils.NovaScenario):
+
+    def run(self):
         """List all nova aggregates.
 
         Measure the "nova aggregate-list" command performance.

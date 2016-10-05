@@ -19,13 +19,15 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaAvailabilityZones(utils.NovaScenario):
-    """Benchmark scenarios for Nova availability-zones."""
+"""Scenarios for Nova availability-zones."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_availability_zones(self, detailed=True):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaAvailabilityZones.list_availability_zones")
+class ListAvailabilityZones(utils.NovaScenario):
+
+    def run(self, detailed=True):
         """List all availability zones.
 
         Measure the "nova availability-zone-list" command performance.

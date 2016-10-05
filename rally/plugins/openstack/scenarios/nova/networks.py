@@ -19,15 +19,18 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaNetworks(utils.NovaScenario):
-    """Benchmark scenarios for Nova networks."""
+"""Scenarios for Nova networks."""
 
-    @validation.restricted_parameters("label")
-    @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova.networks"]})
-    def create_and_list_networks(self, start_cidr, **kwargs):
+
+@validation.restricted_parameters("label")
+@validation.required_parameters("start_cidr")
+@validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova.networks"]},
+                    name="NovaNetworks.create_and_list_networks")
+class CreateAndListNetworks(utils.NovaScenario):
+
+    def run(self, start_cidr, **kwargs):
         """Create nova network and list all networks.
 
         :param start_cidr: IP range
@@ -37,12 +40,16 @@ class NovaNetworks(utils.NovaScenario):
         self._create_network(start_cidr, **kwargs)
         self._list_networks()
 
-    @validation.restricted_parameters("label")
-    @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-    @validation.required_openstack(admin=True)
-    @scenario.configure(context={"admin_cleanup": ["nova.networks"]})
-    def create_and_delete_network(self, start_cidr, **kwargs):
+
+@validation.restricted_parameters("label")
+@validation.required_parameters("start_cidr")
+@validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova.networks"]},
+                    name="NovaNetworks.create_and_delete_network")
+class CreateAndDeleteNetwork(utils.NovaScenario):
+
+    def run(self, start_cidr, **kwargs):
         """Create nova network and delete it.
 
         :param start_cidr: IP range

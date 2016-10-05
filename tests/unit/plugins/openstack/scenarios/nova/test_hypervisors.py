@@ -19,13 +19,9 @@ from rally.plugins.openstack.scenarios.nova import hypervisors
 from tests.unit import test
 
 
-NOVA_HYPERVISORS_MODULE = "rally.plugins.openstack.scenarios.nova.hypervisors"
-NOVA_HYPERVISORS = NOVA_HYPERVISORS_MODULE + ".NovaHypervisors"
-
-
 class NovaHypervisorsTestCase(test.ScenarioTestCase):
     def test_list_hypervisors(self):
-        scenario = hypervisors.NovaHypervisors(self.context)
+        scenario = hypervisors.ListHypervisors(self.context)
         scenario._list_hypervisors = mock.Mock()
-        scenario.list_hypervisors(detailed=False)
+        scenario.run(detailed=False)
         scenario._list_hypervisors.assert_called_once_with(False)

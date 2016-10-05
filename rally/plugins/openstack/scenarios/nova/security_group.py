@@ -25,20 +25,22 @@ from rally.task import types
 from rally.task import validation
 
 
+"""Scenarios for Nova security groups."""
+
+
 class NovaSecurityGroupException(exceptions.RallyException):
     msg_fmt = _("%(message)s")
 
 
-class NovaSecGroup(utils.NovaScenario):
-    """Benchmark scenarios for Nova security groups."""
+@validation.required_parameters("security_group_count",
+                                "rules_per_security_group")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaSecGroup.create_and_delete_secgroups")
+class CreateAndDeleteSecgroups(utils.NovaScenario):
 
-    @validation.required_parameters("security_group_count",
-                                    "rules_per_security_group")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def create_and_delete_secgroups(self, security_group_count,
-                                    rules_per_security_group):
+    def run(self, security_group_count, rules_per_security_group):
         """Create and delete security groups.
 
         This scenario creates N security groups with M rules per group and then
@@ -56,13 +58,16 @@ class NovaSecGroup(utils.NovaScenario):
 
         self._delete_security_groups(security_groups)
 
-    @validation.required_parameters("security_group_count",
-                                    "rules_per_security_group")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def create_and_list_secgroups(self, security_group_count,
-                                  rules_per_security_group):
+
+@validation.required_parameters("security_group_count",
+                                "rules_per_security_group")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaSecGroup.create_and_list_secgroups")
+class CreateAndListSecgroups(utils.NovaScenario):
+
+    def run(self, security_group_count, rules_per_security_group):
         """Create and list security groups.
 
         This scenario creates N security groups with M rules per group and then
@@ -79,11 +84,15 @@ class NovaSecGroup(utils.NovaScenario):
                                               rules_per_security_group)
         self._list_security_groups()
 
-    @validation.required_parameters("security_group_count")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def create_and_update_secgroups(self, security_group_count):
+
+@validation.required_parameters("security_group_count")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaSecGroup.create_and_update_secgroups")
+class CreateAndUpdateSecgroups(utils.NovaScenario):
+
+    def run(self, security_group_count):
         """Create and update security groups.
 
         This scenario creates 'security_group_count' security groups
@@ -95,19 +104,21 @@ class NovaSecGroup(utils.NovaScenario):
             security_group_count)
         self._update_security_groups(security_groups)
 
-    @types.convert(image={"type": "glance_image"},
-                   flavor={"type": "nova_flavor"})
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_parameters("security_group_count",
-                                    "rules_per_security_group")
-    @validation.required_contexts("network")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def boot_and_delete_server_with_secgroups(self, image, flavor,
-                                              security_group_count,
-                                              rules_per_security_group,
-                                              **kwargs):
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_parameters("security_group_count",
+                                "rules_per_security_group")
+@validation.required_contexts("network")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaSecGroup.boot_and_delete_server_with_secgroups")
+class BootAndDeleteServerWithSecgroups(utils.NovaScenario):
+
+    def run(self, image, flavor, security_group_count,
+            rules_per_security_group, **kwargs):
         """Boot and delete server with security groups attached.
 
         Plan of this scenario:

@@ -22,7 +22,7 @@ from tests.unit import test
 class NovaImagesTestCase(test.TestCase):
 
     def test_list_images(self):
-        scenario = images.NovaImages()
+        scenario = images.ListImages()
         scenario._list_images = mock.Mock()
-        scenario.list_images(detailed=False, fakearg="fakearg")
+        scenario.run(detailed=False, fakearg="fakearg")
         scenario._list_images.assert_called_once_with(False, fakearg="fakearg")

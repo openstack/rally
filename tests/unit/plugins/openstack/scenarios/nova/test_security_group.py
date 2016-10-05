@@ -20,9 +20,6 @@ from tests.unit import fakes
 from tests.unit import test
 
 
-SECGROUP = "rally.plugins.openstack.scenarios.nova.security_group"
-
-
 class FakeNeutronScenario(object):
     def __enter__(self):
         return {}
@@ -37,60 +34,59 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
 
-        nova_scenario = security_group.NovaSecGroup(self.context)
-        nova_scenario._create_security_groups = mock.MagicMock(
+        scenario = security_group.CreateAndDeleteSecgroups(self.context)
+        scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
-        nova_scenario._create_rules_for_security_group = mock.MagicMock()
-        nova_scenario._delete_security_groups = mock.MagicMock()
+        scenario._create_rules_for_security_group = mock.MagicMock()
+        scenario._delete_security_groups = mock.MagicMock()
 
         security_group_count = 2
         rules_per_security_group = 10
-        nova_scenario.create_and_delete_secgroups(
-            security_group_count, rules_per_security_group)
+        scenario.run(security_group_count, rules_per_security_group)
 
-        nova_scenario._create_security_groups.assert_called_once_with(
+        scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        nova_scenario._create_rules_for_security_group.assert_called_once_with(
+        scenario._create_rules_for_security_group.assert_called_once_with(
             fake_secgroups, rules_per_security_group)
-        nova_scenario._delete_security_groups.assert_called_once_with(
+        scenario._delete_security_groups.assert_called_once_with(
             fake_secgroups)
 
     def test_create_and_update_security_groups(self):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
-        nova_scenario = security_group.NovaSecGroup()
-        nova_scenario._create_security_groups = mock.MagicMock(
+        scenario = security_group.CreateAndUpdateSecgroups(self.context)
+        scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
-        nova_scenario._update_security_groups = mock.MagicMock()
-        nova_scenario._generate_random_name = mock.Mock(
+        scenario._update_security_groups = mock.MagicMock()
+        scenario._generate_random_name = mock.Mock(
             return_value="_updated")
         security_group_count = 2
-        nova_scenario.create_and_update_secgroups(security_group_count)
-        nova_scenario._create_security_groups.assert_called_once_with(
+        scenario.run(security_group_count)
+        scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        nova_scenario._update_security_groups.assert_called_once_with(
+        scenario._update_security_groups.assert_called_once_with(
             fake_secgroups)
 
     def test_create_and_list_secgroups(self):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
 
-        nova_scenario = security_group.NovaSecGroup(self.context)
-        nova_scenario._create_security_groups = mock.MagicMock(
+        scenario = security_group.CreateAndListSecgroups(self.context)
+        scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
-        nova_scenario._create_rules_for_security_group = mock.MagicMock()
-        nova_scenario._list_security_groups = mock.MagicMock()
+        scenario._create_rules_for_security_group = mock.MagicMock()
+        scenario._list_security_groups = mock.MagicMock()
 
         security_group_count = 2
         rules_per_security_group = 10
-        nova_scenario.create_and_list_secgroups(
+        scenario.run(
             security_group_count, rules_per_security_group)
 
-        nova_scenario._create_security_groups.assert_called_once_with(
+        scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        nova_scenario._create_rules_for_security_group.assert_called_once_with(
+        scenario._create_rules_for_security_group.assert_called_once_with(
             fake_secgroups, rules_per_security_group)
-        nova_scenario._list_security_groups.assert_called_once_with()
+        scenario._list_security_groups.assert_called_once_with()
 
     def _generate_fake_server_with_sg(self, number_of_secgroups):
         sg_list = []
@@ -104,35 +100,36 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
     def _test_boot_and_delete_server_with_secgroups(self):
         fake_server, sg_list = self._generate_fake_server_with_sg(2)
 
-        nova_scenario = security_group.NovaSecGroup(self.context)
-        nova_scenario._create_security_groups = mock.MagicMock(
+        scenario = security_group.BootAndDeleteServerWithSecgroups(
+            self.context)
+        scenario._create_security_groups = mock.MagicMock(
             return_value=sg_list)
-        nova_scenario._create_rules_for_security_group = mock.MagicMock()
-        nova_scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        nova_scenario.generate_random_name = mock.MagicMock(
+        scenario._create_rules_for_security_group = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.generate_random_name = mock.MagicMock(
             return_value="name")
-        nova_scenario._delete_server = mock.MagicMock()
-        nova_scenario._delete_security_groups = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._delete_security_groups = mock.MagicMock()
 
         image = "img"
         flavor = 1
         security_group_count = 2
         rules_per_security_group = 10
 
-        nova_scenario.boot_and_delete_server_with_secgroups(
+        scenario.run(
             image, flavor, security_group_count, rules_per_security_group,
             fakearg="fakearg")
-        nova_scenario._create_security_groups.assert_called_once_with(
+        scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        nova_scenario.generate_random_name.assert_called_once_with()
-        nova_scenario._create_rules_for_security_group.assert_called_once_with(
+        scenario.generate_random_name.assert_called_once_with()
+        scenario._create_rules_for_security_group.assert_called_once_with(
             sg_list, rules_per_security_group)
-        nova_scenario._boot_server.assert_called_once_with(
+        scenario._boot_server.assert_called_once_with(
             "name", image, flavor,
             security_groups=[sg.name for sg in sg_list], fakearg="fakearg")
         fake_server.list_security_group.assert_called_once_with()
-        nova_scenario._delete_server.assert_called_once_with(fake_server)
-        nova_scenario._delete_security_groups.assert_called_once_with(sg_list)
+        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_security_groups.assert_called_once_with(sg_list)
 
     def _test_boot_and_delete_server_with_sg_not_attached(self):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
@@ -140,15 +137,15 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
 
         fake_server, sg_list = self._generate_fake_server_with_sg(1)
 
-        nova_scenario = security_group.NovaSecGroup(self.context)
-        nova_scenario._create_security_groups = mock.MagicMock(
+        scenario = security_group.BootAndDeleteServerWithSecgroups()
+        scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
-        nova_scenario._create_rules_for_security_group = mock.MagicMock()
-        nova_scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        nova_scenario.generate_random_name = mock.MagicMock(
+        scenario._create_rules_for_security_group = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.generate_random_name = mock.MagicMock(
             return_value="name")
-        nova_scenario._delete_server = mock.MagicMock()
-        nova_scenario._delete_security_groups = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._delete_security_groups = mock.MagicMock()
 
         image = "img"
         flavor = 1
@@ -156,19 +153,19 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
         rules_per_security_group = 10
 
         self.assertRaises(security_group.NovaSecurityGroupException,
-                          nova_scenario.boot_and_delete_server_with_secgroups,
+                          scenario.run,
                           image, flavor, security_group_count,
                           rules_per_security_group)
 
-        nova_scenario._create_security_groups.assert_called_once_with(
+        scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        nova_scenario.generate_random_name.assert_called_once_with()
-        nova_scenario._create_rules_for_security_group.assert_called_once_with(
+        scenario.generate_random_name.assert_called_once_with()
+        scenario._create_rules_for_security_group.assert_called_once_with(
             fake_secgroups, rules_per_security_group)
-        nova_scenario._boot_server.assert_called_once_with(
+        scenario._boot_server.assert_called_once_with(
             "name", image, flavor,
             security_groups=[sg.name for sg in fake_secgroups])
         fake_server.list_security_group.assert_called_once_with()
-        nova_scenario._delete_server.assert_called_once_with(fake_server)
-        nova_scenario._delete_security_groups.assert_called_once_with(
+        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_security_groups.assert_called_once_with(
             fake_secgroups)

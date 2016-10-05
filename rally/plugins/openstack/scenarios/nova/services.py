@@ -19,13 +19,15 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaServices(utils.NovaScenario):
-    """Benchmark scenarios for Nova agents."""
+"""Scenarios for Nova agents."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_services(self, host=None, binary=None):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaServices.list_services")
+class ListServices(utils.NovaScenario):
+
+    def run(self, host=None, binary=None):
         """List all nova services.
 
         Measure the "nova service-list" command performance.

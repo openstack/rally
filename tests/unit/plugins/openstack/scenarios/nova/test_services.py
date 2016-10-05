@@ -22,8 +22,8 @@ from tests.unit import test
 class NovaServicesTestCase(test.TestCase):
 
     def test_list_services(self):
-        scenario = services.NovaServices()
+        scenario = services.ListServices()
         scenario._list_services = mock.Mock()
-        scenario.list_services(host="foo_host", binary="foo_hypervisor")
+        scenario.run(host="foo_host", binary="foo_hypervisor")
         scenario._list_services.assert_called_once_with("foo_host",
                                                         "foo_hypervisor")

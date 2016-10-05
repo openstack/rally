@@ -22,7 +22,7 @@ from tests.unit import test
 class NovaHostsTestCase(test.TestCase):
 
     def test_list_hosts(self):
-        scenario = hosts.NovaHosts()
+        scenario = hosts.ListHosts()
         scenario._list_hosts = mock.Mock()
-        scenario.list_hosts(zone=None)
+        scenario.run(zone=None)
         scenario._list_hosts.assert_called_once_with(None)

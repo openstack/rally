@@ -19,13 +19,16 @@ from rally.plugins.openstack.scenarios.nova import utils
 from rally.task import validation
 
 
-class NovaImages(utils.NovaScenario):
-    """Benchmark scenarios for Nova images."""
+"""Scenarios for Nova images."""
 
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
-    @scenario.configure(context={"cleanup": ["nova"]})
-    def list_images(self, detailed=True, **kwargs):
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaImages.list_images")
+class ListImages(utils.NovaScenario):
+
+    def run(self, detailed=True, **kwargs):
         """List all images.
 
         Measure the "nova image-list" command performance.
