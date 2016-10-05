@@ -156,6 +156,42 @@ class HookExecutorTestCase(test.TestCase):
               "summary": {consts.HookStatus.SUCCESS: 1}}],
             hook_executor.results())
 
+    @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
+    def test_time_periodic(self, mock_timer):
+        self.conf["hooks"][0]["trigger"] = {
+            "name": "periodic", "args": {"unit": "time", "step": 2}}
+        hook_executor = hook.HookExecutor(self.conf, self.task)
+
+        for i in range(1, 7):
+            hook_executor.on_event(event_type="time", value=i)
+
+        self.assertEqual(
+            [{
+                "config": self.conf["hooks"][0],
+                "results":[
+                    {
+                        "triggered_by": {"event_type": "time", "value": 2},
+                        "started_at": fakes.FakeTimer().timestamp(),
+                        "finished_at": fakes.FakeTimer().finish_timestamp(),
+                        "status": consts.HookStatus.SUCCESS
+                    },
+                    {
+                        "triggered_by": {"event_type": "time", "value": 4},
+                        "started_at": fakes.FakeTimer().timestamp(),
+                        "finished_at": fakes.FakeTimer().finish_timestamp(),
+                        "status": consts.HookStatus.SUCCESS
+                    },
+                    {
+                        "triggered_by": {"event_type": "time", "value": 6},
+                        "started_at": fakes.FakeTimer().timestamp(),
+                        "finished_at": fakes.FakeTimer().finish_timestamp(),
+                        "status": consts.HookStatus.SUCCESS
+                    }
+                ],
+                "summary": {consts.HookStatus.SUCCESS: 3}
+            }],
+            hook_executor.results())
+
     @mock.patch("rally.common.utils.Stopwatch", autospec=True)
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_timer_thread(self, mock_timer, mock_stopwatch):

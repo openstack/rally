@@ -51,7 +51,7 @@ class Trigger(plugin.Plugin):
 
     def on_event(self, event_type, value=None):
         """Launch hook on specified event."""
-        LOG.info(_("Hook %s is trigged for Task %s by %s=%s")
+        LOG.info(_("Hook %s is triggered for Task %s by %s=%s")
                  % (self.hook_cls.__name__, self.task["uuid"],
                     event_type, value))
         hook = self.hook_cls(self.task, self.context.get("args", {}),
