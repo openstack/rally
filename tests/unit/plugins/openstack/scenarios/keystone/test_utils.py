@@ -55,6 +55,32 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.update_user_enabled")
 
+    def test_token_validate(self):
+        token = mock.MagicMock()
+        scenario = utils.KeystoneScenario(self.context)
+
+        scenario._token_validate(token)
+        self.admin_clients(
+            "keystone").tokens.validate.assert_called_once_with(token)
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.validate_token")
+
+    def test_token_authenticate(self):
+        name = mock.MagicMock()
+        psswd = "foopsswd"
+        tenant_id = mock.MagicMock()
+        tenant_name = mock.MagicMock()
+
+        scenario = utils.KeystoneScenario(self.context)
+        scenario._authenticate_token(name, psswd, tenant_id, tenant_name)
+        self.admin_clients(
+            "keystone").tokens.authenticate.assert_called_once_with(
+            name, tenant_id, tenant_name, "foopsswd")
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.token_authenticate")
+
     def test_role_create(self):
         scenario = utils.KeystoneScenario(self.context)
         scenario.generate_random_name = mock.Mock()

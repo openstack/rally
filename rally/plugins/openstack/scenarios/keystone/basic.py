@@ -92,6 +92,24 @@ class CreateTenant(kutils.KeystoneScenario):
         self._tenant_create(**kwargs)
 
 
+@validation.required_openstack(admin=True)
+@validation.required_api_versions(component="keystone", versions=[2.0])
+@scenario.configure(context={"admin_cleanup": ["keystone"]},
+                    name="KeystoneBasic.authenticate_user_and_validate_token")
+class AuthenticateUserAndValidateToken(kutils.KeystoneScenario):
+
+    def run(self):
+        """Authenticate and validate a keystone token."""
+        name = self.context["user"]["credential"].username
+        password = self.context["user"]["credential"].password
+        tenant_id = self.context["tenant"]["id"]
+        tenant_name = self.context["tenant"]["name"]
+
+        token = self._authenticate_token(name, password, tenant_id,
+                                         tenant_name, atomic_action=False)
+        self._token_validate(token.id)
+
+
 @validation.number("users_per_tenant", minval=1)
 @validation.required_openstack(admin=True)
 @validation.required_api_versions(component="keystone", versions=[2.0])

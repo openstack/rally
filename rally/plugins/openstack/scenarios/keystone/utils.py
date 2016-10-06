@@ -49,6 +49,32 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         self.admin_clients("keystone").users.update_enabled(user, enabled)
 
+    @atomic.action_timer("keystone.validate_token")
+    def _token_validate(self, token):
+        """Validate a token for a user.
+
+        :param token: The token to validate
+        """
+        self.admin_clients("keystone").tokens.validate(token)
+
+    @atomic.optional_action_timer("keystone.token_authenticate")
+    def _authenticate_token(self, name, password, tenant_id, tenant):
+        """Authenticate user token.
+
+        :param name: The user username
+        :param password: User password for authentication
+        :param tenant_id: Tenant id for authentication
+        :param tenant: Tenant on which authentication will take place
+        :param atomic_action: bool, enable user authentication to be
+                              tracked as an atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator
+        """
+        return self.admin_clients("keystone").tokens.authenticate(name,
+                                                                  tenant_id,
+                                                                  tenant,
+                                                                  password)
+
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         r = "keystone.delete_%s" % resource.__class__.__name__.lower()

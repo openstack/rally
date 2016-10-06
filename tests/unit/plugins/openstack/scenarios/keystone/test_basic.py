@@ -29,7 +29,8 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
                 "id": "fake_user_id",
                 "credential": mock.MagicMock()
             },
-            "tenant": {"id": "fake_tenant_id"}
+            "tenant": {"id": "fake_tenant_id",
+                       "name": "fake_tenant_name"}
         })
         return context
 
@@ -66,6 +67,24 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
             scenario._user_create.return_value, False)
         scenario._resource_delete.assert_called_once_with(
             scenario._user_create.return_value)
+
+    def test_user_authenticate_and_validate_token(self):
+        fake_token = mock.MagicMock()
+        context = self._get_context()
+        scenario = basic.AuthenticateUserAndValidateToken(context)
+
+        fake_user = context["user"]["credential"].username
+        fake_paswd = context["user"]["credential"].password
+        fake_tenant_id = context["tenant"]["id"]
+        fake_tenant_name = context["tenant"]["name"]
+
+        scenario._authenticate_token = mock.MagicMock(return_value=fake_token)
+        scenario._token_validate = mock.MagicMock()
+        scenario.run()
+        scenario._authenticate_token.assert_called_once_with(
+            fake_user, fake_paswd, fake_tenant_id,
+            fake_tenant_name, atomic_action=False)
+        scenario._token_validate.assert_called_once_with(fake_token.id)
 
     def test_create_tenant(self):
         scenario = basic.CreateTenant(self.context)
