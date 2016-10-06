@@ -326,17 +326,23 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 @ddt.ddt
 class TempestInstallPluginsTestCase(BaseTestCase):
 
+    @mock.patch("os.path.exists")
     @mock.patch(TEMPEST_PATH + ".tempest.check_output")
     @ddt.data("https://github.com/fake-plugin.git", "/tmp/fake-plugin")
-    def test_install_plugin(self, plugin_source, mock_tempest_check_output):
+    def test_install_plugin(self, plugin_source,
+                            mock_tempest_check_output, mock_exists):
         self.verifier.plugin_source = plugin_source
         self.verifier.install_plugin()
 
-        cmd = [self.verifier.venv_wrapper, "pip", "install",
-               "--src", self.verifier.path("plugins"), "-e",
-               "git+{0}@master#egg={1}".format(plugin_source, "fake-plugin")]
-        mock_tempest_check_output.assert_called_with(cmd,
-                                                     cwd=self.verifier.path())
+        cmd_1 = [self.verifier.venv_wrapper, "pip", "install",
+                 "--src", self.verifier.path("plugins"), "-e",
+                 "git+{0}@master#egg={1}".format(plugin_source, "fake-plugin")]
+        cmd_2 = [
+            self.verifier.venv_wrapper, "pip", "install", "-r",
+            self.verifier.path("plugins/fake-plugin/test-requirements.txt")]
+        mock_tempest_check_output.assert_has_calls([
+            mock.call(cmd_1, cwd=self.verifier.path()),
+            mock.call(cmd_2, cwd=self.verifier.path())])
 
     @mock.patch(TEMPEST_PATH + ".tempest.check_output")
     def test_list_plugins(self, mock_tempest_check_output):
