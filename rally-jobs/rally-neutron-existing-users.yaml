@@ -355,7 +355,7 @@
         image:
             name: {{image_name}}
         command:
-          script_file: "~/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:

@@ -4,7 +4,7 @@
             "args": {
                 "flavor": {"name": "m1.small"},
                 "command": {
-                    "remote_path": "./instance_dd_test.sh"
+                    "remote_path": "./instance_test.sh"
                 },
                 "username": "root",
                 "userdata": "#cloud-config\ndisable_root: 0\nssh_pwauth: 1"

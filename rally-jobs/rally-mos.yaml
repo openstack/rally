@@ -311,7 +311,7 @@
         floating_network: "{{external_net}}"
         use_floating_ip: true
         command:
-          script_file: "~/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:

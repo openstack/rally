@@ -3,7 +3,7 @@
     -
       args:
         command:
-          remote_path: "./instance_dd_test.sh"
+          remote_path: "./instance_test.sh"
         flavor:
           name: m1.small
         userdata: "#cloud-config\ndisable_root: 0\nssh_pwauth: 1"
