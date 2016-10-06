@@ -22,14 +22,17 @@ from rally.task import validation
 LOG = logging.getLogger(__name__)
 
 
-class SaharaJob(utils.SaharaScenario):
-    """Benchmark scenarios for Sahara jobs."""
+"""Benchmark scenarios for Sahara jobs."""
 
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image",
-                                  "sahara_job_binaries", "sahara_cluster")
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_launch_job(self, job_type, configs, job_idx=0):
+
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_contexts("users", "sahara_image",
+                              "sahara_job_binaries", "sahara_cluster")
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaJob.create_launch_job")
+class CreateLaunchJob(utils.SaharaScenario):
+
+    def run(self, job_type, configs, job_idx=0):
         """Create and execute a Sahara EDP Job.
 
         This scenario Creates a Job entity and launches an execution on a
@@ -68,11 +71,15 @@ class SaharaJob(utils.SaharaScenario):
                                 configs=configs,
                                 job_idx=job_idx)
 
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image",
-                                  "sahara_job_binaries", "sahara_cluster")
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_launch_job_sequence(self, jobs):
+
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_contexts("users", "sahara_image",
+                              "sahara_job_binaries", "sahara_cluster")
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaJob.create_launch_job_sequence")
+class CreateLaunchJobSequence(utils.SaharaScenario):
+
+    def run(self, jobs):
         """Create and execute a sequence of the Sahara EDP Jobs.
 
         This scenario Creates a Job entity and launches an execution on a
@@ -81,15 +88,21 @@ class SaharaJob(utils.SaharaScenario):
         :param jobs: list of jobs that should be executed in one context
         """
 
+        launch_job = CreateLaunchJob(self.context)
+
         for idx, job in enumerate(jobs):
             LOG.debug("Launching Job. Sequence #%d" % idx)
-            self.create_launch_job(job["job_type"], job["configs"], idx)
+            launch_job.run(job["job_type"], job["configs"], idx)
 
-    @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image",
-                                  "sahara_job_binaries", "sahara_cluster")
-    @scenario.configure(context={"cleanup": ["sahara"]})
-    def create_launch_job_sequence_with_scaling(self, jobs, deltas):
+
+@validation.required_services(consts.Service.SAHARA)
+@validation.required_contexts("users", "sahara_image",
+                              "sahara_job_binaries", "sahara_cluster")
+@scenario.configure(context={"cleanup": ["sahara"]},
+                    name="SaharaJob.create_launch_job_sequence_with_scaling")
+class CreateLaunchJobSequenceWithScaling(utils.SaharaScenario,):
+
+    def run(self, jobs, deltas):
         """Create and execute Sahara EDP Jobs on a scaling Cluster.
 
         This scenario Creates a Job entity and launches an execution on a
@@ -103,8 +116,8 @@ class SaharaJob(utils.SaharaScenario):
 
         cluster_id = self.context["tenant"]["sahara"]["cluster"]
 
-        # Executing the sequence before the first scaling
-        self.create_launch_job_sequence(jobs)
+        launch_job_sequence = CreateLaunchJobSequence(self.context)
+        launch_job_sequence.run(jobs)
 
         for delta in deltas:
             # The Cluster is fetched every time so that its node groups have
@@ -122,4 +135,4 @@ class SaharaJob(utils.SaharaScenario):
                 self._scale_cluster_down(cluster, delta)
 
             LOG.debug("Starting Job sequence")
-            self.create_launch_job_sequence(jobs)
+            launch_job_sequence.run(jobs)
