@@ -46,7 +46,7 @@ EXPECTED_FAILURES = {
     "This test fails because 'novnc' console type is unavailable."
 }
 
-TEMPEST_PLUGIN = "https://git.openstack.org/openstack/ceilometer"
+TEMPEST_PLUGIN = "https://git.openstack.org/openstack/keystone"
 
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .

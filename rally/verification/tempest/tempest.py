@@ -299,18 +299,32 @@ class Tempest(object):
         """Install Tempest plugin for local Tempest repo."""
         LOG.info(_("Installing Tempest plugin from %s for "
                    "deployment: %s") % (self.plugin_source, self.deployment))
+
+        version = self.plugin_version or "master"
         egg = re.sub("\.git$", "",
                      os.path.basename(self.plugin_source.strip("/")))
-        version = self.plugin_version or "master"
         cmd = ["pip", "install", "--no-deps",
                "--src", self.path("plugins/system-wide"), "-e",
                "git+{0}@{1}#egg={2}".format(self.plugin_source, version, egg)]
+        # Very often Tempest plugins are inside projects and requirements
+        # for plugins are listed in the test-requirements.txt file.
+        test_reqs_path = self.path("plugins/system-wide/"
+                                   "%s/test-requirements.txt" % egg)
         if not self._system_wide:
             cmd.remove("--no-deps")
             cmd.remove(self.path("plugins/system-wide"))
             cmd.insert(0, self.path("tools/with_venv.sh"))
             cmd.insert(4, self.path("plugins"))
+            test_reqs_path = self.path("plugins/"
+                                       "%s/test-requirements.txt" % egg)
         check_output(cmd, cwd=self.path())
+
+        if os.path.exists(test_reqs_path):
+            cmd = ["pip", "install", "-r", test_reqs_path]
+            if not self._system_wide:
+                cmd.insert(0, self.path("tools/with_venv.sh"))
+            check_output(cmd, cwd=self.path())
+
         LOG.info(_("Tempest plugin has been successfully installed!"))
 
     def list_plugins(self):
