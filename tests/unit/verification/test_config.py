@@ -20,7 +20,6 @@ import mock
 from oslo_config import cfg
 import requests
 import six
-from six.moves.urllib import parse
 
 from rally import exceptions
 from rally.verification.tempest import config
@@ -53,34 +52,8 @@ class TempestConfigTestCase(test.TestCase):
         mock.patch("rally.common.objects.deploy.db.deployment_get",
                    return_value=CREDS).start()
         mock.patch("rally.osclients.Clients").start()
-        self.mock_isfile = mock.patch("os.path.isfile",
-                                      return_value=True).start()
 
         self.tempest_conf = config.TempestConfig("fake_deployment")
-
-    @mock.patch("os.rename")
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
-    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
-    def test__download_image_success(self, mock_get,
-                                     mock_open, mock_rename):
-        self.mock_isfile.return_value = False
-        self.tempest_conf._download_image()
-        mock_get.assert_called_once_with(
-            CONF.tempest.img_url, stream=True)
-
-    @mock.patch("requests.get")
-    @ddt.data(404, 500)
-    def test__download_image_failure(self, status_code, mock_get):
-        self.mock_isfile.return_value = False
-        mock_get.return_value = mock.MagicMock(status_code=status_code)
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.tempest_conf._download_image)
-
-    @mock.patch("requests.get", side_effect=requests.ConnectionError())
-    def test__download_image_connection_error(self, mock_requests_get):
-        self.mock_isfile.return_value = False
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
-                          self.tempest_conf._download_image)
 
     @ddt.data({"publicURL": "test_url"},
               {"interface": "public", "url": "test_url"})
@@ -223,10 +196,7 @@ class TempestConfigTestCase(test.TestCase):
     def test__configure_scenario(self):
         self.tempest_conf._configure_scenario()
 
-        image_name = parse.urlparse(
-            config.CONF.tempest.img_url).path.split("/")[-1]
-        expected = (("img_dir", self.tempest_conf.data_dir),
-                    ("img_file", image_name))
+        expected = (("img_dir", self.tempest_conf.data_dir),)
         result = self.tempest_conf.conf.items("scenario")
         for item in expected:
             self.assertIn(item, result)
@@ -284,6 +254,7 @@ class TempestConfigTestCase(test.TestCase):
         conf_data.write.assert_called_once_with(mock_open.side_effect())
 
 
+@ddt.ddt
 class TempestResourcesContextTestCase(test.TestCase):
 
     def setUp(self):
@@ -292,6 +263,8 @@ class TempestResourcesContextTestCase(test.TestCase):
         mock.patch("rally.common.objects.deploy.db.deployment_get",
                    return_value=CREDS).start()
         mock.patch("rally.osclients.Clients").start()
+        self.mock_isfile = mock.patch("os.path.isfile",
+                                      return_value=True).start()
 
         fake_verification = {"uuid": "uuid"}
         self.context = config.TempestResourcesContext("fake_deployment",
@@ -299,6 +272,54 @@ class TempestResourcesContextTestCase(test.TestCase):
                                                       "/fake/path/to/config")
         self.context.conf.add_section("compute")
         self.context.conf.add_section("orchestration")
+        self.context.conf.add_section("scenario")
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
+                create=True)
+    def test__download_image_from_glance(self, mock_open):
+        self.mock_isfile.return_value = False
+        img_path = os.path.join(self.context.data_dir, "foo")
+        img = mock.MagicMock()
+        img.data.return_value = "data"
+
+        config._download_image(img_path, img)
+        mock_open.assert_called_once_with(img_path, "wb")
+        mock_open().write.assert_has_calls([mock.call("d"),
+                                            mock.call("a"),
+                                            mock.call("t"),
+                                            mock.call("a")])
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("requests.get", return_value=mock.MagicMock(status_code=200))
+    def test__download_image_from_url_success(self, mock_get, mock_open):
+        self.mock_isfile.return_value = False
+        img_path = os.path.join(self.context.data_dir, "foo")
+        mock_get.return_value.iter_content.return_value = "data"
+
+        config._download_image(img_path)
+        mock_get.assert_called_once_with(CONF.tempest.img_url, stream=True)
+        mock_open.assert_called_once_with(img_path, "wb")
+        mock_open().write.assert_has_calls([mock.call("d"),
+                                            mock.call("a"),
+                                            mock.call("t"),
+                                            mock.call("a")])
+
+    @mock.patch("requests.get")
+    @ddt.data(404, 500)
+    def test__download_image_from_url_failure(self, status_code, mock_get):
+        self.mock_isfile.return_value = False
+        mock_get.return_value = mock.MagicMock(status_code=status_code)
+        self.assertRaises(
+            exceptions.TempestConfigCreationFailure, config._download_image,
+            os.path.join(self.context.data_dir, "foo"))
+
+    @mock.patch("requests.get", side_effect=requests.ConnectionError())
+    def test__download_image_from_url_connection_error(
+            self, mock_requests_get):
+        self.mock_isfile.return_value = False
+        self.assertRaises(
+            exceptions.TempestConfigCreationFailure, config._download_image,
+            os.path.join(self.context.data_dir, "foo"))
 
     @mock.patch("rally.plugins.openstack.wrappers."
                 "network.NeutronWrapper.create_network")
@@ -313,6 +334,7 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.context.conf.set("compute", "flavor_ref_alt", "id4")
         self.context.conf.set("compute", "fixed_network_name", "name1")
         self.context.conf.set("orchestration", "instance_type", "id5")
+        self.context.conf.set("scenario", "img_file", "id6")
 
         self.context.__enter__()
 
@@ -342,16 +364,45 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertIn(role3, created_roles)
         self.assertIn(role4, created_roles)
 
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    def test__discover_image(self, mock_wrap):
+        client = mock_wrap.return_value
+        client.list_images.return_value = [fakes.FakeImage(name="Foo"),
+                                           fakes.FakeImage(name="CirrOS")]
+
+        image = self.context._discover_image()
+        self.assertEqual("CirrOS", image.name)
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
+                create=True)
+    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
+    @mock.patch("os.path.isfile", return_value=False)
+    def test__download_image(self, mock_isfile, mock_wrap, mock_open):
+        img_1 = mock.MagicMock()
+        img_1.name = "Foo"
+        img_2 = mock.MagicMock()
+        img_2.name = "CirrOS"
+        img_2.data.return_value = "data"
+        mock_wrap.return_value.list_images.return_value = [img_1, img_2]
+
+        self.context._download_image()
+        img_path = os.path.join(self.context.data_dir, self.context.image_name)
+        mock_open.assert_called_once_with(img_path, "wb")
+        mock_open().write.assert_has_calls([mock.call("d"),
+                                            mock.call("a"),
+                                            mock.call("t"),
+                                            mock.call("a")])
+
     # We can choose any option to test the '_configure_option' method. So let's
     # configure the 'flavor_ref' option.
     def test__configure_option(self):
-        create_method = mock.MagicMock()
-        create_method.side_effect = [fakes.FakeFlavor(id="id1")]
+        helper_method = mock.MagicMock()
+        helper_method.side_effect = [fakes.FakeFlavor(id="id1")]
 
         self.context.conf.set("compute", "flavor_ref", "")
-        self.context._configure_option("compute",
-                                       "flavor_ref", create_method, 64)
-        self.assertEqual(create_method.call_count, 1)
+        self.context._configure_option("compute", "flavor_ref",
+                                       helper_method=helper_method, flv_ram=64)
+        self.assertEqual(helper_method.call_count, 1)
 
         result = self.context.conf.get("compute", "flavor_ref")
         self.assertEqual("id1", result)
@@ -374,8 +425,6 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual(image, client.create_image.return_value)
         self.assertEqual(self.context._created_images[0],
                          client.create_image.return_value)
-        mock_wrap.assert_called_once_with(self.context.clients.glance,
-                                          self.context)
         client.create_image.assert_called_once_with(
             container_format=CONF.tempest.img_container_format,
             image_location=mock.ANY,

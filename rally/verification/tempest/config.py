@@ -116,6 +116,41 @@ def _create_or_get_data_dir():
     return data_dir
 
 
+def _download_image(image_path, image=None):
+    if image:
+        LOG.debug("Downloading image '%s' "
+                  "from Glance to %s" % (image.name, image_path))
+        with open(image_path, "wb") as image_file:
+            for chunk in image.data():
+                image_file.write(chunk)
+    else:
+        LOG.debug("Downloading image from %s "
+                  "to %s" % (CONF.tempest.img_url, image_path))
+        try:
+            response = requests.get(CONF.tempest.img_url, stream=True)
+        except requests.ConnectionError as err:
+            msg = _("Failed to download image. "
+                    "Possibly there is no connection to Internet. "
+                    "Error: %s.") % (str(err) or "unknown")
+            raise exceptions.TempestConfigCreationFailure(msg)
+
+        if response.status_code == 200:
+            with open(image_path, "wb") as image_file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:   # filter out keep-alive new chunks
+                        image_file.write(chunk)
+                        image_file.flush()
+        else:
+            if response.status_code == 404:
+                msg = _("Failed to download image. Image was not found.")
+            else:
+                msg = _("Failed to download image. "
+                        "HTTP error code %d.") % response.status_code
+            raise exceptions.TempestConfigCreationFailure(msg)
+
+    LOG.debug("The image has been successfully downloaded!")
+
+
 def _write_config(conf_path, conf_data):
     with open(conf_path, "w+") as conf_file:
         conf_data.write(conf_file)
@@ -136,39 +171,6 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
         self.conf = configparser.ConfigParser()
         self.conf.read(os.path.join(os.path.dirname(__file__), "config.ini"))
-
-        self.image_name = parse.urlparse(
-            CONF.tempest.img_url).path.split("/")[-1]
-        self._download_image()
-
-    def _download_image(self):
-        img_path = os.path.join(self.data_dir, self.image_name)
-        if os.path.isfile(img_path):
-            return
-
-        try:
-            response = requests.get(CONF.tempest.img_url, stream=True)
-        except requests.ConnectionError as err:
-            msg = _("Failed to download image. "
-                    "Possibly there is no connection to Internet. "
-                    "Error: %s.") % (str(err) or "unknown")
-            raise exceptions.TempestConfigCreationFailure(msg)
-
-        if response.status_code == 200:
-            with open(img_path + ".tmp", "wb") as img_file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:   # filter out keep-alive new chunks
-                        img_file.write(chunk)
-                        img_file.flush()
-            os.rename(img_path + ".tmp", img_path)
-        else:
-            if response.status_code == 404:
-                msg = _("Failed to download image. "
-                        "Image was not found.")
-            else:
-                msg = _("Failed to download image. "
-                        "HTTP error code %d.") % response.status_code
-            raise exceptions.TempestConfigCreationFailure(msg)
 
     def _get_service_url(self, service_name):
         s_type = self._get_service_type_by_service_name(service_name)
@@ -284,7 +286,6 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
 
     def _configure_scenario(self, section_name="scenario"):
         self.conf.set(section_name, "img_dir", self.data_dir)
-        self.conf.set(section_name, "img_file", self.image_name)
 
     def _configure_service_available(self, section_name="service_available"):
         services = ["cinder", "glance", "heat", "ironic", "neutron", "nova",
@@ -338,8 +339,8 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         self.conf = configparser.ConfigParser()
         self.conf.read(conf_path)
 
-        self.image_name = parse.urlparse(
-            CONF.tempest.img_url).path.split("/")[-1]
+        self.data_dir = _create_or_get_data_dir()
+        self.image_name = "tempest-image"
 
         self._created_roles = []
         self._created_images = []
@@ -348,16 +349,19 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
 
     def __enter__(self):
         self._create_tempest_roles()
+
+        self._configure_option("scenario", "img_file", self.image_name,
+                               helper_method=self._download_image)
         self._configure_option("compute", "image_ref",
-                               self._discover_or_create_image)
+                               helper_method=self._discover_or_create_image)
         self._configure_option("compute", "image_ref_alt",
-                               self._discover_or_create_image)
+                               helper_method=self._discover_or_create_image)
         self._configure_option("compute", "flavor_ref",
-                               self._discover_or_create_flavor,
-                               CONF.tempest.flavor_ref_ram)
+                               helper_method=self._discover_or_create_flavor,
+                               flv_ram=CONF.tempest.flavor_ref_ram)
         self._configure_option("compute", "flavor_ref_alt",
-                               self._discover_or_create_flavor,
-                               CONF.tempest.flavor_ref_alt_ram)
+                               helper_method=self._discover_or_create_flavor,
+                               flv_ram=CONF.tempest.flavor_ref_alt_ram)
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
             if neutronclient.list_networks(shared=True)["networks"]:
@@ -370,12 +374,14 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                 # resources.
                 LOG.debug("Shared networks found. "
                           "'fixed_network_name' option should be configured")
-                self._configure_option("compute", "fixed_network_name",
-                                       self._create_network_resources)
+                self._configure_option(
+                    "compute", "fixed_network_name",
+                    helper_method=self._create_network_resources)
         if "heat" in self.available_services:
-            self._configure_option("orchestration", "instance_type",
-                                   self._discover_or_create_flavor,
-                                   CONF.tempest.heat_instance_type_ram)
+            self._configure_option(
+                "orchestration", "instance_type",
+                helper_method=self._discover_or_create_flavor,
+                flv_ram=CONF.tempest.heat_instance_type_ram)
 
         _write_config(self.conf_path, self.conf)
 
@@ -406,14 +412,46 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                 LOG.debug("Creating role '%s'" % role)
                 self._created_roles.append(keystoneclient.roles.create(role))
 
-    def _configure_option(self, section, option,
-                          create_method, *args, **kwargs):
+    def _discover_image(self):
+        LOG.debug("Trying to discover a public image with name matching "
+                  "regular expression '%s'. Note that case insensitive "
+                  "matching is performed." % CONF.tempest.img_name_regex)
+        glance_wrapper = glance.wrap(self.clients.glance, self)
+        images = glance_wrapper.list_images(status="active",
+                                            visibility="public")
+        for image in images:
+            if image.name and re.match(CONF.tempest.img_name_regex,
+                                       image.name, re.IGNORECASE):
+                LOG.debug("The following public "
+                          "image discovered: '%s'" % image.name)
+                return image
+
+        LOG.debug("There is no public image with name matching "
+                  "regular expression '%s'" % CONF.tempest.img_name_regex)
+
+    def _download_image(self):
+        image_path = os.path.join(self.data_dir, self.image_name)
+        if os.path.isfile(image_path):
+            LOG.debug("Image is already downloaded to %s" % image_path)
+            return
+
+        if CONF.tempest.img_name_regex:
+            image = self._discover_image()
+            if image:
+                return _download_image(image_path, image)
+
+        _download_image(image_path)
+
+    def _configure_option(self, section, option, value=None,
+                          helper_method=None, *args, **kwargs):
         option_value = self.conf.get(section, option)
         if not option_value:
             LOG.debug("Option '%s' from '%s' section "
                       "is not configured" % (option, section))
-            resource = create_method(*args, **kwargs)
-            value = resource["name"] if "network" in option else resource.id
+            if helper_method:
+                res = helper_method(*args, **kwargs)
+                if res:
+                    value = res["name"] if "network" in option else res.id
             LOG.debug("Setting value '%s' for option '%s'" % (value, option))
             self.conf.set(section, option, value)
             LOG.debug("Option '{opt}' is configured. "
@@ -424,35 +462,25 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                       .format(opt=option, opt_val=option_value))
 
     def _discover_or_create_image(self):
-        glance_wrapper = glance.wrap(self.clients.glance, self)
-
         if CONF.tempest.img_name_regex:
-            LOG.debug("Trying to discover a public image with name matching "
-                      "regular expression '%s'. Note that case insensitive "
-                      "matching is performed" % CONF.tempest.img_name_regex)
-            images = glance_wrapper.list_images(status="active",
-                                                visibility="public")
-            for img in images:
-                if img.name and re.match(CONF.tempest.img_name_regex,
-                                         img.name, re.IGNORECASE):
-                    LOG.debug(
-                        "The following public image discovered: '{0}'. "
-                        "Using image '{0}' for the tests".format(img.name))
-                    return img
-
-            LOG.debug("There is no public image with name matching "
-                      "regular expression '%s'" % CONF.tempest.img_name_regex)
+            image = self._discover_image()
+            if image:
+                LOG.debug("Using image '%s' (ID = %s) "
+                          "for the tests" % (image.name, image.id))
+                return image
 
         params = {
             "name": self.generate_random_name(),
             "disk_format": CONF.tempest.img_disk_format,
             "container_format": CONF.tempest.img_container_format,
-            "image_location": os.path.join(_create_or_get_data_dir(),
-                                           self.image_name),
+            "image_location": os.path.join(self.data_dir, self.image_name),
             "visibility": "public"
         }
         LOG.debug("Creating image '%s'" % params["name"])
+        glance_wrapper = glance.wrap(self.clients.glance, self)
         image = glance_wrapper.create_image(**params)
+        LOG.debug("Image '%s' (ID = %s) has been "
+                  "successfully created!" % (image.name, image.id))
         self._created_images.append(image)
 
         return image
@@ -463,10 +491,11 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         LOG.debug("Trying to discover a flavor with the following "
                   "properties: RAM = %dMB, VCPUs = 1, disk = 0GB" % flv_ram)
         for flavor in novaclient.flavors.list():
-            if (flavor.ram == flv_ram
-                    and flavor.vcpus == 1 and flavor.disk == 0):
-                LOG.debug("The following flavor discovered: '{0}'. Using "
-                          "flavor '{0}' for the tests".format(flavor.name))
+            if (flavor.ram == flv_ram and
+                    flavor.vcpus == 1 and flavor.disk == 0):
+                LOG.debug("The following flavor discovered: '{0}'. "
+                          "Using flavor '{0}' (ID = {1}) for the tests"
+                          .format(flavor.name, flavor.id))
                 return flavor
 
         LOG.debug("There is no flavor with the mentioned properties")
@@ -480,6 +509,8 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         LOG.debug("Creating flavor '%s' with the following properties: RAM "
                   "= %dMB, VCPUs = 1, disk = 0GB" % (params["name"], flv_ram))
         flavor = novaclient.flavors.create(**params)
+        LOG.debug("Flavor '%s' (ID = %s) has been "
+                  "successfully created!" % (flavor.name, flavor.id))
         self._created_flavors.append(flavor)
 
         return flavor
@@ -491,6 +522,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         net = neutron_wrapper.create_network(
             tenant_id, subnets_num=1, add_router=True,
             network_create_args={"shared": True})
+        LOG.debug("Network resources have been successfully created!")
         self._created_networks.append(net)
 
         return net
@@ -500,6 +532,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         for role in self._created_roles:
             LOG.debug("Deleting role '%s'" % role.name)
             keystoneclient.roles.delete(role.id)
+            LOG.debug("Role '%s' has been deleted" % role.name)
 
     def _cleanup_images(self):
         glance_wrapper = glance.wrap(self.clients.glance, self)
@@ -513,6 +546,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                 timeout=CONF.benchmark.glance_image_delete_timeout,
                 check_interval=CONF.benchmark.
                 glance_image_delete_poll_interval)
+            LOG.debug("Image '%s' has been deleted" % image.name)
             self._remove_opt_value_from_config("compute", image.id)
 
     def _cleanup_flavors(self):
@@ -520,6 +554,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         for flavor in self._created_flavors:
             LOG.debug("Deleting flavor '%s'" % flavor.name)
             novaclient.flavors.delete(flavor.id)
+            LOG.debug("Flavor '%s' has been deleted" % flavor.name)
             self._remove_opt_value_from_config("compute", flavor.id)
             self._remove_opt_value_from_config("orchestration", flavor.id)
 
@@ -529,6 +564,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
             LOG.debug("Deleting network resources: router, subnet, network")
             neutron_wrapper.delete_network(net)
             self._remove_opt_value_from_config("compute", net["name"])
+            LOG.debug("Network resources have been deleted")
 
     def _remove_opt_value_from_config(self, section, opt_value):
         for option, value in self.conf.items(section):
@@ -536,3 +572,4 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                 LOG.debug("Removing value '%s' for option '%s' "
                           "from Tempest config file" % (opt_value, option))
                 self.conf.set(section, option, "")
+                LOG.debug("Value '%s' has been removed" % opt_value)
