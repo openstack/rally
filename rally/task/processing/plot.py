@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import datetime as dt
 import hashlib
 import json
 
@@ -24,6 +25,61 @@ from rally.common.plugin import plugin
 from rally.common import version
 from rally.task.processing import charts
 from rally.ui import utils as ui_utils
+
+
+def _process_hooks(hooks):
+    """Prepare hooks data for report."""
+    hooks_ctx = []
+    for hook in hooks:
+        hook_ctx = {"name": hook["config"]["name"],
+                    "desc": hook["config"]["description"],
+                    "additive": [], "complete": []}
+
+        for res in hook["results"]:
+            started_at = dt.datetime.utcfromtimestamp(res["started_at"])
+            finished_at = dt.datetime.utcfromtimestamp(res["finished_at"])
+            triggered_by = "%(event_type)s: %(value)s" % res["triggered_by"]
+
+            for i, data in enumerate(res.get("output", {}).get("additive")):
+                try:
+                    hook_ctx["additive"][i]
+                except IndexError:
+                    chart_cls = plugin.Plugin.get(data["chart_plugin"])
+                    hook_ctx["additive"].append([chart_cls])
+                hook_ctx["additive"][i].append(data)
+
+            complete_charts = []
+            for data in res.get("output", {}).get("complete"):
+                chart_cls = plugin.Plugin.get(data.pop("chart_plugin"))
+                data["widget"] = chart_cls.widget
+                complete_charts.append(data)
+
+            if complete_charts:
+                hook_ctx["complete"].append(
+                    {"triggered_by": triggered_by,
+                     "started_at": started_at.strftime("%Y-%m-%d %H:%M:%S"),
+                     "finished_at": finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+                     "status": res["status"],
+                     "charts": complete_charts})
+
+        for i in range(len(hook_ctx["additive"])):
+            chart_cls = hook_ctx["additive"][i].pop(0)
+            iters_count = len(hook_ctx["additive"][i])
+            first = hook_ctx["additive"][i][0]
+            descr = first.get("description", "")
+            axis_label = first.get("axis_label", "")
+            chart = chart_cls({"iterations_count": iters_count},
+                              title=first["title"],
+                              description=descr,
+                              label=first.get("label", ""),
+                              axis_label=axis_label)
+            for data in hook_ctx["additive"][i]:
+                chart.add_iteration(data["data"])
+            hook_ctx["additive"][i] = chart.render()
+
+        if hook_ctx["additive"] or hook_ctx["complete"]:
+            hooks_ctx.append(hook_ctx)
+    return hooks_ctx
 
 
 def _process_scenario(data, pos):
@@ -75,6 +131,7 @@ def _process_scenario(data, pos):
     cls, method = data["key"]["name"].split(".")
     additive_output = [chart.render() for chart in additive_output_charts]
     iterations_count = data["info"]["iterations_count"]
+
     return {
         "cls": cls,
         "met": method,
@@ -82,6 +139,7 @@ def _process_scenario(data, pos):
         "name": method + (pos and " [%d]" % (pos + 1) or ""),
         "runner": kw["runner"]["type"],
         "config": json.dumps({data["key"]["name"]: [kw]}, indent=2),
+        "hooks": _process_hooks(data["hooks"]),
         "iterations": {
             "iter": main_area.render(),
             "pie": [("success", (data["info"]["iterations_count"]
@@ -95,6 +153,7 @@ def _process_scenario(data, pos):
         "table": main_stat.render(),
         "additive_output": additive_output,
         "complete_output": complete_output,
+        "has_output": any(additive_output) or any(complete_output),
         "output_errors": output_errors,
         "errors": errors,
         "load_duration": data["info"]["load_duration"],

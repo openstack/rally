@@ -25,6 +25,8 @@ from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
+from rally import exceptions
+from rally.task.processing import charts
 from rally.task import trigger
 from rally.task import utils
 
@@ -152,13 +154,21 @@ class Hook(plugin.Plugin):
         """Set status to result."""
         self._result["status"] = status
 
-    def set_output(self, output):
-        """Set output to result.
+    def add_output(self, additive=None, complete=None):
+        """Save custom output.
 
-        :param output: Diagram data in task.OUTPUT_SCHEMA format
+        :param additive: dict with additive output
+        :param complete: dict with complete output
+        :raises RallyException: if output has wrong format
         """
-        if output:
-            self._result["output"] = output
+        if "output" not in self._result:
+            self._result["output"] = {"additive": [], "complete": []}
+        for key, value in (("additive", additive), ("complete", complete)):
+            if value:
+                message = charts.validate_output(key, value)
+                if message:
+                    raise exceptions.RallyException(message)
+                self._result["output"][key].append(value)
 
     def run_async(self):
         """Run hook asynchronously."""
@@ -190,7 +200,7 @@ class Hook(plugin.Plugin):
         Optionally the following methods should be called:
             set_error - to indicate that there was an error;
                         automatically sets hook execution status to 'failed'
-            set_output - to provide diagram data
+            add_output - provide data for report
         """
 
     def result(self):

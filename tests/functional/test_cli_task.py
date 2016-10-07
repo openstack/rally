@@ -1072,23 +1072,31 @@ class HookTestCase(unittest.TestCase):
             ]
         }
 
-    def _get_result(self, config, iterations=None, seconds=None):
-        result = {
-            "config": config,
-            "results": [],
-            "summary": {"success": 0}
-        }
+    def _get_result(self, config, iterations=None, seconds=None, error=False):
+        result = {"config": config, "results": [], "summary": {}}
         events = iterations if iterations else seconds
         event_type = "iteration" if iterations else "time"
-
+        status = "failed" if error else "success"
         for i in range(len(events)):
-            result["results"].append({
+            itr_result = {
                 "finished_at": mock.ANY,
                 "started_at": mock.ANY,
                 "triggered_by": {"event_type": event_type, "value": events[i]},
-                "status": "success"})
-            result["summary"]["success"] += 1
-
+                "status": status,
+                "output": {
+                    "additive": [],
+                    "complete": [{"chart_plugin": "TextArea",
+                                  "data": ["RetCode: %i" % error,
+                                           "StdOut: (empty)",
+                                           "StdErr: (empty)"],
+                                  "description": "Args: %s" % config["args"],
+                                  "title": "System call"}]}}
+            if error:
+                itr_result["error"] = {"etype": "n/a",
+                                       "msg": "Subprocess returned 1",
+                                       "details": "stdout: "}
+            result["results"].append(itr_result)
+        result["summary"][status] = len(events)
         return result
 
     def test_hook_result_with_constant_runner(self):
@@ -1163,12 +1171,7 @@ class HookTestCase(unittest.TestCase):
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
         hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
-        expected = [self._get_result(hooks_cfg[0], iterations=[5])]
-        expected[0]["results"][0]["status"] = "failed"
-        expected[0]["summary"] = {"failed": 1}
-        expected[0]["results"][0]["error"] = {"etype": "n/a",
-                                              "msg": "Subprocess returned 1",
-                                              "details": ""}
+        expected = [self._get_result(hooks_cfg[0], iterations=[5], error=True)]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
