@@ -13,18 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os.path
+import jinja2
 
 
-def get_mako_template(template):
-    import mako.lookup
-    dirs = os.path.join(os.path.dirname(__file__), "templates")
-    lookup = mako.lookup.TemplateLookup(directories=[dirs])
-    return lookup.get_template(template)
-
-
-def get_jinja_template(template):
-    import jinja2
+def get_template(template):
 
     def include_raw_file(file_name):
         try:
@@ -38,9 +30,3 @@ def get_jinja_template(template):
     env.globals["include_raw_file"] = include_raw_file
 
     return env.get_template(template)
-
-
-def get_template(template):
-    if template.endswith(".mako"):
-        return get_mako_template(template)
-    return get_jinja_template(template)

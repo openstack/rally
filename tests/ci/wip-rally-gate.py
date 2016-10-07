@@ -180,7 +180,7 @@ def main():
         else:
             print("Ignoring file %s" % fname)
     print("Exit statuses: %r" % statuses)
-    template = utils.get_template("ci/index.mako")
+    template = utils.get_template("ci/index.html")
     with open("rally-plot/extra/index.html", "w") as output:
         output.write(template.render())
     return any(statuses)
