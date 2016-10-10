@@ -909,6 +909,19 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_flavors")
 
+    def test__set_flavor_keys(self):
+        flavor = mock.MagicMock()
+        nova_scenario = utils.NovaScenario()
+        extra_specs = {"fakeargs": "foo"}
+        flavor.set_keys = mock.MagicMock()
+
+        result = nova_scenario._set_flavor_keys(flavor, extra_specs)
+        self.assertEqual(flavor.set_keys.return_value, result)
+        flavor.set_keys.assert_called_once_with(extra_specs)
+
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.set_flavor_keys")
+
     @ddt.data({},
               {"hypervisor": "foo_hypervisor"})
     @ddt.unpack

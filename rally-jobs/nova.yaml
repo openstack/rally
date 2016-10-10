@@ -1089,6 +1089,26 @@
         failure_rate:
           max: 0
 
+  NovaFlavors.create_flavor_and_set_keys:
+    -
+      args:
+        ram: 500
+        vcpus : 1
+        disk: 1
+        extra_specs:
+          quota:disk_read_bytes_sec: 10240
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 10
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   NovaFlavors.create_and_get_flavor:
     -
       args:
