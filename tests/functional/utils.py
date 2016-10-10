@@ -38,15 +38,19 @@ DEPLOYMENT_FILE = "/tmp/rally_functests_main_deployment.json"
 
 class RallyCliError(Exception):
 
-    def __init__(self, code, output):
+    def __init__(self, cmd, code, output):
+        self.command = cmd
         self.code = code
         self.output = encodeutils.safe_decode(output)
+        self.msg = "Command: %s Code: %d Output: %s\n" % (self.command,
+                                                          self.code,
+                                                          self.output)
 
     def __str__(self):
-        return "Code: %d Output: %s\n" % (self.code, self.output)
+        return self.msg
 
     def __unicode__(self):
-        return "Code: %d Output: %s\n" % (self.code, self.output)
+        return self.msg
 
 
 class TaskConfig(object):
@@ -187,7 +191,7 @@ class Rally(object):
                 return json.loads(output)
             return output
         except subprocess.CalledProcessError as e:
-            raise RallyCliError(e.returncode, e.output)
+            raise RallyCliError(cmd, e.returncode, e.output)
 
 
 def get_global(global_key, env):
