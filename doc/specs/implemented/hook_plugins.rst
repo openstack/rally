@@ -4,9 +4,9 @@
 
  http://creativecommons.org/licenses/by/3.0/legalcode
 
-======================================
-New Tasks Configuration section - hook
-======================================
+=======================
+New Plugins Type - Hook
+=======================
 
 Problem description
 ===================
@@ -44,8 +44,8 @@ of hook plugins that should be executed on this iteration.
                         "trigger: {
                             "name": "event",
                             "args": {
-                                "unit": "seconds",
-                                "on": [1, 50, 100]  # seconds since start
+                                "unit": "time",
+                                "at": [1, 50, 100]  # seconds since start
                             }
                         }
                     },
@@ -58,7 +58,7 @@ of hook plugins that should be executed on this iteration.
                             "name": "event",
                             "args": {
                                 "unit": "iteration",
-                                "on": [35, 40, 45]  # iteration numbers
+                                "at": [35, 40, 45]  # iteration numbers
                             }
                         }
                     },
@@ -85,7 +85,7 @@ of hook plugins that should be executed on this iteration.
                         "trigger: {
                             "name": "periodic",
                             "args": {
-                                "unit": "seconds",
+                                "unit": "time",
                                 "step": 15,   # execute hook each 15 seconds
                                 "start": 100,
                                 "end": 200
@@ -104,44 +104,43 @@ Add a new base class for such plugins, that should:
     - provide abstract method 'run' which should be implemented in plugins
       this method should be called after specified iteration has been executed
 
-Hook plugin classes should:
-    - Implement 'run' method which returns dict with result of action:
-
-        .. code:: json
-
-            {
-               "action": "my_action",
-               "status": "success"
-            }
-
-Add a new base class for trigger plugins, that should:
+Add new classes for trigger plugins, that should:
     - contain validation schema for its configuration
-    - contain abstract method "on_time" and "on_iteration" to check whether
-      the trigger is active on specified time/iteration
+    - contain "get_listening_event" and "on_event" methods
 
 Trigger plugin classes should:
-    - implement "on_time" and "on_iteration" methods and return True if
-      the trigger is active on specified time/iteration, False otherwise
+    - implement "get_listening_event" methods that return events to listen
+    - implement "on_event" methods that check event type and value;
+      launch hook if needed
 
 
 Add HookExecuter class to run hook plugins, that should:
-    - controll when to run a hook specified in config
-    - recieve result of hook execution from hook plugin
+    - control when to run a hook specified in config
+    - receive result of hook execution from hook plugin
     - return a full result of hook execution in the following format:
 
-        .. code:: json
+.. code:: json
 
+    [{
+        # this is config of specific hook; it should not be empty!
+        "config": {...},
+        "results":[
             {
-                "hook": "example_hook",
-                "triggered_on": {"iteration": 20}
+                # value is time in seconds
+                "triggered_by": {"event_type": "iteration", "value": 20},
                 "started_at": 1470331269.134323,
                 "finished_at": 1470331319.761103,
-                "action": "my action",
                 "status": "success",
+                # same output format as in scenarios; this key can be missed
+                # if no output was added
+                "output": {}
             }
+        ],
+        "summary": {"success": 1}
+    }]
 
 Modify ResultConsumer, that should:
-    - controll HookExecuter and provide info about iterations
+    - control HookExecuter and provide info about iterations
     - add a full result to TaskResult
 
 Example code of base class:
@@ -193,34 +192,40 @@ example_hook class:
             # do some action
             rc = os.system(self.cmd)
 
-            return {
-                "action": "my action",
-                "status": "success" if rc == 0 else "failed",
-            }
-
 
 Example of hook result that goes to TaskResult (list of dicts):
 
 .. code:: python
 
-    [
-        {
-            "hook": "example_hook",
-            "triggered_on": {"iteration": 20}
-            "started_at": 1470331269.134323,
-            "finished_at": 1470331319.761103,
-            "action": "my action",
-            "status": "success",
-        },
-        {
-            "hook": "example_hook",
-            "triggered_on": {"time": 150.0}     # time in seconds since start
-            "started_at": 1470331270.352342,
-            "finished_at": 1470331333.623303,
-            "action": "my action",
-            "status": "success",
-        }
-    ]
+    [{
+        # this is config of specific hook; it should not be empty!
+        "config": {...},
+        "results":[
+            {
+                "triggered_by": {"event_type": "iteration", "value": 20},
+                "started_at": 1470331269.134323,
+                "finished_at": 1470331319.761103,
+                "status": "success",
+                # same output format as in scenarios; this key can be missed
+                # if no output was added
+                "output": {}
+            },
+            {
+                # value is time in seconds
+                "triggered_by": {"event_type": "time", "value": 150.0},
+                "started_at": 1470331270.352342,
+                "finished_at": 1470331333.623303,
+                "status": "failed",
+                "error": {
+                    "etype": "Exception",  # type of exception
+                    "msg": "exception message",
+                    # additional information to help (for example, traceback)
+                    "details": ""
+                }
+            }
+        ],
+        "summary": {"success": 1, "failed": 1}
+    }]
 
 
 Alternatives
