@@ -1,1 +1,1 @@
-archive/v0.6.0.rst
+archive/v0.7.0.rst
