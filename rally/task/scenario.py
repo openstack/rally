@@ -50,6 +50,9 @@ def configure(name=None, namespace="default", context=None):
         scen.is_classbased = hasattr(scen, "run") and callable(scen.run)
         if not scen.is_classbased:
             plugin.from_func(Scenario)(scen)
+        else:
+            scen._doc_source_ = scen.run
+
         scen._meta_init()
         if name:
             if "." not in name.strip("."):
