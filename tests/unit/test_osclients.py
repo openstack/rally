@@ -117,7 +117,7 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
         with mock.patch.object(warnings, "warn") as mock_warn:
             self.assertEqual(mock_keystone_get_session.return_value,
                              osclient._get_session(auth_url, version))
-            self.assertTrue(mock_warn.called)
+            self.assertFalse(mock_warn.called)
         mock_keystone_get_session.assert_called_once_with(version)
 
 

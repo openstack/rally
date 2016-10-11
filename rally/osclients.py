@@ -20,12 +20,14 @@ from six.moves.urllib import parse
 
 from rally.cli import envutils
 from rally.common.i18n import _
+from rally.common import logging
 from rally.common import objects
 from rally.common.plugin import plugin
 from rally import consts
 from rally import exceptions
 
 
+LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 OSCLIENTS_OPTS = [
@@ -147,8 +149,7 @@ class OSClient(plugin.Plugin):
                                         self.cache)
 
     def _get_session(self, auth_url=None, version=None):
-        import warnings
-        warnings.warn(
+        LOG.warning(
             "Method `rally.osclient.OSClient._get_session` is deprecated since"
             " Rally 0.6.0. Use "
             "`rally.osclient.OSClient.keystone.get_session` instead.")

@@ -100,6 +100,5 @@ class DeprecatedFileExporter(FileExporter):
     """DEPRECATED."""
     def __init__(self, connection_string):
         super(DeprecatedFileExporter, self).__init__(connection_string)
-        import warnings
-        warnings.warn("'file-exporter' plugin is deprecated. Use 'file' "
-                      "instead.")
+        LOG.warning("'file-exporter' plugin is deprecated. Use 'file' "
+                    "instead.")
