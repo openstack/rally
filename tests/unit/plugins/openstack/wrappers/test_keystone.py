@@ -124,6 +124,10 @@ class KeystoneV2WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.assertEqual("default", result[0].domain_id)
         self.assertFalse(hasattr(result[0], "extra_field"))
 
+    def test_create_role(self):
+        self.wrapped_client.create_role("foo_name")
+        self.client.roles.create.assert_called_once_with("foo_name")
+
     def test_add_role(self):
         self.wrapped_client.add_role("fake_role_id", "fake_user_id",
                                      "fake_project_id")
@@ -218,6 +222,12 @@ class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.assertEqual("project_id", result[0].project_id)
         self.assertEqual("domain_id", result[0].domain_id)
         self.assertFalse(hasattr(result[0], "extra_field"))
+
+    def test_create_role(self, **kwargs):
+        self.wrapped_client.create_role("foo_name", domain="domain",
+                                        **kwargs)
+        self.client.roles.create.assert_called_once_with(
+            "foo_name", domain="domain", **kwargs)
 
     def test_add_role(self):
         self.wrapped_client.add_role("fake_role_id", "fake_user_id",

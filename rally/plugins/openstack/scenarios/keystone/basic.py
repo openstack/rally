@@ -189,7 +189,7 @@ class CreateAndDeleteRole(kutils.KeystoneScenario):
     def run(self):
         """Create a user role and delete it."""
         role = self._role_create()
-        self._resource_delete(role)
+        self._role_delete(role.id)
 
 
 @validation.required_openstack(admin=True, users=True)
