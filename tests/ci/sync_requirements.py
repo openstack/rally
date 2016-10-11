@@ -84,7 +84,7 @@ class Requirement(object):
         self.do_not_touch = False
 
     def sync_max_version_with_pypy(self):
-        if isinstance(self.version, dict) and not self.upper_limit_flag:
+        if isinstance(self.version, dict) and not self.do_not_touch:
             self.version["max"] = "<=%s" % self.pypy_info["info"]["version"]
 
     @property
