@@ -16,6 +16,7 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -36,3 +37,26 @@ class ListHypervisors(utils.NovaScenario):
                          detailed information about all of them
         """
         self._list_hypervisors(detailed)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHypervisors.list_and_get_hypervisors")
+class ListAndGetHypervisors(utils.NovaScenario):
+    """Benchmark scenario for Nova hypervisors."""
+    def run(self, detailed=True):
+        """List and Get hypervisors.
+
+        The scenario fist list all hypervisors,then get detailed information
+        of the listed hypervisors in trun.
+
+        Measure the "nova hypervisor-show" command performance.
+
+        :param detailed: True if the hypervisor listing should contain
+                         detailed information about all of them
+        """
+        hypervisors = self._list_hypervisors(detailed)
+
+        with atomic.ActionTimer(self, "nova.get_hypervisor"):
+            for hypervisor in hypervisors:
+                self._get_hypervisor(hypervisor)
