@@ -1166,3 +1166,25 @@ class NovaScenario(scenario.OpenStackScenario):
                   "availability_zone": availability_zone}
         return self.admin_clients("nova").aggregates.update(aggregate,
                                                             values)
+
+    @atomic.action_timer("nova.aggregate_add_host")
+    def _aggregate_add_host(self, aggregate, host):
+        """Add a host into the Host Aggregate.
+
+        :param aggregate: The aggregate add host to
+        :param host: The host add to aggregate
+        :returns: The aggregate that has been added host to
+        """
+        return self.admin_clients("nova").aggregates.add_host(aggregate,
+                                                              host)
+
+    @atomic.action_timer("nova.aggregate_remove_host")
+    def _aggregate_remove_host(self, aggregate, host):
+        """Remove a host from an aggregate.
+
+        :param aggregate: The aggregate remove host from
+        :param host: The host to remove
+        :returns: The aggregate that has been removed host from
+        """
+        return self.admin_clients("nova").aggregates.remove_host(aggregate,
+                                                                 host)

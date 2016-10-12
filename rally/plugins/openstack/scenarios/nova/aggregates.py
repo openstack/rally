@@ -84,3 +84,23 @@ class CreateAndUpdateAggregate(utils.NovaScenario):
         """
         aggregate = self._create_aggregate(availability_zone)
         self._update_aggregate(aggregate)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaAggregates.create_aggregate_add_and_remove_host")
+class CreateAggregateAddAndRemoveHost(utils.NovaScenario):
+    """Scenario for add a host to and remove the host from an aggregate."""
+
+    def run(self, availability_zone):
+        """Create an aggregate, add a host to and remove the host from it
+
+        Measure "nova aggregate-add-host" and "nova aggregate-remove-host"
+        command performance.
+        """
+        aggregate = self._create_aggregate(availability_zone)
+        hosts = self._list_hosts(zone=None)
+        host_name = hosts[0].host_name
+        self._aggregate_add_host(aggregate, host_name)
+        self._aggregate_remove_host(aggregate, host_name)

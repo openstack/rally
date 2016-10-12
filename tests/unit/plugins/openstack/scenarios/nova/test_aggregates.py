@@ -52,3 +52,22 @@ class NovaAggregatesTestCase(test.TestCase):
         scenario._create_aggregate.assert_called_once_with("nova")
         aggregate = scenario._create_aggregate.return_value
         scenario._update_aggregate.assert_called_once_with(aggregate)
+
+    def test_create_aggregate_add_and_remove_host(self):
+        fake_aggregate = "fake_aggregate"
+        fake_hosts = [mock.Mock(host_name="fake_host_name")]
+        scenario = aggregates.CreateAggregateAddAndRemoveHost()
+        scenario._create_aggregate = mock.MagicMock(
+            return_value=fake_aggregate)
+        scenario._list_hosts = mock.MagicMock(
+            return_value=fake_hosts)
+        scenario._aggregate_add_host = mock.MagicMock()
+        scenario._aggregate_remove_host = mock.MagicMock()
+        scenario.run(availability_zone="nova")
+        scenario._create_aggregate.assert_called_once_with(
+            "nova")
+        scenario._list_hosts.assert_called_once_with(zone=None)
+        scenario._aggregate_add_host.assert_called_once_with(
+            "fake_aggregate", "fake_host_name")
+        scenario._aggregate_remove_host.assert_called_once_with(
+            "fake_aggregate", "fake_host_name")
