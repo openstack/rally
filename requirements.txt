@@ -49,6 +49,3 @@ python-swiftclient>=2.2.0,<=3.1.0                      # Apache Software License
 python-troveclient>=2.2.0,<=2.5.0                      # Apache Software License
 python-watcherclient>=0.23.0,<=0.25.0                  # Apache Software License
 python-zaqarclient>=1.0.0,<=1.2.0                      # Apache Software License
-# [do-not-touch] Version pinned to avoid AssertionError: sorry, but this version
-# only supports 100 named groups
-pycparser!=2.14                                        # BSD
