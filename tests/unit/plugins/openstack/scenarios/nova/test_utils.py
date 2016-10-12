@@ -880,6 +880,15 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.get_hypervisor")
 
+    def test__search_hypervisors(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._search_hypervisors("fake_hostname", servers=False)
+
+        self.admin_clients("nova").hypervisors.search.assert_called_once_with(
+            "fake_hostname", servers=False)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.search_hypervisors")
+
     def test__list_images(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._list_images(detailed=False, fakearg="fakearg")

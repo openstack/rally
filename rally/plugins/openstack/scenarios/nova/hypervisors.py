@@ -59,7 +59,7 @@ class ListAndGetHypervisors(utils.NovaScenario):
 
         with atomic.ActionTimer(self, "nova.get_hypervisor"):
             for hypervisor in hypervisors:
-                self._get_hypervisor(hypervisor)
+                self._get_hypervisor(hypervisor, atomic_action=False)
 
 
 @validation.required_services(consts.Service.NOVA)
@@ -95,3 +95,28 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
         with atomic.ActionTimer(self, "nova.uptime_hypervisor"):
             for hypervisor in hypervisors:
                 self._uptime_hypervisor(hypervisor, atomic_action=False)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHypervisors.list_and_search_hypervisors")
+class ListAndSearchHypervisors(utils.NovaScenario):
+    def run(self, detailed=True):
+        """List all servers belonging to specific hypervisor.
+
+        The scenario first list all hypervisors,then find its hostname,
+        then list all servers belonging to the hypervisor
+
+        Measure the "nova hypervisor-servers <hostname>" command performance.
+
+        :param detailed: True if the hypervisor listing should contain
+                         detailed information about all of them
+        """
+        hypervisors = self._list_hypervisors(detailed)
+
+        with atomic.ActionTimer(self,
+                                "nova.search_%s_hypervisors" % len(hypervisors)
+                                ):
+            for hypervisor in hypervisors:
+                self._search_hypervisors(hypervisor.hypervisor_hostname,
+                                         atomic_action=False)
