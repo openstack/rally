@@ -83,7 +83,8 @@ class InfoMixin(object):
     @classmethod
     def get_info(cls):
         plugin_ = getattr(cls, "func_ref", cls)
-        doc = parse_docstring(plugin_.__doc__)
+        doc_source = getattr(plugin_, "_doc_source_", plugin_)
+        doc = parse_docstring(doc_source.__doc__)
 
         return {
             "name": plugin_.get_name(),
