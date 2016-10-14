@@ -64,6 +64,19 @@ class ListAndGetHypervisors(utils.NovaScenario):
 
 @validation.required_services(consts.Service.NOVA)
 @validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHypervisors.statistics_hypervisors")
+class StatisticsHypervisors(utils.NovaScenario):
+
+    def run(self):
+        """Get hypervisor statistics over all compute nodes.
+
+        Measure the "nova hypervisor-stats" command performance.
+        """
+        self._statistics_hypervisors()
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors")
 class ListAndGetUptimeHypervisors(utils.NovaScenario):
     def run(self, detailed=True):

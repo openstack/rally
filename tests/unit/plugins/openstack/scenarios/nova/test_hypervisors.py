@@ -38,6 +38,12 @@ class NovaHypervisorsTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "nova.get_hypervisor")
 
+    def test_statistics_hypervisors(self):
+        scenario = hypervisors.StatisticsHypervisors(self.context)
+        scenario._statistics_hypervisors = mock.Mock()
+        scenario.run()
+        scenario._statistics_hypervisors.assert_called_once_with()
+
     def test_list_and_get_uptime_hypervisors(self):
         scenario = hypervisors.ListAndGetUptimeHypervisors(self.context)
         scenario._list_hypervisors = mock.MagicMock(detailed=False)
