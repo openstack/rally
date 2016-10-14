@@ -1,0 +1,20 @@
+---
+  CinderVolumeTypes.create_volume_type_and_encryption_type:
+    -
+      args:
+        specs:
+          provider: "LuksEncryptor"
+          cipher: "aes-xts-plain64"
+          key_size: 512
+          control_location: "front-end"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0

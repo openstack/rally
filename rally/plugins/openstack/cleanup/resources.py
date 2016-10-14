@@ -454,7 +454,7 @@ class CinderVolumeBackup(base.ResourceManager):
 
 
 @base.resource("cinder", "volume_types", order=next(_cinder_order),
-               admin_required=True)
+               admin_required=True, perform_for_admin_only=True)
 class CinderVolumeType(base.ResourceManager):
     def list(self):
         return [r for r in self._manager().list()

@@ -259,6 +259,9 @@ class Cinder(ResourceManager):
     def list_volume_types(self):
         return self.client.volume_types.list()
 
+    def list_encryption_types(self):
+        return self.client.volume_encryption_types.list()
+
     def list_transfers(self):
         return self.client.transfers.list()
 
