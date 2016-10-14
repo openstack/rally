@@ -883,6 +883,18 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.lock()
 
+    @atomic.optional_action_timer("nova.uptime_hypervisor")
+    def _uptime_hypervisor(self, hypervisor, atomic_action=False):
+        """Display the uptime of the specified hypervisor.
+
+        :param hypervisor: Hypervisor to get.
+        :param atomic_action: True if this is atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator.
+        :returns: Hypervisor object
+        """
+        return self.admin_clients("nova").hypervisors.uptime(hypervisor)
+
     @atomic.action_timer("nova.unlock_server")
     def _unlock_server(self, server):
         """Unlock the given server.

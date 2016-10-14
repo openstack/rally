@@ -60,3 +60,25 @@ class ListAndGetHypervisors(utils.NovaScenario):
         with atomic.ActionTimer(self, "nova.get_hypervisor"):
             for hypervisor in hypervisors:
                 self._get_hypervisor(hypervisor)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors")
+class ListAndGetUptimeHypervisors(utils.NovaScenario):
+    def run(self, detailed=True):
+        """List hypervisors,then display the uptime of it.
+
+        The scenario first list all hypervisors,then display
+        the uptime of the listed hypervisors in trun.
+
+        Measure the "nova hypervisor-uptime" command performance.
+
+        :param detailed: True if the hypervisor listing should contain
+                         detailed information about all of them
+        """
+        hypervisors = self._list_hypervisors(detailed)
+
+        with atomic.ActionTimer(self, "nova.uptime_hypervisor"):
+            for hypervisor in hypervisors:
+                self._uptime_hypervisor(hypervisor, atomic_action=False)

@@ -1119,3 +1119,12 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "fake_agg", "fake_host")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.aggregate_remove_host")
+
+    def test__uptime_hypervisor(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._uptime_hypervisor("fake_hostname")
+
+        self.admin_clients("nova").hypervisors.uptime.assert_called_once_with(
+            "fake_hostname")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.uptime_hypervisor")
