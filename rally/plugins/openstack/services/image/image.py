@@ -42,6 +42,12 @@ class VisibilityException(Exception):
     """
 
 
+class RemovePropsException(Exception):
+    """Remove Props it not supported exception.
+
+    """
+
+
 class Image(service.UnifiedOpenStackService):
     @classmethod
     def is_applicable(cls, clients):
@@ -84,6 +90,24 @@ class Image(service.UnifiedOpenStackService):
             min_disk=min_disk,
             min_ram=min_ram)
         return image
+
+    @service.should_be_overridden
+    def update_image(self, image_id, image_name=None,
+                     min_disk=0, min_ram=0, remove_props=None):
+        """Update image.
+
+        :param image_id: ID of image to update
+        :param image_name: Image name to be updated to
+        :param min_disk: The min disk of updated image
+        :param min_ram: The min ram of updated image
+        :param remove_props: List of property names to remove
+        """
+        return self._impl.update_image(
+            image_id,
+            image_name=image_name,
+            min_disk=min_disk,
+            min_ram=min_ram,
+            remove_props=remove_props)
 
     @service.should_be_overridden
     def list_images(self, status="active", visibility=None, owner=None):

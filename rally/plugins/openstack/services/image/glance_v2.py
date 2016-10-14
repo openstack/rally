@@ -91,6 +91,26 @@ class GlanceV2Service(service.Service):
             check_interval=CONF.benchmark.glance_image_create_poll_interval)
         return image_obj
 
+    @atomic.action_timer("glance_v2.update_image")
+    def update_image(self, image_id, image_name=None, min_disk=0,
+                     min_ram=0, remove_props=None):
+        """Update image.
+
+        :param image_id: ID of image to update
+        :param image_name: Image name to be updated to
+        :param min_disk: The min disk of updated image
+        :param min_ram: The min ram of updated image
+        :param remove_props: List of property names to remove
+        """
+        image_name = image_name or self.generate_random_name()
+
+        return self._clients.glance("2").images.update(
+            image_id=image_id,
+            name=image_name,
+            min_disk=min_disk,
+            min_ram=min_ram,
+            remove_props=remove_props)
+
     @atomic.action_timer("glance_v2.get_image")
     def get_image(self, image):
         """Get specified image.
@@ -169,6 +189,24 @@ class UnifiedGlanceV2Service(image.Image):
             visibility=visibility,
             min_disk=min_disk,
             min_ram=min_ram)
+        return self._unify_image(image_obj)
+
+    def update_image(self, image_id, image_name=None, min_disk=0,
+                     min_ram=0, remove_props=None):
+        """Update image.
+
+        :param image_id: ID of image to update
+        :param image_name: Image name to be updated to
+        :param min_disk: The min disk of updated image
+        :param min_ram: The min ram of updated image
+        :param remove_props: List of property names to remove
+        """
+        image_obj = self._impl.update_image(
+            image_id=image_id,
+            image_name=image_name,
+            min_disk=min_disk,
+            min_ram=min_ram,
+            remove_props=remove_props)
         return self._unify_image(image_obj)
 
     def list_images(self, status="active", visibility=None, owner=None):
