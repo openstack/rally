@@ -736,10 +736,32 @@ class SwiftContainer(SwiftMixin):
 
 # MISTRAL
 
-@base.resource("mistral", "workbooks", order=1100, tenant_resource=True)
-class MistralWorkbooks(SynchronizedDeletion, base.ResourceManager):
+_mistral_order = get_order(1100)
+
+
+class MistralMixin(SynchronizedDeletion, base.ResourceManager):
+
     def delete(self):
-        self._manager().delete(self.raw_resource.name)
+        self._manager().delete(self.raw_resource["id"])
+
+
+@base.resource("mistral", "workbooks", order=next(_mistral_order),
+               tenant_resource=True)
+class MistralWorkbooks(MistralMixin):
+    def delete(self):
+        self._manager().delete(self.raw_resource["name"])
+
+
+@base.resource("mistral", "workflows", order=next(_mistral_order),
+               tenant_resource=True)
+class MistralWorkflows(MistralMixin):
+    pass
+
+
+@base.resource("mistral", "executions", order=next(_mistral_order),
+               tenant_resource=True)
+class MistralExecutions(MistralMixin):
+    pass
 
 
 # MURANO

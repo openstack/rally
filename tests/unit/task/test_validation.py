@@ -974,3 +974,44 @@ class ValidatorsTestCase(test.TestCase):
         config = {"context": {"api_versions": {"nova": {"version": 2}}}}
         self.assertEqual(validator(config, clients, None).is_valid,
                          valid)
+
+    @mock.patch(
+        "yaml.safe_load",
+        return_value={
+            "version": "2.0",
+            "name": "wb",
+            "workflows": {
+                "wf1": {
+                    "type": "direct",
+                    "tasks": {
+                        "t1": {
+                            "action": "std.noop"
+                        }
+                    }
+                }
+            }
+        }
+    )
+    @mock.patch(MODULE + "os.access")
+    @mock.patch(MODULE + "open")
+    def test_workbook_contains_workflow(self, mock_open, mock_access,
+                                        mock_safe_load):
+
+        validator = self._unwrap_validator(
+            validation.workbook_contains_workflow, "definition",
+            "workflow_name")
+        clients = mock.MagicMock()
+
+        context = {
+            "args": {
+                "definition": "fake_path1",
+                "workflow_name": "wf1"
+            }
+        }
+
+        result = validator(context, clients, None)
+        self.assertTrue(result.is_valid)
+
+        self.assertEqual(1, mock_open.called)
+        self.assertEqual(1, mock_access.called)
+        self.assertEqual(1, mock_safe_load.called)

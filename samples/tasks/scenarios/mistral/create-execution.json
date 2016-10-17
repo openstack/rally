@@ -1,0 +1,25 @@
+{
+    "MistralExecutions.create_execution_from_workbook": [
+        {
+            "args": {
+                "definition": "rally-jobs/extra/mistral_wb.yaml"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 20,
+                "concurrency": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

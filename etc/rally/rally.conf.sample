@@ -268,6 +268,9 @@
 # (floating point value)
 #manila_share_delete_poll_interval = 2.0
 
+# mistral execution timeout (integer value)
+#mistral_execution_timeout = 200
+
 # Delay between creating Monasca metrics and polling for its elements.
 # (floating point value)
 #monasca_metric_create_prepoll_delay = 15.0

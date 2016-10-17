@@ -318,6 +318,18 @@ class FakeWorkbook(FakeResource):
         self.workbook = mock.MagicMock()
 
 
+class FakeWorkflow(FakeResource):
+    def __init__(self, manager=None):
+        super(FakeWorkflow, self).__init__(manager)
+        self.workflow = mock.MagicMock()
+
+
+class FakeExecution(FakeResource):
+    def __init__(self, manager=None):
+        super(FakeExecution, self).__init__(manager)
+        self.execution = mock.MagicMock()
+
+
 class FakeObject(FakeResource):
     pass
 
@@ -939,6 +951,27 @@ class FakeWorkbookManager(FakeManager):
         return [self.workbook]
 
 
+class FakeWorkflowManager(FakeManager):
+    def __init__(self):
+        super(FakeWorkflowManager, self).__init__()
+        self.workflow = FakeWorkflow()
+
+    def list(self):
+        return [self.workflow]
+
+
+class FakeExecutionManager(FakeManager):
+    def __init__(self):
+        super(FakeExecutionManager, self).__init__()
+        self.execution = FakeExecution()
+
+    def list(self):
+        return [self.execution]
+
+    def create(self):
+        return self.execution
+
+
 class FakeObjectManager(FakeManager):
 
     def get_account(self, **kwargs):
@@ -1505,6 +1538,8 @@ class FakeMistralClient(object):
 
     def __init__(self):
         self.workbook = FakeWorkbookManager()
+        self.workflow = FakeWorkflowManager()
+        self.execution = FakeExecutionManager()
 
 
 class FakeSwiftClient(FakeObjectManager):

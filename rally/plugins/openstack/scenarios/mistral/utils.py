@@ -13,10 +13,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 import yaml
 
 from rally.plugins.openstack import scenario
 from rally.task import atomic
+from rally.task import utils
+
+MISTRAL_BENCHMARK_OPTS = [
+    cfg.IntOpt(
+        "mistral_execution_timeout",
+        default=200,
+        help="mistral execution timeout")
+]
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
+CONF.register_opts(MISTRAL_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MistralScenario(scenario.OpenStackScenario):
@@ -24,7 +37,10 @@ class MistralScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("mistral.list_workbooks")
     def _list_workbooks(self):
-        """Gets list of existing workbooks."""
+        """Gets list of existing workbooks.
+
+        :returns: workbook list
+        """
         return self.clients("mistral").workbooks.list()
 
     @atomic.action_timer("mistral.create_workbook")
@@ -48,3 +64,41 @@ class MistralScenario(scenario.OpenStackScenario):
         :param wb_name: the name of workbook that would be deleted.
         """
         self.clients("mistral").workbooks.delete(wb_name)
+
+    @atomic.action_timer("mistral.list_executions")
+    def _list_executions(self, marker="", limit=None, sort_keys="",
+                         sort_dirs=""):
+        """Gets list of existing executions.
+
+        :returns: execution list
+        """
+
+        return self.clients("mistral").executions.list(
+            marker=marker, limit=limit, sort_keys=sort_keys,
+            sort_dirs=sort_dirs)
+
+    @atomic.action_timer("mistral.create_execution")
+    def _create_execution(self, workflow_identifier):
+        """Create a new execution.
+
+        :param workflow_identifier: name or id of the workflow to execute
+        :returns: executions object
+        """
+
+        execution = self.clients("mistral").executions.create(
+            workflow_identifier)
+
+        execution = utils.wait_for_status(
+            execution, ready_statuses=["SUCCESS"], failure_statuses=["ERROR"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.mistral_execution_timeout)
+
+        return execution
+
+    @atomic.action_timer("mistral.delete_execution")
+    def _delete_execution(self, execution):
+        """Delete the given execution.
+
+        :param ex: the execution that would be deleted.
+        """
+        self.clients("mistral").executions.delete(execution.id)

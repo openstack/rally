@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.plugins.openstack.scenarios.mistral import utils
+from tests.unit import fakes
 from tests.unit import test
 
 MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
@@ -27,21 +28,77 @@ class MistralScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(
             self.clients("mistral").workbooks.list.return_value,
             return_wbs_list)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "mistral.list_workbooks")
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.list_workbooks"
+        )
 
     def test_create_workbook(self):
         definition = "version: \"2.0\"\nname: wb"
         scenario = utils.MistralScenario(context=self.context)
-        self.assertEqual(scenario._create_workbook(definition),
-                         self.clients("mistral").workbooks.create.return_value)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "mistral.create_workbook")
+        self.assertEqual(
+            self.clients("mistral").workbooks.create.return_value,
+            scenario._create_workbook(definition)
+        )
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.create_workbook"
+        )
 
     def test_delete_workbook(self):
         scenario = utils.MistralScenario(context=self.context)
         scenario._delete_workbook("wb_name")
         self.clients("mistral").workbooks.delete.assert_called_once_with(
-            "wb_name")
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "mistral.delete_workbook")
+            "wb_name"
+        )
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.delete_workbook"
+        )
+
+    def test_list_executions(self):
+        scenario = utils.MistralScenario(context=self.context)
+        return_executions_list = scenario._list_executions()
+        self.assertEqual(
+            return_executions_list,
+            self.clients("mistral").executions.list.return_value
+        )
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.list_executions"
+        )
+
+    def test_create_execution(self):
+        scenario = utils.MistralScenario(context=self.context)
+
+        mock_wait_for_status = self.mock_wait_for_status.mock
+        wf_name = "fake_wf_name"
+        mock_create_exec = self.clients("mistral").executions.create
+
+        self.assertEqual(
+            mock_wait_for_status.return_value,
+            scenario._create_execution("%s" % wf_name)
+        )
+
+        mock_create_exec.assert_called_once_with(wf_name)
+
+        args, kwargs = mock_wait_for_status.call_args
+        self.assertEqual(mock_create_exec.return_value, args[0])
+        self.assertEqual(["ERROR"], kwargs["failure_statuses"])
+        self.assertEqual(["SUCCESS"], kwargs["ready_statuses"])
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.create_execution"
+        )
+
+    def test_delete_execution(self):
+        scenario = utils.MistralScenario(context=self.context)
+        execution = fakes.FakeMistralClient().execution.create()
+        scenario._delete_execution(execution)
+        self.clients("mistral").executions.delete.assert_called_once_with(
+            execution.id
+        )
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.delete_execution"
+        )

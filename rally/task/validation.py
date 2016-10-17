@@ -21,6 +21,7 @@ import re
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 import six
+import yaml
 
 from rally.common.i18n import _
 from rally.common import objects
@@ -727,3 +728,30 @@ def validate_heat_template(config, clients, deployment, *param_names):
                 msg = (_("Heat template validation failed on %(path)s. "
                          "Original error message: %(msg)s.") % dct)
                 return ValidationResult(False, msg)
+
+
+@validator
+def workbook_contains_workflow(config, clients, deployment, workbook,
+                               workflow_name):
+    """Validate that workflow exist in workbook when workflow is passed
+
+    :param workbook: parameter containing the workbook definition
+    :param workflow_name: parameter containing the workflow name
+    """
+
+    wf_name = config.get("args", {}).get(workflow_name)
+    if wf_name:
+        wb_path = config.get("args", {}).get(workbook)
+        wb_path = os.path.expanduser(wb_path)
+        file_result = _file_access_ok(config.get("args", {}).get(workbook),
+                                      os.R_OK, workbook)
+        if not file_result.is_valid:
+            return file_result
+
+        with open(wb_path, "r") as wb_def:
+            wb_def = yaml.safe_load(wb_def)
+            if wf_name not in wb_def["workflows"]:
+                return ValidationResult(
+                    False,
+                    "workflow '{}' not found in the definition '{}'".format(
+                        wf_name, wb_def))

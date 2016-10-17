@@ -119,6 +119,20 @@ class Magnum(ResourceManager):
         return result
 
 
+class Mistral(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.MISTRAL
+
+    def list_workbooks(self):
+        return self.client.workbooks.list()
+
+    def list_workflows(self):
+        return self.client.workflows.list()
+
+    def list_executions(self):
+        return self.client.executions.list()
+
+
 class Nova(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.NOVA
