@@ -45,6 +45,13 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.list_volumes")
 
+    def test__list_types(self):
+        return_types_list = self.scenario._list_types()
+        self.assertEqual(self.clients("cinder").volume_types.list.return_value,
+                         return_types_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.list_types")
+
     def test__list_snapshots(self):
         return_snapshots_list = self.scenario._list_snapshots()
         self.assertEqual(

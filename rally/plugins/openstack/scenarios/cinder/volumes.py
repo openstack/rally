@@ -88,6 +88,24 @@ class ListVolumes(cinder_utils.CinderScenario,
         self._list_volumes(detailed)
 
 
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(name="CinderVolumes.list_types")
+class ListTypes(cinder_utils.CinderScenario):
+
+    def run(self, search_opts=None, is_public=None):
+        """List all volume types.
+
+        This simple scenario tests the cinder type-list command by listing
+        all the volume types.
+
+        :param search_opts: Options used when search for volume types
+        :param is_public: If query public volume type
+        """
+
+        self._list_types(search_opts, is_public)
+
+
 @types.convert(image={"type": "glance_image"})
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)

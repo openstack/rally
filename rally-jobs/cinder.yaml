@@ -236,6 +236,24 @@
         failure_rate:
           max: 0
 
+  CinderVolumes.list_types:
+  {% for s in ("true", "false") %}
+    -
+      args:
+        is_public: {{s}}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}
+
   CinderVolumes.create_volume:
     -
       args:

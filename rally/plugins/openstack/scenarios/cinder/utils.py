@@ -65,6 +65,17 @@ class CinderScenario(scenario.OpenStackScenario):
 
         return self.clients("cinder").volume_snapshots.list(detailed)
 
+    @atomic.action_timer("cinder.list_types")
+    def _list_types(self, search_opts=None, is_public=None):
+        """Lists all volume types.
+
+        :param search_opts: Options used when search for volume types
+        :param is_public: If query public volume type
+        :returns: A list of volume types
+        """
+        return self.clients("cinder").volume_types.list(search_opts,
+                                                        is_public)
+
     def _set_metadata(self, volume, sets=10, set_size=3):
         """Set volume metadata.
 
