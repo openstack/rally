@@ -39,7 +39,8 @@ class SysCallHook(hook.Hook):
         LOG.debug("sys_call hook: Running command %s", self.config)
         proc = subprocess.Popen(shlex.split(self.config),
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True)
         out, err = proc.communicate()
         LOG.debug("sys_call hook: Command %s returned %s",
                   self.config, proc.returncode)

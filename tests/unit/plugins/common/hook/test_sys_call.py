@@ -100,15 +100,24 @@ class SysCallHookTestCase(test.TestCase):
 
         mock_popen.assert_called_once_with(["foo", "cmd"],
                                            stdout=subprocess.PIPE,
-                                           stderr=subprocess.PIPE)
+                                           stderr=subprocess.PIPE,
+                                           universal_newlines=True)
 
+    @ddt.data(
+        {"communicate_streams": ("foo out", "foo err"),
+         "expected_error_details": "foo err",
+         "expected_data_stderr": "StdErr: foo err"},
+        {"communicate_streams": ("foo out", ""),
+         "expected_error_details": "stdout: foo out",
+         "expected_data_stderr": "StdErr: (empty)"})
+    @ddt.unpack
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     @mock.patch("rally.plugins.common.hook.sys_call.subprocess.Popen")
-    def test_run_error(self, mock_popen, mock_timer):
+    def test_run_error(self, mock_popen, mock_timer, communicate_streams,
+                       expected_error_details, expected_data_stderr):
         popen_instance = mock_popen.return_value
-        popen_instance.communicate.return_value = ("foo out", "foo err")
+        popen_instance.communicate.return_value = communicate_streams
         popen_instance.returncode = 1
-        popen_instance.stdout.read.return_value = b"No such file or directory"
 
         task = mock.MagicMock()
         sys_call_hook = sys_call.SysCallHook(task, "/bin/bash -c 'ls'",
@@ -117,7 +126,7 @@ class SysCallHookTestCase(test.TestCase):
         sys_call_hook.run_sync()
 
         self.assertEqual(
-            {"error": {"details": "foo err",
+            {"error": {"details": expected_error_details,
                        "etype": "n/a",
                        "msg": "Subprocess returned 1"},
              "finished_at": fakes.FakeTimer().finish_timestamp(),
@@ -126,7 +135,7 @@ class SysCallHookTestCase(test.TestCase):
                  "complete": [{"chart_plugin": "TextArea",
                                "data": ["RetCode: 1",
                                         "StdOut: foo out",
-                                        "StdErr: foo err"],
+                                        expected_data_stderr],
                                "description": "Args: /bin/bash -c 'ls'",
                                "title": "System call"}]},
              "started_at": fakes.FakeTimer().timestamp(),
@@ -136,4 +145,5 @@ class SysCallHookTestCase(test.TestCase):
         mock_popen.assert_called_once_with(
             ["/bin/bash", "-c", "ls"],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+            stderr=subprocess.PIPE,
+            universal_newlines=True)
