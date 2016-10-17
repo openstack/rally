@@ -71,3 +71,12 @@ class NovaAggregatesTestCase(test.TestCase):
             "fake_aggregate", "fake_host_name")
         scenario._aggregate_remove_host.assert_called_once_with(
             "fake_aggregate", "fake_host_name")
+
+    def test_create_and_get_aggregate_details(self):
+        scenario = aggregates.CreateAndGetAggregateDetails()
+        scenario._create_aggregate = mock.Mock()
+        scenario._get_aggregate_details = mock.Mock()
+        scenario.run(availability_zone="nova")
+        scenario._create_aggregate.assert_called_once_with("nova")
+        aggregate = scenario._create_aggregate.return_value
+        scenario._get_aggregate_details.assert_called_once_with(aggregate)
