@@ -253,6 +253,16 @@ class NeutronScenario(scenario.OpenStackScenario):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
 
+    @atomic.action_timer("neutron.show_port")
+    def _show_port(self, port, **params):
+        """Return user port details.
+
+        :param port: dict, neutron port
+        :param params: neutron port show options
+        :returns: neutron port dict
+        """
+        return self.clients("neutron").show_port(port["port"]["id"], **params)
+
     @atomic.action_timer("neutron.update_port")
     def _update_port(self, port, port_update_args):
         """Update the neutron port.

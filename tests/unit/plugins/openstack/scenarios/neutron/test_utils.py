@@ -379,6 +379,21 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_ports")
 
+    def test_show_port(self):
+        expect_port = {
+            "port": {
+                "id": "port-id",
+                "name": "port-name",
+                "admin_state_up": True
+            }
+        }
+        self.clients("neutron").show_port.return_value = expect_port
+        self.assertEqual(expect_port, self.scenario._show_port(expect_port))
+        self.clients("neutron").show_port.assert_called_once_with(
+            expect_port["port"]["id"])
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.show_port")
+
     def test_update_port(self):
         expected_port = {
             "port": {

@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.neutron import network
 from tests.unit import test
 
@@ -351,6 +352,69 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
              for _ in range(ports_per_network)])
         scenario._update_port.assert_has_calls(
             [mock.call(p, port_update_args) for p in ports])
+
+    def test_create_and_show_ports_positive(self):
+        port_create_args = {"allocation_pools": []}
+        ports_per_network = 1
+        network_create_args = {"router:external": True}
+        net = mock.MagicMock()
+
+        scenario = network.CreateAndShowPorts(self.context)
+        scenario._get_or_create_network = mock.MagicMock(return_value=net)
+        scenario._create_port = mock.MagicMock()
+        scenario._show_port = mock.MagicMock()
+        port = {"port": {"id": 1, "name": "f"}}
+        port_info = {"port": {"id": 1, "name": "f", "status": "ACTIVE"}}
+        scenario._show_port.return_value = port_info
+
+        # Positive case:
+        scenario._create_port.return_value = port
+        scenario.run(network_create_args=network_create_args,
+                     port_create_args=port_create_args,
+                     ports_per_network=ports_per_network)
+        scenario._get_or_create_network.assert_called_once_with(
+            network_create_args)
+        scenario._create_port.assert_called_with(net, port_create_args)
+        scenario._show_port.assert_called_with(port)
+
+    def test_create_and_show_ports_negative(self):
+        port_create_args = {"allocation_pools": []}
+        ports_per_network = 1
+        network_create_args = {"router:external": True}
+        net = mock.MagicMock()
+
+        scenario = network.CreateAndShowPorts(self.context)
+        scenario._get_or_create_network = mock.MagicMock(return_value=net)
+        scenario._create_port = mock.MagicMock()
+        scenario._show_port = mock.MagicMock()
+
+        # Negative case1: port isn't created
+        scenario._create_port.return_value = None
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          network_create_args,
+                          port_create_args,
+                          ports_per_network)
+        scenario._get_or_create_network.assert_called_once_with(
+            network_create_args)
+        scenario._create_port.assert_called_once_with(net, port_create_args)
+
+        # Negative case2: port isn't show
+        port = {"port": {"id": 1, "name": "f1"}}
+        port_info = {"port": {"id": 2, "name": "f2", "status": "ACTIVE"}}
+        scenario._show_port.return_value = port_info
+        scenario._create_port.return_value = port
+
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          network_create_args,
+                          port_create_args,
+                          ports_per_network)
+
+        scenario._get_or_create_network.assert_called_with(
+            network_create_args)
+        scenario._create_port.assert_called_with(net, port_create_args)
+        scenario._show_port.assert_called_with(port)
 
     def test_create_and_delete_ports(self):
         port_create_args = {"allocation_pools": []}

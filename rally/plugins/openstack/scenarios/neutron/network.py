@@ -16,6 +16,7 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -318,6 +319,42 @@ class CreateAndUpdatePorts(utils.NeutronScenario):
         for i in range(ports_per_network):
             port = self._create_port(network, port_create_args)
             self._update_port(port, port_update_args)
+
+
+@validation.number("ports_per_network", minval=1, integer_only=True)
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronNetworks.create_and_show_ports")
+class CreateAndShowPorts(utils.NeutronScenario):
+
+    def run(self, network_create_args=None,
+            port_create_args=None, ports_per_network=1):
+        """Create a given number of ports and show created ports in trun.
+
+        Measure the "neutron port-create" and "neutron port-show" commands
+        performance.
+
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options.
+        :param port_create_args: dict, POST /v2.0/ports request options
+        :param ports_per_network: int, number of ports for one network
+        """
+        network_create_args = network_create_args or {}
+        port_create_args = port_create_args or {}
+
+        network = self._get_or_create_network(network_create_args)
+        with atomic.ActionTimer(self, "neutron.create_and_show_%i_ports" %
+                                ports_per_network):
+            for i in range(ports_per_network):
+                port = self._create_port(network, port_create_args)
+                msg = "Port isn't created"
+                self.assertTrue(port, err_msg=msg)
+
+                port_info = self._show_port(port)
+                msg = "Created port and Showed port isn't equal"
+                self.assertEqual(port["port"]["id"], port_info["port"]["id"],
+                                 err_msg=msg)
 
 
 @validation.required_parameters("ports_per_network")

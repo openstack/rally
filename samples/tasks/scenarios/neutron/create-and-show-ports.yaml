@@ -1,0 +1,23 @@
+---
+  NeutronNetworks.create_and_show_ports:
+    -
+      args:
+        network_create_args: {}
+        port_create_args: {}
+        ports_per_network: 2
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        network: {}
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        quotas:
+          neutron:
+            network: -1
+            port: -1
+      sla:
+        failure_rate:
+          max: 0
