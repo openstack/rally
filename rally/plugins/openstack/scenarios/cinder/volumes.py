@@ -67,6 +67,35 @@ class CreateAndListVolume(cinder_utils.CinderScenario,
         self._list_volumes(detailed)
 
 
+@types.convert(image={"type": "glance_image"})
+@validation.image_exists("image", nullable=True)
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["cinder"]},
+                    name="CinderVolumes.create_and_get_volume")
+class CreateAndGetVolume(cinder_utils.CinderScenario,
+                         nova_utils.NovaScenario,
+                         glance_utils.GlanceScenario):
+
+    def run(self, size, image=None, **kwargs):
+        """Create a volume and get the volume.
+
+        Measure the "cinder show" command performance.
+
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
+        :param image: image to be used to create volume
+        :param kwargs: optional args to create a volume
+        """
+        if image:
+            kwargs["imageRef"] = image
+
+        volume = self._create_volume(size, **kwargs)
+        self._get_volume(volume.id)
+
+
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
