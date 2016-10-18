@@ -684,6 +684,24 @@
         failure_rate:
           max: 0
 
+  CinderVolumeBackups.create_incremental_volume_backup:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        roles:
+          - "admin"
+      sla:
+        failure_rate:
+          max: 40
+
   CinderVolumes.create_and_restore_volume_backup:
     -
       args:
