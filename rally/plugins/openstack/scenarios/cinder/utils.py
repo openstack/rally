@@ -175,6 +175,18 @@ class CinderScenario(scenario.OpenStackScenario):
         client = cinder_wrapper.wrap(self._clients.cinder, self)
         client.update_volume(volume, **update_volume_args)
 
+    @atomic.action_timer("cinder.update_readonly_flag")
+    def _update_readonly_flag(self, volume, read_only):
+        """Update the read-only access mode flag of the specified volume.
+
+        :param volume: The UUID of the volume to update.
+        :param read_only: The value to indicate whether to update volume to
+            read-only access mode.
+        :returns: A tuple of http Response and body
+        """
+        return self.clients("cinder").volumes.update_readonly_flag(
+            volume, read_only)
+
     @atomic.action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
         """Delete the given volume.

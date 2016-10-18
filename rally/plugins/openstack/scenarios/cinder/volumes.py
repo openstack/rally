@@ -721,3 +721,28 @@ class CreateVolumeFromSnapshot(cinder_utils.CinderScenario,
         if do_delete:
             self._delete_snapshot(snapshot)
             self._delete_volume(volume)
+
+
+@types.convert(image={"type": "glance_image"})
+@validation.image_exists("image", nullable=True)
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["cinder"]},
+                    name="CinderVolumes.create_volume_"
+                    "and_update_readonly_flag")
+class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderScenario,
+                                        glance_utils.GlanceScenario):
+
+    def run(self, size, image=None, read_only=True, **kwargs):
+        """Create a volume and then update its readonly flag.
+
+        :param size: volume size (integer, in GB)
+        :param image: image to be used to create volume
+        :param read_only:The value to indicate whether to update volume to
+            read-only access mode
+        :param kwargs: optional args to create a volume
+        """
+        if image:
+            kwargs["imageRef"] = image
+        volume = self._create_volume(size, **kwargs)
+        self._update_readonly_flag(volume.id, read_only)

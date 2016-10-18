@@ -71,6 +71,16 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._update_volume.assert_called_once_with(fake_volume,
                                                         **volume_update_args)
 
+    def test_create_volume_and_update_readonly_flag(self):
+        scenario = volumes.CreateVolumeAndUpdateReadonlyFlag(self.context)
+        fake_volume = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._update_readonly_flag = mock.MagicMock()
+        scenario.run(1, None, True, fakearg="f")
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")
+        scenario._update_readonly_flag.assert_called_once_with(
+            fake_volume.id, True)
+
     def test_create_and_delete_volume(self):
         fake_volume = mock.MagicMock()
 
