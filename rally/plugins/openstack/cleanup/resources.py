@@ -23,6 +23,7 @@ from rally.common import logging
 from rally.common.plugin import discover
 from rally.common import utils
 from rally.plugins.openstack.cleanup import base
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.fuel import utils as futils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
@@ -444,6 +445,15 @@ _cinder_order = get_order(400)
                tenant_resource=True)
 class CinderVolumeBackup(base.ResourceManager):
     pass
+
+
+@base.resource("cinder", "volume_types", order=next(_cinder_order),
+               admin_required=True)
+class CinderVolumeType(base.ResourceManager):
+    def list(self):
+        return [r for r in self._manager().list()
+                if utils.name_matches_object(r.name,
+                                             cinder_utils.CinderScenario)]
 
 
 @base.resource("cinder", "volume_snapshots", order=next(_cinder_order),

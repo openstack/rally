@@ -391,3 +391,25 @@ class CinderScenario(scenario.OpenStackScenario):
         :returns: list of :class:`VolumeTransfer`
         """
         return self.clients("cinder").transfers.list(detailed, search_opts)
+
+    @atomic.action_timer("cinder.create_volume_type")
+    def _create_volume_type(self, **kwargs):
+        """create volume type.
+
+        :param kwargs: Optional additional arguments for volume type creation
+        :returns: VolumeType object
+        """
+        kwargs["name"] = self.generate_random_name()
+        return self.admin_clients("cinder").volume_types.create(**kwargs)
+
+    @atomic.action_timer("cinder.delete_volume_type")
+    def _delete_volume_type(self, volume_type):
+        """delete a volume type.
+
+        :param volume_type: Name or Id of the volume type
+        :returns: base on client response return True if the request
+                  has been accepted or not
+        """
+        tuple_res = self.admin_clients("cinder").volume_types.delete(
+            volume_type)
+        return (tuple_res[0].status_code == 202)
