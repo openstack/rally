@@ -140,7 +140,7 @@ def do_compare(uuid_1, uuid_2):
     """Compare and save results in different formats."""
     results = {}
     for output_format in ("csv", "html", "json"):
-        cmd = "verify compare --uuid-1 %(uuid-1)s --uuid-2 %(uuid-2)s" % {
+        cmd = "verify results --uuid %(uuid-1)s %(uuid-2)s" % {
             "uuid-1": uuid_1,
             "uuid-2": uuid_2
         }
