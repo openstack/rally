@@ -382,3 +382,28 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             volume_type)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_volume_type")
+
+    def test__transfer_create(self):
+        fake_volume = mock.MagicMock()
+        random_name = "random_name"
+        self.scenario.generate_random_name = mock.MagicMock(
+            return_value=random_name)
+        result = self.scenario._transfer_create(fake_volume.id)
+        self.assertEqual(
+            self.clients("cinder").transfers.create.return_value,
+            result)
+        self.clients("cinder").transfers.create.assert_called_once_with(
+            fake_volume.id, random_name)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.transfer_create")
+
+    def test__transfer_accept(self):
+        fake_transfer = mock.MagicMock()
+        result = self.scenario._transfer_accept(fake_transfer.id, "fake_key")
+        self.assertEqual(
+            self.clients("cinder").transfers.accept.return_value,
+            result)
+        self.clients("cinder").transfers.accept.assert_called_once_with(
+            fake_transfer.id, "fake_key")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.transfer_accept")

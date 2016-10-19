@@ -763,3 +763,28 @@ class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderScenario,
             kwargs["imageRef"] = image
         volume = self._create_volume(size, **kwargs)
         self._update_readonly_flag(volume.id, read_only)
+
+
+@types.convert(image={"type": "glance_image"})
+@validation.image_exists("image", nullable=True)
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["cinder"]},
+                    name="CinderVolumes.create_and_accept_transfer")
+class CreateAndAcceptTransfer(cinder_utils.CinderScenario,
+                              glance_utils.GlanceScenario):
+
+    def run(self, size, image=None, **kwargs):
+        """Create a volume transfer, then accept it
+
+        Measure the "cinder transfer-create" and "cinder transfer-accept"
+        command performace.
+        :param size: volume size (integer, in GB)
+        :param image: image to be used to create initial volume
+        :param kwargs: optional args to create a volume
+        """
+        if image:
+            kwargs["imageRef"] = image
+        volume = self._create_volume(size, **kwargs)
+        transfer = self._transfer_create(volume.id)
+        self._transfer_accept(transfer.id, transfer.auth_key)
