@@ -1203,5 +1203,8 @@ class HookTestCase(unittest.TestCase):
         hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5]),
                     self._get_result(hooks_cfg[1], seconds=[3, 6, 9])]
-        self.assertEqual(expected, hook_results)
+        self.assertEqual(
+            expected,
+            sorted(hook_results,
+                   key=lambda i: i["config"]["trigger"]["args"]["unit"]))
         self._assert_results_time(hook_results)
