@@ -143,14 +143,18 @@ class UserGenerator(UserContextMixin, context.Context):
         "users_per_tenant": 1,
         "resource_management_workers":
             cfg.CONF.users_context.resource_management_workers,
-        "project_domain": cfg.CONF.users_context.project_domain,
-        "user_domain": cfg.CONF.users_context.user_domain,
         "user_choice_method": "random",
     }
 
     def __init__(self, context):
+        self.credential = context["admin"]["credential"]
+        project_domain = (self.credential.project_domain_name or
+                          cfg.CONF.users_context.project_domain)
+        user_domain = (self.credential.user_domain_name or
+                       cfg.CONF.users_context.user_domain)
+        self.DEFAULT_CONFIG["project_domain"] = project_domain
+        self.DEFAULT_CONFIG["user_domain"] = user_domain
         super(UserGenerator, self).__init__(context)
-        self.credential = self.context["admin"]["credential"]
 
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
