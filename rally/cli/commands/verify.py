@@ -235,7 +235,7 @@ class VerifyCommands(object):
     @cliutils.suppress_warnings
     def results(self, uuids=None, output_file=None,
                 output_html=False, output_json=False, output_csv=False):
-        """Display results of a verification.
+        """Display results of verifications.
 
         :param verification: UUID of a verification
         :param output_file: Path to a file to save results
@@ -375,9 +375,9 @@ class VerifyCommands(object):
         self.show(verification, sort_by, True)
 
     def compare(self, *args, **kwargs):
-        """Deprecated."""
-        # NOTE(amaretskiy): this command is deprecated in favor of
-        #                   improved 'rally task results'
+        """Deprecated. Use `rally verify results' instead."""
+        # NOTE(amaretskiy): deprecated since 'rally task results' has been
+        #                   improved and does same job much better
         print("This command is deprecated. Use 'rally task results' instead.")
         return 1
 

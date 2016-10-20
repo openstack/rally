@@ -113,15 +113,15 @@
 {% if compare %}
     <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
     <a href="{{ compare.html.output_file }}">Compare two verifications and display results in HTML</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --html</code>
+    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid&gt; --html</code>
 
     <span class="{{ compare.json.status }}">[{{ compare.json.status }}]</span>
     <a href="{{ compare.json.output_file }}">Compare two verifications and display results in JSON</a> [<a href="{{ compare.json.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --json</code>
+    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid-2&gt; --json</code>
 
     <span class="{{ compare.csv.status }}">[{{ compare.csv.status }}]</span>
     <a href="{{ compare.csv.output_file }}">Compare two verifications and display results in CSV</a> [<a href="{{ compare.csv.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --csv</code>
+    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid-2&gt; --csv</code>
 {% endif %}
 
     <span class="{{ list.status }}">[{{ list.status }}]</span>
