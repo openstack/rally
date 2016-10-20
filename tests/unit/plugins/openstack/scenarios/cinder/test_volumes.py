@@ -60,6 +60,12 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario.run(None, None)
         scenario._list_types.assert_called_once_with(None, None)
 
+    def test_list_transfers(self):
+        scenario = volumes.ListTransfers(self.context)
+        scenario._list_transfers = mock.MagicMock()
+        scenario.run(True, None)
+        scenario._list_transfers.assert_called_once_with(True, None)
+
     def test_create_and_update_volume(self):
         volume_update_args = {"dispaly_name": "_updated"}
         scenario = volumes.CreateAndUpdateVolume(self.context)

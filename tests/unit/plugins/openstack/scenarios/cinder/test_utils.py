@@ -60,6 +60,14 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.list_snapshots")
 
+    def test__list_transfers(self):
+        return_transfers_list = self.scenario._list_transfers()
+        self.assertEqual(
+            self.clients("cinder").transfers.list.return_value,
+            return_transfers_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.list_transfers")
+
     def test__set_metadata(self):
         volume = fakes.FakeVolume()
 
