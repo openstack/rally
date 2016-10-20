@@ -209,6 +209,17 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
             subnets_per_network, router_create_args)
         scenario._list_routers.assert_called_once_with()
 
+    def test_list_agents(self):
+        agent_args = {
+            "F": "id",
+            "sort-dir": "asc"
+        }
+        scenario = network.ListAgents(self.context)
+        scenario._list_agents = mock.Mock()
+
+        scenario.run(agent_args=agent_args)
+        scenario._list_agents.assert_called_once_with(**agent_args)
+
     def test_create_and_update_routers(self):
         router_update_args = {"admin_state_up": False}
         network_create_args = {"router:external": True}
