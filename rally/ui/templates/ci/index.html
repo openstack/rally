@@ -1,9 +1,8 @@
-## -*- coding: utf-8 -*-
-<%inherit file="/base.mako"/>
+{% extends "/base.html" %}
 
-<%block name="title_text">Performance job results</%block>
+{% block title_text %}Performance job results{% endblock %}
 
-<%block name="js_after">
+{% block js_after %}
     function checkLink (elem) {
         var request = new XMLHttpRequest();
             request.open('GET', elem.href, true);
@@ -22,29 +21,27 @@
     for(var i=0; i<elems.length; i++){
         checkLink(elems[i]);
     }
-</%block>
+{% endblock %}
 
-<%block name="css">
+{% block css %}
     li { margin:2px 0 }
     a, a:visited { color:#039 }
     code { padding:0 5px; color:#888 }
     .columns li { position:relative }
     .columns li > :first-child { display:block }
     .columns li > :nth-child(2) { display:block; position:static; left:165px; top:0; white-space:nowrap }
-</%block>
+{% endblock %}
 
-<%block name="css_content_wrap">margin:0 auto; padding:0 5px</%block>
-
-<%block name="media_queries">
+{% block media_queries %}
     @media only screen and (min-width: 320px) { .content-wrap { width:400px } }
     @media only screen and (min-width: 520px) { .content-wrap { width:500px } }
     @media only screen and (min-width: 620px) { .content-wrap { width:90% } .columns li > :nth-child(2) { position:absolute } }
     @media only screen and (min-width: 720px) { .content-wrap { width:70% } }
-</%block>
+{% endblock %}
 
-<%block name="header_text">performance job results</%block>
+{% block header_text %}performance job results{% endblock %}
 
-<%block name="content">
+{% block content %}
     <h2>Logs and files</h2>
     <ul class="columns">
       <li><a href="console.html" class="rich check-gz">Benchmarking logs</a> <code>console.html</code>
@@ -79,4 +76,4 @@
       <li>Unzip plugins and put to <code>.rally/plugins/</code> directory</li>
       <li>Run rally task: <code>$ rally task start task.txt</code></li>
     </ol>
-</%block>
+{% endblock %}

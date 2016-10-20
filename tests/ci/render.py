@@ -22,7 +22,7 @@ from rally.ui import utils
 
 HELP_MESSAGE = (
     "Usage:\n\t"
-    "render.py ci/template.mako"
+    "render.py ci/template.html"
     "[<key-1>=<value-1> <key-2>=<value-2> ...]\n\n\t"
     "Where key-1,value-1 and key-2,value-2 are key pairs of template.")
 
