@@ -26,3 +26,18 @@ class NovaHostsTestCase(test.TestCase):
         scenario._list_hosts = mock.Mock()
         scenario.run(zone=None)
         scenario._list_hosts.assert_called_once_with(None)
+
+    def test_list_and_get_hosts(self):
+        fake_hosts = [mock.Mock(host_name="fake_hostname")]
+        scenario = hosts.ListAndGetHosts()
+        scenario._list_hosts = mock.MagicMock(
+            return_value=fake_hosts)
+        scenario._get_host = mock.MagicMock()
+        scenario.run(zone="nova")
+
+        scenario._list_hosts.assert_called_once_with("nova")
+        scenario._get_host.assert_called_once_with(
+            "fake_hostname", atomic_action=False)
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "nova.get_1_hosts")

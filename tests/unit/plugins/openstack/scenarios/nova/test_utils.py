@@ -889,6 +889,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.search_hypervisors")
 
+    def test__get_host(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._get_host("host_name")
+        self.assertEqual(
+            self.admin_clients("nova").hosts.get.return_value,
+            result)
+        self.admin_clients("nova").hosts.get.assert_called_once_with(
+            "host_name")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_host")
+
     def test__list_images(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._list_images(detailed=False, fakearg="fakearg")
