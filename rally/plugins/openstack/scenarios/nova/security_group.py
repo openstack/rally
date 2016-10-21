@@ -169,3 +169,38 @@ class BootAndDeleteServerWithSecgroups(utils.NovaScenario):
         self.assertEqual(sorted([sg.id for sg in security_groups]),
                          sorted([sg.id for sg in attached_security_groups]),
                          error_message)
+
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaSecGroup.boot_server_and_add_secgroups")
+class BootServerAndAddSecgroups(utils.NovaScenario):
+    def run(self, image, flavor, security_group_count=1,
+            rules_per_security_group=1, **kwargs):
+        """Boot a server and add a security group to it.
+
+        Plan of this scenario:
+         - create N security groups with M rules per group
+         - boot a VM
+         - add security groups to VM
+
+        :param image: ID of the image to be used for server creation
+        :param flavor: ID of the flavor to be used for server creation
+        :param security_group_count: Number of security groups
+        :param rules_per_security_group: Number of rules per security group
+        :param **kwargs: Optional arguments for booting the instance
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        security_groups = self._create_security_groups(security_group_count)
+        self._create_rules_for_security_group(security_groups,
+                                              rules_per_security_group)
+
+        with atomic.ActionTimer(self, "nova.add_server_secgroups"):
+            for sg in security_groups:
+                self._add_server_secgroups(server, sg.name,
+                                           atomic_action=False)

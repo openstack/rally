@@ -169,3 +169,30 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
         scenario._delete_server.assert_called_once_with(fake_server)
         scenario._delete_security_groups.assert_called_once_with(
             fake_secgroups)
+
+    def test_boot_server_and_add_secgroups(self):
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
+                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
+
+        nova_scenario = security_group.BootServerAndAddSecgroups(self.context)
+        nova_scenario._create_security_groups = mock.MagicMock(
+            return_value=fake_secgroups)
+        nova_scenario._create_rules_for_security_group = mock.MagicMock()
+        nova_scenario._boot_server = mock.MagicMock()
+        nova_scenario.add_server_secgroup = mock.MagicMock()
+
+        image = "img"
+        flavor = 1
+        security_group_count = 2
+        rules_per_security_group = 10
+
+        nova_scenario.run(
+            image, flavor, security_group_count, rules_per_security_group,
+            fakearg="fakearg")
+
+        nova_scenario._create_security_groups.assert_called_once_with(
+            security_group_count)
+        nova_scenario._create_rules_for_security_group.assert_called_once_with(
+            fake_secgroups, rules_per_security_group)
+        nova_scenario._boot_server.assert_called_once_with(image, flavor,
+                                                           fakearg="fakearg")

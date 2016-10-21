@@ -766,6 +766,22 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_security_groups")
 
+    def test__add_server_secgroups(self):
+        server = mock.Mock()
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1")]
+
+        nova_scenario = utils.NovaScenario()
+        security_group = fake_secgroups[0]
+        result = nova_scenario._add_server_secgroups(server,
+                                                     security_group.name)
+        self.assertEqual(
+            self.clients("nova").servers.add_security_group.return_value,
+            result)
+        (self.clients("nova").servers.add_security_group.
+            assert_called_once_with(server, security_group.name))
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.add_server_secgroups")
+
     def test__list_keypairs(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._list_keypairs()

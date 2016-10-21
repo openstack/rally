@@ -818,6 +818,33 @@
             security_groups: -1
             security_group_rules: -1
 
+  NovaSecGroup.boot_server_and_add_secgroups:
+    -
+      args:
+        flavor:
+          name: {{flavor_name}}
+        image:
+          name: {{image_name}}
+        security_group_count: 5
+        rules_per_security_group: 5
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network:
+          start_cidr: "10.2.0.0/24"
+        quotas:
+          nova:
+            security_groups: -1
+            security_group_rules: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaKeypair.create_and_delete_keypair:
     -
       runner:
