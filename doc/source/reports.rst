@@ -78,7 +78,7 @@ Full duration
 
 This time includes iterations time (`Load duration <#load-duration>`_)
 plus time taken by another actions related to the task, mostly Contexts
-excecution time.
+execution time.
 
 Iterations
 ~~~~~~~~~~
@@ -261,7 +261,7 @@ Tab «Failures»
 Complete information about exceptions raised during the workload run
 
 **Iteration**
- Number of iteration where exception is occured
+ Number of iteration where exception is occurred
 
 **Exception type**
  Type of raised Exception subclass
