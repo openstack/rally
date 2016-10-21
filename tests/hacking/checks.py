@@ -28,6 +28,11 @@ import functools
 import re
 import tokenize
 
+
+re_assert_equal_end_with_true_or_false = re.compile(
+    r"assertEqual\(.*?, \s+(True|False)\)$")
+re_assert_equal_start_with_true_or_false = re.compile(
+    r"assertEqual\((True|False),")
 re_assert_true_instance = re.compile(
     r"(.)*assertTrue\(isinstance\((\w|\.|\'|\"|\[|\])+, "
     r"(\w|\.|\'|\"|\[|\])+\)\)")
@@ -294,6 +299,23 @@ def assert_not_equal_none(logical_line, physical_line, filename):
         yield (0, "N325 assertNotEqual(A, None) or assertNotEqual(None, A) "
                   "sentences not allowed, you should use assertIsNotNone(A) "
                   "instead.")
+
+
+@skip_ignored_lines
+def assert_equal_true_or_false(logical_line, physical_line, filename):
+    """Check for assertEqual(A, True/False) sentences
+
+    Check for assertEqual(A, True/False) sentences or
+    assertEqual(True/False, A)
+
+    N326
+    """
+    res = (re_assert_equal_end_with_true_or_false.search(logical_line) or
+           re_assert_equal_start_with_true_or_false.search(logical_line))
+    if res:
+        yield (0, "N326 assertEqual(A, True/False) or "
+                  "assertEqual(True/False, A) sentences not allowed,"
+                  "you should use assertTrue(A) or assertFalse(A) instead.")
 
 
 @skip_ignored_lines
@@ -572,6 +594,7 @@ def factory(register):
     register(assert_equal_none)
     register(assert_true_or_false_with_in)
     register(assert_equal_in)
+    register(assert_equal_true_or_false)
     register(check_no_direct_rally_objects_import)
     register(check_no_oslo_deprecated_import)
     register(check_quotes)
