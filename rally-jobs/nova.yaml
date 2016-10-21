@@ -1029,7 +1029,7 @@
             size: 2
         use_floating_ip: true
         command:
-          script_file: "~/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:
@@ -1052,7 +1052,7 @@
           name: {{image_name}}
         use_floating_ip: false
         command:
-          script_file: "~/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:
