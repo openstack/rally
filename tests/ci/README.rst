@@ -18,7 +18,7 @@ This script runs a functional tests suite for Rally CLI. The tests call a range 
 rally-verify.sh
 ---------------
 This script runs various "rally verify" commands. This set of commands allow us to perform Tempest tests of OpenStack live cloud and display verification results.
-The verification results obtained by running various "rally verify <cmd>" commands including "start", "show", "list" are compared using the "rally-verify compare" command, which are then saved in csv, html and json formats in the "rally-verify" directory.
+The verification results obtained by running various "rally verify <cmd>" commands including "start", "show", "list" are compared using the "rally verify results" command, which are then saved in csv, html and json formats in the "rally-verify" directory.
 Jenkins uses this script by running the 'gate-rally-dsvm-verify' job.
 
 
