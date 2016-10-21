@@ -107,7 +107,7 @@ New DB schema
 
 * WorkloadData - contains chunks of raw data for future data analyze and
   reporting. This is complete information that we don't need always, as well
-  for getting overview of what happend. As we have multiple chunks per
+  for getting overview of what happened. As we have multiple chunks per
   Workload, we won't be able to store them without creating this table.
 
 * Tag - contains tags binded to tasks and subtasks by uuid and type

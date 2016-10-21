@@ -30,7 +30,7 @@ from rally.task import sla
 
 @sla.configure(name="performance_degradation")
 class PerformanceDegradation(sla.SLA):
-    """Calculates perfomance degradation based on iteration time
+    """Calculates performance degradation based on iteration time
 
     This SLA plugin finds minimum and maximum duration of
     iterations completed without errors during Rally task execution.
