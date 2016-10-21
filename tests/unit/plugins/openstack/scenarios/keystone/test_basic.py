@@ -143,10 +143,10 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         scenario = basic.CreateAndDeleteRole(self.context)
         fake_role = mock.MagicMock()
         scenario._role_create = mock.MagicMock(return_value=fake_role)
-        scenario._resource_delete = mock.MagicMock()
+        scenario._role_delete = mock.MagicMock()
         scenario.run()
         scenario._role_create.assert_called_once_with()
-        scenario._resource_delete.assert_called_once_with(fake_role)
+        scenario._role_delete.assert_called_once_with(fake_role.id)
 
     def test_create_and_list_user_roles(self):
         context = self._get_context()

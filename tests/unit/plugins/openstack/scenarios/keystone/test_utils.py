@@ -81,17 +81,32 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.token_authenticate")
 
-    def test_role_create(self):
+    @mock.patch("rally.plugins.openstack.wrappers.keystone.wrap")
+    def test_role_create(self, mock_wrap, **kwargs):
+        role = mock.MagicMock()
+        mock_wrap.return_value.create_role.return_value = role
         scenario = utils.KeystoneScenario(self.context)
-        scenario.generate_random_name = mock.Mock()
-        result = scenario._role_create()
+        scenario.generate_random_name = mock.MagicMock()
+        return_role = scenario._role_create(**kwargs)
 
-        self.assertEqual(
-            self.admin_clients("keystone").roles.create.return_value, result)
-        self.admin_clients("keystone").roles.create.assert_called_once_with(
-            scenario.generate_random_name.return_value)
+        self.assertEqual(role, return_role)
+
+        mock_wrap.assert_called_once_with(scenario.admin_clients("keystone"))
+        mock_wrap.return_value.create_role.assert_called_once_with(
+            scenario.generate_random_name.return_value, **kwargs)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_role")
+
+    @mock.patch("rally.plugins.openstack.wrappers.keystone.wrap")
+    def test_role_delete(self, mock_wrap):
+        role = mock.MagicMock()
+        scenario = utils.KeystoneScenario(self.context)
+        scenario._role_delete(role.id)
+
+        mock_wrap.assert_called_once_with(scenario.admin_clients("keystone"))
+        mock_wrap.return_value.delete_role.assert_called_once_with(role.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.role_delete")
 
     def test_list_roles_for_user(self):
         user = mock.MagicMock()

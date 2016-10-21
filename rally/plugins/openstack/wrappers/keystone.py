@@ -87,6 +87,13 @@ class KeystoneWrapper(object):
         """List all services."""
         return map(KeystoneWrapper._wrap_service, self.client.services.list())
 
+    def create_role(self, name, **kwargs):
+        """create a role.
+
+        :param name: name of role
+        :param kwargs: Optional additional arguments for roles creation
+        """
+
     def delete_role(self, role_id):
         """Deletes role."""
         self.client.roles.delete(role_id)
@@ -123,6 +130,10 @@ class KeystoneV2Wrapper(KeystoneWrapper):
         return Project(id=tenant.id, name=tenant.name, domain_id="default")
 
     @staticmethod
+    def _wrap_v2_role(role):
+        return Role(id=role.id, name=role.name)
+
+    @staticmethod
     def _wrap_v2_user(user):
         return User(id=user.id, name=user.name,
                     project_id=getattr(user, "tenantId", None),
@@ -153,6 +164,10 @@ class KeystoneV2Wrapper(KeystoneWrapper):
         return map(KeystoneV2Wrapper._wrap_v2_tenant,
                    self.client.tenants.list())
 
+    def create_role(self, name):
+        role = self.client.roles.create(name)
+        return KeystoneV2Wrapper._wrap_v2_role(role)
+
     def add_role(self, role_id, user_id, project_id):
         self.client.roles.add_user_role(user_id, role_id, tenant=project_id)
 
@@ -177,6 +192,10 @@ class KeystoneV3Wrapper(KeystoneWrapper):
     def _wrap_v3_project(project):
         return Project(id=project.id, name=project.name,
                        domain_id=project.domain_id)
+
+    @staticmethod
+    def _wrap_v3_role(role):
+        return Role(id=role.id, name=role.name)
 
     @staticmethod
     def _wrap_v3_user(user):
@@ -220,6 +239,10 @@ class KeystoneV3Wrapper(KeystoneWrapper):
     def list_projects(self):
         return map(KeystoneV3Wrapper._wrap_v3_project,
                    self.client.projects.list())
+
+    def create_role(self, name, domain, **kwargs):
+        role = self.client.roles.create(name, domain=domain, **kwargs)
+        return KeystoneV3Wrapper._wrap_v3_role(role)
 
     def add_role(self, role_id, user_id, project_id):
         self.client.roles.grant(role_id, user=user_id, project=project_id)

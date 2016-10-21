@@ -16,6 +16,7 @@
 import uuid
 
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 from rally.task import atomic
 
 
@@ -121,14 +122,27 @@ class KeystoneScenario(scenario.OpenStackScenario):
                 name, password=password, email=email, tenant_id=tenant.id)
 
     @atomic.action_timer("keystone.create_role")
-    def _role_create(self):
+    def _role_create(self, **kwargs):
         """Creates keystone user role with random name.
 
-        :returns: keystone user role instance
+        :param **kwargs: Optional additional arguments for roles creation
+        :returns: keystone user role
         """
-        role = self.admin_clients("keystone").roles.create(
-            self.generate_random_name())
+        admin_clients = keystone_wrapper.wrap(self.admin_clients("keystone"))
+
+        role = admin_clients.create_role(
+            self.generate_random_name(), **kwargs)
         return role
+
+    @atomic.action_timer("keystone.role_delete")
+    def _role_delete(self, role_id):
+        """Creates keystone user role with random name.
+
+        :param user_id: id of the role
+        """
+        admin_clients = keystone_wrapper.wrap(self.admin_clients("keystone"))
+
+        admin_clients.delete_role(role_id)
 
     @atomic.action_timer("keystone.list_users")
     def _list_users(self):
