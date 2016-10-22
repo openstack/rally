@@ -878,6 +878,14 @@ class NovaScenario(scenario.OpenStackScenario):
         """List hypervisors."""
         return self.admin_clients("nova").hypervisors.list(detailed)
 
+    @atomic.action_timer("nova.statistics_hypervisors")
+    def _statistics_hypervisors(self):
+        """Get hypervisor statistics over all compute nodes.
+
+        :returns: Hypervisor statistics
+        """
+        return self.admin_clients("nova").hypervisors.statistics()
+
     @atomic.optional_action_timer("nova.get_hypervisor")
     def _get_hypervisor(self, hypervisor):
         """Get a specific hypervisor.
