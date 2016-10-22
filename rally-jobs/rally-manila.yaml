@@ -34,7 +34,8 @@
         failure_rate:
           max: 0
 
-  ManilaShares.create_and_delete_share:
+  {% for s in ("create_and_delete_share", "create_and_list_share") %}
+  ManilaShares.{{s}}:
     -
       args:
         share_proto: "nfs"
@@ -63,6 +64,7 @@
       sla:
         failure_rate:
           max: 0
+  {% endfor %}
 
   ManilaShares.create_share_network_and_delete:
     -
