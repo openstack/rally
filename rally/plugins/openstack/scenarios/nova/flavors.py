@@ -74,6 +74,25 @@ class CreateAndListFlavorAccess(utils.NovaScenario):
 @validation.required_services(consts.Service.NOVA)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_flavor_and_add_tenant_access")
+class CreateFlavorAndAddTenantAccess(utils.NovaScenario):
+
+    def run(self, ram, vcpus, disk, **kwargs):
+        """Create a flavor and Add flavor access for the given tenant.
+
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param kwargs: Optional additional arguments for flavor creation
+        """
+        flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
+        self.assertTrue(flavor)
+        self._add_tenant_access(flavor.id, self.context["tenant"]["id"])
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaFlavors.create_flavor")
 class CreateFlavor(utils.NovaScenario):
 

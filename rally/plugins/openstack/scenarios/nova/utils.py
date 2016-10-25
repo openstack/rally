@@ -1068,6 +1068,17 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").flavor_access.list(flavor=flavor)
 
+    @atomic.action_timer("nova.add_tenant_access")
+    def _add_tenant_access(self, flavor, tenant):
+        """Add a tenant to the given flavor access list.
+
+        :param flavor: name or id of the object flavor
+        :param tenant: id of the object tenant
+        :returns: access rules for flavor instance or flavor ID
+        """
+        return self.admin_clients("nova").flavor_access.add_tenant_access(
+            flavor, tenant)
+
     @atomic.action_timer("nova.update_server")
     def _update_server(self, server, description=None):
         """update the server's name and description.

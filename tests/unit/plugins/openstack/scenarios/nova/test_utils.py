@@ -1054,6 +1054,20 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_flavor_access")
 
+    def test__add_tenant_access(self):
+        tenant = mock.Mock()
+        flavor = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+        admin_clients = self.admin_clients("nova")
+        result = nova_scenario._add_tenant_access(flavor.id, tenant.id)
+        self.assertEqual(
+            admin_clients.flavor_access.add_tenant_access.return_value,
+            result)
+        admin_clients.flavor_access.add_tenant_access.assert_called_once_with(
+            flavor.id, tenant.id)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.add_tenant_access")
+
     def test__create_flavor(self):
         nova_scenario = utils.NovaScenario()
         random_name = "random_name"

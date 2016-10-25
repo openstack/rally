@@ -63,6 +63,31 @@ class NovaFlavorsTestCase(test.TestCase):
                                                    is_public=False,
                                                    **kwargs)
 
+    def test_create_flavor_add_tenant_access(self, **kwargs):
+        flavor = mock.MagicMock()
+        context = {"user": {"tenant_id": "fake"},
+                   "tenant": {"id": "fake"}}
+        scenario = flavors.CreateFlavorAndAddTenantAccess()
+        scenario.context = context
+        scenario.generate_random_name = mock.MagicMock()
+        scenario._create_flavor = mock.MagicMock(return_value=flavor)
+        scenario._add_tenant_access = mock.MagicMock()
+
+        # Positive case:
+        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+
+        scenario._create_flavor.assert_called_once_with(100, 1, 1,
+                                                        **kwargs)
+        scenario._add_tenant_access.assert_called_once_with(flavor.id,
+                                                            "fake")
+
+        # Negative case1: flavor wasn't created
+        scenario._create_flavor.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError, scenario.run,
+                          100, 1, 1, **kwargs)
+        scenario._create_flavor.assert_called_with(100, 1, 1,
+                                                   **kwargs)
+
     def test_create_flavor(self):
         scenario = flavors.CreateFlavor()
         scenario._create_flavor = mock.MagicMock()
