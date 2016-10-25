@@ -1,0 +1,18 @@
+---
+  NovaFlavors.create_and_delete_flavor:
+    -
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 10
+      args:
+        ram: 500
+        vcpus : 1
+        disk: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
