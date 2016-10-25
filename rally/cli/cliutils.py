@@ -516,17 +516,9 @@ def run(argv, categories):
             boto_log = logging.getLogger("boto").logger
             boto_log.setLevel(logging.CRITICAL)
 
-    except cfg.ConfigFilesNotFoundError:
-        cfgfile = CONF.config_file[-1] if CONF.config_file else None
-        if cfgfile and not os.access(cfgfile, os.R_OK):
-            st = os.stat(cfgfile)
-            print(_("Could not read %s. Re-running with sudo") % cfgfile)
-            try:
-                os.execvp("sudo", ["sudo", "-u", "#%s" % st.st_uid] + sys.argv)
-            except Exception:
-                print(_("sudo failed, continuing as if nothing happened"))
-
-        print(_("Please re-run %s as root.") % argv[0])
+    except cfg.ConfigFilesNotFoundError as e:
+        cfg_files = e.config_files
+        print(_("Failed to read configuration file(s): %s") % cfg_files)
         return(2)
 
     if CONF.category.name == "version":
