@@ -173,7 +173,7 @@ That is how a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446
 
 **Second run, with bugfix:**
 
-After a patch was applied (using RPC instead of neutron client in metadata agent), we got **100% success and 2x improved average perfomance**:
+After a patch was applied (using RPC instead of neutron client in metadata agent), we got **100% success and 2x improved average performance**:
 
 +------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
 | action           | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |

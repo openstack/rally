@@ -143,7 +143,7 @@ What if workload has no "sla" configuration in input file?
 
 If *"sla"* section is missed in input file, then block *Service-level agreement*
 is not displayed and its result is assumed to be always passed
-(no matter how many failures occured).
+(no matter how many failures occurred).
 
 Total durations
 ~~~~~~~~~~~~~~~

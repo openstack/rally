@@ -228,7 +228,7 @@ Workload table
     #       "name": <full_name_of_validator>,
     #       "duration": <duration_of_validation>,
     #       "success": <boolean_pass_or_not>,
-    #       "message": <description_of_what_happend>,
+    #       "message": <description_of_what_happened>,
     #   }
     #]
     #
