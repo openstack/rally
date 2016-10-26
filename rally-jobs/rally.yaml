@@ -794,6 +794,38 @@
         failure_rate:
           max: 0
 
+  RallyProfile.generate_names_in_atomic:
+    -
+      args:
+        number_of_names: 100
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        number_of_names: 1000
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        number_of_names: 10000
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
   CeilometerStats.get_stats:
    -
      runner:
