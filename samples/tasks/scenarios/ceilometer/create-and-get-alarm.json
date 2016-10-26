@@ -1,0 +1,31 @@
+{
+    "CeilometerAlarms.create_and_get_alarm": [
+        {
+            "args": {
+                "meter_name": "ram_util",
+                "threshold": 10.0,
+                "type": "threshold",
+                "statistic": "avg",
+                "alarm_actions": ["http://localhost:8776/alarm"],
+                "ok_actions": ["http://localhost:8776/ok"],
+                "insufficient_data_actions": ["http://localhost:8776/notok"]
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

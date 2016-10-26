@@ -47,6 +47,18 @@ class CeilometerAlarmsTestCase(test.ScenarioTestCase):
                                                        {"fakearg": "f"})
         scenario._list_alarms.assert_called_once_with(fake_alarm.alarm_id)
 
+    def test_create_and_get_alarm(self):
+        fake_alarm = mock.MagicMock()
+        scenario = alarms.CreateAndGetAlarm(self.context)
+
+        scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
+        scenario._get_alarm = mock.MagicMock()
+        scenario.run("fake_meter_name", "fake_threshold", fakearg="f")
+        scenario._create_alarm.assert_called_once_with("fake_meter_name",
+                                                       "fake_threshold",
+                                                       {"fakearg": "f"})
+        scenario._get_alarm.assert_called_once_with(fake_alarm.alarm_id)
+
     def test_create_and_update_alarm(self):
         fake_alram_dict_diff = {"description": "Changed Test Description"}
         fake_alarm = mock.MagicMock()
