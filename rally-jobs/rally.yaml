@@ -800,8 +800,8 @@
         number_of_names: 100
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 1000
+        concurrency: 10
       sla:
         failure_rate:
           max: 0
@@ -810,8 +810,8 @@
         number_of_names: 1000
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 500
+        concurrency: 10
       sla:
         failure_rate:
           max: 0
@@ -820,8 +820,8 @@
         number_of_names: 10000
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 200
+        concurrency: 10
       sla:
         failure_rate:
           max: 0
