@@ -282,7 +282,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
                                                         fake_attach)
         scenario._delete_volume.assert_called_once_with(fake_volume)
 
-    def test_create_snapshot_and_attach_volume_use_volume_type(self):
+    def test_create_snapshot_and_attach_volume_use_volume_type_with_name(self):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
@@ -305,13 +305,13 @@ class CinderServersTestCase(test.ScenarioTestCase):
         self.clients("nova").servers.get = mock.MagicMock(
             return_value=fake_server)
 
-        scenario.run(volume_type=True)
+        scenario.run(volume_type="fake_volume_type")
 
         # Make sure create volume's second arg was the correct volume type.
         # fake or none (randomly selected)
         self.assertTrue(scenario._create_volume.called)
         vol_type = scenario._create_volume.call_args_list[0][1]["volume_type"]
-        self.assertTrue(vol_type is fake.name or vol_type is None)
+        self.assertEqual(vol_type, "fake_volume_type")
         scenario._create_snapshot.assert_called_once_with(fake_volume.id,
                                                           False)
         scenario._delete_snapshot.assert_called_once_with(fake_snapshot)
