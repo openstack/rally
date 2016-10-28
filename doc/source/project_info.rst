@@ -101,6 +101,10 @@ Plugin Core reviewers
 | | NikitaKonovalov (irc)      |                                                |
 | | nkonovalov@mirantis.com    |                                                |
 +------------------------------+------------------------------------------------+
+| | Oleg Bondarev              |  * Neutron plugins                             |
+| | obondarev (irc)            |                                                |
+| | obondarev@mirantis.com     |                                                |
++------------------------------+------------------------------------------------+
 | | Sergey Kraynev             |  * Heat plugins                                |
 | | skraynev (irc)             |                                                |
 | | skraynev@mirantis.com      |                                                |
