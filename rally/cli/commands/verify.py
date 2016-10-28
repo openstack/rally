@@ -376,9 +376,10 @@ class VerifyCommands(object):
 
     def compare(self, *args, **kwargs):
         """Deprecated. Use `rally verify results' instead."""
-        # NOTE(amaretskiy): deprecated since 'rally task results' has been
+        # NOTE(amaretskiy): deprecated since 'rally verify results' has been
         #                   improved and does same job much better
-        print("This command is deprecated. Use 'rally task results' instead.")
+        print("This command is deprecated. It was merged in 'rally verify "
+              "results'. Yse that command instead.")
         return 1
 
     @cliutils.args("--uuid", type=str, dest="verification",
