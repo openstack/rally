@@ -898,6 +898,20 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").hypervisors.get(hypervisor)
 
+    @atomic.optional_action_timer("nova.search_hypervisors")
+    def _search_hypervisors(self, hypervisor_match, servers=False):
+        """List all servers belonging to specific hypervisor.
+
+        :param hypervisor_match: Hypervisor's host name.
+        :param servers: If True, server information is also retrieved.
+        :param atomic_action: True if this is atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator.
+        :returns: Hypervisor object
+        """
+        return self.admin_clients("nova").hypervisors.search(hypervisor_match,
+                                                             servers=servers)
+
     @atomic.action_timer("nova.lock_server")
     def _lock_server(self, server):
         """Lock the given server.
