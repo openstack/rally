@@ -380,3 +380,14 @@ class CinderScenario(scenario.OpenStackScenario):
     def get_random_server(self):
         server_id = random.choice(self.context["tenant"]["servers"])
         return self.clients("nova").servers.get(server_id)
+
+    @atomic.action_timer("cinder.list_transfers")
+    def _list_transfers(self, detailed=True, search_opts=None):
+        """Get a list of all volume transfers.
+
+        :param detailed: If True, detailed information about transfer
+                         should be listed
+        :param search_opts: Search options to filter out volume transfers
+        :returns: list of :class:`VolumeTransfer`
+        """
+        return self.clients("cinder").transfers.list(detailed, search_opts)

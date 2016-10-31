@@ -107,6 +107,25 @@ class ListTypes(cinder_utils.CinderScenario):
         self._list_types(search_opts, is_public)
 
 
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(users=True)
+@scenario.configure(name="CinderVolumes.list_transfers")
+class ListTransfers(cinder_utils.CinderScenario):
+
+    def run(self, detailed=True, search_opts=None):
+        """List all transfers.
+
+        This simple scenario tests the "cinder transfer-list" command by
+        listing all the volume transfers.
+
+        :param detailed: If True, detailed information about volume transfer
+                         should be listed
+        :param search_opts: Search options to filter out volume transfers.
+        """
+
+        self._list_transfers(detailed, search_opts)
+
+
 @types.convert(image={"type": "glance_image"})
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
