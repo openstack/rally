@@ -25,27 +25,26 @@ BASE = "rally.plugins.openstack.scenarios.neutron.network"
 @ddt.ddt
 class NeutronNetworksTestCase(test.ScenarioTestCase):
 
+    @ddt.data(
+        {"network_create_args": {}},
+        {"network_create_args": {"name": "given-name"}},
+        {"network_create_args": {"provider:network_type": "vxlan"}}
+    )
+    @ddt.unpack
     @mock.patch("%s.CreateAndListNetworks._list_networks" % BASE)
     @mock.patch("%s.CreateAndListNetworks._create_network" % BASE)
     def test_create_and_list_networks(self,
                                       mock__create_network,
-                                      mock__list_networks):
+                                      mock__list_networks,
+                                      network_create_args):
         scenario = network.CreateAndListNetworks(self.context)
 
-        # Default options
-        network_create_args = {}
         scenario.run(network_create_args=network_create_args)
         mock__create_network.assert_called_once_with(network_create_args)
         mock__list_networks.assert_called_once_with()
 
         mock__create_network.reset_mock()
         mock__list_networks.reset_mock()
-
-        # Explicit network name is specified
-        network_create_args = {"name": "given-name"}
-        scenario.run(network_create_args=network_create_args)
-        mock__create_network.assert_called_once_with(network_create_args)
-        mock__list_networks.assert_called_once_with()
 
     @mock.patch("%s.CreateAndUpdateNetworks._update_network" % BASE)
     @mock.patch("%s.CreateAndUpdateNetworks._create_network" % BASE,
