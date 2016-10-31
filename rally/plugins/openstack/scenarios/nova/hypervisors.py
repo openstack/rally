@@ -47,8 +47,8 @@ class ListAndGetHypervisors(utils.NovaScenario):
     def run(self, detailed=True):
         """List and Get hypervisors.
 
-        The scenario fist list all hypervisors,then get detailed information
-        of the listed hypervisors in trun.
+        The scenario first lists all hypervisors, then get detailed information
+        of the listed hypervisors in turn.
 
         Measure the "nova hypervisor-show" command performance.
 
