@@ -110,7 +110,7 @@ function run () {
     # NOTE(stpierre): if the sla check fails, we still want osresources.py
     # to run, so we turn off -e and save the return value
     set +e
-    rally task sla_check | tee rally-plot/sla.txt
+    rally task sla-check | tee rally-plot/sla.txt
     retval=$?
     set -e
 

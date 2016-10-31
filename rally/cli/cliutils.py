@@ -362,6 +362,24 @@ def deprecated_args(*args, **kwargs):
     return _decorator
 
 
+def help_group(uuid):
+    """Label cli method with specific group.
+
+    Joining methods by groups allows to compose more user-friendly help
+    messages in CLI.
+
+    :param uuid: Name of group to find common methods. It will be used for
+        sorting groups in help message, so you can start uuid with
+        some number (i.e "1_launcher", "2_management") to put groups in proper
+        order. Note: default group had "0" uuid.
+    """
+
+    def wrapper(func):
+        func.help_group = uuid
+        return func
+    return wrapper
+
+
 def _methods_of(cls):
     """Get all callable methods of a class that don't start with underscore.
 
@@ -373,6 +391,20 @@ def _methods_of(cls):
     all_methods = inspect.getmembers(
         cls, predicate=lambda x: inspect.ismethod(x) or inspect.isfunction(x))
     methods = [m for m in all_methods if not m[0].startswith("_")]
+
+    help_groups = {}
+    for m in methods:
+        group = getattr(m[1], "help_group", "0")
+        help_groups.setdefault(group, []).append(m)
+
+    if len(help_groups) > 1:
+        # we should sort methods by groups
+        methods = []
+        for group in sorted(help_groups.items(), key=lambda x: x[0]):
+            if methods:
+                # None -> empty line between groups
+                methods.append((None, None))
+            methods.extend(group[1])
     return methods
 
 
@@ -386,10 +418,13 @@ def _compose_category_description(category):
         description = doc.strip()
     if descr_pairs:
         description += "\n\nCommands:\n"
-        sublen = lambda item: len(item[0])
+        sublen = lambda item: len(item[0]) if item[0] else 0
         first_column_len = max(map(sublen, descr_pairs)) + MARGIN
         for item in descr_pairs:
-            name = getattr(item[1], "alias", item[0])
+            if item[0] is None:
+                description += "\n"
+                continue
+            name = getattr(item[1], "alias", item[0].replace("_", "-"))
             if item[1].__doc__:
                 doc = info.parse_docstring(
                     item[1].__doc__)["short_description"]
@@ -436,6 +471,9 @@ def _add_command_parsers(categories, subparsers):
         category_subparsers = parser.add_subparsers(dest="action")
 
         for method_name, method in _methods_of(command_object):
+            if method is None:
+                continue
+            method_name = method_name.replace("_", "-")
             descr = _compose_action_description(method)
             parser = category_subparsers.add_parser(
                 getattr(method, "alias", method_name),
@@ -647,7 +685,7 @@ complete -o filenames -F _rally rally
     completion = []
     for category, cmds in main.categories.items():
         for name, command in _methods_of(cmds):
-            command_name = getattr(command, "alias", name)
+            command_name = getattr(command, "alias", name.replace("_", "-"))
             args_list = []
             for arg in getattr(command, "args", []):
                 if getattr(command, "deprecated_args", []):

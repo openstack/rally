@@ -111,7 +111,7 @@ def run_task(task, tags=None):
          "%s/%s.html" % (pub_dir, task_name)])
     run(["rally", "task", "results"],
         stdout="%s/results-%s.json" % (pub_dir, task_name))
-    status = run(["rally", "task", "sla_check"],
+    status = run(["rally", "task", "sla-check"],
                  stdout="%s/%s.sla.txt" % (pub_dir, task_name))
     run(["rally", "task", "detailed"],
         stdout="rally-plot/detailed-%s.txt" % task_name)
