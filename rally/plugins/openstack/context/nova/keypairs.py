@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import novaclient.exceptions
-
 from rally.common.i18n import _
 from rally.common import logging
 from rally import osclients
@@ -29,16 +27,15 @@ LOG = logging.getLogger(__name__)
 class Keypair(context.Context):
 
     def _generate_keypair(self, credential):
-        keypair_name = self.generate_random_name()
-
         nova_client = osclients.Clients(credential).nova()
+        # NOTE(hughsaunders): If keypair exists, it should re-generate name.
 
-        # NOTE(hughsaunders): If keypair exists, it must be deleted as we can't
-        # retrieve the private key
-        try:
-            nova_client.keypairs.delete(keypair_name)
-        except novaclient.exceptions.NotFound:
-            pass
+        keypairs = nova_client.keypairs.list()
+        keypair_names = [keypair.name for keypair in keypairs]
+        while True:
+            keypair_name = self.generate_random_name()
+            if keypair_name not in keypair_names:
+                break
 
         keypair = nova_client.keypairs.create(keypair_name)
         return {"private": keypair.private_key,
