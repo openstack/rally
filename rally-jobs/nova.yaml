@@ -1171,6 +1171,21 @@
         failure_rate:
           max: 0
 
+  NovaHosts.list_and_get_hosts:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        concurrency: 2
+        times: 5
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServices.list_services:
     -
       runner:

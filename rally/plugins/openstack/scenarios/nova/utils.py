@@ -1013,6 +1013,18 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").hosts.list(zone)
 
+    @atomic.optional_action_timer("nova.get_host")
+    def _get_host(self, host_name):
+        """Describe a specific host.
+
+        :param host_name: host name to get.
+        :param atomic_action: True if this is atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator.
+        :returns: host object
+        """
+        return self.admin_clients("nova").hosts.get(host_name)
+
     @atomic.action_timer("nova.list_services")
     def _list_services(self, host=None, binary=None):
         """return all nova service details
