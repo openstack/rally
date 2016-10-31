@@ -152,6 +152,15 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.update_volume")
 
+    def test__update_readonly_flag(self):
+        fake_volume = mock.MagicMock()
+        self.scenario._update_readonly_flag(fake_volume, "fake_flag")
+        self.clients(
+            "cinder").volumes.update_readonly_flag.assert_called_once_with(
+            fake_volume, "fake_flag")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.update_readonly_flag")
+
     def test__delete_volume(self):
         cinder = mock.Mock()
         self.scenario._delete_volume(cinder)
