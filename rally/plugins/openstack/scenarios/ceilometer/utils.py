@@ -60,7 +60,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
             "source": source,
             "timestamp": timestamp,
         }
-        for k, v in six.iteritems(opt_fields):
+        for k, v in opt_fields.items():
             if v:
                 sample.update({k: v})
         len_meta = len(metadata_list) if metadata_list else 0

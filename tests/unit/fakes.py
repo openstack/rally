@@ -798,7 +798,7 @@ class FakeAlarmManager(FakeManager):
 
     def update(self, alarm_id, **fake_alarm_dict_diff):
         alarm = self.get(alarm_id)[0]
-        for attr, value in six.iteritems(fake_alarm_dict_diff):
+        for attr, value in fake_alarm_dict_diff.items():
             setattr(alarm, attr, value)
         return alarm
 

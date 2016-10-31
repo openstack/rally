@@ -72,12 +72,12 @@ def serialize(fn):
                              )):
             return data
         if isinstance(data, dict):
-            return {k: conv(v) for k, v in six.iteritems(data)}
+            return {k: conv(v) for k, v in data.items()}
         if isinstance(data, (list, tuple)):
             return [conv(i) for i in data]
         if hasattr(data, "_as_dict"):
             result = data._as_dict()
-            for k, v in six.iteritems(result):
+            for k, v in result.items():
                 result[k] = conv(v)
             return result
 

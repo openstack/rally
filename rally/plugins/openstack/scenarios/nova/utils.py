@@ -16,7 +16,6 @@
 import random
 
 from oslo_config import cfg
-import six
 
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -753,7 +752,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 break
         try:
             new_host = random.choice(
-                [key for key, value in six.iteritems(az.hosts)
+                [key for key, value in az.hosts.items()
                     if key != host and
                     value.get("nova-compute", {}).get("available", False)])
             return new_host

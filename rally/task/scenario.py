@@ -91,7 +91,7 @@ class ConfigurePluginMeta(type):
 
         super(ConfigurePluginMeta, cls).__init__(name, bases, namespaces)
 
-        for name, field in six.iteritems(namespaces):
+        for name, field in namespaces.items():
             if callable(field) and hasattr(field, "_plugin"):
                 field._plugin._meta_set("cls_ref", cls)
 

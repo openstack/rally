@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 import six.moves.xmlrpc_client as xmlrpclib
 
 from rally.common.i18n import _
@@ -70,7 +69,7 @@ class CobblerProvider(provider.ProviderFactory):
 
     @staticmethod
     def ip_for_system(rendered_system):
-        for key, value in six.iteritems(rendered_system):
+        for key, value in rendered_system.items():
             if "ip_address" in key and value:
                 return value
         raise RuntimeError(_("No valid ip address found for system ")

@@ -14,7 +14,6 @@
 #    under the License.
 
 import mock
-import six
 
 from rally.plugins.openstack.scenarios.quotas import utils
 from tests.unit import test
@@ -75,7 +74,7 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
         max_quota = 1024
         scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "nova")
-        for k, v in six.iteritems(quotas):
+        for k, v in quotas.items():
             self.assertGreaterEqual(v, -1)
             self.assertLessEqual(v, max_quota)
 
@@ -83,7 +82,7 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
         max_quota = 1024
         scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "cinder")
-        for k, v in six.iteritems(quotas):
+        for k, v in quotas.items():
             self.assertGreaterEqual(v, -1)
             self.assertLessEqual(v, max_quota)
 
@@ -91,9 +90,9 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
         max_quota = 1024
         scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "neutron")
-        for v in six.itervalues(quotas):
-            for v1 in six.itervalues(v):
-                for v2 in six.itervalues(v1):
+        for v in quotas.values():
+            for v1 in v.values():
+                for v2 in v1.values():
                     self.assertGreaterEqual(v2, -1)
                     self.assertLessEqual(v2, max_quota)
 

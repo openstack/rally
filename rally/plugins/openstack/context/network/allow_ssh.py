@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
@@ -68,7 +66,7 @@ def _prepare_open_secgroup(credential, secgroup_name):
 
     def rule_match(criteria, existing_rule):
         return all(existing_rule[key] == value
-                   for key, value in six.iteritems(criteria))
+                   for key, value in criteria.items())
 
     for new_rule in rules_to_add:
         if not any(rule_match(new_rule, existing_rule) for existing_rule

@@ -18,7 +18,6 @@ import random
 import uuid
 
 from oslo_config import cfg
-import six
 
 from rally.common import broker
 from rally.common.i18n import _
@@ -80,7 +79,7 @@ class UserContextMixin(object):
 
         """
         scenario_ctx = {}
-        for key, value in six.iteritems(context_obj):
+        for key, value in context_obj.items():
             if key not in ["users", "tenants"]:
                 scenario_ctx[key] = value
 

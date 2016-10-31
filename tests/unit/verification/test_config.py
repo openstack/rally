@@ -19,7 +19,6 @@ import ddt
 import mock
 from oslo_config import cfg
 import requests
-import six
 
 from rally import exceptions
 from rally.verification.tempest import config
@@ -136,7 +135,7 @@ class TempestConfigTestCase(test.TestCase):
 
         expected = {"compute": ("fixed_network_name", "fake-network"),
                     "validation": ("network_for_ssh", "fake-network")}
-        for section, option in six.iteritems(expected):
+        for section, option in expected.items():
             result = self.tempest_conf.conf.items(section)
             self.assertIn(option, result)
 

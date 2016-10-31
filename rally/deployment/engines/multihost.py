@@ -77,7 +77,7 @@ class MultihostEngine(engine.Engine):
 
     def _update_controller_ip(self, obj):
         if isinstance(obj, dict):
-            keyval = six.iteritems(obj)
+            keyval = obj.items()
         elif isinstance(obj, list):
             keyval = enumerate(obj)
 

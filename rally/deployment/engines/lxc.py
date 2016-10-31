@@ -16,7 +16,6 @@
 import os
 
 import netaddr
-import six
 
 from rally.common.i18n import _
 from rally.common import logging
@@ -94,8 +93,7 @@ class LxcEngine(engine.Engine):
         lxc_host.prepare()
         lxc_host.create_container(name, distribution, release)
         lxc_host.start_containers()
-        items = six.iteritems(
-            lxc_host.get_server_object(name).get_credentials())
+        items = lxc_host.get_server_object(name).get_credentials().items()
         # filter out all keys where value is None
         credentials = dict(filter(lambda x: x[1] is not None, items))
         engine_config = self.config["engine"].copy()
