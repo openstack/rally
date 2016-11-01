@@ -31,6 +31,12 @@ class QuotasTestCase(test.ScenarioTestCase):
             "tenant": {"id": "fake"}
         })
 
+    def test_nova_get(self):
+        scenario = quotas.NovaGet(self.context)
+        scenario._get_quotas = mock.MagicMock()
+        scenario.run()
+        scenario._get_quotas.assert_called_once_with("nova", "fake")
+
     def test_nova_update(self):
         scenario = quotas.NovaUpdate(self.context)
         scenario._update_quotas = mock.MagicMock()
