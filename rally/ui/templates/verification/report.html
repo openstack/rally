@@ -37,9 +37,9 @@
       })($scope.data.uuids.length)
 
       var bitmask = {"success": 1,
-                     "x-fail": 2,
-                     "skip": 4,
-                     "ux-ok": 8,
+                     "skip": 2,
+                     "xfail": 4,
+                     "uxsuccess": 8,
                      "fail": 16};
 
       for (var i in $scope.data.tests) {
@@ -64,9 +64,9 @@
       }
 
       $scope.state = {"success": true,
-                      "x-fail": true,
                       "skip": true,
-                      "ux-ok": true,
+                      "xfail": true,
+                      "uxsuccess": true,
                       "fail": true};
 
       $scope.filter_by_status = function(test, index, arr) {
@@ -86,17 +86,17 @@
         if ($scope.toggle_filters_flag) {
           $scope.toggle_filters_flag = false;
           $scope.state = {"success": false,
-                          "x-fail": false,
                           "skip": false,
-                          "ux-ok": false,
+                          "xfail": false,
+                          "uxsuccess": false,
                           "fail": false};
           $scope.filter_bits = 0
         } else {
           $scope.toggle_filters_flag = true
           $scope.state = {"success": true,
-                          "x-fail": true,
                           "skip": true,
-                          "ux-ok": true,
+                          "xfail": true,
+                          "uxsuccess": true,
                           "fail": true};
           $scope.filter_bits = 31
         }
@@ -140,20 +140,22 @@
         sync_positions();
         window.onresize = sync_positions;
 
-        var gotop = document.getElementById("button-gotop");
-        gotop.onclick = function () { scrollTo(0, 0) };
+        var goup = document.getElementById("button-goup");
+        goup.onclick = function () { scrollTo(0, 0) };
         window.onscroll = function() {
           if (window.scrollY > 50) {
-            gotop.style.display = "block";
+            goup.style.display = "block";
           } else {
-            gotop.style.display = "none";
+            goup.style.display = "none";
           }
         }
       }
 
+      $scope.show_header = true;
       $scope.toggle_header = (function(e) {
         return function() {
-          e.style.display = (e.style.display === "none") ? "table" : "none";
+          $scope.show_header = (e.style.display === "none");
+          e.style.display = $scope.show_header ? "table" : "none";
           sync_positions()
         }
       })(document.getElementById("verifications"))
@@ -171,19 +173,19 @@
     div.header {margin:0 !important}
     div.header .content-wrap { padding-left:10px }
     .status.status-success { background: #cfc; color: #333 }
-    .status.status-ux-ok { background: #ffd7af; color: #333 }
+    .status.status-uxsuccess { background: #ffd7af; color: #333 }
     .status.status-fail { background: #fbb; color: #333 }
-    .status.status-x-fail { background: #ccf5ff; color: #333 }
-    .status.status-skip { background: #ffb; color: #333 }
+    .status.status-xfail { background: #ffb; color: #333 }
+    .status.status-skip { background: #ccf5ff; color: #333 }
     .status.checkbox { font-size:18px; text-align:center; cursor:pointer; padding:0 }
     .column { display:block; float:left; padding:4px 0 4px 8px; box-sizing:border-box;
               background:#fff; font-size:12px; font-weight:bold;
               border:#ccc solid; border-width:0 0 1px }
     .button { margin:0 5px; padding:0 8px 1px; background:#47a; color:#fff; cursor:pointer;
               border:1px #036 solid; border-radius:11px; font-size:12px; font-weight:normal;
-              line-height:12px; opacity:.8}
+              opacity:.8}
     .button:hover { opacity:1 }
-    #button-gotop { padding:3px 10px 5px; text-align:center; cursor:pointer;
+    #button-goup { padding:3px 10px 5px; text-align:center; cursor:pointer;
                     background:#fff; color:#036; line-height:14px; font-size:14px;
                     position:fixed; bottom:0; right:10px;
                     border:#ccc solid; border-width:1px 1px 0; border-radius:15px 15px 0 0}
@@ -205,15 +207,15 @@
            style="border:#fff solid; border-width:2px 0 15px; margin:0">
       <thead>
         <tr>
-          <th>UUID
-          <th>Set name
+          <th>Verification UUID
           <th>Status
+          <th>Set name
           <th>Started at
-          <th>Duration, s
-          <th>Total tests
+          <th>Duration, sec
+          <th>Total
           <th style="width:9%">success
-          <th style="width:9%">expected failures
           <th style="width:9%">skipped
+          <th style="width:9%">expected failures
           <th style="width:9%">unexpected success
           <th style="width:9%">failures
         </tr>
@@ -221,35 +223,32 @@
       <tbody>
         <tr ng-repeat="uuid in data.uuids">
           <td>{{uuid}}
-          <td>{{data.verifications[uuid].set_name}}
           <td>{{data.verifications[uuid].status}}
+          <td>{{data.verifications[uuid].set_name}}
           <td>{{data.verifications[uuid].started_at}}
           <td>{{data.verifications[uuid].duration}}
           <td>{{data.verifications[uuid].total}}
           <td class="status status-success">{{data.verifications[uuid].success}}
-          <td class="status status-x-fail">{{data.verifications[uuid].expected_failures}}
           <td class="status status-skip">{{data.verifications[uuid].skipped}}
-          <td class="status status-ux-ok">{{data.verifications[uuid].unexpected_success}}
+          <td class="status status-xfail">{{data.verifications[uuid].expected_failures}}
+          <td class="status status-uxsuccess">{{data.verifications[uuid].unexpected_success}}
           <td class="status status-fail">{{data.verifications[uuid].failures}}
         </tr>
         <tr>
           <td colspan="6" style="text-align:right; font-weight:bold">
-            <span ng-click="toggle_filters()" class="button" style="margin-right:10px">
-              toggle all filters
-            </span>
             Filter tests by status:
           <td class="checkbox status status-success" ng-click="set_filter('success')">
             <span ng-hide="state.success">&#x2610;</span>
             <span ng-show="state.success">&#x2611;</span>
-          <td class="checkbox status status-x-fail" ng-click="set_filter('x-fail')">
-            <span ng-hide="state['x-fail']">&#x2610;</span>
-            <span ng-show="state['x-fail']">&#x2611;</span>
           <td class="checkbox status status-skip" ng-click="set_filter('skip')">
             <span ng-hide="state.skip">&#x2610;</span>
             <span ng-show="state.skip">&#x2611;</span>
-          <td class="checkbox status status-ux-ok" ng-click="set_filter('ux-ok')">
-            <span ng-hide="state['ux-ok']">&#x2610;</span>
-            <span ng-show="state['ux-ok']">&#x2611;</span>
+          <td class="checkbox status status-xfail" ng-click="set_filter('xfail')">
+            <span ng-hide="state['xfail']">&#x2610;</span>
+            <span ng-show="state['xfail']">&#x2611;</span>
+          <td class="checkbox status status-uxsuccess" ng-click="set_filter('uxsuccess')">
+            <span ng-hide="state['uxsuccess']">&#x2610;</span>
+            <span ng-show="state['uxsuccess']">&#x2611;</span>
           <td class="checkbox status status-fail" ng-click="set_filter('fail')">
             <span ng-hide="state.fail">&#x2610;</span>
             <span ng-show="state.fail">&#x2611;</span>
@@ -258,11 +257,15 @@
     </table>
 
     <div style="text-align:left; padding:6px 3px; background:#fff">
-      <span class="button" ng-click="show_tags=!show_tags">
-        toggle tags
-      </span>
       <span class="button" ng-click="toggle_header()">
-        toggle header
+        Toggle Header
+      </span>
+      <span class="button" ng-click="show_tags=!show_tags">
+        Toggle Tags
+      </span>
+      <span class="button" style="float:right"
+            ng-show="show_header" ng-click="toggle_filters()">
+        Toggle All Filters
       </span>
     </div>
     <div style="clear:both"></div>
@@ -315,7 +318,7 @@
       </tr>
     </tbody>
   </table>
-  <span id="button-gotop" style="display:none">go top</span>
+  <span id="button-goup" style="display:none">Go Up</span>
   {% endraw %}
 
 {% endblock %}
