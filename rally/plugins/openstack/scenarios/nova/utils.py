@@ -138,7 +138,7 @@ class NovaScenario(scenario.OpenStackScenario):
             server_name, image_id, flavor_id, **kwargs)
 
         self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
-        server = utils.wait_for(
+        server = utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -150,7 +150,7 @@ class NovaScenario(scenario.OpenStackScenario):
     def _do_server_reboot(self, server, reboottype):
         server.reboot(reboot_type=reboottype)
         self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -212,7 +212,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.rebuild(image, **kwargs)
         self.sleep_between(CONF.benchmark.nova_server_rebuild_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -230,7 +230,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: The server to start and wait to become ACTIVE.
         """
         server.start()
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -248,7 +248,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: The server to stop.
         """
         server.stop()
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["SHUTOFF"],
             update_resource=utils.get_from_manager(),
@@ -267,7 +267,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.rescue()
         self.sleep_between(CONF.benchmark.nova_server_rescue_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["RESCUE"],
             update_resource=utils.get_from_manager(),
@@ -285,7 +285,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.unrescue()
         self.sleep_between(CONF.benchmark.nova_server_unrescue_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -304,7 +304,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.suspend()
         self.sleep_between(CONF.benchmark.nova_server_suspend_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["SUSPENDED"],
             update_resource=utils.get_from_manager(),
@@ -323,7 +323,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.resume()
         self.sleep_between(CONF.benchmark.nova_server_resume_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -342,7 +342,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.pause()
         self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["PAUSED"],
             update_resource=utils.get_from_manager(),
@@ -361,7 +361,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.unpause()
         self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -380,7 +380,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.shelve()
         self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["SHELVED_OFFLOADED"],
             update_resource=utils.get_from_manager(),
@@ -399,7 +399,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server.unshelve()
 
         self.sleep_between(CONF.benchmark. nova_server_unshelve_prepoll_delay)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -491,7 +491,7 @@ class NovaScenario(scenario.OpenStackScenario):
                                                                server.name)
         image = self.clients("nova").images.get(image_uuid)
         check_interval = CONF.benchmark.nova_server_image_create_poll_interval
-        image = utils.wait_for(
+        image = utils.wait_for_status(
             image,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -570,7 +570,7 @@ class NovaScenario(scenario.OpenStackScenario):
         servers = [s for s in self.clients("nova").servers.list()
                    if s.name.startswith(name_prefix)]
         self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
-        servers = [utils.wait_for(
+        servers = [utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.
@@ -638,7 +638,7 @@ class NovaScenario(scenario.OpenStackScenario):
     @atomic.action_timer("nova.resize")
     def _resize(self, server, flavor):
         server.resize(flavor)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
@@ -649,7 +649,7 @@ class NovaScenario(scenario.OpenStackScenario):
     @atomic.action_timer("nova.resize_confirm")
     def _resize_confirm(self, server, status="ACTIVE"):
         server.confirm_resize()
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=[status],
             update_resource=utils.get_from_manager(),
@@ -661,7 +661,7 @@ class NovaScenario(scenario.OpenStackScenario):
     @atomic.action_timer("nova.resize_revert")
     def _resize_revert(self, server, status="ACTIVE"):
         server.revert_resize()
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=[status],
             update_resource=utils.get_from_manager(),
@@ -676,7 +676,7 @@ class NovaScenario(scenario.OpenStackScenario):
         volume_id = volume.id
         attachment = self.clients("nova").volumes.create_server_volume(
             server_id, volume_id, device)
-        utils.wait_for(
+        utils.wait_for_status(
             volume,
             ready_statuses=["in-use"],
             update_resource=utils.get_from_manager(),
@@ -695,7 +695,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
         self.clients("nova").volumes.delete_server_volume(server_id,
                                                           attachment_id)
-        utils.wait_for(
+        utils.wait_for_status(
             volume,
             ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
@@ -721,7 +721,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server_admin.live_migrate(target_host,
                                   block_migration=block_migration,
                                   disk_over_commit=disk_over_commit)
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
@@ -771,7 +771,7 @@ class NovaScenario(scenario.OpenStackScenario):
         server_admin = self.admin_clients("nova").servers.get(server.id)
         host_pre_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
         server_admin.migrate()
-        utils.wait_for(
+        utils.wait_for_status(
             server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
