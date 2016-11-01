@@ -101,3 +101,20 @@ class BootAndDeleteServerWithKeypair(utils.NovaScenario):
                                    **boot_server_kwargs)
         self._delete_server(server)
         self._delete_keypair(keypair)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaKeypair.create_and_get_keypair")
+class CreateAndGetKeypair(utils.NovaScenario):
+
+    def run(self, **kwargs):
+        """Create a keypair and get the keypair details.
+
+        :param kwargs: Optional additional arguments for keypair creation
+        """
+
+        keypair = self._create_keypair(**kwargs)
+
+        self._get_keypair(keypair)

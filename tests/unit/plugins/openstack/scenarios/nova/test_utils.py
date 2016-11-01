@@ -840,6 +840,14 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_keypair")
 
+    def test__get_keypair(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._get_keypair("fake_keypair")
+        self.clients("nova").keypairs.get.assert_called_once_with(
+            "fake_keypair")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_keypair")
+
     def test__list_floating_ips_bulk(self):
         floating_ips_bulk_list = ["foo_floating_ips_bulk"]
         self.admin_clients("nova").floating_ips_bulk.list.return_value = (

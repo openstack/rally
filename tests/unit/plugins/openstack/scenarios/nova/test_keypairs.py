@@ -54,6 +54,18 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
         scenario._create_keypair.assert_called_with(fakearg="fakearg")
         scenario._list_keypairs.assert_called_with()
 
+    def test_create_and_get_keypair(self):
+        scenario = keypairs.CreateAndGetKeypair(self.context)
+        fake_keypair = mock.MagicMock()
+        scenario._create_keypair = mock.MagicMock()
+        scenario._get_keypair = mock.MagicMock()
+
+        scenario._create_keypair.return_value = fake_keypair
+        scenario.run(fakearg="fakearg")
+
+        scenario._create_keypair.assert_called_once_with(fakearg="fakearg")
+        scenario._get_keypair.assert_called_once_with(fake_keypair)
+
     def test_create_and_delete_keypair(self):
         scenario = keypairs.CreateAndDeleteKeypair(self.context)
         scenario.generate_random_name = mock.MagicMock(return_value="name")

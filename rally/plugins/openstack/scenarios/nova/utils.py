@@ -536,6 +536,15 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.clients("nova").images.list(detailed, **kwargs)
 
+    @atomic.action_timer("nova.get_keypair")
+    def _get_keypair(self, keypair):
+        """Get a keypair.
+
+        :param keypair: The ID of the keypair to get.
+        :rtype: :class:`Keypair`
+        """
+        return self.clients("nova").keypairs.get(keypair)
+
     @atomic.action_timer("nova.create_keypair")
     def _create_keypair(self, **kwargs):
         """Create a keypair
