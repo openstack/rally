@@ -28,6 +28,7 @@ six>=1.9.0,<=1.10.0                                    # MIT
 boto>=2.32.1,<=2.42.0                                  # MIT
 gnocchiclient>=2.2.0,<=2.6.0                           # Apache Software License
 keystoneauth1>=2.10.0,<=2.13.0                         # Apache Software License
+os-faults>=0.1.5,<0.2.0                                # Apache License, Version 2.0
 python-ceilometerclient>=2.5.0,<=2.6.1                 # Apache Software License
 python-cinderclient>=1.6.0,!=1.7.0,!=1.7.1,<=1.9.0     # Apache Software License
 python-cueclient>=1.0.0                                # Apache License, Version 2.0
