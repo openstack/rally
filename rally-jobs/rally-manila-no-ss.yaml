@@ -39,6 +39,7 @@
       args:
         share_proto: "nfs"
         size: 1
+        share_type: "dhss_false"
         min_sleep: 1
         max_sleep: 2
       runner:
