@@ -18,13 +18,6 @@ from rally import consts
 from rally import exceptions
 
 
-_MAP_OLD_TO_NEW_STATUSES = {
-    "OK": "success",
-    "FAIL": "fail",
-    "SKIP": "skip"
-}
-
-
 class Verification(object):
     """Represents results of verification."""
 
@@ -83,24 +76,6 @@ class Verification(object):
 
     def get_results(self):
         try:
-            results = db.verification_result_get(self.uuid)["data"]
+            return db.verification_result_get(self.uuid)["data"]
         except exceptions.NotFoundException:
             return None
-
-        if "errors" in results:
-            # NOTE(andreykurilin): there is no "error" status in verification
-            # and this key presents only in old format, so it can be used as
-            # an identifier for old format.
-            for test in results["test_cases"].keys():
-                old_status = results["test_cases"][test]["status"]
-                new_status = _MAP_OLD_TO_NEW_STATUSES.get(old_status,
-                                                          old_status.lower())
-                results["test_cases"][test]["status"] = new_status
-
-                if "failure" in results["test_cases"][test]:
-                    results["test_cases"][test]["traceback"] = results[
-                        "test_cases"][test]["failure"]["log"]
-                    results["test_cases"][test].pop("failure")
-            results["unexpected_success"] = 0
-            results["expected_failures"] = 0
-        return results

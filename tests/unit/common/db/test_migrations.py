@@ -15,6 +15,7 @@
 
 """Tests for DB migration."""
 
+import copy
 import json
 import pprint
 import uuid
@@ -883,3 +884,138 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     deployment_table.delete().where(
                         deployment_table.c.uuid == deployment.uuid)
                 )
+
+    def _pre_upgrade_484cd9413e66(self, engine):
+            self._484cd9413e66_deployment_uuid = "484cd9413e66-deploy"
+
+            self._484cd9413e66_verifications = [
+                {"total": {"time": 1.0,
+                           "failures": 2,
+                           "skipped": 3,
+                           "success": 4,
+                           "errors": 0,
+                           "tests": 2
+                           },
+                 "test_cases": {"test1": {"status": "OK"},
+                                "test2": {"status": "FAIL",
+                                          "failure": {"log": "trace"}}},
+                 "set_name": "full"},
+                {"total": {"time": 2.0,
+                           "failures": 3,
+                           "skipped": 4,
+                           "success": 5,
+                           "unexpected_success": 6,
+                           "expected_failures": 7,
+                           "tests": 2
+                           },
+                 "test_cases": {"test1": {"status": "success"},
+                                "test2": {"status": "failed", ""
+                                          "traceback": "trace"}},
+                 "set_name": "smoke"}
+            ]
+            deployment_table = db_utils.get_table(engine, "deployments")
+            verifications_table = db_utils.get_table(engine, "verifications")
+            vresults_table = db_utils.get_table(engine,
+                                                "verification_results")
+
+            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+            vstatus = consts.TaskStatus.FINISHED
+            with engine.connect() as conn:
+                conn.execute(
+                    deployment_table.insert(),
+                    [{"uuid": self._484cd9413e66_deployment_uuid,
+                      "name": self._484cd9413e66_deployment_uuid,
+                      "config": six.b(json.dumps([])),
+                      "enum_deployments_status": deployment_status,
+                      "credentials": six.b(json.dumps([])),
+                      "users": six.b(json.dumps([]))
+                      }])
+
+                for i in range(len(self._484cd9413e66_verifications)):
+                    verification = self._484cd9413e66_verifications[i]
+                    vuuid = "uuid-%s" % i
+                    conn.execute(
+                        verifications_table.insert(),
+                        [{"uuid": vuuid,
+                          "deployment_uuid":
+                              self._484cd9413e66_deployment_uuid,
+                          "status": vstatus,
+                          "set_name": verification["set_name"],
+                          "tests": verification["total"]["tests"],
+                          "failures": verification["total"]["failures"],
+                          "time": verification["total"]["time"],
+                          "errors": 0,
+                          }])
+                    data = copy.deepcopy(verification)
+                    data["total"]["test_cases"] = data["test_cases"]
+                    data = data["total"]
+                    conn.execute(
+                        vresults_table.insert(),
+                        [{"uuid": vuuid,
+                          "verification_uuid": vuuid,
+                          "data": json.dumps(data)
+                          }])
+
+    def _check_484cd9413e66(self, engine, data):
+        self.assertEqual("484cd9413e66",
+                         api.get_backend().schema_revision(engine=engine))
+
+        verifications_table = db_utils.get_table(engine, "verifications")
+
+        with engine.connect() as conn:
+            verifications = conn.execute(
+                verifications_table.select()).fetchall()
+            for i in range(len(verifications)):
+                verification_orig = self._484cd9413e66_verifications[i]
+                verification = verifications[i]
+                total = {"time": verification.tests_duration,
+                         "failures": verification.failures,
+                         "skipped": verification.skipped,
+                         "success": verification.success,
+                         "tests": verification.tests_count}
+                results = verification_orig["test_cases"]
+
+                old_format = "errors" in verification_orig["total"]
+                if old_format:
+                    total["errors"] = 0
+                    for test_name in results:
+                        status = results[test_name]["status"]
+                        if status == "OK":
+                            status = "success"
+                        elif status == "FAIL":
+                            status = "fail"
+                            results[test_name]["traceback"] = results[
+                                test_name]["failure"].pop("log")
+                            results[test_name].pop("failure")
+                        results[test_name]["status"] = status
+                else:
+                    uxsucess = verification.unexpected_success
+                    total["unexpected_success"] = uxsucess
+                    total["expected_failures"] = verification.expected_failures
+
+                self.assertEqual(verification_orig["total"], total)
+
+                self.assertEqual(results, json.loads(verification.tests))
+
+                self.assertEqual(
+                    {"pattern": "set=%s" % verification_orig["set_name"]},
+                    json.loads(verification.run_args))
+
+                self.assertEqual(
+                    verification_orig["total"].get("unexpected_success", 0),
+                    verification.unexpected_success)
+                self.assertEqual(
+                    verification_orig["total"].get("expected_failures", 0),
+                    verification.expected_failures)
+
+                conn.execute(
+                    verifications_table.delete().where(
+                        verifications_table.c.uuid == verification.uuid)
+                )
+
+            deployment_table = db_utils.get_table(engine, "deployments")
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid ==
+                    self._484cd9413e66_deployment_uuid)
+            )

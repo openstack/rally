@@ -365,8 +365,35 @@ class Tag(BASE, RallyBase):
     tag = sa.Column(sa.String(255), nullable=False)
 
 
+class Verifier(BASE, RallyBase):
+    """Represents a verifier."""
+
+    __tablename__ = "verifiers"
+    __table_args__ = (
+        sa.Index("verifier_uuid", "uuid", unique=True),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+
+    name = sa.Column(sa.String(255), unique=True)
+    description = sa.Column(sa.String(1000))
+
+    type = sa.Column(sa.String(255), nullable=False)
+    namespace = sa.Column(sa.String(255))
+
+    source = sa.Column(sa.String(1000))
+    version = sa.Column(sa.String(255))
+    system_wide = sa.Column(sa.Boolean)
+
+    status = sa.Column(sa.String(36), default=consts.VerifierStatus.INIT,
+                       nullable=False)
+
+    extra_settings = sa.Column(sa_types.MutableJSONEncodedDict)
+
+
 class Verification(BASE, RallyBase):
-    """Represents a verifier result."""
+    """Represents a verification."""
 
     __tablename__ = "verifications"
     __table_args__ = (
@@ -376,36 +403,27 @@ class Verification(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
 
-    deployment_uuid = sa.Column(
-        sa.String(36),
-        sa.ForeignKey(Deployment.uuid),
-        nullable=False,
-    )
+    verifier_uuid = sa.Column(sa.String(36),
+                              sa.ForeignKey(Verifier.uuid),
+                              nullable=False)
+    deployment_uuid = sa.Column(sa.String(36),
+                                sa.ForeignKey(Deployment.uuid),
+                                nullable=False)
 
-    status = sa.Column(sa.Enum(*list(consts.TaskStatus),
-                       name="enum_tasks_status"),
-                       default=consts.TaskStatus.INIT,
+    run_args = sa.Column(sa_types.MutableJSONEncodedDict)
+
+    status = sa.Column(sa.String(36), default=consts.VerificationStatus.INIT,
                        nullable=False)
-    set_name = sa.Column(sa.String(20))
 
-    tests = sa.Column(sa.Integer, default=0)
-    # TODO(andreykurilin): remove this variable, when rally will support db
-    #   migrations. Reason: It is not used anywhere :)
-    errors = sa.Column(sa.Integer, default=0)
+    tests_count = sa.Column(sa.Integer, default=0)
     failures = sa.Column(sa.Integer, default=0)
-    time = sa.Column(sa.Float, default=0.0)
+    skipped = sa.Column(sa.Integer, default=0)
+    success = sa.Column(sa.Integer, default=0)
+    unexpected_success = sa.Column(sa.Integer, default=0)
+    expected_failures = sa.Column(sa.Integer, default=0)
+    tests_duration = sa.Column(sa.Float, default=0.0)
 
-
-class VerificationResult(BASE, RallyBase):
-    __tablename__ = "verification_results"
-    __table_args__ = ()
-
-    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-
-    verification_uuid = sa.Column(sa.String(36),
-                                  sa.ForeignKey("verifications.uuid"))
-
-    data = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
+    tests = sa.Column(sa_types.MutableJSONEncodedDict, default={})
 
 
 class Worker(BASE, RallyBase):
