@@ -15,6 +15,7 @@
 
 from rally.common import logging
 from rally import consts
+from rally.plugins.openstack.context.manila import consts as manila_consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.manila import utils
 from rally.task import validation
@@ -228,3 +229,53 @@ class CreateAndListShare(utils.ManilaScenario):
         self._create_share(share_proto=share_proto, size=size, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._list_shares(detailed=detailed)
+
+
+@validation.number("sets", minval=1, integer_only=True)
+@validation.number("set_size", minval=1, integer_only=True)
+@validation.number("key_min_length", minval=1, maxval=256, integer_only=True)
+@validation.number("key_max_length", minval=1, maxval=256, integer_only=True)
+@validation.number(
+    "value_min_length", minval=1, maxval=1024, integer_only=True)
+@validation.number(
+    "value_max_length", minval=1, maxval=1024, integer_only=True)
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@validation.required_contexts(manila_consts.SHARES_CONTEXT_NAME)
+@scenario.configure(
+    context={"cleanup": ["manila"]},
+    name="ManilaShares.set_and_delete_metadata")
+class SetAndDeleteMetadata(utils.ManilaScenario):
+
+    def run(self, sets=10, set_size=3, delete_size=3,
+            key_min_length=1, key_max_length=256,
+            value_min_length=1, value_max_length=1024):
+        """Sets and deletes share metadata.
+
+        This requires a share to be created with the shares
+        context. Additionally, ``sets * set_size`` must be greater
+        than or equal to ``deletes * delete_size``.
+
+        :param sets: how many set_metadata operations to perform
+        :param set_size: number of metadata keys to set in each
+            set_metadata operation
+        :param delete_size: number of metadata keys to delete in each
+            delete_metadata operation
+        :param key_min_length: minimal size of metadata key to set
+        :param key_max_length: maximum size of metadata key to set
+        :param value_min_length: minimal size of metadata value to set
+        :param value_max_length: maximum size of metadata value to set
+        """
+        shares = self.context.get("tenant", {}).get("shares", [])
+        share = shares[self.context["iteration"] % len(shares)]
+
+        keys = self._set_metadata(
+            share=share,
+            sets=sets,
+            set_size=set_size,
+            key_min_length=key_min_length,
+            key_max_length=key_max_length,
+            value_min_length=value_min_length,
+            value_max_length=value_max_length)
+
+        self._delete_metadata(share=share, keys=keys, delete_size=delete_size)

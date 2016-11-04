@@ -58,3 +58,35 @@
         failure_rate:
           max: 0
   {% endfor %}
+
+
+  ManilaShares.set_and_delete_metadata:
+    -
+      args:
+        sets: 1
+        set_size: 3
+        delete_size: 3
+        key_min_length: 1
+        key_max_length: 256
+        value_min_length: 1
+        value_max_length: 1024
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        manila_shares:
+          shares_per_tenant: 1
+          share_proto: "NFS"
+          size: 1
+          share_type: "dhss_false"
+      sla:
+        failure_rate:
+          max: 0

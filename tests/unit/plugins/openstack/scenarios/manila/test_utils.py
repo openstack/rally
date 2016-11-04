@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.scenarios.manila import utils
 from tests.unit import test
@@ -41,12 +42,14 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             },
             "iteration": 0,
         }
-        self.scenario.generate_random_name = mock.Mock()
+        fake_random_name = "fake_random_name_value"
+        self.scenario.generate_random_name = mock.Mock(
+            return_value=fake_random_name)
 
         self.scenario._create_share("nfs")
 
         self.clients("manila").shares.create.assert_called_once_with(
-            "nfs", 1, name=self.scenario.generate_random_name.return_value,
+            "nfs", 1, name=fake_random_name,
             share_network=self.scenario.context["tenant"][
                 consts.SHARE_NETWORKS_CONTEXT_NAME]["share_networks"][0]["id"])
 
@@ -213,3 +216,87 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients(
             "manila").share_networks.add_security_service.assert_has_calls([
                 mock.call(fake_sn, fake_ss)])
+
+    @ddt.data(
+        {"key_min_length": 5, "key_max_length": 4},
+        {"value_min_length": 5, "value_max_length": 4},
+    )
+    def test__set_metadata_wrong_params(self, params):
+        self.assertRaises(
+            exceptions.InvalidArgumentsException,
+            self.scenario._set_metadata,
+            {"id": "fake_share_id"}, **params)
+
+    @ddt.data(
+        {},
+        {"sets": 0, "set_size": 1},
+        {"sets": 1, "set_size": 1},
+        {"sets": 5, "set_size": 7},
+        {"sets": 5, "set_size": 2},
+        {"key_min_length": 1, "key_max_length": 1},
+        {"key_min_length": 1, "key_max_length": 2},
+        {"key_min_length": 256, "key_max_length": 256},
+        {"value_min_length": 1, "value_max_length": 1},
+        {"value_min_length": 1, "value_max_length": 2},
+        {"value_min_length": 1024, "value_max_length": 1024},
+    )
+    def test__set_metadata(self, params):
+        share = {"id": "fake_share_id"}
+        sets = params.get("sets", 1)
+        set_size = params.get("set_size", 1)
+        gen_name_calls = sets * set_size * 2
+        data = range(gen_name_calls)
+        generator_data = iter(data)
+
+        def fake_random_name(prefix="fake", length="fake"):
+            return next(generator_data)
+
+        scenario = self.scenario
+        scenario.clients = mock.MagicMock()
+        scenario._generate_random_part = mock.MagicMock(
+            side_effect=fake_random_name)
+
+        keys = scenario._set_metadata(share, **params)
+
+        self.assertEqual(
+            gen_name_calls,
+            scenario._generate_random_part.call_count)
+        self.assertEqual(
+            params.get("sets", 1),
+            scenario.clients.return_value.shares.set_metadata.call_count)
+        scenario.clients.return_value.shares.set_metadata.assert_has_calls([
+            mock.call(
+                share["id"],
+                dict([(j, j + 1) for j in data[
+                    i * set_size * 2: (i + 1) * set_size * 2: 2]])
+            ) for i in range(sets)
+        ])
+        self.assertEqual([i for i in range(0, gen_name_calls, 2)], keys)
+
+    @ddt.data(None, [], {"fake_set"}, {"fake_key": "fake_value"})
+    def test__delete_metadata_wrong_params(self, keys):
+        self.assertRaises(
+            exceptions.InvalidArgumentsException,
+            self.scenario._delete_metadata,
+            "fake_share", keys=keys,
+        )
+
+    @ddt.data(
+        {"keys": [i for i in range(30)]},
+        {"keys": list(range(7)), "delete_size": 2},
+        {"keys": list(range(7)), "delete_size": 3},
+        {"keys": list(range(7)), "delete_size": 4},
+    )
+    def test__delete_metadata(self, params):
+        share = {"id": "fake_share_id"}
+        delete_size = params.get("delete_size", 3)
+        keys = params.get("keys", [])
+        scenario = self.scenario
+        scenario.clients = mock.MagicMock()
+
+        scenario._delete_metadata(share, **params)
+
+        scenario.clients.return_value.shares.delete_metadata.assert_has_calls([
+            mock.call(share["id"], keys[i:i + delete_size])
+            for i in range(0, len(keys), delete_size)
+        ])
