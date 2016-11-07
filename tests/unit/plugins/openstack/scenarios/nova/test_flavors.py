@@ -64,6 +64,16 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario._get_flavor.assert_called_once_with(
             scenario._create_flavor.return_value.id)
 
+    def test_create_and_delete_flavor(self, **kwargs):
+        scenario = flavors.CreateAndDeleteFlavor()
+        scenario._create_flavor = mock.Mock()
+        scenario._delete_flavor = mock.Mock()
+        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+
+        scenario._create_flavor.assert_called_once_with(100, 1, 1, **kwargs)
+        scenario._delete_flavor.assert_called_once_with(
+            scenario._create_flavor.return_value.id)
+
     def test_create_flavor_and_set_keys(self):
         scenario = flavors.CreateFlavorAndSetKeys()
         scenario._create_flavor = mock.MagicMock()

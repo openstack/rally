@@ -109,6 +109,24 @@ class CreateAndGetFlavor(utils.NovaScenario):
 @validation.required_services(consts.Service.NOVA)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
+                    name="NovaFlavors.create_and_delete_flavor")
+class CreateAndDeleteFlavor(utils.NovaScenario):
+    def run(self, ram, vcpus, disk, **kwargs):
+        """Create flavor and delete the flavor.
+
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param kwargs: Optional additional arguments for flavor creation
+
+        """
+        flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
+        self._delete_flavor(flavor.id)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaFlavors.create_flavor_and_set_keys")
 class CreateFlavorAndSetKeys(utils.NovaScenario):
     def run(self, ram, vcpus, disk, extra_specs, **kwargs):

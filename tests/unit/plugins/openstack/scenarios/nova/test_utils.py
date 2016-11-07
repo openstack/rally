@@ -1078,6 +1078,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.get_flavor")
 
+    def test__delete_flavor(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._delete_flavor("foo_flavor_id")
+        self.assertEqual(
+            self.admin_clients("nova").flavors.delete.return_value,
+            result)
+        self.admin_clients("nova").flavors.delete.assert_called_once_with(
+            "foo_flavor_id")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_flavor")
+
     def test__update_server(self):
         server = mock.Mock()
         nova_scenario = utils.NovaScenario()

@@ -1046,6 +1046,15 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.admin_clients("nova").flavors.create(name, ram, vcpus,
                                                          disk, **kwargs)
 
+    @atomic.action_timer("nova.delete_flavor")
+    def _delete_flavor(self, flavor):
+        """Delete a flavor
+
+        :param flavor: The ID of the :class:`Flavor`
+        :returns: An instance of novaclient.base.TupleWithMeta
+        """
+        return self.admin_clients("nova").flavors.delete(flavor)
+
     @atomic.action_timer("nova.list_flavor_access")
     def _list_flavor_access(self, flavor):
         """List access-rules for non-public flavor.
