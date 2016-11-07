@@ -376,9 +376,10 @@ class NeutronV1Pool(NeutronLbaasV1Mixin):
 class NeutronPort(NeutronMixin):
 
     def delete(self):
-        if (self.raw_resource["device_owner"] == "network:router_interface" or
-                self.raw_resource["device_owner"] ==
-                "network:router_interface_distributed"):
+        if (self.raw_resource["device_owner"] in
+            ("network:router_interface",
+             "network:router_interface_distributed",
+             "network:ha_router_replicated_interface")):
             self._manager().remove_interface_router(
                 self.raw_resource["device_id"],
                 {"port_id": self.raw_resource["id"]})
