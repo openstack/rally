@@ -434,6 +434,79 @@ class NeutronLbaasV1MixinTestCase(test.TestCase):
         self.assertFalse(neut._manager().list_some_resources.called)
 
 
+class NeutronLbaasV2MixinTestCase(test.TestCase):
+
+    def get_neutron_lbaasv2_mixin(self, extensions=None):
+        if extensions is None:
+            extensions = []
+        neut = resources.NeutronLbaasV2Mixin()
+        neut._service = "neutron"
+        neut._resource = "some_resource"
+        neut._manager = mock.Mock()
+        neut._manager().list_extensions.return_value = {
+            "extensions": [{"alias": ext} for ext in extensions]
+        }
+        return neut
+
+    def test_list_lbaasv2_available(self):
+        neut = self.get_neutron_lbaasv2_mixin(extensions=["lbaasv2"])
+        neut.tenant_uuid = "user_tenant"
+
+        some_resources = [{"tenant_id": neut.tenant_uuid}, {"tenant_id": "a"}]
+        neut._manager().list_some_resources.return_value = {
+            "some_resources": some_resources
+        }
+
+        self.assertEqual([some_resources[0]], list(neut.list()))
+        neut._manager().list_some_resources.assert_called_once_with(
+            tenant_id=neut.tenant_uuid)
+
+    def test_list_lbaasv2_unavailable(self):
+        neut = self.get_neutron_lbaasv2_mixin()
+
+        self.assertEqual([], list(neut.list()))
+        self.assertFalse(neut._manager().list_some_resources.called)
+
+
+class NeutronV2LoadbalancerTestCase(test.TestCase):
+
+    def get_neutron_lbaasv2_lb(self):
+        neutron_lb = resources.NeutronV2Loadbalancer()
+        neutron_lb.raw_resource = {"id": "1", "name": "s_rally"}
+        neutron_lb._manager = mock.Mock()
+        return neutron_lb
+
+    def test_is_deleted_true(self):
+        from neutronclient.common import exceptions as n_exceptions
+        neutron_lb = self.get_neutron_lbaasv2_lb()
+        neutron_lb._manager().show_loadbalancer.side_effect = (
+            n_exceptions.NotFound)
+
+        self.assertTrue(neutron_lb.is_deleted())
+
+        neutron_lb._manager().show_loadbalancer.assert_called_once_with(
+            neutron_lb.id())
+
+    def test_is_deleted_false(self):
+        from neutronclient.common import exceptions as n_exceptions
+        neutron_lb = self.get_neutron_lbaasv2_lb()
+        neutron_lb._manager().show_loadbalancer.return_value = (
+            neutron_lb.raw_resource)
+
+        self.assertFalse(neutron_lb.is_deleted())
+        neutron_lb._manager().show_loadbalancer.assert_called_once_with(
+            neutron_lb.id())
+
+        neutron_lb._manager().show_loadbalancer.reset_mock()
+
+        neutron_lb._manager().show_loadbalancer.side_effect = (
+            n_exceptions.Forbidden)
+
+        self.assertFalse(neutron_lb.is_deleted())
+        neutron_lb._manager().show_loadbalancer.assert_called_once_with(
+            neutron_lb.id())
+
+
 class NeutronPortTestCase(test.TestCase):
 
     def test_delete(self):
