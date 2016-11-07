@@ -332,3 +332,17 @@ class CreateAndDeleteEc2Credential(kutils.KeystoneScenario):
         creds = self._create_ec2credentials(self.context["user"]["id"],
                                             self.context["tenant"]["id"])
         self._delete_ec2credential(self.context["user"]["id"], creds.access)
+
+
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["keystone"]},
+                    name="KeystoneBasic.create_and_get_role")
+class CreateAndGetRole(kutils.KeystoneScenario):
+
+    def run(self, **kwargs):
+        """Create a user role and get it detailed information.
+
+        :param kwargs: Optional additional arguments for roles creation
+        """
+        role = self._role_create(**kwargs)
+        self._get_role(role.id)
