@@ -146,8 +146,23 @@ class Nova(ResourceManager):
     def list_floating_ips(self):
         return self.client.floating_ips.list()
 
+    def list_floating_ips_bulk(self):
+        return self.client.floating_ips_bulk.list()
+
     def list_images(self):
         return self.client.images.list()
+
+    def list_aggregates(self):
+        return self.client.aggregates.list()
+
+    def list_hosts(self):
+        return self.client.hosts.list()
+
+    def list_hypervisors(self):
+        return self.client.hypervisors.list()
+
+    def list_agents(self):
+        return self.client.agents.list()
 
     def list_keypairs(self):
         return self.client.keypairs.list()
