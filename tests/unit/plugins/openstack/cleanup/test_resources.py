@@ -589,30 +589,30 @@ class KeystoneMixinTestCase(test.TestCase):
         kmixin._service = "keystone"
         return kmixin
 
-    @mock.patch("%s.keystone_wrapper.wrap" % BASE)
-    def test_manager(self, mock_wrap):
+    @mock.patch("%s.identity" % BASE)
+    def test_manager(self, mock_identity):
         keystone_mixin = self.get_keystone_mixin()
         keystone_mixin.admin = mock.MagicMock()
-        self.assertEqual(mock_wrap.return_value, keystone_mixin._manager())
-        mock_wrap.assert_called_once_with(
-            keystone_mixin.admin.keystone.return_value)
+        self.assertEqual(mock_identity.Identity.return_value,
+                         keystone_mixin._manager())
+        mock_identity.Identity.assert_called_once_with(
+            keystone_mixin.admin)
 
-    @mock.patch("%s.keystone_wrapper.wrap" % BASE)
-    def test_delete(self, mock_wrap):
+    @mock.patch("%s.identity" % BASE)
+    def test_delete(self, mock_identity):
         keystone_mixin = self.get_keystone_mixin()
         keystone_mixin._resource = "some_resource"
         keystone_mixin.id = lambda: "id_a"
         keystone_mixin.admin = mock.MagicMock()
 
         keystone_mixin.delete()
-        mock_wrap.assert_called_once_with(
-            keystone_mixin.admin.keystone.return_value)
-        mock_wrap().delete_some_resource.assert_called_once_with("id_a")
+        mock_identity.Identity.assert_called_once_with(keystone_mixin.admin)
+        identity_service = mock_identity.Identity.return_value
+        identity_service.delete_some_resource.assert_called_once_with("id_a")
 
-    @mock.patch(
-        "rally.common.utils.name_matches_object")
-    @mock.patch("%s.keystone_wrapper.wrap" % BASE)
-    def test_list(self, mock_wrap, mock_name_matches_object):
+    @mock.patch("rally.common.utils.name_matches_object")
+    @mock.patch("%s.identity" % BASE)
+    def test_list(self, mock_identity, mock_name_matches_object):
         keystone_mixin = self.get_keystone_mixin()
         keystone_mixin._resource = "fake_resource"
         keystone_mixin.admin = mock.MagicMock()
@@ -622,10 +622,12 @@ class KeystoneMixinTestCase(test.TestCase):
                   mock.MagicMock(name="foo3")]
         mock_name_matches_object.side_effect = [True, True, False]
 
-        mock_wrap().list_fake_resources.return_value = result
+        identity_service = mock_identity.Identity.return_value
+
+        identity_service.list_fake_resources.return_value = result
 
         self.assertSequenceEqual(result[:2], keystone_mixin.list())
-        mock_wrap().list_fake_resources.assert_called_once_with()
+        identity_service.list_fake_resources.assert_called_once_with()
 
         mock_name_matches_object.assert_has_calls(
             [mock.call(r.name, kutils.KeystoneScenario) for r in result])

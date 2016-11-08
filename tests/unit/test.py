@@ -111,6 +111,9 @@ class ScenarioTestCase(TestCase):
                 mock.Mock(side_effect=self.admin_clients))
         ]
 
+    def get_test_context(self):
+        return get_test_context()
+
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
         if self.patch_benchmark_utils:
@@ -139,7 +142,7 @@ class ScenarioTestCase(TestCase):
         for patcher in self._client_mocks:
             patcher.start()
 
-        self.context = get_test_context()
+        self.context = self.get_test_context()
 
     def tearDown(self):
         for patcher in self._client_mocks:

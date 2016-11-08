@@ -36,6 +36,12 @@ class KeystoneWrapper(object):
     def __init__(self, client):
         self.client = client
 
+        LOG.warning(
+            "Class %s is deprecated since Rally 0.8.0 and will be removed "
+            "soon. Use "
+            "rally.plugins.openstack.services.identity.identity.Identity "
+            "instead." % self.__class__)
+
     def __getattr__(self, attr_name):
         return getattr(self.client, attr_name)
 
@@ -253,6 +259,10 @@ class KeystoneV3Wrapper(KeystoneWrapper):
 
 def wrap(client):
     """Returns keystone wrapper based on keystone client version."""
+    LOG.warning("Method wrap from %s and whole Keystone wrappers are "
+                "deprecated since Rally 0.8.0 and will be removed soon. Use "
+                "rally.plugins.openstack.services.identity.identity.Identity "
+                "instead." % __file__)
 
     if client.version == "v2.0":
         return KeystoneV2Wrapper(client)

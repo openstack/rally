@@ -16,12 +16,24 @@
 import uuid
 
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 from rally.task import atomic
 
 
 class KeystoneScenario(scenario.OpenStackScenario):
     """Base class for Keystone scenarios with basic atomic actions."""
+
+    def __init__(self, context=None, admin_clients=None, clients=None):
+        super(KeystoneScenario, self).__init__(context, admin_clients, clients)
+        if hasattr(self, "_admin_clients"):
+            self.admin_keystone = identity.Identity(
+                self._admin_clients, name_generator=self.generate_random_name,
+                atomic_inst=self.atomic_actions())
+        if hasattr(self, "_clients"):
+            self.keystone = identity.Identity(
+                self._clients, name_generator=self.generate_random_name,
+                atomic_inst=self.atomic_actions())
 
     @atomic.action_timer("keystone.create_user")
     def _user_create(self, email=None, **kwargs):

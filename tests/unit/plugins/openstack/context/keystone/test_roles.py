@@ -91,10 +91,10 @@ class RoleGeneratorTestCase(test.TestCase):
         ctx.credential = mock.MagicMock()
         ctx.cleanup()
         calls = [
-            mock.call("u1", "r1", tenant="t1"),
-            mock.call("u2", "r1", tenant="t2"),
-            mock.call("u1", "r2", tenant="t1"),
-            mock.call("u2", "r2", tenant="t2")
+            mock.call(user="u1", role="r1", tenant="t1"),
+            mock.call(user="u2", role="r1", tenant="t2"),
+            mock.call(user="u1", role="r2", tenant="t1"),
+            mock.call(user="u2", role="r2", tenant="t2")
         ]
 
         fc.keystone().roles.remove_user_role.assert_has_calls(calls,
@@ -113,10 +113,10 @@ class RoleGeneratorTestCase(test.TestCase):
             ctx.setup()
             ctx.credential = mock.MagicMock()
             calls = [
-                mock.call("u1", "r1", tenant="t1"),
-                mock.call("u2", "r1", tenant="t2"),
-                mock.call("u1", "r2", tenant="t1"),
-                mock.call("u2", "r2", tenant="t2")
+                mock.call(user="u1", role="r1", tenant="t1"),
+                mock.call(user="u2", role="r1", tenant="t2"),
+                mock.call(user="u1", role="r2", tenant="t1"),
+                mock.call(user="u2", role="r2", tenant="t2")
             ]
             fc.keystone().roles.add_user_role.assert_has_calls(calls,
                                                                any_order=True)
@@ -132,10 +132,10 @@ class RoleGeneratorTestCase(test.TestCase):
         self.assertEqual(4, fc.keystone().roles.add_user_role.call_count)
         self.assertEqual(4, fc.keystone().roles.remove_user_role.call_count)
         calls = [
-            mock.call("u1", "r1", tenant="t1"),
-            mock.call("u2", "r1", tenant="t2"),
-            mock.call("u1", "r2", tenant="t1"),
-            mock.call("u2", "r2", tenant="t2")
+            mock.call(user="u1", role="r1", tenant="t1"),
+            mock.call(user="u2", role="r1", tenant="t2"),
+            mock.call(user="u1", role="r2", tenant="t1"),
+            mock.call(user="u2", role="r2", tenant="t2")
         ]
         fc.keystone().roles.remove_user_role.assert_has_calls(calls,
                                                               any_order=True)

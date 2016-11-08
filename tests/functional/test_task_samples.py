@@ -49,6 +49,7 @@ class TestTaskSamples(unittest.TestCase):
                 return True
         return False
 
+    @plugins.ensure_plugins_are_loaded
     def test_task_samples_is_valid(self):
         rally = utils.Rally(force_new_db=True)
         # In TestTaskSamples, Rally API will be called directly (not via
@@ -79,7 +80,6 @@ class TestTaskSamples(unittest.TestCase):
         rally("deployment create --name MAIN --filename %s" % deployment_cfg,
               write_report=False)
 
-        plugins.load()
         samples_path = os.path.join(
             os.path.dirname(__file__), os.pardir, os.pardir,
             "samples", "tasks")

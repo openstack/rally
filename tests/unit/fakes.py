@@ -1605,7 +1605,7 @@ class FakeClients(object):
             "fake_password",
             "fake_tenant_name")
 
-    def keystone(self):
+    def keystone(self, version=None):
         if not self._keystone:
             self._keystone = FakeKeystoneClient()
         return self._keystone

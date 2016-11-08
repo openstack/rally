@@ -26,8 +26,8 @@ from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.scenarios.fuel import utils as futils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
-from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 from rally.task import utils as task_utils
 
 CONF = cfg.CONF
@@ -873,7 +873,7 @@ _keystone_order = get_order(9000)
 class KeystoneMixin(SynchronizedDeletion):
 
     def _manager(self):
-        return keystone_wrapper.wrap(getattr(self.admin, self._service)())
+        return identity.Identity(self.admin)
 
     def delete(self):
         delete_method = getattr(self._manager(), "delete_%s" % self._resource)
