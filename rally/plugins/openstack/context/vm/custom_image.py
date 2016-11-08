@@ -153,9 +153,8 @@ class BaseCustomImageGenerator(context.Context):
         flavor_id = types.Flavor.transform(
             clients=clients, resource_config=self.config["flavor"])
 
-        vm_scenario = vmtasks.BootRuncommandDeleteCustomImage(
-            self.context,
-            clients=clients)
+        vm_scenario = vmtasks.BootRuncommandDelete(self.context,
+                                                   clients=clients)
 
         glance_wrap = glance_wrapper.wrap(admin_clients.glance, self)
 

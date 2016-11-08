@@ -632,8 +632,6 @@
       sla:
         failure_rate:
           max: 0
-
-  VMTasks.boot_runcommand_delete_custom_image:
     -
       args:
         command:

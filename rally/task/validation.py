@@ -249,6 +249,7 @@ def _get_validated_image(config, clients, param_name):
     if not image_args:
         msg = _("Parameter %s is not specified.") % param_name
         return (ValidationResult(False, msg), None)
+
     if "image_name" in image_context:
         # NOTE(rvasilets) check string is "exactly equal to" a regex
         # or image name from context equal to image name from args
@@ -338,7 +339,9 @@ def image_exists(config, clients, deployment, param_name, nullable=False):
     image_value = config.get("args", {}).get(param_name)
     if not image_value and nullable:
         return ValidationResult(True)
-    return _get_validated_image(config, clients, param_name)[0]
+    res = _get_validated_image(config, clients, param_name)
+    if res:
+        return res[0]
 
 
 @validator
@@ -353,7 +356,8 @@ def flavor_exists(config, clients, deployment, param_name):
 
 @validator
 def image_valid_on_flavor(config, clients, deployment, flavor_name,
-                          image_name, validate_disk=True):
+                          image_name, validate_disk=True,
+                          fail_on_404_image=True):
     """Returns validator for image could be used for current flavor
 
     :param flavor_name: defines which variable should be used
@@ -364,13 +368,18 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
                           Should be True if instance is booted from image.
                           Should be False if instance is booted from volume.
                           Default value is True.
-
+    :param fail_on_404_image: flag what indicate whether to validate image
+                              or not.
     """
     valid_result, flavor = _get_validated_flavor(config, clients, flavor_name)
     if not valid_result.is_valid:
         return valid_result
 
     valid_result, image = _get_validated_image(config, clients, image_name)
+
+    if not image and not fail_on_404_image:
+        return ValidationResult(True)
+
     if not valid_result.is_valid:
         return valid_result
 
@@ -556,6 +565,23 @@ def required_contexts(config, clients, deployment, *context_names):
                    ", ".join(missing_contexts))
 
         return ValidationResult(False, message)
+
+
+@validator
+def required_param_or_context(config, clients, deployment,
+                              arg_name, ctx_name):
+    """Validator checks if required image is specified.
+
+    :param arg_name: name of parameter
+    :param ctx_name: name of context
+    """
+    message = ("Parameter {} is required but not described into context {}"
+               " or arguments of scenario").format(arg_name, ctx_name)
+    if ctx_name in config.get("context", {}):
+        return ValidationResult(True)
+    if arg_name in config.get("args", {}):
+        return ValidationResult(True)
+    return ValidationResult(False, message)
 
 
 @validator

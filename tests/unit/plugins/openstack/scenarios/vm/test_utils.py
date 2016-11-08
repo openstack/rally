@@ -124,7 +124,8 @@ class VMScenarioTestCase(test.ScenarioTestCase):
                                           "interpreter": "bar"})
 
         mock_sshutils_ssh.assert_called_once_with(
-            "username", "1.2.3.4", port=22, pkey="ssh", password="password")
+            "username", "1.2.3.4",
+            port=22, pkey="ssh", password="password")
         mock_sshutils_ssh.return_value.wait.assert_called_once_with(120, 1)
         mock_vm_scenario__run_command_over_ssh.assert_called_once_with(
             mock_sshutils_ssh.return_value,
