@@ -58,6 +58,12 @@ def compat_layer(original_impl):
     return wrapper
 
 
+def should_be_overridden(func):
+    """Mark method which should be overridden by subclasses."""
+    func.require_impl = True
+    return func
+
+
 # TODO(andreykurilin): remove _DevNullDict and _ServiceWithoutAtomic when we
 #   start support inner atomics
 class _DevNullDict(dict):
@@ -161,25 +167,22 @@ class ServiceMeta(type):
             # nothing to check
             return
 
-        # obtain all public apis of bases which should be implemented in
-        # subclasses
-        public_apis = set()
-        for base in bases:
-            for name, field in inspect.getmembers(base):
-                if not name.startswith("_") and callable(field):
-                    public_apis.add(name)
+        # obtain all properties of cls, since namespace doesn't include
+        # properties of parents
+        not_implemented_apis = set()
+        for name, obj in inspect.getmembers(cls):
+            if (getattr(obj, "require_impl", False) and
+                    # name in namespace means that object was introduced in cls
+                    name not in namespaces):
+                # it is not overridden...
+                not_implemented_apis.add(name)
 
-        not_implemented_apis = public_apis - set(namespaces)
-        # NOTE(andreykurilin): there are three specific methods which should
-        # not be always overridden.
-        not_implemented_apis -= {"generate_random_name", "is_applicable",
-                                 "discover_impl"}
         if not_implemented_apis:
             raise exceptions.RallyException(
                 "%s has wrong implementation. Implementation of specific "
-                "version of API should override all public methods of base"
-                " service class. Missed public method(s): %s." %
-                (cls, ", ".join(not_implemented_apis)))
+                "version of API should override all required methods of "
+                "base service class. Missed method(s): %s." %
+                (cls.__name__, ", ".join(not_implemented_apis)))
 
 
 @six.add_metaclass(ServiceMeta)

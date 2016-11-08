@@ -18,6 +18,7 @@ from rally.task import service as base_service
 service = base_service.service
 compat_layer = base_service.compat_layer
 Service = base_service.Service
+should_be_overridden = base_service.should_be_overridden
 
 
 class UnifiedOpenStackService(base_service.UnifiedService):
