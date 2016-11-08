@@ -107,6 +107,14 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_alarms")
 
+    def test__get_alarm(self):
+        self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
+                         self.scenario._get_alarm("alarm-id"))
+        self.clients("ceilometer").alarms.get.assert_called_once_with(
+            "alarm-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_alarm")
+
     def test__create_alarm(self):
         alarm_dict = {"alarm_id": "fake-alarm-id"}
         orig_alarm_dict = copy.copy(alarm_dict)

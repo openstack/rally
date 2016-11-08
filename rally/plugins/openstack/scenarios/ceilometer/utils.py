@@ -187,6 +187,16 @@ class CeilometerScenario(scenario.OpenStackScenario):
         else:
             return self.clients("ceilometer").alarms.list()
 
+    @atomic.action_timer("ceilometer.get_alarm")
+    def _get_alarm(self, alarm_id):
+        """Get detailed information of an alarm.
+
+        :param alarm_id: Specifies id of the alarm
+        :returns: If alarm_id is existed and correct, returns
+                  detailed information of an alarm, else returns None
+        """
+        return self.clients("ceilometer").alarms.get(alarm_id)
+
     @atomic.action_timer("ceilometer.create_alarm")
     def _create_alarm(self, meter_name, threshold, kwargs):
         """Create an alarm.

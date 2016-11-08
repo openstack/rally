@@ -82,6 +82,30 @@ class CreateAndListAlarm(ceiloutils.CeilometerScenario):
 @validation.required_services(consts.Service.CEILOMETER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
+                    name="CeilometerAlarms.create_and_get_alarm")
+class CreateAndGetAlarm(ceiloutils.CeilometerScenario):
+
+    def run(self, meter_name, threshold, **kwargs):
+        """Create and get the newly created alarm.
+
+        These scenarios test GET /v2/alarms/(alarm_id)
+        Initially an alarm is created and then its detailed information is
+        fetched using its alarm_id. meter_name and threshold are required
+        parameters for alarm creation. kwargs stores other optional parameters
+        like 'ok_actions', 'project_id' etc. that may be passed while creating
+        an alarm.
+
+        :param meter_name: specifies meter name of the alarm
+        :param threshold: specifies alarm threshold
+        :param kwargs: specifies optional arguments for alarm creation.
+        """
+        alarm = self._create_alarm(meter_name, threshold, kwargs)
+        self._get_alarm(alarm.alarm_id)
+
+
+@validation.required_services(consts.Service.CEILOMETER)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_and_update_alarm")
 class CreateAndUpdateAlarm(ceiloutils.CeilometerScenario):
 
