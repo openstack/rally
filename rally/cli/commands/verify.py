@@ -275,11 +275,14 @@ class VerifyCommands(object):
                             "%(uuid)s: %(test)s" % {"uuid": uuid,
                                                     "test": name})
                     raise exceptions.RallyException(mesg)
+                reason = test.get("reason", "")
+                traceback = test.get("traceback", "")
+                sep = "\n\n" if reason and traceback else ""
                 tests[name] = {"tags": test["tags"],
                                "status": test["status"],
                                "duration": test["time"],
-                               "details": (test.get("traceback", "").strip()
-                                           or test.get("reason"))}
+                               "details": (reason + sep +
+                                           traceback.strip()) or None}
             verifications[uuid] = {
                 "tests": tests,
                 "duration": res.get("time", 0),

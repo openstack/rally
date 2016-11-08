@@ -40,20 +40,24 @@ class VerificationReport(object):
         for uuid, verification in self._runs.items():
             for name, test in verification["tests"].items():
                 if name not in tests:
-                    # NOTE(amaretskiy): it is suitable to see resource id
-                    #                   at first place in the report
+                    # NOTE(ylobankov): It is more convenient to see resource
+                    #                  ID at the first place in the report.
                     tags = sorted(test["tags"], reverse=True,
                                   key=lambda tag: tag.startswith("id-"))
                     tests[name] = {"name": name,
                                    "tags": tags,
                                    "by_verification": {},
                                    "has_details": False}
+
                 tests[name]["by_verification"][uuid] = {
-                    "status": test["status"], "duration": test["duration"],
-                    "details": test["details"]}
+                    "status": test["status"],
+                    "duration": test["duration"],
+                    "details": test["details"]
+                }
 
                 if test["details"]:
                     tests[name]["has_details"] = True
+
                     match = self.SKIP_RE.match(test["details"])
                     if match:
                         href = self.LP_BUG_LINK.format(
@@ -62,6 +66,7 @@ class VerificationReport(object):
                             match.group("bug_number"), href, test["details"])
 
                     test["details"] = jinja_utils.escape(test["details"])
+
         self._tests = list(tests.values())
 
     def to_html(self):
