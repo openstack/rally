@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 import six
 import yaml
 
@@ -52,6 +54,8 @@ class ListExecutions(utils.MistralScenario):
 @validation.required_parameters("definition")
 @validation.file_exists("definition")
 @types.convert(definition={"type": "file"})
+@types.convert(params={"type": "file"})
+@types.convert(wf_input={"type": "file"})
 @validation.required_clients("mistral")
 @validation.required_openstack(users=True)
 @validation.required_services(consts.Service.MISTRAL)
@@ -61,7 +65,8 @@ class ListExecutions(utils.MistralScenario):
     context={"cleanup": ["mistral"]})
 class CreateExecutionFromWorkbook(utils.MistralScenario):
 
-    def run(self, definition, workflow_name=None, do_delete=False):
+    def run(self, definition, workflow_name=None, wf_input=None, params=None,
+            do_delete=False):
         """Scenario tests execution creation and deletion.
 
         This scenario is a very useful tool to measure the
@@ -73,7 +78,10 @@ class CreateExecutionFromWorkbook(utils.MistralScenario):
                               one of the to workflows in the definition. If no
                                workflow_name is passed, one of the workflows in
                                the definition will be taken.
-
+        :param wf_input: file containing a json string of mistral workflow
+                         input
+        :param params: file containing a json string of mistral params
+                       (the string is the place to pass the environment)
         :param do_delete: if False than it allows to check performance
                           in "create only" mode.
         """
@@ -85,7 +93,13 @@ class CreateExecutionFromWorkbook(utils.MistralScenario):
             workflow_name = six.next(six.iterkeys(wb_def["workflows"]))
 
         workflow_identifier = ".".join([wb.name, workflow_name])
-        ex = self._create_execution(workflow_identifier)
+
+        if not params:
+            params = {}
+        else:
+            params = json.loads(params)
+
+        ex = self._create_execution(workflow_identifier, wf_input, **params)
 
         if do_delete:
             self._delete_workbook(wb.name)
