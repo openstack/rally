@@ -405,7 +405,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertEqual(1, mock_json_dumps.call_count)
         self.assertEqual(1, len(mock_json_dumps.call_args[0]))
         self.assertSequenceEqual(result, mock_json_dumps.call_args[0][0])
-        self.assertEqual({"sort_keys": True, "indent": 4},
+        self.assertEqual({"sort_keys": False, "indent": 4},
                          mock_json_dumps.call_args[1])
         mock_task_get.assert_called_once_with(task_id)
 
