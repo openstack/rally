@@ -265,9 +265,15 @@ class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
 @base.resource("nova", "aggregates", order=next(_nova_order),
                admin_required=True, perform_for_admin_only=True)
 class NovaAggregate(SynchronizedDeletion, base.ResourceManager):
+
     def list(self):
         return [r for r in self._manager().list()
                 if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+
+    def delete(self):
+        for host in self.raw_resource.hosts:
+            self.raw_resource.remove_host(host)
+        super(NovaAggregate, self).delete()
 
 
 # EC2
