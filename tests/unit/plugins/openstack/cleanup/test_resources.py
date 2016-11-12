@@ -22,6 +22,7 @@ from watcherclient.common.apiclient import exceptions as watcher_exceptions
 
 from rally.common import utils
 from rally.plugins.openstack.cleanup import resources
+from rally.plugins.openstack.scenarios.cinder import utils as cutils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.scenarios.nova import utils as nutils
 from tests.unit import test
@@ -949,3 +950,19 @@ class WatcherActionPlanTestCase(test.TestCase):
 
         self.assertEqual("action_plan", watcher._resource)
         watcher._manager().list.assert_called_once_with(limit=0)
+
+
+class CinderVolumeTypeTestCase(test.TestCase):
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object,
+                  mock_resource_manager__manager):
+        volume_types = [mock.MagicMock(name="foo1"),
+                        mock.MagicMock(name="rally_foo2"),
+                        mock.MagicMock(name="rally_foo3")]
+        mock_name_matches_object.side_effect = [False, True, True]
+        mock_resource_manager__manager().list.return_value = volume_types
+        self.assertEqual(volume_types[1:], resources.CinderVolumeType().list())
+        mock_name_matches_object.assert_has_calls(
+            [mock.call(r.name, cutils.CinderScenario) for r in volume_types])

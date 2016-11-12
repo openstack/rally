@@ -357,3 +357,28 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         server_id = self.scenario.get_random_server()
 
         self.assertIn(server_id, servers)
+
+    def test__create_volume_type(self, **kwargs):
+        random_name = "random_name"
+        self.scenario.generate_random_name = mock.Mock(
+            return_value=random_name)
+
+        result = self.scenario._create_volume_type()
+
+        self.assertEqual(
+            self.admin_clients("cinder").volume_types.create.return_value,
+            result)
+        admin_clients = self.admin_clients("cinder")
+        admin_clients.volume_types.create.assert_called_once_with(
+            name="random_name")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.create_volume_type")
+
+    def test__delete_volume_type(self):
+        volume_type = mock.Mock()
+        self.scenario._delete_volume_type(volume_type)
+        admin_clients = self.admin_clients("cinder")
+        admin_clients.volume_types.delete.assert_called_once_with(
+            volume_type)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.delete_volume_type")
