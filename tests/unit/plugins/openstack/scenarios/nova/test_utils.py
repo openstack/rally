@@ -108,14 +108,15 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         kwargs["fakearg"] = "fakearg"
         return_server = nova_scenario._boot_server("image_id", "flavor_id",
                                                    **kwargs)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.nova_server_boot_poll_interval,
             timeout=CONF.benchmark.nova_server_boot_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
+        self.assertEqual(self.mock_wait_for_status.mock.return_value,
+                         return_server)
 
         expected_kwargs = {"fakearg": "fakearg"}
         if "nics" in kwargs:
@@ -150,7 +151,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._suspend_server(self.server)
         self.server.suspend.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["SUSPENDED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -164,7 +165,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._resume_server(self.server)
         self.server.resume.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -178,7 +179,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._pause_server(self.server)
         self.server.pause.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["PAUSED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -192,7 +193,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unpause_server(self.server)
         self.server.unpause.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -206,7 +207,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._shelve_server(self.server)
         self.server.shelve.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["SHELVED_OFFLOADED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -220,7 +221,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unshelve_server(self.server)
         self.server.unshelve.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -234,7 +235,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.clients("nova").images.get.return_value = self.image
         nova_scenario = utils.NovaScenario(context=self.context)
         return_image = nova_scenario._create_image(self.server)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.image,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -242,7 +243,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             nova_server_image_create_poll_interval,
             timeout=CONF.benchmark.nova_server_image_create_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_image)
+        self.assertEqual(self.mock_wait_for_status.mock.return_value,
+                         return_image)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_image")
 
@@ -280,7 +282,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._reboot_server(self.server)
         self.server.reboot.assert_called_once_with(reboot_type="HARD")
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -294,7 +296,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._soft_reboot_server(self.server)
         self.server.reboot.assert_called_once_with(reboot_type="SOFT")
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -308,7 +310,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._rebuild_server(self.server, "img", fakearg="fakearg")
         self.server.rebuild.assert_called_once_with("img", fakearg="fakearg")
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -322,7 +324,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._start_server(self.server)
         self.server.start.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -336,7 +338,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._stop_server(self.server)
         self.server.stop.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["SHUTOFF"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -350,7 +352,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._rescue_server(self.server)
         self.server.rescue.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["RESCUE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -364,7 +366,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unrescue_server(self.server)
         self.server.unrescue.assert_called_once_with()
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -459,7 +461,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             for i in range(requests)]
         self.clients("nova").servers.create.assert_has_calls(create_calls)
 
-        wait_for_calls = [
+        wait_for_status_calls = [
             mock.call(
                 servers[i],
                 ready_statuses=["ACTIVE"],
@@ -467,7 +469,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                 check_interval=CONF.benchmark.nova_server_boot_poll_interval,
                 timeout=CONF.benchmark.nova_server_boot_timeout)
             for i in range(instances_amount)]
-        self.mock_wait_for.mock.assert_has_calls(wait_for_calls)
+        self.mock_wait_for_status.mock.assert_has_calls(wait_for_status_calls)
 
         self.mock_get_from_manager.mock.assert_has_calls(
             [mock.call() for i in range(instances_amount)])
@@ -584,7 +586,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             status = "ACTIVE"
         else:
             nova_scenario._resize_revert(self.server, status=status)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=[status],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -636,7 +638,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                     disk_over_commit=False,
                                     skip_host_check=True)
 
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
@@ -679,7 +681,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._migrate(fake_server, skip_host_check=True)
 
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             fake_server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
