@@ -1200,3 +1200,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "fake_hostname")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.uptime_hypervisor")
+
+    def test_aggregate_set_metadata(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        fake_metadata = {"test_metadata": "true"}
+        result = nova_scenario._aggregate_set_metadata("fake_aggregate",
+                                                       fake_metadata)
+        self.assertEqual(
+            self.admin_clients("nova").aggregates.set_metadata.return_value,
+            result)
+        self.admin_clients(
+            "nova").aggregates.set_metadata.assert_called_once_with(
+            "fake_aggregate", fake_metadata)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.aggregate_set_metadata")

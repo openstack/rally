@@ -1266,3 +1266,14 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").aggregates.remove_host(aggregate,
                                                                  host)
+
+    @atomic.action_timer("nova.aggregate_set_metadata")
+    def _aggregate_set_metadata(self, aggregate, metadata):
+        """Set metadata to an aggregate
+
+        :param aggregate: The aggregate to set metadata to
+        :param metadata: The metadata to be set
+        :return: The aggregate that has the set metadata
+        """
+        return self.admin_clients("nova").aggregates.set_metadata(aggregate,
+                                                                  metadata)

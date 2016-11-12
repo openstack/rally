@@ -15,11 +15,12 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.nova import aggregates
 from tests.unit import test
 
 
-class NovaAggregatesTestCase(test.TestCase):
+class NovaAggregatesTestCase(test.ScenarioTestCase):
 
     def test_list_aggregates(self):
         scenario = aggregates.ListAggregates()
@@ -80,3 +81,66 @@ class NovaAggregatesTestCase(test.TestCase):
         scenario._create_aggregate.assert_called_once_with("nova")
         aggregate = scenario._create_aggregate.return_value
         scenario._get_aggregate_details.assert_called_once_with(aggregate)
+
+    def test_create_aggregate_add_host_and_boot_server(self):
+        fake_aggregate = mock.Mock()
+        fake_hosts = [mock.Mock(hypervisor_hostname="fake_host_name")]
+        fake_flavor = mock.MagicMock(id="flavor-id-0", ram=512, disk=1,
+                                     vcpus=1)
+        fake_metadata = {"test_metadata": "true"}
+        fake_server = mock.MagicMock(id="server-id-0")
+        setattr(fake_server, "OS-EXT-SRV-ATTR:hypervisor_hostname",
+                "fake_host_name")
+        fake_aggregate_kwargs = {"fake_arg1": "f"}
+
+        scenario = aggregates.CreateAggregateAddHostAndBootServer()
+        scenario._create_aggregate = mock.MagicMock(
+            return_value=fake_aggregate)
+        scenario._list_hypervisors = mock.MagicMock(return_value=fake_hosts)
+        scenario._aggregate_add_host = mock.MagicMock()
+        scenario._aggregate_set_metadata = mock.MagicMock()
+        scenario._create_flavor = mock.MagicMock(return_value=fake_flavor)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        self.admin_clients("nova").servers.get.return_value = fake_server
+
+        scenario.run("img", fake_metadata, availability_zone="nova",
+                     boot_server_kwargs=fake_aggregate_kwargs)
+        scenario._create_aggregate.assert_called_once_with("nova")
+        scenario._list_hypervisors.assert_called_once_with()
+        scenario._aggregate_set_metadata.assert_called_once_with(
+            fake_aggregate, fake_metadata)
+        scenario._aggregate_add_host(fake_aggregate, "fake_host_name")
+        scenario._create_flavor.assert_called_once_with(512, 1, 1)
+        fake_flavor.set_keys.assert_called_once_with(fake_metadata)
+        scenario._boot_server.assert_called_once_with("img", "flavor-id-0",
+                                                      **fake_aggregate_kwargs)
+        self.admin_clients("nova").servers.get.assert_called_once_with(
+            "server-id-0")
+
+        self.assertEqual(getattr(
+            fake_server, "OS-EXT-SRV-ATTR:hypervisor_hostname"),
+            "fake_host_name")
+
+    def test_create_aggregate_add_host_and_boot_server_failure(self):
+        fake_aggregate = mock.Mock()
+        fake_hosts = [mock.Mock(hypervisor_hostname="fake_host_name")]
+        fake_flavor = mock.MagicMock(id="flavor-id-0", ram=512, disk=1,
+                                     vcpus=1)
+        fake_metadata = {"test_metadata": "true"}
+        fake_server = mock.MagicMock(id="server-id-0")
+        setattr(fake_server, "OS-EXT-SRV-ATTR:hypervisor_hostname",
+                "wrong_host_name")
+        fake_boot_server_kwargs = {"fake_arg1": "f"}
+
+        scenario = aggregates.CreateAggregateAddHostAndBootServer()
+        scenario._create_aggregate = mock.MagicMock(
+            return_value=fake_aggregate)
+        scenario._list_hypervisors = mock.MagicMock(return_value=fake_hosts)
+        scenario._aggregate_add_host = mock.MagicMock()
+        scenario._aggregate_set_metadata = mock.MagicMock()
+        scenario._create_flavor = mock.MagicMock(return_value=fake_flavor)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        self.admin_clients("nova").servers.get.return_value = fake_server
+
+        self.assertRaises(exceptions.RallyException, scenario.run, "img",
+                          fake_metadata, "nova", fake_boot_server_kwargs)

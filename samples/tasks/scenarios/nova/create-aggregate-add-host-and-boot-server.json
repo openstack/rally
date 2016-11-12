@@ -1,0 +1,35 @@
+{
+    "NovaAggregates.create_aggregate_add_host_and_boot_server": [
+        {
+            "args": {
+                "image": {
+                    "name": "^cirros.*uec$"
+                },
+                "metadata": {
+                    "test_metadata": "true"
+                },
+                "availability_zone": "nova",
+                "ram": 512,
+                "vcpus": 1,
+                "disk": 1,
+                "boot_server_kwargs": {}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

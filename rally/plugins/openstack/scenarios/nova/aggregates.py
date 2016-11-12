@@ -14,8 +14,10 @@
 #    under the License.
 
 from rally import consts
+from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
+from rally.task import types
 from rally.task import validation
 
 
@@ -98,6 +100,7 @@ class CreateAggregateAddAndRemoveHost(utils.NovaScenario):
 
         Measure "nova aggregate-add-host" and "nova aggregate-remove-host"
         command performance.
+        :param availability_zone: The availability zone of the aggregate
         """
         aggregate = self._create_aggregate(availability_zone)
         hosts = self._list_hosts(zone=None)
@@ -120,3 +123,53 @@ class CreateAndGetAggregateDetails(utils.NovaScenario):
         """
         aggregate = self._create_aggregate(availability_zone)
         self._get_aggregate_details(aggregate)
+
+
+@types.convert(image={"type": "glance_image"})
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(admin=True, users=True)
+@scenario.configure(context={"admin_cleanup": ["nova"], "cleanup": ["nova"]},
+                    name="NovaAggregates."
+                         "create_aggregate_add_host_and_boot_server")
+class CreateAggregateAddHostAndBootServer(utils.NovaScenario):
+    """Scenario to verify an aggregate."""
+
+    def run(self, image, metadata, availability_zone=None, ram=512, vcpus=1,
+            disk=1, boot_server_kwargs=None):
+        """Scenario to create and verify an aggregate
+
+        This scenario creates an aggregate, adds a compute host and metadata
+        to the aggregate, adds the same metadata to the flavor and creates an
+        instance. Verifies that instance host is one of the hosts in the
+        aggregate.
+
+        :param image: The image ID to boot from
+        :param metadata: The metadata to be set as flavor extra specs
+        :param availability_zone: The availability zone of the aggregate
+        :param ram: Memory in MB for the flavor
+        :param vcpus: Number of VCPUs for the flavor
+        :param disk: Size of local disk in GB
+        :param boot_server_kwargs: Optional additional arguments to verify host
+        aggregates
+        :raises RallyException: if instance and aggregate hosts do not match
+        """
+
+        boot_server_kwargs = boot_server_kwargs or {}
+
+        aggregate = self._create_aggregate(availability_zone)
+        hosts = self._list_hypervisors()
+        host_name = hosts[0].hypervisor_hostname
+        self._aggregate_set_metadata(aggregate, metadata)
+        self._aggregate_add_host(aggregate, host_name)
+        flavor = self._create_flavor(ram, vcpus, disk)
+        flavor.set_keys(metadata)
+
+        server = self._boot_server(image, flavor.id, **boot_server_kwargs)
+        # NOTE: we need to get server object by admin user to obtain
+        # "hypervisor_hostname" attribute
+        server = self.admin_clients("nova").servers.get(server.id)
+        instance_hostname = getattr(server,
+                                    "OS-EXT-SRV-ATTR:hypervisor_hostname")
+        if instance_hostname != host_name:
+            raise exceptions.RallyException("Instance host and aggregate "
+                                            "host are different")
