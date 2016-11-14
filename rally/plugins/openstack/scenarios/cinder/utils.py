@@ -413,3 +413,23 @@ class CinderScenario(scenario.OpenStackScenario):
         tuple_res = self.admin_clients("cinder").volume_types.delete(
             volume_type)
         return (tuple_res[0].status_code == 202)
+
+    @atomic.action_timer("cinder.transfer_create")
+    def _transfer_create(self, volume_id):
+        """Create a volume transfer.
+
+        :param volume_id: The ID of the volume to transfer
+        :rtype: VolumeTransfer
+        """
+        name = self.generate_random_name()
+        return self.clients("cinder").transfers.create(volume_id, name)
+
+    @atomic.action_timer("cinder.transfer_accept")
+    def _transfer_accept(self, transfer_id, auth_key):
+        """Accept a volume transfer.
+
+        :param transfer_id: The ID of the transfer to accept.
+        :param auth_key: The auth_key of the transfer.
+        :rtype: VolumeTransfer
+        """
+        return self.clients("cinder").transfers.accept(transfer_id, auth_key)

@@ -655,3 +655,21 @@ class CinderServersTestCase(test.ScenarioTestCase):
             1, snapshot_id=fake_snapshot.id, fakearg="f")
         self.assertFalse(scenario._delete_snapshot.called)
         self.assertFalse(scenario._delete_volume.called)
+
+    @ddt.data({},
+              {"image": "img"})
+    @ddt.unpack
+    def test_create_and_accept_transfer(self, image=None):
+        fake_volume = mock.MagicMock()
+        fake_transfer = mock.MagicMock()
+        scenario = volumes.CreateAndAcceptTransfer(self._get_context())
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._transfer_create = mock.MagicMock(return_value=fake_transfer)
+        scenario._transfer_accept = mock.MagicMock()
+        scenario.run(1, image=image, fakearg="fake")
+        expected = [mock.call(1, imageRef=image, fakearg="fake")
+                    if image else mock.call(1, fakearg="fake")]
+        scenario._create_volume.assert_has_calls(expected)
+        scenario._transfer_create.assert_called_once_with(fake_volume.id)
+        scenario._transfer_accept.assert_called_once_with(
+            fake_transfer.id, fake_transfer.auth_key)
