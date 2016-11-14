@@ -74,6 +74,15 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").list_networks(**kwargs)["networks"]
 
+    @atomic.action_timer("neutron.list_agents")
+    def _list_agents(self, **kwargs):
+        """Fetches agents.
+
+        :param kwargs: neutron agent list options
+        :returns: user agents list
+        """
+        return self.clients("neutron").list_agents(**kwargs)["agents"]
+
     @atomic.action_timer("neutron.update_network")
     def _update_network(self, network, network_update_args):
         """Update the network.

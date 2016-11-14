@@ -368,3 +368,20 @@ class CreateAndDeleteFloatingIps(utils.NeutronScenario):
         floating_ip = self._create_floatingip(floating_network,
                                               **floating_ip_args)
         self._delete_floating_ip(floating_ip["floatingip"])
+
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(name="NeutronNetworks.list_agents")
+class ListAgents(utils.NeutronScenario):
+
+    def run(self, agent_args=None):
+        """List all neutron agents.
+
+        This simple scenario tests the "neutron agent-list" command by
+        listing all the neutron agents.
+
+        :param agent_args: dict, POST /v2.0/agents request options
+        """
+        agent_args = agent_args or {}
+        self._list_agents(**agent_args)

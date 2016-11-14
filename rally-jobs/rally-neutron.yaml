@@ -194,6 +194,22 @@
         failure_rate:
           max: 20
 
+  NeutronNetworks.list_agents:
+    -
+      args:
+        agent_args: {}
+      runner:
+        type: "constant"
+        times: {{smoke or 10}}
+        concurrency: {{smoke or 3}}
+      context:
+        users:
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
+      sla:
+        failure_rate:
+          max: 0
+
   NeutronNetworks.create_and_update_networks:
     -
       args:

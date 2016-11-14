@@ -270,6 +270,14 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_routers")
 
+    def test_list_agents(self):
+        agents = [mock.Mock()]
+        self.clients("neutron").list_agents.return_value = {
+            "agents": agents}
+        self.assertEqual(agents, self.scenario._list_agents())
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.list_agents")
+
     def test_update_router(self):
         expected_router = {
             "router": {
