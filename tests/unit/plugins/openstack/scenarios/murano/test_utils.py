@@ -89,7 +89,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         )
 
         config = CONF.openstack
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             environment,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["READY"],

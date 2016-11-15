@@ -55,7 +55,7 @@ class EC2Scenario(scenario.OpenStackScenario):
         servers = [instance for instance in reservation.instances]
 
         self.sleep_between(CONF.openstack.ec2_server_boot_prepoll_delay)
-        servers = [utils.wait_for(
+        servers = [utils.wait_for_status(
             server,
             ready_statuses=["RUNNING"],
             update_resource=self._update_resource,

@@ -102,7 +102,7 @@ class MuranoScenario(scenario.OpenStackScenario):
                                                session.id)
 
         config = CONF.openstack
-        utils.wait_for(
+        utils.wait_for_status(
             environment,
             ready_statuses=["READY"],
             update_resource=utils.get_from_manager(["DEPLOY FAILURE"]),

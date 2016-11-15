@@ -66,6 +66,6 @@ class EC2ScenarioTestCase(test.ScenarioTestCase):
                 timeout=CONF.openstack.ec2_server_boot_timeout
             )
         ]
-        self.mock_wait_for.mock.assert_has_calls(expected)
+        self.mock_wait_for_status.mock.assert_has_calls(expected)
         self._test_atomic_action_timer(ec2_scenario.atomic_actions(),
                                        "ec2.boot_servers")
