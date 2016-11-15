@@ -1,0 +1,32 @@
+---
+  ManilaShares.set_and_delete_metadata:
+    -
+      args:
+        sets: 1
+        set_size: 3
+        delete_size: 3
+        key_min_length: 1
+        key_max_length: 256
+        value_min_length: 1
+        value_max_length: 1024
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+            share_networks: -1
+        users:
+          tenants: 1
+          users_per_tenant: 1
+          user_choice_method: "round_robin"
+        manila_shares:
+          shares_per_tenant: 1
+          share_proto: "NFS"
+          size: 1
+      sla:
+        failure_rate:
+          max: 0

@@ -33,7 +33,7 @@ CONTEXT_NAME = consts.SHARE_NETWORKS_CONTEXT_NAME
 
 @context.configure(name=CONTEXT_NAME, order=450)
 class ShareNetworks(context.Context):
-    """This context creates resources specific for Manila project."""
+    """This context creates share networks for Manila project."""
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": rally_consts.JSON_SCHEMA,

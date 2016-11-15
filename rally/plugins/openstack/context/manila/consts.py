@@ -13,5 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+SHARES_CONTEXT_NAME = "manila_shares"
 SHARE_NETWORKS_CONTEXT_NAME = "manila_share_networks"
 SECURITY_SERVICES_CONTEXT_NAME = "manila_security_services"

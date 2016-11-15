@@ -209,3 +209,37 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         scenario._create_share.assert_called_once_with(**params)
         scenario.sleep_between.assert_called_once_with(3, 4)
         scenario._list_shares.assert_called_once_with(detailed=detailed)
+
+    @ddt.data(
+        ({}, 0, 0),
+        ({}, 1, 1),
+        ({}, 2, 2),
+        ({}, 3, 0),
+        ({"sets": 5, "set_size": 8, "delete_size": 10}, 1, 1),
+    )
+    @ddt.unpack
+    def test_set_and_delete_metadata(self, params, iteration, share_number):
+        scenario = shares.SetAndDeleteMetadata()
+        share_list = [{"id": "fake_share_%s_id" % d} for d in range(3)]
+        scenario.context = {"tenant": {"shares": share_list}}
+        scenario.context["iteration"] = iteration
+        scenario._set_metadata = mock.MagicMock()
+        scenario._delete_metadata = mock.MagicMock()
+        expected_set_params = {
+            "share": share_list[share_number],
+            "sets": params.get("sets", 10),
+            "set_size": params.get("set_size", 3),
+            "key_min_length": params.get("key_min_length", 1),
+            "key_max_length": params.get("key_max_length", 256),
+            "value_min_length": params.get("value_min_length", 1),
+            "value_max_length": params.get("value_max_length", 1024),
+        }
+
+        scenario.run(**params)
+
+        scenario._set_metadata.assert_called_once_with(**expected_set_params)
+        scenario._delete_metadata.assert_called_once_with(
+            share=share_list[share_number],
+            keys=scenario._set_metadata.return_value,
+            delete_size=params.get("delete_size", 3),
+        )

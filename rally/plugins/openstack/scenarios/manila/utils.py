@@ -13,9 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
 
 from oslo_config import cfg
 
+from rally import exceptions
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack import scenario
 from rally.task import atomic
@@ -244,3 +246,65 @@ class ManilaScenario(scenario.OpenStackScenario):
             "manila").share_networks.add_security_service(
                 share_network, security_service)
         return share_network
+
+    @atomic.action_timer("manila.set_metadata")
+    def _set_metadata(self, share, sets=1, set_size=1,
+                      key_min_length=1, key_max_length=256,
+                      value_min_length=1, value_max_length=1024):
+        """Sets share metadata.
+
+        :param share: the share to set metadata on
+        :param sets: how many operations to perform
+        :param set_size: number of metadata keys to set in each operation
+        :param key_min_length: minimal size of metadata key to set
+        :param key_max_length: maximum size of metadata key to set
+        :param value_min_length: minimal size of metadata value to set
+        :param value_max_length: maximum size of metadata value to set
+        :returns: A list of keys that were set
+        :raises exceptions.InvalidArgumentsException: if invalid arguments
+            were provided.
+        """
+        if not (key_min_length <= key_max_length and
+                value_min_length <= value_max_length):
+            raise exceptions.InvalidArgumentsException(
+                "Min length for keys and values of metadata can not be bigger "
+                "than maximum length.")
+
+        keys = []
+        for i in range(sets):
+            metadata = {}
+            for j in range(set_size):
+                if key_min_length == key_max_length:
+                    key_length = key_min_length
+                else:
+                    key_length = random.choice(
+                        range(key_min_length, key_max_length))
+                if value_min_length == value_max_length:
+                    value_length = value_min_length
+                else:
+                    value_length = random.choice(
+                        range(value_min_length, value_max_length))
+                key = self._generate_random_part(length=key_length)
+                keys.append(key)
+                metadata[key] = self._generate_random_part(length=value_length)
+            self.clients("manila").shares.set_metadata(share["id"], metadata)
+
+        return keys
+
+    @atomic.action_timer("manila.delete_metadata")
+    def _delete_metadata(self, share, keys, delete_size=3):
+        """Deletes share metadata.
+
+        :param share: The share to delete metadata from.
+        :param delete_size: number of metadata keys to delete using one single
+            call.
+        :param keys: a list or tuple of keys to choose deletion candidates from
+        :raises exceptions.InvalidArgumentsException: if invalid arguments
+            were provided.
+        """
+        if not (isinstance(keys, list) and keys):
+            raise exceptions.InvalidArgumentsException(
+                "Param 'keys' should be non-empty 'list'. keys = '%s'" % keys)
+        for i in range(0, len(keys), delete_size):
+            self.clients("manila").shares.delete_metadata(
+                share["id"], keys[i:i + delete_size])
