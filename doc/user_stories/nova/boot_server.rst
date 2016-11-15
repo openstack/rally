@@ -4,7 +4,11 @@ Finding a Keystone bug while benchmarking 20 node HA cloud performance at creati
 
 *(Contributed by Alexander Maretskiy, Mirantis)*
 
-Below we describe how we found a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446>`_ and achieved 2x average performance increase at booting Nova servers after fixing that bug. Our initial goal was to benchmark the booting of a significant amount of servers on a cluster (running on a custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_ v5.1) and to ensure that this operation has reasonable performance and completes with no errors.
+Below we describe how we found a `bug in Keystone`_ and achieved 2x average
+performance increase at booting Nova servers after fixing that bug. Our initial
+goal was to benchmark the booting of a significant amount of servers on a
+cluster (running on a custom build of `Mirantis OpenStack`_ v5.1) and to ensure
+that this operation has reasonable performance and completes with no errors.
 
 Goal
 ----
@@ -38,36 +42,36 @@ Cluster
 
 This cluster was created via Fuel Dashboard interface.
 
-+----------------------+-----------------------------------------------------------------------------+
-| Deployment           | Custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_ v5.1 |
-+----------------------+-----------------------------------------------------------------------------+
-| OpenStack release    | Icehouse                                                                    |
-+----------------------+-----------------------------------------------------------------------------+
-| Operating System     | Ubuntu 12.04.4                                                              |
-+----------------------+-----------------------------------------------------------------------------+
-| Mode                 | High availability                                                           |
-+----------------------+-----------------------------------------------------------------------------+
-| Hypervisor           | KVM                                                                         |
-+----------------------+-----------------------------------------------------------------------------+
-| Networking           | Neutron with GRE segmentation                                               |
-+----------------------+-----------------------------------------------------------------------------+
-| Controller nodes     | 3                                                                           |
-+----------------------+-----------------------------------------------------------------------------+
-| Compute nodes        | 17                                                                          |
-+----------------------+-----------------------------------------------------------------------------+
++----------------------+--------------------------------------------+
+| Deployment           | Custom build of `Mirantis OpenStack`_ v5.1 |
++----------------------+--------------------------------------------+
+| OpenStack release    | Icehouse                                   |
++----------------------+--------------------------------------------+
+| Operating System     | Ubuntu 12.04.4                             |
++----------------------+--------------------------------------------+
+| Mode                 | High availability                          |
++----------------------+--------------------------------------------+
+| Hypervisor           | KVM                                        |
++----------------------+--------------------------------------------+
+| Networking           | Neutron with GRE segmentation              |
++----------------------+--------------------------------------------+
+| Controller nodes     | 3                                          |
++----------------------+--------------------------------------------+
+| Compute nodes        | 17                                         |
++----------------------+--------------------------------------------+
 
 Rally
 -----
 
 **Version**
 
-For this benchmark, we use custom rally with the following patch:
+For this benchmark, we use custom Rally with the following patch:
 
 https://review.openstack.org/#/c/96300/
 
 **Deployment**
 
-Rally was deployed for cluster using `ExistingCloud <https://github.com/openstack/rally/blob/master/samples/deployments/existing.json>`_ type of deployment.
+Rally was deployed for cluster using `ExistingCloud`_ type of deployment.
 
 **Server flavor**
 
@@ -153,16 +157,18 @@ Rally was deployed for cluster using `ExistingCloud <https://github.com/openstac
     ]
  }
 
-The only difference between first and second run is that runner.times for first time was set to 500
+The only difference between first and second run is that runner.times for first
+time was set to 500
 
 Results
 -------
 
 **First time - a bug was found:**
 
-Starting from 142 server, we have error from novaclient: Error <class 'novaclient.exceptions.Unauthorized'>: Unauthorized (HTTP 401).
+Starting from 142 server, we have error from novaclient: **Error <class
+'novaclient.exceptions.Unauthorized'>: Unauthorized (HTTP 401).**
 
-That is how a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446>`_ was found.
+That is how a `bug in Keystone`_ was found.
 
 +------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
 | action           | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |
@@ -173,7 +179,8 @@ That is how a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446
 
 **Second run, with bugfix:**
 
-After a patch was applied (using RPC instead of neutron client in metadata agent), we got **100% success and 2x improved average performance**:
+After a patch was applied (using RPC instead of neutron client in metadata
+agent), we got **100% success and 2x improved average performance**:
 
 +------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
 | action           | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |
@@ -181,3 +188,9 @@ After a patch was applied (using RPC instead of neutron client in metadata agent
 | nova.boot_server | 5.031     | 8.008     | 14.093    | 9.616         | 9.716         | 100.0%  | 400   |
 | total            | 5.031     | 8.008     | 14.093    | 9.616         | 9.716         | 100.0%  | 400   |
 +------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
+
+.. references:
+
+.. _bug in Keystone: https://bugs.launchpad.net/keystone/+bug/1360446
+.. _Mirantis OpenStack: https://software.mirantis.com/
+.. _ExistingCloud: https://github.com/openstack/rally/blob/master/samples/deployments/existing.json
