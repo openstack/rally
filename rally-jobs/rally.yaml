@@ -670,6 +670,34 @@
               step: 2
               start: 0
               end: 6
+    -
+      args:
+        sleep: 0.25
+      runner:
+        type: "rps"
+        times: 55
+        rps:
+          start: 1
+          end: 10
+          step: 1
+        max_concurrency: 10
+        max_cpu_count: 3
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        sleep: 0.5
+      runner:
+        type: "rps"
+        times: 55
+        rps:
+          start: 1
+          end: 10
+          step: 1
+          duration: 2
+        max_concurrency: 10
+        max_cpu_count: 3
       sla:
         failure_rate:
           max: 0

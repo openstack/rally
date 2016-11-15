@@ -13,9 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import jsonschema
 import mock
 
+from rally import exceptions
 from rally.plugins.common.runners import rps
 from rally.task import runner
 from tests.unit import fakes
@@ -26,30 +28,109 @@ RUNNERS_BASE = "rally.task.runner."
 RUNNERS = "rally.plugins.common.runners."
 
 
+@ddt.ddt
 class RPSScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(RPSScenarioRunnerTestCase, self).setUp()
         self.task = mock.MagicMock()
 
-    def test_validate(self):
-        config = {
-            "type": "rps",
-            "times": 1,
-            "rps": 100,
-            "max_concurrency": 50,
-            "max_cpu_count": 8,
-            "timeout": 1
-        }
-        rps.RPSScenarioRunner.validate(config)
-
-    def test_rps_parameter_validate(self):
-        config = {
-            "type": "rps",
-            "rps": 0.0000001,
-            "times": 1
-        }
-        rps.RPSScenarioRunner.validate(config)
+    @ddt.data(
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 3,
+                    "step": 1,
+                },
+                "times": 6
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 10,
+                    "step": 1,
+                },
+                "times": 55
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 2,
+                    "step": 1,
+                },
+                "times": 1
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 2,
+                    "end": 1,
+                    "step": 1,
+                },
+                "times": 2
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 2,
+                    "end": 1,
+                    "step": 3,
+                },
+                "times": 2
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "times": 1,
+                "rps": 100,
+                "max_concurrency": 50,
+                "max_cpu_count": 8,
+                "timeout": 1
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": 0.000001
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 10,
+                    "step": 1,
+                },
+                "times": 55
+            }
+        },
+    )
+    @ddt.unpack
+    def test_validate(self, config):
+        if "times" not in config:
+            self.assertRaises(
+                jsonschema.exceptions.ValidationError,
+                rps.RPSScenarioRunner.validate, config)
+        elif config["times"] == 2:
+            self.assertRaises(
+                exceptions.InvalidTaskException,
+                rps.RPSScenarioRunner.validate, config)
+        else:
+            rps.RPSScenarioRunner.validate(config)
 
     def test_rps_parameter_validate_failed(self):
         config = {
@@ -98,10 +179,13 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context = {"users": [{"tenant_id": "t1", "credential": "c1",
                               "id": "uuid1"}]}
         info = {"processes_to_start": 1, "processes_counter": 1}
+        mock_runs_per_second = mock.MagicMock(return_value=10)
 
-        rps._worker_process(mock_queue, fake_ram_int, 1, 10, times,
+        rps._worker_process(mock_queue, fake_ram_int, 1, times,
                             max_concurrent, context, "Dummy", "dummy",
-                            (), mock_event_queue, mock_event, info)
+                            (), mock_event_queue, mock_event,
+                            mock_runs_per_second, 10, 1,
+                            info)
 
         self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times + 1, mock_thread.call_count)
@@ -140,15 +224,58 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         expected_calls = [mock.call(*args)]
         self.assertEqual(expected_calls, mock__run_scenario_once.mock_calls)
 
+    @ddt.data(
+        {
+            "config": {
+                "times": 20,
+                "rps": 20,
+                "timeout": 5,
+                "max_concurrency": 15
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 10,
+                    "step": 1,
+                },
+                "times": 55
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 10,
+                    "step": 1,
+                },
+                "times": 50
+            }
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": {
+                    "start": 1,
+                    "end": 10,
+                    "step": 1,
+                },
+                "times": 75
+            }
+        },
+    )
+    @ddt.unpack
     @mock.patch(RUNNERS + "rps.time.sleep")
-    def test__run_scenario(self, mock_sleep):
-        config = {"times": 20, "rps": 20, "timeout": 5, "max_concurrency": 15}
+    def test__run_scenario(self, mock_sleep, config):
         runner_obj = rps.RPSScenarioRunner(self.task, config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
                                  fakes.FakeContext({}).context, {})
 
-        self.assertEqual(len(runner_obj.result_queue), config["times"])
+        self.assertEqual(config["times"], len(runner_obj.result_queue))
 
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
@@ -272,7 +399,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                 timeout=0,
                 max_cpu_used=sample["expected"]["max_cpu_used"],
                 processes_to_start=sample["expected"]["processes_to_start"],
-                rps_per_worker=sample["expected"]["rps_per_worker"],
                 times_per_worker=sample["expected"]["times_per_worker"],
                 times_overhead=sample["expected"]["times_overhead"],
                 concurrency_per_worker=(
