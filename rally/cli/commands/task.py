@@ -477,7 +477,7 @@ class TaskCommands(object):
                     "full_duration": x["data"]["full_duration"]}
                    for x in task.get_results()]
 
-        print(json.dumps(results, sort_keys=True, indent=4))
+        print(json.dumps(results, sort_keys=False, indent=4))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,

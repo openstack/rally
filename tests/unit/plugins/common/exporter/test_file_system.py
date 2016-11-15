@@ -68,7 +68,7 @@ class FileExporterTestCase(test.TestCase):
                 "sla": "baz_sla"
             }
         ]
-        mock_dumps.assert_called_once_with(expected_dict, sort_keys=True,
+        mock_dumps.assert_called_once_with(expected_dict, sort_keys=False,
                                            indent=4)
 
     @mock.patch("rally.api.Task.get")
