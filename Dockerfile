@@ -2,13 +2,16 @@ FROM ubuntu:16.04
 MAINTAINER Sergey Skripnick <sskripnick@mirantis.com>
 
 # install prereqs
-RUN apt-get update && apt-get install --yes wget python vim bash-completion gcc
+RUN apt-get update && apt-get install --yes wget python vim bash-completion gcc lsb-release
 
 # ubuntu's pip is too old to work with the version of requests we
 # require, so get pip with get-pip.py
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
   python get-pip.py && \
   rm -f get-pip.py
+
+# install bindep
+RUN pip install bindep
 
 # create rally user
 RUN apt-get install sudo && \

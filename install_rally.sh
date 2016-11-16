@@ -22,6 +22,7 @@ ASKCONFIRMATION=1
 RECREATEDEST="ask"
 USEVIRTUALENV="yes"
 DEVELOPMENT_MODE="false"
+SKIP_SW_CHECK=0
 
 # ansi colors for formatting heredoc
 ESC=$(printf "\e")
@@ -246,26 +247,21 @@ __EOF__
     fi
 }
 
-have_sw_package () {
-    # instead of guessing which distribution this is, we check for the
-    # package manager name as it basically identifies the distro
-    if have_command dpkg; then
-        (dpkg -l "$1" | egrep -q ^i ) >/dev/null 2>/dev/null
-    elif have_command rpm; then
-        rpm -q "$1" >/dev/null 2>/dev/null
-    fi
-}
-
 which_missing_packages () {
     local missing=''
-    for pkgname in "$@"; do
-        if have_sw_package "$pkgname"; then
-            continue;
-        else
-            missing="$missing $pkgname"
+    if have_command bindep; then
+        if ! missing="$(bindep -b)"; then
+            if [ -z "$missing" ]; then
+                abort $EX_PROTOCOL "Error While running bindep command. Please ensure that required command lsb_release is available."
+            fi
         fi
-    done
-    echo "$missing"
+    else
+        missing="bindep"
+    fi
+    if ! have_command pip; then
+        missing="$missing python-pip"
+    fi
+    echo $missing
 }
 
 # Download command
@@ -273,14 +269,9 @@ download() {
     wget -nv $VERBOSE --no-check-certificate -O "$@";
 }
 
-install_required_sw () {
-    # instead of guessing which distribution this is, we check for the
-    # package manager name as it basically identifies the distro
-    local missing pkg_manager
+get_pkg_manager () {
     if have_command apt-get; then
         # Debian/Ubuntu
-        missing=$(which_missing_packages build-essential libssl-dev libffi-dev python-dev libxml2-dev libxslt1-dev libpq-dev git wget)
-
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="apt-get install --yes"
         else
@@ -288,8 +279,6 @@ install_required_sw () {
         fi
     elif have_command dnf; then
         # dnf based RHEL/CentOS/Fedora
-        missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel redhat-rpm-config git wget)
-
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="dnf install -y"
         else
@@ -297,8 +286,6 @@ install_required_sw () {
         fi
     elif have_command yum; then
         # yum based RHEL/CentOS/Fedora
-        missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel redhat-rpm-config git wget)
-
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="yum install -y"
         else
@@ -306,8 +293,6 @@ install_required_sw () {
         fi
     elif have_command zypper; then
         # SuSE
-        missing=$(which_missing_packages gcc libffi48-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql93-devel git wget)
-
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="zypper -n --no-gpg-checks --non-interactive install --auto-agree-with-licenses"
         else
@@ -317,9 +302,15 @@ install_required_sw () {
         # MacOSX maybe?
         echo "Cannot determine what package manager this system has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
     fi
-    if ! have_command pip; then
-        missing="$missing python-pip"
-    fi
+    echo $pkg_manager
+}
+
+install_required_sw () {
+    # instead of guessing which distribution this is, we check for the
+    # package manager name as it basically identifies the distro
+    local missing pkg_manager
+    missing=$1
+    pkg_manager=$(get_pkg_manager)
 
     if [ -n "$missing" ]; then
         cat <<__EOF__
@@ -334,7 +325,8 @@ __EOF__
 In order to install the required software you would need to run as
 'root' the following command:
 $GREEN
-    $pkg_manager $missing
+    $(if [[ "$missing" != "bindep" ]]; then echo "$pkg_manager ${missing//bindep/}"; fi) 
+    $(if [[ "$missing" == *bindep* ]]; then echo "pip install bindep"; fi)
 $NO_COLOR
 __EOF__
             # ask if we have to install it
@@ -356,7 +348,14 @@ __EOF__
                         fi
                     fi
                 fi
-                if ! $pkg_manager $missing; then
+                if [[ "$missing" == *bindep* ]]; then
+                    missing=${missing//bindep/}
+                    if ! pip install bindep; then
+                         abort $EX_PROTOCOL "Error while installing bindep."
+                    fi
+                fi
+                missing=$(echo $missing) # If missing=' ', we must remove the space.
+                if [ -n "$missing" ] && ! $pkg_manager $missing; then
                     abort $EX_UNAVAILABLE "Error while installing $missing"
                 fi
                 # installation successful
@@ -377,6 +376,7 @@ likely to fail!
 __EOF__
             if ask_yn "Proceed with installation anyway?"
             then
+                SKIP_SW_CHECK=1
                 echo "Proceeding with installation at your request... keep fingers crossed!"
             else
                 die $EX_UNAVAILABLE "missing software prerequisites" <<__EOF__
@@ -384,7 +384,8 @@ Please ask your system administrator to install the missing packages,
 or, if you have root access, you can do that by running the following
 command from the 'root' account:
 $GREEN
-    $pkg_manager $missing
+    $(if [[ "$missing" != "bindep" ]]; then echo "$pkg_manager ${missing//bindep/}"; fi) 
+    $(if [[ "$missing" == *bindep* ]]; then echo "pip install bindep"; fi)
 $NO_COLOR
 __EOF__
             fi
@@ -637,7 +638,16 @@ __EOF__
 fi
 
 # check and install prerequisites
-install_required_sw
+while true; do
+    if [ $SKIP_SW_CHECK -ne 0 ]; then
+        break
+    fi
+    missing=$(which_missing_packages)
+    if [ -z "$missing" ]; then
+        break
+    fi
+    install_required_sw "$missing"
+done
 require_python
 
 
