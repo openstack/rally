@@ -51,8 +51,7 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
                             },
                             "strategy": {
                                 "name": "workload_stabilization"
-                            },
-                            "extra": {}
+                            }
                         },
                         {
                             "goal": {
@@ -60,8 +59,7 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
                             },
                             "strategy": {
                                 "name": "workload_stabilization"
-                            },
-                            "extra": {}
+                            }
                         }
                     ]
                 },
@@ -75,7 +73,7 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
         audit_template.setup()
         goal_id = mock_watcher_goal_transform.return_value
         strategy_id = mock_watcher_strategy_transform.return_value
-        mock_calls = [mock.call(goal_id, strategy_id, {})]
+        mock_calls = [mock.call(goal_id, strategy_id)]
         mock_watcher_scenario__create_audit_template.assert_has_calls(
             mock_calls)
 

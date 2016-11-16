@@ -34,19 +34,17 @@ class WatcherScenario(scenario.OpenStackScenario):
     """Base class for Watcher scenarios with basic atomic actions."""
 
     @atomic.action_timer("watcher.create_audit_template")
-    def _create_audit_template(self, goal_id, strategy_id, extra):
+    def _create_audit_template(self, goal_id, strategy_id):
         """Create Audit Template in DB
 
         :param goal_id: UUID Goal
         :param strategy_id: UUID Strategy
-        :param extra: Audit Template Extra (JSON Dict)
         :return: Audit Template object
         """
         return self.admin_clients("watcher").audit_template.create(
             goal=goal_id,
             strategy=strategy_id,
-            name=self.generate_random_name(),
-            extra=extra or {})
+            name=self.generate_random_name())
 
     @atomic.action_timer("watcher.delete_audit_template")
     def _delete_audit_template(self, audit_template):

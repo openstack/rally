@@ -27,10 +27,9 @@ class WatcherTestCase(test.ScenarioTestCase):
         scenario._create_audit_template = mock.MagicMock(
             return_value=audit_template)
         scenario._delete_audit_template = mock.MagicMock()
-        scenario.run("goal", "strategy", {})
+        scenario.run("goal", "strategy")
         scenario._create_audit_template.assert_called_once_with("goal",
-                                                                "strategy",
-                                                                {})
+                                                                "strategy")
         scenario._delete_audit_template.assert_called_once_with(
             audit_template.uuid)
 

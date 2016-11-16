@@ -28,12 +28,11 @@ class WatcherScenarioTestCase(test.ScenarioTestCase):
         watcher_scenario = utils.WatcherScenario(self.context)
         watcher_scenario.generate_random_name = mock.MagicMock(
             return_value="mock_name")
-        watcher_scenario._create_audit_template("fake_goal", "fake_strategy",
-                                                {})
+        watcher_scenario._create_audit_template("fake_goal", "fake_strategy")
         self.admin_clients(
             "watcher").audit_template.create.assert_called_once_with(
             goal="fake_goal", strategy="fake_strategy",
-            name="mock_name", extra={})
+            name="mock_name")
         self._test_atomic_action_timer(watcher_scenario.atomic_actions(),
                                        "watcher.create_audit_template")
 
