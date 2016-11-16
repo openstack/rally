@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.glance import utils
@@ -20,6 +21,7 @@ from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import types
 from rally.task import validation
 
+LOG = logging.getLogger(__name__)
 
 """Scenarios for Glance images."""
 
@@ -108,7 +110,8 @@ class CreateImageAndBootInstances(utils.GlanceScenario,
                                   nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format,
-            flavor, number_instances, **kwargs):
+            flavor, number_instances, create_image_kwargs=None,
+            boot_server_kwargs=None, **kwargs):
         """Create an image and boot several instances from it.
 
         :param container_format: container format of image. Acceptable
@@ -118,10 +121,22 @@ class CreateImageAndBootInstances(utils.GlanceScenario,
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param flavor: Nova flavor to be used to launch an instance
         :param number_instances: number of Nova servers to boot
-        :param kwargs: optional parameters to create server
+        :param create_image_kwargs: optional parameters to create image
+        :param boot_server_kwargs: optional parameters to boot server
+        :param kwargs: optional parameters to create server (deprecated)
         """
+        create_image_kwargs = create_image_kwargs or {}
+        boot_server_kwargs = boot_server_kwargs or kwargs or {}
+
+        if kwargs:
+            LOG.warning("'kwargs' is deprecated in Rally v0.8.0: Use "
+                        "'boot_server_kwargs' for additional parameters when "
+                        "booting servers.")
+
         image = self._create_image(container_format,
                                    image_location,
-                                   disk_format)
+                                   disk_format,
+                                   **create_image_kwargs)
         image_id = image.id
-        self._boot_servers(image_id, flavor, number_instances, **kwargs)
+        self._boot_servers(image_id, flavor, number_instances,
+                           **boot_server_kwargs)

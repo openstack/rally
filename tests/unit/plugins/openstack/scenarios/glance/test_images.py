@@ -70,10 +70,14 @@ class GlanceImagesTestCase(test.ScenarioTestCase):
         fake_servers = [mock.Mock() for i in range(5)]
         mock_create_image.return_value = fake_image
         mock_boot_servers.return_value = fake_servers
-        kwargs = {"fakearg": "f"}
+        create_image_kwargs = {"fakeimagearg": "f"}
+        boot_server_kwargs = {"fakeserverarg": "f"}
 
         images.CreateImageAndBootInstances(self.context).run(
-            "cf", "url", "df", "fid", 5, **kwargs)
-        mock_create_image.assert_called_once_with("cf", "url", "df")
+            "cf", "url", "df", "fid", 5,
+            create_image_kwargs=create_image_kwargs,
+            boot_server_kwargs=boot_server_kwargs)
+        mock_create_image.assert_called_once_with("cf", "url", "df",
+                                                  **create_image_kwargs)
         mock_boot_servers.assert_called_once_with("image-id-0", "fid",
-                                                  5, **kwargs)
+                                                  5, **boot_server_kwargs)
