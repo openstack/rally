@@ -847,7 +847,7 @@
         concurrency: 10
       sla:
         max_avg_duration_per_atomic:
-          generate_100_names: 0.006
+          generate_100_names: 0.01
         failure_rate:
           max: 0
     -
@@ -859,7 +859,7 @@
         concurrency: 10
       sla:
         max_avg_duration_per_atomic:
-          generate_1000_names: 0.046
+          generate_1000_names: 0.075
         failure_rate:
           max: 0
     -
@@ -871,7 +871,7 @@
         concurrency: 10
       sla:
         max_avg_duration_per_atomic:
-          generate_10000_names: 0.415
+          generate_10000_names: 0.75
         failure_rate:
           max: 0
 
