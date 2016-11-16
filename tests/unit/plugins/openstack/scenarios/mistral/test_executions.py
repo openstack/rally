@@ -59,6 +59,9 @@ workflows:
         action: std.noop
 """
 
+PARAMS_EXAMPLE = {"env": {"env_param": "env_param_value"}}
+INPUT_EXAMPLE = """{"input1": "value1", "some_json_input": {"a": "b"}}"""
+
 WB = type("obj", (object,), {"name": "wb", "definition": WB_DEFINITION})()
 WB_ONE_WF = (
     type("obj", (object,), {"name": "wb", "definition": WB_DEF_ONE_WF})()
@@ -86,6 +89,33 @@ class MistralExecutionsTestCase(test.ScenarioTestCase):
     @mock.patch("%s.CreateExecutionFromWorkbook._create_execution" % BASE)
     @mock.patch("%s.CreateExecutionFromWorkbook._create_workbook" % BASE,
                 return_value=WB)
+    def test_create_execution_with_input(self, mock__create_workbook,
+                                         mock__create_execution):
+
+        executions.CreateExecutionFromWorkbook(self.context).run(
+            WB_DEFINITION, wf_input=INPUT_EXAMPLE)
+
+        self.assertEqual(1, mock__create_workbook.called)
+        self.assertEqual(1, mock__create_execution.called)
+
+    @mock.patch("%s.CreateExecutionFromWorkbook._create_execution" % BASE)
+    @mock.patch("%s.CreateExecutionFromWorkbook._create_workbook" % BASE,
+                return_value=WB)
+    @mock.patch("json.loads", return_value=PARAMS_EXAMPLE)
+    def test_create_execution_with_params(self, mock_loads,
+                                          mock__create_workbook,
+                                          mock__create_execution):
+
+        executions.CreateExecutionFromWorkbook(self.context).run(
+            WB_DEFINITION, params=str(PARAMS_EXAMPLE))
+
+        self.assertEqual(1, mock_loads.called)
+        self.assertEqual(1, mock__create_workbook.called)
+        self.assertEqual(1, mock__create_execution.called)
+
+    @mock.patch("%s.CreateExecutionFromWorkbook._create_execution" % BASE)
+    @mock.patch("%s.CreateExecutionFromWorkbook._create_workbook" % BASE,
+                return_value=WB)
     def test_create_execution_with_wf_name(self, mock__create_workbook,
                                            mock__create_execution):
 
@@ -98,7 +128,7 @@ class MistralExecutionsTestCase(test.ScenarioTestCase):
         # we concatenate workbook name with the workflow name in the test
         # the workbook name is not random because we mock the method that
         # adds the random part
-        mock__create_execution.assert_called_once_with("wb.wf4")
+        mock__create_execution.assert_called_once_with("wb.wf4", None,)
 
     @mock.patch("%s.CreateExecutionFromWorkbook._delete_execution" % BASE)
     @mock.patch("%s.CreateExecutionFromWorkbook._delete_workbook" % BASE)
@@ -137,7 +167,7 @@ class MistralExecutionsTestCase(test.ScenarioTestCase):
         # we concatenate workbook name with the workflow name in the test
         # the workbook name is not random because we mock the method that
         # adds the random part
-        mock__create_execution.assert_called_once_with("wb.wf4")
+        mock__create_execution.assert_called_once_with("wb.wf4", None)
 
     @mock.patch("%s.CreateExecutionFromWorkbook._delete_execution" % BASE)
     @mock.patch("%s.CreateExecutionFromWorkbook._delete_workbook" % BASE)
@@ -159,4 +189,4 @@ class MistralExecutionsTestCase(test.ScenarioTestCase):
         # we concatenate workbook name with the workflow name in the test
         # the workbook name is not random because we mock the method that
         # adds the random part
-        mock__create_execution.assert_called_once_with("wb.wf1")
+        mock__create_execution.assert_called_once_with("wb.wf1", None)

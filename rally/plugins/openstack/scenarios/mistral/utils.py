@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 from oslo_config import cfg
 import yaml
 
@@ -78,15 +79,18 @@ class MistralScenario(scenario.OpenStackScenario):
             sort_dirs=sort_dirs)
 
     @atomic.action_timer("mistral.create_execution")
-    def _create_execution(self, workflow_identifier):
+    def _create_execution(self, workflow_identifier, wf_input=None, **params):
         """Create a new execution.
 
         :param workflow_identifier: name or id of the workflow to execute
+        :param input_: json string of mistral workflow input
+        :param params: optional mistral params (this is the place to pass
+                       environment).
         :returns: executions object
         """
 
         execution = self.clients("mistral").executions.create(
-            workflow_identifier)
+            workflow_identifier, workflow_input=wf_input, **params)
 
         execution = utils.wait_for_status(
             execution, ready_statuses=["SUCCESS"], failure_statuses=["ERROR"],

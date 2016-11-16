@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 from rally.plugins.openstack.scenarios.mistral import utils
 from tests.unit import fakes
 from tests.unit import test
 
 MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
+PARAMS_EXAMPLE = {"env": {"env_param": "param_value"}}
+INPUT_EXAMPLE = """{"input1": "value1", "some_json_input": {"a": "b"}}"""
 
 
 class MistralScenarioTestCase(test.ScenarioTestCase):
@@ -80,7 +83,56 @@ class MistralScenarioTestCase(test.ScenarioTestCase):
             scenario._create_execution("%s" % wf_name)
         )
 
-        mock_create_exec.assert_called_once_with(wf_name)
+        mock_create_exec.assert_called_once_with(wf_name, workflow_input=None)
+
+        args, kwargs = mock_wait_for_status.call_args
+        self.assertEqual(mock_create_exec.return_value, args[0])
+        self.assertEqual(["ERROR"], kwargs["failure_statuses"])
+        self.assertEqual(["SUCCESS"], kwargs["ready_statuses"])
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.create_execution"
+        )
+
+    def test_create_execution_with_input(self):
+        scenario = utils.MistralScenario(context=self.context)
+
+        mock_wait_for_status = self.mock_wait_for_status.mock
+        wf_name = "fake_wf_name"
+        mock_create_exec = self.clients("mistral").executions.create
+
+        self.assertEqual(
+            mock_wait_for_status.return_value,
+            scenario._create_execution(
+                wf_name, wf_input=str(INPUT_EXAMPLE))
+        )
+
+        mock_create_exec.assert_called_once_with(wf_name,
+                                                 workflow_input=INPUT_EXAMPLE)
+
+    def test_create_execution_with_params(self):
+        scenario = utils.MistralScenario(context=self.context)
+
+        mock_wait_for_status = self.mock_wait_for_status.mock
+        wf_name = "fake_wf_name"
+        mock_create_exec = self.clients("mistral").executions.create
+
+        self.assertEqual(
+            mock_wait_for_status.return_value,
+            scenario._create_execution(
+                wf_name, **PARAMS_EXAMPLE)
+        )
+        mock_create_exec.assert_called_once_with(wf_name, workflow_input=None,
+                                                 **PARAMS_EXAMPLE)
+
+        args, kwargs = mock_wait_for_status.call_args
+        self.assertEqual(mock_create_exec.return_value, args[0])
+        self.assertEqual(["ERROR"], kwargs["failure_statuses"])
+        self.assertEqual(["SUCCESS"], kwargs["ready_statuses"])
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "mistral.create_execution"
+        )
 
         args, kwargs = mock_wait_for_status.call_args
         self.assertEqual(mock_create_exec.return_value, args[0])

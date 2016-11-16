@@ -6,6 +6,9 @@ name: wb
 workflows:
   wf1:
     type: direct
+    input:
+      - input1: input1
+      - some_json_input: {}
     tasks:
       hello:
         action: std.echo output="Hello"

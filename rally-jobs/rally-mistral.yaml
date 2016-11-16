@@ -64,6 +64,8 @@
       args:
         definition: "~/.rally/extra/mistral_wb.yaml"
         workflow_name: "wf1"
+        params: "~/.rally/extra/mistral_params.json"
+        wf_input: "~/.rally/extra/mistral_input.json"
         do_delete: true
       runner:
         type: "constant"
