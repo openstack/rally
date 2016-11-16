@@ -37,13 +37,12 @@ Contents
    :maxdepth: 2
 
    overview/index
-   install
+   install_and_upgrade/index
    tutorial
    cli/cli_reference
    reports
    plugins
    plugin/plugin_reference
-   db_migrations
    contribute
    gates
    feature_requests

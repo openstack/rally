@@ -1,15 +1,30 @@
-===============================
-Installing Rally using devstack
-===============================
+Rally with DevStack all-in-one installation
+-------------------------------------------
 
-This directory contains the files necessary to integrate Rally with devstack.
+It is also possible to install Rally with DevStack. First, clone the
+corresponding repositories:
 
-To configure devstack to run rally edit ``${DEVSTACK_DIR}/local.conf`` file and add::
+.. code-block:: bash
+
+   git clone https://git.openstack.org/openstack-dev/devstack
+   git clone https://github.com/openstack/rally
+
+Then, configure DevStack to run Rally. First, create your ``local.conf`` file:
+
+.. code-block:: bash
+
+   cd devstack
+   cp samples/local.conf local.conf
+
+Next, edit local.conf: add the following line to the ``[[local|localrc]]``
+section.
+
+.. code-block:: bash
 
     enable_plugin rally https://github.com/openstack/rally master
 
-to the ``[[local|localrc]]`` section.
+Finally, run DevStack as usually:
 
-Run devstack as normal::
+.. code-block:: bash
 
-    $ ./stack.sh
+   ./stack.sh

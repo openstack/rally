@@ -1,0 +1,1 @@
+../../../rally/common/db/sqlalchemy/migrations/README.rst

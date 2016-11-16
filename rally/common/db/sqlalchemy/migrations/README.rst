@@ -15,8 +15,8 @@
 
 .. _db_migrations:
 
-Database upgrade/downgrade in Rally
-===================================
+Database upgrade in Rally
+=========================
 
 Information for users
 ---------------------
@@ -55,8 +55,6 @@ DB migration in Rally is implemented via package *alembic*.
 It is highly recommended to get familiar with it's documentation
 available by the link_ before proceeding.
 
-.. _link: https://alembic.readthedocs.org
-
 If developer is about to change existing DB schema they should
 create new DB revision and migration script with the following command
 
@@ -73,8 +71,9 @@ or
 It will generate migration script -- a file named `<UUID>_<Message>.py`
 located in `rally/common/db/sqlalchemy/migrations/versions`.
 
-Alembic with parameter ``--autogenerate`` makes some "routine" job for developer,
-for example it makes some SQLite compatible batch expressions for migrations.
+Alembic with parameter ``--autogenerate`` makes some "routine" job for
+developer, for example it makes some SQLite compatible batch expressions for
+migrations.
 
 Generated script should then be checked, edited if it is needed to be
 and added to Rally source tree.
@@ -82,3 +81,7 @@ and added to Rally source tree.
 **WARNING** Even though alembic supports schema downgrade, migration
 scripts provided along with Rally do not contain actual code for
 downgrade.
+
+.. references:
+
+.. _link: https://alembic.readthedocs.org

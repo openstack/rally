@@ -15,14 +15,13 @@
 
 .. _install:
 
-Installation
-============
+Installation process
+====================
 
 Automated installation
 ----------------------
 
-The easiest way to install Rally is by executing its `installation script
-<https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh>`_
+The easiest way to install Rally is by executing its `installation script`_
 
 .. code-block:: bash
 
@@ -37,7 +36,7 @@ the required packages.
 
 By default it will install Rally in a virtualenv in ``~/rally`` when
 run as standard user, or install system wide when run as root. You can
-install Rally in a venv by using the option ``--target``:
+install Rally in a **venv** by using the option ``--target``:
 
 .. code-block:: bash
 
@@ -90,50 +89,24 @@ is already installed in your system. If this is not the case, it will
 exit, suggesting you the command to issue **as root** in order to
 install the dependencies.
 
-You also have to set up the **Rally database** after the installation is complete:
+You also have to set up the **Rally database** after the installation is
+complete:
 
 .. code-block:: bash
 
    rally-manage db recreate
 
-
-Rally with DevStack all-in-one installation
--------------------------------------------
-
-It is also possible to install Rally with DevStack. First, clone the corresponding repositories:
-
-.. code-block:: bash
-
-   git clone https://git.openstack.org/openstack-dev/devstack
-   git clone https://github.com/openstack/rally
-
-Then, configure DevStack to run Rally. First, create your ``local.conf`` file:
-
-.. code-block:: bash
-
-   cd devstack
-   cp samples/local.conf local.conf
-
-Next, edit local.conf:
-add ``enable_plugin rally https://github.com/openstack/rally master`` to ``[[local|localrc]]`` section.
-
-Finally, run DevStack as usually:
-
-.. code-block:: bash
-
-   ./stack.sh
-
+.. include:: ../../../devstack/README.rst
 
 Rally & Docker
 --------------
 
 First you need to install Docker; Docker supplies `installation
-instructions for various OSes
-<https://docs.docker.com/installation/>`_.
+instructions for various OSes`_.
 
 You can either use the official Rally Docker image, or build your own
-from the Rally source. To do that, change directory to the root directory of the
-Rally git repository and run:
+from the Rally source. To do that, change directory to the root directory of
+the Rally git repository and run:
 
 .. code-block:: bash
 
@@ -145,7 +118,7 @@ If you build your own Docker image, substitute ``myrally`` for
 The Rally Docker image is configured to store local settings and the
 database in the user's home directory. For persistence of these data,
 you may want to keep this directory outside of the container. This may
-be done by the following steps:
+be done via the following steps:
 
 .. code-block:: bash
 
@@ -162,7 +135,7 @@ be done by the following steps:
    likely to work if your home directory has excessively open
    permissions (e.g., ``0755``), which is not recommended.
 
-All task samples, docs and certification tasks you could find at /opt/rally/.
+You can find all task samples, docs and certification tasks at /opt/rally/.
 Also you may want to save the last command as an alias:
 
 .. code-block:: bash
@@ -195,4 +168,9 @@ Rally currently has no SELinux policy, which is why it must be run in
 Permissive mode for certain configurations. If you can help create an
 SELinux policy for Rally, please contribute!
 
-More about docker: `https://www.docker.com/ <https://www.docker.com/>`_
+More about docker: https://www.docker.com/
+
+.. references:
+
+.. _installation script: https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh
+.. _installation instructions for various OSes: https://docs.docker.com/installation/
