@@ -21,23 +21,38 @@ from tests.unit import test
 
 class CeilometerEventsTestCase(test.ScenarioTestCase):
 
+    def setUp(self):
+        super(CeilometerEventsTestCase, self).setUp()
+        patch = mock.patch(
+            "rally.plugins.openstack.services.identity.identity.Identity")
+        self.addCleanup(patch.stop)
+        self.mock_identity = patch.start()
+
+    def get_test_context(self):
+        context = super(CeilometerEventsTestCase, self).get_test_context()
+        context["admin"] = {"id": "fake_user_id",
+                            "credential": mock.MagicMock()
+                            }
+        return context
+
     def test_list_events(self):
         scenario = events.CeilometerEventsCreateUserAndListEvents(self.context)
 
-        scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
+
         scenario.run()
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_once_with()
 
     def test_list_events_fails(self):
         scenario = events.CeilometerEventsCreateUserAndListEvents(self.context)
 
-        scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock(return_value=[])
 
         self.assertRaises(exceptions.RallyException, scenario.run)
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_once_with()
 
     def test_list_event_types(self):
@@ -45,43 +60,44 @@ class CeilometerEventsTestCase(test.ScenarioTestCase):
             self.context)
 
         scenario._list_event_types = mock.MagicMock()
-        scenario._user_create = mock.MagicMock()
+
         scenario.run()
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_event_types.assert_called_once_with()
 
     def test_list_event_types_fails(self):
         scenario = events.CeilometerEventsCreateUserAndListEventTypes(
             self.context)
 
-        scenario._user_create = mock.MagicMock()
         scenario._list_event_types = mock.MagicMock(return_value=[])
 
         self.assertRaises(exceptions.RallyException, scenario.run)
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_event_types.assert_called_once_with()
 
     def test_get_event(self):
         scenario = events.CeilometerEventsCreateUserAndGetEvent(self.context)
 
-        scenario._user_create = mock.MagicMock()
-        scenario._list_events = mock.MagicMock()
         scenario._get_event = mock.MagicMock()
-        scenario._list_events.return_value = [mock.Mock(message_id="fake_id")]
+        scenario._list_events = mock.MagicMock(
+            return_value=[mock.Mock(message_id="fake_id")])
+
         scenario.run()
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._get_event.assert_called_with(event_id="fake_id")
 
     def test_get_event_fails(self):
         scenario = events.CeilometerEventsCreateUserAndGetEvent(self.context)
 
-        scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock(return_value=[])
         scenario._get_event = mock.MagicMock()
 
         self.assertRaises(exceptions.RallyException, scenario.run)
 
-        scenario._user_create.assert_called_once_with()
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_with()
         self.assertFalse(scenario._get_event.called)

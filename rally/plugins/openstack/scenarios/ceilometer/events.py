@@ -12,15 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+Scenarios for Ceilometer Events API.
+"""
+
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as cutils
-from rally.plugins.openstack.scenarios.keystone import utils as kutils
+from rally.plugins.openstack.scenarios.keystone import basic as kbasic
 from rally.task import validation
-
-
-"""Scenarios for Ceilometer Events API."""
 
 
 # NOTE(idegtiarov): to work with event we need to create it, there are
@@ -34,7 +35,7 @@ from rally.task import validation
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_events")
 class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
-                                              kutils.KeystoneScenario):
+                                              kbasic.KeystoneBasic):
 
     def run(self):
         """Create user and fetch all events.
@@ -42,7 +43,7 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
         This scenario creates user to store new event and
         fetches list of all events using GET /v2/events.
         """
-        self._user_create()
+        self.admin_keystone.create_user()
         events = self._list_events()
         if not events:
             raise exceptions.RallyException(
@@ -57,7 +58,7 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_event_types")
 class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
-                                                  kutils.KeystoneScenario):
+                                                  kbasic.KeystoneBasic):
 
     def run(self):
         """Create user and fetch all event types.
@@ -65,7 +66,7 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
         This scenario creates user to store new event and
         fetches list of all events types using GET /v2/event_types.
         """
-        self._user_create()
+        self.admin_keystone.create_user()
         event_types = self._list_event_types()
         if not event_types:
             raise exceptions.RallyException(
@@ -80,7 +81,7 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_get_event")
 class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
-                                            kutils.KeystoneScenario):
+                                            kbasic.KeystoneBasic):
 
     def run(self):
         """Create user and gets event.
@@ -88,7 +89,7 @@ class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
         This scenario creates user to store new event and
         fetches one event using GET /v2/events/<message_id>.
         """
-        self._user_create()
+        self.admin_keystone.create_user()
         events = self._list_events()
         if not events:
             raise exceptions.RallyException(

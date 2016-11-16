@@ -253,7 +253,6 @@ class UserGenerator(UserContextMixin, context.Context):
                     clients, name_generator=self.generate_random_name)
             client = cache["client"]
             user = client.create_user(username, password=password,
-                                      email="%s@email.me" % username,
                                       project_id=tenant_id,
                                       domain_name=user_dom,
                                       default_role=default_role)

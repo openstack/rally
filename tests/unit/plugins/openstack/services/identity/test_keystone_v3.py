@@ -1,4 +1,3 @@
-# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,6 +14,7 @@
 
 import uuid
 
+import ddt
 import mock
 
 from rally import exceptions
@@ -26,12 +26,15 @@ from tests.unit import test
 PATH = "rally.plugins.openstack.services.identity.keystone_v3"
 
 
+@ddt.ddt
 class KeystoneV3ServiceTestCase(test.TestCase):
     def setUp(self):
         super(KeystoneV3ServiceTestCase, self).setUp()
         self.clients = mock.MagicMock()
         self.kc = self.clients.keystone.return_value
-        self.service = keystone_v3.KeystoneV3Service(self.clients)
+        self.name_generator = mock.MagicMock()
+        self.service = keystone_v3.KeystoneV3Service(
+            self.clients, name_generator=self.name_generator)
 
     def test__get_domain_id_not_found(self):
         from keystoneclient import exceptions as kc_exceptions
@@ -85,6 +88,26 @@ class KeystoneV3ServiceTestCase(test.TestCase):
         self.kc.projects.create.assert_called_once_with(name=name,
                                                         domain=domain_id)
 
+    @ddt.data({"project_id": "fake_id", "name": True, "enabled": True,
+               "description": True},
+              {"project_id": "fake_id", "name": "some", "enabled": False,
+               "description": "descr"})
+    @ddt.unpack
+    def test_update_project(self, project_id, name, enabled, description):
+
+        self.service.update_project(project_id,
+                                    name=name,
+                                    description=description,
+                                    enabled=enabled)
+
+        if name is True:
+            name = self.name_generator.return_value
+        if description is True:
+            description = self.name_generator.return_value
+
+        self.kc.projects.update.assert_called_once_with(
+            project_id, name=name, description=description, enabled=enabled)
+
     def test_delete_project(self):
         project_id = "fake_id"
         self.service.delete_project(project_id)
@@ -95,29 +118,56 @@ class KeystoneV3ServiceTestCase(test.TestCase):
                          self.service.list_projects())
         self.kc.projects.list.assert_called_once_with()
 
+    def test_get_project(self):
+        project_id = "fake_id"
+        self.service.get_project(project_id)
+        self.kc.projects.get.assert_called_once_with(project_id)
+
     @mock.patch("%s.LOG" % PATH)
     @mock.patch("%s.KeystoneV3Service._get_domain_id" % PATH)
     def test_create_user(self, mock__get_domain_id, mock_log):
 
         name = "name"
         password = "passwd"
-        email = "rally@example.com"
         project_id = "project"
         domain_name = "domain"
 
         self.service.list_roles = mock.MagicMock(return_value=[])
 
-        user = self.service.create_user(name, password=password, email=email,
+        user = self.service.create_user(name, password=password,
                                         project_id=project_id,
                                         domain_name=domain_name)
 
         self.assertEqual(user, self.kc.users.create.return_value)
         self.kc.users.create.assert_called_once_with(
-            name=name, password=password, email=email,
-            default_project=project_id,
-            domain=mock__get_domain_id.return_value)
+            name=name, password=password, default_project=project_id,
+            domain=mock__get_domain_id.return_value,
+            enabled=True)
 
         self.assertTrue(mock_log.warning.called)
+
+    @mock.patch("%s.LOG" % PATH)
+    @mock.patch("%s.KeystoneV3Service._get_domain_id" % PATH)
+    def test_create_user_without_project_id(self, mock__get_domain_id,
+                                            mock_log):
+
+        name = "name"
+        password = "passwd"
+        domain_name = "domain"
+
+        self.service.list_roles = mock.MagicMock(return_value=[])
+
+        user = self.service.create_user(name, password=password,
+                                        domain_name=domain_name)
+
+        self.assertEqual(user, self.kc.users.create.return_value)
+        self.kc.users.create.assert_called_once_with(
+            name=name, password=password, default_project=None,
+            domain=mock__get_domain_id.return_value,
+            enabled=True)
+
+        self.assertFalse(self.service.list_roles.called)
+        self.assertFalse(mock_log.warning.called)
 
     @mock.patch("%s.LOG" % PATH)
     @mock.patch("%s.KeystoneV3Service._get_domain_id" % PATH)
@@ -127,7 +177,6 @@ class KeystoneV3ServiceTestCase(test.TestCase):
 
         name = "name"
         password = "passwd"
-        email = "rally@example.com"
         project_id = "project"
         domain_name = "domain"
 
@@ -140,15 +189,15 @@ class KeystoneV3ServiceTestCase(test.TestCase):
             return_value=[Role("admin"), Role("member")])
         self.service.add_role = mock.MagicMock()
 
-        user = self.service.create_user(name, password=password, email=email,
+        user = self.service.create_user(name, password=password,
                                         project_id=project_id,
                                         domain_name=domain_name)
 
         self.assertEqual(user, self.kc.users.create.return_value)
         self.kc.users.create.assert_called_once_with(
-            name=name, password=password, email=email,
-            default_project=project_id,
-            domain=mock__get_domain_id.return_value)
+            name=name, password=password, default_project=project_id,
+            domain=mock__get_domain_id.return_value,
+            enabled=True)
 
         self.assertFalse(mock_log.warning.called)
         self.service.add_role.assert_called_once_with(
@@ -156,25 +205,65 @@ class KeystoneV3ServiceTestCase(test.TestCase):
             user_id=user.id,
             project_id=project_id)
 
-    def test_list_users(self):
-        self.assertEqual(self.kc.users.list.return_value,
-                         self.service.list_users())
-        self.kc.users.list.assert_called_once_with()
+    def test_create_users(self):
+        self.service.create_user = mock.MagicMock()
 
-    def test_delete_user(self):
+        n = 2
+        project_id = "some"
+        self.assertEqual([self.service.create_user.return_value] * n,
+                         self.service.create_users(number_of_users=n,
+                                                   project_id=project_id))
+        self.assertEqual([mock.call(project_id=project_id)] * n,
+                         self.service.create_user.call_args_list)
+
+    @ddt.data(None, "some")
+    def test_update_user(self, domain_name):
         user_id = "fake_id"
-        self.service.delete_user(user_id)
-        self.kc.users.delete.assert_called_once_with(user_id)
+        name = "new name"
+        project_id = "new project"
+        password = "pass"
+        email = "mail"
+        description = "n/a"
+        enabled = False
+        default_project = "some"
 
-    def test_delete_service(self):
-        service_id = "fake_id"
-        self.service.delete_service(service_id)
-        self.kc.services.delete.assert_called_once_with(service_id)
+        self.service._get_domain_id = mock.MagicMock()
 
-    def test_list_services(self):
-        self.assertEqual(self.kc.services.list.return_value,
-                         self.service.list_services())
-        self.kc.services.list.assert_called_once_with()
+        self.service.update_user(user_id, name=name, domain_name=domain_name,
+                                 project_id=project_id, password=password,
+                                 email=email, description=description,
+                                 enabled=enabled,
+                                 default_project=default_project)
+
+        domain = None
+        if domain_name:
+            self.service._get_domain_id.assert_called_once_with(domain_name)
+            domain = self.service._get_domain_id.return_value
+        else:
+            self.assertFalse(self.service._get_domain_id.called)
+
+        self.kc.users.update.assert_called_once_with(
+            user_id, name=name, domain=domain, project=project_id,
+            password=password, email=email, description=description,
+            enabled=enabled, default_project=default_project)
+
+    @ddt.data({"name": None, "service_type": None, "description": None,
+               "enabled": True},
+              {"name": "some", "service_type": "st", "description": "d",
+               "enabled": False})
+    @ddt.unpack
+    def test_create_service(self, name, service_type, description, enabled):
+        self.assertEqual(self.kc.services.create.return_value,
+                         self.service.create_service(name=name,
+                                                     service_type=service_type,
+                                                     description=description,
+                                                     enabled=enabled))
+        name = name or self.name_generator.return_value
+        service_type = service_type or "rally_test_type"
+        description = description or self.name_generator.return_value
+        self.kc.services.create.assert_called_once_with(
+            name, type=service_type, description=description,
+            enabled=enabled)
 
     @mock.patch("%s.KeystoneV3Service._get_domain_id" % PATH)
     def test_create_role(self, mock__get_domain_id):
@@ -188,6 +277,26 @@ class KeystoneV3ServiceTestCase(test.TestCase):
         self.kc.roles.create.assert_called_once_with(
             name, domain=mock__get_domain_id.return_value)
 
+    @ddt.data({"domain_name": "domain", "user_id": "user", "project_id": "pr"},
+              {"domain_name": None, "user_id": None, "project_id": None})
+    @ddt.unpack
+    def test_list_roles(self, domain_name, user_id, project_id):
+        self.service._get_domain_id = mock.MagicMock()
+        self.assertEqual(self.kc.roles.list.return_value,
+                         self.service.list_roles(user_id=user_id,
+                                                 domain_name=domain_name,
+                                                 project_id=project_id))
+        domain = None
+        if domain_name:
+            self.service._get_domain_id.assert_called_once_with(domain_name)
+            domain = self.service._get_domain_id.return_value
+        else:
+            self.assertFalse(self.service._get_domain_id.called)
+
+        self.kc.roles.list.assert_called_once_with(user=user_id,
+                                                   domain=domain,
+                                                   project=project_id)
+
     def test_add_role(self):
         role_id = "fake_id"
         user_id = "user_id"
@@ -196,17 +305,6 @@ class KeystoneV3ServiceTestCase(test.TestCase):
         self.service.add_role(role_id, user_id=user_id, project_id=project_id)
         self.kc.roles.grant.assert_called_once_with(
             user=user_id, role=role_id, project=project_id)
-
-    def test_delete_role(self):
-        role_id = "fake_id"
-        self.service.delete_role(role_id)
-        self.kc.roles.delete.assert_called_once_with(role_id)
-
-    def test_list_roles(self):
-        self.assertEqual(self.kc.roles.list.return_value,
-                         self.service.list_roles())
-        self.kc.roles.list.assert_called_once_with(project=None, user=None,
-                                                   domain=None)
 
     def test_revoke_role(self):
         role_id = "fake_id"
@@ -233,7 +331,18 @@ class KeystoneV3ServiceTestCase(test.TestCase):
         self.kc.domains.create.assert_called_once_with(
             name, description=descr, enabled=enabled)
 
+    def test_create_ec2credentials(self):
+        user_id = "fake_id"
+        project_id = "fake_id"
 
+        self.assertEqual(self.kc.ec2.create.return_value,
+                         self.service.create_ec2credentials(
+                             user_id, project_id=project_id))
+        self.kc.ec2.create.assert_called_once_with(user_id,
+                                                   project_id=project_id)
+
+
+@ddt.ddt
 class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
     def setUp(self):
         super(UnifiedKeystoneV3ServiceTestCase, self).setUp()
@@ -300,10 +409,34 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
             self.service._impl.create_project.return_value)
         self.service._impl.create_project.assert_called_once_with(name)
 
+    def test_update_project(self):
+        project_id = "fake_id"
+        name = "name"
+        description = "descr"
+        enabled = False
+
+        self.service.update_project(project_id=project_id, name=name,
+                                    description=description, enabled=enabled)
+        self.service._impl.update_project.assert_called_once_with(
+            project_id=project_id, name=name, description=description,
+            enabled=enabled)
+
     def test_delete_project(self):
         project_id = "fake_id"
         self.service.delete_project(project_id)
         self.service._impl.delete_project.assert_called_once_with(project_id)
+
+    @mock.patch("%s.UnifiedKeystoneV3Service._unify_project" % PATH)
+    def test_get_project(self,
+                         mock_unified_keystone_v3_service__unify_project):
+        mock_unify_project = mock_unified_keystone_v3_service__unify_project
+        project_id = "id"
+
+        self.assertEqual(mock_unify_project.return_value,
+                         self.service.get_project(project_id))
+        mock_unify_project.assert_called_once_with(
+            self.service._impl.get_project.return_value)
+        self.service._impl.get_project.assert_called_once_with(project_id)
 
     @mock.patch("%s.UnifiedKeystoneV3Service._unify_project" % PATH)
     def test_list_projects(self,
@@ -323,28 +456,33 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
 
         name = "name"
         password = "passwd"
-        email = "rally@example.com"
         project_id = "project"
         domain_name = "domain"
         default_role = "role"
 
         self.assertEqual(mock_unify_user.return_value,
                          self.service.create_user(name, password=password,
-                                                  email=email,
                                                   project_id=project_id,
                                                   domain_name=domain_name,
                                                   default_role=default_role))
         mock_unify_user.assert_called_once_with(
             self.service._impl.create_user.return_value)
         self.service._impl.create_user.assert_called_once_with(
-            username=name, password=password, email=email,
-            project_id=project_id, domain_name=domain_name,
-            default_role=default_role)
+            username=name, password=password, project_id=project_id,
+            domain_name=domain_name, default_role=default_role, enabled=True)
 
-    def test_delete_user(self):
-        user_id = "fake_id"
-        self.service.delete_user(user_id)
-        self.service._impl.delete_user.assert_called_once_with(user_id)
+    @mock.patch("%s.UnifiedKeystoneV3Service._unify_user" % PATH)
+    def test_create_users(self, mock_unified_keystone_v3_service__unify_user):
+        project_id = "project"
+        n = 3
+        domain_name = "Default"
+
+        self.service.create_users(
+            project_id, number_of_users=3,
+            user_create_args={"domain_name": domain_name})
+        self.service._impl.create_users.assert_called_once_with(
+            project_id=project_id, number_of_users=n,
+            user_create_args={"domain_name": domain_name})
 
     @mock.patch("%s.UnifiedKeystoneV3Service._unify_user" % PATH)
     def test_list_users(self, mock_unified_keystone_v3_service__unify_user):
@@ -357,10 +495,17 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
                          self.service.list_users())
         mock_unify_user.assert_called_once_with(users[0])
 
-    def test_delete_service(self):
-        service_id = "fake_id"
-        self.service.delete_service(service_id)
-        self.service._impl.delete_service.assert_called_once_with(service_id)
+    @ddt.data({"user_id": "id", "enabled": False, "name": "Fake",
+               "email": "badboy@example.com", "password": "pass"},
+              {"user_id": "id", "enabled": None, "name": None,
+               "email": None, "password": None})
+    @ddt.unpack
+    def test_update_user(self, user_id, enabled, name, email, password):
+        self.service.update_user(user_id, enabled=enabled, name=name,
+                                 email=email, password=password)
+        self.service._impl.update_user.assert_called_once_with(
+            user_id, enabled=enabled, name=name, email=email,
+            password=password)
 
     @mock.patch("%s.UnifiedKeystoneV3Service._unify_service" % PATH)
     def test_list_services(self,
@@ -375,26 +520,28 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
         mock_unify_service.assert_called_once_with(services[0])
 
     @mock.patch("%s.UnifiedKeystoneV3Service._unify_role" % PATH)
-    def test_add_role(self, mock_unified_keystone_v3_service__unify_role):
+    def test_create_role(self, mock_unified_keystone_v3_service__unify_role):
         mock_unify_role = mock_unified_keystone_v3_service__unify_role
+        name = "some"
+        domain = "some"
 
+        self.assertEqual(mock_unify_role.return_value,
+                         self.service.create_role(name, domain_name=domain))
+
+        self.service._impl.create_role.assert_called_once_with(
+            name, domain_name=domain)
+        mock_unify_role.assert_called_once_with(
+            self.service._impl.create_role.return_value)
+
+    def test_add_role(self):
         role_id = "fake_id"
         user_id = "user_id"
         project_id = "user_id"
 
-        self.assertEqual(mock_unify_role.return_value,
-                         self.service.add_role(role_id, user_id=user_id,
-                                               project_id=project_id))
+        self.service.add_role(role_id, user_id=user_id, project_id=project_id)
 
         self.service._impl.add_role.assert_called_once_with(
             user_id=user_id, role_id=role_id, project_id=project_id)
-        mock_unify_role.assert_called_once_with(
-            self.service._impl.add_role.return_value)
-
-    def test_delete_role(self):
-        role_id = "fake_id"
-        self.service.delete_role(role_id)
-        self.service._impl.delete_role.assert_called_once_with(role_id)
 
     def test_revoke_role(self):
         role_id = "fake_id"
@@ -418,7 +565,13 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
                          self.service.list_roles())
         mock_unify_role.assert_called_once_with(roles[0])
 
-    def test_get_role(self):
-        role_id = "fake_id"
-        self.service.get_role(role_id)
-        self.service._impl.get_role.assert_called_once_with(role_id)
+    def test_create_ec2credentials(self):
+        user_id = "id"
+        project_id = "project-id"
+
+        self.assertEqual(self.service._impl.create_ec2credentials.return_value,
+                         self.service.create_ec2credentials(
+                             user_id=user_id, project_id=project_id))
+
+        self.service._impl.create_ec2credentials.assert_called_once_with(
+            user_id=user_id, project_id=project_id)

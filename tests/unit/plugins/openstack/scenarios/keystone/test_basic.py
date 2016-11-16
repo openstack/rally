@@ -48,88 +48,91 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
 
     def test_create_user(self):
         scenario = basic.CreateUser(self.context)
-        scenario._user_create = mock.MagicMock()
-        scenario.run(password="tttt", tenant_id="id")
-        scenario._user_create.assert_called_once_with(password="tttt",
-                                                      tenant_id="id")
+
+        scenario.run(password="tttt", project_id="id")
+        self.mock_identity.return_value.create_user.assert_called_once_with(
+            password="tttt", project_id="id")
 
     def test_create_delete_user(self):
-        create_result = mock.MagicMock()
+        identity_service = self.mock_identity.return_value
+
+        fake_email = "abcd"
+        fake_user = identity_service.create_user.return_value
 
         scenario = basic.CreateDeleteUser(self.context)
-        scenario._user_create = mock.MagicMock(return_value=create_result)
-        scenario._resource_delete = mock.MagicMock()
 
-        scenario.run(email="abcd", enabled=True)
+        scenario.run(email=fake_email, enabled=True)
 
-        scenario._user_create.assert_called_once_with(email="abcd",
-                                                      enabled=True)
-        scenario._resource_delete.assert_called_once_with(create_result)
+        identity_service.create_user.assert_called_once_with(
+            email=fake_email, enabled=True)
+        identity_service.delete_user.assert_called_once_with(fake_user.id)
 
     def test_create_user_set_enabled_and_delete(self):
-        scenario = basic.CreateUserSetEnabledAndDelete(self.context)
-        scenario._user_create = mock.Mock()
-        scenario._update_user_enabled = mock.Mock()
-        scenario._resource_delete = mock.Mock()
+        identity_service = self.mock_identity.return_value
 
-        scenario.run(enabled=True, email="abcd")
-        scenario._user_create.assert_called_once_with(email="abcd",
-                                                      enabled=True)
-        scenario._update_user_enabled.assert_called_once_with(
-            scenario._user_create.return_value, False)
-        scenario._resource_delete.assert_called_once_with(
-            scenario._user_create.return_value)
+        scenario = basic.CreateUserSetEnabledAndDelete(self.context)
+
+        fake_email = "abcd"
+        fake_user = identity_service.create_user.return_value
+        scenario.run(enabled=True, email=fake_email)
+
+        identity_service.create_user.assert_called_once_with(
+            email=fake_email, enabled=True)
+        identity_service.update_user.assert_called_once_with(
+            fake_user.id, enabled=False)
+        identity_service.delete_user.assert_called_once_with(fake_user.id)
 
     def test_user_authenticate_and_validate_token(self):
-        fake_token = mock.MagicMock()
-        context = self.context
-        scenario = basic.AuthenticateUserAndValidateToken(context)
+        identity_service = self.mock_identity.return_value
+        scenario = basic.AuthenticateUserAndValidateToken(self.context)
 
-        fake_user = context["user"]["credential"].username
-        fake_paswd = context["user"]["credential"].password
-        fake_tenant_id = context["tenant"]["id"]
-        fake_tenant_name = context["tenant"]["name"]
+        fake_token = identity_service.fetch_token.return_value
 
-        scenario._authenticate_token = mock.MagicMock(return_value=fake_token)
-        scenario._token_validate = mock.MagicMock()
         scenario.run()
-        scenario._authenticate_token.assert_called_once_with(
-            fake_user, fake_paswd, fake_tenant_id,
-            fake_tenant_name, atomic_action=False)
-        scenario._token_validate.assert_called_once_with(fake_token.id)
+
+        identity_service.fetch_token.assert_called_once_with()
+        identity_service.validate_token.assert_called_once_with(fake_token)
 
     def test_create_tenant(self):
         scenario = basic.CreateTenant(self.context)
-        scenario._tenant_create = mock.MagicMock()
+
         scenario.run(enabled=True)
-        scenario._tenant_create.assert_called_once_with(enabled=True)
+
+        self.mock_identity.return_value.create_project.assert_called_once_with(
+            enabled=True)
 
     def test_create_tenant_with_users(self):
+        identity_service = self.mock_identity.return_value
+
+        fake_project = identity_service.create_project.return_value
+        number_of_users = 1
+
         scenario = basic.CreateTenantWithUsers(self.context)
-        fake_tenant = mock.MagicMock()
-        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
-        scenario._users_create = mock.MagicMock()
-        scenario.run(users_per_tenant=1, enabled=True)
-        scenario._tenant_create.assert_called_once_with(enabled=True)
-        scenario._users_create.assert_called_once_with(fake_tenant,
-                                                       users_per_tenant=1)
+
+        scenario.run(users_per_tenant=number_of_users, enabled=True)
+
+        identity_service.create_project.assert_called_once_with(enabled=True)
+        identity_service.create_users.assert_called_once_with(
+            fake_project.id, number_of_users=number_of_users)
 
     def test_create_and_list_users(self):
         scenario = basic.CreateAndListUsers(self.context)
-        scenario._user_create = mock.MagicMock()
-        scenario._list_users = mock.MagicMock()
-        scenario.run(password="tttt", tenant_id="id")
-        scenario._user_create.assert_called_once_with(password="tttt",
-                                                      tenant_id="id")
-        scenario._list_users.assert_called_once_with()
+
+        passwd = "tttt"
+        project_id = "id"
+
+        scenario.run(password=passwd, project_id=project_id)
+        self.mock_identity.return_value.create_user.assert_called_once_with(
+            password=passwd, project_id=project_id)
+        self.mock_identity.return_value.list_users.assert_called_once_with()
 
     def test_create_and_list_tenants(self):
+        identity_service = self.mock_identity.return_value
         scenario = basic.CreateAndListTenants(self.context)
-        scenario._tenant_create = mock.MagicMock()
-        scenario._list_tenants = mock.MagicMock()
+
         scenario.run(enabled=True)
-        scenario._tenant_create.assert_called_once_with(enabled=True)
-        scenario._list_tenants.assert_called_with()
+        identity_service.create_project.assert_called_once_with(enabled=True)
+        identity_service.list_projects.assert_called_once_with()
 
     def test_assign_and_remove_user_role(self):
         fake_tenant = self.context["tenant"]["id"]
@@ -187,116 +190,127 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
 
     @ddt.data(None, "keystone", "fooservice")
     def test_get_entities(self, service_name):
-        fake_tenant = mock.MagicMock()
-        fake_user = mock.MagicMock()
-        fake_role = mock.MagicMock()
-        fake_service = mock.MagicMock()
+        identity_service = self.mock_identity.return_value
 
-        self.mock_identity.return_value.create_role.return_value = fake_role
+        fake_project = identity_service.create_project.return_value
+        fake_user = identity_service.create_user.return_value
+        fake_role = identity_service.create_role.return_value
+        fake_service = identity_service.create_service.return_value
 
         scenario = basic.GetEntities(self.context)
 
-        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
-        scenario._user_create = mock.MagicMock(return_value=fake_user)
-
-        scenario._service_create = mock.MagicMock(return_value=fake_service)
-
-        scenario._get_tenant = mock.MagicMock(return_value=fake_tenant)
-        scenario._get_user = mock.MagicMock(return_value=fake_user)
-        scenario._get_role = mock.MagicMock(return_value=fake_role)
-        scenario._get_service_by_name = mock.MagicMock(
-            return_value=fake_service)
-        scenario._get_service = mock.MagicMock(return_value=fake_service)
-
         scenario.run(service_name)
 
-        scenario._tenant_create.assert_called_once_with()
-        scenario._user_create.assert_called_once_with()
-        self.mock_identity.return_value.create_role.assert_called_once_with()
+        identity_service.create_project.assert_called_once_with()
+        identity_service.create_user.assert_called_once_with(
+            project_id=fake_project.id)
+        identity_service.create_role.assert_called_once_with()
 
-        scenario._get_tenant.assert_called_once_with(fake_tenant.id)
-        scenario._get_user.assert_called_once_with(fake_user.id)
-        scenario._get_role.assert_called_once_with(fake_role.id)
+        identity_service.get_project.assert_called_once_with(fake_project.id)
+        identity_service.get_user.assert_called_once_with(fake_user.id)
+        identity_service.get_role.assert_called_once_with(fake_role.id)
 
         if service_name is None:
-            scenario._service_create.assert_called_once_with()
-            self.assertFalse(scenario._get_service_by_name.called)
+            identity_service.create_service.assert_called_once_with()
+            self.assertFalse(identity_service.get_service_by_name.called)
+            identity_service.get_service.assert_called_once_with(
+                fake_service.id)
         else:
-            scenario._get_service_by_name.assert_called_once_with(service_name)
-            self.assertFalse(scenario._service_create.called)
-        scenario._get_service.assert_called_once_with(fake_service.id)
+            identity_service.get_service_by_name.assert_called_once_with(
+                service_name)
+            self.assertFalse(identity_service.create_service.called)
+            identity_service.get_service.assert_called_once_with(
+                identity_service.get_service_by_name.return_value.id)
 
     def test_create_and_delete_service(self):
+        identity_service = self.mock_identity.return_value
         scenario = basic.CreateAndDeleteService(self.context)
+
         service_type = "test_service_type"
         description = "test_description"
-        fake_service = mock.MagicMock()
-        scenario._service_create = mock.MagicMock(return_value=fake_service)
-        scenario._delete_service = mock.MagicMock()
+        fake_service = identity_service.create_service.return_value
+
         scenario.run(service_type=service_type, description=description)
-        scenario._service_create.assert_called_once_with(service_type,
-                                                         description)
-        scenario._delete_service.assert_called_once_with(fake_service.id)
+
+        identity_service.create_service.assert_called_once_with(
+            service_type=service_type, description=description)
+        identity_service.delete_service.assert_called_once_with(
+            fake_service.id)
 
     def test_create_update_and_delete_tenant(self):
+        identity_service = self.mock_identity.return_value
+
         scenario = basic.CreateUpdateAndDeleteTenant(self.context)
-        fake_tenant = mock.MagicMock()
-        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
-        scenario._update_tenant = mock.MagicMock()
-        scenario._resource_delete = mock.MagicMock()
+
+        gen_name = mock.MagicMock()
+        basic.CreateUpdateAndDeleteTenant.generate_random_name = gen_name
+        fake_project = identity_service.create_project.return_value
+
         scenario.run()
-        scenario._update_tenant.assert_called_once_with(fake_tenant)
-        scenario._resource_delete.assert_called_once_with(fake_tenant)
+
+        identity_service.create_project.assert_called_once_with()
+        identity_service.update_project.assert_called_once_with(
+            fake_project.id, description=gen_name.return_value,
+            name=gen_name.return_value)
+        identity_service.delete_project(fake_project.id)
 
     def test_create_user_update_password(self):
+        identity_service = self.mock_identity.return_value
+
         scenario = basic.CreateUserUpdatePassword(self.context)
+
         fake_password = "pswd"
-        fake_user = mock.MagicMock()
-        scenario._user_create = mock.MagicMock(return_value=fake_user)
+        fake_user = identity_service.create_user.return_value
         scenario.generate_random_name = mock.MagicMock(
             return_value=fake_password)
-        scenario._update_user_password = mock.MagicMock()
 
         scenario.run()
+
         scenario.generate_random_name.assert_called_once_with()
-        scenario._user_create.assert_called_once_with()
-        scenario._update_user_password.assert_called_once_with(fake_user.id,
-                                                               fake_password)
+        identity_service.create_user.assert_called_once_with()
+        identity_service.update_user.assert_called_once_with(
+            fake_user.id, password=fake_password)
 
     def test_create_and_list_services(self):
+        identity_service = self.mock_identity.return_value
+
         scenario = basic.CreateAndListServices(self.context)
         service_type = "test_service_type"
         description = "test_description"
-        fake_service = mock.MagicMock()
-        scenario._service_create = mock.MagicMock(return_value=fake_service)
-        scenario._list_services = mock.MagicMock()
+
         scenario.run(service_type=service_type, description=description)
-        scenario._service_create.assert_called_once_with(service_type,
-                                                         description)
-        scenario._list_services.assert_called_once_with()
+
+        identity_service.create_service.assert_called_once_with(
+            service_type=service_type, description=description)
+        identity_service.list_services.assert_called_once_with()
 
     def test_create_and_list_ec2credentials(self):
-        context = self.context
-        scenario = basic.CreateAndListEc2Credentials(context)
-        scenario._create_ec2credentials = mock.MagicMock()
-        scenario._list_ec2credentials = mock.MagicMock()
+        identity_service = self.mock_identity.return_value
+
+        scenario = basic.CreateAndListEc2Credentials(self.context)
+
         scenario.run()
-        scenario._create_ec2credentials.assert_called_once_with(
-            "fake_user_id", "fake_tenant_id")
-        scenario._list_ec2credentials.assert_called_with("fake_user_id")
+
+        identity_service.create_ec2credentials.assert_called_once_with(
+            self.context["user"]["id"],
+            project_id=self.context["tenant"]["id"])
+        identity_service.list_ec2credentials.assert_called_with(
+            self.context["user"]["id"])
 
     def test_create_and_delete_ec2credential(self):
-        fake_creds = mock.MagicMock()
-        context = self.context
-        scenario = basic.CreateAndDeleteEc2Credential(context)
-        scenario._create_ec2credentials = mock.MagicMock(
-            return_value=fake_creds)
-        scenario._delete_ec2credential = mock.MagicMock()
+        identity_service = self.mock_identity.return_value
+
+        fake_creds = identity_service.create_ec2credentials.return_value
+
+        scenario = basic.CreateAndDeleteEc2Credential(self.context)
+
         scenario.run()
-        scenario._create_ec2credentials.assert_called_once_with(
-            "fake_user_id", "fake_tenant_id")
-        scenario._delete_ec2credential.assert_called_once_with(
-            "fake_user_id", fake_creds.access)
+
+        identity_service.create_ec2credentials.assert_called_once_with(
+            self.context["user"]["id"],
+            project_id=self.context["tenant"]["id"])
+        identity_service.delete_ec2credential.assert_called_once_with(
+            self.context["user"]["id"], access=fake_creds.access)
 
     def test_add_and_remove_user_role(self):
         context = self.context

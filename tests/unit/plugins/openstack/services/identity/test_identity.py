@@ -1,4 +1,3 @@
-# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -41,6 +40,19 @@ class IdentityTestCase(test.TestCase):
         service._impl.create_project.assert_called_once_with(
             project_name, domain_name=domain_name)
 
+    def test_update_project(self):
+        service = self.get_service_with_fake_impl()
+
+        project_id = "id"
+        project_name = "name"
+        description = "descr"
+        enabled = False
+        service.update_project(project_id=project_id, name=project_name,
+                               description=description, enabled=enabled)
+        service._impl.update_project.assert_called_once_with(
+            project_id, name=project_name, description=description,
+            enabled=enabled)
+
     def test_delete_project(self):
         service = self.get_service_with_fake_impl()
         project = "id"
@@ -52,21 +64,37 @@ class IdentityTestCase(test.TestCase):
         service.list_projects()
         service._impl.list_projects.assert_called_once_with()
 
+    def test_get_project(self):
+        service = self.get_service_with_fake_impl()
+        project = "id"
+        service.get_project(project)
+        service._impl.get_project.assert_called_once_with(project)
+
     def test_create_user(self):
         service = self.get_service_with_fake_impl()
 
         username = "username"
         password = "password"
-        email = "email"
         project_id = "project_id"
         domain_name = "domain_name"
 
-        service.create_user(username=username, password=password, email=email,
+        service.create_user(username=username, password=password,
                             project_id=project_id, domain_name=domain_name)
         service._impl.create_user.assert_called_once_with(
-            username=username, password=password, email=email,
-            project_id=project_id, domain_name=domain_name,
-            default_role="member")
+            username=username, password=password, project_id=project_id,
+            domain_name=domain_name, default_role="member")
+
+    def test_create_users(self):
+        service = self.get_service_with_fake_impl()
+
+        project_id = "project_id"
+        n = 3
+        user_create_args = {}
+
+        service.create_users(project_id, number_of_users=n,
+                             user_create_args=user_create_args)
+        service._impl.create_users.assert_called_once_with(
+            project_id, number_of_users=n, user_create_args=user_create_args)
 
     def test_delete_user(self):
         service = self.get_service_with_fake_impl()
@@ -79,6 +107,38 @@ class IdentityTestCase(test.TestCase):
         service.list_users()
         service._impl.list_users.assert_called_once_with()
 
+    def test_update_user(self):
+        service = self.get_service_with_fake_impl()
+
+        user_id = "id"
+        user_name = "name"
+        email = "mail"
+        password = "pass"
+        enabled = False
+        service.update_user(user_id, name=user_name, password=password,
+                            email=email, enabled=enabled)
+        service._impl.update_user.assert_called_once_with(
+            user_id, name=user_name, password=password, email=email,
+            enabled=enabled)
+
+    def test_get_user(self):
+        service = self.get_service_with_fake_impl()
+        user = "id"
+        service.get_user(user)
+        service._impl.get_user.assert_called_once_with(user)
+
+    def test_create_service(self):
+        service = self.get_service_with_fake_impl()
+
+        service_name = "name"
+        service_type = "service_type"
+        description = "descr"
+        service.create_service(service_name, service_type=service_type,
+                               description=description)
+        service._impl.create_service.assert_called_once_with(
+            name=service_name, service_type=service_type,
+            description=description)
+
     def test_delete_service(self):
         service = self.get_service_with_fake_impl()
         service_id = "id"
@@ -90,6 +150,18 @@ class IdentityTestCase(test.TestCase):
         service = self.get_service_with_fake_impl()
         service.list_services()
         service._impl.list_services.assert_called_once_with()
+
+    def test_get_service(self):
+        service = self.get_service_with_fake_impl()
+        service_id = "id"
+        service.get_service(service_id)
+        service._impl.get_service.assert_called_once_with(service_id)
+
+    def test_get_service_by_name(self):
+        service = self.get_service_with_fake_impl()
+        service_name = "name"
+        service.get_service_by_name(service_name)
+        service._impl.get_service_by_name.assert_called_once_with(service_name)
 
     def test_create_role(self):
         service = self.get_service_with_fake_impl()
@@ -144,26 +216,42 @@ class IdentityTestCase(test.TestCase):
         service.get_role(role)
         service._impl.get_role.assert_called_once_with(role)
 
-    def test__unify_service(self):
-        class SomeFakeService(object):
-            id = 123123123123123
-            name = "asdfasdfasdfasdfadf"
-            other_var = "asdfasdfasdfasdfasdfasdfasdf"
+    def test_create_ec2credentials(self):
+        service = self.get_service_with_fake_impl()
 
-        service = self.get_service_with_fake_impl()._unify_service(
-            SomeFakeService())
-        self.assertIsInstance(service, identity.Service)
-        self.assertEqual(SomeFakeService.id, service.id)
-        self.assertEqual(SomeFakeService.name, service.name)
+        user_id = "id"
+        project_id = "project-id"
 
-    def test__unify_role(self):
-        class SomeFakeRole(object):
-            id = 123123123123123
-            name = "asdfasdfasdfasdfadf"
-            other_var = "asdfasdfasdfasdfasdfasdfasdf"
+        service.create_ec2credentials(user_id=user_id, project_id=project_id)
+        service._impl.create_ec2credentials.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
 
-        role = self.get_service_with_fake_impl()._unify_role(
-            SomeFakeRole())
-        self.assertIsInstance(role, identity.Role)
-        self.assertEqual(SomeFakeRole.id, role.id)
-        self.assertEqual(SomeFakeRole.name, role.name)
+    def test_list_ec2credentials(self):
+        service = self.get_service_with_fake_impl()
+
+        user_id = "id"
+
+        service.list_ec2credentials(user_id=user_id)
+        service._impl.list_ec2credentials.assert_called_once_with(user_id)
+
+    def test_delete_ec2credential(self):
+        service = self.get_service_with_fake_impl()
+
+        user_id = "id"
+        access = "access"
+
+        service.delete_ec2credential(user_id=user_id, access=access)
+        service._impl.delete_ec2credential.assert_called_once_with(
+            user_id=user_id, access=access)
+
+    def test_fetch_token(self):
+        service = self.get_service_with_fake_impl()
+        service.fetch_token()
+        service._impl.fetch_token.assert_called_once_with()
+
+    def test_validate_token(self):
+        service = self.get_service_with_fake_impl()
+
+        token = "id"
+        service.validate_token(token)
+        service._impl.validate_token.assert_called_once_with(token)
