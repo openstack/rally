@@ -18,7 +18,11 @@
 Step 7. Working with multiple OpenStack clouds
 ==============================================
 
-Rally is an awesome tool that allows you to work with multiple clouds and can itself deploy them. We already know how to work with :ref:`a single cloud <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`. Let us now register 2 clouds in Rally: the one that we have access to and the other that we know is registered with wrong credentials.
+Rally is an awesome tool that allows you to work with multiple clouds and can
+itself deploy them. We already know how to work with
+:ref:`a single cloud <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`.
+Let us now register 2 clouds in Rally: the one that we have access to and the
+other that we know is registered with wrong credentials.
 
 .. code-block:: console
 
@@ -56,7 +60,11 @@ Let us now list the deployments we have created:
     | 658b9bae-1f9c-4036-9400-9e71e88864fc | 2015-01-05 00:40:58.451435 | cloud-2    | deploy->finished | *      |
     +--------------------------------------+----------------------------+------------+------------------+--------+
 
-Note that the second is marked as **"active"** because this is the deployment we have created most recently. This means that it will be automatically (unless its UUID or name is passed explicitly via the *--deployment* parameter) used by the commands that need a deployment, like *rally task start ...* or *rally deployment check*:
+Note that the second is marked as **"active"** because this is the deployment
+we have created most recently. This means that it will be automatically (unless
+its UUID or name is passed explicitly via the *--deployment* parameter) used by
+the commands that need a deployment, like *rally task start ...* or *rally
+deployment check*:
 
 .. code-block:: console
 
@@ -80,7 +88,8 @@ Note that the second is marked as **"active"** because this is the deployment we
     | s3       | s3             | Available |
     +----------+----------------+-----------+
 
-You can also switch the active deployment using the **rally deployment use** command:
+You can also switch the active deployment using the **rally deployment use**
+command:
 
 .. code-block:: console
 
@@ -106,9 +115,15 @@ You can also switch the active deployment using the **rally deployment use** com
     | s3       | s3             | Available |
     +----------+----------------+-----------+
 
-Note the first two lines of the CLI output for the *rally deployment use* command. They tell you the UUID of the new active deployment and also say that the *~/.rally/openrc* file was updated -- this is the place where the "active" UUID is actually stored by Rally.
+Note the first two lines of the CLI output for the *rally deployment use*
+command. They tell you the UUID of the new active deployment and also say that
+the *~/.rally/openrc* file was updated -- this is the place where the "active"
+UUID is actually stored by Rally.
 
-One last detail about managing different deployments in Rally is that the *rally task list* command outputs only those tasks that were run against the currently active deployment, and you have to provide the *--all-deployments* parameter to list all the tasks:
+One last detail about managing different deployments in Rally is that the
+*rally task list* command outputs only those tasks that were run against the
+currently active deployment, and you have to provide the *--all-deployments*
+parameter to list all the tasks:
 
 .. code-block:: console
 

@@ -24,7 +24,11 @@ Step 5. Rally task templates
 Basic template syntax
 ---------------------
 
-A nice feature of the input task format used in Rally is that it supports the **template syntax** based on `Jinja2 <https://pypi.python.org/pypi/Jinja2>`_. This turns out to be extremely useful when, say, you have a fixed structure of your task but you want to parameterize this task in some way. For example, imagine your input task file (*task.yaml*) runs a set of Nova scenarios:
+A nice feature of the input task format used in Rally is that it supports the
+**template syntax** based on `Jinja2`_. This turns out to be extremely useful
+when, say, you have a fixed structure of your task but you want to parameterize
+this task in some way. For example, imagine your input task file (*task.yaml*)
+runs a set of Nova scenarios:
 
 .. code-block:: yaml
 
@@ -63,7 +67,12 @@ A nice feature of the input task format used in Rally is that it supports the **
               tenants: 1
               users_per_tenant: 1
 
-In both scenarios above, the *"^cirros.*uec$"* image is passed to the scenario as an argument (so that these scenarios use an appropriate image while booting servers). Let’s say you want to run the same set of scenarios with the same runner/context/sla, but you want to try another image while booting server to compare the performance. The most elegant solution is then to turn the image name into a template variable:
+In both scenarios above, the *"^cirros.*uec$"* image is passed to the scenario
+as an argument (so that these scenarios use an appropriate image while booting
+servers). Let’s say you want to run the same set of scenarios with the same
+runner/context/sla, but you want to try another image while booting server to
+compare the performance. The most elegant solution is then to turn the image
+name into a template variable:
 
 .. code-block:: yaml
 
@@ -102,10 +111,13 @@ In both scenarios above, the *"^cirros.*uec$"* image is passed to the scenario a
               tenants: 1
               users_per_tenant: 1
 
-and then pass the argument value for **{{image_name}}** when starting a task with this configuration file. Rally provides you with different ways to do that:
+and then pass the argument value for **{{image_name}}** when starting a task
+with this configuration file. Rally provides you with different ways to do
+that:
 
 
-1. Pass the argument values directly in the command-line interface (with either a JSON or YAML dictionary):
+1. Pass the argument values directly in the command-line interface (with either
+a JSON or YAML dictionary):
 
 .. code-block:: bash
 
@@ -136,7 +148,8 @@ where the files containing argument values should look as follows:
     ---
       image_name: "^cirros.*uec$"
 
-Passed in either way, these parameter values will be substituted by Rally when starting a task:
+Passed in either way, these parameter values will be substituted by Rally when
+starting a task:
 
 .. code-block:: console
 
@@ -192,7 +205,10 @@ Passed in either way, these parameter values will be substituted by Rally when s
 Using the default values
 ------------------------
 
-Note that the Jinja2 template syntax allows you to set the default values for your parameters. With default values set, your task file will work even if you don't parameterize it explicitly while starting a task. The default values should be set using the *{% set ... %}* clause (*task.yaml*):
+Note that the ``Jinja2`` template syntax allows you to set the default values
+for your parameters. With default values set, your task file will work even if
+you don't parameterize it explicitly while starting a task. The default values
+should be set using the *{% set ... %}* clause (*task.yaml*):
 
 .. code-block:: yaml
 
@@ -217,7 +233,8 @@ Note that the Jinja2 template syntax allows you to set the default values for yo
 
         ...
 
-If you don't pass the value for *{{image_name}}* while starting a task, the default one will be used:
+If you don't pass the value for *{{image_name}}* while starting a task, the
+default one will be used:
 
 .. code-block:: console
 
@@ -251,9 +268,13 @@ If you don't pass the value for *{{image_name}}* while starting a task, the defa
 Advanced templates
 ------------------
 
-Rally makes it possible to use all the power of Jinja2 template syntax, including the mechanism of **built-in functions**. This enables you to construct elegant task files capable of generating complex load on your cloud.
+Rally makes it possible to use all the power of ``Jinja2`` template syntax,
+including the mechanism of **built-in functions**. This enables you to
+construct elegant task files capable of generating complex load on your cloud.
 
-As an example, let us make up a task file that will create new users with increasing concurrency. The input task file (*task.yaml*) below uses the Jinja2 **for-endfor** construct to accomplish that:
+As an example, let us make up a task file that will create new users with
+increasing concurrency. The input task file (*task.yaml*) below uses the
+``Jinja2`` **for-endfor** construct to accomplish that:
 
 
 .. code-block:: yaml
@@ -273,7 +294,9 @@ As an example, let us make up a task file that will create new users with increa
       {% endfor %}
 
 
-In this case, you don’t need to pass any arguments via *--task-args/--task-args-file*, but as soon as you start this task, Rally will automatically unfold the for-loop for you:
+In this case, you don’t need to pass any arguments via
+*--task-args/--task-args-file*, but as soon as you start this task, Rally will
+automatically unfold the for-loop for you:
 
 .. code-block:: console
 
@@ -344,4 +367,12 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
 
     Benchmarking... This can take a while...
 
-As you can see, the Rally task template syntax is a simple but powerful mechanism that not only enables you to write elegant task configurations, but also makes them more readable for other people. When used appropriately, it can really improve the understanding of your benchmarking procedures in Rally when shared with others.
+As you can see, the Rally task template syntax is a simple but powerful
+mechanism that not only enables you to write elegant task configurations, but
+also makes them more readable for other people. When used appropriately, it can
+really improve the understanding of your benchmarking procedures in Rally when
+shared with others.
+
+.. references:
+
+.. _Jinja2: https://pypi.python.org/pypi/Jinja2

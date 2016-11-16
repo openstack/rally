@@ -15,31 +15,42 @@
 
 .. _gates:
 
-Rally OS Gates
-==============
+Rally OpenStack Gates
+=====================
 
 Gate jobs
 ---------
 
-The **OpenStack CI system** uses the so-called **"Gate jobs"** to control merges of patched submitted for review on Gerrit. These **Gate jobs** usually just launch a set of tests -- unit, functional, integration, style -- that check that the proposed patch does not break the software and can be merged into the target branch, thus providing additional guarantees for the stability of the software.
+The **OpenStack CI system** uses the so-called **"Gate jobs"** to control
+merges of patches submitted for review on Gerrit. These **Gate jobs** usually
+just launch a set of tests -- unit, functional, integration, style -- that
+check that the proposed patch does not break the software and can be merged
+into the target branch, thus providing additional guarantees for the stability
+of the software.
 
 
 Create a custom Rally Gate job
 ------------------------------
 
-You can create a **Rally Gate job** for your project to run Rally benchmarks against the patchsets proposed to be merged into your project.
+You can create a **Rally Gate job** for your project to run Rally benchmarks
+against the patchsets proposed to be merged into your project.
 
-To create a rally-gate job, you should create a **rally-jobs/** directory at the root of your project.
+To create a rally-gate job, you should create a **rally-jobs/** directory at
+the root of your project.
 
-As a rule, this directory contains only **{projectname}.yaml**, but more scenarios and jobs can be added as well. This yaml file is in fact an input Rally task file specifying benchmark scenarios that should be run in your gate job.
+As a rule, this directory contains only **{projectname}.yaml**, but more
+scenarios and jobs can be added as well. This yaml file is in fact an input
+Rally task file specifying benchmark scenarios that should be run in your gate
+job.
 
-To make *{projectname}.yaml* run in gates, you need to add *"rally-jobs"* to the "jobs" section of *projects.yaml* in *openstack-infra/project-config*.
+To make *{projectname}.yaml* run in gates, you need to add *"rally-jobs"* to
+the "jobs" section of *projects.yaml* in *openstack-infra/project-config*.
 
 
 Example: Rally Gate job for Glance
 ----------------------------------
 
-Let's take a look at an example for the `Glance <https://wiki.openstack.org/wiki/Glance>`_ project:
+Let's take a look at an example for the `Glance`_ project:
 
 Edit *jenkins/jobs/projects.yaml:*
 
@@ -87,9 +98,11 @@ Also add *gate-rally-dsvm-{projectname}* to *zuul/layout.yaml*:
        - gate-grenade-dsvm-forward
 
 
-To add one more scenario and job, you need to add *{scenarioname}.yaml* file here, and *gate-rally-dsvm-{scenarioname}* to *projects.yaml*.
+To add one more scenario and job, you need to add *{scenarioname}.yaml* file
+here, and *gate-rally-dsvm-{scenarioname}* to *projects.yaml*.
 
-For example, you can add *myscenario.yaml* to *rally-jobs* directory in your project and then edit *jenkins/jobs/projects.yaml* in this way:
+For example, you can add *myscenario.yaml* to *rally-jobs* directory in your
+project and then edit *jenkins/jobs/projects.yaml* in this way:
 
 .. parsed-literal::
 
@@ -127,7 +140,10 @@ Finally, add *gate-rally-dsvm-myscenario* to *zuul/layout.yaml*:
        - gate-tempest-dsvm-neutron-large-ops
        **- gate-rally-dsvm-myscenario**
 
-It is also possible to arrange your input task files as templates based on jinja2. Say, you want to set the image names used throughout the *myscenario.yaml* task file as a variable parameter. Then, replace concrete image names in this file with a variable:
+It is also possible to arrange your input task files as templates based on
+``Jinja2``. Say, you want to set the image names used throughout the
+*myscenario.yaml* task file as a variable parameter. Then, replace concrete
+image names in this file with a variable:
 
 .. code-block:: yaml
 
@@ -147,7 +163,8 @@ It is also possible to arrange your input task files as templates based on jinja
               name: {{image_name}}
         ...
 
-and create a file named *myscenario_args.yaml* that will define the parameter values:
+and create a file named *myscenario_args.yaml* that will define the parameter
+values:
 
 .. code-block:: yaml
 
@@ -155,15 +172,21 @@ and create a file named *myscenario_args.yaml* that will define the parameter va
 
       image_name: "^cirros.*uec$"
 
-this file will be automatically used by Rally to substitute the variables in *myscenario.yaml*.
+this file will be automatically used by Rally to substitute the variables in
+*myscenario.yaml*.
 
 
 Plugins & Extras in Rally Gate jobs
 -----------------------------------
 
-Along with scenario configs in yaml, the **rally-jobs** directory can also contain two subdirectories:
+Along with scenario configs in yaml, the **rally-jobs** directory can also
+contain two subdirectories:
 
 - **plugins**: :ref:`Plugins <plugins>` needed for your gate job;
 - **extra**: auxiliary files like bash scripts or images.
 
 Both subdirectories will be copied to *~/.rally/* before the job gets started.
+
+.. references:
+
+.. _Glance: https://wiki.openstack.org/wiki/Glance

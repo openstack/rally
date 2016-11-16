@@ -18,7 +18,12 @@
 Step 9. Deploying OpenStack from Rally
 ======================================
 
-Along with supporting already existing OpenStack deployments, Rally itself can **deploy OpenStack automatically** by using one of its *deployment engines*. Take a look at other `deployment configuration file samples <https://github.com/openstack/rally/tree/master/samples/deployments>`_. For example, *devstack-in-existing-servers.json* is a deployment configuration file that tells Rally to deploy OpenStack with **Devstack** on the existing servers with given credentials:
+Along with supporting already existing OpenStack deployments, Rally itself can
+**deploy OpenStack automatically** by using one of its *deployment engines*.
+Take a look at other `deployment configuration file samples`_. For example,
+*devstack-in-existing-servers.json* is a deployment configuration file that
+tells Rally to deploy OpenStack with **Devstack** on the existing servers with
+given credentials:
 
 .. code-block:: json
 
@@ -30,7 +35,8 @@ Along with supporting already existing OpenStack deployments, Rally itself can *
         }
     }
 
-You can try to deploy OpenStack in your Virtual Machine using this script. Edit the configuration file with your IP address/user name and run, as usual:
+You can try to deploy OpenStack in your Virtual Machine using this script. Edit
+the configuration file with your IP address/user name and run, as usual:
 
 .. code-block:: console
 
@@ -41,3 +47,7 @@ You can try to deploy OpenStack in your Virtual Machine using this script. Edit 
    |     <Deployment UUID>     | 2015-01-10 22:00:28.270941 | new-devstack | deploy->finished |
    +---------------------------+----------------------------+--------------+------------------+
    Using deployment : <Deployment UUID>
+
+.. references:
+
+.. _deployment configuration file samples: https://github.com/openstack/rally/tree/master/samples/deployments

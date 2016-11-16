@@ -27,8 +27,8 @@ Basic input task syntax
 Rally comes with a really great collection of
 :ref:`plugins <tutorial_step_8_discovering_more_plugins>` and in most
 real-world cases you will use multiple plugins to test your OpenStack cloud.
-Rally makes it very easy to run **different test cases defined in a single task**.
-To do so, use the following syntax:
+Rally makes it very easy to run **different test cases defined in a single
+task**. To do so, use the following syntax:
 
 .. code-block:: json
 
@@ -51,7 +51,13 @@ where *<benchmark_config>*, as before, is a dictionary:
 Multiple benchmarks in a single task
 ------------------------------------
 
-As an example, let's edit our configuration file from :ref:`step 1 <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>` so that it prescribes Rally to launch not only the **NovaServers.boot_and_delete_server** scenario, but also the **KeystoneBasic.create_delete_user** scenario. All we have to do is to append the configuration of the second scenario as yet another top-level key of our json file:
+As an example, let's edit our configuration file from
+:ref:`step 1 <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
+so that it prescribes Rally to launch not only the
+**NovaServers.boot_and_delete_server** scenario, but also the
+**KeystoneBasic.create_delete_user** scenario. All we have to do is to append
+the configuration of the second scenario as yet another top-level key of our
+JSON file:
 
 *multiple-scenarios.json*
 
@@ -125,20 +131,30 @@ Now you can start this benchmark task as usually:
 
     ...
 
-Note that the HTML reports you can generate by typing **rally task report --out=report_name.html** after your benchmark task has completed will get richer as your benchmark task configuration file includes more benchmark scenarios. Let's take a look at the report overview page for a task that covers all the scenarios available in Rally:
+Note that the HTML reports you can generate by typing **rally task report
+--out=report_name.html** after your benchmark task has completed will get
+richer as your benchmark task configuration file includes more benchmark
+scenarios. Let's take a look at the report overview page for a task that covers
+all the scenarios available in Rally:
 
 .. code-block:: bash
 
    rally task report --out=report_multiple_scenarios.html --open
 
-.. image:: ../images/Report-Multiple-Overview.png
+.. image:: ../../images/Report-Multiple-Overview.png
    :align: center
 
 
 Multiple configurations of the same scenario
 --------------------------------------------
 
-Yet another thing you can do in Rally is to launch **the same benchmark scenario multiple times with different configurations**. That's why our configuration file stores a list for the key *"NovaServers.boot_and_delete_server"*: you can just append a different configuration of this benchmark scenario to this list to get it. Let's say, you want to run the **boot_and_delete_server** scenario twice: first using the *"m1.tiny"* flavor and then using the *"m1.small"* flavor:
+Yet another thing you can do in Rally is to launch **the same benchmark
+scenario multiple times with different configurations**. That's why our
+configuration file stores a list for the key
+*"NovaServers.boot_and_delete_server"*: you can just append a different
+configuration of this benchmark scenario to this list to get it. Let's say,
+you want to run the **boot_and_delete_server** scenario twice: first using the
+*"m1.tiny"* flavor and then using the *"m1.small"* flavor:
 
 *multiple-configurations.json*
 
@@ -211,5 +227,5 @@ The HTML report will also look similar to what we have seen before:
 
    rally task report --out=report_multiple_configuraions.html --open
 
-.. image:: ../images/Report-Multiple-Configurations-Overview.png
+.. image:: ../../images/Report-Multiple-Configurations-Overview.png
    :align: center

@@ -29,9 +29,8 @@ different OpenStack projects like **Keystone**, **Nova**, **Cinder**,
 **Glance** and so on. The good news is that you can combine multiple plugins
 in one task to test your cloud in a comprehensive way.
 
-First, let's see what plugins are available in Rally.
-One of the ways to discover these plugins is just to inspect their
-`source code <https://github.com/openstack/rally/tree/master/rally/plugins/>`_.
+First, let's see what plugins are available in Rally. One of the ways to
+discover these plugins is just to inspect their `source code`_.
 another is to use build-in rally plugin command.
 
 CLI: rally plugin show
@@ -110,3 +109,7 @@ This command can be used to list filtered by name list of plugins.
     | KeystoneBasic.create_user_update_password        | default   | Create user and update password for that user.                  |
     | KeystoneBasic.get_entities                       | default   | Get instance of a tenant, user, role and service by id's.       |
     +--------------------------------------------------+-----------+-----------------------------------------------------------------+
+
+.. references:
+
+.. _source code: https://github.com/openstack/rally/tree/master/rally/plugins/

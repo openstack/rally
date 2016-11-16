@@ -38,13 +38,12 @@ Contents
 
    overview/index
    install_and_upgrade/index
-   tutorial
+   quick_start/index
    cli/cli_reference
    reports
    plugins
    plugin/plugin_reference
    contribute
-   gates
    feature_requests
    project_info
    release_notes

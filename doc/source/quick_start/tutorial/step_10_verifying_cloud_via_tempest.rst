@@ -21,9 +21,9 @@ Step 10. Verifying cloud via Tempest
 .. contents::
    :local:
 
-In this guide, we show how to use Tempest and Rally together.
-We assume that you have a :ref:`Rally installation <tutorial_step_0_installation>`
-and have already :ref:`registered an OpenStack deployment <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
+In this guide, we show how to use Tempest and Rally together. We assume that
+you have a :ref:`Rally installation <tutorial_step_0_installation>` and have
+:ref:`registered an OpenStack deployment <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`
 in Rally. So, let's get started!
 
 
@@ -53,7 +53,8 @@ The command clones Tempest from the
 a Python virtual environment for the current deployment by default. The
 arguments below allow these default behaviors to be overridden.
 
-Use the **--deployment** argument to specify any deployment registered in Rally.
+Use the **--deployment** argument to specify any deployment registered in
+Rally.
 
 .. code-block:: console
 
@@ -154,9 +155,9 @@ Use the **--version** argument to specify a Tempest commit ID or tag.
     2016-05-09 13:50:42.903 23870 INFO rally.verification.tempest.tempest [-] Installing the virtual environment for Tempest.
     2016-05-09 13:50:55.827 23870 INFO rally.verification.tempest.tempest [-] Tempest has been successfully installed!
 
-Use the **--system-wide** argument to install Tempest in the system Python path.
-In this case, it is assumed that all Tempest requirements are already installed
-in the local environment.
+Use the **--system-wide** argument to install Tempest in the system Python
+path. In this case, it is assumed that all Tempest requirements are already
+installed in the local environment.
 
 .. code-block:: console
 
@@ -795,7 +796,7 @@ a verification report we tell you bellow.
         Details: {u'message': u'Cannot add host node-2.domain.tld in aggregate 450: host exists', u'code': 409}
         ...
 
-.. image:: ../images/Report-verify-xfail.png
+.. image:: ../../images/Report-verify-xfail.png
    :align: center
 
 Finally, users can specify the **--system-wide** argument that will tell Rally

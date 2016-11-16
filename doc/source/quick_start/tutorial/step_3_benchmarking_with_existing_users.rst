@@ -24,17 +24,29 @@ Step 3. Benchmarking OpenStack with existing users
 Motivation
 ----------
 
-There are two very important reasons from the production world of why it is preferable to use some already existing users to benchmark your OpenStack cloud:
+There are two very important reasons from the production world of why it is
+preferable to use some already existing users to benchmark your OpenStack
+cloud:
 
-1. *Read-only Keystone Backends:* creating temporary users for benchmark scenarios in Rally is just impossible in case of r/o Keystone backends like *LDAP* and *AD*.
+1. *Read-only Keystone Backends:* creating temporary users for benchmark
+scenarios in Rally is just impossible in case of r/o Keystone backends like
+*LDAP* and *AD*.
 
-2. *Safety:* Rally can be run from an isolated group of users, and if something goes wrong, this won’t affect the rest of the cloud users.
+2. *Safety:* Rally can be run from an isolated group of users, and if something
+goes wrong, this won’t affect the rest of the cloud users.
 
 
 Registering existing users in Rally
 -----------------------------------
 
-The information about existing users in your OpenStack cloud should be passed to Rally at the :ref:`deployment initialization step <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`. You have to use the **ExistingCloud** deployment plugin that just provides Rally with credentials of an already existing cloud. The difference from the deployment configuration we've seen previously is that you should set up the *"users"* section with the credentials of already existing users. Let's call this deployment configuration file *existing_users.json*:
+The information about existing users in your OpenStack cloud should be passed
+to Rally at the
+:ref:`deployment initialization step <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`.
+You have to use the **ExistingCloud** deployment plugin that just provides
+Rally with credentials of an already existing cloud. The difference from the
+deployment configuration we've seen previously is that you should set up the
+*"users"* section with the credentials of already existing users. Let's call
+this deployment configuration file *existing_users.json*:
 
 .. code-block:: json
 
@@ -62,7 +74,11 @@ The information about existing users in your OpenStack cloud should be passed to
         ]
     }
 
-This deployment configuration requires some basic information about the OpenStack cloud like the region name, auth url. admin user credentials, and any amount of users already existing in the system. Rally will use their credentials to generate load in against this deployment as soon as we register it as usual:
+This deployment configuration requires some basic information about the
+OpenStack cloud like the region name, auth url. admin user credentials, and any
+amount of users already existing in the system. Rally will use their
+credentials to generate load in against this deployment as soon as we register
+it as usual:
 
 .. code-block:: console
 
@@ -76,7 +92,8 @@ This deployment configuration requires some basic information about the OpenStac
     ~/.rally/openrc was updated
 
 
-After that, the **rally show** command lists the resources for each user separately:
+After that, the **rally show** command lists the resources for each user
+separately:
 
 .. code-block:: console
 
@@ -112,13 +129,18 @@ After that, the **rally show** command lists the resources for each user separat
     | d82eaf7a-ff63-4826-9aa7-5fa105610e01 | cirros-0.3.4-x86_64-uec-kernel  | 4979632   |
     +--------------------------------------+---------------------------------+-----------+
 
-With this new deployment being active, Rally will use the already existing users *"b1"* and *"b2"* instead of creating the temporary ones when launching benchmark task that do not specify the *"users"* context.
+With this new deployment being active, Rally will use the already existing
+users *"b1"* and *"b2"* instead of creating the temporary ones when launching
+benchmark task that do not specify the *"users"* context.
 
 
 Running benchmark scenarios with existing users
 -----------------------------------------------
 
-After you have registered a deployment with existing users, don't forget to remove the *"users"* context from your benchmark task configuration if you want to use existing users, like in the following configuration file (*boot-and-delete.json*):
+After you have registered a deployment with existing users, don't forget to
+remove the *"users"* context from your benchmark task configuration if you want
+to use existing users, like in the following configuration file
+(*boot-and-delete.json*):
 
 
 .. code-block:: json
@@ -145,13 +167,14 @@ After you have registered a deployment with existing users, don't forget to remo
         ]
     }
 
-When you start this task, it will use the existing users *"b1"* and *"b2"* instead of creating the temporary ones:
+When you start this task, it will use the existing users *"b1"* and *"b2"*
+instead of creating the temporary ones:
 
 .. code-block:: bash
 
     rally task start samples/tasks/scenarios/nova/boot-and-delete.json
 
-It goes without saying that support of benchmarking with predefined users simplifies the usage of Rally for generating loads against production clouds.
-
+It goes without saying that support of benchmarking with predefined users
+simplifies the usage of Rally for generating loads against production clouds.
 
 (based on: http://boris-42.me/rally-can-generate-load-with-passed-users-now/)
