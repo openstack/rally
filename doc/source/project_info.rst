@@ -130,6 +130,8 @@ Useful links
 - `Patches on review <https://review.openstack.org/#/q/status:open+rally,n,z>`_
 - `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2016/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
 - `IRC logs <http://irclog.perlgeek.de/openstack-rally>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
+- `Gitter chat <https://gitter.im/rally-dev/Lobby>`_
+- `Trello board <https://trello.com/b/DoD8aeZy/rally>`_
 
 
 Where can I discuss and propose changes?

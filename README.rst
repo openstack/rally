@@ -76,4 +76,5 @@ Links
 * Step-by-step tutorial: http://rally.readthedocs.org/en/latest/tutorial.html
 * RoadMap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g
 * Launchpad page: https://launchpad.net/rally
-
+* Gitter chat: https://gitter.im/rally-dev/Lobby
+* Trello board: https://trello.com/b/DoD8aeZy/rally
