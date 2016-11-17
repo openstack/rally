@@ -24,8 +24,8 @@ Rally Plugin Reference
 
 Rally has a plugin oriented architecture - in other words Rally team is trying
 to make all places of code pluggable. Such architecture leads to the big amount
-of plugins. :ref:`Rally Plugins Reference page <plugin_reference>` contains a
-full list with detailed descriptions of all official Rally plugins.
+of plugins. :ref:`Rally Plugins Reference page <plugin_reference>` contains
+a full list with detailed descriptions of all official Rally plugins.
 
 
 How plugins work
@@ -34,17 +34,17 @@ How plugins work
 Rally provides an opportunity to create and use a **custom benchmark
 scenario, runner, SLA, deployment or context** as a **plugin**:
 
-.. image:: ./images/Rally-Plugins.png
+.. image:: ../images/Rally-Plugins.png
    :align: center
 
 Placement
 ---------
 
 Plugins can be quickly written and used, with no need to contribute
-them to the actual Rally code. Just place a python module with your
+them to the actual Rally code. Just place a Python module with your
 plugin class into the ``/opt/rally/plugins`` or ``~/.rally/plugins``
 directory (or its subdirectories), and it will be
-autoloaded. Additional paths can be specified with the
+automatically loaded. Additional paths can be specified with the
 ``--plugin-paths`` argument, or with the ``RALLY_PLUGIN_PATHS``
 environment variable, both of which accept comma-delimited
 lists. Both ``--plugin-paths`` and ``RALLY_PLUGIN_PATHS`` can list
@@ -80,4 +80,4 @@ with ``rally.task.scenario.configure``
    :glob:
    :maxdepth: 1
 
-   plugins/**
+   implementation/**
