@@ -40,7 +40,8 @@ Contents
    install_and_upgrade/index
    quick_start/index
    cli/cli_reference
-   reports
+   components/task
+   components/verification
    plugins
    plugin/plugin_reference
    contribute
