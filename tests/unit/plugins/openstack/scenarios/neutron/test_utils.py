@@ -729,6 +729,17 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_security_groups")
 
+    def test_show_security_group(self):
+        security_group = {"security_group": {"id": "fake-id"}}
+        result = self.scenario._show_security_group(security_group)
+        self.assertEqual(
+            result,
+            self.clients("neutron").show_security_group.return_value)
+        self.clients("neutron").show_security_group.assert_called_once_with(
+            security_group["security_group"]["id"])
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.show_security_group")
+
     def test_delete_security_group(self):
         security_group = {"security_group": {"id": "fake-id"}}
         self.scenario._delete_security_group(security_group)

@@ -624,6 +624,17 @@ class NeutronScenario(scenario.OpenStackScenario):
         """Return list of Neutron security groups."""
         return self.clients("neutron").list_security_groups(**kwargs)
 
+    @atomic.action_timer("neutron.show_security_group")
+    def _show_security_group(self, security_group, **kwargs):
+        """Show security group details.
+
+        :param: security_group: dict, neutron security_group
+        :param: kwargs: Optional additional arguments for security_group show
+        :returns: security_group details
+        """
+        return self.clients("neutron").show_security_group(
+            security_group["security_group"]["id"], **kwargs)
+
     @atomic.action_timer("neutron.update_security_group")
     def _update_security_group(self, security_group,
                                **security_group_update_args):

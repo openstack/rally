@@ -153,6 +153,25 @@
         failure_rate:
           max: 20
 
+  NeutronSecurityGroup.create_and_show_security_group:
+    -
+      args:
+        security_group_create_args: {}
+      runner:
+        type: "constant"
+        times: {{smoke or 20 }}
+        concurrency: {{smoke or 10}}
+      context:
+        users:
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+            security_group: -1
+      sla:
+        failure_rate:
+          max: 20
+
   NeutronSecurityGroup.create_and_delete_security_groups:
     -
       args:

@@ -1,0 +1,19 @@
+---
+  NeutronSecurityGroup.create_and_show_security_group:
+    -
+      args:
+        security_group_create_args: {}
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 3
+        quotas:
+          neutron:
+            security_group: -1
+      sla:
+        failure_rate:
+          max: 0

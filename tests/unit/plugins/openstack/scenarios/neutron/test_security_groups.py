@@ -13,6 +13,7 @@
 import ddt
 import mock
 
+from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.neutron import security_groups
 from tests.unit import test
 
@@ -37,6 +38,48 @@ class NeutronSecurityGroup(test.TestCase):
         scenario._create_security_group.assert_called_once_with(
             **security_group_data)
         scenario._list_security_groups.assert_called_once_with()
+
+    @ddt.data(
+        {},
+        {"security_group_create_args": {}},
+        {"security_group_create_args": {"description": "fake-description"}},
+    )
+    @ddt.unpack
+    def test_create_and_show_security_group(
+            self, security_group_create_args=None):
+        scenario = security_groups.CreateAndShowSecurityGroup()
+        security_group = mock.Mock()
+        security_group_data = security_group_create_args or {}
+        scenario._create_security_group = mock.Mock()
+        scenario._show_security_group = mock.Mock()
+
+        # Positive case
+        scenario._create_security_group.return_value = security_group
+        scenario.run(security_group_create_args=security_group_create_args)
+        scenario._create_security_group.assert_called_once_with(
+            **security_group_data)
+        scenario._show_security_group.assert_called_once_with(
+            scenario._create_security_group.return_value)
+
+    @ddt.data(
+        {},
+        {"security_group_create_args": {}},
+        {"security_group_create_args": {"description": "fake-description"}},
+    )
+    @ddt.unpack
+    def test_create_and_show_security_group_with_none_group(
+            self, security_group_create_args=None):
+        scenario = security_groups.CreateAndShowSecurityGroup()
+        security_group_data = security_group_create_args or {}
+        scenario._create_security_group = mock.Mock()
+        scenario._show_security_group = mock.Mock()
+
+        # Negative case: security_group isn't created
+        scenario._create_security_group.return_value = None
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run, security_group_create_args)
+        scenario._create_security_group.assert_called_with(
+            **security_group_data)
 
     @ddt.data(
         {},

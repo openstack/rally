@@ -44,6 +44,31 @@ class CreateAndListSecurityGroups(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name=("NeutronSecurityGroup"
+                          ".create_and_show_security_group"))
+class CreateAndShowSecurityGroup(utils.NeutronScenario):
+
+    def run(self, security_group_create_args=None):
+        """Create and show Neutron security-group.
+
+        Measure the "neutron security-group-create" and "neutron
+        security-group-show" command performance.
+
+        :param security_group_create_args: dict, POST /v2.0/security-groups
+                                           request options
+        """
+        security_group_create_args = security_group_create_args or {}
+        security_group = self._create_security_group(
+            **security_group_create_args)
+        msg = "security_group isn't created"
+        self.assertTrue(security_group, err_msg=msg)
+
+        self._show_security_group(security_group)
+
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name=("NeutronSecurityGroup"
                           ".create_and_delete_security_groups"))
 class CreateAndDeleteSecurityGroups(utils.NeutronScenario):
 
