@@ -382,9 +382,12 @@ class Heat(OSClient):
         """Return heat client."""
         from heatclient import client as heat
 
-        client = heat.Client(self.choose_version(version),
-                             session=self.keystone.get_session()[0],
-                             endpoint=self._get_endpoint(service_type))
+        client = heat.Client(
+            self.choose_version(version),
+            session=self.keystone.get_session()[0],
+            # Remove endpoint once requirement is python-heatclient>=1.6
+            endpoint=self._get_endpoint(service_type),
+            endpoint_override=self._get_endpoint(service_type))
         return client
 
 
