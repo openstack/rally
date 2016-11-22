@@ -17,11 +17,13 @@
 
 import json
 import pprint
+import uuid
 
 import alembic
 import mock
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils as db_utils
+from oslo_utils import timeutils
 import six
 import sqlalchemy as sa
 
@@ -454,7 +456,257 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             deployment_uuid = self._08e1515a576c_deployment_uuid
             conn.execute(
                 deployment_table.delete().where(
-                    deployment_table.c.uuid == deployment_uuid)
+                    deployment_table.c.uuid == deployment_uuid))
+
+    def _pre_upgrade_e654a0648db0(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        taskresult_table = db_utils.get_table(engine, "task_results")
+
+        self._e654a0648db0_task_uuid = str(uuid.uuid4())
+        self._e654a0648db0_deployment_uuid = str(uuid.uuid4())
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": self._e654a0648db0_deployment_uuid,
+                    "name": self._e654a0648db0_deployment_uuid,
+                    "config": "{}",
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": self._e654a0648db0_task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "verification_log": json.dumps({}),
+                    "tag": "test_tag",
+                    "deployment_uuid": self._e654a0648db0_deployment_uuid
+                }]
+            )
+
+            conn.execute(
+                taskresult_table.insert(), [
+                    {
+                        "task_uuid": self._e654a0648db0_task_uuid,
+                        "created_at": timeutils.utcnow(),
+                        "updated_at": timeutils.utcnow(),
+                        "key": json.dumps({
+                            "name": "test_scenario",
+                            "pos": 0,
+                            "kw": {
+                                "args": {"a": "A"},
+                                "runner": {"type": "theRunner"},
+                                "context": {"c": "C"},
+                                "sla": {"s": "S"}
+                            }
+                        }),
+                        "data": json.dumps({
+                            "raw": [
+                                {"error": "e", "duration": 3},
+                                {"duration": 1},
+                                {"duration": 8},
+                            ],
+                            "load_duration": 42,
+                            "full_duration": 142,
+                            "sla": [{"success": True}, {"success": False}]
+                        })
+                    }
+                ]
+            )
+
+    def _check_e654a0648db0(self, engine, data):
+        self.assertEqual(
+            "e654a0648db0", api.get_backend().schema_revision(engine=engine))
+
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+        workloaddata_table = db_utils.get_table(engine, "workloaddata")
+        tag_table = db_utils.get_table(engine, "tags")
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.connect() as conn:
+
+            # Check task
+
+            tasks_found = conn.execute(
+                task_table.select().
+                where(task_table.c.uuid == self._e654a0648db0_task_uuid)
+            ).fetchall()
+
+            self.assertEqual(len(tasks_found), 1)
+
+            task_found = tasks_found[0]
+            self.assertEqual(task_found.uuid, self._e654a0648db0_task_uuid)
+            self.assertEqual(task_found.deployment_uuid,
+                             self._e654a0648db0_deployment_uuid)
+            self.assertEqual(task_found.status, consts.TaskStatus.FINISHED)
+            # NOTE(ikhudoshyn): if for all workloads success == True
+            self.assertEqual(task_found.pass_sla, False)
+            # NOTE(ikhudoshyn): sum of all full_durations of all workloads
+            self.assertEqual(task_found.task_duration, 142)
+            # NOTE(ikhudoshyn): we have no info on validation duration in old
+            # schema
+            self.assertEqual(task_found.validation_duration, 0)
+            self.assertEqual(json.loads(task_found.validation_result), {})
+
+            # Check subtask
+
+            subtasks_found = conn.execute(
+                subtask_table.select().
+                where(subtask_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            ).fetchall()
+
+            self.assertEqual(len(subtasks_found), 1)
+
+            subtask_found = subtasks_found[0]
+            self.assertEqual(subtask_found.task_uuid,
+                             self._e654a0648db0_task_uuid)
+
+            # NOTE(ikhudoshyn): if for all workloads success == True
+            self.assertEqual(subtask_found.pass_sla, False)
+            # NOTE(ikhudoshyn): sum of all full_durations of all workloads
+            self.assertEqual(subtask_found.duration, 142)
+
+            self._e654a0648db0_subtask_uuid = subtask_found.uuid
+
+            # Check tag
+
+            tags_found = conn.execute(
+                tag_table.select().
+                where(tag_table.c.uuid == self._e654a0648db0_task_uuid)
+            ).fetchall()
+
+            self.assertEqual(len(tags_found), 1)
+            self.assertEqual(tags_found[0].tag, "test_tag")
+            self.assertEqual(tags_found[0].type, consts.TagType.TASK)
+
+            # Check workload
+
+            workloads_found = conn.execute(
+                workload_table.select().
+                where(workload_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            ).fetchall()
+
+            self.assertEqual(len(workloads_found), 1)
+
+            workload_found = workloads_found[0]
+
+            self.assertEqual(workload_found.task_uuid,
+                             self._e654a0648db0_task_uuid)
+
+            self.assertEqual(workload_found.subtask_uuid,
+                             self._e654a0648db0_subtask_uuid)
+
+            self.assertEqual(workload_found.name, "test_scenario")
+            self.assertEqual(workload_found.position, 0)
+            self.assertEqual(workload_found.runner_type, "theRunner")
+            self.assertEqual(workload_found.runner,
+                             json.dumps({"type": "theRunner"}))
+            self.assertEqual(workload_found.sla,
+                             json.dumps({"s": "S"}))
+            self.assertEqual(workload_found.args,
+                             json.dumps({"a": "A"}))
+            self.assertEqual(workload_found.context,
+                             json.dumps({"c": "C"}))
+            self.assertEqual(workload_found.sla_results,
+                             json.dumps({
+                                 "sla": [
+                                     {"success": True},
+                                     {"success": False}
+                                 ]
+                             }))
+            self.assertEqual(workload_found.context_execution,
+                             json.dumps({}))
+            self.assertEqual(workload_found.load_duration, 42)
+            self.assertEqual(workload_found.full_duration, 142)
+            self.assertEqual(workload_found.min_duration, 1)
+            self.assertEqual(workload_found.max_duration, 8)
+            self.assertEqual(workload_found.total_iteration_count, 3)
+            self.assertEqual(workload_found.failed_iteration_count, 1)
+            self.assertEqual(workload_found.pass_sla, False)
+
+            self._e654a0648db0_workload_uuid = workload_found.uuid
+
+            # Check workloadData
+
+            workloaddata_found = conn.execute(
+                workloaddata_table.select().
+                where(workloaddata_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            ).fetchall()
+
+            self.assertEqual(len(workloaddata_found), 1)
+
+            wloaddata_found = workloaddata_found[0]
+
+            self.assertEqual(wloaddata_found.task_uuid,
+                             self._e654a0648db0_task_uuid)
+
+            self.assertEqual(wloaddata_found.workload_uuid,
+                             self._e654a0648db0_workload_uuid)
+
+            self.assertEqual(wloaddata_found.chunk_order, 0)
+            self.assertEqual(wloaddata_found.chunk_size, 0)
+            self.assertEqual(wloaddata_found.compressed_chunk_size, 0)
+            self.assertEqual(wloaddata_found.iteration_count, 3)
+            self.assertEqual(wloaddata_found.failed_iteration_count, 1)
+            self.assertEqual(
+                wloaddata_found.chunk_data,
+                json.dumps(
+                    {
+                        "raw": [
+                            {"error": "e", "duration": 3},
+                            {"duration": 1},
+                            {"duration": 8},
+                        ]
+                    }
+                )
+            )
+
+            # Delete all stuff created at _pre_upgrade step
+
+            conn.execute(
+                tag_table.delete().
+                where(tag_table.c.uuid == self._e654a0648db0_task_uuid)
+            )
+
+            conn.execute(
+                workloaddata_table.delete().
+                where(workloaddata_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            )
+
+            conn.execute(
+                workload_table.delete().
+                where(workload_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            )
+            conn.execute(
+                subtask_table.delete().
+                where(subtask_table.c.task_uuid ==
+                      self._e654a0648db0_task_uuid)
+            )
+
+            conn.execute(
+                task_table.delete().
+                where(task_table.c.uuid == self._e654a0648db0_task_uuid)
+            )
+
+            conn.execute(
+                deployment_table.delete().
+                where(deployment_table.c.uuid ==
+                      self._e654a0648db0_deployment_uuid)
             )
 
     def _pre_upgrade_6ad4f426f005(self, engine):

@@ -30,7 +30,7 @@ from alembic import migration
 from alembic import script as alembic_script
 from oslo_config import cfg
 
-from rally.common.db.sqlalchemy import api as s_api
+import rally.common.db.sqlalchemy.api as s_api
 from rally.common.i18n import _LE
 from rally.common import logging
 

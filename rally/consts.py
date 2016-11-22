@@ -49,6 +49,19 @@ JSON_SCHEMA = "http://json-schema.org/draft-04/schema"
 
 
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
+    # TODO(ikhudoshyn): new statuses
+    # INIT = "init"
+    # VALIDATING = "validating"
+    # VALIDATED = "validated"
+    # VALIDATION_FAILED = "validation_failed"
+    # ABORTING = "aborting"
+    # SOFT_ABORTING = "soft_aborting"
+    # ABORTED = "aborted"
+    # CRASHED = "crashed"
+    # RUNNING = "running"
+    # FINISHED = "finished"
+
+    # TODO(ikhudoshyn): deprecated statuses
     INIT = "init"
     VERIFYING = "verifying"
     SETTING_UP = "setting up"
@@ -60,6 +73,12 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     SOFT_ABORTING = "soft_aborting"
     ABORTED = "aborted"
     PAUSED = "paused"
+
+
+class _SubtaskStatus(utils.ImmutableMixin, utils.EnumMixin):
+    RUNNING = "running"
+    FINISHED = "finished"
+    CRASHED = "crashed"
 
 
 class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):
@@ -188,7 +207,13 @@ class _HookStatus(utils.ImmutableMixin, utils.EnumMixin):
     VALIDATION_FAILED = "validation_failed"
 
 
+class _TagType(utils.ImmutableMixin, utils.EnumMixin):
+    TASK = "task"
+    SUBTASK = "subtask"
+
+
 TaskStatus = _TaskStatus()
+SubtaskStatus = _SubtaskStatus()
 DeployStatus = _DeployStatus()
 EndpointPermission = _EndpointPermission()
 ServiceType = _ServiceType()
@@ -197,3 +222,4 @@ EndpointType = _EndpointType()
 TempestTestsAPI = _TempestTestsAPI()
 TempestTestsSets = _TempestTestsSets()
 HookStatus = _HookStatus()
+TagType = _TagType()

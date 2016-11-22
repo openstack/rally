@@ -21,7 +21,23 @@ from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
 
 
-class JSONEncodedDict(sa_types.TypeDecorator):
+class LongText(sa_types.TypeDecorator):
+    """Represents an immutable structure as a json-encoded string.
+
+       MySql can store only 64kb in Text type, and for example in psql or
+       sqlite we are able to store more than 1GB. In some cases, like storing
+       results of task 64kb is not enough. So this type uses for MySql
+       LONGTEXT that allows us to store 4GiB.
+    """
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "mysql":
+            return dialect.type_descriptor(mysql_types.LONGTEXT)
+        else:
+            return dialect.type_descriptor(sa_types.Text)
+
+
+class JSONEncodedDict(LongText):
     """Represents an immutable structure as a json-encoded string."""
 
     impl = sa_types.Text
@@ -38,20 +54,13 @@ class JSONEncodedDict(sa_types.TypeDecorator):
         return value
 
 
-class BigJSONEncodedDict(JSONEncodedDict):
-    """Represents an immutable structure as a json-encoded string.
+class JSONEncodedList(JSONEncodedDict):
+    """Represents an immutable structure as a json-encoded string."""
 
-       MySql can store only 64kb in Text type, and for example in psql or
-       sqlite we are able to store more than 1GB. In some cases, like storing
-       results of task 64kb is not enough. So this type uses for MySql
-       LONGTEXT that allows us to store 4GiB.
-    """
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == "mysql":
-            return dialect.type_descriptor(mysql_types.LONGTEXT)
-        else:
-            return dialect.type_descriptor(sa_types.Text)
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
 
 
 class MutableDict(mutable.Mutable, dict):
@@ -69,25 +78,59 @@ class MutableDict(mutable.Mutable, dict):
             return value
 
     def __setitem__(self, key, value):
-        "Detect dictionary set events and emit change events."
+        """Detect dictionary set events and emit change events."""
 
         dict.__setitem__(self, key, value)
         self.changed()
 
     def __delitem__(self, key):
-        "Detect dictionary del events and emit change events."
+        """Detect dictionary del events and emit change events."""
 
         dict.__delitem__(self, key)
         self.changed()
+
+
+class MutableList(mutable.Mutable, list):
+    @classmethod
+    def coerce(cls, key, value):
+        """Convert plain lists to MutableList."""
+        if not isinstance(value, MutableList):
+            if isinstance(value, list):
+                return MutableList(value)
+
+            # this call will raise ValueError
+            return mutable.Mutable.coerce(key, value)
+        else:
+            return value
+
+    def append(self, value):
+        """Detect list add events and emit change events."""
+        list.append(self, value)
+        self.changed()
+
+    def remove(self, value):
+        """Removes an item by value and emit change events."""
+        list.remove(self, value)
+        self.changed()
+
+    def __setitem__(self, key, value):
+        """Detect list set events and emit change events."""
+        list.__setitem__(self, key, value)
+        self.changed()
+
+    def __delitem__(self, i):
+        """Detect list del events and emit change events."""
+        list.__delitem__(self, i)
+        self.changed()
+
+
+class MutableJSONEncodedList(JSONEncodedList):
+    """Represent a mutable structure as a json-encoded string."""
 
 
 class MutableJSONEncodedDict(JSONEncodedDict):
     """Represent a mutable structure as a json-encoded string."""
 
 
-class BigMutableJSONEncodedDict(BigJSONEncodedDict):
-    """Represent a big mutable structure as a json-encoded string."""
-
-
 MutableDict.associate_with(MutableJSONEncodedDict)
-MutableDict.associate_with(BigMutableJSONEncodedDict)
+MutableList.associate_with(MutableJSONEncodedList)

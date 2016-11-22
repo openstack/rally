@@ -15,6 +15,7 @@
 
 """Tests for db.api layer."""
 import datetime as dt
+import json
 
 import ddt
 from six import moves
@@ -130,6 +131,14 @@ class TasksTestCase(test.DBTestCase):
         self.assertIsNotNone(db_task["id"])
         self.assertEqual(db_task["status"], consts.TaskStatus.INIT)
 
+    def test_task_create_with_tag(self):
+        task = self._create_task(values={"tag": "test_tag"})
+        db_task = self._get_task(task["uuid"])
+        self.assertIsNotNone(db_task["uuid"])
+        self.assertIsNotNone(db_task["id"])
+        self.assertEqual(db_task["status"], consts.TaskStatus.INIT)
+        self.assertEqual(db_task["tag"], "test_tag")
+
     def test_task_create_without_uuid(self):
         _uuid = "19be8589-48b0-4af1-a369-9bebaaa563ab"
         task = self._create_task({"uuid": _uuid})
@@ -141,6 +150,16 @@ class TasksTestCase(test.DBTestCase):
         db.task_update(task["uuid"], {"status": consts.TaskStatus.FAILED})
         db_task = self._get_task(task["uuid"])
         self.assertEqual(db_task["status"], consts.TaskStatus.FAILED)
+
+    def test_task_update_with_tag(self):
+        task = self._create_task({})
+        db.task_update(task["uuid"], {
+            "status": consts.TaskStatus.FAILED,
+            "tag": "test_tag"
+        })
+        db_task = self._get_task(task["uuid"])
+        self.assertEqual(db_task["status"], consts.TaskStatus.FAILED)
+        self.assertEqual(db_task["tag"], "test_tag")
 
     def test_task_update_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
@@ -203,9 +222,27 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_delete_with_results(self):
         task_id = self._create_task()["uuid"]
-        db.task_result_create(task_id,
-                              {task_id: task_id},
-                              {task_id: task_id})
+        key = {
+            "name": "atata",
+            "pos": 0,
+            "kw": {
+                "args": {"a": "A"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"}
+            }
+        }
+        data = {
+            "raw": [],
+            "sla": [
+                {"s": "S", "success": True},
+                {"1": "2", "success": True},
+                {"a": "A", "success": True}
+            ],
+            "load_duration": 13,
+            "full_duration": 42
+        }
+        db.task_result_create(task_id, key, data)
         res = db.task_result_get_all_by_uuid(task_id)
         self.assertEqual(len(res), 1)
         db.task_delete(task_id)
@@ -237,42 +274,139 @@ class TasksTestCase(test.DBTestCase):
     def test_task_result_get_all_by_uuid(self):
         task1 = self._create_task()["uuid"]
         task2 = self._create_task()["uuid"]
+        key = {
+            "name": "atata",
+            "pos": 0,
+            "kw": {
+                "args": {"task_id": "task_id"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"}
+            }
+        }
+        data = {
+            "raw": [],
+            "sla": [{"success": True}],
+            "load_duration": 13,
+            "full_duration": 42,
+            "hooks": [],
+        }
 
         for task_id in (task1, task2):
-            db.task_result_create(task_id,
-                                  {task_id: task_id},
-                                  {task_id: task_id})
+            key["kw"]["args"]["task_id"] = task_id
+            data["sla"][0] = {"success": True}
+            db.task_result_create(task_id, key, data)
 
         for task_id in (task1, task2):
             res = db.task_result_get_all_by_uuid(task_id)
-            data = {task_id: task_id}
+            key["kw"]["args"]["task_id"] = task_id
+            data["sla"][0] = {"success": True}
             self.assertEqual(len(res), 1)
-            self.assertEqual(res[0]["key"], data)
+            self.assertEqual(res[0]["key"], key)
             self.assertEqual(res[0]["data"], data)
 
     def test_task_get_detailed(self):
-        task1 = self._create_task()
-        key = {"name": "atata"}
-        data = {"a": "b", "c": "d"}
+        validation_result = {
+            "etype": "FooError",
+            "msg": "foo message",
+            "trace": "foo t/b",
+        }
+        task1 = self._create_task({"validation_result": validation_result,
+                                   "tag": "bar"})
+        key = {
+            "name": "atata",
+            "pos": 0,
+            "kw": {
+                "args": {"a": "A"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"}
+            }
+        }
+        data = {
+            "raw": [],
+            "sla": [
+                {"s": "S", "success": True},
+                {"1": "2", "success": True},
+                {"a": "A", "success": True}
+            ],
+            "load_duration": 13,
+            "full_duration": 42,
+            "hooks": [],
+        }
 
         db.task_result_create(task1["uuid"], key, data)
         task1_full = db.task_get_detailed(task1["uuid"])
+        self.assertEqual(validation_result,
+                         json.loads(task1_full["verification_log"]))
+        self.assertEqual("bar", task1_full["tag"])
         results = task1_full["results"]
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["key"], key)
-        self.assertEqual(results[0]["data"], data)
+        self.assertEqual(1, len(results))
+        self.assertEqual(key, results[0]["key"])
+        self.assertEqual(data, results[0]["data"])
 
     def test_task_get_detailed_last(self):
         task1 = self._create_task()
-        key = {"name": "atata"}
-        data = {"a": "b", "c": "d"}
+        key = {
+            "name": "atata",
+            "pos": 0,
+            "kw": {
+                "args": {"a": "A"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"}
+            }
+        }
+        data = {
+            "raw": [],
+            "sla": [
+                {"s": "S", "success": True},
+                {"1": "2", "success": True},
+                {"a": "A", "success": True}
+            ],
+            "load_duration": 13,
+            "full_duration": 42,
+            "hooks": [],
+        }
 
         db.task_result_create(task1["uuid"], key, data)
         task1_full = db.task_get_detailed_last()
         results = task1_full["results"]
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["key"], key)
-        self.assertEqual(results[0]["data"], data)
+        self.assertEqual(1, len(results))
+        self.assertEqual(key, results[0]["key"])
+        self.assertEqual(data, results[0]["data"])
+
+    def test_task_result_create(self):
+        task_id = self._create_task()["uuid"]
+        key = {
+            "name": "atata",
+            "pos": 0,
+            "kw": {
+                "args": {"a": "A"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"}
+            }
+        }
+        data = {
+            "raw": [
+                {"error": "anError"},
+                {"duration": 1},
+                {"duration": 2}
+            ],
+            "sla": [
+                {"s": "S", "success": True},
+                {"1": "2", "success": True},
+                {"a": "A", "success": True}
+            ],
+            "load_duration": 13,
+            "full_duration": 42,
+            "hooks": [],
+        }
+        db.task_result_create(task_id, key, data)
+        res = db.task_result_get_all_by_uuid(task_id)
+        self.assertEqual(1, len(res))
+        self.assertEqual(data["raw"], res[0]["data"]["raw"])
 
 
 class DeploymentTestCase(test.DBTestCase):

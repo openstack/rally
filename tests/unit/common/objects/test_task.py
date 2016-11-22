@@ -16,7 +16,6 @@
 """Tests for db.task layer."""
 
 import datetime as dt
-import json
 
 import ddt
 import jsonschema
@@ -167,7 +166,7 @@ class TaskTestCase(test.TestCase):
         task.update_verification_log({"a": "fake"})
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
-            {"verification_log": json.dumps({"a": "fake"})}
+            {"validation_result": {"a": "fake"}}
         )
 
     @mock.patch("rally.common.objects.task.charts")
@@ -251,9 +250,9 @@ class TaskTestCase(test.TestCase):
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
             {"status": consts.TaskStatus.FAILED,
-             "verification_log": json.dumps({"etype": "foo_type",
-                                             "msg": "foo_error_message",
-                                             "trace": "foo_trace"})},
+             "validation_result": {"etype": "foo_type",
+                                   "msg": "foo_error_message",
+                                   "trace": "foo_trace"}},
         )
 
     @ddt.data(
