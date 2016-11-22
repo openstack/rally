@@ -519,6 +519,16 @@ def check_datetime_alias(logical_line, physical_line, filename):
 
 
 @skip_ignored_lines
+def check_no_six_iteritems(logical_line, physical_line, filename):
+    """Check no six.iteritems
+
+    N357
+    """
+    if re.search(r"\six.iteritems\(\)", logical_line):
+        yield (0, "N357 Use dict.items() instead of six.iteritems()")
+
+
+@skip_ignored_lines
 def check_db_imports_in_cli(logical_line, physical_line, filename):
     """Ensure that CLI modules do not use ``rally.common.db``
 
@@ -567,3 +577,4 @@ def factory(register):
     register(check_db_imports_in_cli)
     register(check_objects_imports_in_cli)
     register(check_old_type_class)
+    register(check_no_six_iteritems)
