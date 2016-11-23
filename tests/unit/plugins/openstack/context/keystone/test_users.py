@@ -288,8 +288,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                                                           "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__create_tenants(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test__create_tenants(self, mock_identity):
         self.context["config"]["users"]["tenants"] = 1
         user_generator = users.UserGenerator(self.context)
         tenants = user_generator._create_tenants()
@@ -297,8 +297,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         id, tenant = tenants.popitem()
         self.assertIn("name", tenant)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__create_users(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test__create_users(self, mock_identity):
         self.context["config"]["users"]["users_per_tenant"] = 2
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
@@ -309,26 +309,26 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
             self.assertIn("id", user)
             self.assertIn("credential", user)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__delete_tenants(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test__delete_tenants(self, mock_identity):
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__delete_tenants_failure(self, mock_keystone):
-        wrapped_keystone = mock_keystone.wrap.return_value
-        wrapped_keystone.delete_project.side_effect = Exception()
+    @mock.patch("%s.identity" % CTX)
+    def test__delete_tenants_failure(self, mock_identity):
+        identity_service = mock_identity.Identity.return_value
+        identity_service.delete_project.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__delete_users(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test__delete_users(self, mock_identity):
         user_generator = users.UserGenerator(self.context)
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
@@ -336,10 +336,10 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         user_generator._delete_users()
         self.assertEqual(len(user_generator.context["users"]), 0)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test__delete_users_failure(self, mock_keystone):
-        wrapped_keystone = mock_keystone.wrap.return_value
-        wrapped_keystone.delete_user.side_effect = Exception()
+    @mock.patch("%s.identity" % CTX)
+    def test__delete_users_failure(self, mock_identity):
+        identity_service = mock_identity.Identity.return_value
+        identity_service.delete_user.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
@@ -347,10 +347,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         user_generator._delete_users()
         self.assertEqual(len(user_generator.context["users"]), 0)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test_setup_and_cleanup(self, mock_keystone):
-        wrapped_keystone = mock.MagicMock()
-        mock_keystone.wrap.return_value = wrapped_keystone
+    @mock.patch("%s.identity" % CTX)
+    def test_setup_and_cleanup(self, mock_identity):
         with users.UserGenerator(self.context) as ctx:
 
             ctx.setup()
@@ -365,11 +363,11 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         self.assertEqual(len(ctx.context["tenants"]), 0)
 
     @mock.patch("rally.common.broker.LOG.warning")
-    @mock.patch("%s.keystone" % CTX)
+    @mock.patch("%s.identity" % CTX)
     def test_setup_and_cleanup_with_error_during_create_user(
-            self, mock_keystone, mock_log_warning):
-        wrapped_keystone = mock_keystone.wrap.return_value
-        wrapped_keystone.create_user.side_effect = Exception
+            self, mock_identity, mock_log_warning):
+        identity_service = mock_identity.Identity.return_value
+        identity_service.create_user.side_effect = Exception()
         with users.UserGenerator(self.context) as ctx:
                 self.assertRaises(exceptions.ContextSetupFailure, ctx.setup)
                 mock_log_warning.assert_called_with(
@@ -378,10 +376,9 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         # Ensure that tenants get deleted anyway
         self.assertEqual(0, len(ctx.context["tenants"]))
 
-    @mock.patch("%s.keystone" % CTX)
-    def test_users_and_tenants_in_context(self, mock_keystone):
-        wrapped_keystone = mock.MagicMock()
-        mock_keystone.wrap.return_value = wrapped_keystone
+    @mock.patch("%s.identity" % CTX)
+    def test_users_and_tenants_in_context(self, mock_identity):
+        identity_service = mock_identity.Identity.return_value
 
         credential = objects.Credential("foo_url", "foo", "foo_pass",
                                         https_insecure=True,
@@ -395,7 +392,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         credential_dict = credential.to_dict(False)
         user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
-        wrapped_keystone.create_user.side_effect = user_list
+        identity_service.create_user.side_effect = user_list
 
         with users.UserGenerator(tmp_context) as ctx:
             ctx.generate_random_name = mock.Mock()
@@ -430,8 +427,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 self.assertEqual(user["id"], orig_user.id)
                 self.assertEqual(user["tenant_id"], tenant_id)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test_users_contains_correct_endpoint_type(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test_users_contains_correct_endpoint_type(self, mock_identity):
         credential = objects.Credential(
             "foo_url", "foo", "foo_pass",
             endpoint_type=consts.EndpointType.INTERNAL)
@@ -453,8 +450,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         for user in users_:
             self.assertEqual("internal", user["credential"].endpoint_type)
 
-    @mock.patch("%s.keystone" % CTX)
-    def test_users_contains_default_endpoint_type(self, mock_keystone):
+    @mock.patch("%s.identity" % CTX)
+    def test_users_contains_default_endpoint_type(self, mock_identity):
         credential = objects.Credential("foo_url", "foo", "foo_pass")
         config = {
             "config": {

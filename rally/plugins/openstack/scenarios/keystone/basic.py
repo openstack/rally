@@ -13,13 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+Benchmark scenarios for Keystone.
+"""
+
 from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.task import validation
-
-
-"""Benchmark scenarios for Keystone."""
 
 
 @validation.required_openstack(admin=True)
@@ -176,9 +177,11 @@ class AddAndRemoveUserRole(kutils.KeystoneScenario):
         """Create a user role add to a user and disassociate."""
         tenant_id = self.context["tenant"]["id"]
         user_id = self.context["user"]["id"]
-        role = self._role_create()
-        self._role_add(user_id, role, tenant_id)
-        self._role_remove(user_id, role, tenant_id)
+        role = self.admin_keystone.create_role()
+        self.admin_keystone.add_role(role_id=role.id, user_id=user_id,
+                                     project_id=tenant_id)
+        self.admin_keystone.revoke_role(role.id, user_id=user_id,
+                                        project_id=tenant_id)
 
 
 @validation.required_openstack(admin=True)
@@ -188,8 +191,8 @@ class CreateAndDeleteRole(kutils.KeystoneScenario):
 
     def run(self):
         """Create a user role and delete it."""
-        role = self._role_create()
-        self._role_delete(role.id)
+        role = self.admin_keystone.create_role()
+        self.admin_keystone.delete_role(role.id)
 
 
 @validation.required_openstack(admin=True, users=True)
@@ -201,9 +204,10 @@ class CreateAddAndListUserRoles(kutils.KeystoneScenario):
         """Create user role, add it and list user roles for given user."""
         tenant_id = self.context["tenant"]["id"]
         user_id = self.context["user"]["id"]
-        role = self._role_create()
-        self._role_add(user_id, role, tenant_id)
-        self._list_roles_for_user(user_id, tenant_id)
+        role = self.admin_keystone.create_role()
+        self.admin_keystone.add_role(user_id=user_id, role_id=role.id,
+                                     project_id=tenant_id)
+        self.admin_keystone.list_roles(user_id=user_id, project_id=tenant_id)
 
 
 @validation.required_openstack(admin=True)
@@ -228,7 +232,7 @@ class GetEntities(kutils.KeystoneScenario):
         """
         tenant = self._tenant_create()
         user = self._user_create()
-        role = self._role_create()
+        role = self.admin_keystone.create_role()
         self._get_tenant(tenant.id)
         self._get_user(user.id)
         self._get_role(role.id)
@@ -344,5 +348,5 @@ class CreateAndGetRole(kutils.KeystoneScenario):
 
         :param kwargs: Optional additional arguments for roles creation
         """
-        role = self._role_create(**kwargs)
-        self._get_role(role.id)
+        role = self.admin_keystone.create_role(**kwargs)
+        self.admin_keystone.get_role(role.id)

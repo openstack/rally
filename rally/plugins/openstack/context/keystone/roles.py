@@ -21,7 +21,7 @@ from rally.common import logging
 from rally import consts
 from rally import exceptions
 from rally import osclients
-from rally.plugins.openstack.wrappers import keystone
+from rally.plugins.openstack.services.identity import identity
 from rally.task import context
 
 LOG = logging.getLogger(__name__)
@@ -63,8 +63,8 @@ class RoleGenerator(context.Context):
 
         :param context_role: name of existing role.
         """
-        client = keystone.wrap(osclients.Clients(self.credential).keystone())
-        default_roles = client.list_roles()
+        keystone = identity.Identity(osclients.Clients(self.credential))
+        default_roles = keystone.list_roles()
         for def_role in default_roles:
             if str(def_role.name) == context_role:
                 return def_role
@@ -76,8 +76,10 @@ class RoleGenerator(context.Context):
             role_id, user_id, project_id = args
             if "client" not in cache:
                 clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
-            getattr(cache["client"], func_name)(role_id, user_id, project_id)
+                cache["client"] = identity.Identity(clients)
+            getattr(cache["client"], func_name)(role_id=role_id,
+                                                user_id=user_id,
+                                                project_id=project_id)
         return consume
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
@@ -109,9 +111,9 @@ class RoleGenerator(context.Context):
 
         def publish(queue):
             for role_id in self.context["roles"]:
-                LOG.debug("Removing role %s from all users" % (role_id))
+                LOG.debug("Removing role %s from all users" % role_id)
                 for user in self.context["users"]:
                     args = (role_id, user["id"], user["tenant_id"])
                     queue.append(args)
 
-        broker.run(publish, self._get_consumer("remove_role"), threads)
+        broker.run(publish, self._get_consumer("revoke_role"), threads)

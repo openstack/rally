@@ -27,7 +27,7 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import osclients
-from rally.plugins.openstack.wrappers import keystone
+from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
 from rally.task import utils
@@ -214,9 +214,9 @@ class UserGenerator(UserContextMixin, context.Context):
             domain, task_id, i = args
             if "client" not in cache:
                 clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
-            tenant = cache["client"].create_project(
-                self.generate_random_name(), domain)
+                cache["client"] = identity.Identity(
+                    clients, name_generator=self.generate_random_name)
+            tenant = cache["client"].create_project(domain_name=domain)
             tenant_dict = {"id": tenant.id, "name": tenant.name, "users": []}
             tenants.append(tenant_dict)
 
@@ -249,17 +249,18 @@ class UserGenerator(UserContextMixin, context.Context):
             username, password, project_dom, user_dom, tenant_id = args
             if "client" not in cache:
                 clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
+                cache["client"] = identity.Identity(
+                    clients, name_generator=self.generate_random_name)
             client = cache["client"]
-            user = client.create_user(
-                username, password,
-                "%s@email.me" % username,
-                tenant_id, user_dom,
-                default_role=default_role)
+            user = client.create_user(username, password=password,
+                                      email="%s@email.me" % username,
+                                      project_id=tenant_id,
+                                      domain_name=user_dom,
+                                      default_role=default_role)
             user_credential = objects.Credential(
-                client.auth_url, user.name, password,
+                self.credential.auth_url, user.name, password,
                 self.context["tenants"][tenant_id]["name"],
-                consts.EndpointPermission.USER, client.region_name,
+                consts.EndpointPermission.USER, self.credential.region_name,
                 project_domain_name=project_dom, user_domain_name=user_dom,
                 endpoint_type=self.credential.endpoint_type,
                 https_insecure=self.credential.insecure,
@@ -276,7 +277,7 @@ class UserGenerator(UserContextMixin, context.Context):
         def consume(cache, resource_id):
             if "client" not in cache:
                 clients = osclients.Clients(self.credential)
-                cache["client"] = keystone.wrap(clients.keystone())
+                cache["client"] = identity.Identity(clients)
             getattr(cache["client"], func_name)(resource_id)
         return consume
 
