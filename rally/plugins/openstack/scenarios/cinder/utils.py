@@ -59,6 +59,15 @@ class CinderScenario(scenario.OpenStackScenario):
 
         return self.clients("cinder").volumes.list(detailed)
 
+    @atomic.action_timer("cinder.get_volume")
+    def _get_volume(self, volume_id):
+        """get volume detailed information.
+
+        :param volume_id: id of volume
+        :returns: class:`Volume`
+        """
+        return self.clients("cinder").volumes.get(volume_id)
+
     @atomic.action_timer("cinder.list_snapshots")
     def _list_snapshots(self, detailed=True):
         """Returns user snapshots list."""

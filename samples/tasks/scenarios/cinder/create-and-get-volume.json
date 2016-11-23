@@ -1,0 +1,49 @@
+{
+    "CinderVolumes.create_and_get_volume": [
+        {
+            "args": {
+                "size": 1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 5,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        },
+        {
+            "args": {
+                "size": {
+                    "min": 1,
+                    "max": 5
+                }
+            },
+            "runner": {
+                "type": "constant",
+                "times": 5,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

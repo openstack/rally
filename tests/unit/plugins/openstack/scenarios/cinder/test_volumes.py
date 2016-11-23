@@ -48,6 +48,15 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
         scenario._list_volumes.assert_called_once_with(True)
 
+    def test_create_and_get_volume(self):
+        scenario = volumes.CreateAndGetVolume(self.context)
+        scenario._create_volume = mock.MagicMock()
+        scenario._get_volume = mock.MagicMock()
+        scenario.run(1, fakearg="f")
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")
+        scenario._get_volume.assert_called_once_with(
+            scenario._create_volume.return_value.id)
+
     def test_list_volumes(self):
         scenario = volumes.ListVolumes(self.context)
         scenario._list_volumes = mock.MagicMock()
