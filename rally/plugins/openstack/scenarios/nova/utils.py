@@ -1097,6 +1097,15 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.admin_clients("nova").aggregates.create(aggregate_name,
                                                             availability_zone)
 
+    @atomic.action_timer("nova.get_aggregate_details")
+    def _get_aggregate_details(self, aggregate):
+        """Get details of the specified aggregate.
+
+        :param aggregate: The aggregate to get details
+        :returns: Detailed information of aggregate
+        """
+        return self.admin_clients("nova").aggregates.get_details(aggregate)
+
     @atomic.action_timer("nova.delete_aggregate")
     def _delete_aggregate(self, aggregate):
         """Delete the specified aggregate.
