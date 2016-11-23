@@ -237,14 +237,13 @@ def main():
     render_vars["install"] = call_rally("verify install")
 
     # Get Rally deployment ID
-    rally_deployment_id = subprocess.check_output(
-        "rally deployment list | awk '/devstack/ {print $2}'",
-        shell=True, stderr=subprocess.STDOUT)
+    rally_deployment_id = envutils.get_global(envutils.ENV_DEPLOYMENT)
     # Get the penultimate Tempest commit ID
+    tempest_dir = (
+        "/home/jenkins/.rally/tempest/for-deployment-%s" % rally_deployment_id)
     tempest_commit_id = subprocess.check_output(
-        "cd /home/jenkins/.rally/tempest/for-deployment-%s "
-        "git log --skip 1 -n 1 | awk '/commit/ {print $2}' | head -1"
-        % rally_deployment_id, shell=True, stderr=subprocess.STDOUT).strip()
+        ["git", "log", "-n", "1", "--pretty=format:'%H'"],
+        cwd=tempest_dir).strip()
     # Install the penultimate Tempest version
     render_vars["reinstall"] = call_rally(
         "verify reinstall --version %s" % tempest_commit_id)
