@@ -179,7 +179,7 @@ def upgrade():
             nullable=False),
         sa.Column(
             "data",
-            rally.common.db.sqlalchemy.types.BigMutableJSONEncodedDict(),
+            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
             nullable=False),
         sa.Column("task_uuid", sa.String(length=36), nullable=True),
         sa.ForeignKeyConstraint(["task_uuid"], ["tasks.uuid"], ),
@@ -194,7 +194,7 @@ def upgrade():
         sa.Column("verification_uuid", sa.String(length=36), nullable=True),
         sa.Column(
             "data",
-            rally.common.db.sqlalchemy.types.BigMutableJSONEncodedDict(),
+            rally.common.db.sqlalchemy.types.MutableJSONEncodedDict(),
             nullable=False),
         sa.ForeignKeyConstraint(["verification_uuid"], ["verifications.uuid"]),
         sa.PrimaryKeyConstraint("id")

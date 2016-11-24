@@ -48,14 +48,16 @@ Changes in DB
 Existing DB schema
 ~~~~~~~~~~~~~~~~~~
 
-+------------+    +-------------+
-| Task       |    | TaskResult  |
-+------------+    +-------------+
-|            |    |             |
-|  id        |    |  id         |
-|  uuid   <--+----+- task_uuid  |
-|   ^        |    |             |
-+---+--------+    +-------------+
+.. code-block::
+
+    +------------+    +-------------+
+    | Task       |    | TaskResult  |
+    +------------+    +-------------+
+    |            |    |             |
+    |  id        |    |  id         |
+    |  uuid   <--+----+- task_uuid  |
+    |   ^        |    |             |
+    +---+--------+    +-------------+
 
 * Task - stores task status, tags, validation log
 
@@ -66,30 +68,31 @@ Existing DB schema
 New DB schema
 ~~~~~~~~~~~~~
 
-+------------+    +-------------+    +--------------+    +---------------+
-| Task       |    | Subtask     |    | Workload     |    | WorkloadData  |
-+------------+    +-------------+    +--------------+    +---------------+
-|            |    |             |    |              |    |               |
-|  id        |    |  id    <----+--+ |  id    <-----+--+ |  id           |
-|  uuid   <--+----+- task_uuid  |  +-+- subtask_id  |  +-+- workload_id  |
-|   ^        |    |  uuid       |    |  uuid        |    |  uuid         |
-+---+--------+    +---^---------+    |              |    |               |
-    +--------------------------------+- task_uuid   |    |               |
-    |                 |              +--------------+    |               |
-    +----------------------------------------------------+- task_uuid    |
-    |                 |                                  +---------------+
-    +-------+---------+
-            |
-+--------+  +
-| Tag    |  |
-+--------+  |
-|        |  |
-|  id    |  |
-|  uuid -+--+
-|  type  |
-|  tag   |
-+--------+
+.. code-block::
 
+    +------------+    +-------------+    +--------------+    +---------------+
+    | Task       |    | Subtask     |    | Workload     |    | WorkloadData  |
+    +------------+    +-------------+    +--------------+    +---------------+
+    |            |    |             |    |              |    |               |
+    |  id        |    |  id    <----+--+ |  id    <-----+--+ |  id           |
+    |  uuid   <--+----+- task_uuid  |  +-+- subtask_id  |  +-+- workload_id  |
+    |   ^        |    |  uuid       |    |  uuid        |    |  uuid         |
+    +---+--------+    +---^---------+    |              |    |               |
+        +--------------------------------+- task_uuid   |    |               |
+        |                 |              +--------------+    |               |
+        +----------------------------------------------------+- task_uuid    |
+        |                 |                                  +---------------+
+        +-------+---------+
+                |
+    +--------+  +
+    | Tag    |  |
+    +--------+  |
+    |        |  |
+    |  id    |  |
+    |  uuid -+--+
+    |  type  |
+    |  tag   |
+    +--------+
 
 * Task - stores information about task, when it was started/updated/finished,
   it's status, description, and so on. As well it used to aggregate all
@@ -115,6 +118,8 @@ New DB schema
 
 Task table
 ~~~~~~~~~~
+
+.. code-block::
 
     id                      : INT, PK
     uuid                    : UUID
@@ -159,18 +164,23 @@ Task table
 
 Task.status diagram of states
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-INIT -> VALIDATING -> VALIDATION_FAILED
-                   -> ABORTING -> ABORTED
-                   -> SOFT_ABORTING -> ABORTED
-                   -> CRASHED
-                   -> VALIDATED -> RUNNING -> FINISHED
-                                           -> ABORTING -> ABORTED
-                                           -> SOFT_ABORTING -> ABORTED
-                                           -> CRASHED
+
+.. code-block::
+
+    INIT -> VALIDATING -> VALIDATION_FAILED
+                       -> ABORTING -> ABORTED
+                       -> SOFT_ABORTING -> ABORTED
+                       -> CRASHED
+                       -> VALIDATED -> RUNNING -> FINISHED
+                                               -> ABORTING -> ABORTED
+                                               -> SOFT_ABORTING -> ABORTED
+                                               -> CRASHED
 
 
 Subtask table
 ~~~~~~~~~~~~~
+
+.. code-block::
 
     id                      : INT, PK
     uuid                    : UUID
@@ -197,6 +207,8 @@ Subtask table
 
 Workload table
 ~~~~~~~~~~~~~~
+
+.. code-block::
 
     id                      : INT, PK
     uuid                    : UUID
@@ -257,8 +269,8 @@ Workload table
     min_duration            : FLOAT
     max_duration            : FLOAT
 
-    total_iter_count        : INT
-    failed_iter_count       : INT
+    total_iteration_count   : INT
+    failed_iteration_count  : INT
 
     # Statictics data structure (order makes sense)
     #   {
@@ -277,7 +289,7 @@ Workload table
     statistics              : JSON  # Aggregated information about actions
 
     # As for SLA result
-    success                 : BOOL
+    pass_sla                : BOOL
 
     # Profile information collected during the run of scenario
     # This is internal data and format of it can be changed over time
@@ -286,6 +298,8 @@ Workload table
 
 WorkloadData
 ~~~~~~~~~~~~
+
+.. code-block::
 
     id                      : INT, PK
     uuid                    : UUID
@@ -299,7 +313,7 @@ WorkloadData
     iteration_count         : INT
 
     # Number of failed iterations
-    iteration_failed        : INT
+    failed_iteration_count  : INT
 
     # Full size of results in bytes
     chunk_size              : INT
@@ -331,6 +345,8 @@ WorkloadData
 Tag table
 ~~~~~~~~~
 
+.. code-block::
+
     id                      : INT, PK
     uuid                    : UUID of task or subtask
     type                    : ENUM(task, subtask)
@@ -342,10 +358,7 @@ Tag table
 Open questions
 ~~~~~~~~~~~~~~
 
-- We store both SLA configuration (plugin names and config params) and
-  SLA results (passed/failed and numeric data). The same is true for context.
-  Should we separate 'sla_results' from 'sla' and 'context_execution' from
-  'context' in Workload?
+None.
 
 
 Alternatives

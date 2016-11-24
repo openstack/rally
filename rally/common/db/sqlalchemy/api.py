@@ -16,6 +16,8 @@
 SQLAlchemy implementation for DB.API
 """
 
+import datetime as dt
+import json
 import os
 
 import alembic
@@ -25,13 +27,13 @@ from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_utils import timeutils
-import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import load_only as sa_loadonly
 
 from rally.common.db import api as db_api
 from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
+from rally import consts
 from rally import exceptions
 
 
@@ -197,6 +199,12 @@ class Connection(object):
 
         return query
 
+    def _tags_get(self, uuid, tag_type):
+        tags = (self.model_query(models.Tag).
+                filter_by(uuid=uuid, type=tag_type).all())
+
+        return list(set(t.tag for t in tags))
+
     def _task_get(self, uuid, load_only=None, session=None):
         pre_query = self.model_query(models.Task, session=session)
         if load_only:
@@ -207,41 +215,114 @@ class Connection(object):
             raise exceptions.TaskNotFound(uuid=uuid)
         return task
 
-    @db_api.serialize
-    def task_get(self, uuid):
-        return self._task_get(uuid)
+    def _make_old_task(self, task):
+        tags = self._tags_get(task.uuid, consts.TagType.TASK)
+        tag = tags[0] if tags else ""
 
-    @db_api.serialize
+        return {
+            "id": task.id,
+            "uuid": task.uuid,
+            "deployment_uuid": task.deployment_uuid,
+            "status": task.status,
+            "created_at": task.created_at,
+            "updated_at": task.updated_at,
+            "tag": tag,
+            "verification_log": json.dumps(task.validation_result)
+        }
+
+    def _make_old_task_result(self, workload, workload_data):
+        return {
+            "id": workload.id,
+            "task_uuid": workload.task_uuid,
+            "created_at": workload.created_at,
+            "updated_at": workload.updated_at,
+            "key": {
+                "name": workload.name,
+                "pos": workload.position,
+                "kw": {
+                    "args": workload.args,
+                    "runner": workload.runner,
+                    "context": workload.context,
+                    "sla": workload.sla
+                }
+            },
+            "data": {
+                "raw": workload_data.chunk_data["raw"],
+                "load_duration": workload.load_duration,
+                "full_duration": workload.full_duration,
+                "sla": workload.sla_results["sla"],
+                "hooks": workload.hooks
+            }
+        }
+
+    # @db_api.serialize
+    def task_get(self, uuid):
+        task = self._task_get(uuid)
+        return self._make_old_task(task)
+
+    # @db_api.serialize
     def task_get_detailed(self, uuid):
-        return (self.model_query(models.Task).
-                options(sa.orm.joinedload("results")).
-                filter_by(uuid=uuid).first())
+        task = self.task_get(uuid)
+        task["results"] = self._task_result_get_all_by_uuid(uuid)
+        return task
 
     @db_api.serialize
     def task_get_status(self, uuid):
         return self._task_get(uuid, load_only="status").status
 
-    @db_api.serialize
+    # @db_api.serialize
     def task_get_detailed_last(self):
-        return (self.model_query(models.Task).
-                options(sa.orm.joinedload("results")).
+        task = (self.model_query(models.Task).
                 order_by(models.Task.id.desc()).first())
+        task = self._make_old_task(task)
+        task["results"] = self._task_result_get_all_by_uuid(task["uuid"])
+        return task
 
-    @db_api.serialize
+    # @db_api.serialize
     def task_create(self, values):
+        new_tag = values.pop("tag", None)
+        # TODO(ikhudoshyn): currently 'input_task'
+        # does not come in 'values'
+        # After completely switching to the new
+        # DB schema in API we should reconstruct
+        # input_task's from associated workloads
+        # the same is true for 'pass_sla',
+        # 'task_duration', 'validation_result'
+        # and 'validation_duration'
         task = models.Task()
         task.update(values)
         task.save()
-        return task
 
-    @db_api.serialize
+        if new_tag:
+            tag = models.Tag()
+            tag.update({
+                "uuid": task.uuid,
+                "type": consts.TagType.TASK,
+                "tag": new_tag
+            })
+            tag.save()
+
+        return self._make_old_task(task)
+
+    # @db_api.serialize
     def task_update(self, uuid, values):
         session = get_session()
         values.pop("uuid", None)
+        new_tag = values.pop("tag", None)
         with session.begin():
             task = self._task_get(uuid, session=session)
             task.update(values)
-        return task
+
+            if new_tag:
+                tag = models.Tag()
+                tag.update({
+                    "uuid": uuid,
+                    "type": consts.TagType.TASK,
+                    "tag": new_tag
+                })
+                tag.save()
+
+        return self._make_old_task(task)
 
     def task_update_status(self, uuid, statuses, status_value):
         session = get_session()
@@ -259,7 +340,7 @@ class Connection(object):
             raise exceptions.RallyException(msg)
         return query
 
-    @db_api.serialize
+    # @db_api.serialize
     def task_list(self, status=None, deployment=None):
         query = self.model_query(models.Task)
 
@@ -272,7 +353,8 @@ class Connection(object):
 
         if filters:
             query = query.filter_by(**filters)
-        return query.all()
+
+        return [self._make_old_task(task) for task in query.all()]
 
     def task_delete(self, uuid, status=None):
         session = get_session()
@@ -282,7 +364,17 @@ class Connection(object):
             if status is not None:
                 query = base_query.filter_by(status=status)
 
-            (self.model_query(models.TaskResult).filter_by(task_uuid=uuid).
+            (self.model_query(models.WorkloadData).filter_by(task_uuid=uuid).
+             delete(synchronize_session=False))
+
+            (self.model_query(models.Workload).filter_by(task_uuid=uuid).
+             delete(synchronize_session=False))
+
+            (self.model_query(models.Subtask).filter_by(task_uuid=uuid).
+             delete(synchronize_session=False))
+
+            (self.model_query(models.Tag).filter_by(
+                uuid=uuid, type=consts.TagType.TASK).
              delete(synchronize_session=False))
 
             count = query.delete(synchronize_session=False)
@@ -295,17 +387,119 @@ class Connection(object):
                                                            actual=task.status)
                 raise exceptions.TaskNotFound(uuid=uuid)
 
-    @db_api.serialize
+    # @db_api.serialize
     def task_result_create(self, task_uuid, key, data):
-        result = models.TaskResult()
-        result.update({"task_uuid": task_uuid, "key": key, "data": data})
-        result.save()
-        return result
+        raw_data = data.get("raw", [])
+        iter_count = len(raw_data)
 
-    @db_api.serialize
+        failed_iter_count = 0
+        max_duration = 0
+        min_duration = 0
+
+        success = True
+
+        for d in raw_data:
+            if d.get("error"):
+                failed_iter_count += 1
+
+            duration = d.get("duration", 0)
+
+            if duration > max_duration:
+                max_duration = duration
+
+            if min_duration and min_duration > duration:
+                min_duration = duration
+
+        sla = data.get("sla", [])
+        # TODO(ikhudoshyn): if no SLA was specified and there are
+        # failed iterations is it success?
+        # NOTE(ikhudoshyn): we call it 'pass_sla'
+        # for the sake of consistency with other models
+        # so if no SLAs were specified, then we assume pass_sla == True
+        success = all([s.get("success") for s in sla])
+
+        now = timeutils.utcnow()
+        delta = dt.timedelta(seconds=data.get("full_duration", 0))
+        start = now - delta
+
+        subtask = models.Subtask()
+        subtask.update({"task_uuid": task_uuid})
+        subtask.save()
+
+        workload = models.Workload()
+        workload.update({
+            "task_uuid": task_uuid,
+            "subtask_uuid": subtask.uuid,
+            "name": key["name"],
+            "position": key["pos"],
+            "runner": key["kw"]["runner"],
+            "runner_type": key["kw"]["runner"]["type"],
+            "context": key["kw"].get("context", {}),
+            "hooks": data.get("hooks", []),
+            "sla": key["kw"].get("sla", {}),
+            "args": key["kw"].get("args", {}),
+            "sla_results": {"sla": sla},
+            "context_execution": {},
+            "load_duration": data.get("load_duration", 0),
+            "full_duration": data.get("full_duration", 0),
+            "min_duration": min_duration,
+            "max_duration": max_duration,
+            "total_iteration_count": iter_count,
+            "failed_iteration_count": failed_iter_count,
+            # TODO(ikhudoshyn)
+            "start_time": start,
+            "statistics": {},
+            "pass_sla": success
+        })
+        workload.save()
+
+        workload_data = models.WorkloadData()
+        workload_data.update({
+            "task_uuid": task_uuid,
+            "workload_uuid": workload.uuid,
+            "chunk_order": 0,
+            "iteration_count": iter_count,
+            "failed_iteration_count": failed_iter_count,
+            "chunk_data": {"raw": raw_data},
+            # TODO(ikhudoshyn)
+            "chunk_size": 0,
+            "compressed_chunk_size": 0,
+            "started_at": start,
+            "finished_at": now
+        })
+
+        # TODO(ikhudoshyn): create workload and workload data in
+        # one transaction
+        workload_data.save()
+
+        # TODO(ikhudoshyn): if pass_sla is False,
+        # then update task's and subtask's pass_sla
+
+        # TODO(ikhudoshyn): update task.task_duration
+        # and subtask.duration
+
+        return self._make_old_task_result(workload, workload_data)
+
+    def _task_result_get_all_by_uuid(self, uuid):
+        results = []
+
+        workloads = (self.model_query(models.Workload).
+                     filter_by(task_uuid=uuid).all())
+
+        for workload in workloads:
+            workload_data = (self.model_query(models.WorkloadData).
+                             filter_by(task_uuid=uuid,
+                                       workload_uuid=workload.uuid).
+                             first())
+
+            results.append(
+                self._make_old_task_result(workload, workload_data))
+
+        return results
+
+    # @db_api.serialize
     def task_result_get_all_by_uuid(self, uuid):
-        return (self.model_query(models.TaskResult).
-                filter_by(task_uuid=uuid).all())
+        return self._task_result_get_all_by_uuid(uuid)
 
     def _deployment_get(self, deployment, session=None):
         stored_deployment = self.model_query(

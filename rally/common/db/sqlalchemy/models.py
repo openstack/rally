@@ -153,7 +153,7 @@ class Resource(BASE, RallyBase):
 
 
 class Task(BASE, RallyBase):
-    """Represents a Benchmark task."""
+    """Represents a task."""
     __tablename__ = "tasks"
     __table_args__ = (
         sa.Index("task_uuid", "uuid", unique=True),
@@ -163,12 +163,6 @@ class Task(BASE, RallyBase):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
-    status = sa.Column(sa.Enum(*list(consts.TaskStatus),
-                       name="enum_tasks_status"),
-                       default=consts.TaskStatus.INIT,
-                       nullable=False)
-    verification_log = sa.Column(sa.Text, default="")
-    tag = sa.Column(sa.String(64), default="")
 
     deployment_uuid = sa.Column(
         sa.String(36),
@@ -183,21 +177,192 @@ class Task(BASE, RallyBase):
         primaryjoin=(deployment_uuid == Deployment.uuid),
     )
 
+    input_task = sa.Column(sa.Text, default="")
+    title = sa.Column(sa.String(64), default="")
+    description = sa.Column(sa.Text, default="")
 
-class TaskResult(BASE, RallyBase):
-    __tablename__ = "task_results"
-    __table_args__ = ()
+    validation_result = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+
+    validation_duration = sa.Column(sa.Float)
+    task_duration = sa.Column(sa.Float)
+    pass_sla = sa.Column(sa.Boolean)
+
+    status = sa.Column(sa.Enum(*list(consts.TaskStatus),
+                       name="enum_tasks_status"),
+                       default=consts.TaskStatus.INIT,
+                       nullable=False)
+
+
+class Subtask(BASE, RallyBase):
+    __tablename__ = "subtasks"
+    __table_args__ = (
+        sa.Index("subtask_uuid", "uuid", unique=True),
+        sa.Index("subtask_status", "status"),
+    )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
 
-    key = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
-    data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
+    task_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Task.uuid),
+        nullable=False,
+    )
 
-    task_uuid = sa.Column(sa.String(36), sa.ForeignKey("tasks.uuid"))
-    task = sa.orm.relationship(Task,
-                               backref=sa.orm.backref("results"),
-                               foreign_keys=task_uuid,
-                               primaryjoin="TaskResult.task_uuid == Task.uuid")
+    task = sa.orm.relationship(
+        Task,
+        backref=sa.orm.backref("subtasks"),
+        foreign_keys=task_uuid,
+        primaryjoin=(task_uuid == Task.uuid),
+    )
+
+    title = sa.Column(sa.String(64), default="")
+    description = sa.Column(sa.Text, default="")
+
+    context = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    sla = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    run_in_parallel = sa.Column(sa.Boolean, default=False, nullable=False)
+    duration = sa.Column(sa.Float)
+    pass_sla = sa.Column(sa.Boolean)
+
+    status = sa.Column(sa.Enum(*list(consts.SubtaskStatus),
+                       name="enum_subtasks_status"),
+                       default=consts.SubtaskStatus.RUNNING,
+                       nullable=False)
+
+
+class Workload(BASE, RallyBase):
+    __tablename__ = "workloads"
+    __table_args__ = (
+        sa.Index("workload_uuid", "uuid", unique=True),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+
+    task_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Task.uuid),
+        nullable=False,
+    )
+
+    subtask_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Subtask.uuid),
+        nullable=False,
+    )
+
+    subtask = sa.orm.relationship(
+        Subtask,
+        backref=sa.orm.backref("workloads"),
+        foreign_keys=subtask_uuid,
+        primaryjoin=(subtask_uuid == Subtask.uuid),
+    )
+
+    name = sa.Column(sa.String(64), nullable=False)
+    description = sa.Column(sa.Text, default="")
+    position = sa.Column(sa.Integer, default=0, nullable=False)
+
+    runner = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    runner_type = sa.Column(sa.String(64), nullable=False)
+
+    context = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    sla = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    args = sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    hooks = sa.Column(
+        sa_types.JSONEncodedList, default=[], nullable=False)
+
+    sla_results = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+
+    context_execution = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+
+    start_time = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow())
+
+    load_duration = sa.Column(sa.Float, default=0)
+    full_duration = sa.Column(sa.Float, default=0)
+    min_duration = sa.Column(sa.Float, default=0)
+    max_duration = sa.Column(sa.Float, default=0)
+    total_iteration_count = sa.Column(sa.Integer, default=0)
+    failed_iteration_count = sa.Column(sa.Integer, default=0)
+
+    statistics = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+
+    pass_sla = sa.Column(sa.Boolean)
+    _profiling_data = sa.Column(sa.Text, default="")
+
+
+class WorkloadData(BASE, RallyBase):
+    __tablename__ = "workloaddata"
+    __table_args__ = (
+        sa.Index("workload_data_uuid", "uuid", unique=True),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+
+    task_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Task.uuid),
+        nullable=False,
+    )
+
+    workload_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Workload.uuid),
+        nullable=False,
+    )
+
+    workload = sa.orm.relationship(
+        Workload,
+        backref=sa.orm.backref("workload_data"),
+        foreign_keys=workload_uuid,
+        primaryjoin=(workload_uuid == Workload.uuid),
+    )
+
+    chunk_order = sa.Column(sa.Integer, nullable=False)
+    iteration_count = sa.Column(sa.Integer, nullable=False)
+    failed_iteration_count = sa.Column(sa.Integer, nullable=False)
+    chunk_size = sa.Column(sa.Integer, nullable=False)
+    compressed_chunk_size = sa.Column(sa.Integer, nullable=False)
+    started_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
+                           nullable=False)
+    finished_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
+                            nullable=False)
+    # chunk_data = sa.Column(sa.Text, nullable=False)
+    chunk_data = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+
+
+class Tag(BASE, RallyBase):
+    __tablename__ = "tags"
+    __table_args__ = (
+        sa.Index("d_type_tag", "uuid", "type", "tag", unique=True),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+
+    type = sa.Column(sa.Enum(*list(consts.TagType),
+                     name="enum_tag_types"),
+                     nullable=False)
+
+    tag = sa.Column(sa.String(255), nullable=False)
 
 
 class Verification(BASE, RallyBase):
@@ -240,7 +405,7 @@ class VerificationResult(BASE, RallyBase):
     verification_uuid = sa.Column(sa.String(36),
                                   sa.ForeignKey("verifications.uuid"))
 
-    data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
+    data = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
 
 
 class Worker(BASE, RallyBase):

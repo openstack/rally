@@ -14,7 +14,6 @@
 #    under the License.
 
 import collections
-import json
 import uuid
 
 from rally.common import db
@@ -384,12 +383,12 @@ class Task(object):
             self._update({"status": status})
 
     def update_verification_log(self, log):
-        self._update({"verification_log": json.dumps(log)})
+        self._update({"validation_result": log})
 
     def set_failed(self, etype, msg, etraceback):
         self._update({"status": consts.TaskStatus.FAILED,
-                      "verification_log": json.dumps(
-                          {"etype": etype, "msg": msg, "trace": etraceback})})
+                      "validation_result": {
+                          "etype": etype, "msg": msg, "trace": etraceback}})
 
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])

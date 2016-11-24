@@ -39,7 +39,7 @@ task_results_helper = sa.Table(
     "task_results",
     sa.MetaData(),
     sa.Column("id", sa.Integer(), nullable=False),
-    sa.Column("data", sa_types.BigMutableJSONEncodedDict(), nullable=False),
+    sa.Column("data", sa_types.MutableJSONEncodedDict(), nullable=False),
 )
 
 
