@@ -4,20 +4,29 @@
 
 *(Contributed by Neependra Khare, Red Hat)*
 
-Below we describe how we were able to get and verify a 4x better performance of Keystone inside Apache. To do that, we ran a Keystone token creation benchmark with Rally under different load (this benchmark scenario essentially just authenticate users with keystone to get tokens).
+Below we describe how we were able to get and verify a 4x better performance of
+Keystone inside Apache. To do that, we ran a Keystone token creation benchmark
+with Rally under different load (this benchmark scenario essentially just
+authenticate users with keystone to get tokens).
 
 Goal
 ----
 - Get the data about performance of token creation under different load.
-- Ensure that keystone with increased public_workers/admin_workers values and under Apache works better than the default setup.
+- Ensure that keystone with increased public_workers/admin_workers values and
+  under Apache works better than the default setup.
 
 Summary
 -------
 - As the concurrency increases, time to authenticate the user gets up.
-- Keystone is CPU bound process and by default only one thread of keystone-all process get started. We can increase the parallelism by:
-    1. increasing public_workers/admin_workers values in keystone.conf file
-    2. running keystone inside Apache
-- We configured Keystone with 4 public_workers and ran Keystone inside Apache. In both cases we got upto 4x better performance as compared to default keystone configuration.
+- Keystone is CPU bound process and by default only one thread of
+  *keystone-all* process get started. We can increase the parallelism by:
+
+  1. increasing *public_workers/admin_workers* values in *keystone.conf* file
+  2. running Keystone inside Apache
+
+- We configured Keystone with 4 *public_workers* and ran Keystone inside
+  Apache. In both cases we got up to 4x better performance as compared to
+  default Keystone configuration.
 
 Setup
 -----
@@ -35,9 +44,11 @@ Keystone - Commit#455d50e8ae360c2a7598a61d87d9d341e5d9d3ed
 
 Keystone API - 2
 
-To increase public_workers - Uncomment line with public_workers and set public_workers to 4. Then restart keystone service.
+To increase public_workers - Uncomment line with *public_workers* and set
+*public_workers* to 4. Then restart Keystone service.
 
-To run keystone inside Apache - Added *APACHE_ENABLED_SERVICES=key* in localrc file while setting up OpenStack environment with devstack.
+To run Keystone inside Apache - Added *APACHE_ENABLED_SERVICES=key* in
+*localrc* file while setting up OpenStack environment with Devstack.
 
 
 Results

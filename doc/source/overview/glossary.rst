@@ -20,8 +20,8 @@ Common
 Alembic
 -------
 
-A lightweight database migration tool which powers Rally migrations.
-Read more at `Official Alembic documentation <http://alembic.readthedocs.io/en/latest/>`_
+A lightweight database migration tool which powers Rally migrations. Read more
+at `Official Alembic documentation <http://alembic.readthedocs.io/en/latest/>`_
 
 DB Migrations
 -------------
