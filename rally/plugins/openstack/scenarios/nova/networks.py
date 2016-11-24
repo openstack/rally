@@ -37,8 +37,15 @@ class CreateAndListNetworks(utils.NovaScenario):
         :param kwargs: Optional additional arguments for network creation
         """
 
-        self._create_network(start_cidr, **kwargs)
-        self._list_networks()
+        network = self._create_network(start_cidr, **kwargs)
+        msg = ("Network isn't created")
+        self.assertTrue(network, err_msg=msg)
+        list_networks = self._list_networks()
+        msg = ("New network not in the list of existed networks.\n"
+               "New network UUID: {}\n"
+               "List of available networks: {}").format(network,
+                                                        list_networks)
+        self.assertIn(network, list_networks, err_msg=msg)
 
 
 @validation.restricted_parameters("label")

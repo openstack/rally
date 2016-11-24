@@ -50,8 +50,13 @@ class CreateAndListAggregates(utils.NovaScenario):
         This scenario creates a aggregate and then lists all aggregates.
         :param availability_zone: The availability zone of the aggregate
         """
-        self._create_aggregate(availability_zone)
-        self._list_aggregates()
+        aggregate = self._create_aggregate(availability_zone)
+        msg = "Aggregate isn't created"
+        self.assertTrue(aggregate, err_msg=msg)
+        all_aggregates = self._list_aggregates()
+        msg = ("Created aggregate is not in the"
+               " list of all available aggregates")
+        self.assertIn(aggregate, all_aggregates, err_msg=msg)
 
 
 @validation.required_services(consts.Service.NOVA)

@@ -96,16 +96,16 @@ class FunctionalMixin(object):
                 self._concatenate_message(msg, err_msg))
 
     def assertIn(self, member, container, err_msg=None):
+        msg = "%s not found in %s" % (repr(member),
+                                      repr(container))
         if member not in container:
-            msg = "%s not found in %s" % (repr(member),
-                                          repr(container))
             raise exceptions.RallyAssertionError(
                 self._concatenate_message(msg, err_msg))
 
     def assertNotIn(self, member, container, err_msg=None):
+        msg = "%s found in %s" % (repr(member),
+                                  repr(container))
         if member in container:
-            msg = "%s found in %s" % (repr(member),
-                                      repr(container))
             raise exceptions.RallyAssertionError(
                 self._concatenate_message(msg, err_msg))
 
@@ -116,9 +116,51 @@ class FunctionalMixin(object):
             raise exceptions.RallyAssertionError(
                 self._concatenate_message(msg, err_msg))
 
+    def assertIsSubset(self, member, container, err_msg=None):
+        msg = "%s not found in %s" % (repr(member),
+                                      repr(container))
+        if set(member) - set(container):
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
+    def assertIsNotSubset(self, member, container, err_msg=None):
+        msg = "%s found in %s" % (repr(member),
+                                  repr(container))
+        if not (set(member) - set(container)):
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
     def assertIsNotInstance(self, first, second, err_msg=None):
         if isinstance(first, second):
             msg = "%s is instance of %s" % (repr(first),
                                             repr(second))
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
+    def assertLessEqual(self, first, second, err_msg=None):
+        msg = "%s is greater than %s" % (repr(first),
+                                         repr(second))
+        if first > second:
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
+    def assertLess(self, first, second, err_msg=None):
+        msg = "%s is greater or equal to %s" % (repr(first),
+                                                repr(second))
+        if first >= second:
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
+    def assertGreaterEqual(self, first, second, err_msg=None):
+        msg = "%s is less than %s" % (repr(first),
+                                      repr(second))
+        if first < second:
+            raise exceptions.RallyAssertionError(
+                self._concatenate_message(msg, err_msg))
+
+    def assertGreater(self, first, second, err_msg=None):
+        msg = "%s is less or equal to %s" % (repr(first),
+                                             repr(second))
+        if first <= second:
             raise exceptions.RallyAssertionError(
                 self._concatenate_message(msg, err_msg))

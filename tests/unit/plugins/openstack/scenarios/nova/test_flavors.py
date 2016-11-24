@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.nova import flavors
 from tests.unit import test
 
@@ -36,16 +37,31 @@ class NovaFlavorsTestCase(test.TestCase):
               {"is_public": False, "fakeargs": "fakeargs"})
     @ddt.unpack
     def test_create_and_list_flavor_access(self, **kwargs):
+        # Common parameters
+        ram = 100
+        vcpus = 1
+        disk = 1
+
         scenario = flavors.CreateAndListFlavorAccess()
         scenario._create_flavor = mock.Mock()
         scenario._list_flavor_access = mock.Mock()
-        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+
+        # Positive case:
+        scenario.run(ram, vcpus, disk, **kwargs)
         kwargs.pop("is_public", None)
-        scenario._create_flavor.assert_called_once_with(100, 1, 1,
+        scenario._create_flavor.assert_called_once_with(ram, vcpus, disk,
                                                         is_public=False,
                                                         **kwargs)
         scenario._list_flavor_access.assert_called_once_with(
             scenario._create_flavor.return_value.id)
+
+        # Negative case1: flavor wasn't created
+        scenario._create_flavor.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError, scenario.run,
+                          ram, vcpus, disk, **kwargs)
+        scenario._create_flavor.assert_called_with(ram, vcpus, disk,
+                                                   is_public=False,
+                                                   **kwargs)
 
     def test_create_flavor(self):
         scenario = flavors.CreateFlavor()

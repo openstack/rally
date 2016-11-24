@@ -58,8 +58,15 @@ class BootAndListServer(utils.NovaScenario, cinder_utils.CinderScenario):
                          detailed information about all of them
         :param kwargs: Optional additional arguments for server creation
         """
-        self._boot_server(image, flavor, **kwargs)
-        self._list_servers(detailed)
+        server = self._boot_server(image, flavor, **kwargs)
+        msg = ("Servers isn't created")
+        self.assertTrue(server, err_msg=msg)
+
+        pool_list = self._list_servers(detailed)
+        msg = ("Server not included into list of available servers\n"
+               "Booted server: {}\n"
+               "Pool of servers: {}").format(server, pool_list)
+        self.assertIn(server, pool_list, err_msg=msg)
 
 
 @validation.required_services(consts.Service.NOVA)

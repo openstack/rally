@@ -40,8 +40,13 @@ class CreateAndListFloatingIpsBulk(utils.NovaScenario):
         :param kwargs: Optional additional arguments for range IP creation
         """
 
-        self._create_floating_ips_bulk(start_cidr, **kwargs)
-        self._list_floating_ips_bulk()
+        ips_bulk = self._create_floating_ips_bulk(start_cidr, **kwargs)
+        msg = ("Bulk of IPS isn't created")
+        self.assertTrue(ips_bulk, err_msg=msg)
+
+        list_ips = self._list_floating_ips_bulk()
+        self.assertLessEqual(len(ips_bulk), len(list_ips))
+        self.assertIsSubset(ips_bulk, list_ips)
 
 
 @validation.restricted_parameters("pool")
