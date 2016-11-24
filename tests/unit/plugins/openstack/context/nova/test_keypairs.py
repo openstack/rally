@@ -84,6 +84,7 @@ class KeyPairContextTestCase(test.TestCase):
         mock_keypair.id = "key_id"
         keypair_ctx = keypairs.Keypair(self.ctx_without_keys)
         keypair_ctx.generate_random_name = mock.Mock()
+
         key = keypair_ctx._generate_keypair("credential")
 
         self.assertEqual({
@@ -94,8 +95,6 @@ class KeyPairContextTestCase(test.TestCase):
         }, key)
 
         mock_clients.assert_has_calls([
-            mock.call().nova().keypairs.delete(
-                keypair_ctx.generate_random_name.return_value),
             mock.call().nova().keypairs.create(
-                keypair_ctx.generate_random_name.return_value)
+                keypair_ctx.generate_random_name.return_value),
         ])
