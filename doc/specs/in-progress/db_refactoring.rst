@@ -56,8 +56,8 @@ Existing DB schema
     |            |    |             |
     |  id        |    |  id         |
     |  uuid   <--+----+- task_uuid  |
-    |   ^        |    |             |
-    +---+--------+    +-------------+
+    |            |    |             |
+    +------------+    +-------------+
 
 * Task - stores task status, tags, validation log
 
