@@ -17,7 +17,6 @@
                   name: "dummy"
               strategy:
                   name: "dummy"
-              extra: {}
       sla:
         failure_rate:
           max: 0
@@ -29,7 +28,6 @@
           name: "dummy"
         strategy:
           name: "dummy"
-        extra: {}
       runner:
         type: "constant"
         times: 10
@@ -56,12 +54,10 @@
                   name: "workload_balancing"
               strategy:
                   name: "workload_stabilization"
-              extra: {}
             - goal:
                   name: "dummy"
               strategy:
                   name: "dummy"
-              extra: {}
       sla:
         failure_rate:
           max: 0

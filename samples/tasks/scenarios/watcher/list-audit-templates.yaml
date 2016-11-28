@@ -14,9 +14,7 @@
                   name: "workload_balancing"
               strategy:
                   name: "workload_stabilization"
-              extra: {}
             - goal:
                   name: "dummy"
               strategy:
                   name: "dummy"
-              extra: {}

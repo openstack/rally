@@ -17,8 +17,7 @@
                             },
                             "strategy": {
                                 "name": "workload_stabilization"
-                            },
-                            "extra": {}
+                            }
                         },
                         {
                             "goal": {
@@ -26,8 +25,7 @@
                             },
                             "strategy": {
                                 "name": "dummy"
-                            },
-                            "extra": {}
+                            }
                         }
                     ]
                 }

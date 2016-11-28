@@ -60,9 +60,6 @@ class AuditTemplateGenerator(context.Context):
                             }
                         }
                     },
-                    "extra": {
-                        "type": "object"
-                    },
                 },
             },
         },
@@ -100,10 +97,9 @@ class AuditTemplateGenerator(context.Context):
             strategy_id = types.WatcherStrategy.transform(
                 clients=clients,
                 resource_config=audit_params["strategy"])
-            extra = audit_params.get("extra") or {}
 
             audit_template = watcher_scenario._create_audit_template(
-                goal_id, strategy_id, extra)
+                goal_id, strategy_id)
             self.context["audit_templates"].append(audit_template.uuid)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Audit Templates`"))

@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.watcher import utils
@@ -28,18 +29,18 @@ from rally.task import validation
                     name="Watcher.create_audit_template_and_delete")
 class CreateAuditTemplateAndDelete(utils.WatcherScenario):
 
-    def run(self, goal, strategy, extra=None):
+    @logging.log_deprecated_args("Extra field has been removed "
+                                 "since it isn't used.", "0.8.0", ["extra"],
+                                 once=True)
+    def run(self, goal, strategy):
         """Create audit template and delete it.
 
         :param goal: The goal audit template is based on
         :param strategy: The strategy used to provide resource optimization
         algorithm
-        :param extra: This field is used to specify some audit template
-        options
         """
 
-        extra = extra or {}
-        audit_template = self._create_audit_template(goal, strategy, extra)
+        audit_template = self._create_audit_template(goal, strategy)
         self._delete_audit_template(audit_template.uuid)
 
 

@@ -6,7 +6,6 @@
           name: "dummy"
         strategy:
           name: "dummy"
-        extra: {}
       runner:
         type: "constant"
         times: 10

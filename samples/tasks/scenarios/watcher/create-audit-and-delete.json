@@ -21,8 +21,7 @@
                             },
                             "strategy": {
                                 "name": "dummy"
-                            },
-                            "extra": {}
+                            }
                         }
                     ]
                 }
