@@ -17,7 +17,7 @@ import ddt
 from keystoneclient import exceptions as keystone_exc
 import mock
 from oslo_config import cfg
-from six import moves
+import six
 import sqlalchemy.exc
 
 from rally.cli import cliutils
@@ -226,7 +226,7 @@ class CliUtilsTestCase(test.TestCase):
             def failed_to_open_file(self):
                 raise IOError("No such file")
 
-        ret = cliutils.run(["rally", "failure", "failed_to_open_file"],
+        ret = cliutils.run(["rally", "failure", "failed-to-open-file"],
                            {"failure": FailuresCommands})
         self.assertEqual(1, ret)
 
@@ -237,7 +237,7 @@ class CliUtilsTestCase(test.TestCase):
             def operational_failure(self):
                 raise sqlalchemy.exc.OperationalError("Can't open DB file")
 
-        ret = cliutils.run(["rally", "failure", "operational_failure"],
+        ret = cliutils.run(["rally", "failure", "operational-failure"],
                            {"failure": SQLAlchemyCommands})
         self.assertEqual(1, ret)
 
@@ -376,13 +376,13 @@ class CliUtilsTestCase(test.TestCase):
                       "+---+---+")})
     @ddt.unpack
     def test_print_list(self, args, kwargs, expected):
-        out = moves.StringIO()
+        out = six.moves.StringIO()
         kwargs["out"] = out
         cliutils.print_list(*args, **kwargs)
         self.assertEqual(expected, out.getvalue().strip())
 
     def test_print_list_raises(self):
-        out = moves.StringIO()
+        out = six.moves.StringIO()
         self.assertRaisesRegexp(
             ValueError,
             "Field labels list.*has different number "
@@ -390,6 +390,54 @@ class CliUtilsTestCase(test.TestCase):
             cliutils.print_list,
             [self.TestObj()], ["x"],
             field_labels=["x", "y"], sortby_index=None, out=out)
+
+    def test_help_for_grouped_methods(self):
+        class SomeCommand(object):
+            @cliutils.help_group("1_manage")
+            def install(self):
+                pass
+
+            @cliutils.help_group("1_manage")
+            def uninstall(self):
+                pass
+
+            @cliutils.help_group("1_manage")
+            def reinstall(self):
+                pass
+
+            @cliutils.help_group("2_launch")
+            def run(self):
+                pass
+
+            @cliutils.help_group("2_launch")
+            def rerun(self):
+                pass
+
+            @cliutils.help_group("3_results")
+            def show(self):
+                pass
+
+            @cliutils.help_group("3_results")
+            def list(self):
+                pass
+
+            def do_do_has_do_has_mesh(self):
+                pass
+
+        self.assertEqual(
+            "\n\nCommands:\n"
+            "   do-do-has-do-has-mesh   \n"
+            "\n"
+            "   install                 \n"
+            "   reinstall               \n"
+            "   uninstall               \n"
+            "\n"
+            "   rerun                   \n"
+            "   run                     \n"
+            "\n"
+            "   list                    \n"
+            "   show                    \n",
+            cliutils._compose_category_description(SomeCommand))
 
 
 class ValidateArgsTest(test.TestCase):

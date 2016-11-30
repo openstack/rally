@@ -40,6 +40,7 @@ _rally()
     OPTS["task_list"]="--deployment --all-deployments --status --uuids-only"
     OPTS["task_report"]="--tasks --out --open --html --html-static --junit"
     OPTS["task_results"]="--uuid"
+    OPTS["task_sla-check"]="--uuid --json"
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"
     OPTS["task_status"]="--uuid"

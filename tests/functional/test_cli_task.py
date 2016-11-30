@@ -206,7 +206,7 @@ class TaskTestCase(unittest.TestCase):
     def test_sla_check_with_wrong_task_id(self):
         rally = utils.Rally()
         self.assertRaises(utils.RallyCliError,
-                          rally, "task sla_check --uuid %s" % FAKE_TASK_UUID)
+                          rally, "task sla-check --uuid %s" % FAKE_TASK_UUID)
 
     def test_status_with_wrong_task_id(self):
         rally = utils.Rally()
@@ -883,13 +883,13 @@ class SLATestCase(unittest.TestCase):
         cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        self.assertRaises(utils.RallyCliError, rally, "task sla_check")
+        self.assertRaises(utils.RallyCliError, rally, "task sla-check")
 
     def test_sla_success(self):
         rally = utils.Rally()
         config = utils.TaskConfig(self._get_sample_task_config())
         rally("task start --task %s" % config.filename)
-        rally("task sla_check")
+        rally("task sla-check")
         expected = [
             {"benchmark": "KeystoneBasic.create_and_list_users",
              "criterion": "failure_rate",
@@ -900,7 +900,7 @@ class SLATestCase(unittest.TestCase):
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"}
         ]
-        data = rally("task sla_check --json", getjson=True)
+        data = rally("task sla-check --json", getjson=True)
         self.assertEqual(expected, data)
 
 
@@ -935,11 +935,11 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
              "pos": 0, "status": "FAIL"}
         ]
         try:
-            rally("task sla_check --json", getjson=True)
+            rally("task sla-check --json", getjson=True)
         except utils.RallyCliError as expected_error:
             self.assertEqual(json.loads(expected_error.output), expected)
         else:
-            self.fail("`rally task sla_check` command should return non-zero "
+            self.fail("`rally task sla-check` command should return non-zero "
                       "exit code")
 
     def _test_broken_context(self, runner):
@@ -963,11 +963,11 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
              "pos": 0, "status": "FAIL"}
         ]
         try:
-            rally("task sla_check --json", getjson=True)
+            rally("task sla-check --json", getjson=True)
         except utils.RallyCliError as expected_error:
             self.assertEqual(json.loads(expected_error.output), expected)
         else:
-            self.fail("`rally task sla_check` command should return non-zero "
+            self.fail("`rally task sla-check` command should return non-zero "
                       "exit code")
 
     def test_broken_context_with_constant_runner(self):
@@ -1012,20 +1012,20 @@ class SLAPerfDegrTestCase(unittest.TestCase):
         cfg = self._get_sample_task_config(max_degradation=1)
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        self.assertRaises(utils.RallyCliError, rally, "task sla_check")
+        self.assertRaises(utils.RallyCliError, rally, "task sla-check")
 
     def test_sla_success(self):
         rally = utils.Rally()
         config = utils.TaskConfig(self._get_sample_task_config())
         rally("task start --task %s" % config.filename)
-        rally("task sla_check")
+        rally("task sla-check")
         expected = [
             {"benchmark": "Dummy.dummy_random_action",
              "criterion": "performance_degradation",
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"},
         ]
-        data = rally("task sla_check --json", getjson=True)
+        data = rally("task sla-check --json", getjson=True)
         self.assertEqual(expected, data)
 
 

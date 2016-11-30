@@ -744,6 +744,16 @@ class TaskCommands(object):
                    action="store_true",
                    help="Output in JSON format.")
     @envutils.with_default_task_id
+    @cliutils.alias("sla_check")
+    def sla_check_deprecated(self, task_id=None, tojson=False):
+        """DEPRECATED since Rally 0.8.0, use `rally task sla-check` instead."""
+        return self.sla_check(task_id=task_id, tojson=tojson)
+
+    @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
+    @cliutils.args("--json", dest="tojson",
+                   action="store_true",
+                   help="Output in JSON format.")
+    @envutils.with_default_task_id
     def sla_check(self, task_id=None, tojson=False):
         """Display SLA check results table.
 
