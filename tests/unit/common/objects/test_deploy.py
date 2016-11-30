@@ -133,13 +133,13 @@ class DeploymentTestCase(test.TestCase):
 
         expected_users = [u.to_dict(include_permission=True)
                           for u in credentials["users"]]
-
+        expected_admin = credentials["admin"].to_dict(include_permission=True)
         deploy.update_credentials(credentials)
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"],
             {
-                "admin": credentials["admin"].to_dict(include_permission=True),
-                "users": expected_users
+                "credentials": [["openstack", {"admin": expected_admin,
+                                               "users": expected_users}]]
             })
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -148,7 +148,9 @@ class DeploymentTestCase(test.TestCase):
         deploy = objects.Deployment(deployment=self.deployment)
         deploy.update_credentials({})
         mock_deployment_update.assert_called_once_with(
-            self.deployment["uuid"], {"admin": {}, "users": []})
+            self.deployment["uuid"], {
+                "credentials": [["openstack", {"admin": {}, "users": []}]]
+            })
 
     @mock.patch("rally.common.objects.deploy.db.resource_create")
     def test_add_resource(self, mock_resource_create):

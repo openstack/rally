@@ -350,7 +350,11 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         })
         mock_engine_validate.assert_called_with()
         mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid, self.credentials)
+            mock.call(self.deployment_uuid,
+                      {"credentials": [["openstack",
+                                        {"admin": self.credentials["admin"],
+                                         "users": self.credentials["users"]}]]
+                       })
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -396,7 +400,11 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         api.Deployment.recreate(self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid, self.credentials)
+            mock.call(self.deployment_uuid,
+                      {"credentials": [["openstack",
+                                        {"admin": self.credentials["admin"],
+                                         "users": self.credentials["users"]}]]
+                       })
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
