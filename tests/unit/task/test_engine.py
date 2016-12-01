@@ -575,6 +575,8 @@ class ResultConsumerTestCase(test.TestCase):
             pass
 
         self.assertTrue(runner.abort.called)
+        task.update_status.assert_called_once_with(
+            consts.TaskStatus.SOFT_ABORTING)
 
     @mock.patch("rally.task.hook.HookExecutor")
     @mock.patch("rally.common.objects.Task.get_status")

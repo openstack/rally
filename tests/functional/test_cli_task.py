@@ -563,6 +563,8 @@ class TaskTestCase(unittest.TestCase):
               {"task_file": config.filename,
                "deployment_id": deployment_id})
         results = json.loads(rally("task results"))
+        self.assertEqual(1, len(results),
+                         "Second subtask should not be started")
         iterations_completed = len(results[0]["result"])
         self.assertLess(iterations_completed, times)
 
@@ -582,6 +584,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "max_seconds_per_iteration": 0.01
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
@@ -602,6 +614,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "max_seconds_per_iteration": 0.01
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
@@ -623,6 +645,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "max_seconds_per_iteration": 0.01
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
@@ -644,6 +676,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "failure_rate": {"max": 0.0}
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
@@ -664,6 +706,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "failure_rate": {"max": 0.0}
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
@@ -685,6 +737,16 @@ class TaskTestCase(unittest.TestCase):
                     "sla": {
                         "failure_rate": {"max": 0.0}
                     }
+                },
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 1,
+                        "concurrency": 1
+                    },
                 }
             ]
         }
