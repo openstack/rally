@@ -56,18 +56,17 @@ class NovaAggregatesTestCase(test.ScenarioTestCase):
 
     def test_create_aggregate_add_and_remove_host(self):
         fake_aggregate = "fake_aggregate"
-        fake_hosts = [mock.Mock(host_name="fake_host_name")]
+        fake_hosts = [mock.Mock(service={"host": "fake_host_name"})]
         scenario = aggregates.CreateAggregateAddAndRemoveHost()
         scenario._create_aggregate = mock.MagicMock(
             return_value=fake_aggregate)
-        scenario._list_hosts = mock.MagicMock(
-            return_value=fake_hosts)
+        scenario._list_hypervisors = mock.MagicMock(return_value=fake_hosts)
         scenario._aggregate_add_host = mock.MagicMock()
         scenario._aggregate_remove_host = mock.MagicMock()
         scenario.run(availability_zone="nova")
         scenario._create_aggregate.assert_called_once_with(
             "nova")
-        scenario._list_hosts.assert_called_once_with(zone=None)
+        scenario._list_hypervisors.assert_called_once_with()
         scenario._aggregate_add_host.assert_called_once_with(
             "fake_aggregate", "fake_host_name")
         scenario._aggregate_remove_host.assert_called_once_with(
@@ -84,7 +83,7 @@ class NovaAggregatesTestCase(test.ScenarioTestCase):
 
     def test_create_aggregate_add_host_and_boot_server(self):
         fake_aggregate = mock.Mock()
-        fake_hosts = [mock.Mock(hypervisor_hostname="fake_host_name")]
+        fake_hosts = [mock.Mock(service={"host": "fake_host_name"})]
         fake_flavor = mock.MagicMock(id="flavor-id-0", ram=512, disk=1,
                                      vcpus=1)
         fake_metadata = {"test_metadata": "true"}
@@ -123,7 +122,7 @@ class NovaAggregatesTestCase(test.ScenarioTestCase):
 
     def test_create_aggregate_add_host_and_boot_server_failure(self):
         fake_aggregate = mock.Mock()
-        fake_hosts = [mock.Mock(hypervisor_hostname="fake_host_name")]
+        fake_hosts = [mock.Mock(service={"host": "fake_host_name"})]
         fake_flavor = mock.MagicMock(id="flavor-id-0", ram=512, disk=1,
                                      vcpus=1)
         fake_metadata = {"test_metadata": "true"}
