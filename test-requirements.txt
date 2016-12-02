@@ -23,3 +23,6 @@ testtools>=1.4.0
 
 oslosphinx>=4.7.0                                      # Apache Software License
 oslotest>=1.10.0                                       # Apache Software License
+
+testresources>=0.2.4                                   # Apache-2.0/BSD
+testscenarios>=0.4                                     # Apache-2.0/BSD

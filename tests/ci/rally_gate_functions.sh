@@ -37,13 +37,18 @@ function setUp () {
     # NOTE(ikhudoshyn): Create additional users and register a new env
     # so that we could run scenarios using 'existing_users' context
     if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" = "1" ]; then
+        # NOTE(andreykurilin): let's hardcode version, since we already
+        #    hardcoded arguments for users...
+        export OS_IDENTITY_API_VERSION=3
         openstack --version
 
-        openstack --os-interface admin project create rally-test-project-1
-        openstack --os-interface admin user create --project rally-test-project-1 --password rally-test-password-1 rally-test-user-1
+        openstack project create rally-test-project-1
+        openstack user create --project rally-test-project-1 --password rally-test-password-1 rally-test-user-1
+        openstack role add --project rally-test-project-1 --user rally-test-user-1 Member
 
-        openstack --os-interface admin project create rally-test-project-2
-        openstack --os-interface admin user create --project rally-test-project-2 --password rally-test-password-2 rally-test-user-2
+        openstack project create rally-test-project-2
+        openstack user create --project rally-test-project-2 --password rally-test-password-2 rally-test-user-2
+        openstack role add --project rally-test-project-2 --user rally-test-user-2 Member
 
         set +e
         NEUTRON_EXISTS=$(openstack --os-interface admin service list | grep neutron)
@@ -63,12 +68,16 @@ function setUp () {
           {\
               "username": "rally-test-user-1",\
               "password": "rally-test-password-1",\
-              "tenant_name": "rally-test-project-1",\
+              "project_name": "rally-test-project-1",\
+              "user_domain_name": "Default",\
+              "project_domain_name": "Default"\
           },\
           {\
               "username": "rally-test-user-2",\
               "password": "rally-test-password-2",\
-              "tenant_name": "rally-test-project-2"\
+              "project_name": "rally-test-project-2",\
+              "user_domain_name": "Default",\
+              "project_domain_name": "Default"\
           }\
         ],\
     ' $DEPLOYMENT_CONFIG_FILE
