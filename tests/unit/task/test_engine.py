@@ -22,6 +22,7 @@ import threading
 import jsonschema
 import mock
 
+from rally.common import objects
 from rally import consts
 from rally import exceptions
 from rally.task import engine
@@ -411,7 +412,7 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
             mock_result_consumer, mock_task_get_status):
-        task = mock.MagicMock()
+        task = mock.MagicMock(spec=objects.Task)
         config = {
             "a.task": [{"runner": {"type": "a", "b": 1}}],
             "b.task": [{"runner": {"type": "a", "b": 1}}],
@@ -498,6 +499,8 @@ class ResultConsumerTestCase(test.TestCase):
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
 
         results = [
@@ -508,7 +511,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
         with engine.ResultConsumer(
-                key, task, runner, False) as consumer_obj:
+                key, task, subtask, workload, runner, False) as consumer_obj:
             pass
 
         mock_sla_instance.add_iteration.assert_has_calls([
@@ -536,22 +539,23 @@ class ResultConsumerTestCase(test.TestCase):
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
 
         results = []
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
         with engine.ResultConsumer(
-                key, task, runner, False):
+                key, task, subtask, workload, runner, False):
             pass
-        task.append_results.assert_has_calls([mock.call(
-            key, {
-                "raw": [],
-                "full_duration": 1,
-                "sla": mock_sla_results,
-                "load_duration": 0
-            }
-        )], any_order=True)
+
+        workload.add_workload_data.assert_called_once_with({"raw": []})
+        workload.set_results.assert_called_once_with({
+            "full_duration": 1,
+            "sla": mock_sla_results,
+            "load_duration": 0
+        })
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
@@ -565,13 +569,15 @@ class ResultConsumerTestCase(test.TestCase):
                                                        False]
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
 
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 1},
               {"duration": 2, "timestamp": 2}]] * 4)
 
-        with engine.ResultConsumer(key, task, runner, True):
+        with engine.ResultConsumer(key, task, subtask, workload, runner, True):
             pass
 
         self.assertTrue(runner.abort.called)
@@ -594,6 +600,8 @@ class ResultConsumerTestCase(test.TestCase):
 
         task = mock.MagicMock()
         mock_task_get_status.return_value = consts.TaskStatus.ABORTED
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
 
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
 
@@ -603,7 +611,7 @@ class ResultConsumerTestCase(test.TestCase):
 
         mock_hook_executor_instance = mock_hook_executor.return_value
 
-        with engine.ResultConsumer(key, task, runner, True):
+        with engine.ResultConsumer(key, task, subtask, workload, runner, True):
             pass
 
         mock_sla_checker.assert_called_once_with(key["kw"])
@@ -623,12 +631,15 @@ class ResultConsumerTestCase(test.TestCase):
                                                        False]
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 4}]] * 4)
         runner.event_queue = collections.deque()
 
-        with engine.ResultConsumer(key, task, runner, False):
+        with engine.ResultConsumer(key, task, subtask, workload,
+                                   runner, False):
             pass
 
         self.assertEqual(0, runner.abort.call_count)
@@ -644,12 +655,15 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_checker.return_value = mock_sla_instance
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1])
         runner.event_queue = collections.deque()
         exc = TestException()
         try:
-            with engine.ResultConsumer(key, task, runner, False):
+            with engine.ResultConsumer(key, task, subtask, workload,
+                                       runner, False):
                 raise exc
         except TestException:
             pass
@@ -675,6 +689,8 @@ class ResultConsumerTestCase(test.TestCase):
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         key = {"kw": {"fake": 2, "hooks": []}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         runner = mock.MagicMock()
         events = [
             {"type": "iteration", "value": 1},
@@ -684,7 +700,8 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque()
         runner.event_queue = collections.deque(events)
 
-        consumer_obj = engine.ResultConsumer(key, task, runner, False)
+        consumer_obj = engine.ResultConsumer(key, task, subtask,
+                                             workload, runner, False)
         stop_event = threading.Event()
 
         def set_stop_event(event_type, value):
@@ -702,15 +719,13 @@ class ResultConsumerTestCase(test.TestCase):
             mock.call(event_type="iteration", value=3)
         ])
 
-        task.append_results.assert_called_once_with(
-            key, {
-                "raw": [],
-                "full_duration": 1,
-                "sla": mock_sla_results,
-                "hooks": mock_hook_results,
-                "load_duration": 0
-            }
-        )
+        workload.add_workload_data.assert_called_once_with({"raw": []})
+        workload.set_results.assert_called_once_with({
+            "full_duration": 1,
+            "sla": mock_sla_results,
+            "hooks": mock_hook_results,
+            "load_duration": 0
+        })
 
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
@@ -725,6 +740,8 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock()
         key = mock.MagicMock()
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         mock_task_get_status.side_effect = (consts.TaskStatus.RUNNING,
                                             consts.TaskStatus.RUNNING,
                                             consts.TaskStatus.ABORTING)
@@ -732,7 +749,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_event.return_value = mock_is_done
         mock_is_done.isSet.return_value = False
 
-        res = engine.ResultConsumer(key, task, runner, True)
+        res = engine.ResultConsumer(key, task, subtask, workload, runner, True)
         res.wait_and_abort()
 
         runner.abort.assert_called_with()
@@ -752,13 +769,15 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock()
         key = mock.MagicMock()
         task = mock.MagicMock()
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         mock_is_done = mock.MagicMock()
         mock_event.return_value = mock_is_done
 
         mock_is_done.isSet.side_effect = [False, False, False, False, True]
 
-        res = engine.ResultConsumer(key, task, runner, True)
+        res = engine.ResultConsumer(key, task, subtask, workload, runner, True)
         res.wait_and_abort()
 
         # check method don't abort runner if task is not aborted

@@ -235,13 +235,6 @@ class TaskTestCase(test.TestCase):
             self.task["uuid"])
         self.assertEqual(results, "foo_results")
 
-    @mock.patch("rally.common.objects.task.db.task_result_create")
-    def test_append_results(self, mock_task_result_create):
-        task = objects.Task(task=self.task)
-        task.append_results("opt", "val")
-        mock_task_result_create.assert_called_once_with(
-            self.task["uuid"], "opt", "val")
-
     @mock.patch("rally.common.objects.task.db.task_update")
     def test_set_failed(self, mock_task_update):
         mock_task_update.return_value = self.task
@@ -254,6 +247,14 @@ class TaskTestCase(test.TestCase):
                                    "msg": "foo_error_message",
                                    "trace": "foo_trace"}},
         )
+
+    @mock.patch("rally.common.objects.task.Subtask")
+    def test_add_subtask(self, mock_subtask):
+        task = objects.Task(task=self.task)
+        subtask = task.add_subtask(title="foo")
+        mock_subtask.assert_called_once_with(
+            self.task["uuid"], title="foo")
+        self.assertIs(subtask, mock_subtask.return_value)
 
     @ddt.data(
         {
@@ -328,3 +329,73 @@ class TaskTestCase(test.TestCase):
             allowed_statuses=(consts.TaskStatus.RUNNING,
                               consts.TaskStatus.SOFT_ABORTING)
         )
+
+
+class SubtaskTestCase(test.TestCase):
+
+    def setUp(self):
+        super(SubtaskTestCase, self).setUp()
+        self.subtask = {
+            "task_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
+            "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca2",
+            "title": "foo",
+        }
+
+    @mock.patch("rally.common.objects.task.db.subtask_create")
+    def test_init(self, mock_subtask_create):
+        mock_subtask_create.return_value = self.subtask
+        subtask = objects.Subtask("bar", title="foo")
+        mock_subtask_create.assert_called_once_with(
+            "bar", title="foo")
+        self.assertEqual(subtask["uuid"], self.subtask["uuid"])
+
+    @mock.patch("rally.common.objects.task.Workload")
+    @mock.patch("rally.common.objects.task.db.subtask_create")
+    def test_add_workload(self, mock_subtask_create, mock_workload):
+        mock_subtask_create.return_value = self.subtask
+        subtask = objects.Subtask("bar", title="foo")
+
+        workload = subtask.add_workload({"bar": "baz"})
+        mock_workload.assert_called_once_with(
+            self.subtask["task_uuid"], self.subtask["uuid"], {"bar": "baz"})
+        self.assertIs(workload, mock_workload.return_value)
+
+
+class WorkloadTestCase(test.TestCase):
+
+    def setUp(self):
+        super(WorkloadTestCase, self).setUp()
+        self.workload = {
+            "task_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
+            "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca3",
+        }
+
+    @mock.patch("rally.common.objects.task.db.workload_create")
+    def test_init(self, mock_workload_create):
+        mock_workload_create.return_value = self.workload
+        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+        mock_workload_create.assert_called_once_with(
+            "uuid1", "uuid2", {"bar": "baz"})
+        self.assertEqual(workload["uuid"], self.workload["uuid"])
+
+    @mock.patch("rally.common.objects.task.db.workload_data_create")
+    @mock.patch("rally.common.objects.task.db.workload_create")
+    def test_add_workload_data(self, mock_workload_create,
+                               mock_workload_data_create):
+        mock_workload_create.return_value = self.workload
+        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+
+        workload = workload.add_workload_data({"data": "foo"})
+        mock_workload_data_create.assert_called_once_with(
+            self.workload["task_uuid"], self.workload["uuid"], {"data": "foo"})
+
+    @mock.patch("rally.common.objects.task.db.workload_set_results")
+    @mock.patch("rally.common.objects.task.db.workload_create")
+    def test_set_results(self, mock_workload_create,
+                         mock_workload_set_results):
+        mock_workload_create.return_value = self.workload
+        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+
+        workload = workload.set_results({"data": "foo"})
+        mock_workload_set_results.assert_called_once_with(
+            self.workload["uuid"], {"data": "foo"})

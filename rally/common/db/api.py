@@ -234,15 +234,48 @@ def task_result_get_all_by_uuid(task_uuid):
     return get_impl().task_result_get_all_by_uuid(task_uuid)
 
 
-def task_result_create(task_uuid, key, data):
-    """Append result record to task.
+def subtask_create(task_uuid, title, description=None, context=None):
+    """Create a subtask.
 
     :param task_uuid: string with UUID of Task instance.
-    :param key: key expected to update in task result.
-    :param data: data expected to update in task result.
-    :returns: TaskResult instance appended.
+    :param title: subtask title.
+    :param description: subtask description.
+    :param context: subtask context dict.
+    :returns: a dict with data on the subtask.
     """
-    return get_impl().task_result_create(task_uuid, key, data)
+    return get_impl().subtask_create(task_uuid, title, description, context)
+
+
+def workload_create(task_uuid, subtask_uuid, key):
+    """Create a workload.
+
+    :param task_uuid: string with UUID of Task instance.
+    :param subtask_uuid: string with UUID of Subtask instance.
+    :param key: dict with record values on the workload.
+    :returns: a dict with data on the workload.
+    """
+    return get_impl().workload_create(task_uuid, subtask_uuid, key)
+
+
+def workload_data_create(task_uuid, workload_uuid, data):
+    """Create a workload data.
+
+    :param task_uuid: string with UUID of Task instance.
+    :param workload_uuid: string with UUID of Workload instance.
+    :param data: dict with record values on the workload data.
+    :returns: a dict with data on the workload data.
+    """
+    return get_impl().workload_data_create(task_uuid, workload_uuid, data)
+
+
+def workload_set_results(workload_uuid, data):
+    """Set workload results.
+
+    :param workload_uuid: string with UUID of Workload instance.
+    :param data: dict with workload results.
+    :returns: a dict with data on the workload.
+    """
+    return get_impl().workload_set_results(workload_uuid, data)
 
 
 def deployment_create(values):
