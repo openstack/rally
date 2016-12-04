@@ -66,12 +66,13 @@ class DeploymentCommands(object):
             OS_USERNAME
             OS_PASSWORD
             OS_AUTH_URL
-            OS_TENANT_NAME
+            OS_TENANT_NAME or OS_PROJECT_NAME
             OS_ENDPOINT_TYPE or OS_INTERFACE
             OS_ENDPOINT
             OS_REGION_NAME
             OS_CACERT
             OS_INSECURE
+            OS_IDENTITY_API_VERSION
 
         All other deployment engines need more complex configuration
         data, so it should be stored in a configuration file.
