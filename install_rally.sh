@@ -33,7 +33,8 @@ PYTHON2=$(which python || true)
 PYTHON3=$(which python3 || true)
 PYTHON=${PYTHON2:-$PYTHON3}
 BASE_PIP_URL=${BASE_PIP_URL:-"https://pypi.python.org/simple"}
-VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
+VIRTUALENV_VERSION="15.1.0"
+VIRTUALENV_URL="https://raw.github.com/pypa/virtualenv/$VIRTUALENV_VERSION/virtualenv.py"
 
 RALLY_GIT_URL="https://git.openstack.org/openstack/rally"
 RALLY_GIT_BRANCH="master"
@@ -417,23 +418,24 @@ __EOF__
     fi
 
     # Use the latest virtualenv that can use `.tar.gz` files
-    VIRTUALENV_DST="$DESTDIR/virtualenv-191.py"
+    VIRTUALENV_DST="$DESTDIR/virtualenv-$VIRTUALENV_VERSION.py"
     mkdir -p "$DESTDIR"
-    download "$VIRTUALENV_DST" "$VIRTUALENV_191_URL"
-    "$PYTHON" "$VIRTUALENV_DST" $VERBOSE -p "$PYTHON" "$DESTDIR"
+    download "$VIRTUALENV_DST" "$VIRTUALENV_URL"
+    "$PYTHON" "$VIRTUALENV_DST" $VERBOSE --no-setuptools --no-pip --no-wheel \
+        -p "$PYTHON" "$DESTDIR"
 
     cd "${DESTDIR}" && . bin/activate
 
-    # Setuptools>=0.8 is required to support "wheel" format, otherwise
-    # pip will fail with an error. To be sure, just run upgrade to the
-    # recent version of setuptools
-    download - https://bootstrap.pypa.io/ez_setup.py | python - --insecure\
-        || die ${EX_SOFTWARE}\
-            "Failed to install the latest version of Python 'setuptools'" <<__EOF__
+    local getpip="$DESTDIR/get-pip.py"
+    download - "$getpip" https://bootstrap.pypa.io/get-pip.py | python -\
+        || die $EX_PROTOCOL \
+        "Error while installing python-pip from external source." <<__EOF__
 
-The required Python package setuptools could not be installed.
+The required Python package pip could not be installed.
 
 __EOF__
+
+    pip install setuptools wheel
 }
 
 setup_rally_configuration () {
