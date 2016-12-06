@@ -50,8 +50,14 @@ class DeploymentTestCase(unittest.TestCase):
                          config["admin"]["username"])
         self.assertEqual(utils.TEST_ENV["OS_PASSWORD"],
                          config["admin"]["password"])
-        self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
-                         config["admin"]["tenant_name"])
+        if "project_name" in config["admin"]:
+            # keystone v3
+            self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
+                             config["admin"]["project_name"])
+        else:
+            # keystone v2
+            self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
+                             config["admin"]["tenant_name"])
         self.assertEqual(utils.TEST_ENV["OS_AUTH_URL"],
                          config["auth_url"])
 

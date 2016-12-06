@@ -108,11 +108,16 @@ def get_creds_from_env_vars():
 
     user_domain_name = os.environ.get("OS_USER_DOMAIN_NAME")
     project_domain_name = os.environ.get("OS_PROJECT_DOMAIN_NAME")
-    if user_domain_name or project_domain_name:
-        # it is Keystone v3 and it has another config schem
+    identity_api_version = os.environ.get(
+        "OS_IDENTITY_API_VERSION", os.environ.get("IDENTITY_API_VERSION"))
+    if (identity_api_version == "3" or
+            (identity_api_version is None and
+                (user_domain_name or project_domain_name))):
+        # it is Keystone v3 and it has another config scheme
         creds["admin"]["project_name"] = creds["admin"].pop("tenant_name")
-        creds["admin"]["user_domain_name"] = user_domain_name or ""
-        creds["admin"]["project_domain_name"] = project_domain_name or ""
+        creds["admin"]["user_domain_name"] = user_domain_name or "Default"
+        project_domain_name = project_domain_name or "Default"
+        creds["admin"]["project_domain_name"] = project_domain_name
 
     return creds
 
