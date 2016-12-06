@@ -51,11 +51,13 @@ class CreateAndListImage(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param kwargs: optional parameters to create image
         """
-        self._create_image(container_format,
-                           image_location,
-                           disk_format,
-                           **kwargs)
-        self._list_images()
+        image = self._create_image(container_format,
+                                   image_location,
+                                   disk_format,
+                                   **kwargs)
+        self.assertTrue(image)
+        image_list = self._list_images()
+        self.assertIn(image.id, [i.id for i in image_list])
 
 
 @validation.required_services(consts.Service.GLANCE)
@@ -137,6 +139,5 @@ class CreateImageAndBootInstances(utils.GlanceScenario,
                                    image_location,
                                    disk_format,
                                    **create_image_kwargs)
-        image_id = image.id
-        self._boot_servers(image_id, flavor, number_instances,
+        self._boot_servers(image.id, flavor, number_instances,
                            **boot_server_kwargs)

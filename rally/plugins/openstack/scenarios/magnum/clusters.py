@@ -61,5 +61,8 @@ class CreateAndListClusters(utils.MagnumScenario):
         cluster_template_uuid = kwargs.get("cluster_template_uuid", None)
         if cluster_template_uuid is None:
             cluster_template_uuid = self.context["tenant"]["cluster_template"]
-        self._create_cluster(cluster_template_uuid, node_count, **kwargs)
-        self._list_clusters(**kwargs)
+        cluster = self._create_cluster(cluster_template_uuid,
+                                       node_count, **kwargs)
+        self.assertTrue(cluster)
+        list_clusters = self._list_clusters(**kwargs)
+        self.assertIn(cluster, list_clusters)

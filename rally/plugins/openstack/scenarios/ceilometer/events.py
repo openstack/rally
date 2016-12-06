@@ -17,7 +17,6 @@ Scenarios for Ceilometer Events API.
 """
 
 from rally import consts
-from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as cutils
 from rally.plugins.openstack.scenarios.keystone import basic as kbasic
@@ -45,10 +44,9 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
         """
         self.admin_keystone.create_user()
         events = self._list_events()
-        if not events:
-            raise exceptions.RallyException(
-                "Events list is empty, but it should include at least one "
-                "event about user creation")
+        msg = ("Events list is empty, but it should include at least one "
+               "event about user creation")
+        self.assertTrue(events, msg)
 
 
 @validation.required_services(consts.Service.CEILOMETER,
@@ -68,10 +66,9 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
         """
         self.admin_keystone.create_user()
         event_types = self._list_event_types()
-        if not event_types:
-            raise exceptions.RallyException(
-                "Event types list is empty, but it should include at least one"
-                " type about user creation")
+        msg = ("Event types list is empty, but it should include at least one"
+               " type about user creation")
+        self.assertTrue(event_types, msg)
 
 
 @validation.required_services(consts.Service.CEILOMETER,
@@ -91,9 +88,7 @@ class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
         """
         self.admin_keystone.create_user()
         events = self._list_events()
-        if not events:
-            raise exceptions.RallyException(
-                "Events list is empty, but it should include at least one "
-                "event about user creation")
-        event = events[0]
-        self._get_event(event_id=event.message_id)
+        msg = ("Events list is empty, but it should include at least one "
+               "event about user creation")
+        self.assertTrue(events, msg)
+        self._get_event(event_id=events[0].message_id)

@@ -61,11 +61,12 @@ class CreateAndListNode(utils.IronicScenario):
         :param kwargs: Optional additional arguments for node creation
         """
 
-        self._create_node(**kwargs)
-
-        self._list_nodes(
+        node = self._create_node(**kwargs)
+        self.assertTrue(node)
+        list_nodes = self._list_nodes(
             associated=associated, maintenance=maintenance, marker=marker,
             limit=limit, detail=detail, sort_key=sort_key, sort_dir=sort_dir)
+        self.assertIn(node, list_nodes)
 
 
 @validation.required_parameters("driver")

@@ -15,6 +15,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.ironic import nodes
 from tests.unit import test
 
@@ -23,8 +24,10 @@ class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_node(self):
         scenario = nodes.CreateAndListNode(self.context)
-        scenario._create_node = mock.Mock()
-        scenario._list_nodes = mock.Mock()
+        scenario._create_node = mock.Mock(return_value="node_obj1")
+        scenario._list_nodes = mock.Mock(return_value=["node_obj1",
+                                                       "node_obj2",
+                                                       "node_obj3"])
         fake_params = {
             "sort_dir": "foo1",
             "associated": "foo2",
@@ -35,10 +38,31 @@ class IronicNodesTestCase(test.ScenarioTestCase):
             "marker": "foo6",
             "fake_parameter1": "foo7"
         }
+
+        # Positive case:
         scenario.run(**fake_params)
 
         scenario._create_node.assert_called_once_with(fake_parameter1="foo7")
         scenario._list_nodes.assert_called_once_with(
+            sort_dir="foo1", associated="foo2", sort_key="foo3", detail=True,
+            limit="foo4", maintenance="foo5", marker="foo6")
+
+        # Negative case1: node isn't created
+        scenario._create_node = mock.Mock(return_value=None)
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run,
+                          **fake_params)
+
+        scenario._create_node.assert_called_with(fake_parameter1="foo7")
+
+        # Negative case2: cretaed node not in the list of available nodes
+        scenario._create_node = mock.Mock()
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run,
+                          **fake_params)
+
+        scenario._create_node.assert_called_with(fake_parameter1="foo7")
+        scenario._list_nodes.assert_called_with(
             sort_dir="foo1", associated="foo2", sort_key="foo3", detail=True,
             limit="foo4", maintenance="foo5", marker="foo6")
 
