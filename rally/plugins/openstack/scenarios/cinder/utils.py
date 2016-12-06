@@ -442,3 +442,14 @@ class CinderScenario(scenario.OpenStackScenario):
         :rtype: VolumeTransfer
         """
         return self.clients("cinder").transfers.accept(transfer_id, auth_key)
+
+    @atomic.action_timer("cinder.create_encryption_type")
+    def _create_encryption_type(self, volume_type, specs):
+        """Create encryption type for a volume type. Default: admin only.
+
+        :param volume_type: the volume type on which to add an encryption type
+        :param specs: the encryption type specifications to add
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        return self.admin_clients("cinder").volume_encryption_types.create(
+            volume_type, specs)
