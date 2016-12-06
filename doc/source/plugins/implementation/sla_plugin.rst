@@ -26,7 +26,8 @@ allowed maximum value.
 Creation
 ^^^^^^^^
 
-Inherit a class for your plugin from the base *SLA* class and implement its API (the *add_iteration(iteration)*, the *details()* method):
+Inherit a class for your plugin from the base *SLA* class and implement its API
+(the *add_iteration(iteration)*, the *details()* method):
 
 .. code-block:: python
 

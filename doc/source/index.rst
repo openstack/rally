@@ -42,8 +42,7 @@ Contents
    cli/cli_reference
    components/task
    components/verification
-   plugins
-   plugin/plugin_reference
+   plugins/index
    contribute
    feature_requests
    project_info
