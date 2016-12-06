@@ -32,6 +32,5 @@ Problem Description
 * Disaster recovery
 
   Rally should use special name patterns, to be able to delete resources
-  in such case if something went wrong with server that is running rally. And
-  you have just new instance (without old rally db) of rally on new server.
-
+  in such case if something went wrong with server that is running Rally. And
+  you have just new instance (without old Rally DB) of Rally on new server.

@@ -45,5 +45,4 @@ Contents
    plugins/index
    contribute
    feature_requests
-   project_info
-   release_notes
+   project_info/index
