@@ -426,16 +426,22 @@ __EOF__
 
     cd "${DESTDIR}" && . bin/activate
 
-    local getpip="$DESTDIR/get-pip.py"
-    download - "$getpip" https://bootstrap.pypa.io/get-pip.py | python -\
+    download - https://bootstrap.pypa.io/get-pip.py | python -\
         || die $EX_PROTOCOL \
-        "Error while installing python-pip from external source." <<__EOF__
+        "Error while running get-pip.py" <<__EOF__
 
-The required Python package pip could not be installed.
+The required Python package pip could not be installed
+in virtualenv.
 
 __EOF__
 
-    pip install setuptools wheel
+    pip install setuptools wheel || die $EX_PROTOCOL \
+        "Error while running 'pip install setuptools wheel'" <<__EOF__
+
+The required Python package setuptools, wheel could not be installed
+in virtualenv.
+
+__EOF__
 }
 
 setup_rally_configuration () {
