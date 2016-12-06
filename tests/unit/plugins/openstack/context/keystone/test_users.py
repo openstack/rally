@@ -24,109 +24,6 @@ from tests.unit import test
 CTX = "rally.plugins.openstack.context.keystone.users"
 
 
-class UserContextMixinTestCase(test.TestCase):
-
-    def setUp(self):
-        super(self.__class__, self).setUp()
-        self.mixin = users.UserContextMixin()
-        self.mixin.context = {
-            "config": {
-                "users": {
-                    "user_choice_method": "random",
-                },
-            },
-        }
-
-    @mock.patch("%s.random.choice" % CTX, side_effect=lambda x: x[1])
-    def test_map_for_scenario_random(self, mock_choice):
-        self.mixin.context["config"]["users"]["user_choice_method"] = (
-            "random")
-        users_ = []
-        tenants = {}
-
-        for i in ("0", "1"):
-            tenants[i] = {"id": i, "name": i, "users": []}
-            for j in ("a", "b", "c"):
-                user = {
-                    "id": "%s_%s" % (i, j),
-                    "tenant_id": i,
-                    "credential": "credential",
-                }
-                users_.append(user)
-                tenants[i]["users"].append(user)
-
-        context = {
-            "admin": mock.MagicMock(),
-            "users": users_,
-            "tenants": tenants,
-            "some_random_key": {
-                "nested": mock.MagicMock(),
-                "one_more": 10
-            },
-            "config": {
-                "users": {
-                    "user_choice_method": "random",
-                },
-            },
-        }
-        chosen_tenant = context["tenants"][context["users"][1]["tenant_id"]]
-        expected_context = {
-            "admin": context["admin"],
-            "user": context["users"][1],
-            "tenant": chosen_tenant,
-            "some_random_key": context["some_random_key"],
-            "config": context["config"]
-        }
-
-        self.assertEqual(
-            expected_context,
-            self.mixin.map_for_scenario(context)
-        )
-
-    def test_user_choice_method_default(self):
-        self.mixin.context["config"]["users"]["user_choice_method"] = None
-
-        self.assertEqual(
-            "random",
-            self.mixin.user_choice_method
-        )
-
-    @mock.patch("%s.random.choice" % CTX,
-                side_effect=Exception("Should not be raised"))
-    def test_map_for_scenario_round_robin(self, mock_choice):
-        self.mixin.context["config"]["users"]["user_choice_method"] = (
-            "round_robin")
-        tenants = {s: {"name": s, "users": []} for s in ("0", "1")}
-        users_ = []
-        for tenant_id, tenant in tenants.items():
-            for i in ("0", "1"):
-                user = {"id": "%s_%s" % (tenant_id, i), "tenant_id": tenant_id,
-                        "endpoint": "endpoint"}
-                users_.append(user)
-                tenant["users"].append(user)
-        context = {
-            "admin": mock.MagicMock(),
-            "users": users_,
-            "tenants": tenants,
-            "some_random_key": {
-                "nested": mock.MagicMock(),
-                "one_more": 10
-            },
-            "config": {
-                "users": {
-                    "user_choice_method": "round_robin",
-                },
-            },
-        }
-        expected_ids = ["0_0", "1_0", "0_1", "1_1"] * 4
-        mapped_ids = []
-        for i in range(1, 17):
-            context["iteration"] = i
-            user = self.mixin.map_for_scenario(context)
-            mapped_ids.append(user["user"]["id"])
-        self.assertEqual(expected_ids, mapped_ids)
-
-
 class UserGeneratorTestCase(test.ScenarioTestCase):
 
     tenants_num = 1
@@ -154,10 +51,6 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
     def tearDown(self):
         self.osclients_patcher.stop()
         super(UserGeneratorTestCase, self).tearDown()
-
-    def test_is_user_context_mixin_subclass(self):
-        self.assertTrue(
-            issubclass(users.UserGenerator, users.UserContextMixin))
 
     @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_not_needed(self, mock_wrap):
@@ -357,6 +250,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                              self.users_num)
             self.assertEqual(len(ctx.context["tenants"]),
                              self.tenants_num)
+            self.assertEqual("random", ctx.context["user_choice_method"])
 
         # Cleanup (called by content manager)
         self.assertEqual(len(ctx.context["users"]), 0)

@@ -14,7 +14,6 @@
 #    under the License.
 
 import collections
-import random
 import uuid
 
 from oslo_config import cfg
@@ -56,56 +55,8 @@ CONF.register_opts(USER_CONTEXT_OPTS,
                                       title="benchmark context options"))
 
 
-class UserContextMixin(object):
-
-    @property
-    def user_choice_method(self):
-        if not hasattr(self, "_user_choice_method"):
-            self._user_choice_method = self.context["config"].get(
-                "users", {}).get("user_choice_method")
-            if self._user_choice_method is None:
-                # NOTE(vponomaryov): consider 'existing_users' context
-                # picking up value for 'user_choice_method'
-                # when it is supported there.
-                # Until it happens we use old "random" approach for
-                # 'existing_users' context.
-                self._user_choice_method = "random"
-        return self._user_choice_method
-
-    def map_for_scenario(self, context_obj):
-        """Pass only context of one user and related to it tenant to scenario.
-
-        We are choosing on each iteration one user
-
-        """
-        scenario_ctx = {}
-        for key, value in context_obj.items():
-            if key not in ["users", "tenants"]:
-                scenario_ctx[key] = value
-
-        if self.user_choice_method == "random":
-            user = random.choice(context_obj["users"])
-            tenant = context_obj["tenants"][user["tenant_id"]]
-        else:
-            # Second and last case - 'round_robin'.
-            tenants_amount = len(context_obj["tenants"])
-            # NOTE(amaretskiy): iteration is subtracted by `1' because it
-            #                   starts from `1' but we count from `0'
-            tenant_index = int((context_obj["iteration"] - 1) % tenants_amount)
-            tenant_id = sorted(context_obj["tenants"].keys())[tenant_index]
-            tenant = context_obj["tenants"][tenant_id]
-            users = context_obj["tenants"][tenant_id]["users"]
-            user_index = int(((context_obj["iteration"] - 1) / tenants_amount)
-                             % len(users))
-            user = users[user_index]
-
-        scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
-
-        return scenario_ctx
-
-
 @context.configure(name="users", order=100)
-class UserGenerator(UserContextMixin, context.Context):
+class UserGenerator(context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     CONFIG_SCHEMA = {
@@ -308,8 +259,10 @@ class UserGenerator(UserContextMixin, context.Context):
     @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
     def setup(self):
         """Create tenants and users, using the broker pattern."""
+        super(UserGenerator, self).setup()
         self.context["users"] = []
         self.context["tenants"] = {}
+        self.context["user_choice_method"] = self.config["user_choice_method"]
 
         threads = self.config["resource_management_workers"]
 

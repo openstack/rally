@@ -101,6 +101,7 @@ class ShareNetworksTestCase(test.TestCase):
             "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants,
+            "user_choice_method": "random",
         }
         return context
 

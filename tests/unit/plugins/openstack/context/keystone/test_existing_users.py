@@ -55,12 +55,14 @@ class ExistingUserTestCase(test.TestCase):
             "task": mock.MagicMock(),
             "config": {
                 "existing_users": user_list
-            }
+            },
         }
         existing_users.ExistingUsers(context).setup()
 
         self.assertIn("users", context)
         self.assertIn("tenants", context)
+        self.assertIn("user_choice_method", context)
+        self.assertEqual("random", context["user_choice_method"])
         self.assertEqual(3, len(context["users"]))
         self.assertEqual(
             {

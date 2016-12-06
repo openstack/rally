@@ -71,7 +71,8 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                 "credential": mock.MagicMock()
             },
             "users": users,
-            "tenants": tenants
+            "tenants": tenants,
+            "user_choice_method": "random",
         })
         return tenants, context
 
