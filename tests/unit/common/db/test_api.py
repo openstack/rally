@@ -14,6 +14,7 @@
 #    under the License.
 
 """Tests for db.api layer."""
+import copy
 import datetime as dt
 import json
 
@@ -417,6 +418,8 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(deploy["uuid"], deploys[0]["uuid"])
         self.assertEqual(deploy["status"], consts.DeployStatus.DEPLOY_INIT)
         self.assertEqual(deploy["config"], {"opt": "val"})
+        self.assertEqual(deploy["credentials"],
+                         [["openstack", {"admin": None, "users": []}]])
 
     def test_deployment_create_several(self):
         # Create a deployment
@@ -440,15 +443,21 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(deploy_two["config"], {"opt2": "val2"})
 
     def test_deployment_update(self):
-        deploy = db.deployment_create({})
+        credentials = {"admin": {"foo": "bar"}, "users": ["foo_user"]}
+        deploy = db.deployment_create(copy.deepcopy(credentials))
         self.assertEqual(deploy["config"], {})
+        self.assertEqual(deploy["credentials"], [["openstack", credentials]])
         update_deploy = db.deployment_update(deploy["uuid"],
                                              {"config": {"opt": "val"}})
         self.assertEqual(update_deploy["uuid"], deploy["uuid"])
         self.assertEqual(update_deploy["config"], {"opt": "val"})
+        self.assertEqual(update_deploy["credentials"],
+                         [["openstack", credentials]])
         get_deploy = db.deployment_get(deploy["uuid"])
         self.assertEqual(get_deploy["uuid"], deploy["uuid"])
         self.assertEqual(get_deploy["config"], {"opt": "val"})
+        self.assertEqual(update_deploy["credentials"],
+                         [["openstack", credentials]])
 
     def test_deployment_update_several(self):
         # Create a deployment and update it

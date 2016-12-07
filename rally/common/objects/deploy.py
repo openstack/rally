@@ -59,11 +59,11 @@ class Deployment(object):
         admin = credentials.get("admin", {})
         if admin:
             admin = admin.to_dict(include_permission=True)
+        users = [e.to_dict(include_permission=True)
+                 for e in credentials.get("users", [])]
 
         self._update({
-            "admin": admin,
-            "users": [e.to_dict(include_permission=True)
-                      for e in credentials.get("users", [])]
+            "credentials": [["openstack", {"admin": admin, "users": users}]]
         })
 
     def set_started(self):

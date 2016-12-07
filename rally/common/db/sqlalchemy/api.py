@@ -559,15 +559,6 @@ class Connection(object):
         values.pop("uuid", None)
         with session.begin():
             dpl = self._deployment_get(deployment, session=session)
-            # TODO(rpromyshlennikov): remove after credentials refactoring
-            values.setdefault(
-                "credentials",
-                [
-                    ["openstack",
-                     {"admin": values.get("admin"),
-                      "users": values.get("users", [])}]
-                ]
-            )
             dpl.update(values)
         return dpl
 
