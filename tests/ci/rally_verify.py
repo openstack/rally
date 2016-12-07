@@ -21,8 +21,6 @@ import subprocess
 import sys
 import uuid
 
-import yaml
-
 from rally.cli import envutils
 from rally.common import objects
 from rally import osclients
@@ -31,22 +29,22 @@ from rally.ui import utils
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
-
-MODES_PARAMETERS = {
-    "full": "--set full",
-    "light": "--set smoke"
-}
-
 BASE_DIR = "rally-verify"
 
-EXPECTED_FAILURES_FILE = "expected_failures.yaml"
-EXPECTED_FAILURES = {
+MODES = {"full": "--pattern set=full", "light": "--pattern set=smoke"}
+DEPLOYMENT_NAME = "devstack"
+VERIFIER_TYPE = "tempest"
+VERIFIER_SOURCE = "https://git.openstack.org/openstack/tempest"
+VERIFIER_EXT_REPO = "https://git.openstack.org/openstack/keystone"
+VERIFIER_EXT_NAME = "keystone_tests"
+SKIPPED_TESTS = (
+    "tempest.api.compute.flavors.test_flavors.FlavorsV2TestJSON."
+    "test_get_flavor[id-1f12046b-753d-40d2-abb6-d8eb8b30cb2f,smoke]: "
+    "This test was skipped intentionally")
+XFAILED_TESTS = (
     "tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON."
-    "test_get_vnc_console[id-c6bc11bf-592e-4015-9319-1c98dc64daf5]":
-    "This test fails because 'novnc' console type is unavailable."
-}
-
-TEMPEST_PLUGIN = "https://git.openstack.org/openstack/keystone"
+    "test_get_vnc_console[id-c6bc11bf-592e-4015-9319-1c98dc64daf5]: "
+    "This test fails because 'novnc' console type is unavailable")
 
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .
@@ -57,45 +55,40 @@ _return_status = 0
 
 
 def call_rally(cmd, print_output=False, output_type=None):
+    """Execute a Rally command and write result in files."""
     global _return_status
     global _call_count
     _call_count += 1
 
     data = {"cmd": "rally --rally-debug %s" % cmd}
-    stdout_file = "{base}/{prefix}_{cmd}.txt.gz"
+    stdout_file = "{base_dir}/{prefix}_{cmd}.txt.gz"
 
-    if "--xfails-file" in cmd or "--source" in cmd:
-        cmd_items = cmd.split()
-        for num, item in enumerate(cmd_items):
-            if EXPECTED_FAILURES_FILE in item or TEMPEST_PLUGIN in item:
-                cmd_items[num] = os.path.basename(item)
-                break
-        cmd = " ".join(cmd_items)
-
-    data.update({"stdout_file": stdout_file.format(base=BASE_DIR,
+    cmd = cmd.replace("/", "_")
+    data.update({"stdout_file": stdout_file.format(base_dir=BASE_DIR,
                                                    prefix=_call_count,
                                                    cmd=cmd.replace(" ", "_"))})
 
     if output_type:
         data["output_file"] = data["stdout_file"].replace(
             ".txt.", ".%s." % output_type)
-        data["cmd"] += " --%(type)s --output-file %(file)s" % {
-            "type": output_type, "file": data["output_file"]}
+        data["cmd"] += " --file %s" % data["output_file"]
+        if output_type == "html":
+            data["cmd"] += " --html"
 
     try:
-        LOG.info("Try to launch `%s`." % data["cmd"])
-        stdout = subprocess.check_output(data["cmd"], shell=True,
+        LOG.info("Try to execute `%s`." % data["cmd"])
+        stdout = subprocess.check_output(data["cmd"].split(),
                                          stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        LOG.error("Command `%s` is failed." % data["cmd"])
+        LOG.error("Command `%s` failed." % data["cmd"])
         stdout = e.output
         data["status"] = "fail"
         _return_status = 1
     else:
-        data["status"] = "pass"
+        data["status"] = "success"
 
     if output_type:
-        # lets gzip results
+        # let's gzip results
         with open(data["output_file"]) as f:
             output = f.read()
         with gzip.open(data["output_file"], "wb") as f:
@@ -112,39 +105,34 @@ def call_rally(cmd, print_output=False, output_type=None):
     return data
 
 
-def create_file_with_xfails():
-    """Create a YAML file with a list of tests that are expected to fail."""
-    with open(os.path.join(BASE_DIR, EXPECTED_FAILURES_FILE), "wb") as f:
-        yaml.dump(EXPECTED_FAILURES, f, default_flow_style=False)
-
-    return os.path.join(os.getcwd(), BASE_DIR, EXPECTED_FAILURES_FILE)
-
-
-def launch_verification_once(launch_parameters):
-    """Launch verification and show results in different formats."""
-    results = call_rally("verify start %s" % launch_parameters)
+def start_verification(args):
+    """Start a verification, show results and generate reports."""
+    results = call_rally("verify start %s" % args)
     results["uuid"] = envutils.get_global(envutils.ENV_VERIFICATION)
-    results["result_in_html"] = call_rally("verify results",
-                                           output_type="html")
-    results["result_in_json"] = call_rally("verify results",
-                                           output_type="json")
     results["show"] = call_rally("verify show")
     results["show_detailed"] = call_rally("verify show --detailed")
+    for ot in ("json", "html"):
+        results[ot] = call_rally("verify report", output_type=ot)
     # NOTE(andreykurilin): we need to clean verification uuid from global
     # environment to be able to load it next time(for another verification).
     envutils.clear_global(envutils.ENV_VERIFICATION)
     return results
 
 
-def do_compare(uuid_1, uuid_2):
-    """Compare and save results in different formats."""
+def write_file(filename, data):
+    """Create a file and write some data to it."""
+    path = os.path.join(BASE_DIR, filename)
+    with open(path, "wb") as f:
+        f.write(data)
+    return path
+
+
+def generate_trends_reports(uuid_1, uuid_2):
+    """Generate trends reports."""
     results = {}
-    for output_format in ("csv", "html", "json"):
-        cmd = "verify results --uuid %(uuid-1)s %(uuid-2)s" % {
-            "uuid-1": uuid_1,
-            "uuid-2": uuid_2
-        }
-        results[output_format] = call_rally(cmd, output_type=output_format)
+    for ot in ("json", "html"):
+        results[ot] = call_rally(
+            "verify report --uuid %s %s" % (uuid_1, uuid_2), output_type=ot)
     return results
 
 
@@ -155,35 +143,29 @@ def render_page(**render_vars):
 
 
 def main():
-    # NOTE(andreykurilin): We need to stop checking verification component to
-    #   be able to split forthcoming redesign by several patches.
-    return 0
     parser = argparse.ArgumentParser(description="Launch rally-verify job.")
-    parser.add_argument(
-        "--mode",
-        type=str,
-        default="light",
-        help="Mode of job. The 'full' mode corresponds to the full set of "
-             "Tempest tests. The 'light' mode corresponds to the smoke set "
-             "of Tempest tests.",
-        choices=MODES_PARAMETERS.keys())
-    parser.add_argument(
-        "--compare",
-        action="store_true",
-        help="Launch 2 verifications and compare them.")
-    parser.add_argument(
-        "--ctx-create-resources",
-        action="store_true",
-        help="Make Tempest context create needed resources for the tests.")
+    parser.add_argument("--mode", type=str, default="light",
+                        help="Mode of job. The 'full' mode corresponds to the "
+                             "full set of verifier tests. The 'light' mode "
+                             "corresponds to the smoke set of verifier tests.",
+                        choices=MODES.keys())
+    parser.add_argument("--compare", action="store_true",
+                        help="Start the second verification to generate a "
+                             "trends report for two verifications.")
+    # TODO(ylobankov): Remove hard-coded Tempest related things and make it
+    #                  configurable.
+    parser.add_argument("--ctx-create-resources", action="store_true",
+                        help="Make Tempest context create needed resources "
+                             "for the tests.")
 
     args = parser.parse_args()
 
     if not os.path.exists("%s/extra" % BASE_DIR):
         os.makedirs("%s/extra" % BASE_DIR)
 
-    # Check deployment
-    call_rally("deployment use --deployment devstack", print_output=True)
-    call_rally("deployment check", print_output=True)
+    # Choose and check the deployment
+    call_rally("deployment use --deployment %s" % DEPLOYMENT_NAME)
+    call_rally("deployment check")
 
     config = json.loads(
         subprocess.check_output(["rally", "deployment", "config"]))
@@ -234,57 +216,74 @@ def main():
                 "= %dMB, VCPUs = 1, disk = 0GB" % (params["name"], flv_ram))
             clients.nova().flavors.create(**params)
 
-    render_vars = {"verifications": []}
+    render_vars = dict(verifications=[])
 
-    # Install the latest Tempest version
-    render_vars["install"] = call_rally("verify install")
+    # List plugins for verifiers management
+    render_vars["list_plugins"] = call_rally("verify list-plugins")
 
-    # Get Rally deployment ID
-    rally_deployment_id = envutils.get_global(envutils.ENV_DEPLOYMENT)
-    # Get the penultimate Tempest commit ID
-    tempest_dir = (
-        "/home/jenkins/.rally/tempest/for-deployment-%s" % rally_deployment_id)
-    tempest_commit_id = subprocess.check_output(
-        ["git", "log", "-n", "1", "--pretty=format:'%H'"],
-        cwd=tempest_dir).strip()
-    # Install the penultimate Tempest version
-    render_vars["reinstall"] = call_rally(
-        "verify reinstall --version %s" % tempest_commit_id)
+    # Create a verifier
+    render_vars["create_verifier"] = call_rally(
+        "verify create-verifier --type %s --name my-verifier --source %s"
+        % (VERIFIER_TYPE, VERIFIER_SOURCE))
 
-    # Install a Tempest plugin
-    render_vars["installplugin"] = call_rally(
-        "verify installplugin --source %s" % TEMPEST_PLUGIN)
+    # List verifiers
+    render_vars["list_verifiers"] = call_rally("verify list-verifiers")
 
-    # List installed Tempest plugins
-    render_vars["listplugins"] = call_rally("verify listplugins")
+    # Get verifier ID
+    verifier_id = envutils.get_global(envutils.ENV_VERIFIER)
+    # Get the penultimate verifier commit ID
+    repo_dir = os.path.join(
+        os.path.expanduser("~"),
+        ".rally/verification/verifier-%s/repo" % verifier_id)
+    p_commit_id = subprocess.check_output(
+        ["git", "log", "-n", "1", "--pretty=format:%H"], cwd=repo_dir).strip()
+    # Switch the verifier to the penultimate version
+    render_vars["update_verifier"] = call_rally(
+        "verify update-verifier --version %s --update-venv" % p_commit_id)
 
-    # Discover tests depending on Tempest suite
-    discover_cmd = "verify discover"
-    if args.mode == "light":
-        discover_cmd += " --pattern smoke"
-    render_vars["discover"] = call_rally(discover_cmd)
+    # Generate and show the verifier config file
+    render_vars["configure_verifier"] = call_rally(
+        "verify configure-verifier --show")
 
-    # Generate and show Tempest config file
-    render_vars["genconfig"] = call_rally("verify genconfig")
-    render_vars["showconfig"] = call_rally("verify showconfig")
+    # Add a verifier extension
+    render_vars["add_verifier_ext"] = call_rally(
+        "verify add-verifier-ext --source %s" % VERIFIER_EXT_REPO)
 
-    # Create a file with a list of tests that are expected to fail
-    xfails_file_path = create_file_with_xfails()
+    # List verifier extensions
+    render_vars["list_verifier_exts"] = call_rally("verify list-verifier-exts")
 
-    # Launch verification
-    launch_params = "%s --xfails-file %s" % (
-        MODES_PARAMETERS[args.mode], xfails_file_path)
-    render_vars["verifications"].append(
-        launch_verification_once(launch_params))
+    # List verifier tests
+    render_vars["list_verifier_tests"] = call_rally(
+        "verify list-verifier-tests %s" % MODES[args.mode])
+
+    # Start a verification, show results and generate reports
+    skip_list_path = write_file("skip-list.yaml", SKIPPED_TESTS)
+    xfail_list_path = write_file("xfail-list.yaml", XFAILED_TESTS)
+    run_args = ("%s --skip-list %s --xfail-list %s"
+                % (MODES[args.mode], skip_list_path, xfail_list_path))
+    render_vars["verifications"].append(start_verification(run_args))
 
     if args.compare:
-        render_vars["verifications"].append(
-            launch_verification_once(launch_params))
-        render_vars["compare"] = do_compare(
+        # Start another verification, show results and generate reports
+        with gzip.open(render_vars["list_verifier_tests"]["stdout_file"]) as f:
+            load_list_path = write_file("load-list.txt", f.read())
+        run_args = "--load-list %s" % load_list_path
+        render_vars["verifications"].append(start_verification(run_args))
+
+        # Generate trends reports for two verifications
+        render_vars["compare"] = generate_trends_reports(
             render_vars["verifications"][-2]["uuid"],
             render_vars["verifications"][-1]["uuid"])
 
+    # List verifications
     render_vars["list"] = call_rally("verify list")
+
+    # Delete the verifier extension
+    render_vars["delete_verifier_ext"] = call_rally(
+        "verify delete-verifier-ext --name %s" % VERIFIER_EXT_NAME)
+    # Delete the verifier and all verifications
+    render_vars["delete_verifier"] = call_rally(
+        "verify delete-verifier --force")
 
     render_page(**render_vars)
 
