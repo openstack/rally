@@ -85,6 +85,7 @@ class ResultConsumer(object):
         return self
 
     def _consume_results(self):
+        task_aborted = False
         while True:
             if self.runner.result_queue:
                 results = self.runner.result_queue.popleft()
@@ -95,9 +96,14 @@ class ResultConsumer(object):
                     self.load_finished_at = max(r["duration"] + r["timestamp"],
                                                 self.load_finished_at)
                     success = self.sla_checker.add_iteration(r)
-                    if self.abort_on_sla_failure and not success:
+                    if (self.abort_on_sla_failure and
+                            not success and
+                            not task_aborted):
                         self.sla_checker.set_aborted_on_sla()
                         self.runner.abort()
+                        self.task.update_status(
+                            consts.TaskStatus.SOFT_ABORTING)
+                        task_aborted = True
             elif self.is_done.isSet():
                 break
             else:
