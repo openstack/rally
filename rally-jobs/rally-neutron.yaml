@@ -1,4 +1,5 @@
 {% set image_name = "^cirros.*uec$" %}
+{% set flavor_name = "m1.tiny" %}
 {% set smoke = 0 %}
 
 ---
@@ -564,6 +565,8 @@
           script_file: "~/.rally/extra/instance_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
+        volume_args:
+            size: 2
       runner:
         type: "constant"
         times: {{smoke or 4}}
@@ -572,6 +575,40 @@
         users:
           tenants: {{smoke or 2}}
           users_per_tenant: {{smoke or 2}}
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        flavor:
+          name: {{flavor_name}}
+        image:
+          name: {{image_name}}
+        floating_network: "public"
+        command:
+          script_inline: |
+            time_seconds(){ (time -p $1 ) 2>&1 |awk '/real/{print $2}'; }
+            file=/tmp/test.img
+            c=100 #100M
+            write_seq=$(time_seconds "dd if=/dev/zero of=$file bs=1M count=$c")
+            read_seq=$(time_seconds "dd if=$file of=/dev/null bs=1M count=$c")
+            [ -f $file ] && rm $file
+
+            echo "{
+                \"write_seq\": $write_seq,
+                \"read_seq\": $read_seq
+                }"
+          interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
         network: {}
       sla:
         failure_rate:

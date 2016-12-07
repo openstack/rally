@@ -299,6 +299,7 @@
           image:
               name: {{image_name}}
           servers_per_tenant: 2
+          auto_assign_nic: True
         network:
           networks_per_tenant: 2
       sla:
@@ -769,9 +770,9 @@
           tenants: 3
           users_per_tenant: 2
         quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+          neutron:
+            security_group: -1
+            security_group_rule: -1
       sla:
         failure_rate:
           max: 0
@@ -789,8 +790,8 @@
           tenants: 3
           users_per_tenant: 2
         quotas:
-          nova:
-            security_groups: -1
+          neutron:
+            security_group: -1
       sla:
         failure_rate:
           max: 0
@@ -810,30 +811,9 @@
           users_per_tenant: 2
           user_choice_method: "round_robin"
         quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaSecGroup.create_and_list_secgroups:
-    -
-      args:
-        security_group_count: 5
-        rules_per_security_group: 5
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+          neutron:
+            security_group: -1
+            security_group_rule: -1
       sla:
         failure_rate:
           max: 0
@@ -994,122 +974,6 @@
         users:
           tenants: 2
           users_per_tenant: 2
-
-  NovaFloatingIpsBulk.create_and_list_floating_ips_bulk:
-    -
-      args:
-        start_cidr: "10.2.0.0/27"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk:
-    -
-      args:
-        start_cidr: "10.2.0.0/27"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  VMTasks.boot_runcommand_delete:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-        floating_network: "public"
-        use_floating_ip: true
-        command:
-          script_inline: |
-            time_seconds(){ (time -p $1 ) 2>&1 |awk '/real/{print $2}'; }
-            file=/tmp/test.img
-            c=100 #100M
-            write_seq=$(time_seconds "dd if=/dev/zero of=$file bs=1M count=$c")
-            read_seq=$(time_seconds "dd if=$file of=/dev/null bs=1M count=$c")
-            [ -f $file ] && rm $file
-
-            echo "{
-                \"write_seq\": $write_seq,
-                \"read_seq\": $read_seq
-                }"
-          interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-        volume_args:
-            size: 2
-        use_floating_ip: true
-        command:
-          script_file: "~/.rally/extra/instance_test.sh"
-          interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-        use_floating_ip: false
-        command:
-          script_file: "~/.rally/extra/instance_test.sh"
-          interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
 
   NovaFlavors.list_flavors:
     -
