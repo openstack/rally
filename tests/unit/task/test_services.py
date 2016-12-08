@@ -103,6 +103,7 @@ class ServiceMetaTestCase(test.TestCase):
     def test_servicemeta_fail_on_missed_public_function(self):
         def init_classes():
             class SomeService(service.UnifiedService):
+                @service.should_be_overridden
                 def foo(self):
                     pass
 
@@ -115,7 +116,7 @@ class ServiceMetaTestCase(test.TestCase):
                 pass
 
         e = self.assertRaises(exceptions.RallyException, init_classes)
-        self.assertIn("Missed public method(s): foo", str(e))
+        self.assertIn("Missed method(s): foo", str(e))
 
 
 class DiscoverTestCase(test.TestCase):
