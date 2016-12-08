@@ -44,8 +44,7 @@ Change actions results schema from type "object" to "array"
 and extend it with timestamps and nested actions.
 
 Nested actions will be represented by "children" key and have
-single level of nesting, since there is no need of more nested levels.
-We could implement deeper nesting at any time later, if required.
+unlimited nesting.
 
 With timestamps, there is no need to save durations anymore,
 so get rid of this value.
@@ -108,20 +107,7 @@ TO BE:
               "name": {"type": "string"},  # name of action
               "started_at": {"type": "number"},  # float UNIX timestamp
               "finished_at": {"type": "number"},  # float UNIX timestamp
-              "children": {  # nested actions, single level
-                  "type": "array",
-                  "items": {
-                      "type": "object",
-                      "properties": {
-                          "name": {"type": "string"},
-                          "started_at": {"type": "number"},
-                          "finished_at": {"type": "number"}
-                      },
-                      "required": ["name", "started_at", "finished_at"],
-                      "additionalProperties": False
-                  },
-                  "minItems": 0
-              }
+              "children": {"$ref": "#/"},
           },
           "required": ["name", "started_at", "finished_at", "children"],
           "additionalProperties": False
