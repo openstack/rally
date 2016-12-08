@@ -108,7 +108,6 @@ class CreateTenant(KeystoneBasic):
 
 
 @validation.required_openstack(admin=True)
-@validation.required_api_versions(component="keystone", versions=[2.0])
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
                     name="KeystoneBasic.authenticate_user_and_validate_token")
 class AuthenticateUserAndValidateToken(KeystoneBasic):

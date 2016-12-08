@@ -24,7 +24,6 @@ from tests.functional import utils
 class TestCertificationTask(unittest.TestCase):
 
     def test_task_samples_is_valid(self):
-        return
         rally = utils.Rally()
         full_path = os.path.join(
             os.path.dirname(__file__), os.pardir, os.pardir,
