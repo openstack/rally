@@ -103,8 +103,8 @@ class CreateAggregateAddAndRemoveHost(utils.NovaScenario):
         :param availability_zone: The availability zone of the aggregate
         """
         aggregate = self._create_aggregate(availability_zone)
-        hosts = self._list_hosts(zone=None)
-        host_name = hosts[0].host_name
+        hosts = self._list_hypervisors()
+        host_name = hosts[0].service["host"]
         self._aggregate_add_host(aggregate, host_name)
         self._aggregate_remove_host(aggregate, host_name)
 
@@ -158,7 +158,7 @@ class CreateAggregateAddHostAndBootServer(utils.NovaScenario):
 
         aggregate = self._create_aggregate(availability_zone)
         hosts = self._list_hypervisors()
-        host_name = hosts[0].hypervisor_hostname
+        host_name = hosts[0].service["host"]
         self._aggregate_set_metadata(aggregate, metadata)
         self._aggregate_add_host(aggregate, host_name)
         flavor = self._create_flavor(ram, vcpus, disk)
