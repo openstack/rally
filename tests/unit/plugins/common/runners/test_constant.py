@@ -16,6 +16,7 @@
 import jsonschema
 import mock
 
+from rally import exceptions
 from rally.plugins.common.runners import constant
 from rally.task import runner
 from tests.unit import fakes
@@ -40,10 +41,16 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
     def test_validate(self):
         constant.ConstantScenarioRunner.validate(self.config)
 
-    def test_validate_failed(self):
+    def test_validate_failed_by_additional_key(self):
         self.config["new_key"] = "should fail"
         self.assertRaises(jsonschema.ValidationError,
-                          runner.ScenarioRunner.validate,
+                          constant.ConstantScenarioRunner.validate,
+                          self.config)
+
+    def test_validate_failed_by_wrong_concurrency(self):
+        self.config["concurrency"] = self.config["times"] + 1
+        self.assertRaises(exceptions.ValidationError,
+                          constant.ConstantScenarioRunner.validate,
                           self.config)
 
     @mock.patch(RUNNERS + "constant.runner")
