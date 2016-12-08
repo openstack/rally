@@ -15,7 +15,7 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as cutils
-from rally.plugins.openstack.scenarios.keystone import utils as kutils
+from rally.plugins.openstack.scenarios.keystone import basic as kbasic
 from rally.task import validation
 
 
@@ -33,7 +33,7 @@ from rally.task import validation
                              "cleanup": ["ceilometer"]},
                     name="CeilometerTraits.create_user_and_list_traits")
 class CreateUserAndListTraits(cutils.CeilometerScenario,
-                              kutils.KeystoneScenario):
+                              kbasic.KeystoneBasic):
 
     def run(self):
         """Create user and fetch all event traits.
@@ -42,7 +42,7 @@ class CreateUserAndListTraits(cutils.CeilometerScenario,
         fetches list of all traits for certain event type and
         trait name using GET /v2/event_types/<event_type>/traits/<trait_name>.
         """
-        self._user_create()
+        self.admin_keystone.create_user()
         event = self._list_events()[0]
         trait_name = event.traits[0]["name"]
         self._list_event_traits(event_type=event.event_type,
@@ -57,7 +57,7 @@ class CreateUserAndListTraits(cutils.CeilometerScenario,
                     name="CeilometerTraits.create_user_and"
                          "_list_trait_descriptions")
 class CreateUserAndListTraitDescriptions(
-        cutils.CeilometerScenario, kutils.KeystoneScenario):
+        cutils.CeilometerScenario, kbasic.KeystoneBasic):
 
     def run(self):
         """Create user and fetch all trait descriptions.
@@ -66,6 +66,6 @@ class CreateUserAndListTraitDescriptions(
         fetches list of all traits for certain event type using
         GET /v2/event_types/<event_type>/traits.
         """
-        self._user_create()
+        self.admin_keystone.create_user()
         event = self._list_events()[0]
         self._list_event_trait_descriptions(event_type=event.event_type)

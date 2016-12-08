@@ -43,6 +43,19 @@ class Identity(service.UnifiedOpenStackService):
                                          domain_name=domain_name)
 
     @service.should_be_overridden
+    def update_project(self, project_id, name=None, enabled=None,
+                       description=None):
+        """Update project name, enabled and description
+
+        :param project_id: Id of project to update
+        :param name: project name to be set
+        :param enabled: enabled status of project
+        :param description: project description to be set
+        """
+        self._impl.update_project(project_id, name=name, enabled=enabled,
+                                  description=description)
+
+    @service.should_be_overridden
     def delete_project(self, project_id):
         """Deletes project."""
         return self._impl.delete_project(project_id)
@@ -53,28 +66,44 @@ class Identity(service.UnifiedOpenStackService):
         return self._impl.list_projects()
 
     @service.should_be_overridden
-    def create_user(self, username=None, password=None, email=None,
-                    project_id=None, domain_name="Default",
+    def get_project(self, project_id):
+        """Get project."""
+        return self._impl.get_project(project_id)
+
+    @service.should_be_overridden
+    def create_user(self, username=None, password=None, project_id=None,
+                    domain_name="Default", enabled=True,
                     default_role="member"):
         """Create user.
 
         :param username: name of user
         :param password: user password
-        :param email: user's email
         :param project_id: user's default project
         :param domain_name: Name or id of domain where to create user, for
                             those service implementations that don't support
                             domains you should use None or 'Default' value.
+        :param enabled: whether the user is enabled.
         :param default_role: Name of role, for implementations that don't
                              support domains this argument must be None or
                              'member'.
         """
         return self._impl.create_user(username=username,
                                       password=password,
-                                      email=email,
                                       project_id=project_id,
                                       domain_name=domain_name,
                                       default_role=default_role)
+
+    @service.should_be_overridden
+    def create_users(self, owner_id, number_of_users, user_create_args=None):
+        """Create specified amount of users.
+
+        :param owner_id: Id of tenant/project
+        :param number_of_users: number of users to create
+        :param user_create_args: additional user creation arguments
+        """
+        return self._impl.create_users(owner_id,
+                                       number_of_users=number_of_users,
+                                       user_create_args=user_create_args)
 
     @service.should_be_overridden
     def delete_user(self, user_id):
@@ -87,6 +116,28 @@ class Identity(service.UnifiedOpenStackService):
         return self._impl.list_users()
 
     @service.should_be_overridden
+    def update_user(self, user_id, enabled=None, name=None, email=None,
+                    password=None):
+        return self._impl.update_user(user_id, enabled=enabled, name=name,
+                                      email=email, password=password)
+
+    @service.should_be_overridden
+    def get_user(self, user_id):
+        """Get user."""
+        return self._impl.get_user(user_id)
+
+    @service.should_be_overridden
+    def create_service(self, name=None, service_type=None, description=None):
+        """Creates keystone service with random name.
+
+        :param name: name of service to create
+        :param service_type: type of the service
+        :param description: description of the service
+        """
+        return self._impl.create_service(name=name, service_type=service_type,
+                                         description=description)
+
+    @service.should_be_overridden
     def delete_service(self, service_id):
         """Deletes service."""
         self._impl.delete_service(service_id)
@@ -95,6 +146,11 @@ class Identity(service.UnifiedOpenStackService):
     def list_services(self):
         """List all services."""
         return self._impl.list_services()
+
+    @service.should_be_overridden
+    def get_service(self, service_id):
+        """Get service."""
+        return self._impl.get_service(service_id)
 
     @service.should_be_overridden
     def create_role(self, name=None, domain_name="Default"):
@@ -143,10 +199,51 @@ class Identity(service.UnifiedOpenStackService):
         """Get role."""
         return self._impl.get_role(role_id)
 
-    @staticmethod
-    def _unify_service(service):
-        return Service(id=service.id, name=service.name)
+    @service.should_be_overridden
+    def get_service_by_name(self, name):
+        """List all services to find proper one."""
+        return self._impl.get_service_by_name(name)
 
-    @staticmethod
-    def _unify_role(role):
-        return Role(id=role.id, name=role.name)
+    @service.should_be_overridden
+    def create_ec2credentials(self, user_id, project_id):
+        """Create ec2credentials.
+
+        :param user_id: User ID for which to create credentials
+        :param project_id: Project ID for which to create credentials
+
+        :returns: Created ec2-credentials object
+        """
+        return self._impl.create_ec2credentials(user_id=user_id,
+                                                project_id=project_id)
+
+    @service.should_be_overridden
+    def list_ec2credentials(self, user_id):
+        """List of access/secret pairs for a user_id.
+
+        :param user_id: List all ec2-credentials for User ID
+
+        :returns: Return ec2-credentials list
+        """
+        return self._impl.list_ec2credentials(user_id)
+
+    @service.should_be_overridden
+    def delete_ec2credential(self, user_id, access):
+        """Delete ec2credential.
+
+        :param user_id: User ID for which to delete credential
+        :param access: access key for ec2credential to delete
+        """
+        return self._impl.delete_ec2credential(user_id=user_id, access=access)
+
+    @service.should_be_overridden
+    def fetch_token(self):
+        """Authenticate user token."""
+        return self._impl.fetch_token()
+
+    @service.should_be_overridden
+    def validate_token(self, token):
+        """Validate user token.
+
+        :param token: Auth token to validate
+        """
+        return self._impl.validate_token(token)

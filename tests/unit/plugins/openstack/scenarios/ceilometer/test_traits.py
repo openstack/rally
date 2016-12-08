@@ -20,18 +20,33 @@ from tests.unit import test
 
 class CeilometerTraitsTestCase(test.ScenarioTestCase):
 
+    def setUp(self):
+        super(CeilometerTraitsTestCase, self).setUp()
+        patch = mock.patch(
+            "rally.plugins.openstack.services.identity.identity.Identity")
+        self.addCleanup(patch.stop)
+        self.mock_identity = patch.start()
+
+    def get_test_context(self):
+        context = super(CeilometerTraitsTestCase, self).get_test_context()
+        context["admin"] = {"id": "fake_user_id",
+                            "credential": mock.MagicMock()
+                            }
+        return context
+
     def test_list_traits(self):
         scenario = traits.CreateUserAndListTraits(self.context)
 
-        scenario._user_create = mock.MagicMock()
-        scenario._list_events = mock.MagicMock()
         scenario._list_event_traits = mock.MagicMock()
-        scenario._list_events.return_value = [mock.Mock(
-            event_type="fake_event_type",
-            traits=[{"name": "fake_trait_name"}])
-        ]
+        scenario._list_events = mock.MagicMock(
+            return_value=[mock.Mock(
+                event_type="fake_event_type",
+                traits=[{"name": "fake_trait_name"}])
+            ])
+
         scenario.run()
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._list_event_traits.assert_called_once_with(
             event_type="fake_event_type", trait_name="fake_trait_name")
@@ -40,14 +55,15 @@ class CeilometerTraitsTestCase(test.ScenarioTestCase):
         scenario = traits.CreateUserAndListTraitDescriptions(
             self.context)
 
-        scenario._user_create = mock.MagicMock()
-        scenario._list_events = mock.MagicMock()
         scenario._list_event_trait_descriptions = mock.MagicMock()
-        scenario._list_events.return_value = [mock.Mock(
-            event_type="fake_event_type")
-        ]
+        scenario._list_events = mock.MagicMock(
+            return_value=[mock.Mock(
+                event_type="fake_event_type")
+            ])
+
         scenario.run()
-        scenario._user_create.assert_called_once_with()
+
+        self.mock_identity.return_value.create_user.assert_called_once_with()
         scenario._list_events.assert_called_with()
         scenario._list_event_trait_descriptions.assert_called_once_with(
             event_type="fake_event_type")

@@ -12,18 +12,40 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 from rally.plugins.openstack import service
 from rally.plugins.openstack.services.identity import identity
+from rally.plugins.openstack.services.identity import keystone_common
 from rally.task import atomic
 
 
 @service.service("keystone", service_type="identity", version="2")
-class KeystoneV2Service(service.Service):
+class KeystoneV2Service(service.Service, keystone_common.KeystoneMixin):
 
     @atomic.action_timer("keystone_v2.create_tenant")
     def create_tenant(self, tenant_name=None):
         tenant_name = tenant_name or self.generate_random_name()
         return self._clients.keystone("2").tenants.create(tenant_name)
+
+    @atomic.action_timer("keystone_v2.update_tenant")
+    def update_tenant(self, tenant_id, name=None, enabled=None,
+                      description=None):
+        """Update tenant name and description.
+
+        :param tenant_id: Id of tenant to update
+        :param name: tenant name to be set (if boolean True, random name will
+            be set)
+        :param enabled: enabled status of project
+        :param description: tenant description to be set (if boolean True,
+            random description will be set)
+        """
+        if name is True:
+            name = self.generate_random_name()
+        if description is True:
+            description = self.generate_random_name()
+        self._clients.keystone("2").tenants.update(
+            tenant_id, name=name, description=description, enabled=enabled)
 
     @atomic.action_timer("keystone_v2.delete_tenant")
     def delete_tenant(self, tenant_id):
@@ -33,31 +55,69 @@ class KeystoneV2Service(service.Service):
     def list_tenants(self):
         return self._clients.keystone("2").tenants.list()
 
+    @atomic.action_timer("keystone_v2.get_tenant")
+    def get_tenant(self, tenant_id):
+        """Get tenant."""
+        return self._clients.keystone("2").tenants.get(tenant_id)
+
     @atomic.action_timer("keystone_v2.create_user")
-    def create_user(self, username, password, email=None, tenant_id=None):
+    def create_user(self, username=None, password=None, email=None,
+                    tenant_id=None, enabled=True):
+        username = username or self.generate_random_name()
+        password = password or str(uuid.uuid4())
+        email = email or (username + "@rally.me")
         return self._clients.keystone("2").users.create(name=username,
                                                         password=password,
                                                         email=email,
-                                                        tenant_id=tenant_id)
+                                                        tenant_id=tenant_id,
+                                                        enabled=enabled)
 
-    @atomic.action_timer("keystone_v2.list_users")
-    def list_users(self):
-        return self._clients.keystone("2").users.list()
+    @atomic.action_timer("keystone_v2.create_users")
+    def create_users(self, tenant_id, number_of_users, user_create_args=None):
+        """Create specified amount of users.
 
-    @atomic.action_timer("keystone_v2.delete_user")
-    def delete_user(self, user_id):
-        """Deletes user by its id."""
-        self._clients.keystone("2").users.delete(user_id)
+        :param tenant_id: Id of tenant
+        :param number_of_users: number of users to create
+        :param user_create_args: additional user creation arguments
+        """
+        users = []
+        for _i in range(number_of_users):
+            users.append(self.create_user(tenant_id=tenant_id,
+                                          **(user_create_args or {})))
+        return users
 
-    @atomic.action_timer("keystone_v2.delete_service")
-    def delete_service(self, service_id):
-        """Deletes service."""
-        self._clients.keystone("2").services.delete(service_id)
+    @atomic.action_timer("keystone_v2.update_user")
+    def update_user(self, user_id, **kwargs):
+        allowed_args = ("name", "email", "enabled")
+        restricted = set(kwargs) - set(allowed_args)
+        if restricted:
+            raise NotImplementedError(
+                "Failed to update '%s', since Keystone V2 allows to update "
+                "only '%s'." % ("', '".join(restricted),
+                                "', '".join(allowed_args)))
+        self._clients.keystone("2").users.update(user_id, **kwargs)
 
-    @atomic.action_timer("keystone.list_services")
-    def list_services(self):
-        """List all services."""
-        return self._clients.keystone("2").services.list()
+    @atomic.action_timer("keystone_v2.update_user_password")
+    def update_user_password(self, user_id, password):
+        self._clients.keystone("2").users.update_password(user_id,
+                                                          password=password)
+
+    @atomic.action_timer("keystone_v2.create_service")
+    def create_service(self, name=None, service_type=None, description=None):
+        """Creates keystone service.
+
+        :param name: name of service to create
+        :param service_type: type of the service
+        :param description: description of the service
+        :returns: keystone service instance
+        """
+        name = name or self.generate_random_name()
+        service_type = service_type or "rally_test_type"
+        description = description or self.generate_random_name()
+        return self._clients.keystone("2").services.create(
+            name,
+            service_type=service_type,
+            description=description)
 
     @atomic.action_timer("keystone_v2.create_role")
     def create_role(self, name=None):
@@ -66,13 +126,8 @@ class KeystoneV2Service(service.Service):
 
     @atomic.action_timer("keystone_v2.add_role")
     def add_role(self, role_id, user_id, tenant_id):
-        return self._clients.keystone("2").roles.add_user_role(
+        self._clients.keystone("2").roles.add_user_role(
             user=user_id, role=role_id, tenant=tenant_id)
-
-    @atomic.action_timer("keystone.delete_role")
-    def delete_role(self, role_id):
-        """Deletes role."""
-        self._clients.keystone("2").roles.delete(role_id)
 
     @atomic.action_timer("keystone_v2.list_roles")
     def list_roles(self):
@@ -90,14 +145,22 @@ class KeystoneV2Service(service.Service):
                                                            role=role_id,
                                                            tenant=tenant_id)
 
-    @atomic.action_timer("keystone_v2.get_role")
-    def get_role(self, role_id):
-        """Get role."""
-        return self._clients.keystone("2").roles.get(role_id)
+    @atomic.action_timer("keystone_v2.create_ec2creds")
+    def create_ec2credentials(self, user_id, tenant_id):
+        """Create ec2credentials.
+
+        :param user_id: User ID for which to create credentials
+        :param tenant_id: Tenant ID for which to create credentials
+
+        :returns: Created ec2-credentials object
+        """
+        return self._clients.keystone("2").ec2.create(user_id,
+                                                      tenant_id=tenant_id)
 
 
 @service.compat_layer(KeystoneV2Service)
-class UnifiedKeystoneV2Service(identity.Identity):
+class UnifiedKeystoneV2Service(keystone_common.UnifiedKeystoneMixin,
+                               identity.Identity):
     """Compatibility layer for Keystone V2."""
 
     @staticmethod
@@ -128,6 +191,18 @@ class UnifiedKeystoneV2Service(identity.Identity):
         tenant = self._impl.create_tenant(project_name)
         return self._unify_tenant(tenant)
 
+    def update_project(self, project_id, name=None, enabled=None,
+                       description=None):
+        """Update project name, enabled and description
+
+        :param project_id: Id of project to update
+        :param name: project name to be set
+        :param enabled: enabled status of project
+        :param description: project description to be set
+        """
+        self._impl.update_tenant(tenant_id=project_id, name=name,
+                                 enabled=enabled, description=description)
+
     def delete_project(self, project_id):
         """Deletes project."""
         return self._impl.delete_tenant(project_id)
@@ -136,37 +211,64 @@ class UnifiedKeystoneV2Service(identity.Identity):
         """List all projects."""
         return [self._unify_tenant(t) for t in self._impl.list_tenants()]
 
-    def create_user(self, username, password, email=None, project_id=None,
-                    domain_name="Default", default_role="member"):
+    def get_project(self, project_id):
+        """Get project."""
+        return self._unify_tenant(self._impl.get_tenant(project_id))
+
+    def create_user(self, username=None, password=None, project_id=None,
+                    domain_name="Default", enabled=True,
+                    default_role="member"):
         """Create user.
 
         :param username: name of user
         :param password: user password
-        :param email: user's email
         :param project_id: user's default project
         :param domain_name: Restricted for Keystone V2. Should not be set or
             "Default" is expected.
+        :param enabled: whether the user is enabled.
         :param default_role: Restricted for Keystone V2. Should not be set or
             "member" is expected.
         """
         self._check_domain(domain_name)
         user = self._impl.create_user(username=username,
                                       password=password,
-                                      email=email,
-                                      tenant_id=project_id)
+                                      tenant_id=project_id,
+                                      enabled=enabled)
         return self._unify_user(user)
 
-    def delete_user(self, user_id):
-        """Deletes user by its id."""
-        return self._impl.delete_user(user_id)
+    def create_users(self, tenant_id, number_of_users, user_create_args=None):
+        """Create specified amount of users.
+
+        :param tenant_id: Id of tenant
+        :param number_of_users: number of users to create
+        :param user_create_args: additional user creation arguments
+        """
+        if user_create_args and "domain_name" in user_create_args:
+            self._check_domain(user_create_args["domain_name"])
+        return [self._unify_user(u)
+                for u in self._impl.create_users(
+                    tenant_id=tenant_id, number_of_users=number_of_users,
+                    user_create_args=user_create_args)]
 
     def list_users(self):
         """List all users."""
         return [self._unify_user(u) for u in self._impl.list_users()]
 
-    def delete_service(self, service_id):
-        """Deletes service."""
-        return self._impl.delete_service(service_id)
+    def update_user(self, user_id, enabled=None, name=None, email=None,
+                    password=None):
+        if password is not None:
+            self._impl.update_user_password(user_id=user_id, password=password)
+
+        update_args = {}
+        if enabled is not None:
+            update_args["enabled"] = enabled
+        if name is not None:
+            update_args["name"] = name
+        if email is not None:
+            update_args["email"] = email
+
+        if update_args:
+            self._impl.update_user(user_id, **update_args)
 
     def list_services(self):
         """List all services."""
@@ -179,12 +281,8 @@ class UnifiedKeystoneV2Service(identity.Identity):
 
     def add_role(self, role_id, user_id, project_id):
         """Add role to user."""
-        return self._unify_role(self._impl.add_role(
-            role_id=role_id, user_id=user_id, tenant_id=project_id))
-
-    def delete_role(self, role_id):
-        """Deletes role."""
-        return self._impl.delete_role(role_id)
+        self._impl.add_role(role_id=role_id, user_id=user_id,
+                            tenant_id=project_id)
 
     def revoke_role(self, role_id, user_id, project_id):
         """Revokes a role from a user."""
@@ -203,6 +301,13 @@ class UnifiedKeystoneV2Service(identity.Identity):
             roles = self._impl.list_roles()
         return [self._unify_role(role) for role in roles]
 
-    def get_role(self, role_id):
-        """Get role."""
-        return self._unify_role(self._impl.get_role(role_id))
+    def create_ec2credentials(self, user_id, project_id):
+        """Create ec2credentials.
+
+        :param user_id: User ID for which to create credentials
+        :param project_id: Project ID for which to create credentials
+
+        :returns: Created ec2-credentials object
+        """
+        return self._impl.create_ec2credentials(user_id=user_id,
+                                                tenant_id=project_id)
