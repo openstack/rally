@@ -20,7 +20,7 @@ Problem Description
 
   There should be few attempts to delete resource in case of failures
 
-* (implemented) Log resources that failed to be deleted 
+* (implemented) Log resources that failed to be deleted
 
   We should log warnings about all non deleted resources. This information
   should include UUID of resource, it's type and project.

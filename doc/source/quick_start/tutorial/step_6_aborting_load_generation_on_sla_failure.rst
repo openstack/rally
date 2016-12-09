@@ -19,7 +19,7 @@ Step 6. Aborting load generation on success criteria failure
 ============================================================
 
 Benchmarking pre-production and production OpenStack clouds is not a trivial
-task. From the one side it is important to reach the OpenStack cloud’s limits,
+task. From the one side it is important to reach the OpenStack cloud's limits,
 from the other side the cloud shouldn't be damaged. Rally aims to make this
 task as simple as possible. Since the very beginning Rally was able to generate
 enough load for any OpenStack cloud. Generating too big a load was the major
@@ -139,9 +139,9 @@ Let’s run it!
     :align: center
 
 This time load stopped after 1410 iterations versus 2495 which is much better.
-The interesting thing on this chart is that first occurrence of “> 10 second”
-authentication happened on 950 iteration. The reasonable question: “Why does
-Rally run 500 more authentication requests then?”. This appears from the math:
+The interesting thing on this chart is that first occurrence of "> 10 second"
+authentication happened on 950 iteration. The reasonable question: "Why does
+Rally run 500 more authentication requests then?". This appears from the math:
 During the execution of **bad** authentication (10 seconds) Rally performed
 about 50 request/sec * 10 sec = 500 new requests as a result we run 1400
 iterations instead of 950.

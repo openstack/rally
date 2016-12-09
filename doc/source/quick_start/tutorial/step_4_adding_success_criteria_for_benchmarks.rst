@@ -160,5 +160,5 @@ pages:
 Success criteria present a very useful concept that enables not only to analyze
 the outcome of your benchmark tasks, but also to control their execution. In
 :ref:`one of the next sections <tutorial_step_6_aborting_load_generation_on_sla_failure>`
-of our tutorial, we will show how to use SLA to abort the load generation before
-your OpenStack goes wrong.
+of our tutorial, we will show how to use SLA to abort the load generation
+before your OpenStack goes wrong.
