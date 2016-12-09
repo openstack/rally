@@ -52,9 +52,6 @@ class TestTaskSamples(unittest.TestCase):
 
     @plugins.ensure_plugins_are_loaded
     def test_task_samples_is_valid(self):
-        # FIXME(andreykurilin): fix me as soon as we add keystone v3 support
-        # for all scenarios
-        return
         rally = utils.Rally(force_new_db=True)
         # In TestTaskSamples, Rally API will be called directly (not via
         # subprocess), so we need to change database options to temp database.
