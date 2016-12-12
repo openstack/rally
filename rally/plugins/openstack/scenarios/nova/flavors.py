@@ -66,6 +66,8 @@ class CreateAndListFlavorAccess(utils.NovaScenario):
                             "flavor access rules. Setting is_public to False"))
         kwargs["is_public"] = False
         flavor = self._create_flavor(ram, vcpus, disk, **kwargs)
+        self.assertTrue(flavor)
+
         self._list_flavor_access(flavor.id)
 
 

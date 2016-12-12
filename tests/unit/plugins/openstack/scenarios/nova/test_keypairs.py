@@ -15,22 +15,44 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.nova import keypairs
+from tests.unit import fakes
 from tests.unit import test
 
 
 class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_keypairs(self):
+
+        fake_nova_client = fakes.FakeNovaClient()
+        fake_nova_client.keypairs.create("keypair")
+        fake_keypair = list(fake_nova_client.keypairs.cache.values())[0]
+
         scenario = keypairs.CreateAndListKeypairs(self.context)
-        scenario.generate_random_name = mock.MagicMock(return_value="name")
-        scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
+        scenario._create_keypair = mock.MagicMock()
         scenario._list_keypairs = mock.MagicMock()
 
+        scenario._list_keypairs.return_value = [fake_keypair] * 3
+        # Positive case:
+        scenario._create_keypair.return_value = fake_keypair.id
         scenario.run(fakearg="fakearg")
 
         scenario._create_keypair.assert_called_once_with(fakearg="fakearg")
         scenario._list_keypairs.assert_called_once_with()
+
+        # Negative case1: keypair isn't created
+        scenario._create_keypair.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, fakearg="fakearg")
+        scenario._create_keypair.assert_called_with(fakearg="fakearg")
+
+        # Negative case2: new keypair not in the list of keypairs
+        scenario._create_keypair.return_value = "fake_keypair"
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, fakearg="fakearg")
+        scenario._create_keypair.assert_called_with(fakearg="fakearg")
+        scenario._list_keypairs.assert_called_with()
 
     def test_create_and_delete_keypair(self):
         scenario = keypairs.CreateAndDeleteKeypair(self.context)

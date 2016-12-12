@@ -38,8 +38,11 @@ class CreateAndListKeypairs(utils.NovaScenario):
         :param kwargs: Optional additional arguments for keypair creation
         """
 
-        self._create_keypair(**kwargs)
-        self._list_keypairs()
+        keypair_name = self._create_keypair(**kwargs)
+        self.assertTrue(keypair_name, "Keypair isn't created")
+
+        list_keypairs = self._list_keypairs()
+        self.assertIn(keypair_name, [i.id for i in list_keypairs])
 
 
 @validation.required_services(consts.Service.NOVA)

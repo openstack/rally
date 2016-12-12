@@ -70,6 +70,14 @@ class FunctionalMixinTestCase(test.TestCase):
         self.assertRaises(exceptions.RallyAssertionError,
                           a.assertNotIn, "1", ["1", "2", "3"])
 
+        a.assertIsSubset(["1", "2"], ["1", "2", "3"])
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertIsSubset, ["1", "4"], ["1", "2", "3"])
+
+        a.assertIsNotSubset(["1", "4"], ["1", "2", "3"])
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertIsNotSubset, ["1", "2"], ["1", "2", "3"])
+
         a.assertIsInstance("a", str)
         self.assertRaises(exceptions.RallyAssertionError,
                           a.assertIsInstance, "a", int)
@@ -77,6 +85,33 @@ class FunctionalMixinTestCase(test.TestCase):
         a.assertIsNotInstance("a", int)
         self.assertRaises(exceptions.RallyAssertionError,
                           a.assertIsNotInstance, "a", str)
+
+        a.assertLessEqual(len(["1", "2"]), len(["3", "4", "5"]))
+        a.assertLessEqual(len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLessEqual,
+                          len(["1", "2", "3"]), len(["3", "4"]))
+
+        a.assertLess(len(["1", "2"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLess,
+                          len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLess, len(["1", "2", "3"]), len(["3", "4"]))
+
+        a.assertGreaterEqual(len(["1", "2", "9", "8"]), len(["3", "4", "5"]))
+        a.assertGreaterEqual(len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreaterEqual,
+                          len(["1", "2"]), len(["3", "4", "5"]))
+
+        a.assertGreater(len(["1", "2", "9", "8"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreater,
+                          len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreater,
+                          len(["1", "2"]), len(["3", "4", "5"]))
 
     @testtools.skipIf(sys.version_info < (2, 7),
                       "assertRaises as context not supported")
@@ -150,6 +185,39 @@ class FunctionalMixinTestCase(test.TestCase):
         message = self._catch_exception_message(a.assertIsNotInstance,
                                                 "a", str, custom_message)
         self.assertRegex(message, assert_message)
+
+        a.assertLessEqual(len(["1", "2"]), len(["3", "4", "5"]))
+        a.assertLessEqual(len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLessEqual,
+                          len(["1", "2", "3"]), len(["3", "4"]),
+                          custom_message)
+
+        a.assertLess(len(["1", "2"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLess,
+                          len(["1", "2", "3"]), len(["3", "4", "5"]),
+                          custom_message)
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertLess, len(["1", "2", "3"]), len(["3", "4"]),
+                          custom_message)
+
+        a.assertGreaterEqual(len(["1", "2", "9", "8"]), len(["3", "4", "5"]))
+        a.assertGreaterEqual(len(["1", "2", "3"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreaterEqual,
+                          len(["1", "2"]), len(["3", "4", "5"]),
+                          custom_message)
+
+        a.assertGreater(len(["1", "2", "9", "8"]), len(["3", "4", "5"]))
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreater,
+                          len(["1", "2", "3"]), len(["3", "4", "5"]),
+                          custom_message)
+        self.assertRaises(exceptions.RallyAssertionError,
+                          a.assertGreater,
+                          len(["1", "2"]), len(["3", "4", "5"]),
+                          custom_message)
 
     def _catch_exception_message(self, func, *args):
         try:

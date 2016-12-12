@@ -80,9 +80,15 @@ class CreateAndListSecgroups(utils.NovaScenario):
         security_groups = self._create_security_groups(
             security_group_count)
 
+        self.assertTrue(security_groups)
+
         self._create_rules_for_security_group(security_groups,
                                               rules_per_security_group)
-        self._list_security_groups()
+
+        pool_groups = self._list_security_groups()
+        self.assertLessEqual(len(security_groups), len(pool_groups))
+        self.assertIsSubset([i.id for i in security_groups],
+                            [i.id for i in pool_groups])
 
 
 @validation.required_parameters("security_group_count")

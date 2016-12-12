@@ -15,6 +15,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.nova import security_group
 from tests.unit import fakes
 from tests.unit import test
@@ -72,13 +73,22 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
 
         scenario = security_group.CreateAndListSecgroups(self.context)
-        scenario._create_security_groups = mock.MagicMock(
-            return_value=fake_secgroups)
+
+        scenario._create_security_groups = mock.MagicMock()
         scenario._create_rules_for_security_group = mock.MagicMock()
         scenario._list_security_groups = mock.MagicMock()
 
+        scenario._list_security_groups.return_value = fake_secgroups
+        scenario._list_security_groups.return_value.append(
+            fakes.FakeSecurityGroup(None, None, 3, "uuid3"))
+        scenario._list_security_groups.return_value.append(
+            fakes.FakeSecurityGroup(None, None, 4, "uuid4"))
+
         security_group_count = 2
         rules_per_security_group = 10
+
+        # Positive case:
+        scenario._create_security_groups.return_value = fake_secgroups
         scenario.run(
             security_group_count, rules_per_security_group)
 
@@ -87,6 +97,27 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
         scenario._create_rules_for_security_group.assert_called_once_with(
             fake_secgroups, rules_per_security_group)
         scenario._list_security_groups.assert_called_once_with()
+
+        # Negative case1: groups aren't created
+        scenario._create_security_groups.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run,
+                          security_group_count, rules_per_security_group)
+        scenario._create_security_groups.assert_called_with(
+            security_group_count)
+
+        # Negative case2: new groups are not present in the list of groups
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 6, "uuid6")]
+        scenario._create_security_groups.return_value = fake_secgroups
+        scenario._create_rules_for_security_group = mock.MagicMock()
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run,
+                          security_group_count, rules_per_security_group)
+        scenario._create_security_groups.assert_called_with(
+            security_group_count)
+        scenario._create_rules_for_security_group.assert_called_with(
+            fake_secgroups, rules_per_security_group)
+        scenario._list_security_groups.assert_called_with()
 
     def _generate_fake_server_with_sg(self, number_of_secgroups):
         sg_list = []

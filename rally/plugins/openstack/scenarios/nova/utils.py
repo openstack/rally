@@ -804,15 +804,20 @@ class NovaScenario(scenario.OpenStackScenario):
                                          ip_protocol="tcp", cidr="0.0.0.0/0"):
         action_name = ("nova.create_%s_rules" % (rules_per_security_group *
                                                  len(security_groups)))
+        creation_status = True
         with atomic.ActionTimer(self, action_name):
             for i, security_group in enumerate(security_groups):
+                result = True
                 for j in range(rules_per_security_group):
-                        self.clients("nova").security_group_rules.create(
-                            security_group.id,
-                            from_port=(i * rules_per_security_group + j + 1),
-                            to_port=(i * rules_per_security_group + j + 1),
-                            ip_protocol=ip_protocol,
-                            cidr=cidr)
+                    result = self.clients("nova").security_group_rules.create(
+                        security_group.id,
+                        from_port=(i * rules_per_security_group + j + 1),
+                        to_port=(i * rules_per_security_group + j + 1),
+                        ip_protocol=ip_protocol,
+                        cidr=cidr)
+                if not result:
+                    creation_status = False
+        return creation_status
 
     def _update_security_groups(self, security_groups):
         """Update a list of security groups

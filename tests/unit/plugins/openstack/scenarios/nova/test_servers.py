@@ -244,15 +244,42 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
     def test_boot_and_list_server(self):
         scenario = servers.BootAndListServer(self.context)
-        scenario.generate_random_name = mock.MagicMock(return_value="name")
+#        scenario.generate_random_name = mock.MagicMock(return_value="name")
+
+        img_name = "img"
+        flavor_uuid = 0
+        details = True
+        fake_server_name = mock.MagicMock()
         scenario._boot_server = mock.MagicMock()
         scenario._list_servers = mock.MagicMock()
+        scenario._list_servers.return_value = [mock.MagicMock(),
+                                               fake_server_name,
+                                               mock.MagicMock()]
 
-        scenario.run("img", 0, fakearg="fakearg")
+        # Positive case
+        scenario._boot_server.return_value = fake_server_name
+        scenario.run(img_name, flavor_uuid, fakearg="fakearg")
 
-        scenario._boot_server.assert_called_once_with("img", 0,
+        scenario._boot_server.assert_called_once_with(img_name, flavor_uuid,
                                                       fakearg="fakearg")
-        scenario._list_servers.assert_called_once_with(True)
+        scenario._list_servers.assert_called_once_with(details)
+
+        # Negative case1: server isn't created
+        scenario._boot_server.return_value = None
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          img_name, flavor_uuid, fakearg="fakearg")
+        scenario._boot_server.assert_called_with(img_name, flavor_uuid,
+                                                 fakearg="fakearg")
+
+        # Negative case2: server not in the list of available servers
+        scenario._boot_server.return_value = mock.MagicMock()
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          img_name, flavor_uuid, fakearg="fakearg")
+        scenario._boot_server.assert_called_with(img_name, flavor_uuid,
+                                                 fakearg="fakearg")
+        scenario._list_servers.assert_called_with(details)
 
     def test_suspend_and_resume_server(self):
         fake_server = object()

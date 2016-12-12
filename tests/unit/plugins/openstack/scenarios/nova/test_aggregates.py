@@ -29,12 +29,26 @@ class NovaAggregatesTestCase(test.ScenarioTestCase):
         scenario._list_aggregates.assert_called_once_with()
 
     def test_create_and_list_aggregates(self):
+        # Positive case
         scenario = aggregates.CreateAndListAggregates()
-        scenario._create_aggregate = mock.Mock()
-        scenario._list_aggregates = mock.Mock()
+        scenario._create_aggregate = mock.Mock(return_value="agg1")
+        scenario._list_aggregates = mock.Mock(return_value=("agg1", "agg2"))
         scenario.run(availability_zone="nova")
         scenario._create_aggregate.assert_called_once_with("nova")
         scenario._list_aggregates.assert_called_once_with()
+
+        # Negative case 1: aggregate isn't created
+        scenario._create_aggregate.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, availability_zone="nova")
+        scenario._create_aggregate.assert_called_with("nova")
+
+        # Negative case 2: aggregate was created but not included into list
+        scenario._create_aggregate.return_value = "agg3"
+        self.assertRaises(exceptions.RallyAssertionError,
+                          scenario.run, availability_zone="nova")
+        scenario._create_aggregate.assert_called_with("nova")
+        scenario._list_aggregates.assert_called_with()
 
     def test_create_and_delete_aggregate(self):
         scenario = aggregates.CreateAndDeleteAggregate()
