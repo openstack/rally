@@ -838,9 +838,9 @@
         network:
           start_cidr: "10.2.0.0/24"
         quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+          neutron:
+            security_group: -1
+            security_group_rule: -1
 
   NovaSecGroup.boot_server_and_add_secgroups:
     -
@@ -862,9 +862,9 @@
         network:
           start_cidr: "10.2.0.0/24"
         quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+          neutron:
+            security_group: -1
+            security_group_rule: -1
       sla:
         failure_rate:
           max: 0
