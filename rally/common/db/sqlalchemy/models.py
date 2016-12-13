@@ -377,12 +377,12 @@ class Verifier(BASE, RallyBase):
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
 
     name = sa.Column(sa.String(255), unique=True)
-    description = sa.Column(sa.String(1000))
+    description = sa.Column(sa.Text)
 
     type = sa.Column(sa.String(255), nullable=False)
     namespace = sa.Column(sa.String(255))
 
-    source = sa.Column(sa.String(1000))
+    source = sa.Column(sa.String(255))
     version = sa.Column(sa.String(255))
     system_wide = sa.Column(sa.Boolean)
 

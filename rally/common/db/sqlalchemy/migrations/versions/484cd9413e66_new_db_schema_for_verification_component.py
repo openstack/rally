@@ -91,12 +91,12 @@ def upgrade():
         sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
 
         sa.Column("name", sa.String(255), unique=True),
-        sa.Column("description", sa.String(1000)),
+        sa.Column("description", sa.Text),
 
         sa.Column("type", sa.String(255), nullable=False),
         sa.Column("namespace", sa.String(255)),
 
-        sa.Column("source", sa.String(1000)),
+        sa.Column("source", sa.String(255)),
         sa.Column("version", sa.String(255)),
         sa.Column("system_wide", sa.Boolean),
 
