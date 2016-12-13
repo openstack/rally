@@ -48,11 +48,14 @@ class ResultConsumer(object):
     about started iterations.
     """
 
-    def __init__(self, key, task, runner, abort_on_sla_failure):
+    def __init__(self, key, task, subtask, workload, runner,
+                 abort_on_sla_failure):
         """ResultConsumer constructor.
 
         :param key: Scenario identifier
         :param task: Instance of Task, task to run
+        :param subtask: Instance of Subtask
+        :param workload: Instance of Workload
         :param runner: ScenarioRunner instance that produces results to be
                        consumed
         :param abort_on_sla_failure: True if the execution should be stopped
@@ -61,6 +64,8 @@ class ResultConsumer(object):
 
         self.key = key
         self.task = task
+        self.subtask = subtask
+        self.workload = workload
         self.runner = runner
         self.load_started_at = float("inf")
         self.load_finished_at = 0
@@ -144,7 +149,6 @@ class ResultConsumer(object):
             self.finish - self.start))
 
         results = {
-            "raw": self.results,
             "load_duration": load_duration,
             "full_duration": self.finish - self.start,
             "sla": self.sla_checker.results(),
@@ -154,7 +158,8 @@ class ResultConsumer(object):
             self.event_thread.join()
             results["hooks"] = self.hook_executor.results()
 
-        self.task.append_results(self.key, results)
+        self.workload.add_workload_data({"raw": self.results})
+        self.workload.set_results(results)
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):
@@ -363,6 +368,8 @@ class TaskEngine(object):
         self.task.update_status(consts.TaskStatus.RUNNING)
 
         for subtask in self.config.subtasks:
+            subtask_obj = self.task.add_subtask(**subtask.to_dict())
+
             for pos, workload in enumerate(subtask.workloads):
 
                 if ResultConsumer.is_task_in_aborting_status(
@@ -372,13 +379,15 @@ class TaskEngine(object):
                     return
 
                 key = workload.make_key(pos)
+                workload_obj = subtask_obj.add_workload(key)
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
                 runner_obj = self._get_runner(workload.runner)
                 context_obj = self._prepare_context(
                     workload.context, workload.name, self.admin)
                 try:
-                    with ResultConsumer(key, self.task, runner_obj,
+                    with ResultConsumer(key, self.task,
+                                        subtask_obj, workload_obj, runner_obj,
                                         self.abort_on_sla_failure):
                         with context.ContextManager(context_obj):
                             runner_obj.run(workload.name, context_obj,
@@ -586,6 +595,13 @@ class SubTask(object):
                           for wconf
                           in config["workloads"]]
         self.context = config.get("context", {})
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "description": self.description,
+            "context": self.context,
+        }
 
 
 class Workload(object):

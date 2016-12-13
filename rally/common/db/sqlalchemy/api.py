@@ -19,6 +19,7 @@ SQLAlchemy implementation for DB.API
 import datetime as dt
 import json
 import os
+import time
 
 import alembic
 from alembic import config as alembic_config
@@ -387,9 +388,113 @@ class Connection(object):
                                                            actual=task.status)
                 raise exceptions.TaskNotFound(uuid=uuid)
 
+    def _task_result_get_all_by_uuid(self, uuid):
+        results = []
+
+        workloads = (self.model_query(models.Workload).
+                     filter_by(task_uuid=uuid).all())
+
+        for workload in workloads:
+            workload_data = (self.model_query(models.WorkloadData).
+                             filter_by(task_uuid=uuid,
+                                       workload_uuid=workload.uuid).
+                             first())
+
+            results.append(
+                self._make_old_task_result(workload, workload_data))
+
+        return results
+
     # @db_api.serialize
-    def task_result_create(self, task_uuid, key, data):
+    def task_result_get_all_by_uuid(self, uuid):
+        return self._task_result_get_all_by_uuid(uuid)
+
+    @db_api.serialize
+    def subtask_create(self, task_uuid, title, description=None, context=None):
+        subtask = models.Subtask(task_uuid=task_uuid)
+        subtask.update({
+            "title": title,
+            "description": description or "",
+            "context": context or {},
+        })
+        subtask.save()
+        return subtask
+
+    @db_api.serialize
+    def workload_create(self, task_uuid, subtask_uuid, key):
+        workload = models.Workload(task_uuid=task_uuid,
+                                   subtask_uuid=subtask_uuid)
+        workload.update({
+            "name": key["name"],
+            "position": key["pos"],
+            "runner": key["kw"]["runner"],
+            "runner_type": key["kw"]["runner"]["type"],
+            "context": key["kw"].get("context", {}),
+            "sla": key["kw"].get("sla", {}),
+            "args": key["kw"].get("args", {}),
+            "context_execution": {},
+            "statistics": {},
+        })
+        workload.save()
+        return workload
+
+    @db_api.serialize
+    def workload_data_create(self, task_uuid, workload_uuid, data):
+        workload_data = models.WorkloadData(task_uuid=task_uuid,
+                                            workload_uuid=workload_uuid)
+
         raw_data = data.get("raw", [])
+        iter_count = len(raw_data)
+
+        failed_iter_count = 0
+
+        started_at = float("inf")
+        finished_at = 0
+        for d in raw_data:
+            if d.get("error"):
+                failed_iter_count += 1
+
+            timestamp = d["timestamp"]
+            duration = d["duration"]
+            finished = timestamp + duration
+
+            if timestamp < started_at:
+                started_at = timestamp
+
+            if finished > finished_at:
+                finished_at = finished
+
+        now = time.time()
+        if started_at == float("inf"):
+            started_at = now
+        if finished_at == 0:
+            finished_at = now
+
+        workload_data.update({
+            "task_uuid": task_uuid,
+            "workload_uuid": workload_uuid,
+            "chunk_order": 0,
+            "iteration_count": iter_count,
+            "failed_iteration_count": failed_iter_count,
+            "chunk_data": {"raw": raw_data},
+            # TODO(ikhudoshyn)
+            "chunk_size": 0,
+            "compressed_chunk_size": 0,
+            "started_at": dt.datetime.fromtimestamp(started_at),
+            "finished_at": dt.datetime.fromtimestamp(finished_at)
+        })
+        workload_data.save()
+        return workload_data
+
+    @db_api.serialize
+    def workload_set_results(self, workload_uuid, data):
+        workload = self.model_query(models.Workload).filter_by(
+            uuid=workload_uuid).first()
+
+        workload_data = self.model_query(models.WorkloadData).filter_by(
+            workload_uuid=workload_uuid).first()
+
+        raw_data = workload_data.chunk_data.get("raw", [])
         iter_count = len(raw_data)
 
         failed_iter_count = 0
@@ -422,24 +527,12 @@ class Connection(object):
         delta = dt.timedelta(seconds=data.get("full_duration", 0))
         start = now - delta
 
-        subtask = models.Subtask()
-        subtask.update({"task_uuid": task_uuid})
-        subtask.save()
-
-        workload = models.Workload()
         workload.update({
-            "task_uuid": task_uuid,
-            "subtask_uuid": subtask.uuid,
-            "name": key["name"],
-            "position": key["pos"],
-            "runner": key["kw"]["runner"],
-            "runner_type": key["kw"]["runner"]["type"],
-            "context": key["kw"].get("context", {}),
-            "hooks": data.get("hooks", []),
-            "sla": key["kw"].get("sla", {}),
-            "args": key["kw"].get("args", {}),
+            "task_uuid": workload.task_uuid,
+            "subtask_uuid": workload.subtask_uuid,
             "sla_results": {"sla": sla},
             "context_execution": {},
+            "hooks": data.get("hooks", []),
             "load_duration": data.get("load_duration", 0),
             "full_duration": data.get("full_duration", 0),
             "min_duration": min_duration,
@@ -451,26 +544,6 @@ class Connection(object):
             "statistics": {},
             "pass_sla": success
         })
-        workload.save()
-
-        workload_data = models.WorkloadData()
-        workload_data.update({
-            "task_uuid": task_uuid,
-            "workload_uuid": workload.uuid,
-            "chunk_order": 0,
-            "iteration_count": iter_count,
-            "failed_iteration_count": failed_iter_count,
-            "chunk_data": {"raw": raw_data},
-            # TODO(ikhudoshyn)
-            "chunk_size": 0,
-            "compressed_chunk_size": 0,
-            "started_at": start,
-            "finished_at": now
-        })
-
-        # TODO(ikhudoshyn): create workload and workload data in
-        # one transaction
-        workload_data.save()
 
         # TODO(ikhudoshyn): if pass_sla is False,
         # then update task's and subtask's pass_sla
@@ -478,28 +551,8 @@ class Connection(object):
         # TODO(ikhudoshyn): update task.task_duration
         # and subtask.duration
 
-        return self._make_old_task_result(workload, workload_data)
-
-    def _task_result_get_all_by_uuid(self, uuid):
-        results = []
-
-        workloads = (self.model_query(models.Workload).
-                     filter_by(task_uuid=uuid).all())
-
-        for workload in workloads:
-            workload_data = (self.model_query(models.WorkloadData).
-                             filter_by(task_uuid=uuid,
-                                       workload_uuid=workload.uuid).
-                             first())
-
-            results.append(
-                self._make_old_task_result(workload, workload_data))
-
-        return results
-
-    # @db_api.serialize
-    def task_result_get_all_by_uuid(self, uuid):
-        return self._task_result_get_all_by_uuid(uuid)
+        workload.save()
+        return workload
 
     def _deployment_get(self, deployment, session=None):
         stored_deployment = self.model_query(

@@ -390,6 +390,9 @@ class Task(object):
                       "validation_result": {
                           "etype": etype, "msg": msg, "trace": etraceback}})
 
+    def add_subtask(self, **subtask):
+        return Subtask(self.task["uuid"], **subtask)
+
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
 
@@ -517,9 +520,6 @@ class Task(object):
             extended.append(scenario)
         return extended
 
-    def append_results(self, key, value):
-        db.task_result_create(self.task["uuid"], key, value)
-
     def delete(self, status=None):
         db.task_delete(self.task["uuid"], status=status)
 
@@ -544,3 +544,34 @@ class Task(object):
                       if soft else consts.TaskStatus.ABORTING)
         self.update_status(new_status, allowed_statuses=(
             consts.TaskStatus.RUNNING, consts.TaskStatus.SOFT_ABORTING))
+
+
+class Subtask(object):
+    """Represents a subtask object."""
+
+    def __init__(self, task_uuid, **attributes):
+        self.subtask = db.subtask_create(task_uuid, **attributes)
+
+    def __getitem__(self, key):
+        return self.subtask[key]
+
+    def add_workload(self, key):
+        return Workload(self.subtask["task_uuid"],
+                        self.subtask["uuid"], key)
+
+
+class Workload(object):
+    """Represents a workload object."""
+
+    def __init__(self, task_uuid, subtask_uuid, key):
+        self.workload = db.workload_create(task_uuid, subtask_uuid, key)
+
+    def __getitem__(self, key):
+        return self.workload[key]
+
+    def add_workload_data(self, workload_data):
+        db.workload_data_create(self.workload["task_uuid"],
+                                self.workload["uuid"], workload_data)
+
+    def set_results(self, data):
+        db.workload_set_results(self.workload["uuid"], data)
