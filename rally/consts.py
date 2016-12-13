@@ -212,6 +212,26 @@ class _TagType(utils.ImmutableMixin, utils.EnumMixin):
     SUBTASK = "subtask"
 
 
+class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
+    """Verifier statuses."""
+    INIT = "init"
+    INSTALLING = "installing"
+    INSTALLED = "installed"
+    UPDATING = "updating"
+    EXTENDING = "extending"
+    CONFIGURING = "configuring"
+    CONFIGURED = "configured"
+    FAILED = "failed"
+
+
+class VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
+    """Verification statuses."""
+    INIT = "init"
+    RUNNING = "running"
+    FINISHED = "finished"
+    FAILED = "failed"
+
+
 TaskStatus = _TaskStatus()
 SubtaskStatus = _SubtaskStatus()
 DeployStatus = _DeployStatus()
@@ -223,3 +243,4 @@ TempestTestsAPI = _TempestTestsAPI()
 TempestTestsSets = _TempestTestsSets()
 HookStatus = _HookStatus()
 TagType = _TagType()
+VerifierStatus = _VerifierStatus()
