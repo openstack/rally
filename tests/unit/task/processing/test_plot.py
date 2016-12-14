@@ -105,8 +105,7 @@ class PlotTestCase(test.TestCase):
              "summary": {"success": 2}},
             {"config": {"trigger": {"args": {"at": [1, 2, 4], "unit": "time"},
                                     "name": "event"},
-                        "args": "bar cmd", "description": "Bar hook",
-                        "name": "sys_call"},
+                        "args": "bar cmd", "name": "sys_call"},
              "results": [
                  {"status": "success", "finished_at": 1475589988.437791,
                   "triggered_by": {"event_type": "time", "value": 1},
@@ -150,7 +149,7 @@ class PlotTestCase(test.TestCase):
                    "started_at": "2016-10-04 14:06:29",
                    "status": "success",
                    "triggered_by": "time: 2"}],
-              "desc": "Bar hook",
+              "desc": "",
               "name": "sys_call"}]})
     @ddt.unpack
     def test__process_hooks(self, hooks, expected):
