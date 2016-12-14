@@ -244,7 +244,8 @@ class Connection(object):
                     "args": workload.args,
                     "runner": workload.runner,
                     "context": workload.context,
-                    "sla": workload.sla
+                    "sla": workload.sla,
+                    "hooks": [r["config"] for r in workload.hooks],
                 }
             },
             "data": {

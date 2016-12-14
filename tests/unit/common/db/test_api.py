@@ -286,7 +286,8 @@ class TasksTestCase(test.DBTestCase):
                 "args": {"task_id": "task_id"},
                 "context": {"c": "C"},
                 "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
+                "runner": {"r": "R", "type": "T"},
+                "hooks": [],
             }
         }
         data = {
@@ -328,7 +329,8 @@ class TasksTestCase(test.DBTestCase):
                 "args": {"a": "A"},
                 "context": {"c": "C"},
                 "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
+                "runner": {"r": "R", "type": "T"},
+                "hooks": [],
             }
         }
         data = {
@@ -375,7 +377,8 @@ class TasksTestCase(test.DBTestCase):
                 "args": {"a": "A"},
                 "context": {"c": "C"},
                 "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
+                "runner": {"r": "R", "type": "T"},
+                "hooks": [],
             }
         }
         data = {
@@ -419,6 +422,8 @@ class TasksTestCase(test.DBTestCase):
                 "args": {"a": "A"},
                 "context": {"c": "C"},
                 "sla": {"s": "S"},
+                "hooks": [{"name": "foo_hook", "args": "bar",
+                           "trigger": {"name": "foo_trigger", "args": "baz"}}],
                 "runner": {"r": "R", "type": "T"}
             }
         }
@@ -437,7 +442,14 @@ class TasksTestCase(test.DBTestCase):
             ],
             "load_duration": 13,
             "full_duration": 42,
-            "hooks": [],
+            "hooks": [
+                {"config": {"name": "foo_hook", "args": "bar",
+                            "trigger": {"name": "foo_trigger", "args": "baz"}},
+                 "results": [
+                    {"status": "success", "started_at": 10.0,
+                     "finished_at": 11.0, "triggered_by": {"time": 5}}],
+                 "summary": {}}
+            ],
         }
 
         subtask = db.subtask_create(task_id, title="foo")
@@ -448,6 +460,7 @@ class TasksTestCase(test.DBTestCase):
         res = db.task_result_get_all_by_uuid(task_id)
         self.assertEqual(1, len(res))
         self.assertEqual(raw_data["raw"], res[0]["data"]["raw"])
+        self.assertEqual(key, res[0]["key"])
 
 
 class SubtaskTestCase(test.DBTestCase):
