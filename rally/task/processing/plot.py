@@ -32,7 +32,7 @@ def _process_hooks(hooks):
     hooks_ctx = []
     for hook in hooks:
         hook_ctx = {"name": hook["config"]["name"],
-                    "desc": hook["config"]["description"],
+                    "desc": hook["config"].get("description", ""),
                     "additive": [], "complete": []}
 
         for res in hook["results"]:
