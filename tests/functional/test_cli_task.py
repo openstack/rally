@@ -397,7 +397,7 @@ class TaskTestCase(unittest.TestCase):
         for line in res.splitlines():
             if "finished" in line:
                 task_uuids.append(line.split(" ")[1][:-1])
-        self.assertTrue(len(task_uuids))
+        self.assertGreater(len(task_uuids), 0)
         self.assertIn(task_uuids[0],
                       rally("task list --uuids-only --deployment MAIN"))
 
