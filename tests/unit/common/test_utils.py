@@ -664,3 +664,143 @@ class StopwatchTestCase(test.TestCase):
             mock.call(1),
             mock.call(1),
         ])
+
+
+class BackupTestCase(test.TestCase):
+    def setUp(self):
+        super(BackupTestCase, self).setUp()
+        p = mock.patch("rally.common.utils.os.mkdir")
+        self.mock_mkdir = p.start()
+        self.addCleanup(p.stop)
+
+    @mock.patch("rally.common.utils.os.path.exists")
+    @mock.patch("rally.common.utils.uuid")
+    def test__find_non_existing_path(self, mock_uuid, mock_exists):
+        tmp_dir = "/some"
+        mock_exists.side_effect = (False, True, False)
+        uuids = ("exist-1", "exist-2", "uuuiiiddd")
+        mock_uuid.uuid4.side_effect = uuids
+
+        bh = utils.BackupHelper()
+        mock_exists.reset_mock()
+
+        self.assertEqual("%s/%s" % (tmp_dir, uuids[-1]),
+                         bh._find_non_existing_path(tmp_dir))
+
+        self.assertEqual(
+            [mock.call("%s/%s" % (tmp_dir, uuid)) for uuid in uuids[1:]],
+            mock_exists.call_args_list)
+
+    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
+    @mock.patch("rally.common.utils.tempfile")
+    def test___init__(self, mock_tempfile, mock__find_non_existing_path):
+        utils.BackupHelper()
+
+        mock_tempfile.gettempdir.assert_called_once_with()
+        mock__find_non_existing_path.assert_called_once_with(
+            mock_tempfile.gettempdir.return_value)
+        self.mock_mkdir.assert_called_once_with(
+            mock__find_non_existing_path.return_value)
+
+    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
+    @mock.patch("rally.common.utils.shutil.copytree")
+    def test_backup(self, mock_copytree, mock__find_non_existing_path):
+        backup_dir = "another_dir"
+        mock__find_non_existing_path.side_effect = ("base_tmp_dir", backup_dir)
+
+        bh = utils.BackupHelper()
+
+        path = "some_path"
+        bh.backup(path)
+        mock_copytree.assert_called_once_with(path, backup_dir, symlinks=True)
+        self.assertEqual(backup_dir, bh._stored_data[path])
+        mock_copytree.reset_mock()
+
+        self.assertRaises(exceptions.RallyException, bh.backup, path)
+        self.assertFalse(mock_copytree.called)
+
+    @mock.patch("rally.common.utils.BackupHelper.rollback")
+    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
+    @mock.patch("rally.common.utils.shutil.copytree")
+    def test_backup_failed_while_copy(self, mock_copytree,
+                                      mock__find_non_existing_path,
+                                      mock_backup_helper_rollback):
+        backup_dir = "another_dir"
+        mock__find_non_existing_path.side_effect = ("base_tmp_dir", backup_dir)
+        mock_copytree.side_effect = RuntimeError
+
+        bh = utils.BackupHelper()
+
+        path = "some_path"
+        self.assertRaises(RuntimeError, bh.backup, path)
+        mock_copytree.assert_called_once_with(path, backup_dir, symlinks=True)
+        self.assertTrue(not bh._stored_data)
+        mock_backup_helper_rollback.assert_called_once_with()
+
+    @mock.patch("rally.common.utils.BackupHelper.backup")
+    def test_call(self, mock_backup_helper_backup):
+        path = "/some/path"
+
+        bh = utils.BackupHelper()
+
+        self.assertEqual(bh, bh(path))
+        mock_backup_helper_backup.assert_called_once_with(path)
+
+    @mock.patch("rally.common.utils."
+                "os.path.exists", side_effect=(False, True, True))
+    @mock.patch("rally.common.utils.shutil.rmtree")
+    def test___del__(self, mock_rmtree, mock_exists):
+        paths = {"original_path": "/tmp/backup_of_something",
+                 "another_path": "/tmp/backup_of_another_thing"}
+        bh = utils.BackupHelper()
+        bh._stored_data = paths
+
+        del bh
+
+        self.assertEqual([mock.call(p) for p in paths.values()],
+                         mock_rmtree.call_args_list)
+
+    @mock.patch("rally.common.utils.os.path.exists", side_effect=(False, True))
+    @mock.patch("rally.common.utils.shutil.rmtree")
+    @mock.patch("rally.common.utils.shutil.copytree")
+    def test_rollback(self, mock_copytree, mock_rmtree, mock_exists):
+
+        bh = utils.BackupHelper()
+
+        original_path = "/some/original/path"
+        tmp_path = "/temporary/location/for/backup"
+        path = {original_path: tmp_path}
+        bh._stored_data = path
+
+        rollback_method = mock.MagicMock()
+        args = (1, 2, 3)
+        kwargs = {"arg1": "value"}
+        bh.add_rollback_action(rollback_method, *args, **kwargs)
+
+        bh.rollback()
+
+        mock_rmtree.assert_called_once_with(original_path)
+        mock_copytree.assert_called_once_with(tmp_path, original_path,
+                                              symlinks=True)
+        self.assertTrue(not bh._stored_data)
+        rollback_method.assert_called_once_with(*args, **kwargs)
+
+    @mock.patch("rally.common.utils.BackupHelper.rollback")
+    def test_context_manager(self, mock_backup_helper_rollback):
+        bh = utils.BackupHelper()
+        with bh:
+            pass
+        self.assertFalse(mock_backup_helper_rollback.called)
+
+        bh = utils.BackupHelper()
+        try:
+            with bh:
+                raise RuntimeError()
+        except RuntimeError:
+            # it is expected behaviour
+            pass
+        else:
+            self.fail("BackupHelper context manager should not hide an "
+                      "exception")
+
+        self.assertTrue(mock_backup_helper_rollback.called)
