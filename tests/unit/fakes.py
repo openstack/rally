@@ -1855,6 +1855,8 @@ class FakeAPI(object):
     def __init__(self):
         self._deployment = mock.Mock(spec=api._Deployment)
         self._task = mock.Mock(spec=api._Task)
+        self._verifier = mock.Mock(spec=api._Verifier)
+        self._verification = mock.Mock(spec=api._Verification)
 
     @property
     def deployment(self):
@@ -1863,3 +1865,11 @@ class FakeAPI(object):
     @property
     def task(self):
         return self._task
+
+    @property
+    def verifier(self):
+        return self._verifier
+
+    @property
+    def verification(self):
+        return self._verification

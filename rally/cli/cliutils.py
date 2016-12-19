@@ -127,13 +127,12 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
             if field in formatters:
                 row.append(formatters[field](o))
             else:
+                field_name = field
+
                 if normalize_field_names:
-                    if field in mixed_case_fields:
-                        field_name = field.replace(" ", "_")
-                    else:
-                        field_name = field.lower().replace(" ", "_")
-                else:
-                    field_name = field
+                    if field_name not in mixed_case_fields:
+                        field_name = field_name.lower()
+                    field_name = field_name.replace(" ", "_").replace("-", "_")
 
                 if isinstance(o, dict):
                     data = o.get(field_name, "")
@@ -216,7 +215,7 @@ def make_header(text, size=80, symbol="-"):
     :param symbol: What symbol to use to create header
     """
     header = symbol * size + "\n"
-    header += " %s\n" % text
+    header += "%s\n" % text
     header += symbol * size + "\n"
     return header
 
@@ -639,6 +638,8 @@ complete -o filenames -F _rally rally
     completion = []
     for category, cmds in main.categories.items():
         for name, command in _methods_of(cmds):
+            if name is None:
+                continue
             command_name = getattr(command, "alias", name.replace("_", "-"))
             args_list = []
             for arg in getattr(command, "args", []):
