@@ -13,18 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from distutils import version
 import inspect
 import os
 import re
 
-from neutronclient import version as nc_version
 from oslo_config import cfg
 import requests
+import six
 from six.moves import configparser
 from six.moves.urllib import parse
 
-from rally.common import db
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import objects
@@ -34,8 +32,11 @@ from rally import osclients
 from rally.plugins.openstack.wrappers import glance
 from rally.plugins.openstack.wrappers import network
 from rally.task import utils as task_utils
+from rally.verification import context
+
 
 LOG = logging.getLogger(__name__)
+
 
 TEMPEST_OPTS = [
     cfg.StrOpt("img_url",
@@ -108,7 +109,7 @@ CONF.import_opt("glance_image_delete_poll_interval",
 
 def _create_or_get_data_dir():
     data_dir = os.path.join(
-        os.path.expanduser("~"), ".rally", "tempest", "data")
+        os.path.expanduser("~"), ".rally", "verification", "tempest", "data")
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
@@ -150,18 +151,44 @@ def _download_image(image_path, image=None):
     LOG.debug("The image has been successfully downloaded!")
 
 
-def _write_config(conf_path, conf_data):
-    with open(conf_path, "w+") as conf_file:
-        conf_data.write(conf_file)
+def write_configfile(path, conf_object):
+    with open(path, "w") as configfile:
+        conf_object.write(configfile)
 
 
-class TempestConfig(utils.RandomNameGeneratorMixin):
-    """Class to generate Tempest configuration file."""
+def read_configfile(path):
+    with open(path) as f:
+        return f.read()
+
+
+def add_extra_options(extra_options, conf_object):
+    for section in extra_options:
+        if section not in (conf_object.sections() + ["DEFAULT"]):
+            conf_object.add_section(section)
+        for option, value in extra_options[section].items():
+            conf_object.set(section, option, value)
+
+    return conf_object
+
+
+def extend_configfile(configfile, extra_options):
+    conf = configparser.ConfigParser()
+
+    conf.read(configfile)
+    add_extra_options(extra_options, conf)
+    write_configfile(configfile, conf)
+    raw_conf = six.StringIO()
+    conf.write(raw_conf)
+    return raw_conf.getvalue()
+
+
+class TempestConfigfileManager(utils.RandomNameGeneratorMixin):
+    """Class to create a Tempest config file."""
 
     def __init__(self, deployment):
         self.deployment = deployment
 
-        self.credential = db.deployment_get(deployment)["admin"]
+        self.credential = deployment["admin"]
         self.clients = osclients.Clients(objects.Credential(**self.credential))
         self.keystone = self.clients.verified_keystone()
         self.available_services = self.clients.services().values()
@@ -255,24 +282,15 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
             self, section_name="network-feature-enabled"):
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
-            # NOTE(ylobankov): We need the if/else block here because
-            # the list_ext method has different number of arguments in
-            # different Neutron client versions.
-            cl_ver = nc_version.__version__
-            if version.StrictVersion(cl_ver) >= version.StrictVersion("4.1.0"):
-                # Neutron client version >= 4.1.0
-                extensions = neutronclient.list_ext(
-                    "extensions", "/extensions", retrieve_all=True)
-            else:
-                # Neutron client version < 4.1.0
-                extensions = neutronclient.list_ext("/extensions")
+            extensions = neutronclient.list_ext("extensions", "/extensions",
+                                                retrieve_all=True)
             aliases = [ext["alias"] for ext in extensions["extensions"]]
             aliases_str = ",".join(aliases)
             self.conf.set(section_name, "api_extensions", aliases_str)
 
     def _configure_oslo_concurrency(self, section_name="oslo_concurrency"):
         lock_path = os.path.join(self.data_dir,
-                                 "lock_files_%s" % self.deployment)
+                                 "lock_files_%s" % self.deployment["uuid"])
         if not os.path.exists(lock_path):
             os.makedirs(lock_path)
         self.conf.set(section_name, "lock_path", lock_path)
@@ -307,38 +325,34 @@ class TempestConfig(utils.RandomNameGeneratorMixin):
         self.conf.set(section_name, "stack_user_role",
                       CONF.tempest.heat_stack_user_role)
 
-    def generate(self, conf_path, extra_conf=None):
+    def create(self, conf_path, extra_options=None):
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name.startswith("_configure_"):
                 method()
 
-        if extra_conf:
-            for section in extra_conf.sections():
-                if section not in self.conf.sections():
-                    self.conf.add_section(section)
-                for option, value in extra_conf.items(section):
-                    self.conf.set(section, option, value)
+        if extra_options:
+            add_extra_options(extra_options, self.conf)
 
-        _write_config(conf_path, self.conf)
+        write_configfile(conf_path, self.conf)
+
+        return read_configfile(conf_path)
 
 
-class TempestResourcesContext(utils.RandomNameGeneratorMixin):
+@context.configure("tempest_configuration", order=900)
+class TempestResourcesContext(context.VerifierContext):
     """Context class to create/delete resources needed for Tempest."""
 
     RESOURCE_NAME_FORMAT = "rally_verify_XXXXXXXX_XXXXXXXX"
 
-    def __init__(self, deployment, verification, conf_path):
-        credential = db.deployment_get(deployment)["admin"]
+    def __init__(self, ctx):
+        super(TempestResourcesContext, self).__init__(ctx)
+        credential = self.verifier.deployment["admin"]
         self.clients = osclients.Clients(objects.Credential(**credential))
-        self.available_services = self.clients.services().values()
 
-        self.verification = verification
-
-        self.conf_path = conf_path
         self.conf = configparser.ConfigParser()
-        self.conf.read(conf_path)
-
-        self.data_dir = _create_or_get_data_dir()
+        self.conf_path = self.verifier.manager.configfile
+        self.data_dir = os.path.join(os.path.expanduser("~"), ".rally",
+                                     "verification", "tempest", "data")
         self.image_name = "tempest-image"
 
         self._created_roles = []
@@ -346,7 +360,13 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         self._created_flavors = []
         self._created_networks = []
 
-    def __enter__(self):
+    def setup(self):
+        self.available_services = self.clients.services().values()
+
+        self.conf.read(self.conf_path)
+
+        self.data_dir = _create_or_get_data_dir()
+
         self._create_tempest_roles()
 
         self._configure_option("scenario", "img_file", self.image_name,
@@ -382,9 +402,9 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
                 helper_method=self._discover_or_create_flavor,
                 flv_ram=CONF.tempest.heat_instance_type_ram)
 
-        _write_config(self.conf_path, self.conf)
+        write_configfile(self.conf_path, self.conf)
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def cleanup(self):
         # Tempest tests may take more than 1 hour and we should remove all
         # cached clients sessions to avoid tokens expiration when deleting
         # Tempest resources.
@@ -396,7 +416,7 @@ class TempestResourcesContext(utils.RandomNameGeneratorMixin):
         if "neutron" in self.available_services:
             self._cleanup_network_resources()
 
-        _write_config(self.conf_path, self.conf)
+        write_configfile(self.conf_path, self.conf)
 
     def _create_tempest_roles(self):
         keystoneclient = self.clients.verified_keystone()

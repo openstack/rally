@@ -25,7 +25,27 @@ LOG = logging.getLogger(__name__)
 
 
 def check_output(*args, **kwargs):
+    """Run command with arguments and return its output.
+
+    If the exit code was non-zero it raises a CalledProcessError. The
+    CalledProcessError object will have the return code in the returncode
+    attribute and output in the output attribute.
+
+    The difference between check_output from subprocess package and this
+    function:
+
+      * Additional arguments:
+        - "msg_on_err" argument. It is a message that should be written in case
+          of error. Reduces a number of try...except blocks
+        - "debug_output" argument(Defaults to True). Print or not output to
+          LOG.debug
+      * stderr is hardcoded to stdout
+      * In case of error, prints failed command and output to LOG.error
+      * Prints output to LOG.debug
+
+    """
     msg_on_err = kwargs.pop("msg_on_err", None)
+    debug_output = kwargs.pop("debug_output", True)
 
     kwargs["stderr"] = subprocess.STDOUT
     try:
@@ -37,7 +57,7 @@ def check_output(*args, **kwargs):
         LOG.error("Error output: '%s'" % encodeutils.safe_decode(exc.output))
         raise
 
-    if output:
+    if output and debug_output:
         LOG.debug("Subprocess output: '%s'" % encodeutils.safe_decode(output))
 
     return output

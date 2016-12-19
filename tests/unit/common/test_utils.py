@@ -675,38 +675,32 @@ class BackupTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.os.path.exists")
     @mock.patch("rally.common.utils.uuid")
-    def test__find_non_existing_path(self, mock_uuid, mock_exists):
+    def test_generate_random_path(self, mock_uuid, mock_exists):
         tmp_dir = "/some"
-        mock_exists.side_effect = (False, True, False)
-        uuids = ("exist-1", "exist-2", "uuuiiiddd")
+        mock_exists.side_effect = (True, False)
+        uuids = ("exist", "uuuiiiddd")
         mock_uuid.uuid4.side_effect = uuids
 
-        bh = utils.BackupHelper()
-        mock_exists.reset_mock()
-
         self.assertEqual("%s/%s" % (tmp_dir, uuids[-1]),
-                         bh._find_non_existing_path(tmp_dir))
+                         utils.generate_random_path(tmp_dir))
 
         self.assertEqual(
-            [mock.call("%s/%s" % (tmp_dir, uuid)) for uuid in uuids[1:]],
+            [mock.call("%s/%s" % (tmp_dir, uuid)) for uuid in uuids],
             mock_exists.call_args_list)
 
-    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
-    @mock.patch("rally.common.utils.tempfile")
-    def test___init__(self, mock_tempfile, mock__find_non_existing_path):
+    @mock.patch("rally.common.utils.generate_random_path")
+    def test___init__(self, mock_generate_random_path):
         utils.BackupHelper()
 
-        mock_tempfile.gettempdir.assert_called_once_with()
-        mock__find_non_existing_path.assert_called_once_with(
-            mock_tempfile.gettempdir.return_value)
+        mock_generate_random_path.assert_called_once_with()
         self.mock_mkdir.assert_called_once_with(
-            mock__find_non_existing_path.return_value)
+            mock_generate_random_path.return_value)
 
-    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
+    @mock.patch("rally.common.utils.generate_random_path")
     @mock.patch("rally.common.utils.shutil.copytree")
-    def test_backup(self, mock_copytree, mock__find_non_existing_path):
+    def test_backup(self, mock_copytree, mock_generate_random_path):
         backup_dir = "another_dir"
-        mock__find_non_existing_path.side_effect = ("base_tmp_dir", backup_dir)
+        mock_generate_random_path.side_effect = ("base_tmp_dir", backup_dir)
 
         bh = utils.BackupHelper()
 
@@ -720,13 +714,13 @@ class BackupTestCase(test.TestCase):
         self.assertFalse(mock_copytree.called)
 
     @mock.patch("rally.common.utils.BackupHelper.rollback")
-    @mock.patch("rally.common.utils.BackupHelper._find_non_existing_path")
+    @mock.patch("rally.common.utils.generate_random_path")
     @mock.patch("rally.common.utils.shutil.copytree")
     def test_backup_failed_while_copy(self, mock_copytree,
-                                      mock__find_non_existing_path,
+                                      mock_generate_random_path,
                                       mock_backup_helper_rollback):
         backup_dir = "another_dir"
-        mock__find_non_existing_path.side_effect = ("base_tmp_dir", backup_dir)
+        mock_generate_random_path.side_effect = ("base_tmp_dir", backup_dir)
         mock_copytree.side_effect = RuntimeError
 
         bh = utils.BackupHelper()

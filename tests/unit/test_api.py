@@ -1212,11 +1212,12 @@ class VerificationAPITestCase(test.TestCase):
             verifier_id, deployment_id=deployment_id, run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
             consts.VerificationStatus.RUNNING)
+
         context = {"config": verifier_obj.manager._meta_get.return_value,
-                   "run_args": run_args}
-        verifier_obj.manager.run.assert_called_once_with(verification_obj,
-                                                         context,
-                                                         **run_args)
+                   "run_args": run_args,
+                   "verification": verification_obj,
+                   "verifier": verifier_obj}
+        verifier_obj.manager.run.assert_called_once_with(context)
 
         results = verifier_obj.manager.run.return_value
         verification_obj.finish.assert_called_once_with(results.totals,
@@ -1247,11 +1248,12 @@ class VerificationAPITestCase(test.TestCase):
             verifier_id, deployment_id=deployment_id, run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
             consts.VerificationStatus.RUNNING)
+
         context = {"config": verifier_obj.manager._meta_get.return_value,
-                   "run_args": run_args}
-        verifier_obj.manager.run.assert_called_once_with(verification_obj,
-                                                         context,
-                                                         **run_args)
+                   "run_args": run_args,
+                   "verification": verification_obj,
+                   "verifier": verifier_obj}
+        verifier_obj.manager.run.assert_called_once_with(context)
 
         self.assertFalse(verification_obj.finish.called)
 

@@ -715,30 +715,36 @@ class Stopwatch(object):
             interruptable_sleep(sec)
 
 
+def generate_random_path(root_dir=None):
+    """Generates a vacant name foo file or dir at specified place.
+
+    :param root_dir: Name of a directory to generate path in. If None (default
+        behaviour), temporary directory (i.e /tmp in linux) will be used.
+    """
+    root_dir = root_dir or tempfile.gettempdir()
+    path = None
+    while path is None:
+        candidate = os.path.join(root_dir, str(uuid.uuid4()))
+        if not os.path.exists(candidate):
+            path = candidate
+    return path
+
+
 class BackupHelper(object):
     def __init__(self):
-        self._tempdir = self._find_non_existing_path(tempfile.gettempdir())
+        self._tempdir = generate_random_path()
 
         os.mkdir(self._tempdir)
 
         self._stored_data = {}
         self._rollback_actions = []
 
-    @staticmethod
-    def _find_non_existing_path(root_dir):
-        path = None
-        while path is None:
-            candidate = os.path.join(root_dir, str(uuid.uuid4()))
-            if not os.path.exists(candidate):
-                path = candidate
-        return path
-
     def backup(self, original_path):
         if original_path in self._stored_data:
             raise exceptions.RallyException(
                 _LE("Failed to back up %s since it was already stored.") %
                 original_path)
-        backup_path = self._find_non_existing_path(self._tempdir)
+        backup_path = generate_random_path(self._tempdir)
         LOG.debug("Creating backup of %s in %s" % (original_path, backup_path))
         try:
             shutil.copytree(original_path, backup_path, symlinks=True)

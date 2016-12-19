@@ -20,12 +20,13 @@ configure = context.configure
 class VerifierContext(context.Context):
     """Verifier context that will be run before starting a verification."""
 
-    def __init__(self, **ctx):
+    def __init__(self, ctx):
         super(VerifierContext, self).__init__(ctx)
 
         # There is no term "task" in verification.
         del self.task
         self.verification = self.context.get("verification", {})
+        self.verifier = self.context["verifier"]
 
     @classmethod
     def _meta_get(cls, key, default=None):

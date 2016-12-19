@@ -21,7 +21,7 @@ from oslo_config import cfg
 import requests
 
 from rally import exceptions
-from rally.verification.tempest import config
+from rally.plugins.openstack.verification.tempest import config
 from tests.unit import fakes
 from tests.unit import test
 
@@ -40,8 +40,11 @@ CREDS = {
         "https_cacert": "/path/to/cacert/file",
         "user_domain_name": "admin",
         "project_domain_name": "admin"
-    }
+    },
+    "uuid": "fake_deployment"
 }
+
+PATH = "rally.plugins.openstack.verification.tempest.config"
 
 
 @ddt.ddt
@@ -50,11 +53,9 @@ class TempestConfigTestCase(test.TestCase):
     def setUp(self):
         super(TempestConfigTestCase, self).setUp()
 
-        mock.patch("rally.common.objects.deploy.db.deployment_get",
-                   return_value=CREDS).start()
         mock.patch("rally.osclients.Clients").start()
 
-        self.tempest_conf = config.TempestConfig("fake_deployment")
+        self.tempest_conf = config.TempestConfigfileManager(CREDS)
 
     @ddt.data({"publicURL": "test_url"},
               {"interface": "public", "url": "test_url"})
@@ -139,11 +140,7 @@ class TempestConfigTestCase(test.TestCase):
             result = self.tempest_conf.conf.items(section)
             self.assertIn(option, result)
 
-    @ddt.data({}, {"version": "4.1.0", "args": ("extensions", "/extensions"),
-                   "kwargs": {"retrieve_all": True}})
-    @ddt.unpack
-    def test__configure_network_feature_enabled(
-            self, version="4.0.0", args=("/extensions",), kwargs={}):
+    def test__configure_network_feature_enabled(self):
         self.tempest_conf.available_services = ["neutron"]
         client = self.tempest_conf.clients.neutron()
         client.list_ext.return_value = {
@@ -154,9 +151,9 @@ class TempestConfigTestCase(test.TestCase):
             ]
         }
 
-        mock.patch("neutronclient.version.__version__", version).start()
         self.tempest_conf._configure_network_feature_enabled()
-        client.list_ext.assert_called_once_with(*args, **kwargs)
+        client.list_ext.assert_called_once_with("extensions", "/extensions",
+                                                retrieve_all=True)
         self.assertEqual(self.tempest_conf.conf.get(
             "network-feature-enabled", "api_extensions"),
             "dvr,extra_dhcp_opt,extraroute")
@@ -227,31 +224,26 @@ class TempestConfigTestCase(test.TestCase):
         for item in expected:
             self.assertIn(item, result)
 
-    @mock.patch("rally.verification.tempest.config._write_config")
+    @mock.patch("rally.plugins.openstack.verification."
+                "tempest.config.read_configfile")
+    @mock.patch("rally.plugins.openstack.verification."
+                "tempest.config.write_configfile")
     @mock.patch("inspect.getmembers")
-    def test_generate(self, mock_inspect_getmembers, mock__write_config):
+    def test_create(self, mock_inspect_getmembers, mock_write_configfile,
+                    mock_read_configfile):
         configure_something_method = mock.MagicMock()
         mock_inspect_getmembers.return_value = [("_configure_something",
                                                  configure_something_method)]
 
-        fake_extra_conf = mock.MagicMock()
-        fake_extra_conf.sections.return_value = ["section"]
-        fake_extra_conf.items.return_value = [("option", "value")]
+        fake_extra_conf = {"section": {"option": "value"}}
 
-        self.tempest_conf.generate("/path/to/fake/conf", fake_extra_conf)
+        self.assertEqual(mock_read_configfile.return_value,
+                         self.tempest_conf.create("/path/to/fake/conf",
+                                                  fake_extra_conf))
         self.assertEqual(configure_something_method.call_count, 1)
         self.assertIn(("option", "value"),
                       self.tempest_conf.conf.items("section"))
-        self.assertEqual(mock__write_config.call_count, 1)
-
-    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
-    def test__write_config(self, mock_open):
-        conf_path = "/path/to/fake/conf"
-        conf_data = mock.Mock()
-
-        config._write_config(conf_path, conf_data)
-        mock_open.assert_called_once_with(conf_path, "w+")
-        conf_data.write.assert_called_once_with(mock_open.side_effect())
+        self.assertEqual(mock_write_configfile.call_count, 1)
 
 
 @ddt.ddt
@@ -260,16 +252,14 @@ class TempestResourcesContextTestCase(test.TestCase):
     def setUp(self):
         super(TempestResourcesContextTestCase, self).setUp()
 
-        mock.patch("rally.common.objects.deploy.db.deployment_get",
-                   return_value=CREDS).start()
         mock.patch("rally.osclients.Clients").start()
         self.mock_isfile = mock.patch("os.path.isfile",
                                       return_value=True).start()
 
-        fake_verification = {"uuid": "uuid"}
-        self.context = config.TempestResourcesContext("fake_deployment",
-                                                      fake_verification,
-                                                      "/fake/path/to/config")
+        cfg = {"verifier": mock.Mock(deployment=CREDS),
+               "verification": {"uuid": "uuid"}}
+        cfg["verifier"].manager.configfile = "/fake/path/to/config"
+        self.context = config.TempestResourcesContext(cfg)
         self.context.conf.add_section("compute")
         self.context.conf.add_section("orchestration")
         self.context.conf.add_section("scenario")
@@ -527,3 +517,117 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.assertEqual(mock_neutron_wrapper_delete_network.call_count, 1)
         self.assertEqual("", self.context.conf.get("compute",
                                                    "fixed_network_name"))
+
+    @mock.patch("%s.write_configfile" % PATH)
+    @mock.patch("%s.TempestResourcesContext._configure_option" % PATH)
+    @mock.patch("%s.TempestResourcesContext._create_tempest_roles" % PATH)
+    @mock.patch("%s._create_or_get_data_dir" % PATH)
+    @mock.patch("%s.osclients.Clients" % PATH)
+    def test_setup(self, mock_clients, mock__create_or_get_data_dir,
+                   mock__create_tempest_roles, mock__configure_option,
+                   mock_write_configfile):
+        mock_clients.return_value.services.return_value = {}
+        verifier = mock.MagicMock(deployment=CREDS)
+        cfg = config.TempestResourcesContext({"verifier": verifier})
+        cfg.conf = mock.Mock()
+
+        # case #1: no neutron and heat
+        cfg.setup()
+
+        cfg.conf.read.assert_called_once_with(verifier.manager.configfile)
+        mock__create_or_get_data_dir.assert_called_once_with()
+        mock__create_tempest_roles.assert_called_once_with()
+        mock_write_configfile.assert_called_once_with(
+            verifier.manager.configfile, cfg.conf)
+        self.assertEqual(
+            [mock.call("scenario", "img_file", cfg.image_name,
+                       helper_method=cfg._download_image),
+             mock.call("compute", "image_ref",
+                       helper_method=cfg._discover_or_create_image),
+             mock.call("compute", "image_ref_alt",
+                       helper_method=cfg._discover_or_create_image),
+             mock.call("compute", "flavor_ref",
+                       helper_method=cfg._discover_or_create_flavor,
+                       flv_ram=config.CONF.tempest.flavor_ref_ram),
+             mock.call("compute", "flavor_ref_alt",
+                       helper_method=cfg._discover_or_create_flavor,
+                       flv_ram=config.CONF.tempest.flavor_ref_alt_ram)],
+            mock__configure_option.call_args_list)
+
+        cfg.conf.reset_mock()
+        mock__create_or_get_data_dir.reset_mock()
+        mock__create_tempest_roles.reset_mock()
+        mock_write_configfile.reset_mock()
+        mock__configure_option.reset_mock()
+
+        # case #2: neutron and heat are presented
+        mock_clients.return_value.services.return_value = {
+            "network": "neutron", "orchestration": "heat"}
+        cfg.setup()
+
+        cfg.conf.read.assert_called_once_with(verifier.manager.configfile)
+        mock__create_or_get_data_dir.assert_called_once_with()
+        mock__create_tempest_roles.assert_called_once_with()
+        mock_write_configfile.assert_called_once_with(
+            verifier.manager.configfile, cfg.conf)
+        self.assertEqual(
+            [mock.call("scenario", "img_file", cfg.image_name,
+                       helper_method=cfg._download_image),
+             mock.call("compute", "image_ref",
+                       helper_method=cfg._discover_or_create_image),
+             mock.call("compute", "image_ref_alt",
+                       helper_method=cfg._discover_or_create_image),
+             mock.call("compute", "flavor_ref",
+                       helper_method=cfg._discover_or_create_flavor,
+                       flv_ram=config.CONF.tempest.flavor_ref_ram),
+             mock.call("compute", "flavor_ref_alt",
+                       helper_method=cfg._discover_or_create_flavor,
+                       flv_ram=config.CONF.tempest.flavor_ref_alt_ram),
+             mock.call("compute", "fixed_network_name",
+                       helper_method=cfg._create_network_resources),
+             mock.call("orchestration", "instance_type",
+                       helper_method=cfg._discover_or_create_flavor,
+                       flv_ram=config.CONF.tempest.heat_instance_type_ram)],
+            mock__configure_option.call_args_list)
+
+
+class UtilsTestCase(test.TestCase):
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_write_configfile(self, mock_open):
+        conf_path = "/path/to/fake/conf"
+        conf_data = mock.Mock()
+
+        config.write_configfile(conf_path, conf_data)
+        mock_open.assert_called_once_with(conf_path, "w")
+        conf_data.write.assert_called_once_with(mock_open.side_effect())
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_read_configfile(self, mock_open):
+        conf_path = "/path/to/fake/conf"
+
+        config.read_configfile(conf_path)
+        mock_open.assert_called_once_with(conf_path)
+        mock_open.side_effect().read.assert_called_once_with()
+
+    @mock.patch("rally.plugins.openstack.verification.tempest.config."
+                "six.StringIO")
+    @mock.patch("rally.plugins.openstack.verification.tempest.config."
+                "write_configfile")
+    @mock.patch("rally.plugins.openstack.verification.tempest.config."
+                "add_extra_options")
+    @mock.patch("rally.plugins.openstack.verification.tempest.config."
+                "configparser")
+    def test_extend_configfile(self, mock_configparser, mock_add_extra_options,
+                               mock_write_configfile, mock_string_io):
+        conf_path = "/path/to/fake/conf"
+        extra_options = mock.Mock()
+
+        config.extend_configfile(conf_path, extra_options)
+
+        mock_configparser.ConfigParser.assert_called_once_with()
+        conf = mock_configparser.ConfigParser.return_value
+        conf.read.assert_called_once_with(conf_path)
+        mock_add_extra_options.assert_called_once_with(extra_options, conf)
+        conf.write.assert_called_once_with(mock_string_io.return_value)
+        mock_string_io.return_value.getvalue.assert_called_once_with()
