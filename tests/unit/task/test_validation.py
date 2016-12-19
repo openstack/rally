@@ -26,7 +26,6 @@ from rally import consts
 from rally import exceptions
 import rally.osclients
 from rally.task import validation
-from rally.verification.tempest import tempest
 from tests.unit import test
 
 
@@ -534,75 +533,6 @@ class ValidatorsTestCase(test.TestCase):
         net2.name = {"name": "custom"}
         result = validator({"args": {"name": "custom"}}, clients, None)
         self.assertTrue(result.is_valid, result.msg)
-
-    def test_tempest_tests_exists_no_arg(self):
-        validator = self._unwrap_validator(validation.tempest_tests_exists)
-        result = validator({}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-    @mock.patch(MODULE + "tempest.Tempest")
-    def test_tempest_tests_exists(self, mock_tempest):
-        mock_tempest().is_installed.return_value = False
-        mock_tempest().is_configured.return_value = False
-        mock_tempest().discover_tests.return_value = set([
-            "tempest.api.a", "tempest.api.b", "tempest.api.c"])
-
-        deployment = {"uuid": "someuuid"}
-        validator = self._unwrap_validator(validation.tempest_tests_exists)
-
-        result = validator({"args": {"test_name": "a"}}, None, deployment)
-        self.assertTrue(result.is_valid, result.msg)
-        mock_tempest().is_installed.assert_called_once_with()
-        mock_tempest().is_configured.assert_called_once_with()
-        mock_tempest().discover_tests.assert_called_once_with()
-
-        result = validator({"args": {"test_name": "d"}}, None, deployment)
-        self.assertFalse(result.is_valid, result.msg)
-
-        result = validator({"args": {"test_name": "tempest.api.a"}}, None,
-                           deployment)
-        self.assertTrue(result.is_valid, result.msg)
-        result = validator({"args": {"test_name": "tempest.api.d"}}, None,
-                           deployment)
-        self.assertFalse(result.is_valid, result.msg)
-
-        result = validator({"args": {"test_names": ["tempest.api.a", "b"]}},
-                           None, deployment)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator({"args": {"test_names": ["tempest.api.j", "e"]}},
-                           None, deployment)
-        self.assertFalse(result.is_valid, result.msg)
-
-    @mock.patch(MODULE + "tempest.Tempest")
-    def test_tempest_tests_exists_tempest_installation_failed(self,
-                                                              mock_tempest):
-        mock_tempest().is_installed.return_value = False
-        mock_tempest().install.side_effect = tempest.TempestSetupFailure
-
-        deployment = {"uuid": "someuuid"}
-        validator = self._unwrap_validator(validation.tempest_tests_exists)
-
-        result = validator({"args": {"test_name": "a"}}, None, deployment)
-        self.assertFalse(result.is_valid, result.msg)
-        mock_tempest().is_installed.assert_called_once_with()
-
-    def test_tempest_set_exists_missing_args(self):
-        validator = self._unwrap_validator(validation.tempest_set_exists)
-        result = validator({}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_tempest_set_exists(self):
-        validator = self._unwrap_validator(validation.tempest_set_exists)
-        sets = list(list(consts.TempestTestsSets) +
-                    list(consts.TempestTestsAPI))
-        result = validator(
-            {"args": {"set_name": sets[0]}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator(
-            {"args": {"set_name": "lol"}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
 
     def test_required_parameters(self):
         validator = self._unwrap_validator(validation.required_parameters,

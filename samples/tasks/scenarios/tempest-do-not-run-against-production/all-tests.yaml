@@ -1,9 +1,0 @@
----
-  TempestScenario.all:
-    -
-      args:
-          tempest_conf: "/etc/tempest/tempest.conf"
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1

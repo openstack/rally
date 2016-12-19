@@ -22,17 +22,3 @@ Verification Component
 ======================
 
 This section describes Rally Verification Component.
-
-HTML Reports
-============
-
-Right now this section is referencing to
-:ref:`Rally step-by-step: verify <tutorial_step_10_verifying_cloud_via_tempest>` -
-documentation will be changed in future, once this component refactoring will
-be completed.
-
-CLI References
-==============
-
-For more information regarding Rally Task Component CLI please proceed
-to `CLI reference <../cli/cli_reference.html#category-verify>`_

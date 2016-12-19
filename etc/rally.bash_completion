@@ -47,23 +47,6 @@ _rally()
     OPTS["task_trends"]="--out --open --tasks"
     OPTS["task_use"]="--uuid"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
-    OPTS["verify_compare"]=""
-    OPTS["verify_detailed"]="--uuid --sort-by"
-    OPTS["verify_discover"]="--deployment --pattern --system-wide"
-    OPTS["verify_genconfig"]="--deployment --tempest-config --add-options --override"
-    OPTS["verify_import"]="--deployment --set --file --no-use"
-    OPTS["verify_install"]="--deployment --source --version --system-wide"
-    OPTS["verify_installplugin"]="--deployment --source --version --system-wide"
-    OPTS["verify_list"]=""
-    OPTS["verify_listplugins"]="--deployment --system-wide"
-    OPTS["verify_reinstall"]="--deployment --source --version --system-wide"
-    OPTS["verify_results"]="--uuid --html --json --csv --output-file"
-    OPTS["verify_show"]="--uuid --sort-by --detailed"
-    OPTS["verify_showconfig"]="--deployment"
-    OPTS["verify_start"]="--deployment --set --regex --load-list --skip-list --tempest-config --xfail-list --no-use --system-wide --concurrency --failing"
-    OPTS["verify_uninstall"]="--deployment"
-    OPTS["verify_uninstallplugin"]="--deployment --repo-name --system-wide"
-    OPTS["verify_use"]="--uuid"
 
     for OPT in ${!OPTS[*]} ; do
         CMD=${OPT%%_*}

@@ -31,7 +31,6 @@ from rally import osclients
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 from rally.task import types
-from rally.verification.tempest import tempest
 
 # TODO(boris-42): make the validators usable as a functions as well.
 # At the moment validators can only be used as decorators.
@@ -422,59 +421,6 @@ def external_network_exists(config, clients, deployment, network_name):
                     "Available networks: %(networks)s") % {
                         "network": ext_network,
                         "networks": networks}
-        return ValidationResult(False, message)
-
-
-@validator
-def tempest_tests_exists(config, clients, deployment):
-    """Validator checks that specified test exists."""
-    args = config.get("args", {})
-
-    if "test_name" in args:
-        tests = [args["test_name"]]
-    else:
-        tests = args.get("test_names", [])
-
-    if not tests:
-        return ValidationResult(False,
-                                _("Parameter 'test_name' or 'test_names' "
-                                  "should be specified."))
-    verifier = tempest.Tempest(
-        deployment["uuid"],
-        source=config.get("context", {}).get("tempest", {}).get("source"))
-    if not verifier.is_installed():
-        try:
-            verifier.install()
-        except tempest.TempestSetupFailure as e:
-            return ValidationResult(False, e)
-    if not verifier.is_configured():
-        verifier.generate_config_file()
-
-    allowed_tests = verifier.discover_tests()
-
-    for i, test in enumerate(tests):
-        if not test.startswith("tempest.api."):
-            tests[i] = "tempest.api." + test
-
-    wrong_tests = set(tests) - allowed_tests
-
-    if wrong_tests:
-        message = (_("One or more tests not found: '%s'") %
-                   "', '".join(sorted(wrong_tests)))
-        return ValidationResult(False, message)
-
-
-@validator
-def tempest_set_exists(config, clients, deployment):
-    """Validator that check that tempest set_name is valid."""
-    set_name = config.get("args", {}).get("set_name")
-
-    if not set_name:
-        return ValidationResult(False, "`set_name` is not specified.")
-
-    if set_name not in (list(consts.TempestTestsSets) +
-                        list(consts.TempestTestsAPI)):
-        message = _("There is no tempest set with name '%s'.") % set_name
         return ValidationResult(False, message)
 
 

@@ -652,68 +652,6 @@ class Connection(object):
             raise exceptions.ResourceNotFound(id=id)
 
     @db_api.serialize
-    def verification_create(self, deployment_uuid):
-        verification = models.Verification()
-        verification.update({"deployment_uuid": deployment_uuid})
-        verification.save()
-        return verification
-
-    @db_api.serialize
-    def verification_get(self, verification_uuid, session=None):
-        return self._verification_get(verification_uuid, session)
-
-    def _verification_get(self, verification_uuid, session=None):
-        verification = (self.model_query(models.Verification, session=session).
-                        filter_by(uuid=verification_uuid).first())
-        if not verification:
-            raise exceptions.NotFoundException(
-                "Can't find any verification with following UUID '%s'." %
-                verification_uuid)
-        return verification
-
-    @db_api.serialize
-    def verification_update(self, verification_uuid, values):
-        session = get_session()
-        with session.begin():
-            verification = self._verification_get(verification_uuid,
-                                                  session=session)
-            verification.update(values)
-        return verification
-
-    @db_api.serialize
-    def verification_list(self, status=None):
-        query = self.model_query(models.Verification)
-        if status is not None:
-            query = query.filter_by(status=status)
-        return query.all()
-
-    def verification_delete(self, verification_uuid):
-        count = (self.model_query(models.Verification).
-                 filter_by(id=verification_uuid).
-                 delete(synchronize_session=False))
-        if not count:
-            raise exceptions.NotFoundException(
-                "Can't find any verification with following UUID '%s'." %
-                verification_uuid)
-
-    @db_api.serialize
-    def verification_result_create(self, verification_uuid, data):
-        result = models.VerificationResult()
-        result.update({"verification_uuid": verification_uuid,
-                       "data": data})
-        result.save()
-        return result
-
-    @db_api.serialize
-    def verification_result_get(self, verification_uuid):
-        result = (self.model_query(models.VerificationResult).
-                  filter_by(verification_uuid=verification_uuid).first())
-        if not result:
-            raise exceptions.NotFoundException(
-                "No results for following UUID '%s'." % verification_uuid)
-        return result
-
-    @db_api.serialize
     def register_worker(self, values):
         try:
             worker = models.Worker()
