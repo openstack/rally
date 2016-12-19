@@ -50,8 +50,6 @@
           if (status in bitmask) {
             bits |= bitmask[status]
           }
-          $scope.data.tests[i].by_verification[uuid].show_duration = (
-            t.by_verification[uuid].duration > 0.0001)
         }
         $scope.data.tests[i].filter = bits;
       }
@@ -209,10 +207,10 @@
         <tr>
           <th>Verification UUID
           <th>Status
-          <th>Set name
           <th>Started at
-          <th>Duration, sec
-          <th>Total
+          <th>Finished at
+          <th>Tests count
+          <th>Tests duration, sec
           <th style="width:9%">success
           <th style="width:9%">skipped
           <th style="width:9%">expected failures
@@ -224,10 +222,10 @@
         <tr ng-repeat="uuid in data.uuids">
           <td>{{uuid}}
           <td>{{data.verifications[uuid].status}}
-          <td>{{data.verifications[uuid].set_name}}
           <td>{{data.verifications[uuid].started_at}}
-          <td>{{data.verifications[uuid].duration}}
-          <td>{{data.verifications[uuid].total}}
+          <td>{{data.verifications[uuid].finished_at}}
+          <td>{{data.verifications[uuid].tests_count}}
+          <td>{{data.verifications[uuid].tests_duration}}
           <td class="status status-success">{{data.verifications[uuid].success}}
           <td class="status status-skip">{{data.verifications[uuid].skipped}}
           <td class="status status-xfail">{{data.verifications[uuid].expected_failures}}
@@ -255,6 +253,10 @@
         </tr>
       </tbody>
     </table>
+    <!-- TODO(andreykurilin): display a note about the comparison strategy
+    <div style="">
+      <span ng-if="{{show_comparison_note}}">Note: </span>
+    </div> -->
 
     <div style="text-align:left; padding:6px 3px; background:#fff">
       <span class="button" ng-click="toggle_header()">
@@ -300,8 +302,7 @@
             class="status status-{{t.by_verification[uuid].status}}"
             style="width:{{td_width.uuid}}%">
           <div ng-if="t.by_verification[uuid]">
-            {{t.by_verification[uuid].status}}
-            <span ng-if="t.by_verification[uuid].show_duration">{{t.by_verification[uuid].duration}}</span>
+            {{t.by_verification[uuid].status}} {{t.by_verification[uuid].duration}}
           </div>
           <div ng-if="!t.by_verification[uuid]" style="color:#999">
             &ndash;
