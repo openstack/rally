@@ -28,6 +28,7 @@ from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_utils import timeutils
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import load_only as sa_loadonly
 
@@ -650,6 +651,119 @@ class Connection(object):
                  filter_by(id=id).delete(synchronize_session=False))
         if not count:
             raise exceptions.ResourceNotFound(id=id)
+
+    @db_api.serialize
+    def verifier_create(self, name, vtype, namespace, source, version,
+                        system_wide, extra_settings=None):
+        verifier = models.Verifier()
+        properties = {"name": name, "type": vtype, "namespace": namespace,
+                      "source": source, "extra_settings": extra_settings,
+                      "version": version, "system_wide": system_wide}
+        verifier.update(properties)
+        verifier.save()
+        return verifier
+
+    @db_api.serialize
+    def verifier_get(self, verifier_id):
+        return self._verifier_get(verifier_id)
+
+    def _verifier_get(self, verifier_id, session=None):
+        verifier = self.model_query(
+            models.Verifier, session=session).filter(
+                or_(models.Verifier.name == verifier_id,
+                    models.Verifier.uuid == verifier_id)).first()
+        if not verifier:
+            raise exceptions.ResourceNotFound(id=verifier_id)
+        return verifier
+
+    @db_api.serialize
+    def verifier_list(self, status=None):
+        query = self.model_query(models.Verifier)
+        if status:
+            query = query.filter_by(status=status)
+        return query.all()
+
+    def verifier_delete(self, verifier_id):
+        session = get_session()
+        with session.begin():
+            query = self.model_query(
+                models.Verifier, session=session).filter(
+                    or_(models.Verifier.name == verifier_id,
+                        models.Verifier.uuid == verifier_id))
+            count = query.delete(synchronize_session=False)
+            if not count:
+                raise exceptions.ResourceNotFound(id=verifier_id)
+
+    @db_api.serialize
+    def verifier_update(self, verifier_id, properties):
+        session = get_session()
+        with session.begin():
+            verifier = self._verifier_get(verifier_id)
+            verifier.update(properties)
+            verifier.save()
+        return verifier
+
+    @db_api.serialize
+    def verification_create(self, verifier_id, deployment_id, run_args):
+        verifier = self._verifier_get(verifier_id)
+        deployment = self._deployment_get(deployment_id)
+        verification = models.Verification()
+        verification.update({"verifier_uuid": verifier.uuid,
+                             "deployment_uuid": deployment["uuid"],
+                             "run_args": run_args})
+        verification.save()
+        return verification
+
+    @db_api.serialize
+    def verification_get(self, verification_uuid):
+        return self._verification_get(verification_uuid)
+
+    def _verification_get(self, verification_uuid, session=None):
+        verification = self.model_query(
+            models.Verification, session=session).filter_by(
+            uuid=verification_uuid).first()
+        if not verification:
+            raise exceptions.ResourceNotFound(id=verification_uuid)
+        return verification
+
+    @db_api.serialize
+    def verification_list(self, verifier_id=None, deployment_id=None,
+                          status=None):
+        session = get_session()
+        with session.begin():
+            filter_by = {}
+            if verifier_id:
+                verifier = self._verifier_get(verifier_id, session=session)
+                filter_by["verifier_uuid"] = verifier.uuid
+            if deployment_id:
+                deployment = self._deployment_get(deployment_id,
+                                                  session=session)
+                filter_by["deployment_uuid"] = deployment.uuid
+            if status:
+                filter_by["status"] = status
+
+            query = self.model_query(models.Verification, session=session)
+            if filter_by:
+                query = query.filter_by(**filter_by)
+        return query.all()
+
+    def verification_delete(self, verification_uuid):
+        session = get_session()
+        with session.begin():
+            count = self.model_query(
+                models.Verification, session=session).filter_by(
+                uuid=verification_uuid).delete(synchronize_session=False)
+        if not count:
+            raise exceptions.ResourceNotFound(id=verification_uuid)
+
+    @db_api.serialize
+    def verification_update(self, verification_uuid, properties):
+        session = get_session()
+        with session.begin():
+            verification = self._verification_get(verification_uuid)
+            verification.update(properties)
+            verification.save()
+        return verification
 
     @db_api.serialize
     def register_worker(self, values):
