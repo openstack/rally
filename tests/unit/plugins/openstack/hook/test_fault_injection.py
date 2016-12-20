@@ -60,7 +60,7 @@ class FaultInjectionHookTestCase(test.TestCase):
                               fault_injection.FaultInjectionHook.validate,
                               config)
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
+    @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("os_faults.human_api")
     @mock.patch("os_faults.connect")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
@@ -84,7 +84,7 @@ class FaultInjectionHookTestCase(test.TestCase):
         injector_inst.verify.assert_called_once_with()
         mock_human_api.assert_called_once_with(injector_inst, "foo")
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
+    @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("os_faults.human_api")
     @mock.patch("os_faults.connect")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
@@ -109,7 +109,7 @@ class FaultInjectionHookTestCase(test.TestCase):
         mock_connect.assert_called_once_with({"conf": "foo_config"})
         mock_human_api.assert_called_once_with(injector_inst, "foo")
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
+    @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("os_faults.human_api")
     @mock.patch("os_faults.connect")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)

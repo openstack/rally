@@ -38,7 +38,7 @@ class PluginCommands(object):
     @cliutils.args("--namespace", dest="namespace", type=str,
                    help="Plugin namespace.")
     @plugins.ensure_plugins_are_loaded
-    def show(self, name, namespace=None):
+    def show(self, api, name, namespace=None):
         """Show detailed information about a Rally plugin."""
         name_lw = name.lower()
         all_plugins = plugin.Plugin.get_all(namespace=namespace)
@@ -80,7 +80,7 @@ class PluginCommands(object):
         "--namespace", dest="namespace", type=str,
         help="List only plugins that are in the specified namespace.")
     @plugins.ensure_plugins_are_loaded
-    def list(self, name=None, namespace=None):
+    def list(self, api, name=None, namespace=None):
         """List all Rally plugins that match name and namespace."""
         all_plugins = plugin.Plugin.get_all(namespace=namespace)
         matched = all_plugins

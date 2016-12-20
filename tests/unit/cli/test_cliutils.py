@@ -49,27 +49,6 @@ class CliUtilsTestCase(test.TestCase):
         self._unregister_opts()
         super(CliUtilsTestCase, self).tearDown()
 
-    @mock.patch("rally.cli.cliutils.os.path")
-    def test_find_config_files(self, mock_os_path):
-
-        mock_os_path.expanduser.return_value = "expanduser"
-        mock_os_path.abspath.return_value = "abspath"
-        mock_os_path.isfile.return_value = True
-
-        result = cliutils.find_config_files(["path1", "path2"])
-        mock_os_path.expanduser.assert_called_once_with("path1")
-        mock_os_path.abspath.assert_called_once_with(
-            mock_os_path.expanduser.return_value)
-        mock_os_path.isfile.assert_called_once_with(
-            mock_os_path.abspath.return_value + "/rally.conf")
-        self.assertEqual([mock_os_path.abspath.return_value + "/rally.conf"],
-                         result)
-
-        mock_os_path.isfile.return_value = False
-
-        result = cliutils.find_config_files(["path1", "path2"])
-        self.assertIsNone(result)
-
     def test_make_header(self):
         h1 = cliutils.make_header("msg", size=4, symbol="=")
         self.assertEqual(h1, "====\n msg\n====\n")
@@ -186,11 +165,13 @@ class CliUtilsTestCase(test.TestCase):
                                          )
         CONF.unregister_opt(category_opt)
 
-    @mock.patch("rally.cli.cliutils.CONF", config_file=None,
-                side_effect=cfg.ConfigFilesNotFoundError("config_file"))
-    def test_run_fails(self, mock_cliutils_conf):
+    @mock.patch("rally.api.API",
+                side_effect=exceptions.RallyException("config_file"))
+    def test_run_fails(self, mock_rally_api_api):
         ret = cliutils.run(["rally", "show", "flavors"], self.categories)
         self.assertEqual(ret, 2)
+        mock_rally_api_api.assert_called_once_with(
+            config_args=["show", "flavors"])
 
     def test_run_version(self):
         ret = cliutils.run(["rally", "version"], self.categories)

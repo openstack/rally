@@ -13,26 +13,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import re
+import sys
 import time
 
 import jinja2
 import jinja2.meta
 import jsonschema
+from oslo_config import cfg
+from requests.packages import urllib3
 
-from rally.common.i18n import _, _LI, _LE
+from rally.common.i18n import _, _LI, _LE, _LW
 from rally.common import logging
 from rally.common import objects
+from rally.common.plugin import discover
+from rally.common import version
 from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally import osclients
 from rally.task import engine
 
+CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-class Deployment(object):
+class _Deployment(object):
 
     @classmethod
     def create(cls, config, name):
@@ -143,7 +150,7 @@ class Deployment(object):
         return services
 
 
-class Task(object):
+class _Task(object):
 
     TASK_RESULT_SCHEMA = objects.task.TASK_RESULT_SCHEMA
 
@@ -371,3 +378,107 @@ class Task(object):
         else:
             objects.Task.delete_by_uuid(
                 task_uuid, status=consts.TaskStatus.FINISHED)
+
+
+class _DeprecatedAPIClass(object):
+    """Deprecates direct usage of api classes."""
+    def __init__(self, cls):
+        self._cls = cls
+
+    def __getattr__(self, attr, default=None):
+        LOG.warn(_LW("'%s' is deprecated since Rally 0.8.0 in favor of "
+                     "'rally.api.API' class.") % self._cls.__name__[1:])
+        return getattr(self._cls, attr, default)
+
+
+Deployment = _DeprecatedAPIClass(_Deployment)
+Task = _DeprecatedAPIClass(_Task)
+
+
+class API(object):
+
+    CONFIG_SEARCH_PATHS = [sys.prefix + "/etc/rally", "~/.rally", "/etc/rally"]
+    CONFIG_FILE_NAME = "rally.conf"
+
+    def __init__(self, config_file=None, config_args=None,
+                 rally_endpoint=None, plugin_paths=None):
+        """Initialize Rally API instance
+
+        :param config_file: Path to rally configuration file. If None, default
+                            path will be selected
+        :type config_file: str
+        :param config_args: Arguments for initialization current configuration
+        :type config_args: list
+        :param rally_endpoint: [Restricted]Rally endpoint connection string.
+        :type rally_endpoint: str
+        :param plugin_paths: Additional custom plugin locations
+        :type plugin_paths: list
+        """
+        if rally_endpoint:
+            raise NotImplementedError(_LE("Sorry, but Rally-as-a-Service is "
+                                          "not ready yet."))
+        try:
+            config_files = ([config_file] if config_file else
+                            self._default_config_file())
+            CONF(config_args or [],
+                 project="rally",
+                 version=version.version_string(),
+                 default_config_files=config_files)
+            logging.setup("rally")
+            if not CONF.get("log_config_append"):
+                # The below two lines are to disable noise from request module.
+                # The standard way should be we make such lots of settings on
+                # the root rally. However current oslo codes doesn't support
+                # such interface. So I choose to use a 'hacking' way to avoid
+                # INFO logs from request module where user didn't give specific
+                # log configuration. And we could remove this hacking after
+                # oslo.log has such interface.
+                LOG.debug(
+                    "INFO logs from urllib3 and requests module are hide.")
+                requests_log = logging.getLogger("requests").logger
+                requests_log.setLevel(logging.WARNING)
+                urllib3_log = logging.getLogger("urllib3").logger
+                urllib3_log.setLevel(logging.WARNING)
+
+                LOG.debug("urllib3 insecure warnings are hidden.")
+                for warning in ("InsecurePlatformWarning",
+                                "SNIMissingWarning",
+                                "InsecureRequestWarning"):
+                    warning_cls = getattr(urllib3.exceptions, warning, None)
+                    if warning_cls is not None:
+                        urllib3.disable_warnings(warning_cls)
+
+            # NOTE(wtakase): This is for suppressing boto error logging.
+            LOG.debug("ERROR log from boto module is hide.")
+            boto_log = logging.getLogger("boto").logger
+            boto_log.setLevel(logging.CRITICAL)
+
+        except cfg.ConfigFilesNotFoundError as e:
+            cfg_files = e.config_files
+            raise exceptions.RallyException(_LE(
+                "Failed to read configuration file(s): %s") % cfg_files)
+
+        plugin_paths = plugin_paths or []
+        plugin_paths.extend(CONF.get("plugin_paths") or [])
+        for path in plugin_paths:
+            discover.load_plugins(path)
+
+        # NOTE(andreykurilin): There is no reason to auto-discover API's. We
+        # have only 3 classes, so let's do it in good old way - hardcode them:)
+        self._deployment = _Deployment
+        self._task = _Task
+
+    def _default_config_file(self):
+        for path in self.CONFIG_SEARCH_PATHS:
+            abspath = os.path.abspath(os.path.expanduser(path))
+            fpath = os.path.join(abspath, self.CONFIG_FILE_NAME)
+            if os.path.isfile(fpath):
+                return [fpath]
+
+    @property
+    def deployment(self):
+        return self._deployment
+
+    @property
+    def task(self):
+        return self._task

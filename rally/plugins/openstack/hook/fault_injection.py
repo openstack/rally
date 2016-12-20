@@ -15,8 +15,8 @@
 
 import os_faults
 
-from rally import api
 from rally.common import logging
+from rally.common import objects
 from rally import consts
 from rally.task import hook
 
@@ -56,7 +56,7 @@ class FaultInjectionHook(hook.Hook):
     }
 
     def get_cloud_config(self):
-        deployment = api.Deployment.get(self.task["deployment_uuid"])
+        deployment = objects.Deployment.get(self.task["deployment_uuid"])
         deployment_config = deployment["config"]
         if deployment_config["type"] != "ExistingCloud":
             return None

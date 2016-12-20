@@ -26,19 +26,14 @@ import jsonschema
 from oslo_config import cfg
 from oslo_utils import encodeutils
 import prettytable
-from requests.packages import urllib3
 import six
 import sqlalchemy.exc
 
+from rally import api
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common.plugin import discover
 from rally.common.plugin import info
-from rally.common import version
 from rally import exceptions
-
-
-CONFIG_SEARCH_PATHS = [sys.prefix + "/etc/rally", "~/.rally", "/etc/rally"]
 
 
 CONF = cfg.CONF
@@ -47,16 +42,6 @@ LOG = logging.getLogger(__name__)
 
 # Some CLI-specific constants
 MARGIN = 3
-
-
-def find_config_files(path_list):
-    for path in path_list:
-        abspath = os.path.abspath(os.path.expanduser(path))
-        confname = abspath + "/rally.conf"
-        if os.path.isfile(confname):
-            return [confname]
-
-    return None
 
 
 class MissingArgs(Exception):
@@ -524,43 +509,13 @@ def run(argv, categories):
                                       help=help_msg))
 
     try:
-        CONF(argv[1:], project="rally", version=version.version_string(),
-             default_config_files=find_config_files(CONFIG_SEARCH_PATHS))
-        logging.setup("rally")
-        if not CONF.get("log_config_append"):
-            # The below two lines are to disable noise from request module. The
-            # standard way should be we make such lots of settings on the root
-            # rally. However current oslo codes doesn't support such interface.
-            # So I choose to use a 'hacking' way to avoid INFO logs from
-            # request module where user didn't give specific log configuration.
-            # And we could remove this hacking after oslo.log has such
-            # interface.
-            LOG.debug("INFO logs from urllib3 and requests module are hide.")
-            requests_log = logging.getLogger("requests").logger
-            requests_log.setLevel(logging.WARNING)
-            urllib3_log = logging.getLogger("urllib3").logger
-            urllib3_log.setLevel(logging.WARNING)
-
-            LOG.debug("urllib3 insecure warnings are hidden.")
-            for warning in ("InsecurePlatformWarning",
-                            "SNIMissingWarning",
-                            "InsecureRequestWarning"):
-                warning_cls = getattr(urllib3.exceptions, warning, None)
-                if warning_cls is not None:
-                    urllib3.disable_warnings(warning_cls)
-
-            # NOTE(wtakase): This is for suppressing boto error logging.
-            LOG.debug("ERROR log from boto module is hide.")
-            boto_log = logging.getLogger("boto").logger
-            boto_log.setLevel(logging.CRITICAL)
-
-    except cfg.ConfigFilesNotFoundError as e:
-        cfg_files = e.config_files
-        print(_("Failed to read configuration file(s): %s") % cfg_files)
+        rapi = api.API(config_args=argv[1:])
+    except exceptions.RallyException as e:
+        print(e)
         return(2)
 
     if CONF.category.name == "version":
-        print(version.version_string())
+        print(CONF.version)
         return(0)
 
     if CONF.category.name == "bash-completion":
@@ -570,6 +525,8 @@ def run(argv, categories):
     fn = CONF.category.action_fn
     fn_args = [encodeutils.safe_decode(arg)
                for arg in CONF.category.action_args]
+    # api instance always is the first argument
+    fn_args.insert(0, rapi)
     fn_kwargs = {}
     for k in CONF.category.action_kwargs:
         v = getattr(CONF.category, "action_kwarg_" + k)
@@ -598,9 +555,6 @@ def run(argv, categories):
         return(1)
 
     try:
-        for path in CONF.plugin_paths or []:
-            discover.load_plugins(path)
-
         validate_deprecated_args(argv, fn)
 
         if getattr(fn, "_suppress_warnings", False):

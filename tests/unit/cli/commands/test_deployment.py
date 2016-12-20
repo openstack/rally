@@ -31,17 +31,17 @@ class DeploymentCommandsTestCase(test.TestCase):
     def setUp(self):
         super(DeploymentCommandsTestCase, self).setUp()
         self.deployment = deployment.DeploymentCommands()
+        self.fake_api = fakes.FakeAPI()
 
     @mock.patch.dict(os.environ, {"RALLY_DEPLOYMENT": "my_deployment_id"})
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cli.commands.deployment.open",
                 side_effect=mock.mock_open(read_data="{\"some\": \"json\"}"),
                 create=True)
-    def test_create(self, mock_open, mock_deployment_create,
-                    mock_deployment_commands_list):
-        self.deployment.create("fake_deploy", False, "path_to_config.json")
-        mock_deployment_create.assert_called_once_with(
+    def test_create(self, mock_open, mock_deployment_commands_list):
+        self.deployment.create(self.fake_api, "fake_deploy", False,
+                               "path_to_config.json")
+        self.fake_api.deployment.create.assert_called_once_with(
             {"some": "json"}, "fake_deploy")
 
     @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
@@ -54,11 +54,10 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
                                   "RALLY_DEPLOYMENT": "fake_deployment_id"})
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
-    def test_createfromenv_keystonev2(self, mock_list, mock_deployment_create):
-        self.deployment.create("from_env", True)
-        mock_deployment_create.assert_called_once_with(
+    def test_createfromenv_keystonev2(self, mock_list):
+        self.deployment.create(self.fake_api, "from_env", True)
+        self.fake_api.deployment.create.assert_called_once_with(
             {
                 "type": "ExistingCloud",
                 "auth_url": "fake_auth_url",
@@ -88,11 +87,10 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
                                   "RALLY_DEPLOYMENT": "fake_deployment_id"})
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
-    def test_createfromenv_keystonev3(self, mock_list, mock_deployment_create):
-        self.deployment.create("from_env", True)
-        mock_deployment_create.assert_called_once_with(
+    def test_createfromenv_keystonev3(self, mock_list):
+        self.deployment.create(self.fake_api, "from_env", True)
+        self.fake_api.deployment.create.assert_called_once_with(
             {
                 "type": "ExistingCloud",
                 "auth_url": "fake_auth_url",
@@ -114,25 +112,26 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.use")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.create",
-                return_value=dict(uuid="uuid"))
     @mock.patch("rally.cli.commands.deployment.open",
                 side_effect=mock.mock_open(read_data="{\"uuid\": \"uuid\"}"),
                 create=True)
-    def test_create_and_use(self, mock_open, mock_deployment_create,
-                            mock_deployment_commands_use,
+    def test_create_and_use(self, mock_open, mock_deployment_commands_use,
                             mock_deployment_commands_list):
-        self.deployment.create("fake_deploy", False, "path_to_config.json",
-                               True)
-        mock_deployment_create.assert_called_once_with(
+        self.fake_api.deployment.create.return_value = dict(uuid="uuid")
+        self.deployment.create(self.fake_api, "fake_deploy", False,
+                               "path_to_config.json", True)
+        self.fake_api.deployment.create.assert_called_once_with(
             {"uuid": "uuid"}, "fake_deploy")
-        mock_deployment_commands_use.assert_called_once_with("uuid")
+        mock_deployment_commands_list.assert_called_once_with(
+            self.fake_api, deployment_list=[{"uuid": "uuid"}])
+        mock_deployment_commands_use.assert_called_once_with(
+            self.fake_api, "uuid")
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.recreate")
-    def test_recreate(self, mock_deployment_recreate):
+    def test_recreate(self):
         deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
-        self.deployment.recreate(deployment_id)
-        mock_deployment_recreate.assert_called_once_with(deployment_id)
+        self.deployment.recreate(self.fake_api, deployment_id)
+        self.fake_api.deployment.recreate.assert_called_once_with(
+            deployment_id)
 
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
     def test_recreate_no_deployment_id(self, mock_get_global):
@@ -140,24 +139,21 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.recreate, None)
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.destroy")
-    def test_destroy(self, mock_deployment_destroy):
+    def test_destroy(self):
         deployment_id = "53fd0273-60ce-42e5-a759-36f1a683103e"
-        self.deployment.destroy(deployment_id)
-        mock_deployment_destroy.assert_called_once_with(deployment_id)
+        self.deployment.destroy(self.fake_api, deployment_id)
+        self.fake_api.deployment.destroy.assert_called_once_with(deployment_id)
 
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
     def test_destroy_no_deployment_id(self, mock_get_global):
         mock_get_global.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.deployment.destroy, None)
+                          self.deployment.destroy, self.fake_api, None)
 
     @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cli.commands.deployment.utils.Struct")
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.list")
-    def test_list_different_deployment_id(self, mock_deployment_list,
-                                          mock_get_global, mock_struct,
+    def test_list_different_deployment_id(self, mock_get_global, mock_struct,
                                           mock_print_list):
         current_deployment_id = "26a3ce76-0efa-40e4-86e5-514574bd1ff6"
         mock_get_global.return_value = current_deployment_id
@@ -168,8 +164,8 @@ class DeploymentCommandsTestCase(test.TestCase):
              "status": "deploy->started",
              "active": "False"}]
 
-        mock_deployment_list.return_value = fake_deployment_list
-        self.deployment.list()
+        self.fake_api.deployment.list.return_value = fake_deployment_list
+        self.deployment.list(self.fake_api)
 
         fake_deployment = fake_deployment_list[0]
         fake_deployment["active"] = ""
@@ -183,9 +179,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cli.commands.deployment.utils.Struct")
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.list")
-    def test_list_current_deployment_id(self, mock_deployment_list,
-                                        mock_get_global, mock_struct,
+    def test_list_current_deployment_id(self, mock_get_global, mock_struct,
                                         mock_print_list):
         current_deployment_id = "64258e84-ffa1-4011-9e4c-aba07bdbcc6b"
         mock_get_global.return_value = current_deployment_id
@@ -194,8 +188,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                                  "name": "dep2",
                                  "status": "deploy->finished",
                                  "active": "True"}]
-        mock_deployment_list.return_value = fake_deployment_list
-        self.deployment.list()
+        self.fake_api.deployment.list.return_value = fake_deployment_list
+        self.deployment.list(self.fake_api)
 
         fake_deployment = fake_deployment_list[0]
         fake_deployment["active"] = "*"
@@ -206,27 +200,25 @@ class DeploymentCommandsTestCase(test.TestCase):
                                                 sortby_index=headers.index(
                                                 "created_at"))
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
     @mock.patch("json.dumps")
-    def test_config(self, mock_json_dumps, mock_deployment_get):
+    def test_config(self, mock_json_dumps):
         deployment_id = "fa4a423e-f15d-4d83-971a-89574f892999"
         value = {"config": "config"}
-        mock_deployment_get.return_value = value
-        self.deployment.config(deployment_id)
+        self.fake_api.deployment.get.return_value = value
+        self.deployment.config(self.fake_api, deployment_id)
         mock_json_dumps.assert_called_once_with(value["config"],
                                                 sort_keys=True, indent=4)
-        mock_deployment_get.assert_called_once_with(deployment_id)
+        self.fake_api.deployment.get.assert_called_once_with(deployment_id)
 
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
     def test_config_no_deployment_id(self, mock_get_global):
         mock_get_global.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.deployment.config, None)
+                          self.deployment.config, self.fake_api, None)
 
     @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cli.commands.deployment.utils.Struct")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
-    def test_show(self, mock_deployment_get, mock_struct, mock_print_list):
+    def test_show(self, mock_struct, mock_print_list):
         deployment_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
         value = {
             "admin": {
@@ -239,9 +231,9 @@ class DeploymentCommandsTestCase(test.TestCase):
             },
             "users": []
         }
-        mock_deployment_get.return_value = value
-        self.deployment.show(deployment_id)
-        mock_deployment_get.assert_called_once_with(deployment_id)
+        self.fake_api.deployment.get.return_value = value
+        self.deployment.show(self.fake_api, deployment_id)
+        self.fake_api.deployment.get.assert_called_once_with(deployment_id)
 
         headers = ["auth_url", "username", "password", "tenant_name",
                    "region_name", "endpoint_type"]
@@ -257,26 +249,23 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("os.remove")
     @mock.patch("os.symlink")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get",
-                return_value=fakes.FakeDeployment(
-                    uuid="593b683c-4b16-4b2b-a56b-e162bd60f10b"))
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.fileutils.update_env_file")
     def test_use(self, mock_update_env_file, mock_path_exists,
-                 mock_deployment_get, mock_symlink, mock_remove):
-        deployment_id = mock_deployment_get.return_value["uuid"]
-
-        mock_deployment_get.return_value["admin"] = {
-            "auth_url": "fake_auth_url",
-            "username": "fake_username",
-            "password": "fake_password",
-            "tenant_name": "fake_tenant_name",
-            "endpoint": "fake_endpoint",
-            "region_name": None}
+                 mock_symlink, mock_remove):
+        deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
+        self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
+            uuid=deployment_id,
+            admin={"auth_url": "fake_auth_url",
+                   "username": "fake_username",
+                   "password": "fake_password",
+                   "tenant_name": "fake_tenant_name",
+                   "endpoint": "fake_endpoint",
+                   "region_name": None})
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
-            self.deployment.use(deployment_id)
+            self.deployment.use(self.fake_api, deployment_id)
             self.assertEqual(2, mock_path_exists.call_count)
             mock_update_env_file.assert_called_once_with(os.path.expanduser(
                 "~/.rally/globals"),
@@ -296,28 +285,27 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch("os.remove")
     @mock.patch("os.symlink")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get",
-                return_value=fakes.FakeDeployment(
-                    uuid="593b683c-4b16-4b2b-a56b-e162bd60f10b"))
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.fileutils.update_env_file")
     def test_use_with_v3_auth(self, mock_update_env_file, mock_path_exists,
-                              mock_deployment_get, mock_symlink, mock_remove):
-        deployment_id = mock_deployment_get.return_value["uuid"]
+                              mock_symlink, mock_remove):
+        deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
 
-        mock_deployment_get.return_value["admin"] = {
-            "auth_url": "http://localhost:5000/v3",
-            "username": "fake_username",
-            "password": "fake_password",
-            "tenant_name": "fake_tenant_name",
-            "endpoint": "fake_endpoint",
-            "region_name": None,
-            "user_domain_name": "fake_user_domain",
-            "project_domain_name": "fake_project_domain"}
+        self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
+            uuid=deployment_id,
+            admin={
+                "auth_url": "http://localhost:5000/v3",
+                "username": "fake_username",
+                "password": "fake_password",
+                "tenant_name": "fake_tenant_name",
+                "endpoint": "fake_endpoint",
+                "region_name": None,
+                "user_domain_name": "fake_user_domain",
+                "project_domain_name": "fake_project_domain"})
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
-            self.deployment.use(deployment_id)
+            self.deployment.use(self.fake_api, deployment_id)
             self.assertEqual(2, mock_path_exists.call_count)
             mock_update_env_file.assert_called_once_with(os.path.expanduser(
                 "~/.rally/globals"),
@@ -341,67 +329,61 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands."
                 "_update_openrc_deployment_file")
     @mock.patch("rally.common.fileutils.update_globals_file")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment")
-    def test_use_by_name(self, mock_api_deployment, mock_update_globals_file,
+    def test_use_by_name(self, mock_update_globals_file,
                          mock__update_openrc_deployment_file):
         fake_deployment = fakes.FakeDeployment(
             uuid="fake_uuid",
             admin="fake_credentials")
-        mock_api_deployment.list.return_value = [fake_deployment]
-        mock_api_deployment.get.return_value = fake_deployment
-        status = self.deployment.use(deployment="fake_name")
+        self.fake_api.deployment.list.return_value = [fake_deployment]
+        self.fake_api.deployment.get.return_value = fake_deployment
+        status = self.deployment.use(self.fake_api, deployment="fake_name")
         self.assertIsNone(status)
-        mock_api_deployment.get.assert_called_once_with("fake_name")
+        self.fake_api.deployment.get.assert_called_once_with("fake_name")
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_DEPLOYMENT, "fake_uuid")
         mock__update_openrc_deployment_file.assert_called_once_with(
             "fake_uuid", "fake_credentials")
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
-    def test_deployment_not_found(self, mock_deployment_get):
+    def test_deployment_not_found(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
-            deployment=deployment_id)
-        self.assertEqual(1, self.deployment.use(deployment_id))
+        exc = exceptions.DeploymentNotFound(deployment=deployment_id)
+        self.fake_api.deployment.get.side_effect = exc
+        self.assertEqual(1, self.deployment.use(self.fake_api, deployment_id))
 
     @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.check")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
-    def test_deployment_check(self, mock_deployment_get,
-                              mock_deployment_check, mock_print_list):
+    def test_deployment_check(self, mock_print_list):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
                                                "admin",
                                                "adminpass").to_dict()
         deployment = {"admin": sample_credential,
                       "users": [sample_credential]}
-        mock_deployment_get.return_value = deployment
-        mock_deployment_check.return_value = {}
+        self.fake_api.deployment.get.return_value = deployment
+        self.fake_api.deployment.check.return_value = {}
 
-        self.deployment.check(deployment_id)
+        self.deployment.check(self.fake_api, deployment_id)
 
-        mock_deployment_get.assert_called_once_with(deployment_id)
-        mock_deployment_check.assert_called_once_with(deployment)
+        self.fake_api.deployment.get.assert_called_once_with(deployment_id)
+        self.fake_api.deployment.check.assert_called_once_with(deployment)
         headers = ["services", "type", "status"]
         mock_print_list.assert_called_once_with([], headers)
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
-    def test_deployment_check_not_exist(self, mock_deployment_get):
+    def test_deployment_check_not_exist(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
-            deployment=deployment_id)
-        self.assertEqual(self.deployment.check(deployment_id), 1)
+        exc = exceptions.DeploymentNotFound(deployment=deployment_id)
+        self.fake_api.deployment.get.side_effect = exc
+        self.assertEqual(self.deployment.check(
+            self.fake_api, deployment_id), 1)
 
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.check")
-    @mock.patch("rally.cli.commands.deployment.api.Deployment.get")
-    def test_deployment_check_raise(self, mock_deployment_get,
-                                    mock_deployment_check):
+    def test_deployment_check_raise(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
                                                "admin",
                                                "adminpass").to_dict()
         sample_credential["not-exist-key"] = "error"
-        mock_deployment_get.return_value = {"admin": sample_credential}
+        self.fake_api.deployment.get.return_value = {
+            "admin": sample_credential}
         refused = keystone_exceptions.ConnectionRefused()
-        mock_deployment_check.side_effect = refused
-        self.assertEqual(self.deployment.check(deployment_id), 1)
+        self.fake_api.deployment.check.side_effect = refused
+        self.assertEqual(self.deployment.check(
+            self.fake_api, deployment_id), 1)

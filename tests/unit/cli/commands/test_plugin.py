@@ -77,7 +77,7 @@ class PluginCommandsTestCase(test.TestCase):
 
     def test_show(self):
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().show("p1", "p1_ns")
+            plugin_cmd.PluginCommands().show(None, "p1", "p1_ns")
             output = out.getvalue()
 
             self.assertIn("NAME\n\tp1", output)
@@ -101,7 +101,7 @@ class PluginCommandsTestCase(test.TestCase):
     @ddt.unpack
     def test_show_not_found(self, name, namespace, text):
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().show(name, namespace)
+            plugin_cmd.PluginCommands().show(None, name, namespace)
             self.assertEqual(out.getvalue(), text)
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
@@ -110,7 +110,7 @@ class PluginCommandsTestCase(test.TestCase):
             with mock.patch("rally.cli.commands.plugin.plugin.Plugin."
                             "get_all") as mock_plugin_get_all:
                 mock_plugin_get_all.return_value = [self.Plugin2, self.Plugin3]
-                plugin_cmd.PluginCommands().show("p", "p2_ns")
+                plugin_cmd.PluginCommands().show(None, "p", "p2_ns")
                 self.assertEqual(out.getvalue(), "Multiple plugins found:\n")
                 mock_plugin_get_all.assert_called_once_with(namespace="p2_ns")
 
@@ -133,15 +133,15 @@ class PluginCommandsTestCase(test.TestCase):
     def test_list_not_found(self, name, namespace, text):
 
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().list(name, namespace)
+            plugin_cmd.PluginCommands().list(None, name, namespace)
             self.assertEqual(out.getvalue(), text)
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
     def test_list(self, mock_plugin_commands__print_plugins_list):
 
-        plugin_cmd.PluginCommands().list(None, "p1_ns")
-        plugin_cmd.PluginCommands().list("p1", "p1_ns")
-        plugin_cmd.PluginCommands().list("p2", None)
+        plugin_cmd.PluginCommands().list(None, None, "p1_ns")
+        plugin_cmd.PluginCommands().list(None, "p1", "p1_ns")
+        plugin_cmd.PluginCommands().list(None, "p2", None)
 
         mock_plugin_commands__print_plugins_list.assert_has_calls([
             mock.call([self.Plugin1]),

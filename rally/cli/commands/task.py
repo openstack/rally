@@ -28,7 +28,6 @@ import six
 from six.moves.urllib import parse as urlparse
 import yaml
 
-from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
@@ -44,10 +43,11 @@ from rally.task import exporter
 from rally.task.processing import plot
 
 
+LOG = logging.getLogger(__name__)
+
+
 class FailedToLoadTask(exceptions.RallyException):
     msg_fmt = _("Failed to load task")
-
-LOG = logging.getLogger(__name__)
 
 
 class TaskCommands(object):
@@ -55,7 +55,7 @@ class TaskCommands(object):
 
     """
 
-    def _load_task(self, task_file, task_args=None, task_args_file=None):
+    def _load_task(self, api, task_file, task_args=None, task_args_file=None):
         """Load tasks template from file and render it with passed args.
 
         :param task_file: Path to file with input task
@@ -110,7 +110,7 @@ class TaskCommands(object):
                 input_task = f.read()
                 task_dir = os.path.expanduser(
                     os.path.dirname(task_file)) or "./"
-                rendered_task = api.Task.render_template(input_task,
+                rendered_task = api.task.render_template(input_task,
                                                          task_dir, **kw)
             except Exception as e:
                 print(_("Failed to render task template:\n%(task)s\n%(err)s\n")
@@ -131,17 +131,17 @@ class TaskCommands(object):
             print(_("Task syntax is correct :)"))
             return parsed_task
 
-    def _load_and_validate_task(self, task, task_args, task_args_file,
+    def _load_and_validate_task(self, api, task, task_args, task_args_file,
                                 deployment, task_instance=None):
         try:
-            input_task = self._load_task(task, task_args, task_args_file)
+            input_task = self._load_task(api, task, task_args, task_args_file)
         except Exception as err:
             if task_instance:
                 task_instance.set_failed(err.__class__.__name__,
                                          str(err),
                                          json.dumps(traceback.format_exc()))
             raise
-        api.Task.validate(deployment, input_task, task_instance)
+        api.task.validate(deployment, input_task, task_instance)
         print(_("Task config is valid :)"))
         return input_task
 
@@ -159,7 +159,7 @@ class TaskCommands(object):
                         "to render the Jinja2 template in the input task.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
-    def validate(self, task, deployment=None, task_args=None,
+    def validate(self, api, task, deployment=None, task_args=None,
                  task_args_file=None):
         """Validate a task configuration file.
 
@@ -181,7 +181,7 @@ class TaskCommands(object):
         :param deployment: UUID or name of the deployment
         """
         try:
-            self._load_and_validate_task(task, task_args, task_args_file,
+            self._load_and_validate_task(api, task, task_args, task_args_file,
                                          deployment)
 
         except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
@@ -209,8 +209,9 @@ class TaskCommands(object):
                         "any SLA check for it fails.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
-    def start(self, task, deployment=None, task_args=None, task_args_file=None,
-              tag=None, do_use=False, abort_on_sla_failure=False):
+    def start(self, api, task, deployment=None, task_args=None,
+              task_args_file=None, tag=None, do_use=False,
+              abort_on_sla_failure=False):
         """Start benchmark task.
 
         If both task_args and task_args_file are specified, they will
@@ -234,12 +235,12 @@ class TaskCommands(object):
                                      for it fails
         """
 
-        task_instance = api.Task.create(deployment, tag)
+        task_instance = api.task.create(deployment, tag)
 
         try:
             print("Running Rally version", version.version_string())
             input_task = self._load_and_validate_task(
-                task, task_args, task_args_file, deployment,
+                api, task, task_args, task_args_file, deployment,
                 task_instance=task_instance)
 
             print(cliutils.make_header(
@@ -251,11 +252,11 @@ class TaskCommands(object):
             print("\trally task status\n\tor\n\trally task detailed\n")
 
             if do_use:
-                self.use(task_instance["uuid"])
+                self.use(api, task_instance["uuid"])
 
-            api.Task.start(deployment, input_task, task=task_instance,
+            api.task.start(deployment, input_task, task=task_instance,
                            abort_on_sla_failure=abort_on_sla_failure)
-            self.detailed(task_id=task_instance["uuid"])
+            self.detailed(api, task_id=task_instance["uuid"])
 
         except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
             task_instance.set_failed(type(e).__name__,
@@ -269,7 +270,7 @@ class TaskCommands(object):
     @cliutils.args(
         "--soft", action="store_true",
         help="Abort task after current scenario finishes execution.")
-    def abort(self, task_id=None, soft=False):
+    def abort(self, api, task_id=None, soft=False):
         """Abort a running benchmarking task.
 
         :param task_id: Task uuid
@@ -282,20 +283,20 @@ class TaskCommands(object):
                   "starting. If you are running task with only one "
                   "scenario, soft abort will not help at all.")
 
-        api.Task.abort(task_id, soft, async=False)
+        api.task.abort(task_id, soft, async=False)
 
         print("Task %s successfully stopped." % task_id)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
-    def status(self, task_id=None):
+    def status(self, api, task_id=None):
         """Display the current status of a task.
 
         :param task_id: Task uuid
         Returns current status of task
         """
 
-        task = api.Task.get(task_id)
+        task = api.task.get(task_id)
         print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
@@ -306,13 +307,13 @@ class TaskCommands(object):
                    action="store_true",
                    help="Print detailed results for each iteration.")
     @envutils.with_default_task_id
-    def detailed(self, task_id=None, iterations_data=False):
+    def detailed(self, api, task_id=None, iterations_data=False):
         """Print detailed information about given task.
 
         :param task_id: str, task uuid
         :param iterations_data: bool, include results for each iteration
         """
-        task = api.Task.get_detailed(task_id, extended_results=True)
+        task = api.task.get_detailed(task_id, extended_results=True)
 
         if not task:
             print("The task %s can not be found" % task_id)
@@ -455,14 +456,14 @@ class TaskCommands(object):
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
     @cliutils.suppress_warnings
-    def results(self, task_id=None):
+    def results(self, api, task_id=None):
         """Display raw task results.
 
         This will produce a lot of output data about every iteration.
 
         :param task_id: Task uuid
         """
-        task = api.Task.get(task_id)
+        task = api.task.get(task_id)
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
         if task["status"] not in finished_statuses:
@@ -491,7 +492,7 @@ class TaskCommands(object):
     @cliutils.args("--uuids-only", action="store_true",
                    dest="uuids_only", help="List task UUIDs only.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def list(self, deployment=None, all_deployments=False, status=None,
+    def list(self, api, deployment=None, all_deployments=False, status=None,
              uuids_only=False):
         """List tasks, started and finished.
 
@@ -522,7 +523,7 @@ class TaskCommands(object):
         if not all_deployments:
             filters.setdefault("deployment", deployment)
 
-        task_list = [task.to_dict() for task in api.Task.list(**filters)]
+        task_list = [task.to_dict() for task in api.task.list(**filters)]
 
         for x in task_list:
             x["duration"] = x["updated_at"] - x["created_at"]
@@ -553,7 +554,7 @@ class TaskCommands(object):
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="UUIDs of tasks, or JSON files with task results")
     @cliutils.suppress_warnings
-    def trends(self, *args, **kwargs):
+    def trends(self, api, *args, **kwargs):
         """Generate workloads trends HTML report."""
         tasks = kwargs.get("tasks", []) or list(args)
 
@@ -571,7 +572,7 @@ class TaskCommands(object):
                         try:
                             jsonschema.validate(
                                 result,
-                                api.Task.TASK_RESULT_SCHEMA)
+                                api.task.TASK_RESULT_SCHEMA)
                         except jsonschema.ValidationError as e:
                             print(_("ERROR: Invalid task result format in %s")
                                   % task_id, file=sys.stderr)
@@ -586,7 +587,7 @@ class TaskCommands(object):
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
-                    api.Task.get(task_id).get_results())
+                    api.task.get(task_id).get_results())
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s")
                       % task_id, file=sys.stderr)
@@ -627,7 +628,8 @@ class TaskCommands(object):
                    help="Generate the report in the JUnit format.")
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "tasks")
     @cliutils.suppress_warnings
-    def report(self, tasks=None, out=None, open_it=False, out_format="html"):
+    def report(self, api, tasks=None, out=None, open_it=False,
+               out_format="html"):
         """Generate report file for specified task.
 
         :param task_id: UUID, task identifier
@@ -651,7 +653,7 @@ class TaskCommands(object):
                         try:
                             jsonschema.validate(
                                 result,
-                                api.Task.TASK_RESULT_SCHEMA)
+                                api.task.TASK_RESULT_SCHEMA)
                         except jsonschema.ValidationError as e:
                             print(_("ERROR: Invalid task result format in %s")
                                   % task_file_or_uuid, file=sys.stderr)
@@ -666,7 +668,7 @@ class TaskCommands(object):
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
-                    api.Task.get(task_file_or_uuid).get_results())
+                    api.task.get(task_file_or_uuid).get_results())
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
@@ -717,7 +719,7 @@ class TaskCommands(object):
                    metavar="<task-id>",
                    help="UUID of task or a list of task UUIDs.")
     @envutils.with_default_task_id
-    def delete(self, task_id=None, force=False):
+    def delete(self, api, task_id=None, force=False):
         """Delete task and its results.
 
         :param task_id: Task uuid or a list of task uuids
@@ -726,7 +728,7 @@ class TaskCommands(object):
 
         def _delete_single_task(tid, force):
             try:
-                api.Task.delete(tid, force=force)
+                api.task.delete(tid, force=force)
                 print("Successfully deleted task `%s`" % tid)
             except exceptions.TaskInvalidStatus as e:
                 print(e)
@@ -745,22 +747,22 @@ class TaskCommands(object):
                    help="Output in JSON format.")
     @envutils.with_default_task_id
     @cliutils.alias("sla_check")
-    def sla_check_deprecated(self, task_id=None, tojson=False):
+    def sla_check_deprecated(self, api, task_id=None, tojson=False):
         """DEPRECATED since Rally 0.8.0, use `rally task sla-check` instead."""
-        return self.sla_check(task_id=task_id, tojson=tojson)
+        return self.sla_check(api, task_id=task_id, tojson=tojson)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @cliutils.args("--json", dest="tojson",
                    action="store_true",
                    help="Output in JSON format.")
     @envutils.with_default_task_id
-    def sla_check(self, task_id=None, tojson=False):
+    def sla_check(self, api, task_id=None, tojson=False):
         """Display SLA check results table.
 
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = api.Task.get(task_id).get_results()
+        results = api.task.get(task_id).get_results()
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"
@@ -786,13 +788,13 @@ class TaskCommands(object):
                    help="UUID of the task")
     @cliutils.deprecated_args("--task", dest="task_id", type=str,
                               release="0.2.0", alternative="--uuid")
-    def use(self, task_id):
+    def use(self, api, task_id):
         """Set active task.
 
         :param task_id: Task uuid.
         """
         print("Using task: %s" % task_id)
-        api.Task.get(task_id)
+        api.task.get(task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
 
     @cliutils.args("--uuid", dest="uuid", type=str,
@@ -802,7 +804,7 @@ class TaskCommands(object):
                    required=True,
                    help="Connection url to the task export system.")
     @plugins.ensure_plugins_are_loaded
-    def export(self, uuid, connection_string):
+    def export(self, api, uuid, connection_string):
         """Export task results to the custom task's exporting system.
 
         :param uuid: UUID of the task
