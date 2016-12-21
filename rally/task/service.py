@@ -347,7 +347,7 @@ class UnifiedService(Service):
         if len(service_names) > 1:
             enabled_services = list(self._clients.services().values())
 
-        for cls, impl in six.iteritems(impls):
+        for cls, impl in impls.items():
             if (enabled_services is not None and
                     impl._meta_get("name") not in enabled_services):
                 continue
