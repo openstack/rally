@@ -1,4 +1,4 @@
-#
+# Copyright 2015: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,40 +17,23 @@
 from oslo_utils import encodeutils
 from subunit import v2
 
-
-def total_seconds(td):
-    """Return the total number of seconds contained in the duration.
-
-    NOTE(andreykurilin): python 2.6 compatible method
-    """
-    if hasattr(td, "total_seconds"):
-        s = td.total_seconds()
-    else:
-        # NOTE(andreykurilin): next calculation is proposed in python docs
-        # https://docs.python.org/2/library/datetime.html#datetime.timedelta.total_seconds
-        s = (td.microseconds +
-             (td.seconds + td.days * 24 * 3600) * 10 ** 6) / 10.0 ** 6
-    return "%.3f" % s
+from rally.common import logging
 
 
-def preparse_input_args(func):
-    def inner(self, test_id=None, test_status=None, test_tags=None,
-              runnable=True, file_name=None, file_bytes=None, eof=False,
-              mime_type=None, route_code=None, timestamp=None):
-        # NOTE(andreykurilin): Variables 'runnable', 'eof', 'route_code' are
-        # not used in parser. Variable 'test_tags' is used to store workers
-        # info, which is not helpful in parser.
-
+def prepare_input_args(func):
+    # NOTE(andreykurilin): Variables 'runnable', 'eof', 'route_code' are not
+    # used in parser.
+    def inner(self, test_id=None, test_status=None, timestamp=None,
+              file_name=None, file_bytes=None, mime_type=None, test_tags=None,
+              runnable=True, eof=False, route_code=None):
         if not test_id:
             return
 
         if (test_id.startswith("setUpClass (") or
                 test_id.startswith("tearDown (")):
             test_id = test_id[test_id.find("(") + 1:-1]
-        if test_id.find("[") > -1:
-            tags = test_id.split("[")[1][:-1].split(",")
-        else:
-            tags = []
+
+        tags = _parse_test_tags(test_id)
 
         if mime_type:
             mime_type, charset = mime_type.split("; ")[:2]
@@ -58,60 +41,97 @@ def preparse_input_args(func):
         else:
             charset = None
 
-        func(self, test_id, test_status, tags, file_name, file_bytes,
-             mime_type, timestamp, charset)
+        func(self, test_id, test_status, timestamp, tags,
+             file_name, file_bytes, test_tags, mime_type, charset)
+
     return inner
 
 
-class SubunitV2StreamResult(object):
-    """A test result for reporting the activity of a test run."""
+def _parse_test_tags(test_id):
+    tags = []
+    if test_id.find("[") > -1:
+        tags = test_id.split("[")[1][:-1].split(",")
 
-    def __init__(self, expected_failures=None):
+    return tags
+
+
+class SubunitV2StreamResult(object):
+
+    def __init__(self, expected_failures=None, skipped_tests=None, live=False,
+                 logger_name=None):
         self._tests = {}
         self._expected_failures = expected_failures or {}
+        self._skipped_tests = skipped_tests or {}
+
+        self._live = live
+        self._logger = logging.getLogger(logger_name or __name__)
+
         self._timestamps = {}
-        # NOTE(andreykurilin): _first_timestamp and _last_timestamp vars are
-        #   designed to calculate total time of tests executions
+        # NOTE(andreykurilin): _first_timestamp and _last_timestamp variables
+        # are designed to calculate the total time of tests execution.
         self._first_timestamp = None
         self._last_timestamp = None
-        # let's save unknown entities and process them after main test case
+
+        # Store unknown entities and process them later.
         self._unknown_entities = {}
         self._is_parsed = False
 
-    def _post_parse(self):
-        # parse unknown entities
+    @staticmethod
+    def _get_test_name(test_id):
+        return test_id.split("[")[0] if test_id.find("[") > -1 else test_id
+
+    def _check_expected_failure(self, test_id):
+        if (test_id in self._expected_failures or
+                self._get_test_name(test_id) in self._expected_failures):
+            if self._tests[test_id]["status"] == "fail":
+                self._tests[test_id]["status"] = "xfail"
+                if self._expected_failures[test_id]:
+                    self._tests[test_id]["reason"] = (
+                        self._expected_failures[test_id])
+            elif self._tests[test_id]["status"] == "success":
+                self._tests[test_id]["status"] = "uxsuccess"
+
+    def _process_skipped_tests(self):
+        for t_id in self._skipped_tests.copy():
+            if t_id not in self._tests:
+                status = "skip"
+                name = self._get_test_name(t_id)
+                self._tests[t_id] = {"status": status,
+                                     "name": name,
+                                     "duration": "%.3f" % 0,
+                                     "tags": _parse_test_tags(t_id)}
+                if self._skipped_tests[t_id]:
+                    self._tests[t_id]["reason"] = self._skipped_tests[t_id]
+                    status += ": %s" % self._tests[t_id]["reason"]
+                if self._live:
+                    self._logger.info("{-} %s ... %s", name, status)
+
+            self._skipped_tests.pop(t_id)
+
+    def _parse(self):
+        # NOTE(andreykurilin): When whole test class is marked as skipped or
+        # failed, there is only one event with reason and status. So we should
+        # modify all tests of test class manually.
         for test_id in self._unknown_entities:
-            # NOTE(andreykurilin): When whole TestCase is marked as skipped
-            # or failed, there is only one event with reason and status, so
-            # we should modify all tests of TestCase manually.
-            matcher = lambda i: i == test_id or i.startswith("%s." % test_id)
-            known_ids = filter(matcher, self._tests)
-            for id_ in known_ids:
-                if self._tests[id_]["status"] == "init":
-                    self._tests[id_]["status"] = (
+            known_test_ids = filter(lambda t:
+                                    t == test_id or t.startswith(
+                                        "%s." % test_id), self._tests)
+            for t_id in known_test_ids:
+                if self._tests[t_id]["status"] == "init":
+                    self._tests[t_id]["status"] = (
                         self._unknown_entities[test_id]["status"])
+
                 if self._unknown_entities[test_id].get("reason"):
-                    self._tests[id_]["reason"] = (
+                    self._tests[t_id]["reason"] = (
                         self._unknown_entities[test_id]["reason"])
                 elif self._unknown_entities[test_id].get("traceback"):
-                    self._tests[id_]["traceback"] = (
+                    self._tests[t_id]["traceback"] = (
                         self._unknown_entities[test_id]["traceback"])
-
-        # parse expected failures
-        for test_id in self._expected_failures:
-            if self._tests.get(test_id):
-                if self._tests[test_id]["status"] == "fail":
-                    self._tests[test_id]["status"] = "xfail"
-                    if self._expected_failures[test_id]:
-                        self._tests[test_id]["reason"] = (
-                            self._expected_failures[test_id])
-                elif self._tests[test_id]["status"] == "success":
-                    self._tests[test_id]["status"] = "uxsuccess"
 
         # decode data
         for test_id in self._tests:
             for file_name in ["traceback", "reason"]:
-                # FIXME(andreykurilin): decode fields based on mime_type
+                # TODO(andreykurilin): decode fields based on mime_type
                 if file_name in self._tests[test_id]:
                     self._tests[test_id][file_name] = (
                         encodeutils.safe_decode(
@@ -122,42 +142,47 @@ class SubunitV2StreamResult(object):
     @property
     def tests(self):
         if not self._is_parsed:
-            self._post_parse()
+            self._parse()
         return self._tests
 
     @property
-    def total(self):
-        total_time = 0
+    def totals(self):
+        td = 0
         if self._first_timestamp:
-            total_time = total_seconds(
-                self._last_timestamp - self._first_timestamp)
-        return {"tests": len(self.tests),
-                "time": total_time,
+            td = (self._last_timestamp - self._first_timestamp).total_seconds()
+
+        return {"tests_count": len(self.tests),
+                "tests_duration": "%.3f" % td,
                 "failures": len(self.filter_tests("fail")),
                 "skipped": len(self.filter_tests("skip")),
                 "success": len(self.filter_tests("success")),
                 "unexpected_success": len(self.filter_tests("uxsuccess")),
                 "expected_failures": len(self.filter_tests("xfail"))}
 
-    @preparse_input_args
-    def status(self, test_id=None, test_status=None, tags=None,
-               file_name=None, file_bytes=None, mime_type=None,
-               timestamp=None, charset=None):
+    @prepare_input_args
+    def status(self, test_id=None, test_status=None, timestamp=None, tags=None,
+               file_name=None, file_bytes=None, worker=None, mime_type=None,
+               charset=None):
+        if timestamp:
+            if not self._first_timestamp:
+                self._first_timestamp = timestamp
+            self._last_timestamp = timestamp
+
         if test_status == "exists":
             self._tests[test_id] = {"status": "init",
-                                    "name": (test_id.split("[")[0]
-                                             if test_id.find("[") > -1
-                                             else test_id),
-                                    "time": "%.3f" % 0}
-            if tags:
-                self._tests[test_id]["tags"] = tags
+                                    "name": self._get_test_name(test_id),
+                                    "duration": "%.3f" % 0,
+                                    "tags": tags if tags else []}
         elif test_id in self._tests:
             if test_status == "inprogress":
+                # timestamp of test start
                 self._timestamps[test_id] = timestamp
             elif test_status:
-                self._tests[test_id]["time"] = total_seconds(
-                    timestamp - self._timestamps[test_id])
+                self._tests[test_id]["duration"] = "%.3f" % (
+                    timestamp - self._timestamps[test_id]).total_seconds()
                 self._tests[test_id]["status"] = test_status
+
+                self._check_expected_failure(test_id)
             else:
                 if file_name in ["traceback", "reason"]:
                     if file_name not in self._tests[test_id]:
@@ -173,13 +198,33 @@ class SubunitV2StreamResult(object):
                 else:
                     self._unknown_entities[test_id][file_name] += file_bytes
 
-        if timestamp:
-            if not self._first_timestamp:
-                self._first_timestamp = timestamp
-            self._last_timestamp = timestamp
+        if self._skipped_tests:
+            self._process_skipped_tests()
+
+        if self._live and test_status not in (None, "exists", "inprogress"):
+            duration = ""
+            if test_id in self._tests:
+                status = self._tests[test_id]["status"]
+                duration = " [%ss]" % self._tests[test_id]["duration"]
+            else:
+                status = test_status
+
+            status += duration
+
+            if "xfail" in status or "skip" in status:
+                if test_id in self._tests:
+                    reason = self._tests[test_id].get("reason")
+                else:
+                    reason = self._unknown_entities[test_id].get("reason")
+                if reason:
+                    status += ": %s" % reason
+
+            w = "{%s} " % worker.pop().split("-")[1] if worker else "-"
+            self._logger.info(
+                "%s ... %s", w + self._get_test_name(test_id), status)
 
     def filter_tests(self, status):
-        """Filter results by given status."""
+        """Filter tests by given status."""
         filtered_tests = {}
         for test in self.tests:
             if self.tests[test]["status"] == status:
@@ -188,9 +233,17 @@ class SubunitV2StreamResult(object):
         return filtered_tests
 
 
-def parse_results_file(filename, expected_failures=None):
-    with open(filename, "rb") as source:
-        results = SubunitV2StreamResult(expected_failures)
-        v2.ByteStreamToStreamResult(
-            source=source, non_subunit_name="non-subunit").run(results)
-        return results
+def parse(stream, expected_failures=None, skipped_tests=None, live=False,
+          logger_name=None):
+    results = SubunitV2StreamResult(expected_failures, skipped_tests, live,
+                                    logger_name)
+    v2.ByteStreamToStreamResult(stream, "non-subunit").run(results)
+
+    return results
+
+
+def parse_file(filename, expected_failures=None, skipped_tests=None,
+               live=False, logger_name=None):
+    with open(filename, "rb") as stream:
+        return parse(stream, expected_failures, skipped_tests, live,
+                     logger_name)
