@@ -21,6 +21,7 @@ import ddt
 import jsonschema
 from keystoneclient import exceptions as keystone_exceptions
 import mock
+from oslo_config import cfg
 
 from rally import api
 from rally.common import objects
@@ -64,7 +65,7 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.engine.TaskEngine")
     def test_validate(
             self, mock_task_engine, mock_deployment_get, mock_task):
-        api.Task.validate(mock_deployment_get.return_value["uuid"], "config")
+        api._Task.validate(mock_deployment_get.return_value["uuid"], "config")
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
@@ -90,35 +91,36 @@ class TaskAPITestCase(test.TestCase):
 
         excpt = exceptions.InvalidTaskException()
         mock_task_engine.return_value.validate.side_effect = excpt
-        self.assertRaises(exceptions.InvalidTaskException, api.Task.validate,
+        self.assertRaises(exceptions.InvalidTaskException, api._Task.validate,
                           mock_deployment.return_value["uuid"], "config")
 
     def test_render_template(self):
         self.assertEqual(
             "3 = 3",
-            api.Task.render_template("{{a + b}} = {{c}}", a=1, b=2, c=3))
+            api._Task.render_template("{{a + b}} = {{c}}", a=1, b=2, c=3))
 
     def test_render_template_default_values(self):
         template = "{% set a = a or 1 %}{{a + b}} = {{c}}"
 
-        self.assertEqual("3 = 3", api.Task.render_template(template, b=2, c=3))
+        self.assertEqual("3 = 3",
+                         api._Task.render_template(template, b=2, c=3))
 
         self.assertEqual(
-            "5 = 5", api.Task.render_template(template, a=2, b=3, c=5))
+            "5 = 5", api._Task.render_template(template, a=2, b=3, c=5))
 
     def test_render_template_default_filter(self):
         template = "{{ c | default(3) }}"
 
-        self.assertEqual("3", api.Task.render_template(template))
+        self.assertEqual("3", api._Task.render_template(template))
 
-        self.assertEqual("5", api.Task.render_template(template, c=5))
+        self.assertEqual("5", api._Task.render_template(template, c=5))
 
     def test_render_template_builtin(self):
         template = "{% for i in range(4) %}{{i}}{% endfor %}"
-        self.assertEqual("0123", api.Task.render_template(template))
+        self.assertEqual("0123", api._Task.render_template(template))
 
     def test_render_template_missing_args(self):
-        self.assertRaises(TypeError, api.Task.render_template, "{{a}}")
+        self.assertRaises(TypeError, api._Task.render_template, "{{a}}")
 
     def test_render_template_include_other_template(self):
         other_template_path = os.path.join(
@@ -128,33 +130,33 @@ class TaskAPITestCase(test.TestCase):
             other_template_path)
         with open(other_template_path) as f:
             other_template = f.read()
-        expect = api.Task.render_template(other_template)
-        actual = api.Task.render_template(template,
-                                          os.path.dirname(other_template_path))
+        expect = api._Task.render_template(other_template)
+        actual = api._Task.render_template(
+            template, os.path.dirname(other_template_path))
         self.assertEqual(expect, actual)
 
     def test_render_template_min(self):
         template = "{{ min(1, 2)}}"
-        self.assertEqual("1", api.Task.render_template(template))
+        self.assertEqual("1", api._Task.render_template(template))
 
     def test_render_template_max(self):
         template = "{{ max(1, 2)}}"
-        self.assertEqual("2", api.Task.render_template(template))
+        self.assertEqual("2", api._Task.render_template(template))
 
     def test_render_template_ceil(self):
         template = "{{ ceil(2.2)}}"
-        self.assertEqual("3", api.Task.render_template(template))
+        self.assertEqual("3", api._Task.render_template(template))
 
     def test_render_template_round(self):
         template = "{{ round(2.2)}}"
-        self.assertEqual("2", api.Task.render_template(template))
+        self.assertEqual("2", api._Task.render_template(template))
 
     @mock.patch("rally.common.objects.Deployment.get",
                 return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
     @mock.patch("rally.common.objects.Task")
     def test_create(self, mock_task, mock_deployment_get):
         tag = "a"
-        api.Task.create(mock_deployment_get.return_value["uuid"], tag)
+        api._Task.create(mock_deployment_get.return_value["uuid"], tag)
         mock_task.assert_called_once_with(
             deployment_uuid=mock_deployment_get.return_value["uuid"], tag=tag)
 
@@ -167,7 +169,7 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.engine.TaskEngine")
     def test_start(self, mock_task_engine, mock_deployment_get,
                    mock_task):
-        api.Task.start(mock_deployment_get.return_value["uuid"], "config")
+        api._Task.start(mock_deployment_get.return_value["uuid"], "config")
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
@@ -192,7 +194,7 @@ class TaskAPITestCase(test.TestCase):
     def test_start_temporary_task(self, mock_deployment_get,
                                   mock_task):
 
-        self.assertRaises(ValueError, api.Task.start,
+        self.assertRaises(ValueError, api._Task.start,
                           mock_deployment_get.return_value["uuid"], "config")
 
     @mock.patch("rally.api.objects.Task")
@@ -202,7 +204,7 @@ class TaskAPITestCase(test.TestCase):
                              mock_task):
         mock_task.return_value.is_temporary = False
         mock_task_engine.return_value.run.side_effect = TypeError
-        self.assertRaises(TypeError, api.Task.start, "deployment_uuid",
+        self.assertRaises(TypeError, api._Task.start, "deployment_uuid",
                           "config")
         mock_deployment_get().update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
@@ -221,7 +223,7 @@ class TaskAPITestCase(test.TestCase):
 
         some_uuid = "ca441749-0eb9-4fcc-b2f6-76d314c55404"
 
-        api.Task.abort(some_uuid, soft=soft, async=False)
+        api._Task.abort(some_uuid, soft=soft, async=False)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
@@ -235,7 +237,7 @@ class TaskAPITestCase(test.TestCase):
     def test_abort_async(self, soft, mock_task, mock_time):
         some_uuid = "133695fb-400d-4988-859c-30bfaa0488ce"
 
-        api.Task.abort(some_uuid, soft=soft, async=True)
+        api._Task.abort(some_uuid, soft=soft, async=True)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
@@ -284,7 +286,7 @@ class TaskAPITestCase(test.TestCase):
     def test_delete(self, mock_task_delete_by_uuid, mock_task_get_status,
                     task_status, expected_status, force=False, raises=None):
         mock_task_get_status.return_value = task_status
-        api.Task.delete(self.task_uuid, force=force)
+        api._Task.delete(self.task_uuid, force=force)
         if force:
             self.assertFalse(mock_task_get_status.called)
         else:
@@ -297,7 +299,7 @@ class TaskAPITestCase(test.TestCase):
     def test_get_detailed(self, mock_task):
         mock_task.get_detailed.return_value = "detailed_task_data"
         self.assertEqual("detailed_task_data",
-                         api.Task.get_detailed("task_uuid"))
+                         api._Task.get_detailed("task_uuid"))
         mock_task.get_detailed.assert_called_once_with("task_uuid")
 
     @mock.patch("rally.api.objects.Task")
@@ -306,8 +308,8 @@ class TaskAPITestCase(test.TestCase):
                                                ("results", "raw_results"))
         mock_task.extend_results.return_value = "extended_results"
         self.assertEqual({"uuid": "foo_uuid", "results": "extended_results"},
-                         api.Task.get_detailed("foo_uuid",
-                                               extended_results=True))
+                         api._Task.get_detailed("foo_uuid",
+                                                extended_results=True))
         mock_task.get_detailed.assert_called_once_with("foo_uuid")
         mock_task.extend_results.assert_called_once_with("raw_results")
 
@@ -342,7 +344,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        api.Deployment.create(self.deployment_config, "fake_deployment")
+        api._Deployment.create(self.deployment_config, "fake_deployment")
         mock_deployment_create.assert_called_once_with({
             "name": "fake_deployment",
             "config": self.deployment_config,
@@ -365,7 +367,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         self.assertRaises(jsonschema.ValidationError,
-                          api.Deployment.create,
+                          api._Deployment.create,
                           self.deployment_config, "fake_deployment")
         mock_deployment_update.assert_called_once_with(
             self.deployment_uuid,
@@ -377,7 +379,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                     deployment="fake_deploy"))
     def test_create_duplication_error(self, mock_deployment_create, mock_log):
         self.assertRaises(exceptions.DeploymentNameExists,
-                          api.Deployment.create, self.deployment_config,
+                          api._Deployment.create, self.deployment_config,
                           "fake_deployment")
 
     @mock.patch("rally.common.objects.deploy.db.deployment_delete")
@@ -387,7 +389,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                      mock_deployment_update, mock_deployment_delete):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        api.Deployment.destroy(self.deployment_uuid)
+        api._Deployment.destroy(self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
 
@@ -396,7 +398,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
     def test_recreate(self, mock_deployment_get, mock_deployment_update):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        api.Deployment.recreate(self.deployment_uuid)
+        api._Deployment.recreate(self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
             mock.call(self.deployment_uuid,
@@ -410,14 +412,14 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
     def test_get(self, mock_deployment_get):
         deployment_id = "aaaa-bbbb-cccc-dddd"
         mock_deployment_get.return_value = self.deployment
-        ret = api.Deployment.get(deployment_id)
+        ret = api._Deployment.get(deployment_id)
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
     @mock.patch("rally.common.objects.Deployment.list")
     def test_list(self, mock_deployment_list):
         mock_deployment_list.return_value = self.deployment
-        ret = api.Deployment.list()
+        ret = api._Deployment.list()
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
@@ -430,7 +432,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                                                "adminpass").to_dict()
         deployment = {"admin": sample_credential,
                       "users": [sample_credential]}
-        api.Deployment.check(deployment)
+        api._Deployment.check(deployment)
         mock_keystone_create_client.assert_called_with()
         mock_clients_services.assert_called_once_with()
 
@@ -440,7 +442,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                                                "adminpass").to_dict()
         sample_credential["not-exist-key"] = "error"
         deployment = {"admin": sample_credential}
-        self.assertRaises(TypeError, api.Deployment.check, deployment)
+        self.assertRaises(TypeError, api._Deployment.check, deployment)
 
     @mock.patch("rally.osclients.Clients.services")
     def test_deployment_check_connect_failed(self, mock_clients_services):
@@ -452,4 +454,82 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_clients_services.side_effect = refused
         self.assertRaises(
             keystone_exceptions.ConnectionRefused,
-            api.Deployment.check, deployment)
+            api._Deployment.check, deployment)
+
+
+class APITestCase(test.TestCase):
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_config_args(self, mock_conf, mock_version_string,
+                              mock_isfile):
+        api_ = api.API(config_args=["foo", "bar", "baz"])
+        mock_conf.assert_called_once_with(
+            ["foo", "bar", "baz"], default_config_files=None,
+            project="rally", version="0.0.0")
+
+        self.assertIs(api_.deployment, api._Deployment)
+        self.assertIs(api_.task, api._Task)
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_config_file(self, mock_conf, mock_version_string,
+                              mock_isfile):
+        api_ = api.API(config_file="myfile.conf")
+        mock_conf.assert_called_once_with(
+            [], default_config_files=["myfile.conf"],
+            project="rally", version="0.0.0")
+
+        self.assertIs(api_.deployment, api._Deployment)
+        self.assertIs(api_.task, api._Task)
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_no_default_config_file(self, mock_conf, mock_version_string,
+                                         mock_isfile):
+        api.API()
+        mock_conf.assert_called_once_with(
+            [], default_config_files=None, project="rally", version="0.0.0")
+
+    @mock.patch("os.path.isfile")
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_default_config_file(self, mock_conf, mock_version_string,
+                                      mock_isfile):
+        mock_isfile.side_effect = lambda f: f == "/etc/rally/rally.conf"
+        api.API()
+        mock_conf.assert_called_once_with(
+            [], default_config_files=["/etc/rally/rally.conf"],
+            project="rally", version="0.0.0")
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_exception(self, mock_conf, mock_version_string, mock_isfile):
+        mock_conf.side_effect = cfg.ConfigFilesNotFoundError(["file1",
+                                                              "file2"])
+        self.assertRaises(exceptions.RallyException, api.API)
+        mock_conf.assert_called_once_with(
+            [], default_config_files=None, project="rally", version="0.0.0")
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.plugin.discover.load_plugins")
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_plugin_path(self, mock_conf, mock_version_string,
+                              mock_load_plugins, mock_isfile):
+        mock_conf.get.side_effect = (
+            lambda a: ["/path/from/args"] if a == "plugin_paths" else None)
+        api.API(plugin_paths=["/my/path"])
+        mock_conf.assert_called_once_with([], default_config_files=None,
+                                          project="rally", version="0.0.0")
+        mock_load_plugins.assert_has_calls([
+            mock.call("/my/path"),
+            mock.call("/path/from/args"),
+        ])
+
+    def test_init_rally_endpoint(self):
+        self.assertRaises(NotImplementedError, api.API, rally_endpoint="foo")

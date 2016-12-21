@@ -44,7 +44,7 @@ def output_migration_result(method_name):
 class DBCommands(object):
     """Commands for DB management."""
 
-    def recreate(self):
+    def recreate(self, api):
         """Drop and create Rally database.
 
         This will delete all existing data.
@@ -53,16 +53,16 @@ class DBCommands(object):
         db.schema_create()
         envutils.clear_env()
 
-    def create(self):
+    def create(self, api):
         """Create Rally database."""
         db.schema_create()
 
-    def upgrade(self):
+    def upgrade(self, api):
         """Upgrade Rally database to the latest state."""
         with output_migration_result("upgrade"):
             db.schema_upgrade()
 
-    def revision(self):
+    def revision(self, api):
         """Print current Rally database revision UUID."""
         print(db.schema_revision())
 

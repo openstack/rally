@@ -27,7 +27,6 @@ from keystoneclient import exceptions as keystone_exceptions
 from six.moves.urllib import parse
 import yaml
 
-from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
@@ -50,7 +49,7 @@ class DeploymentCommands(object):
                    help="Don't set new deployment as default for"
                         " future operations.")
     @plugins.ensure_plugins_are_loaded
-    def create(self, name, fromenv=False, filename=None, do_use=False):
+    def create(self, api, name, fromenv=False, filename=None, do_use=False):
         """Create new deployment.
 
         This command will create a new deployment record in rally
@@ -100,7 +99,7 @@ class DeploymentCommands(object):
                 config = yaml.safe_load(deploy_file.read())
 
         try:
-            deployment = api.Deployment.create(config, name)
+            deployment = api.deployment.create(config, name)
         except jsonschema.ValidationError:
             print(_("Config schema validation error: %s.") % sys.exc_info()[1])
             return(1)
@@ -108,16 +107,16 @@ class DeploymentCommands(object):
             print(_("Error: %s") % sys.exc_info()[1])
             return(1)
 
-        self.list(deployment_list=[deployment])
+        self.list(api, deployment_list=[deployment])
         if do_use:
-            self.use(deployment["uuid"])
+            self.use(api, deployment["uuid"])
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
-    def recreate(self, deployment=None):
+    def recreate(self, api, deployment=None):
         """Destroy and create an existing deployment.
 
         Unlike 'deployment destroy', the deployment database record
@@ -125,14 +124,14 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        api.Deployment.recreate(deployment)
+        api.deployment.recreate(deployment)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
-    def destroy(self, deployment=None):
+    def destroy(self, api, deployment=None):
         """Destroy existing deployment.
 
         This will delete all containers, virtual machines, OpenStack
@@ -142,14 +141,14 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        api.Deployment.destroy(deployment)
+        api.deployment.destroy(deployment)
 
-    def list(self, deployment_list=None):
+    def list(self, api, deployment_list=None):
         """List existing deployments."""
 
         headers = ["uuid", "created_at", "name", "status", "active"]
         current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
-        deployment_list = deployment_list or api.Deployment.list()
+        deployment_list = deployment_list or api.deployment.list()
 
         table_rows = []
         if deployment_list:
@@ -169,7 +168,7 @@ class DeploymentCommands(object):
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @cliutils.suppress_warnings
-    def config(self, deployment=None):
+    def config(self, api, deployment=None):
         """Display configuration of the deployment.
 
         Output is the configuration of the deployment in a
@@ -177,7 +176,7 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        deploy = api.Deployment.get(deployment)
+        deploy = api.deployment.get(deployment)
         result = deploy["config"]
         print(json.dumps(result, sort_keys=True, indent=4))
 
@@ -185,7 +184,7 @@ class DeploymentCommands(object):
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
-    def show(self, deployment=None):
+    def show(self, api, deployment=None):
         """Show the credentials of the deployment.
 
         :param deployment: UUID or name of the deployment
@@ -195,7 +194,7 @@ class DeploymentCommands(object):
                    "region_name", "endpoint_type"]
         table_rows = []
 
-        deployment = api.Deployment.get(deployment)
+        deployment = api.deployment.get(deployment)
         users = deployment["users"]
         admin = deployment["admin"]
         credentials = users + [admin] if admin else users
@@ -210,7 +209,7 @@ class DeploymentCommands(object):
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
-    def check(self, deployment=None):
+    def check(self, api, deployment=None):
         """Check keystone authentication and list all available services.
 
         :param deployment: UUID or name of the deployment
@@ -218,14 +217,14 @@ class DeploymentCommands(object):
         headers = ["services", "type", "status"]
         table_rows = []
         try:
-            deployment = api.Deployment.get(deployment)
+            deployment = api.deployment.get(deployment)
 
         except exceptions.DeploymentNotFound:
             print(_("Deployment %s is not found.") % deployment)
             return(1)
 
         try:
-            services = api.Deployment.check(deployment)
+            services = api.deployment.check(deployment)
         except keystone_exceptions.ConnectionRefused:
             print(_("Unable to connect %s.") % deployment["admin"]["auth_url"])
             return(1)
@@ -288,13 +287,13 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
-    def use(self, deployment):
+    def use(self, api, deployment):
         """Set active deployment.
 
         :param deployment: UUID or name of the deployment
         """
         try:
-            deployment = api.Deployment.get(deployment)
+            deployment = api.deployment.get(deployment)
             print("Using deployment: %s" % deployment["uuid"])
 
             fileutils.update_globals_file("RALLY_DEPLOYMENT",

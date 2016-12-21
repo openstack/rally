@@ -27,6 +27,7 @@ from novaclient import exceptions as nova_exceptions
 import six
 from swiftclient import exceptions as swift_exceptions
 
+from rally import api
 from rally.common import objects
 from rally.common import utils as rally_utils
 from rally import consts
@@ -1847,3 +1848,18 @@ class FakeTask(dict):
 
     def to_dict(self):
         return self
+
+
+class FakeAPI(object):
+
+    def __init__(self):
+        self._deployment = mock.Mock(spec=api._Deployment)
+        self._task = mock.Mock(spec=api._Task)
+
+    @property
+    def deployment(self):
+        return self._deployment
+
+    @property
+    def task(self):
+        return self._task

@@ -17,7 +17,6 @@
 
 from __future__ import print_function
 
-from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common.i18n import _
@@ -40,8 +39,8 @@ class ShowCommands(object):
                  "tenant": credentials["tenant_name"]})
 
     @staticmethod
-    def _get_credentials(deployment):
-        deployment = api.Deployment.get(deployment)
+    def _get_credentials(api, deployment):
+        deployment = api.deployment.get(deployment)
         # NOTE(andreykurilin): it is a bad practise to access to inner db_obj,
         # but we can do it here, since we are planning to deprecate and remove
         # this  command at all.
@@ -55,7 +54,7 @@ class ShowCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
-    def images(self, deployment=None):
+    def images(self, api, deployment=None):
         """Display available images.
 
         :param deployment: UUID or name of a deployment
@@ -67,7 +66,7 @@ class ShowCommands(object):
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
 
-        for credential_dict in self._get_credentials(deployment):
+        for credential_dict in self._get_credentials(api, deployment):
             self._print_header("Images", credential_dict)
             table_rows = []
 
@@ -87,7 +86,7 @@ class ShowCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
-    def flavors(self, deployment=None):
+    def flavors(self, api, deployment=None):
         """Display available flavors.
 
         :param deployment: UUID or name of a deployment
@@ -99,7 +98,7 @@ class ShowCommands(object):
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
 
-        for credential_dict in self._get_credentials(deployment):
+        for credential_dict in self._get_credentials(api, deployment):
             self._print_header("Flavors", credential_dict)
             table_rows = []
             clients = osclients.Clients(objects.Credential(**credential_dict))
@@ -119,13 +118,13 @@ class ShowCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
-    def networks(self, deployment=None):
+    def networks(self, api, deployment=None):
         """Display configured networks."""
 
         headers = ["ID", "Label", "CIDR"]
         mixed_case_fields = ["ID", "Label", "CIDR"]
 
-        for credential_dict in self._get_credentials(deployment):
+        for credential_dict in self._get_credentials(api, deployment):
             self._print_header("Networks", credential_dict)
             table_rows = []
             clients = osclients.Clients(objects.Credential(**credential_dict))
@@ -143,12 +142,12 @@ class ShowCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
-    def secgroups(self, deployment=None):
+    def secgroups(self, api, deployment=None):
         """Display security groups."""
 
         headers = ["ID", "Name", "Description"]
         mixed_case_fields = ["ID", "Name", "Description"]
-        for credential_dict in self._get_credentials(deployment):
+        for credential_dict in self._get_credentials(api, deployment):
             self._print_header("Security groups", credential_dict)
             table_rows = []
             clients = osclients.Clients(objects.Credential(**credential_dict))
@@ -168,13 +167,13 @@ class ShowCommands(object):
                    help="UUID or name of a deployment.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.process_keystone_exc
-    def keypairs(self, deployment=None):
+    def keypairs(self, api, deployment=None):
         """Display available ssh keypairs."""
 
         headers = ["Name", "Fingerprint"]
         mixed_case_fields = ["Name", "Fingerprint"]
 
-        for credential_dict in self._get_credentials(deployment):
+        for credential_dict in self._get_credentials(api, deployment):
             self._print_header("Keypairs", credential_dict)
             table_rows = []
             clients = osclients.Clients(objects.Credential(**credential_dict))
