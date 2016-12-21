@@ -970,7 +970,8 @@ class API(object):
                 "Failed to read configuration file(s): %s") % cfg_files)
 
         plugin_paths = plugin_paths or []
-        plugin_paths.extend(CONF.get("plugin_paths") or [])
+        if "plugin_paths" in CONF:
+            plugin_paths.extend(CONF.get("plugin_paths") or [])
         for path in plugin_paths:
             discover.load_plugins(path)
 
