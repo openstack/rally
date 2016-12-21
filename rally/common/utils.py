@@ -20,14 +20,19 @@ import ctypes
 import heapq
 import inspect
 import multiprocessing
+import os
 import random
 import re
+import shutil
 import string
 import sys
+import tempfile
 import time
+import uuid
 
 from six import moves
 
+from rally.common.i18n import _LE
 from rally.common import logging
 from rally import exceptions
 
@@ -708,3 +713,69 @@ class Stopwatch(object):
             self._stop_event.wait(sec)
         else:
             interruptable_sleep(sec)
+
+
+class BackupHelper(object):
+    def __init__(self):
+        self._tempdir = self._find_non_existing_path(tempfile.gettempdir())
+
+        os.mkdir(self._tempdir)
+
+        self._stored_data = {}
+        self._rollback_actions = []
+
+    @staticmethod
+    def _find_non_existing_path(root_dir):
+        path = None
+        while path is None:
+            candidate = os.path.join(root_dir, str(uuid.uuid4()))
+            if not os.path.exists(candidate):
+                path = candidate
+        return path
+
+    def backup(self, original_path):
+        if original_path in self._stored_data:
+            raise exceptions.RallyException(
+                _LE("Failed to back up %s since it was already stored.") %
+                original_path)
+        backup_path = self._find_non_existing_path(self._tempdir)
+        LOG.debug("Creating backup of %s in %s" % (original_path, backup_path))
+        try:
+            shutil.copytree(original_path, backup_path, symlinks=True)
+        except Exception:
+            # Ooops. something went wrong
+            self.rollback()
+            raise
+        self._stored_data[original_path] = backup_path
+
+    def rollback(self):
+        LOG.debug("Performing rollback of stored data.")
+        for original_path, stored_path in self._stored_data.copy().items():
+            if os.path.exists(original_path):
+                shutil.rmtree(original_path)
+            shutil.copytree(stored_path, original_path, symlinks=True)
+            # not to delete the same path in __del__ method
+            self._stored_data.pop(original_path)
+
+        for m, args, kwargs in self._rollback_actions:
+            m(*args, **kwargs)
+
+    def add_rollback_action(self, method, *args, **kwargs):
+        self._rollback_actions.append((method, args, kwargs))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.rollback()
+
+    def __call__(self, path):
+        self.backup(path)
+        return self
+
+    def __del__(self):
+        for path in self._stored_data.values():
+            if os.path.exists(path):
+                LOG.debug("Deleting %s" % path)
+                shutil.rmtree(path)
