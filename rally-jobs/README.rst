@@ -33,8 +33,8 @@ Useful links
 
 * More about Rally: https://rally.readthedocs.org/en/latest/
 
-* How to add rally-gates: https://rally.readthedocs.org/en/latest/gates.html
+* How to add rally-gates: http://rally.readthedocs.io/en/latest/quick_start/gates.html
 
-* About plugins:  https://rally.readthedocs.org/en/latest/plugins.html
+* About plugins: https://rally.readthedocs.io/en/latest/plugins/index.html
 
 * Plugin samples: https://github.com/openstack/rally/tree/master/samples/plugins
