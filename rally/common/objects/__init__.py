@@ -20,3 +20,5 @@ from rally.common.objects.endpoint import Endpoint  # noqa
 from rally.common.objects.task import Subtask  # noqa
 from rally.common.objects.task import Task  # noqa
 from rally.common.objects.task import Workload  # noqa
+from rally.common.objects.verification import Verification  # noqa
+from rally.common.objects.verifier import Verifier  # noqa

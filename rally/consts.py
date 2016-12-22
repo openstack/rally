@@ -224,7 +224,7 @@ class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
     FAILED = "failed"
 
 
-class VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
+class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Verification statuses."""
     INIT = "init"
     RUNNING = "running"
@@ -244,3 +244,4 @@ TempestTestsSets = _TempestTestsSets()
 HookStatus = _HookStatus()
 TagType = _TagType()
 VerifierStatus = _VerifierStatus()
+VerificationStatus = _VerificationStatus()

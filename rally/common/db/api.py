@@ -363,6 +363,117 @@ def resource_delete(id):
     return get_impl().resource_delete(id)
 
 
+def verifier_create(name, vtype, namespace, source, version, system_wide,
+                    extra_settings=None):
+    """Create a verifier record.
+
+    :param name: verifier name
+    :param vtype: verifier plugin name
+    :param namespace: verifier plugin namespace
+    :param source: path or URL to a verifier repo
+    :param version: branch, tag or commit ID of a verifier repo
+    :param system_wide: whether or not to use the system-wide environment
+    :param extra: verifier-specific installation options
+    :returns: a dict with verifier data
+    """
+    return get_impl().verifier_create(name=name, vtype=vtype,
+                                      namespace=namespace, source=source,
+                                      version=version, system_wide=system_wide,
+                                      extra_settings=extra_settings)
+
+
+def verifier_get(verifier_id):
+    """Get a verifier record.
+
+    :param verifier_id: verifier name or UUID
+    :raises ResourceNotFound: if verifier does not exist
+    :returns: a dict with verifier data
+    """
+    return get_impl().verifier_get(verifier_id)
+
+
+def verifier_list(status=None):
+    """Get all verifier records.
+
+    :param status: status to filter verifiers by
+    :returns: a list of dicts with verifiers data
+    """
+    return get_impl().verifier_list(status)
+
+
+def verifier_delete(verifier_id):
+    """Delete a verifier record.
+
+    :param verifier_id: verifier name or UUID
+    :raises ResourceNotFound: if verifier does not exist
+    """
+    get_impl().verifier_delete(verifier_id)
+
+
+def verifier_update(verifier_id, **properties):
+    """Update a verifier record.
+
+    :param verifier_id: verifier name or UUID
+    :param properties: a dict with new properties to update verifier record
+    :raises ResourceNotFound: if verifier does not exist
+    :returns: the updated dict with verifier data
+    """
+    return get_impl().verifier_update(verifier_id, properties)
+
+
+def verification_create(verifier_uuid, deployment_uuid, run_args):
+    """Create a verification record.
+
+    :param verifier_uuid: verification UUID
+    :param deployment_uuid: deployment UUID
+    :param run_args: a dict with run arguments for verification
+    :returns: a dict with verification data
+    """
+    return get_impl().verification_create(verifier_uuid, deployment_uuid,
+                                          run_args)
+
+
+def verification_get(verification_uuid):
+    """Get a verification record.
+
+    :param verification_uuid: verification UUID
+    :raises ResourceNotFound: if verification does not exist
+    :returns: a dict with verification data
+    """
+    return get_impl().verification_get(verification_uuid)
+
+
+def verification_list(verifier_id=None, deployment_id=None, status=None):
+    """List all verification records.
+
+    :param verifier_id: verifier name or UUID to filter verifications by
+    :param deployment_id: deployment name or UUID to filter verifications by
+    :param status: status to filter verifications by
+    :returns: a list of dicts with verifications data
+    """
+    return get_impl().verification_list(verifier_id, deployment_id, status)
+
+
+def verification_delete(verification_uuid):
+    """Delete a verification record.
+
+    :param verification_uuid: verification UUID
+    :raises ResourceNotFound: if verification does not exist
+    """
+    return get_impl().verification_delete(verification_uuid)
+
+
+def verification_update(uuid, **properties):
+    """Update a verification record.
+
+    :param uuid: verification UUID
+    :param properties: a dict with new properties to update verification record
+    :raises ResourceNotFound: if verification does not exist
+    :returns: the updated dict with verification data
+    """
+    return get_impl().verification_update(uuid, properties)
+
+
 def register_worker(values):
     """Register a new worker service at the specified hostname.
 

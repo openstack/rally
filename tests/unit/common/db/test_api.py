@@ -873,6 +873,102 @@ class ResourceTestCase(test.DBTestCase):
         self.assertEqual(res_two["id"], resources[0]["id"])
 
 
+class VerifierTestCase(test.DBTestCase):
+
+    def test_verifier_create(self):
+        v = db.verifier_create("a", "b", "c", "d", "e", False)
+        self.assertEqual("a", v["name"])
+
+    def test_verifier_get(self):
+        v = db.verifier_create("a", "b", "c", "d", "e", False)
+        self.assertEqual("a", db.verifier_get(v["uuid"])["name"])
+
+    def test_verifier_get_raise_exc(self):
+        self.assertRaises(exceptions.ResourceNotFound, db.verifier_get, "1234")
+
+    def test_verifier_list(self):
+        v1 = db.verifier_create("a1", "b1", "c1", "d1", "e1", False)
+        v2 = db.verifier_create("a2", "b2", "c2", "d2", "e2", False)
+        vs = db.verifier_list()
+        self.assertEqual(sorted([v1["uuid"], v2["uuid"]]),
+                         sorted([v["uuid"] for v in vs]))
+
+        v1 = db.verifier_update(v1["uuid"], status="foo")
+        vs = db.verifier_list(status="foo")
+        self.assertEqual(len(vs), 1)
+        self.assertEqual(v1["uuid"], vs[0]["uuid"])
+
+    def test_verifier_delete(self):
+        v = db.verifier_create("a", "b", "c", "d", "e", False)
+        db.verifier_delete(v["uuid"])
+        self.assertRaises(exceptions.ResourceNotFound, db.verifier_delete,
+                          v["uuid"])
+
+    def test_verification_update(self):
+        v = db.verifier_create("a", "b", "c", "d", "e", False)
+        v = db.verifier_update(v["uuid"], source="foo", version="bar")
+        self.assertEqual("foo", v["source"])
+        self.assertEqual("bar", v["version"])
+
+
+class VerificationTestCase(test.DBTestCase):
+
+    def setUp(self):
+        super(VerificationTestCase, self).setUp()
+
+        self.verifier = db.verifier_create("a", "b", "c", "d", "e", False)
+        self.deploy = db.deployment_create({})
+
+    def _create_verification(self):
+        verifier_uuid = self.verifier["uuid"]
+        deployment_uuid = self.deploy["uuid"]
+        return db.verification_create(verifier_uuid, deployment_uuid, {})
+
+    def test_verification_create(self):
+        v = self._create_verification()
+        self.assertEqual(self.verifier["uuid"], v["verifier_uuid"])
+        self.assertEqual(self.deploy["uuid"], v["deployment_uuid"])
+
+    def test_verification_get(self):
+        v = db.verification_get(self._create_verification()["uuid"])
+        self.assertEqual(self.verifier["uuid"], v["verifier_uuid"])
+        self.assertEqual(self.deploy["uuid"], v["deployment_uuid"])
+
+    def test_verification_get_raise_exc(self):
+        self.assertRaises(exceptions.ResourceNotFound, db.verification_get,
+                          "1234")
+
+    def test_verification_list(self):
+        deploy = db.deployment_create({})
+        v1 = db.verification_create(self.verifier["uuid"], deploy["uuid"], {})
+        v2 = self._create_verification()
+
+        vs = db.verification_list(self.verifier["uuid"])
+        self.assertEqual(sorted([v1["uuid"], v2["uuid"]]),
+                         sorted([v["uuid"] for v in vs]))
+
+        vs = db.verification_list(self.verifier["uuid"], deploy["uuid"])
+        self.assertEqual(len(vs), 1)
+        self.assertEqual(v1["uuid"], vs[0]["uuid"])
+
+        v2 = db.verification_update(v2["uuid"], status="foo")
+        vs = db.verification_list(status="foo")
+        self.assertEqual(len(vs), 1)
+        self.assertEqual(v2["uuid"], vs[0]["uuid"])
+
+    def test_verification_delete(self):
+        v = self._create_verification()
+        db.verification_delete(v["uuid"])
+        self.assertRaises(exceptions.ResourceNotFound, db.verification_delete,
+                          v["uuid"])
+
+    def test_verification_update(self):
+        v = self._create_verification()
+        v = db.verification_update(v["uuid"], status="foo", tests_count=10)
+        self.assertEqual("foo", v["status"])
+        self.assertEqual(10, v["tests_count"])
+
+
 class WorkerTestCase(test.DBTestCase):
     def setUp(self):
         super(WorkerTestCase, self).setUp()
