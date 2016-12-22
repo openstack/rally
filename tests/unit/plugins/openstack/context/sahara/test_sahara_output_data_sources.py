@@ -60,7 +60,7 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
             "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": self.users_key,
-            "tenants": self.tenants,
+            "tenants": self.tenants
         })
 
     def check_setup(self):
@@ -119,7 +119,8 @@ class SaharaOutputDataSourcesTestCase(test.ScenarioTestCase):
             "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
             "users": self.users_key,
-            "tenants": self.tenants
+            "tenants": self.tenants,
+            "user_choice_method": "random",
         })
 
         sahara_ctx = sahara_output_data_sources.SaharaOutputDataSources(

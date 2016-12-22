@@ -47,20 +47,10 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
                          expected)
         mock_format_exc.assert_called_once_with(mock_exc)
 
-    @mock.patch(BASE + "context.ContextManager")
-    def test_get_scenario_context(self, mock_context_manager):
-        mock_context_obj = {}
-        mock_map_for_scenario = (
-            mock_context_manager.return_value.map_for_scenario)
-
-        result = runner._get_scenario_context(13, mock_context_obj)
-        self.assertEqual(
-            mock_map_for_scenario.return_value,
-            result
-        )
-
-        mock_context_manager.assert_called_once_with({"iteration": 14})
-        mock_map_for_scenario.assert_called_once_with()
+    def test_get_scenario_context(self):
+        context_obj = {"foo": "bar"}
+        result = runner._get_scenario_context(13, context_obj)
+        self.assertEqual(result, {"foo": "bar", "iteration": 14})
 
     def test_run_scenario_once_internal_logic(self):
         context = runner._get_scenario_context(

@@ -25,7 +25,6 @@ import six
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
-from rally.task import context
 from rally.task.processing import charts
 from rally.task import scenario
 from rally.task import types
@@ -49,7 +48,7 @@ def format_result_on_timeout(exc, timeout):
 def _get_scenario_context(iteration, context_obj):
     context_obj = copy.deepcopy(context_obj)
     context_obj["iteration"] = iteration + 1  # Numeration starts from `1'
-    return context.ContextManager(context_obj).map_for_scenario()
+    return context_obj
 
 
 def _run_scenario_once(cls, method_name, context_obj, scenario_kwargs,

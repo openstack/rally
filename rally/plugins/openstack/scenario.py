@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally import osclients
 from rally.task import scenario
 
@@ -35,25 +37,47 @@ class OpenStackScenario(scenario.Scenario):
                         "version": api_versions[service].get("version"),
                         "service_type": api_versions[service].get(
                             "service_type")}
-            if "admin" in context:
+
+            if admin_clients is None and "admin" in context:
                 self._admin_clients = osclients.Clients(
                     context["admin"]["credential"], api_info)
-            if "user" in context:
-                self._clients = osclients.Clients(
-                    context["user"]["credential"], api_info)
+            if clients is None:
+                if "users" in context and "user" not in context:
+                    self._choose_user(context)
+
+                if "user" in context:
+                    self._clients = osclients.Clients(
+                        context["user"]["credential"], api_info)
 
         if admin_clients:
-            if hasattr(self, "_admin_clients"):
-                raise ValueError(
-                    "Only one of context[\"admin\"] or admin_clients"
-                    " must be supplied")
             self._admin_clients = admin_clients
+
         if clients:
-            if hasattr(self, "_clients"):
-                raise ValueError(
-                    "Only one of context[\"user\"] or clients"
-                    " must be supplied")
             self._clients = clients
+
+    def _choose_user(self, context):
+        """Choose one user from users context
+
+        We are choosing on each iteration one user
+
+        """
+        if context["user_choice_method"] == "random":
+            user = random.choice(context["users"])
+            tenant = context["tenants"][user["tenant_id"]]
+        else:
+            # Second and last case - 'round_robin'.
+            tenants_amount = len(context["tenants"])
+            # NOTE(amaretskiy): iteration is subtracted by `1' because it
+            #                   starts from `1' but we count from `0'
+            iteration = context["iteration"] - 1
+            tenant_index = int(iteration % tenants_amount)
+            tenant_id = sorted(context["tenants"].keys())[tenant_index]
+            tenant = context["tenants"][tenant_id]
+            users = context["tenants"][tenant_id]["users"]
+            user_index = int((iteration / tenants_amount) % len(users))
+            user = users[user_index]
+
+        context["user"], context["tenant"] = user, tenant
 
     def clients(self, client_type, version=None):
         """Returns a python openstack client of the requested type.
