@@ -15,7 +15,7 @@
 
 from rally.common import db
 from rally import exceptions
-# from rally.verification import manager
+from rally.verification import manager
 
 
 class Verifier(object):
@@ -78,11 +78,11 @@ class Verifier(object):
                 "`set_deployment` method.")
         return self._deployment
 
-    # @property
-    # def manager(self):
-    #    # lazy load manager to be able to use non-plugin related stuff without
-    #    # loading plugins
-    #     if not self._manager:
-    #         self._manager = manager.VerifierManager.get(self.type,
-    #                                                     self.namespace)(self)
-    #     return self._manager
+    @property
+    def manager(self):
+        # lazy load manager to be able to use non-plugin related stuff without
+        # loading plugins
+        if not self._manager:
+            self._manager = manager.VerifierManager.get(self.type,
+                                                        self.namespace)(self)
+        return self._manager

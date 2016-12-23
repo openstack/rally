@@ -77,3 +77,17 @@ class VerifierTestCase(test.TestCase):
     def test_deployment_property_raise_exc(self):
         v = objects.Verifier(self.db_obj)
         self.assertRaises(exceptions.RallyException, getattr, v, "deployment")
+
+    @mock.patch("rally.common.objects.verifier.manager")
+    def test_manager_property(self, mock_manager):
+        self.db_obj["type"] = "some"
+        self.db_obj["namespace"] = "namespace"
+        v = objects.Verifier(self.db_obj)
+        self.assertIsNone(v._manager)
+        self.assertFalse(mock_manager.VerifierManager.get.called)
+
+        self.assertEqual(
+            mock_manager.VerifierManager.get.return_value.return_value,
+            v.manager)
+        mock_manager.VerifierManager.get.assert_called_once_with(
+            self.db_obj["type"], self.db_obj["namespace"])
