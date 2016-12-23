@@ -64,8 +64,9 @@ class VerifierManagerTestCase(test.TestCase):
     @mock.patch("rally.verification.context.ContextManager.validate")
     def test_validate(self, mock_context_manager_validate, mock_validate_args):
         args = mock.Mock()
+        deployment = mock.MagicMock()
         with mock.patch.object(FakeVerifier, "_meta_get") as mock__meta_get:
-            FakeVerifier.validate(args)
+            FakeVerifier.validate(deployment, args)
             mock__meta_get.assert_called_once_with("context")
             mock_validate_args.assert_called_once_with(args)
             mock_context_manager_validate.assert_called_once_with(

@@ -55,7 +55,7 @@ class VerificationTestCase(test.TestCase):
 
     @mock.patch("rally.common.objects.verification.db.verification_delete")
     def test_delete(self, mock_verification_delete):
-        objects.Verification.delete(self.db_obj["uuid"])
+        objects.Verification(self.db_obj).delete()
         mock_verification_delete.assert_called_once_with(self.db_obj["uuid"])
 
     @mock.patch("rally.common.objects.verification.db.verification_update")

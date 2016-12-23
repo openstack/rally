@@ -49,9 +49,8 @@ class Verification(object):
                                                  deployment_id, status)
         return [cls(db_entry) for db_entry in verification_list]
 
-    @staticmethod
-    def delete(verification_uuid):
-        db.verification_delete(verification_uuid)
+    def delete(self):
+        db.verification_delete(self.uuid)
 
     def _update(self, **properties):
         self._db_entry = db.verification_update(self.uuid, **properties)

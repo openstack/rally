@@ -137,7 +137,7 @@ class VerifierManager(plugin.Plugin):
                     "where keys are test names and values are reasons.")
 
     @classmethod
-    def validate(cls, run_args):
+    def validate(cls, deployment, run_args):
         ctx_config = cls._meta_get("context")
         context.ContextManager.validate({"config": ctx_config})
         cls.validate_args(run_args)
@@ -282,8 +282,9 @@ class VerifierManager(plugin.Plugin):
         return subunit_v2.parse(six.StringIO(data))
 
     @abc.abstractmethod
-    def run(self, verification, pattern=None, load_list=None, skip_list=None,
-            xfail_list=None, concurrency=None, failed=False, extra_args=None):
+    def run(self, verification, context, pattern=None, load_list=None,
+            skip_list=None, xfail_list=None, concurrency=None, failed=False,
+            extra_args=None):
         """Run verifier tests.
 
         This method should return an object with the following attributes:

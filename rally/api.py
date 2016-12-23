@@ -28,12 +28,17 @@ from rally.common.i18n import _, _LI, _LE, _LW
 from rally.common import logging
 from rally.common import objects
 from rally.common.plugin import discover
+from rally.common import utils
 from rally.common import version
 from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally import osclients
 from rally.task import engine
+from rally.ui import report
+from rally.verification import context as vcontext
+from rally.verification import manager as vmanager
+
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -89,8 +94,11 @@ class _Deployment(object):
             with deployer:
                 deployer.make_cleanup()
         except exceptions.PluginNotFound:
-            LOG.info(_("Deployment %s will be deleted despite"
-                       " exception") % deployment["uuid"])
+            LOG.info(_("Deployment %s will be deleted despite exception")
+                     % deployment["uuid"])
+
+        for verifier in _Verifier.list():
+            _Verifier.delete(verifier.uuid, deployment["name"], force=True)
 
         deployment.delete()
 
@@ -380,6 +388,509 @@ class _Task(object):
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
 
+class _Verifier(object):
+
+    READY_TO_USE_STATES = (consts.VerifierStatus.INSTALLED,
+                           consts.VerifierStatus.CONFIGURED)
+
+    @classmethod
+    def list_plugins(cls, namespace=None):
+        """List all plugins for verifiers management.
+
+        :param namespace: Verifier plugin namespace
+        """
+        return [{"name": p.get_name(),
+                 "namespace": p.get_namespace(),
+                 "description": p.get_info()["title"],
+                 "location": "%s.%s" % (p.__module__, p.__name__)}
+                for p in vmanager.VerifierManager.get_all(namespace=namespace)]
+
+    @classmethod
+    def create(cls, name, vtype, namespace=None, source=None, version=None,
+               system_wide=False, extra=None):
+        """Create a verifier.
+
+        :param name: Verifier name
+        :param vtype: Verifier plugin name
+        :param namespace: Verifier type namespace. Should be specified when
+                          there are two verifier plugins with equal names but
+                          in different namespaces
+        :param source: Path or URL to the repo to clone verifier from
+        :param version: Branch, tag or commit ID to checkout before
+                        verifier installation
+        :param system_wide: Whether or not to use the system-wide environment
+                            for verifier instead of a virtual environment
+        :param extra: Verifier-specific installation options
+        """
+        # check that the specified verifier type exists
+        vmanager.VerifierManager.get(vtype, namespace=namespace)
+
+        LOG.info("Creating verifier '%s'.", name)
+
+        try:
+            verifier = cls.get(name)
+        except exceptions.ResourceNotFound:
+            verifier = objects.Verifier.create(
+                name=name, source=source, system_wide=system_wide,
+                version=version, vtype=vtype, namespace=namespace,
+                extra_settings=extra)
+        else:
+            raise exceptions.RallyException(
+                "Verifier with name '%s' already exists! Please, specify "
+                "another name for verifier and try again." % verifier.name)
+
+        verifier.update_status(consts.VerifierStatus.INSTALLING)
+        try:
+            verifier.manager.install()
+        except Exception:
+            verifier.update_status(consts.VerifierStatus.FAILED)
+            raise
+        verifier.update_status(consts.VerifierStatus.INSTALLED)
+
+        LOG.info("Verifier %s has been successfully created!", verifier)
+
+        return verifier.uuid
+
+    @staticmethod
+    def get(verifier_id):
+        """Get a verifier.
+
+        :param verifier_id: Verifier name or UUID
+        """
+        return objects.Verifier.get(verifier_id)
+
+    @staticmethod
+    def list(status=None):
+        """List all verifiers.
+
+        :param status: Status to filter verifiers by
+        """
+        return objects.Verifier.list(status)
+
+    @classmethod
+    def delete(cls, verifier_id, deployment_id=None, force=False):
+        """Delete a verifier.
+
+        :param verifier_id: Verifier name or UUID
+        :param deployment_id: Deployment name or UUID. If specified,
+                              only deployment-specific data will be deleted
+                              for verifier
+        :param force: Delete all stored verifier verifications.
+                      If deployment_id specified, only deployment-specific
+                      verifications will be deleted
+        """
+        verifier = cls.get(verifier_id)
+        verifications = _Verification.list(verifier_id, deployment_id)
+        if verifications:
+            d_msg = ((" for deployment '%s'" % deployment_id)
+                     if deployment_id else "")
+            if force:
+                LOG.info("Deleting all verifications created by verifier "
+                         "%s%s.", verifier, d_msg)
+                for verification in verifications:
+                    _Verification.delete(verification.uuid)
+            else:
+                raise exceptions.RallyException(
+                    "Failed to delete verifier {0} because there are stored "
+                    "verifier verifications{1}! Please, make sure that they "
+                    "are not important to you. Set 'force=True' if you would "
+                    "like to delete verifications{1} as well."
+                    .format(verifier, d_msg))
+
+        if deployment_id:
+            LOG.info("Deleting deployment-specific data for verifier %s.",
+                     verifier)
+            verifier.set_deployment(deployment_id)
+            verifier.manager.uninstall()
+            LOG.info("Deployment-specific data has been successfully deleted!")
+        else:
+            LOG.info("Deleting verifier %s.", verifier)
+            verifier.manager.uninstall(full=True)
+            objects.Verifier.delete(verifier_id)
+            LOG.info("Verifier has been successfully deleted!")
+
+    @classmethod
+    def update(cls, verifier_id, system_wide=None, version=None,
+               update_venv=False):
+        """Update a verifier.
+
+        :param verifier_id: Verifier name or UUID
+        :param system_wide: Switch to using the system-wide environment
+        :param version: Branch, tag or commit ID to checkout
+        :param update_venv: Update the virtual environment for verifier
+        """
+        if system_wide is None and version is None and not update_venv:
+            # nothing to update
+            raise exceptions.RallyException(
+                "At least one of the following parameters should be "
+                "specified: 'update-venv', 'version', 'system-wide', "
+                "'no-system-wide'.")
+
+        verifier = cls.get(verifier_id)
+        LOG.info("Updating verifier %s.", verifier)
+
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to update verifier %s because verifier is in '%s' "
+                "status." % (verifier, verifier.status))
+
+        system_wide_in_use = (system_wide or
+                              (system_wide is None and verifier.system_wide))
+        if update_venv and system_wide_in_use:
+            raise exceptions.RallyException(
+                "It is impossible to update the virtual environment for "
+                "verifier %s when it uses the system-wide environment."
+                % verifier)
+
+        # store original status to set it again after updating or rollback
+        original_status = verifier.status
+        verifier.update_status(consts.VerifierStatus.UPDATING)
+
+        properties = {}  # store new verifier properties to update old ones
+
+        sw_is_checked = False
+
+        if version:
+            properties["version"] = version
+
+            backup = utils.BackupHelper()
+            rollback_msg = ("Failed to update verifier %s. It has been "
+                            "rollbacked to the previous state." % verifier)
+            backup.add_rollback_action(LOG.info, rollback_msg)
+            backup.add_rollback_action(verifier.update_status, original_status)
+            with backup(verifier.manager.repo_dir):
+                verifier.manager.checkout(version)
+
+            if system_wide_in_use:
+                verifier.manager.check_system_wide()
+                sw_is_checked = True
+
+        if system_wide is not None:
+            if system_wide == verifier.system_wide:
+                LOG.info(
+                    "Verifier %s is already switched to system_wide=%s. "
+                    "Nothing will be changed.", verifier, verifier.system_wide)
+            else:
+                properties["system_wide"] = system_wide
+                if not system_wide:
+                    update_venv = True  # we need to install a virtual env
+                else:
+                    # NOTE(andreykurilin): should we remove previously created
+                    #   virtual environment?!
+                    if not sw_is_checked:
+                        verifier.manager.check_system_wide()
+
+        if update_venv:
+            backup = utils.BackupHelper()
+            rollback_msg = ("Failed to update the virtual environment for "
+                            "verifier %s. It has been rollbacked to the "
+                            "previous state." % verifier)
+            backup.add_rollback_action(LOG.info, rollback_msg)
+            backup.add_rollback_action(verifier.update_status, original_status)
+            with backup(verifier.manager.venv_dir):
+                verifier.manager.install_venv()
+
+        properties["status"] = original_status  # change verifier status back
+        verifier.update_properties(**properties)
+
+        LOG.info("Verifier %s has been successfully updated!", verifier)
+
+        return verifier.uuid
+
+    @classmethod
+    def configure(cls, verifier, deployment_id, extra_options=None,
+                  recreate=False):
+        """Configure a verifier.
+
+        :param verifier: Verifier Object or (name or UUID)
+        :param deployment_id: Deployment name or UUID
+        :param extra_options: Add extra options to the verifier configuration
+        :param recreate: Recreate the verifier configuration
+        """
+        if not isinstance(verifier, objects.Verifier):
+            verifier = cls.get(verifier)
+        verifier.set_deployment(deployment_id)
+        LOG.info(
+            "Configuring verifier %s for deployment '%s' (UUID=%s).",
+            verifier, verifier.deployment["name"], verifier.deployment["uuid"])
+
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to configure verifier %s for deployment "
+                "'%s' (UUID=%s) because verifier is in '%s' status."
+                % (verifier, verifier.deployment["name"],
+                   verifier.deployment["uuid"], verifier.status))
+
+        msg = ("Verifier %s has been successfully configured for deployment "
+               "'%s' (UUID=%s)!" % (verifier, verifier.deployment["name"],
+                                    verifier.deployment["uuid"]))
+        vm = verifier.manager
+        if verifier.status == consts.VerifierStatus.CONFIGURED:
+            LOG.info("Verifier is already configured!")
+            if not recreate:
+                if not extra_options:
+                    return vm.get_configuration()
+                else:
+                    # Just add extra options to the config file.
+                    if logging.is_debug():
+                        LOG.debug("Adding the following extra options: %s "
+                                  "to verifier configuration.", extra_options)
+                    else:
+                        LOG.info(
+                            "Adding extra options to verifier configuration.")
+                    verifier.update_status(consts.VerifierStatus.CONFIGURING)
+                    vm.extend_configuration(extra_options)
+                    verifier.update_status(consts.VerifierStatus.CONFIGURED)
+                    LOG.info(msg)
+                    return vm.get_configuration()
+
+            LOG.info("Reconfiguring verifier.")
+
+        verifier.update_status(consts.VerifierStatus.CONFIGURING)
+        raw_config = vm.configure(extra_options=extra_options)
+        verifier.update_status(consts.VerifierStatus.CONFIGURED)
+
+        LOG.info(msg)
+
+        return raw_config
+
+    @classmethod
+    def override_configuration(cls, verifier_id, deployment_id, new_content):
+        """Override a verifier configuration(for example rewrite config file).
+
+        :param verifier_id: Verifier name or UUID
+        :param deployment_id: Deployment name or UUID
+        :param new_content: New content for the verifier configuration
+        """
+        verifier = cls.get(verifier_id)
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to override verifier %s configuration for deployment "
+                "'%s' (UUID=%s) because verifier is in '%s' status."
+                % (verifier, verifier.deployment["name"],
+                   verifier.deployment["uuid"], verifier.status))
+        verifier.set_deployment(deployment_id)
+        verifier.update_status(consts.VerifierStatus.CONFIGURING)
+        verifier.manager.override_configuration(new_content)
+        verifier.update_status(consts.VerifierStatus.CONFIGURED)
+
+    @classmethod
+    def list_tests(cls, verifier_id, pattern=""):
+        """List all verifier tests.
+
+        :param verifier_id: Verifier name or UUID
+        :param pattern: Pattern which will be used for matching
+        """
+        verifier = cls.get(verifier_id)
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to list tests for verifier %s because verifier is not "
+                "installed yet." % verifier)
+        return verifier.manager.list_tests(pattern)
+
+    @classmethod
+    def add_extension(cls, verifier_id, source, version=None, extra=None):
+        """Add a verifier extension.
+
+        :param verifier_id: Verifier name or UUID
+        :param source: Path or URL to the repo to clone verifier from
+        :param version: Branch, tag or commit ID to checkout before
+                        installation of the verifier extension
+        :param extra: Verifier-specific installation options
+        """
+        verifier = cls.get(verifier_id)
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to add extension for verifier %s because verifier "
+                "is in '%s' status." % (verifier, verifier.status))
+
+        LOG.info("Adding extension for verifier %s.", verifier)
+
+        # store original status to rollback it after failure
+        original_status = verifier.status
+        verifier.update_status(consts.VerifierStatus.EXTENDING)
+        try:
+            verifier.manager.install_extension(source, version=version,
+                                               extra=extra)
+        finally:
+            verifier.update_status(original_status)
+
+        LOG.info("Extension for verifier %s has been successfully added!",
+                 verifier)
+
+    @classmethod
+    def list_extensions(cls, verifier_id):
+        """List all verifier extensions.
+
+        :param verifier_id: Verifier name or UUID
+        """
+        verifier = cls.get(verifier_id)
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to list extensions of verifier %s because verifier "
+                "is not installed yet." % verifier)
+        return verifier.manager.list_extensions()
+
+    @classmethod
+    def delete_extension(cls, verifier_id, name):
+        """Delete a verifier extension.
+
+        :param verifier_id: Verifier name or UUID
+        :param name: Verifier extension name
+        """
+        verifier = cls.get(verifier_id)
+        if verifier.status not in cls.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to delete extension of verifier %s because verifier "
+                "even is not installed yet." % verifier)
+        LOG.info("Deleting extension for verifier %s.", verifier)
+        verifier.manager.uninstall_extension(name)
+        LOG.info("Extension for verifier %s has been successfully deleted!",
+                 verifier)
+
+
+class _Verification(object):
+
+    @classmethod
+    def start(cls, verifier_id, deployment_id, **run_args):
+        """Start a verification.
+
+        :param verifier_id: Verifier name or UUID
+        :param deployment_id: Deployment name or UUID
+        :param run_args: Dictionary with run arguments
+        """
+        # TODO(ylobankov): Add an ability to skip tests by specifying only test
+        #                  names (without test IDs). Also, it would be nice to
+        #                  skip the whole test suites. For example, all tests
+        #                  in the class or module.
+
+        verifier = _Verifier.get(verifier_id)
+        if verifier.status not in _Verifier.READY_TO_USE_STATES:
+            raise exceptions.RallyException(
+                "Failed to start verification because verifier %s is in '%s' "
+                "status." % (verifier, verifier.status))
+
+        verifier.set_deployment(deployment_id)
+        if verifier.status != consts.VerifierStatus.CONFIGURED:
+            _Verifier.configure(verifier, deployment_id)
+
+        # TODO(andreykurilin): save validation results to db
+        verifier.manager.validate(verifier.deployment, run_args)
+
+        verification = objects.Verification.create(verifier_id,
+                                                   deployment_id=deployment_id,
+                                                   run_args=run_args)
+        LOG.info("Starting verification (UUID=%s) for deployment '%s' "
+                 "(UUID=%s) by verifier %s.", verification.uuid,
+                 verifier.deployment["name"], verifier.deployment["uuid"],
+                 verifier)
+        verification.update_status(consts.VerificationStatus.RUNNING)
+
+        context = {"config": verifier.manager._meta_get("context"),
+                   "run_args": run_args}
+        try:
+            with vcontext.ContextManager(context):
+                results = verifier.manager.run(verification, context,
+                                               **context["run_args"])
+        except Exception as e:
+            verification.set_failed(e)
+            raise
+
+        # TODO(ylobankov): Check that verification exists in the database
+        #                  because users may delete verification before tests
+        #                  finish.
+        verification.finish(results.totals, results.tests)
+
+        LOG.info("Verification (UUID=%s) has been successfully finished for "
+                 "deployment '%s' (UUID=%s)!", verification.uuid,
+                 verifier.deployment["name"], verifier.deployment["uuid"])
+
+        return verification, results
+
+    @staticmethod
+    def get(verification_uuid):
+        """Get a verification.
+
+        :param verification_uuid: Verification UUID
+        """
+        return objects.Verification.get(verification_uuid)
+
+    @staticmethod
+    def list(verifier_id=None, deployment_id=None, status=None):
+        """List all verifications.
+
+        :param verifier_id: Verifier name or UUID
+        :param deployment_id: Deployment name or UUID
+        :param status: Status to filter verifications by
+        """
+        return objects.Verification.list(verifier_id,
+                                         deployment_id=deployment_id,
+                                         status=status)
+
+    @classmethod
+    def delete(cls, verification_uuid):
+        """Delete a verification.
+
+        :param verification_uuid: Verification UUID
+        """
+        verification = cls.get(verification_uuid)
+        LOG.info("Deleting verification (UUID=%s).", verification.uuid)
+        verification.delete()
+        LOG.info("Verification has been successfully deleted!")
+
+    @classmethod
+    def report(cls, uuids, html=False):
+        """Generate a report for a verification or a few verifications.
+
+        :param uuids: List of verifications UUIDs
+        :param html: Whether or not to create the report in HTML format
+        """
+        verifications = [cls.get(uuid) for uuid in uuids]
+
+        if html:
+            return report.VerificationReport(verifications).to_html()
+
+        return report.VerificationReport(verifications).to_json()
+
+    @classmethod
+    def import_results(cls, verifier_id, deployment_id, data, **run_args):
+        """Import results of a test run into Rally database..
+
+        :param verifier_id: Verifier name or UUID
+        :param deployment_id: Deployment name or UUID
+        :param data: Results data of a test run to import
+        :param run_args: Dictionary with run arguments
+        """
+        # TODO(aplanas): Create an external deployment if this is missing, as
+        # required in the blueprint [1].
+        # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
+
+        verifier = _Verifier.get(verifier_id)
+        verifier.set_deployment(deployment_id)
+        LOG.info("Importing test results into a new verification for "
+                 "deployment '%s' (UUID=%s), using verifier %s.",
+                 verifier.deployment["name"], verifier.deployment["uuid"],
+                 verifier)
+
+        verifier.manager.validate_args(run_args)
+
+        verification = objects.Verification.create(verifier_id,
+                                                   deployment_id=deployment_id,
+                                                   run_args=run_args)
+        verification.update_status(consts.VerificationStatus.RUNNING)
+
+        try:
+            results = verifier.manager.parse_results(data)
+        except Exception as e:
+            verification.set_failed(e)
+            raise
+        verification.finish(results.totals, results.tests)
+
+        LOG.info("Test results have been successfully imported.")
+
+        return verification, results
+
+
 class _DeprecatedAPIClass(object):
     """Deprecates direct usage of api classes."""
     def __init__(self, cls):
@@ -464,9 +975,11 @@ class API(object):
             discover.load_plugins(path)
 
         # NOTE(andreykurilin): There is no reason to auto-discover API's. We
-        # have only 3 classes, so let's do it in good old way - hardcode them:)
+        # have only 4 classes, so let's do it in good old way - hardcode them:)
         self._deployment = _Deployment
         self._task = _Task
+        self._verifier = _Verifier
+        self._verification = _Verification
 
     def _default_config_file(self):
         for path in self.CONFIG_SEARCH_PATHS:
@@ -482,3 +995,11 @@ class API(object):
     @property
     def task(self):
         return self._task
+
+    @property
+    def verifier(self):
+        return self._verifier
+
+    @property
+    def verification(self):
+        return self._verification
