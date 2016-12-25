@@ -513,3 +513,14 @@ class WaitForStatusTestCase(test.TestCase):
                                     check_deletion=True,
                                     update_resource=upd)
         self.assertEqual(res, ret)
+
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", side_effect=[1, 2, 3, 4])
+    def test_wait_timeout(self, mock_time, mock_sleep):
+        res = {"status": "not_ready"}
+        upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
+                                          {"status": "fail"}])
+        self.assertRaises(exceptions.TimeoutException,
+                          utils.wait_for_status,
+                          resource=res, ready_statuses=["ready"],
+                          update_resource=upd, timeout=2, id_attr="uuid")

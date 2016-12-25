@@ -247,8 +247,8 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
                 desired_status="('%s')" % "', '".join(ready_statuses),
                 resource_name=resource_repr,
                 resource_type=resource.__class__.__name__,
-                resource_id=getattr(resource, "id", "<no id>"),
-                resource_status=get_status(resource))
+                resource_id=getattr(resource, id_attr, "<no id>"),
+                resource_status=get_status(resource, status_attr))
 
 
 @logging.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
