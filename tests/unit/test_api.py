@@ -402,7 +402,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
         mock___verifier_list.assert_called_once_with()
         self.assertEqual(
-            [mock.call(m.uuid, self.deployment["name"], force=True)
+            [mock.call(m.name, self.deployment["name"], force=True)
              for m in list_verifiers],
             mock___verifier_delete.call_args_list)
 
@@ -577,7 +577,8 @@ class VerifierAPITestCase(test.TestCase):
             [{"name": FakeVerifierManager.NAME,
               "namespace": FakeVerifierManager.NAMESPACE,
               "description": FakeVerifierManager.TITLE,
-              "location": "tests.unit.test_api.FakeVerifierManager"}],
+              "location": "%s.%s" % (FakeVerifierManager.__module__,
+                                     FakeVerifierManager.__name__)}],
             api._Verifier.list_plugins(namespace))
         mock_verifier_manager_get_all.assert_called_once_with(
             namespace=namespace)
@@ -613,18 +614,19 @@ class VerifierAPITestCase(test.TestCase):
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
-        extra = {"verifier_specific_option": "value_for_it"}
+        extra_settings = {"verifier_specific_option": "value_for_it"}
 
         uuid_of_verifier = api._Verifier.create(
             name, vtype=vtype, namespace=namespace, source=source,
-            version=version, system_wide=system_wide, extra=extra)
+            version=version, system_wide=system_wide,
+            extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=namespace)
         mock___verifier_get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=source, system_wide=system_wide, version=version,
-            vtype=vtype, namespace=namespace, extra_settings=extra)
+            vtype=vtype, namespace=namespace, extra_settings=extra_settings)
 
         verifier_obj = mock_verifier_create.return_value
         self.assertEqual(verifier_obj.uuid, uuid_of_verifier)
@@ -645,12 +647,13 @@ class VerifierAPITestCase(test.TestCase):
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
-        extra = {"verifier_specific_option": "value_for_it"}
+        extra_settings = {"verifier_specific_option": "value_for_it"}
 
         self.assertRaises(exceptions.RallyException, api._Verifier.create,
                           name=name, vtype=vtype, namespace=namespace,
                           source=source, version=version,
-                          system_wide=system_wide, extra=extra)
+                          system_wide=system_wide,
+                          extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=namespace)
@@ -673,19 +676,20 @@ class VerifierAPITestCase(test.TestCase):
         source = "https://example.com"
         version = "3.1415"
         system_wide = True
-        extra = {"verifier_specific_option": "value_for_it"}
+        extra_settings = {"verifier_specific_option": "value_for_it"}
 
         self.assertRaises(RuntimeError, api._Verifier.create,
                           name=name, vtype=vtype, namespace=namespace,
                           source=source, version=version,
-                          system_wide=system_wide, extra=extra)
+                          system_wide=system_wide,
+                          extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=namespace)
         mock___verifier_get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=source, system_wide=system_wide, version=version,
-            vtype=vtype, namespace=namespace, extra_settings=extra)
+            vtype=vtype, namespace=namespace, extra_settings=extra_settings)
 
         self.assertEqual([mock.call(consts.VerifierStatus.INSTALLING),
                           mock.call(consts.VerifierStatus.FAILED)],
@@ -936,8 +940,8 @@ class VerifierAPITestCase(test.TestCase):
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.override_configuration,
                                       verifier_id, deployment_id, new_content)
-                self.assertIn("because verifier is in '%s' status" % status,
-                              "%s" % e)
+                self.assertIn("because verifier %s is in '%s' status"
+                              % (verifier_obj, status), "%s" % e)
 
     @mock.patch("rally.api._Verifier.get")
     def test_override_config_when_it_is_already_configured(
@@ -966,7 +970,8 @@ class VerifierAPITestCase(test.TestCase):
         e = self.assertRaises(exceptions.RallyException,
                               api._Verifier.list_tests, verifier_id,
                               pattern=pattern)
-        self.assertIn("because verifier is not installed yet", "%s" % e)
+        self.assertIn("because verifier %s is in '%s' status"
+                      % (verifier_obj, verifier_obj.status), "%s" % e)
         self.assertFalse(verifier_obj.manager.list_tests.called)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
@@ -980,7 +985,7 @@ class VerifierAPITestCase(test.TestCase):
         verifier_id = "uuiiiidd"
         source = "example.com"
         version = 3.14159
-        extra = {}
+        extra_settings = {}
 
         for status in consts.VerifierStatus:
             if status not in (consts.VerifierStatus.INSTALLED,
@@ -989,15 +994,15 @@ class VerifierAPITestCase(test.TestCase):
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.add_extension,
                                       verifier_id, source, version=version,
-                                      extra=extra)
-                self.assertIn("because verifier is in '%s' status" % status,
-                              "%s" % e)
+                                      extra_settings=extra_settings)
+                self.assertIn("because verifier %s is in '%s' status"
+                              % (verifier_obj, status), "%s" % e)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         api._Verifier.add_extension(verifier_id, source, version=version,
-                                    extra=extra)
+                                    extra_settings=extra_settings)
         verifier_obj.manager.install_extension.assert_called_once_with(
-            source, version=version, extra=extra)
+            source, version=version, extra_settings=extra_settings)
         self.assertEqual([mock.call(consts.VerifierStatus.EXTENDING),
                           mock.call(verifier_obj.status)],
                          verifier_obj.update_status.call_args_list)
@@ -1007,7 +1012,8 @@ class VerifierAPITestCase(test.TestCase):
 
         verifier_obj.manager.install_extension.side_effect = RuntimeError
         self.assertRaises(RuntimeError, api._Verifier.add_extension,
-                          verifier_id, source, version=version, extra=extra)
+                          verifier_id, source, version=version,
+                          extra_settings=extra_settings)
         self.assertEqual([mock.call(consts.VerifierStatus.EXTENDING),
                           mock.call(verifier_obj.status)],
                          verifier_obj.update_status.call_args_list)
@@ -1024,8 +1030,8 @@ class VerifierAPITestCase(test.TestCase):
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.list_extensions,
                                       verifier_id)
-                self.assertIn("because verifier is not installed yet",
-                              "%s" % e)
+                self.assertIn("because verifier %s is in '%s' status"
+                              % (verifier_obj, status), "%s" % e)
                 self.assertFalse(verifier_obj.manager.list_extensions.called)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
@@ -1046,8 +1052,8 @@ class VerifierAPITestCase(test.TestCase):
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.delete_extension,
                                       verifier_id, name)
-                self.assertIn("because verifier even is not installed yet",
-                              "%s" % e)
+                self.assertIn("because verifier %s is in '%s' status"
+                              % (verifier_obj, status), "%s" % e)
                 self.assertFalse(verifier_obj.manager.list_tests.called)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
@@ -1165,9 +1171,9 @@ class VerificationAPITestCase(test.TestCase):
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verification.start,
                                       verifier_id, deployment_id)
-                self.assertEqual(
+                self.assertIn(
                     "Failed to start verification because verifier %s is in "
-                    "'%s' status." % (verifier_obj, verifier_obj.status),
+                    "'%s' status" % (verifier_obj, verifier_obj.status),
                     "%s" % e)
 
     @mock.patch("rally.api.objects.Verification.create")

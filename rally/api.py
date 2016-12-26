@@ -29,7 +29,7 @@ from rally.common import logging
 from rally.common import objects
 from rally.common.plugin import discover
 from rally.common import utils
-from rally.common import version
+from rally.common import version as rally_version
 from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
@@ -98,7 +98,7 @@ class _Deployment(object):
                      % deployment["uuid"])
 
         for verifier in _Verifier.list():
-            _Verifier.delete(verifier.uuid, deployment["name"], force=True)
+            _Verifier.delete(verifier.name, deployment["name"], force=True)
 
         deployment.delete()
 
@@ -407,12 +407,12 @@ class _Verifier(object):
 
     @classmethod
     def create(cls, name, vtype, namespace=None, source=None, version=None,
-               system_wide=False, extra=None):
+               system_wide=False, extra_settings=None):
         """Create a verifier.
 
         :param name: Verifier name
         :param vtype: Verifier plugin name
-        :param namespace: Verifier type namespace. Should be specified when
+        :param namespace: Verifier plugin namespace. Should be specified when
                           there are two verifier plugins with equal names but
                           in different namespaces
         :param source: Path or URL to the repo to clone verifier from
@@ -420,7 +420,7 @@ class _Verifier(object):
                         verifier installation
         :param system_wide: Whether or not to use the system-wide environment
                             for verifier instead of a virtual environment
-        :param extra: Verifier-specific installation options
+        :param extra_settings: Extra installation settings for verifier
         """
         # check that the specified verifier type exists
         vmanager.VerifierManager.get(vtype, namespace=namespace)
@@ -433,7 +433,7 @@ class _Verifier(object):
             verifier = objects.Verifier.create(
                 name=name, source=source, system_wide=system_wide,
                 version=version, vtype=vtype, namespace=namespace,
-                extra_settings=extra)
+                extra_settings=extra_settings)
         else:
             raise exceptions.RallyException(
                 "Verifier with name '%s' already exists! Please, specify "
@@ -523,8 +523,7 @@ class _Verifier(object):
             # nothing to update
             raise exceptions.RallyException(
                 "At least one of the following parameters should be "
-                "specified: 'update-venv', 'version', 'system-wide', "
-                "'no-system-wide'.")
+                "specified: 'system_wide', 'version', 'update_venv'.")
 
         verifier = cls.get(verifier_id)
         LOG.info("Updating verifier %s.", verifier)
@@ -532,7 +531,8 @@ class _Verifier(object):
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
                 "Failed to update verifier %s because verifier is in '%s' "
-                "status." % (verifier, verifier.status))
+                "status, but should be in %s." % (verifier, verifier.status,
+                                                  cls.READY_TO_USE_STATES))
 
         system_wide_in_use = (system_wide or
                               (system_wide is None and verifier.system_wide))
@@ -616,10 +616,11 @@ class _Verifier(object):
 
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to configure verifier %s for deployment "
-                "'%s' (UUID=%s) because verifier is in '%s' status."
-                % (verifier, verifier.deployment["name"],
-                   verifier.deployment["uuid"], verifier.status))
+                "Failed to configure verifier %s for deployment '%s' "
+                "(UUID=%s) because verifier is in '%s' status, but should be "
+                "in %s." % (verifier, verifier.deployment["name"],
+                            verifier.deployment["uuid"], verifier.status,
+                            cls.READY_TO_USE_STATES))
 
         msg = ("Verifier %s has been successfully configured for deployment "
                "'%s' (UUID=%s)!" % (verifier, verifier.deployment["name"],
@@ -656,7 +657,7 @@ class _Verifier(object):
 
     @classmethod
     def override_configuration(cls, verifier_id, deployment_id, new_content):
-        """Override a verifier configuration(for example rewrite config file).
+        """Override verifier configuration (e.g., rewrite the config file).
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
@@ -665,14 +666,24 @@ class _Verifier(object):
         verifier = cls.get(verifier_id)
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to override verifier %s configuration for deployment "
-                "'%s' (UUID=%s) because verifier is in '%s' status."
-                % (verifier, verifier.deployment["name"],
-                   verifier.deployment["uuid"], verifier.status))
+                "Failed to override verifier configuration for deployment "
+                "'%s' (UUID=%s) because verifier %s is in '%s' status, but "
+                "should be in %s." % (
+                    verifier.deployment["name"], verifier.deployment["uuid"],
+                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+
+        LOG.info("Overriding configuration of verifier %s for deployment '%s' "
+                 "(UUID=%s).", verifier, verifier.deployment["name"],
+                 verifier.deployment["uuid"])
+
         verifier.set_deployment(deployment_id)
         verifier.update_status(consts.VerifierStatus.CONFIGURING)
         verifier.manager.override_configuration(new_content)
         verifier.update_status(consts.VerifierStatus.CONFIGURED)
+
+        LOG.info("Configuration of verifier %s has been successfully "
+                 "overridden for deployment '%s' (UUID=%s)!", verifier,
+                 verifier.deployment["name"], verifier.deployment["uuid"])
 
     @classmethod
     def list_tests(cls, verifier_id, pattern=""):
@@ -684,25 +695,30 @@ class _Verifier(object):
         verifier = cls.get(verifier_id)
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to list tests for verifier %s because verifier is not "
-                "installed yet." % verifier)
+                "Failed to list verifier tests because verifier %s is in '%s' "
+                "status, but should be in %s." % (verifier, verifier.status,
+                                                  cls.READY_TO_USE_STATES))
+
         return verifier.manager.list_tests(pattern)
 
     @classmethod
-    def add_extension(cls, verifier_id, source, version=None, extra=None):
+    def add_extension(cls, verifier_id, source, version=None,
+                      extra_settings=None):
         """Add a verifier extension.
 
         :param verifier_id: Verifier name or UUID
-        :param source: Path or URL to the repo to clone verifier from
+        :param source: Path or URL to the repo to clone verifier extension from
         :param version: Branch, tag or commit ID to checkout before
                         installation of the verifier extension
-        :param extra: Verifier-specific installation options
+        :param extra_settings: Extra installation settings for verifier
+                               extension
         """
         verifier = cls.get(verifier_id)
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to add extension for verifier %s because verifier "
-                "is in '%s' status." % (verifier, verifier.status))
+                "Failed to add verifier extension because verifier %s "
+                "is in '%s' status, but should be in %s." % (
+                    verifier, verifier.status, cls.READY_TO_USE_STATES))
 
         LOG.info("Adding extension for verifier %s.", verifier)
 
@@ -711,7 +727,7 @@ class _Verifier(object):
         verifier.update_status(consts.VerifierStatus.EXTENDING)
         try:
             verifier.manager.install_extension(source, version=version,
-                                               extra=extra)
+                                               extra_settings=extra_settings)
         finally:
             verifier.update_status(original_status)
 
@@ -727,8 +743,10 @@ class _Verifier(object):
         verifier = cls.get(verifier_id)
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to list extensions of verifier %s because verifier "
-                "is not installed yet." % verifier)
+                "Failed to list verifier extensions because verifier %s "
+                "is in '%s' status, but should be in %s." % (
+                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+
         return verifier.manager.list_extensions()
 
     @classmethod
@@ -741,8 +759,10 @@ class _Verifier(object):
         verifier = cls.get(verifier_id)
         if verifier.status not in cls.READY_TO_USE_STATES:
             raise exceptions.RallyException(
-                "Failed to delete extension of verifier %s because verifier "
-                "even is not installed yet." % verifier)
+                "Failed to delete verifier extension because verifier %s "
+                "is in '%s' status, but should be in %s." % (
+                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+
         LOG.info("Deleting extension for verifier %s.", verifier)
         verifier.manager.uninstall_extension(name)
         LOG.info("Extension for verifier %s has been successfully deleted!",
@@ -768,7 +788,8 @@ class _Verification(object):
         if verifier.status not in _Verifier.READY_TO_USE_STATES:
             raise exceptions.RallyException(
                 "Failed to start verification because verifier %s is in '%s' "
-                "status." % (verifier, verifier.status))
+                "status, but should be in %s." % (
+                    verifier, verifier.status, _Verifier.READY_TO_USE_STATES))
 
         verifier.set_deployment(deployment_id)
         if verifier.status != consts.VerifierStatus.CONFIGURED:
@@ -793,7 +814,7 @@ class _Verification(object):
                 results = verifier.manager.run(verification, context,
                                                **context["run_args"])
         except Exception as e:
-            verification.set_failed(e)
+            verification.set_error(e)
             raise
 
         # TODO(ylobankov): Check that verification exists in the database
@@ -854,7 +875,7 @@ class _Verification(object):
 
     @classmethod
     def import_results(cls, verifier_id, deployment_id, data, **run_args):
-        """Import results of a test run into Rally database..
+        """Import results of a test run into Rally database.
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
@@ -933,7 +954,7 @@ class API(object):
                             self._default_config_file())
             CONF(config_args or [],
                  project="rally",
-                 version=version.version_string(),
+                 version=rally_version.version_string(),
                  default_config_files=config_files)
             logging.setup("rally")
             if not CONF.get("log_config_append"):

@@ -59,7 +59,7 @@ def configure(name, namespace="default", default_repo=None,
 @six.add_metaclass(abc.ABCMeta)
 class VerifierManager(plugin.Plugin):
 
-    # TODO(andreykurilin): move support of default meta to MetaMixin
+    # TODO(andreykurilin): Move support of default meta to MetaMixin.
     @classmethod
     def _get_default_meta(cls):
         return {}
@@ -84,9 +84,8 @@ class VerifierManager(plugin.Plugin):
 
     @property
     def home_dir(self):
-        return os.path.join(
-            self.base_dir,
-            "for-deployment-%s" % self.verifier.deployment["uuid"])
+        return os.path.join(self.base_dir, "for-deployment-%s"
+                            % self.verifier.deployment["uuid"])
 
     @property
     def repo_dir(self):
@@ -241,7 +240,7 @@ class VerifierManager(plugin.Plugin):
                      "configuration.") % self.get_name())
 
     def override_configuration(self, new_content):
-        """Override verifier's configuration."""
+        """Override verifier configuration."""
         raise NotImplementedError(
             _LE("'%s' verifiers don't support configuration at all.")
             % self.get_name())
@@ -256,11 +255,10 @@ class VerifierManager(plugin.Plugin):
         """Get verifier configuration (e.g., the config file content)."""
         return ""
 
-    def install_extension(self, source, version=None, extra=None):
+    def install_extension(self, source, version=None, extra_settings=None):
         """Install a verifier extension."""
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support extensions.")
-            % self.get_name())
+            _LE("'%s' verifiers don't support extensions.") % self.get_name())
 
     def list_extensions(self):
         """List all verifier extensions."""
@@ -269,17 +267,16 @@ class VerifierManager(plugin.Plugin):
     def uninstall_extension(self, name):
         """Uninstall a verifier extension."""
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support extensions.")
-            % self.get_name())
+            _LE("'%s' verifiers don't support extensions.") % self.get_name())
 
     @abc.abstractmethod
     def list_tests(self, pattern=""):
         """List all verifier tests."""
 
-    def parse_results(self, data):
+    def parse_results(self, results_data):
         """Parse subunit results data of a test run."""
-        # TODO(andreykurilin): support more formats
-        return subunit_v2.parse(six.StringIO(data))
+        # TODO(andreykurilin): Support more formats.
+        return subunit_v2.parse(six.StringIO(results_data))
 
     @abc.abstractmethod
     def run(self, verification, context, pattern=None, load_list=None,
