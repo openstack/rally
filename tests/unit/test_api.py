@@ -473,10 +473,12 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 class APITestCase(test.TestCase):
 
     @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "foobar", "current_head": "foobar"})
     @mock.patch("rally.common.version.version_string", return_value="0.0.0")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_config_args(self, mock_conf, mock_version_string,
-                              mock_isfile):
+                              mock_database_revision, mock_isfile):
         api_ = api.API(config_args=["foo", "bar", "baz"])
         mock_conf.assert_called_once_with(
             ["foo", "bar", "baz"], default_config_files=None,
@@ -486,10 +488,12 @@ class APITestCase(test.TestCase):
         self.assertIs(api_.task, api._Task)
 
     @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "foobar", "current_head": "foobar"})
     @mock.patch("rally.common.version.version_string", return_value="0.0.0")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_config_file(self, mock_conf, mock_version_string,
-                              mock_isfile):
+                              mock_database_revision, mock_isfile):
         api_ = api.API(config_file="myfile.conf")
         mock_conf.assert_called_once_with(
             [], default_config_files=["myfile.conf"],
@@ -499,19 +503,23 @@ class APITestCase(test.TestCase):
         self.assertIs(api_.task, api._Task)
 
     @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "foobar", "current_head": "foobar"})
     @mock.patch("rally.common.version.version_string", return_value="0.0.0")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_no_default_config_file(self, mock_conf, mock_version_string,
-                                         mock_isfile):
+                                         mock_database_revision, mock_isfile):
         api.API()
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
     @mock.patch("os.path.isfile")
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "foobar", "current_head": "foobar"})
     @mock.patch("rally.common.version.version_string", return_value="0.0.0")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_default_config_file(self, mock_conf, mock_version_string,
-                                      mock_isfile):
+                                      mock_database_revision, mock_isfile):
         mock_isfile.side_effect = lambda f: f == "/etc/rally/rally.conf"
         api.API()
         mock_conf.assert_called_once_with(
@@ -530,10 +538,13 @@ class APITestCase(test.TestCase):
 
     @mock.patch("os.path.isfile", return_value=False)
     @mock.patch("rally.common.plugin.discover.load_plugins")
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "foobar", "current_head": "foobar"})
     @mock.patch("rally.common.version.version_string", return_value="0.0.0")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_plugin_path(self, mock_conf, mock_version_string,
-                              mock_load_plugins, mock_isfile):
+                              mock_database_revision, mock_load_plugins,
+                              mock_isfile):
         mock_conf.__contains__.return_value = True
         mock_conf.get.side_effect = (
             lambda a: ["/path/from/args"] if a == "plugin_paths" else None)
@@ -544,6 +555,19 @@ class APITestCase(test.TestCase):
             mock.call("/my/path"),
             mock.call("/path/from/args"),
         ])
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": "spam", "current_head": "foobar"})
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_check_revision_exception(self, mock_conf,
+                                           mock_version_string,
+                                           mock_database_revision,
+                                           mock_isfile):
+        self.assertRaises(exceptions.RallyException, api.API)
+        mock_conf.assert_called_once_with(
+            [], default_config_files=None, project="rally", version="0.0.0")
 
     def test_init_rally_endpoint(self):
         self.assertRaises(NotImplementedError, api.API, rally_endpoint="foo")

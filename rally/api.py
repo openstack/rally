@@ -933,7 +933,7 @@ class API(object):
     CONFIG_FILE_NAME = "rally.conf"
 
     def __init__(self, config_file=None, config_args=None,
-                 rally_endpoint=None, plugin_paths=None):
+                 rally_endpoint=None, plugin_paths=None, skip_db_check=False):
         """Initialize Rally API instance
 
         :param config_file: Path to rally configuration file. If None, default
@@ -945,6 +945,8 @@ class API(object):
         :type rally_endpoint: str
         :param plugin_paths: Additional custom plugin locations
         :type plugin_paths: list
+        :param skip_db_check: Allows to skip db revision check
+        :type skip_db_check: bool
         """
         if rally_endpoint:
             raise NotImplementedError(_LE("Sorry, but Rally-as-a-Service is "
@@ -985,11 +987,20 @@ class API(object):
             boto_log = logging.getLogger("boto").logger
             boto_log.setLevel(logging.CRITICAL)
 
+            # Set alembic log level to ERROR
+            alembic_log = logging.getLogger("alembic").logger
+            alembic_log.setLevel(logging.ERROR)
+
         except cfg.ConfigFilesNotFoundError as e:
             cfg_files = e.config_files
             raise exceptions.RallyException(_LE(
                 "Failed to read configuration file(s): %s") % cfg_files)
 
+        # Check that db is upgraded to the latest revision
+        if not skip_db_check:
+            self._check_db_revision()
+
+        # Load plugins
         plugin_paths = plugin_paths or []
         if "plugin_paths" in CONF:
             plugin_paths.extend(CONF.get("plugin_paths") or [])
@@ -1009,6 +1020,15 @@ class API(object):
             fpath = os.path.join(abspath, self.CONFIG_FILE_NAME)
             if os.path.isfile(fpath):
                 return [fpath]
+
+    def _check_db_revision(self):
+        rev = rally_version.database_revision()
+        if rev["revision"] == rev["current_head"]:
+            return
+        raise exceptions.RallyException(_LE(
+            "Database seems to be outdated. Run upgrade from "
+            "revision %(revision)s to %(current_head)s by command "
+            "`rally-manage db upgrade'") % rev)
 
     @property
     def deployment(self):

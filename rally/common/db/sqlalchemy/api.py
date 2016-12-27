@@ -24,6 +24,7 @@ import time
 import alembic
 from alembic import config as alembic_config
 import alembic.migration as alembic_migration
+from alembic import script as alembic_script
 from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
@@ -117,18 +118,27 @@ class Connection(object):
     def schema_cleanup(self):
         models.drop_db()
 
-    def schema_revision(self, config=None, engine=None):
+    def schema_revision(self, config=None, engine=None, detailed=False):
         """Current database revision.
 
         :param config: Instance of alembic config
         :param engine: Instance of DB engine
+        :param detailed: whether to return a dict with detailed data
+        :rtype detailed: bool
         :returns: Database revision
         :rtype: string
+        :rtype: dict
         """
         engine = engine or get_engine()
         with engine.connect() as conn:
             context = alembic_migration.MigrationContext.configure(conn)
-            return context.get_current_revision()
+            revision = context.get_current_revision()
+        if detailed:
+            config = config or _alembic_config()
+            sc_dir = alembic_script.ScriptDirectory.from_config(config)
+            return {"revision": revision,
+                    "current_head": sc_dir.get_current_head()}
+        return revision
 
     def schema_upgrade(self, revision=None, config=None, engine=None):
         """Used for upgrading database.

@@ -81,6 +81,15 @@ class SerializeTestCase(test.DBTestCase):
         self.assertRaises(ValueError, fake_method)
 
 
+class ConnectionTestCase(test.DBTestCase):
+
+    def test_schema_revision(self):
+        rev = db.schema_revision()
+        drev = db.schema_revision(detailed=True)
+        self.assertEqual(drev["revision"], rev)
+        self.assertEqual(drev["revision"], drev["current_head"])
+
+
 class FixDeploymentTestCase(test.DBTestCase):
     def test_fix_deployment(self):
         deployment = {

@@ -119,9 +119,9 @@ def schema_create():
     return get_impl().schema_create()
 
 
-def schema_revision():
+def schema_revision(detailed=False):
     """Return the schema revision."""
-    return get_impl().schema_revision()
+    return get_impl().schema_revision(detailed=detailed)
 
 
 def schema_stamp(revision):

@@ -489,7 +489,7 @@ def validate_deprecated_args(argv, fn):
                                                                 fn.__name__))
 
 
-def run(argv, categories):
+def run(argv, categories, skip_db_check=False):
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
     category_opt = cfg.SubCommandOpt("category",
                                      title="Command categories",
@@ -509,7 +509,7 @@ def run(argv, categories):
                                       help=help_msg))
 
     try:
-        rapi = api.API(config_args=argv[1:])
+        rapi = api.API(config_args=argv[1:], skip_db_check=skip_db_check)
     except exceptions.RallyException as e:
         print(e)
         return(2)

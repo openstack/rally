@@ -15,6 +15,8 @@
 
 from pbr import version as pbr_version
 
+from rally.common.db import api
+
 RALLY_VENDOR = "OpenStack Foundation"
 RALLY_PRODUCT = "OpenStack Rally"
 RALLY_PACKAGE = None  # OS distro package version suffix
@@ -25,3 +27,7 @@ version_info = pbr_version.VersionInfo("rally")
 
 def version_string():
     return version_info.semantic_version().debian_string()
+
+
+def database_revision():
+    return api.schema_revision(detailed=True)

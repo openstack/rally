@@ -163,31 +163,51 @@ class CliUtilsTestCase(test.TestCase):
                                          )
         CONF.unregister_opt(category_opt)
 
-    def test_run_version(self):
+    @mock.patch("rally.api.API",
+                side_effect=exceptions.RallyException("config_file"))
+    def test_run_fails(self, mock_rally_api_api):
+        ret = cliutils.run(["rally", "version"], self.categories)
+        self.assertEqual(ret, 2)
+        mock_rally_api_api.assert_called_once_with(
+            config_args=["version"], skip_db_check=False)
+
+    @mock.patch("rally.api.API._check_db_revision")
+    def test_run_version(self, mock_api__check_db_revision):
         ret = cliutils.run(["rally", "version"], self.categories)
         self.assertEqual(ret, 0)
 
-    def test_run_bash_completion(self):
+    def test_run_skip_db_check(self):
+        ret = cliutils.run(["rally", "version"], self.categories,
+                           skip_db_check=True)
+        self.assertEqual(ret, 0)
+
+    @mock.patch("rally.api.API._check_db_revision")
+    def test_run_bash_completion(self, mock_api__check_db_revision):
         ret = cliutils.run(["rally", "bash-completion"], self.categories)
         self.assertEqual(ret, 0)
 
+    @mock.patch("rally.api.API._check_db_revision")
     @mock.patch("rally.common.db.task_get",
                 side_effect=exceptions.TaskNotFound(uuid=FAKE_TASK_UUID))
-    def test_run_task_not_found(self, mock_task_get):
+    def test_run_task_not_found(self, mock_task_get,
+                                mock_api__check_db_revision):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_task_get.called)
         self.assertEqual(ret, 1)
 
+    @mock.patch("rally.api.API._check_db_revision")
     @mock.patch("rally.cli.cliutils.validate_args",
                 side_effect=cliutils.MissingArgs("missing"))
-    def test_run_task_failed(self, mock_validate_args):
+    def test_run_task_failed(self, mock_validate_args,
+                             mock_api__check_db_revision):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_validate_args.called)
         self.assertEqual(ret, 1)
 
-    def test_run_failed_to_open_file(self):
+    @mock.patch("rally.api.API._check_db_revision")
+    def test_run_failed_to_open_file(self, mock_api__check_db_revision):
 
         class FailuresCommands(object):
 
@@ -198,7 +218,9 @@ class CliUtilsTestCase(test.TestCase):
                            {"failure": FailuresCommands})
         self.assertEqual(1, ret)
 
-    def test_run_sqlalchmey_operational_failure(self):
+    @mock.patch("rally.api.API._check_db_revision")
+    def test_run_sqlalchmey_operational_failure(self,
+                                                mock_api__check_db_revision):
 
         class SQLAlchemyCommands(object):
 
