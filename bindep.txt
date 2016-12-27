@@ -1,0 +1,23 @@
+# This is a cross-platform list tracking distribution packages needed by tests;
+# see http://docs.openstack.org/infra/bindep/ for additional information.
+
+build-essential [platform:dpkg]
+gcc [platform:rpm]
+git
+gmp-devel [platform:rpm]
+libffi-dev [platform:dpkg]
+libffi-devel [platform:rpm !platform:opensuse]
+libffi48-devel [platform:opensuse]
+libpq-dev [platform:dpkg]
+libssl-dev [platform:dpkg]
+libxml2-dev [platform:dpkg]
+libxml2-devel [platform:rpm]
+libxslt1-dev [platform:dpkg]
+libxslt-devel [platform:rpm]
+openssl-devel [platform:rpm]
+postgresql-devel [platform:rpm !platform:opensuse]
+postgresql93-devel [platform:opensuse]
+python-dev [platform:dpkg]
+python-devel [platform:rpm]
+redhat-rpm-config [platform:rpm]
+wget
