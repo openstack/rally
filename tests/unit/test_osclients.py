@@ -739,23 +739,6 @@ class OSClientsTestCase(test.TestCase):
                 key += "%s" % {"version": version}
             self.assertEqual(fake_designate, self.clients.cache[key])
 
-    @mock.patch("rally.osclients.Keystone.get_session")
-    def test_cue(self, mock_keystone_get_session):
-        fake_cue = fakes.FakeCueClient()
-        mock_cue = mock.MagicMock()
-        mock_cue.client.Client = mock.MagicMock(return_value=fake_cue)
-        mock_keystone_get_session.return_value = ("fake_session",
-                                                  "fake_auth_plugin")
-        self.assertNotIn("cue", self.clients.cache)
-        with mock.patch.dict("sys.modules", {"cueclient": mock_cue,
-                                             "cueclient.v1": mock_cue}):
-            client = self.clients.cue()
-            self.assertEqual(fake_cue, client)
-            mock_cue.client.Client.assert_called_once_with(
-                interface=self.credential.endpoint_type,
-                session="fake_session")
-            self.assertEqual(fake_cue, self.clients.cache["cue"])
-
     def test_senlin(self):
         mock_senlin = mock.MagicMock()
         self.assertNotIn("senlin", self.clients.cache)
