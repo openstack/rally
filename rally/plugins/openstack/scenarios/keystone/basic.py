@@ -326,7 +326,7 @@ class CreateAndListServices(KeystoneBasic):
 
 
 @validation.required_openstack(users=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"cleanup": ["keystone"]},
                     name="KeystoneBasic.create_and_list_ec2credentials")
 class CreateAndListEc2Credentials(KeystoneBasic):
 
@@ -339,7 +339,7 @@ class CreateAndListEc2Credentials(KeystoneBasic):
 
 
 @validation.required_openstack(users=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"cleanup": ["keystone"]},
                     name="KeystoneBasic.create_and_delete_ec2credential")
 class CreateAndDeleteEc2Credential(KeystoneBasic):
 
