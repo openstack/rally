@@ -22,7 +22,6 @@ import sqlalchemy.exc
 
 from rally.cli import cliutils
 from rally.cli.commands import deployment
-from rally.cli.commands import show
 from rally.cli.commands import task
 from rally.cli.commands import verify
 from rally import exceptions
@@ -40,7 +39,6 @@ class CliUtilsTestCase(test.TestCase):
         super(CliUtilsTestCase, self).setUp()
         self.categories = {
             "deployment": deployment.DeploymentCommands,
-            "show": show.ShowCommands,
             "task": task.TaskCommands,
             "verify": verify.VerifyCommands
         }
@@ -165,14 +163,6 @@ class CliUtilsTestCase(test.TestCase):
                                          )
         CONF.unregister_opt(category_opt)
 
-    @mock.patch("rally.api.API",
-                side_effect=exceptions.RallyException("config_file"))
-    def test_run_fails(self, mock_rally_api_api):
-        ret = cliutils.run(["rally", "show", "flavors"], self.categories)
-        self.assertEqual(ret, 2)
-        mock_rally_api_api.assert_called_once_with(
-            config_args=["show", "flavors"])
-
     def test_run_version(self):
         ret = cliutils.run(["rally", "version"], self.categories)
         self.assertEqual(ret, 0)
@@ -180,10 +170,6 @@ class CliUtilsTestCase(test.TestCase):
     def test_run_bash_completion(self):
         ret = cliutils.run(["rally", "bash-completion"], self.categories)
         self.assertEqual(ret, 0)
-
-    def test_run_show(self):
-        ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
-        self.assertEqual(ret, 1)
 
     @mock.patch("rally.common.db.task_get",
                 side_effect=exceptions.TaskNotFound(uuid=FAKE_TASK_UUID))
@@ -195,8 +181,9 @@ class CliUtilsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.cliutils.validate_args",
                 side_effect=cliutils.MissingArgs("missing"))
-    def test_run_show_fails(self, mock_validate_args):
-        ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
+    def test_run_task_failed(self, mock_validate_args):
+        ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
+                           self.categories)
         self.assertTrue(mock_validate_args.called)
         self.assertEqual(ret, 1)
 
@@ -837,3 +824,13 @@ class ValidateArgsTest(test.TestCase):
         cmd_name = "test-command"
         wrapped = cliutils.alias(cmd_name)
         self.assertEqual(wrapped(alias_fn).alias, cmd_name)
+
+
+class CategoryParserTestCase(test.TestCase):
+
+    def setUp(self):
+        super(CategoryParserTestCase, self).setUp()
+        self.categoryParser = cliutils.CategoryParser()
+
+    def test_format_help(self):
+        self.assertIsNotNone(self.categoryParser.format_help())

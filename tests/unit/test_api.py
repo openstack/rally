@@ -534,6 +534,7 @@ class APITestCase(test.TestCase):
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_init_plugin_path(self, mock_conf, mock_version_string,
                               mock_load_plugins, mock_isfile):
+        mock_conf.__contains__.return_value = True
         mock_conf.get.side_effect = (
             lambda a: ["/path/from/args"] if a == "plugin_paths" else None)
         api.API(plugin_paths=["/my/path"])
