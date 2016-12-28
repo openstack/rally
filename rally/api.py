@@ -699,6 +699,9 @@ class _Verifier(object):
                 "status, but should be in %s." % (verifier, verifier.status,
                                                   cls.READY_TO_USE_STATES))
 
+        if pattern:
+            verifier.manager.validate_args({"pattern": pattern})
+
         return verifier.manager.list_tests(pattern)
 
     @classmethod
@@ -796,7 +799,7 @@ class _Verification(object):
             _Verifier.configure(verifier, deployment_id)
 
         # TODO(andreykurilin): save validation results to db
-        verifier.manager.validate(verifier.deployment, run_args)
+        verifier.manager.validate(run_args)
 
         verification = objects.Verification.create(verifier_id,
                                                    deployment_id=deployment_id,

@@ -63,10 +63,10 @@ class VerifierManagerTestCase(test.TestCase):
     @mock.patch("rally.verification.manager.VerifierManager.validate_args")
     @mock.patch("rally.verification.context.ContextManager.validate")
     def test_validate(self, mock_context_manager_validate, mock_validate_args):
+        fvmanager = FakeVerifier(mock.Mock())
         args = mock.Mock()
-        deployment = mock.MagicMock()
         with mock.patch.object(FakeVerifier, "_meta_get") as mock__meta_get:
-            FakeVerifier.validate(deployment, args)
+            fvmanager.validate(args)
             mock__meta_get.assert_called_once_with("context")
             mock_validate_args.assert_called_once_with(args)
             mock_context_manager_validate.assert_called_once_with(
@@ -262,45 +262,45 @@ class VerifierManagerTestCase(test.TestCase):
 
     def test_validate_args(self):
         # validating "pattern" argument
-        FakeVerifier.validate_args({"pattern": "it is string"})
+        fvmanager = FakeVerifier(mock.Mock())
+        fvmanager.validate_args({"pattern": "it is string"})
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args, {"pattern": 2})
+                              fvmanager.validate_args, {"pattern": 2})
         self.assertEqual("'pattern' argument should be a string.",
                          e.kwargs["message"])
 
         # validating "concurrency" argument
-        FakeVerifier.validate_args({"concurrency": 1})
-        FakeVerifier.validate_args({"concurrency": 5})
-        FakeVerifier.validate_args({"concurrency": 0})
+        fvmanager.validate_args({"concurrency": 1})
+        fvmanager.validate_args({"concurrency": 5})
+        fvmanager.validate_args({"concurrency": 0})
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args, {"concurrency": -1})
+                              fvmanager.validate_args, {"concurrency": -1})
         self.assertEqual("'concurrency' argument should be a positive integer "
                          "or zero.", e.kwargs["message"])
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args,
-                              {"concurrency": "bla"})
+                              fvmanager.validate_args, {"concurrency": "bla"})
         self.assertEqual("'concurrency' argument should be a positive integer "
                          "or zero.", e.kwargs["message"])
 
         # validating "load_list" argument
-        FakeVerifier.validate_args({"load_list": []})
+        fvmanager.validate_args({"load_list": []})
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args, {"load_list": "str"})
+                              fvmanager.validate_args, {"load_list": "str"})
         self.assertEqual("'load_list' argument should be a list of tests.",
                          e.kwargs["message"])
 
         # validating "skip_list" argument
-        FakeVerifier.validate_args({"skip_list": {}})
+        fvmanager.validate_args({"skip_list": {}})
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args, {"skip_list": "str"})
+                              fvmanager.validate_args, {"skip_list": "str"})
         self.assertEqual("'skip_list' argument should be a dict of tests where"
                          " keys are test names and values are reasons.",
                          e.kwargs["message"])
 
         # validating "xfail_list" argument
-        FakeVerifier.validate_args({"xfail_list": {}})
+        fvmanager.validate_args({"xfail_list": {}})
         e = self.assertRaises(exceptions.ValidationError,
-                              FakeVerifier.validate_args,
+                              fvmanager.validate_args,
                               {"xfail_list": "str"})
         self.assertEqual("'xfail_list' argument should be a dict of tests "
                          "where keys are test names and values are reasons.",

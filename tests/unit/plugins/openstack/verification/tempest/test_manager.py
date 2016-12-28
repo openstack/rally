@@ -83,13 +83,18 @@ class TempestManagerTestCase(test.TestCase):
 
     @mock.patch("%s.os.path.exists" % PATH)
     @mock.patch("%s.utils.check_output" % PATH)
-    def test_install_extension(self, mock_check_output, mock_exists):
+    @mock.patch("%s.TempestManager.check_system_wide" % PATH)
+    def test_install_extension(self, mock_check_system_wide, mock_check_output,
+                               mock_exists):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd",
                                                         system_wide=True))
         e = self.assertRaises(NotImplementedError, tempest.install_extension,
                               None, None, {"key": "value"})
         self.assertIn("verifiers don't support extra installation settings",
                       "%s" % e)
+
+        test_reqs_path = os.path.join(tempest.base_dir, "extensions",
+                                      "example", "test-requirements.txt")
 
         # case #1 system-wide installation
         source = "https://github.com/example/example"
@@ -100,7 +105,8 @@ class TempestManagerTestCase(test.TestCase):
             ["pip", "install", "--no-deps", "--src", path, "-e",
              "git+https://github.com/example/example@master#egg=example"],
             cwd=tempest.base_dir, env=tempest.environ)
-        self.assertFalse(mock_exists.called)
+        mock_check_system_wide.assert_called_once_with(
+            reqs_file_path=test_reqs_path)
 
         mock_check_output.reset_mock()
 
@@ -109,8 +115,6 @@ class TempestManagerTestCase(test.TestCase):
         version = "some"
         tempest.install_extension(source, version=version)
 
-        test_reqs_path = os.path.join(tempest.base_dir, "extensions",
-                                      "example", "test-requirements.txt")
         self.assertEqual([
             mock.call([
                 "pip", "install", "--src", path, "-e",
@@ -119,7 +123,6 @@ class TempestManagerTestCase(test.TestCase):
             mock.call(["pip", "install", "-r", test_reqs_path],
                       cwd=tempest.base_dir, env=tempest.environ)],
             mock_check_output.call_args_list)
-        mock_exists.assert_called_once_with(test_reqs_path)
 
     @mock.patch("%s.utils.check_output" % PATH)
     def test_list_extensions(self, mock_check_output):
@@ -187,21 +190,20 @@ class TempestManagerTestCase(test.TestCase):
 
     @mock.patch("%s.testr.TestrLauncher.validate_args" % PATH)
     def test_validate_args(self, mock_testr_launcher_validate_args):
-        manager.TempestManager.validate_args({})
-        manager.TempestManager.validate_args({"pattern": "some.test"})
-        manager.TempestManager.validate_args({"pattern": "set=smoke"})
-        manager.TempestManager.validate_args({"pattern": "set=compute"})
-        manager.TempestManager.validate_args({"pattern": "set=full"})
+        tm = manager.TempestManager(mock.Mock())
+        tm.validate_args({})
+        tm.validate_args({"pattern": "some.test"})
+        tm.validate_args({"pattern": "set=smoke"})
+        tm.validate_args({"pattern": "set=compute"})
+        tm.validate_args({"pattern": "set=full"})
 
-        e = self.assertRaises(exceptions.ValidationError,
-                              manager.TempestManager.validate_args,
+        e = self.assertRaises(exceptions.ValidationError, tm.validate_args,
                               {"pattern": "foo=bar"})
         self.assertEqual("Validation error: 'pattern' argument should be a "
                          "regexp or set name (format: 'tempest.api.identity."
                          "v3', 'set=smoke').", "%s" % e)
 
-        e = self.assertRaises(exceptions.ValidationError,
-                              manager.TempestManager.validate_args,
+        e = self.assertRaises(exceptions.ValidationError, tm.validate_args,
                               {"pattern": "set=foo"})
         self.assertIn("Test set 'foo' not found in available Tempest test "
                       "sets. Available sets are ", "%s" % e)
@@ -218,17 +220,17 @@ class TempestManagerTestCase(test.TestCase):
                          tempest._transform_pattern("set=compute"))
 
     @mock.patch("%s.TempestManager._transform_pattern" % PATH)
-    def test__process_run_args(self, mock__transform_pattern):
+    def test_prepare_run_args(self, mock__transform_pattern):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
 
-        self.assertEqual({}, tempest._process_run_args({}))
+        self.assertEqual({}, tempest.prepare_run_args({}))
         self.assertFalse(mock__transform_pattern.called)
 
         self.assertEqual({"foo": "bar"},
-                         tempest._process_run_args({"foo": "bar"}))
+                         tempest.prepare_run_args({"foo": "bar"}))
         self.assertFalse(mock__transform_pattern.called)
 
         pattern = mock.Mock()
         self.assertEqual({"pattern": mock__transform_pattern.return_value},
-                         tempest._process_run_args({"pattern": pattern}))
+                         tempest.prepare_run_args({"pattern": pattern}))
         mock__transform_pattern.assert_called_once_with(pattern)

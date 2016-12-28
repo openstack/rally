@@ -17,6 +17,7 @@ import gzip
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import uuid
@@ -37,14 +38,15 @@ VERIFIER_TYPE = "tempest"
 VERIFIER_SOURCE = "https://git.openstack.org/openstack/tempest"
 VERIFIER_EXT_REPO = "https://git.openstack.org/openstack/keystone"
 VERIFIER_EXT_NAME = "keystone_tests"
-SKIPPED_TESTS = (
+SKIP_TESTS = (
     "tempest.api.compute.flavors.test_flavors.FlavorsV2TestJSON."
     "test_get_flavor[id-1f12046b-753d-40d2-abb6-d8eb8b30cb2f,smoke]: "
     "This test was skipped intentionally")
-XFAILED_TESTS = (
+XFAIL_TESTS = (
     "tempest.api.compute.servers.test_server_actions.ServerActionsTestJSON."
     "test_get_vnc_console[id-c6bc11bf-592e-4015-9319-1c98dc64daf5]: "
     "This test fails because 'novnc' console type is unavailable")
+TEST_NAME_RE = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-,=0-9]*\])?$")
 
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .
@@ -257,8 +259,8 @@ def main():
         "verify list-verifier-tests %s" % MODES[args.mode])
 
     # Start a verification, show results and generate reports
-    skip_list_path = write_file("skip-list.yaml", SKIPPED_TESTS)
-    xfail_list_path = write_file("xfail-list.yaml", XFAILED_TESTS)
+    skip_list_path = write_file("skip-list.yaml", SKIP_TESTS)
+    xfail_list_path = write_file("xfail-list.yaml", XFAIL_TESTS)
     run_args = ("%s --skip-list %s --xfail-list %s"
                 % (MODES[args.mode], skip_list_path, xfail_list_path))
     render_vars["verifications"].append(start_verification(run_args))
@@ -266,7 +268,8 @@ def main():
     if args.compare:
         # Start another verification, show results and generate reports
         with gzip.open(render_vars["list_verifier_tests"]["stdout_file"]) as f:
-            load_list_path = write_file("load-list.txt", f.read())
+            tests = [t for t in f.read().split("\n") if TEST_NAME_RE.match(t)]
+            load_list_path = write_file("load-list.txt", "\n".join(tests))
         run_args = "--load-list %s" % load_list_path
         render_vars["verifications"].append(start_verification(run_args))
 

@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import os
 import re
 import shutil
@@ -31,12 +30,12 @@ from rally.verification import utils
 LOG = logging.getLogger(__name__)
 
 CTX_NAME = "verification_testr"
-TEST_NAME_REGEX = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-,=0-9]*\])?$")
+TEST_NAME_RE = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-,=0-9]*\])?$")
 
 
 @context.configure("testr_verifier", order=999)
 class TestrContext(context.VerifierContext):
-    """Testr context to convert 'run_args' into a list of testr arguments."""
+    """Context to transform 'run_args' into CLI arguments for testr."""
 
     def __init__(self, ctx):
         super(TestrContext, self).__init__(ctx)
@@ -44,7 +43,7 @@ class TestrContext(context.VerifierContext):
 
     def setup(self):
         self.context["testr_cmd"] = ["testr", "run", "--subunit"]
-        run_args = self.verifier.manager._process_run_args(
+        run_args = self.verifier.manager.prepare_run_args(
             self.context.get("run_args", {}))
 
         concurrency = run_args.get("concurrency", 0)
@@ -111,7 +110,7 @@ class TestrLauncher(manager.VerifierManager):
         output = utils.check_output(["testr", "list-tests", pattern],
                                     cwd=self.repo_dir, env=self.environ,
                                     debug_output=False)
-        return [t for t in output.split("\n") if TEST_NAME_REGEX.match(t)]
+        return [t for t in output.split("\n") if TEST_NAME_RE.match(t)]
 
     def run(self, context):
         """Run tests."""
@@ -132,10 +131,10 @@ class TestrLauncher(manager.VerifierManager):
 
         return results
 
-    def _process_run_args(self, run_args):
-        """Process run_args before verification execution.
+    def prepare_run_args(self, run_args):
+        """Prepare 'run_args' for testr context.
 
-        This method is called by TestrContext before transforming run_args into
-        cli arguments for testr.
+        This method is called by TestrContext before transforming 'run_args'
+        into CLI arguments for testr.
         """
         return run_args
