@@ -38,16 +38,21 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.list_plugins(self.fake_api, namespace="some")
         self.fake_api.verifier.list_plugins.assert_called_once_with("some")
 
-    @mock.patch("rally.cli.commands.verify.VerifyCommands.use_verifier")
-    def test_create_verifier(self, mock_use_verifier):
+    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    def test_create_verifier(self, mock_update_globals_file):
+        self.fake_api.verifier.create.return_value = "v_uuid"
+        self.fake_api.verifier.get.return_value = mock.Mock(uuid="v_uuid")
+
         self.verify.create_verifier(self.fake_api, "a", vtype="b",
                                     namespace="c", source="d", version="e",
                                     system_wide=True, extra={})
         self.fake_api.verifier.create.assert_called_once_with(
             "a", vtype="b", namespace="c", source="d", version="e",
             system_wide=True, extra_settings={})
-        mock_use_verifier.assert_called_once_with(
-            self.fake_api.verifier.create.return_value)
+
+        self.fake_api.verifier.get.assert_called_once_with("v_uuid")
+        mock_update_globals_file.assert_called_once_with(
+            envutils.ENV_VERIFIER, "v_uuid")
 
     @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
     def test_use_verifier(self, mock_update_globals_file):
@@ -158,9 +163,9 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.delete_extension.assert_called_once_with(
             "v_id", "ext_name")
 
-    @mock.patch("rally.cli.commands.verify.VerifyCommands.use")
+    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
     @mock.patch("rally.cli.commands.verify.os.path.exists")
-    def test_start(self, mock_exists, mock_use):
+    def test_start(self, mock_exists, mock_update_globals_file):
         self.verify.start(self.fake_api, "v_id", "d_id", pattern="pattern",
                           failed=True)
         self.assertFalse(self.fake_api.verification.start.called)
@@ -169,7 +174,7 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.start(self.fake_api, "v_id", "d_id", load_list="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.start.called)
 
-        verification = mock.Mock(uuid="verification_uuid")
+        verification = mock.Mock(uuid="v_uuid")
         results = mock.Mock(totals={"tests_count": 2,
                                     "tests_duration": 4,
                                     "success": 2,
@@ -178,6 +183,7 @@ class VerifyCommandsTestCase(test.TestCase):
                                     "unexpected_success": 0,
                                     "failures": 0})
         self.fake_api.verification.start.return_value = (verification, results)
+        self.fake_api.verification.get.return_value = verification
 
         mock_exists.return_value = True
         tf = tempfile.NamedTemporaryFile()
@@ -213,11 +219,15 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verification.start.assert_called_once_with(
             "v_id", "d_id", xfail_list={"test_1": None, "test_2": "Reason"})
 
-        mock_use.assert_called_with("verification_uuid")
+        self.fake_api.verification.get.assert_called_with("v_uuid")
+        mock_update_globals_file.assert_called_with(
+            envutils.ENV_VERIFICATION, "v_uuid")
 
-        mock_use.reset_mock()
+        self.fake_api.verification.get.reset_mock()
+        mock_update_globals_file.reset_mock()
         self.verify.start(self.fake_api, "v_id", "d_id", do_use=False)
-        self.assertFalse(mock_use.called)
+        self.assertFalse(self.fake_api.verification.get.called)
+        self.assertFalse(mock_update_globals_file.called)
 
     @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
     def test_use(self, mock_update_globals_file):
