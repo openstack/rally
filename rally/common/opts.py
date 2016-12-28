@@ -32,8 +32,8 @@ from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
+from rally.plugins.openstack.verification.tempest import config as tempest_conf
 from rally.plugins.openstack.wrappers import glance as glance_utils
-from rally.verification.tempest import config as tempest_conf
 
 
 def list_opts():

@@ -26,14 +26,6 @@ class FakeContext(context.VerifierContext):
 
 
 class VerifierContextTestCase(test.TestCase):
-    def test___init__(self):
-        ctx = FakeContext()
-        self.assertEqual({}, ctx.verification)
-
-        v = mock.MagicMock()
-        ctx = FakeContext(verification=v)
-        self.assertEqual(v, ctx.verification)
-
     def test__meta_get(self):
 
         data = {"key1": "value1", "key2": "value2", "hidden": False}

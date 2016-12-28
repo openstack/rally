@@ -808,11 +808,12 @@ class _Verification(object):
         verification.update_status(consts.VerificationStatus.RUNNING)
 
         context = {"config": verifier.manager._meta_get("context"),
-                   "run_args": run_args}
+                   "run_args": run_args,
+                   "verification": verification,
+                   "verifier": verifier}
         try:
             with vcontext.ContextManager(context):
-                results = verifier.manager.run(verification, context,
-                                               **context["run_args"])
+                results = verifier.manager.run(context)
         except Exception as e:
             verification.set_error(e)
             raise

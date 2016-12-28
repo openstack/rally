@@ -59,17 +59,6 @@ def configure(name, namespace="default", default_repo=None,
 @six.add_metaclass(abc.ABCMeta)
 class VerifierManager(plugin.Plugin):
 
-    # TODO(andreykurilin): Move support of default meta to MetaMixin.
-    @classmethod
-    def _get_default_meta(cls):
-        return {}
-
-    @classmethod
-    def _meta_init(cls):
-        super(VerifierManager, cls)._meta_init()
-        for key, value in cls._get_default_meta().items():
-            cls._meta_setdefault(key, value)
-
     def __init__(self, verifier):
         """Init a verifier manager.
 
@@ -279,9 +268,7 @@ class VerifierManager(plugin.Plugin):
         return subunit_v2.parse(six.StringIO(results_data))
 
     @abc.abstractmethod
-    def run(self, verification, context, pattern=None, load_list=None,
-            skip_list=None, xfail_list=None, concurrency=None, failed=False,
-            extra_args=None):
+    def run(self, context):
         """Run verifier tests.
 
         This method should return an object with the following attributes:
