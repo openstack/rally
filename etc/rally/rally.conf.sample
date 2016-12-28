@@ -612,7 +612,7 @@
 # Deprecated group/name - [DATABASE]/sql_max_retries
 #max_retries = 10
 
-# Interval between retries of opening a SQL connection. (integer
+# Interval between retries of opening an SQL connection. (integer
 # value)
 # Deprecated group/name - [DEFAULT]/sql_retry_interval
 # Deprecated group/name - [DATABASE]/reconnect_interval
