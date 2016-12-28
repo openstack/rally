@@ -493,7 +493,7 @@ class _Verifier(object):
                 raise exceptions.RallyException(
                     "Failed to delete verifier {0} because there are stored "
                     "verifier verifications{1}! Please, make sure that they "
-                    "are not important to you. Set 'force=True' if you would "
+                    "are not important to you. Use 'force' flag if you would "
                     "like to delete verifications{1} as well."
                     .format(verifier, d_msg))
 

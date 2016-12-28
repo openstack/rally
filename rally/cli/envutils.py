@@ -24,8 +24,9 @@ from rally import exceptions
 
 ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
 ENV_TASK = "RALLY_TASK"
+ENV_VERIFIER = "RALLY_VERIFIER"
 ENV_VERIFICATION = "RALLY_VERIFICATION"
-ENVVARS = [ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFICATION]
+ENVVARS = [ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
 
 MSG_MISSING_ARG = _("Missing argument: --%(arg_name)s")
 
@@ -78,9 +79,14 @@ def with_default_deployment(cli_arg_name="uuid"):
                                          "the --%(arg_name)s argument of "
                                          "this command"))
 
+
+def with_default_verifier_id(cli_arg_name="id"):
+    return default_from_global("verifier_id", ENV_VERIFIER, cli_arg_name)
+
+
 with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
-with_default_verification_id = default_from_global(
-    "verification", ENV_VERIFICATION, "uuid")
+with_default_verification_uuid = default_from_global("verification_uuid",
+                                                     ENV_VERIFICATION, "uuid")
 
 
 def get_creds_from_env_vars():

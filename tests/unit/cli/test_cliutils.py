@@ -49,7 +49,7 @@ class CliUtilsTestCase(test.TestCase):
 
     def test_make_header(self):
         h1 = cliutils.make_header("msg", size=4, symbol="=")
-        self.assertEqual(h1, "====\n msg\n====\n")
+        self.assertEqual(h1, "====\nmsg\n====\n")
 
     def test_make_table_header(self):
         actual = cliutils.make_table_header("Response Times (sec)", 40)
