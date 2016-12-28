@@ -110,7 +110,7 @@ class VerifyCommands(object):
             version=version, system_wide=system_wide, extra_settings=extra)
 
         if do_use:
-            self.use_verifier(verifier_uuid)
+            self.use_verifier(api, verifier_uuid)
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str, required=True,
@@ -440,7 +440,7 @@ class VerifyCommands(object):
         self._print_totals(results.totals)
 
         if do_use:
-            self.use(verification.uuid)
+            self.use(api, verification.uuid)
         else:
             print(_("Verification UUID: %s.") % verification.uuid)
 
