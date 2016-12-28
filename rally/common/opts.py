@@ -34,13 +34,15 @@ from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
 from rally.plugins.openstack.verification.tempest import config as tempest_conf
 from rally.plugins.openstack.wrappers import glance as glance_utils
+from rally.task import engine
 
 
 def list_opts():
     return [
         ("DEFAULT",
          itertools.chain(logging.DEBUG_OPTS,
-                         osclients.OSCLIENTS_OPTS)),
+                         osclients.OSCLIENTS_OPTS,
+                         engine.TASK_ENGINE_OPTS)),
         ("benchmark",
          itertools.chain(cinder_utils.CINDER_BENCHMARK_OPTS,
                          ec2_utils.EC2_BENCHMARK_OPTS,

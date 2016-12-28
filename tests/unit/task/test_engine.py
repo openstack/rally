@@ -550,7 +550,7 @@ class ResultConsumerTestCase(test.TestCase):
                 key, task, subtask, workload, runner, False):
             pass
 
-        workload.add_workload_data.assert_called_once_with({"raw": []})
+        self.assertFalse(workload.add_workload_data.called)
         workload.set_results.assert_called_once_with({
             "full_duration": 1,
             "sla": mock_sla_results,
@@ -671,6 +671,60 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_instance.set_unexpected_failure.assert_has_calls(
             [mock.call(exc)])
 
+    @mock.patch("rally.task.engine.CONF")
+    @mock.patch("rally.common.objects.Task.get_status")
+    @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
+    @mock.patch("rally.task.sla.SLAChecker")
+    def test_consume_results_chunked(
+            self, mock_sla_checker, mock_result_consumer_wait_and_abort,
+            mock_task_get_status, mock_conf):
+        mock_conf.raw_result_chunk_size = 2
+        mock_sla_instance = mock.MagicMock()
+        mock_sla_checker.return_value = mock_sla_instance
+        mock_task_get_status.return_value = consts.TaskStatus.RUNNING
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock(spec=objects.Task)
+        subtask = mock.Mock(spec=objects.Subtask)
+        workload = mock.Mock(spec=objects.Workload)
+        runner = mock.MagicMock()
+
+        results = [
+            [{"duration": 1, "timestamp": 3},
+             {"duration": 2, "timestamp": 2},
+             {"duration": 3, "timestamp": 3}],
+            [{"duration": 4, "timestamp": 2},
+             {"duration": 5, "timestamp": 3}],
+            [{"duration": 6, "timestamp": 2}],
+            [{"duration": 7, "timestamp": 1}],
+        ]
+
+        runner.result_queue = collections.deque(results)
+        runner.event_queue = collections.deque()
+        with engine.ResultConsumer(
+                key, task, subtask, workload, runner, False) as consumer_obj:
+            pass
+
+        mock_sla_instance.add_iteration.assert_has_calls([
+            mock.call({"duration": 1, "timestamp": 3}),
+            mock.call({"duration": 2, "timestamp": 2}),
+            mock.call({"duration": 3, "timestamp": 3}),
+            mock.call({"duration": 4, "timestamp": 2}),
+            mock.call({"duration": 5, "timestamp": 3}),
+            mock.call({"duration": 6, "timestamp": 2}),
+            mock.call({"duration": 7, "timestamp": 1})])
+
+        self.assertEqual([{"duration": 7, "timestamp": 1}],
+                         consumer_obj.results)
+
+        workload.add_workload_data.assert_has_calls([
+            mock.call(0, {"raw": [{"duration": 2, "timestamp": 2},
+                                  {"duration": 1, "timestamp": 3}]}),
+            mock.call(1, {"raw": [{"duration": 4, "timestamp": 2},
+                                  {"duration": 3, "timestamp": 3}]}),
+            mock.call(2, {"raw": [{"duration": 6, "timestamp": 2},
+                                  {"duration": 5, "timestamp": 3}]}),
+            mock.call(3, {"raw": [{"duration": 7, "timestamp": 1}]})])
+
     @mock.patch("rally.task.engine.LOG")
     @mock.patch("rally.task.hook.HookExecutor")
     @mock.patch("rally.task.engine.time.time")
@@ -719,7 +773,7 @@ class ResultConsumerTestCase(test.TestCase):
             mock.call(event_type="iteration", value=3)
         ])
 
-        workload.add_workload_data.assert_called_once_with({"raw": []})
+        self.assertFalse(workload.add_workload_data.called)
         workload.set_results.assert_called_once_with({
             "full_duration": 1,
             "sla": mock_sla_results,

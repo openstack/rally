@@ -242,7 +242,10 @@ class Connection(object):
             "verification_log": json.dumps(task.validation_result)
         }
 
-    def _make_old_task_result(self, workload, workload_data):
+    def _make_old_task_result(self, workload, workload_data_list):
+        raw_data = [data
+                    for workload_data in workload_data_list
+                    for data in workload_data.chunk_data["raw"]]
         return {
             "id": workload.id,
             "task_uuid": workload.task_uuid,
@@ -260,13 +263,18 @@ class Connection(object):
                 }
             },
             "data": {
-                "raw": workload_data.chunk_data["raw"],
+                "raw": raw_data,
                 "load_duration": workload.load_duration,
                 "full_duration": workload.full_duration,
                 "sla": workload.sla_results["sla"],
                 "hooks": workload.hooks
             }
         }
+
+    def _task_workload_data_get_all(self, workload_uuid):
+        return (self.model_query(models.WorkloadData).
+                filter_by(workload_uuid=workload_uuid).
+                order_by(models.WorkloadData.chunk_order.asc()))
 
     # @db_api.serialize
     def task_get(self, uuid):
@@ -407,13 +415,11 @@ class Connection(object):
                      filter_by(task_uuid=uuid).all())
 
         for workload in workloads:
-            workload_data = (self.model_query(models.WorkloadData).
-                             filter_by(task_uuid=uuid,
-                                       workload_uuid=workload.uuid).
-                             first())
+            workload_data_list = self._task_workload_data_get_all(
+                workload.uuid)
 
             results.append(
-                self._make_old_task_result(workload, workload_data))
+                self._make_old_task_result(workload, workload_data_list))
 
         return results
 
@@ -451,7 +457,8 @@ class Connection(object):
         return workload
 
     @db_api.serialize
-    def workload_data_create(self, task_uuid, workload_uuid, data):
+    def workload_data_create(self, task_uuid, workload_uuid, chunk_order,
+                             data):
         workload_data = models.WorkloadData(task_uuid=task_uuid,
                                             workload_uuid=workload_uuid)
 
@@ -485,7 +492,7 @@ class Connection(object):
         workload_data.update({
             "task_uuid": task_uuid,
             "workload_uuid": workload_uuid,
-            "chunk_order": 0,
+            "chunk_order": chunk_order,
             "iteration_count": iter_count,
             "failed_iteration_count": failed_iter_count,
             "chunk_data": {"raw": raw_data},
@@ -503,10 +510,11 @@ class Connection(object):
         workload = self.model_query(models.Workload).filter_by(
             uuid=workload_uuid).first()
 
-        workload_data = self.model_query(models.WorkloadData).filter_by(
-            workload_uuid=workload_uuid).first()
+        workload_data_list = self._task_workload_data_get_all(workload.uuid)
 
-        raw_data = workload_data.chunk_data.get("raw", [])
+        raw_data = [raw
+                    for workload_data in workload_data_list
+                    for raw in workload_data.chunk_data["raw"]]
         iter_count = len(raw_data)
 
         failed_iter_count = 0

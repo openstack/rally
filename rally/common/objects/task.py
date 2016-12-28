@@ -569,9 +569,10 @@ class Workload(object):
     def __getitem__(self, key):
         return self.workload[key]
 
-    def add_workload_data(self, workload_data):
+    def add_workload_data(self, chunk_order, workload_data):
         db.workload_data_create(self.workload["task_uuid"],
-                                self.workload["uuid"], workload_data)
+                                self.workload["uuid"], chunk_order,
+                                workload_data)
 
     def set_results(self, data):
         db.workload_set_results(self.workload["uuid"], data)
