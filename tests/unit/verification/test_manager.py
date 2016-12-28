@@ -70,7 +70,7 @@ class VerifierManagerTestCase(test.TestCase):
             mock__meta_get.assert_called_once_with("context")
             mock_validate_args.assert_called_once_with(args)
             mock_context_manager_validate.assert_called_once_with(
-                {"config": mock__meta_get.return_value})
+                mock__meta_get.return_value)
 
     def test__clone(self):
         verifier = mock.Mock(source=None)

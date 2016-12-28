@@ -716,7 +716,7 @@ class Stopwatch(object):
 
 
 def generate_random_path(root_dir=None):
-    """Generates a vacant name foo file or dir at specified place.
+    """Generates a vacant name for a file or dir at the specified place.
 
     :param root_dir: Name of a directory to generate path in. If None (default
         behaviour), temporary directory (i.e /tmp in linux) will be used.

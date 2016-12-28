@@ -88,7 +88,8 @@ class TempestManagerTestCase(test.TestCase):
                                                         system_wide=True))
         e = self.assertRaises(NotImplementedError, tempest.install_extension,
                               None, None, {"key": "value"})
-        self.assertIn("verifiers don't support extra options", "%s" % e)
+        self.assertIn("verifiers don't support extra installation settings",
+                      "%s" % e)
 
         # case #1 system-wide installation
         source = "https://github.com/example/example"

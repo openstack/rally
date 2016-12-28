@@ -44,5 +44,5 @@ class ContextManager(context.ContextManager):
             VerifierContext.get(name).validate(config, non_hidden=non_hidden)
 
     def _get_sorted_context_lst(self):
-        return sorted([VerifierContext.get(name)(cfg)
-                       for name, cfg in self.context_obj["config"].items()])
+        return sorted([VerifierContext.get(name)(self.context_obj)
+                       for name in self.context_obj["config"].keys()])

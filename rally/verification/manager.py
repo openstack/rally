@@ -49,7 +49,7 @@ def configure(name, namespace="default", default_repo=None,
         plugin._configure(name, namespace)
         plugin._meta_set("default_repo", default_repo)
         plugin._meta_set("default_version", default_version)
-        plugin._meta_set("config", context or {})
+        plugin._meta_set("context", context or {})
         return plugin
 
     return decorator
@@ -126,8 +126,7 @@ class VerifierManager(plugin.Plugin):
 
     @classmethod
     def validate(cls, deployment, run_args):
-        ctx_config = cls._meta_get("context")
-        context.ContextManager.validate({"config": ctx_config})
+        context.ContextManager.validate(cls._meta_get("context"))
         cls.validate_args(run_args)
 
     def _clone(self):
@@ -173,7 +172,7 @@ class VerifierManager(plugin.Plugin):
             LOG.info("Deleting old virtual environment.")
             shutil.rmtree(self.venv_dir)
 
-        LOG.info("Creating virtual environment.")
+        LOG.info("Creating virtual environment. It may take a few minutes.")
 
         LOG.debug("Initializing virtual environment in %s directory.",
                   self.venv_dir)

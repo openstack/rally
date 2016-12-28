@@ -18,9 +18,11 @@ import re
 import shutil
 import subprocess
 
+from rally.common.i18n import _LE
 from rally.common.io import subunit_v2
 from rally.common import logging
 from rally.common import utils as common_utils
+from rally import exceptions
 from rally.verification import context
 from rally.verification import manager
 from rally.verification import utils
@@ -97,8 +99,8 @@ class TestrLauncher(manager.VerifierManager):
             except (subprocess.CalledProcessError, OSError):
                 if os.path.exists(test_repository_dir):
                     shutil.rmtree(test_repository_dir)
-                LOG.error("Failed to initialize a new repository for 'testr'.")
-                raise
+                raise exceptions.RallyException(
+                    _LE("Failed to initialize testr."))
 
     def install(self):
         super(TestrLauncher, self).install()
@@ -133,7 +135,7 @@ class TestrLauncher(manager.VerifierManager):
     def _process_run_args(self, run_args):
         """Process run_args before verification execution.
 
-        This method is called by TestrContext before transforming run_args to
-        cli arguments of testr.
+        This method is called by TestrContext before transforming run_args into
+        cli arguments for testr.
         """
         return run_args

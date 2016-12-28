@@ -16,6 +16,7 @@ import subprocess
 
 import mock
 
+from rally import exceptions
 from rally.plugins.common.verification import testr
 from tests.unit import test
 
@@ -222,7 +223,7 @@ class TestrLauncherTestCase(test.TestCase):
         test_repository_dir = os.path.join(launcher.base_dir,
                                            ".testrepository")
 
-        self.assertRaises(OSError, launcher._init_testr)
+        self.assertRaises(exceptions.RallyException, launcher._init_testr)
 
         mock_check_output.assert_called_once_with(
             ["testr", "init"], cwd=launcher.repo_dir, env=launcher.environ)

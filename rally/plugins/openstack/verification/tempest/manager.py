@@ -57,6 +57,9 @@ class TempestManager(testr.TestrLauncher):
         return config.read_configfile(self.configfile)
 
     def configure(self, extra_options=None):
+        if not os.path.isdir(os.path.dirname(self.configfile)):
+            os.makedirs(os.path.dirname(self.configfile))
+
         cm = config.TempestConfigfileManager(self.verifier.deployment)
         raw_configfile = cm.create(self.configfile, extra_options)
         return raw_configfile
@@ -68,13 +71,12 @@ class TempestManager(testr.TestrLauncher):
         with open(self.configfile, "w") as f:
             f.write(new_content)
 
-    def install_extension(self, source, version=None, extra=None):
+    def install_extension(self, source, version=None, extra_settings=None):
         """Install a Tempest plugin."""
-        if extra:
+        if extra_settings:
             raise NotImplementedError(
-                _LE("'%s' verifiers don't support extra options for "
-                    "extension installations.")
-                % self.get_name())
+                _LE("'%s' verifiers don't support extra installation settings "
+                    "for extensions.") % self.get_name())
         version = version or "master"
         egg = re.sub("\.git$", "", os.path.basename(source.strip("/")))
         full_source = "git+{0}@{1}#egg={2}".format(source, version, egg)
