@@ -634,22 +634,6 @@ class Monasca(OSClient):
         return client
 
 
-@configure("cue", default_version="1", default_service_type="message-broker")
-class Cue(OSClient):
-    def create_client(self, service_type=None):
-        """Return cue client."""
-        from cueclient.v1 import client as cue
-
-        version = self.choose_version()
-        api_url = self._get_endpoint(service_type)
-        api_url += "v%s" % version
-
-        session = self.keystone.get_session()[0]
-        endpoint_type = self.credential.endpoint_type
-
-        return cue.Client(session=session, interface=endpoint_type)
-
-
 @configure("senlin", default_version="1", default_service_type="clustering",
            supported_versions=["1"])
 class Senlin(OSClient):

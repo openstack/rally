@@ -1553,12 +1553,6 @@ class FakeEC2Client(object):
         pass
 
 
-class FakeCueClient(object):
-
-    def __init__(self):
-        pass
-
-
 class FakeSenlinClient(object):
 
     def __init__(self):
