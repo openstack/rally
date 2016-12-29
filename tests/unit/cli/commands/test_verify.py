@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as dt
 import tempfile
 
 import mock
+import six
 
+from rally.cli import cliutils
 from rally.cli.commands import verify
 from rally.cli import envutils
 from tests.unit import fakes
@@ -237,9 +240,18 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_VERIFICATION, "v_uuid")
 
-    @mock.patch("rally.cli.commands.verify.cliutils.print_list")
-    def test_show(self, mock_print_list):
+    def test_show(self):
+        deployment_name = "Some Deploy"
+        verifier_name = "My Verifier"
+        verifier_type = "OldSchoolTestTool"
+        verifier_namespace = "OpenStack"
+        verifier = mock.Mock(type=verifier_type, namespace=verifier_namespace)
+        verifier.name = verifier_name
         verification = {
+            "uuid": "uuuiiiiddd",
+            "status": "success",
+            "created_at": dt.datetime(2016, 1, 1, 17, 0, 3, 66),
+            "updated_at": dt.datetime(2016, 1, 1, 17, 1, 5, 77),
             "tests_count": 2,
             "tests_duration": 4,
             "success": 1,
@@ -248,7 +260,9 @@ class VerifyCommandsTestCase(test.TestCase):
             "unexpected_success": 0,
             "failures": 1,
             "run_args": {
-                "load_list": ["test_1", "test_2"]
+                "load_list": ["test_1", "test_2"],
+                "skip_list": ["test_3"],
+                "concurrency": "3"
             },
             "tests": {
                 "test_1": {
@@ -265,9 +279,72 @@ class VerifyCommandsTestCase(test.TestCase):
                 }
             }
         }
+        self.fake_api.verifier.get.return_value = verifier
         self.fake_api.verification.get.return_value = mock.Mock(**verification)
+        self.fake_api.deployment.get.return_value = {"name": deployment_name}
 
-        self.verify.show(self.fake_api, "v_uuid", detailed=True)
+        # It is a hard task to mock default value of function argument, so we
+        # need to apply this workaround
+        original_print_dict = cliutils.print_dict
+        print_dict_calls = []
+
+        def print_dict(*args, **kwargs):
+            print_dict_calls.append(six.StringIO())
+            kwargs["out"] = print_dict_calls[-1]
+            original_print_dict(*args, **kwargs)
+
+        with mock.patch.object(verify.cliutils, "print_dict",
+                               new=print_dict):
+            self.verify.show(self.fake_api, "v_uuid", detailed=True)
+
+        self.assertEqual(1, len(print_dict_calls))
+
+        self.assertEqual(
+            "+----------------------------------------------------------------"
+            "--------------------+\n"
+            "|                                    Verification                "
+            "                    |\n"
+            "+---------------------+------------------------------------------"
+            "--------------------+\n"
+            "| UUID                | uuuiiiiddd                               "
+            "                    |\n"
+            "| Verifier name       | My Verifier                              "
+            "                    |\n"
+            "| Verifier type       | OldSchoolTestTool (namespace: OpenStack) "
+            "                    |\n"
+            "| Deployment name     | Some Deploy                              "
+            "                    |\n"
+            "| Started at          | 2016-01-01 17:00:03                      "
+            "                    |\n"
+            "| Finished at         | 2016-01-01 17:01:05                      "
+            "                    |\n"
+            "| Duration            | 0:01:02                                  "
+            "                    |\n"
+            "| Run arguments       | concurrency: 3                           "
+            "                    |\n"
+            "|                     | load_list: (value is too long, will be di"
+            "splayed separately) |\n"
+            "|                     | skip_list: (value is too long, will be di"
+            "splayed separately) |\n"
+            "| Tests count         | 2                                        "
+            "                    |\n"
+            "| Tests duration, sec | 4                                        "
+            "                    |\n"
+            "| Success             | 1                                        "
+            "                    |\n"
+            "| Skipped             | 0                                        "
+            "                    |\n"
+            "| Expected failures   | 0                                        "
+            "                    |\n"
+            "| Unexpected success  | 0                                        "
+            "                    |\n"
+            "| Failures            | 1                                        "
+            "                    |\n"
+            "| Status              | success                                  "
+            "                    |\n"
+            "+---------------------+------------------------------------------"
+            "--------------------+\n", print_dict_calls[0].getvalue())
+
         self.fake_api.verification.get.assert_called_once_with("v_uuid")
 
     @mock.patch("rally.cli.commands.verify.cliutils.print_list")
