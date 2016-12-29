@@ -83,7 +83,7 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
         """List hypervisors,then display the uptime of it.
 
         The scenario first list all hypervisors,then display
-        the uptime of the listed hypervisors in trun.
+        the uptime of the listed hypervisors in turn.
 
         Measure the "nova hypervisor-uptime" command performance.
 
