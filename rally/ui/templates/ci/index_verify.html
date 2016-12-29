@@ -1,6 +1,6 @@
 {% extends "/base.html" %}
 
-{% block title_text %}Rally Verification job results{% endblock %}
+{% block title_text %}Rally Verification Job Results{% endblock %}
 
 {% block css %}
     li { margin:2px 0 }
@@ -12,8 +12,8 @@
     .columns li { position:relative }
     .columns li > :first-child { display:block }
     .columns li > :nth-child(2) { display:block; position:static; left:165px; top:0; white-space:nowrap }
-    .fail {color: red; text-transform: uppercase}
-    .pass {color: green; display: none; text-transform: uppercase}
+    .fail {color: red}
+    .success {color: green}
 {% endblock %}
 
 {% block css_content_wrap %}margin:0 auto; padding:0 5px{% endblock %}
@@ -25,108 +25,92 @@
     @media only screen and (min-width: 720px) { .content-wrap { width:70% } }
 {% endblock %}
 
-{% block header_text %}Verify job results{% endblock %}
+{% block header_text %}Verify Job Results{% endblock %}
 
 {% block content %}
-    <h2>Job Logs and Job Result files</h2>
+    <h2>Logs and Results Files</h2>
     <ul class="columns">
-      <li><a href="console.html" class="rich">Job logs</a> <code>console.html</code>
+      <li><a href="console.html">Job logs</a> <code>console.html</code>
       <li><a href="logs/">Logs of all services</a> <code>logs/</code>
       <li><a href="rally-verify/">Results files</a> <code>rally-verify/</code>
     </ul>
 
-    <h2>Job Steps and Results</h2>
-    <h3>Table</h3>
-    <ul>
-        <li>Tempest Management</li>
-        <li>Launch verification(s)</li>
-    {% if compare %}
-        <li>Compare two verification results</li>
-    {% endif %}
-        <li>List all verifications</li>
-    </ul>
+    <h2>Steps</h2>
 
-    Each job step has output in all supported formats.
+    <span class="{{ list_plugins.status }}">[{{ list_plugins.status }}]</span>
+    <a href="{{ list_plugins.stdout_file }}">List plugins for verifiers management</a>
+    <code>$ {{ list_plugins.cmd }}</code><br>
 
-    <h4>Details</h4>
-    <span class="{{ install.status }}">[{{ install.status }}]</span>
-    <a href="{{ install.stdout_file }}">Tempest installation</a>
-    <code>$ {{ install.cmd }}</code>
+    <span class="{{ create_verifier.status }}">[{{ create_verifier.status }}]</span>
+    <a href="{{ create_verifier.stdout_file }}">Create a verifier</a>
+    <code>$ {{ create_verifier.cmd }}</code>
+    <span class="{{ list_verifiers.status }}">[{{ list_verifiers.status }}]</span>
+    <a href="{{ list_verifiers.stdout_file }}">List verifiers</a>
+    <code>$ {{ list_verifiers.cmd }}</code>
+    <span class="{{ update_verifier.status }}">[{{ update_verifier.status }}]</span>
+    <a href="{{ update_verifier.stdout_file }}">Switch the verifier to the penultimate version </a>
+    <code>$ {{ update_verifier.cmd }}</code>
+    <span class="{{ configure_verifier.status }}">[{{ configure_verifier.status }}]</span>
+    <a href="{{ configure_verifier.stdout_file }}">Generate and show the verifier config file</a>
+    <code>$ {{ configure_verifier.cmd }}</code><br>
 
-    <span class="{{ reinstall.status }}">[{{ reinstall.status }}]</span>
-    <a href="{{ reinstall.stdout_file }}">Tempest re-installation</a>
-    <code>$ {{ reinstall.cmd }}</code>
+    <span class="{{ add_verifier_ext.status }}">[{{ add_verifier_ext.status }}]</span>
+    <a href="{{ add_verifier_ext.stdout_file }}">Add a verifier extension</a>
+    <code>$ {{ add_verifier_ext.cmd }}</code>
+    <span class="{{ list_verifier_exts.status }}">[{{ list_verifier_exts.status }}]</span>
+    <a href="{{ list_verifier_exts.stdout_file }}">List verifier extensions</a>
+    <code>$ {{ list_verifier_exts.cmd }}</code><br>
 
-    <span class="{{ installplugin.status }}">[{{ installplugin.status }}]</span>
-    <a href="{{ installplugin.stdout_file }}">Tempest plugin installation</a>
-    <code>$ {{ installplugin.cmd }}</code>
-
-    <span class="{{ listplugins.status }}">[{{ listplugins.status }}]</span>
-    <a href="{{ listplugins.stdout_file }}">List installed Tempest plugins</a>
-    <code>$ {{ listplugins.cmd }}</code>
-
-    <span class="{{ discover.status }}">[{{ discover.status }}]</span>
-    <a href="{{ discover.stdout_file }}">Discovering tests</a>
-    <code>$ {{ discover.cmd }}</code>
-
-    <span class="{{ genconfig.status }}">[{{ genconfig.status }}]</span>
-    <a href="{{ genconfig.stdout_file }}">Tempest config generation</a>
-    <code>$ {{ genconfig.cmd }}</code>
-
-    <span class="{{ showconfig.status }}">[{{ showconfig.status}}]</span>
-    <a href="{{ showconfig.stdout_file }}">Show tempest config</a>
-    <code>$ {{ showconfig.cmd }}</code>
+    <span class="{{ list_verifier_tests.status }}">[{{ list_verifier_tests.status }}]</span>
+    <a href="{{ list_verifier_tests.stdout_file }}">List verifier tests</a>
+    <code>$ {{ list_verifier_tests.cmd }}</code><br>
 
 {% for i in range(verifications|length) %}
 {% if verifications|length > 1 %}
-    <br>Verification # {{ i + 1}}
+    <b>Verification # {{ i + 1}}</b><p>
+    <div style="padding-left:2em">
 {% endif %}
-    <ol>
-        <li>
-            <span class="{{ verifications[i].status }}">[{{ verifications[i].status }}]</span>
-            <a href="{{ verifications[i].stdout_file }}">Launch of verification</a>
-            <code>$ {{ verifications[i].cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ verifications[i].result_in_html.status }}">[{{ verifications[i].result_in_html.status }}]</span>
-            <a href="{{ verifications[i].result_in_html.output_file }}">Display raw results in HTML</a> [<a href="{{ verifications[i].result_in_html.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ verifications[i].result_in_html.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ verifications[i].result_in_json.status }}">[{{ verifications[i].result_in_json.status }}]</span>
-            <a href="{{ verifications[i].result_in_json.output_file }}">Display raw results in JSON</a> [<a href="{{ verifications[i].result_in_json.stdout_file }}">Output from CLI</a>]
-            <code>$ {{ verifications[i].result_in_json.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ verifications[i].show.status }}">[{{ verifications[i].show.status }}]</span>
-            <a href="{{ verifications[i].show.stdout_file }}">Display results table of the verification</a>
-            <code>$ {{ verifications[i].show.cmd }}</code>
-        </li>
-        <li>
-            <span class="{{ verifications[i].show_detailed.status }}">[{{ verifications[i].show_detailed.status }}]</span>
-            <a href="{{ verifications[i].show_detailed.stdout_file }}">Display results table of the verification with detailed errors</a><br />
-            <code>$ {{ verifications[i].show_detailed.cmd }}</code>
-        </li>
-    </ol>
+    <span class="{{ verifications[i].status }}">[{{ verifications[i].status }}]</span>
+    <a href="{{ verifications[i].stdout_file }}">Start verification</a>
+    <code>$ {{ verifications[i].cmd }}</code><br>
+
+    <span class="{{ verifications[i].show.status }}">[{{ verifications[i].show.status }}]</span>
+    <a href="{{ verifications[i].show.stdout_file }}">Show verification results</a>
+    <code>$ {{ verifications[i].show.cmd }}</code>
+    <span class="{{ verifications[i].show_detailed.status }}">[{{ verifications[i].show_detailed.status }}]</span>
+    <a href="{{ verifications[i].show_detailed.stdout_file }}">Show verification results with details</a>
+    <code>$ {{ verifications[i].show_detailed.cmd }}</code><br>
+
+    <span class="{{ verifications[i].json.status }}">[{{ verifications[i].json.status }}]</span>
+    <a href="{{ verifications[i].json.output_file }}">Generate the verification report in JSON format</a> [<a href="{{ verifications[i].json.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ verifications[i].json.cmd }}</code>
+    <span class="{{ verifications[i].html.status }}">[{{ verifications[i].html.status }}]</span>
+    <a href="{{ verifications[i].html.output_file }}">Generate the verification report in HTML format</a> [<a href="{{ verifications[i].html.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ verifications[i].html.cmd }}</code><br>
+{% if verifications|length > 1 %}
+    </div>
+{% endif %}
 {% endfor %}
 
 {% if compare %}
-    <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
-    <a href="{{ compare.html.output_file }}">Compare two verifications and display results in HTML</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid&gt; --html</code>
-
     <span class="{{ compare.json.status }}">[{{ compare.json.status }}]</span>
-    <a href="{{ compare.json.output_file }}">Compare two verifications and display results in JSON</a> [<a href="{{ compare.json.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid-2&gt; --json</code>
-
-    <span class="{{ compare.csv.status }}">[{{ compare.csv.status }}]</span>
-    <a href="{{ compare.csv.output_file }}">Compare two verifications and display results in CSV</a> [<a href="{{ compare.csv.stdout_file }}">Output from CLI</a>]
-    <code>$ rally verify results --uuid &lt;uuid-1&gt; &lt;uuid-2&gt; --csv</code>
+    <a href="{{ compare.json.output_file }}">Generate the trends report for two verifications in JSON format</a> [<a href="{{ compare.json.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ compare.json.cmd }}</code>
+    <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
+    <a href="{{ compare.html.output_file }}">Generate the trends report for two verifications in HTML format</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ compare.html.cmd }}</code><br>
 {% endif %}
 
     <span class="{{ list.status }}">[{{ list.status }}]</span>
-    <a href="{{ list.stdout_file }}">List of all verifications</a>
-    <code>$ {{ list.cmd }}</code>
+    <a href="{{ list.stdout_file }}">List verifications</a>
+    <code>$ {{ list.cmd }}</code><br>
+
+    <span class="{{ delete_verifier_ext.status }}">[{{ delete_verifier_ext.status }}]</span>
+    <a href="{{ delete_verifier_ext.stdout_file }}">Delete the verifier extension</a>
+    <code>$ {{ delete_verifier_ext.cmd }}</code>
+    <span class="{{ delete_verifier.status }}">[{{ delete_verifier.status }}]</span>
+    <a href="{{ delete_verifier.stdout_file }}">Delete the verifier and all verifications</a>
+    <code>$ {{ delete_verifier.cmd }}</code>
 
     <h2>About Rally</h2>
     <p>Rally is benchmarking and verification system for OpenStack:</p>
@@ -136,6 +120,5 @@
       <li><a href="https://rally.readthedocs.org/en/latest/">Documentation</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/HowTo">How to use Rally (locally)</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/RallyGates">How to add Rally job to your project</a>
-      <li><a href="https://www.mirantis.com/blog/rally-openstack-tempest-testing-made-simpler/">Rally: OpenStack Tempest Testing Made Simple(r) [a little outdated blog-post, but contains basic of Rally verification]</a>
     </ul>
 {% endblock %}
