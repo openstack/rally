@@ -423,6 +423,16 @@ class CinderScenario(scenario.OpenStackScenario):
             volume_type)
         return (tuple_res[0].status_code == 202)
 
+    @atomic.action_timer("cinder.set_volume_type_keys")
+    def _set_volume_type_keys(self, volume_type, metadata):
+        """Set extra specs on a volume type.
+
+        :param volume_type: The :class:`VolumeType` to set extra spec on
+        :param metadata: A dict of key/value pairs to be set
+        :returns: extra_specs if the request has been accepted
+        """
+        return volume_type.set_keys(metadata)
+
     @atomic.action_timer("cinder.transfer_create")
     def _transfer_create(self, volume_id):
         """Create a volume transfer.

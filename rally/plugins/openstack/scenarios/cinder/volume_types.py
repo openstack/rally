@@ -80,3 +80,21 @@ class CreateAndListEncryptionType(cinder_utils.CinderScenario):
         volume_type = self._create_volume_type(**kwargs)
         self._create_encryption_type(volume_type, specs)
         self._list_encryption_type(search_opts)
+
+
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_and_set_volume_type_keys")
+class CreateAndSetVolumeTypeKeys(cinder_utils.CinderScenario):
+
+    def run(self, volume_type_key, **kwargs):
+        """Create and set a volume type's extra specs.
+
+        :param volume_type_key:  A dict of key/value pairs to be set
+        :param kwargs: Optional parameters used during volume
+                       type creation.
+        """
+        volume_type = self._create_volume_type(**kwargs)
+
+        self._set_volume_type_keys(volume_type, volume_type_key)
