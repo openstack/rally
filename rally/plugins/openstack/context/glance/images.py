@@ -19,7 +19,7 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
+from rally.plugins.openstack.services.image import image
 from rally.task import context
 from rally.task import utils
 
@@ -49,41 +49,94 @@ class ImageGenerator(context.Context):
                 "enum": ["qcow2", "raw", "vhd", "vmdk", "vdi", "iso", "aki",
                          "ari", "ami"],
             },
+            "disk_format": {
+                "enum": ["qcow2", "raw", "vhd", "vmdk", "vdi", "iso", "aki",
+                         "ari", "ami"]
+            },
             "image_container": {
                 "type": "string",
+            },
+            "container_format": {
+                "enum": ["aki", "ami", "ari", "bare", "docker", "ova", "ovf"]
             },
             "image_name": {
                 "type": "string",
             },
-            "min_ram": {  # megabytes
+            "min_ram": {
+                "description": "Amount of RAM in MB",
                 "type": "integer",
                 "minimum": 0
             },
-            "min_disk": {  # gigabytes
+            "min_disk": {
+                "description": "Amount of disk space in GB",
                 "type": "integer",
                 "minimum": 0
+            },
+            "visibility": {
+                "enum": ["public", "private", "shared", "community"]
             },
             "images_per_tenant": {
                 "type": "integer",
                 "minimum": 1
             },
             "image_args": {
+                "description": "This param is deprecated from Rally-0.10.0",
                 "type": "object",
                 "additionalProperties": True
             }
         },
-        "required": ["image_url", "image_type", "image_container",
-                     "images_per_tenant"],
+        "oneOf": [{"description": "It is been used since Rally 0.10.0",
+                   "required": ["image_url", "disk_format",
+                                "container_format", "images_per_tenant"]},
+                  {"description": "One of backward compatible way",
+                   "required": ["image_url", "image_type",
+                                "container_format", "images_per_tenant"]},
+                  {"description": "One of backward compatible way",
+                   "required": ["image_url", "disk_format",
+                                "image_container", "images_per_tenant"]},
+                  {"description": "One of backward compatible way",
+                   "required": ["image_url", "image_type",
+                                "image_container", "images_per_tenant"]}],
         "additionalProperties": False
     }
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
-        image_url = self.config["image_url"]
-        image_type = self.config["image_type"]
-        image_container = self.config["image_container"]
-        images_per_tenant = self.config["images_per_tenant"]
+        image_url = self.config.get("image_url")
+        image_type = self.config.get("image_type")
+        disk_format = self.config.get("disk_format")
+        image_container = self.config.get("image_container")
+        container_format = self.config.get("container_format")
+        images_per_tenant = self.config.get("images_per_tenant")
         image_name = self.config.get("image_name")
+        visibility = self.config.get("visibility", "private")
+        min_disk = self.config.get("min_disk", 0)
+        min_ram = self.config.get("min_ram", 0)
+        image_args = self.config.get("image_args", {})
+        is_public = image_args.get("is_public")
+
+        if is_public:
+            LOG.warning(_("The 'is_public' argument is deprecated "
+                          "since Rally 0.10.0; specify visibility "
+                          "arguments instead"))
+            if "visibility" not in self.config:
+                visibility = "public" if is_public else "private"
+
+        if image_type:
+            LOG.warning(_("The 'image_type' argument is deprecated "
+                          "since Rally 0.10.0; specify disk_format "
+                          "arguments instead"))
+            disk_format = image_type
+
+        if image_container:
+            LOG.warning(_("The 'image_container' argument is deprecated "
+                          "since Rally 0.10.0; specify container_format "
+                          "arguments instead"))
+            container_format = image_container
+
+        if image_args:
+            LOG.warning(_("The 'kwargs' argument is deprecated since "
+                          "Rally 0.10.0; specify exact arguments instead"))
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -91,21 +144,9 @@ class ImageGenerator(context.Context):
             clients = osclients.Clients(
                 user["credential"],
                 api_info=self.context["config"].get("api_versions"))
-            glance_wrap = glance_wrapper.wrap(clients.glance, self)
-
-            kwargs = self.config.get("image_args", {})
-            if self.config.get("min_ram") is not None:
-                LOG.warning("The 'min_ram' argument is deprecated; specify "
-                            "arbitrary arguments with 'image_args' instead")
-                kwargs["min_ram"] = self.config["min_ram"]
-            if self.config.get("min_disk") is not None:
-                LOG.warning("The 'min_disk' argument is deprecated; specify "
-                            "arbitrary arguments with 'image_args' instead")
-                kwargs["min_disk"] = self.config["min_disk"]
-            if "is_public" in kwargs:
-                LOG.warning("The 'is_public' argument is deprecated since "
-                            "Rally 0.8.0; specify visibility arguments "
-                            "instead")
+            image_service = image.Image(
+                clients,
+                name_generator=self.generate_random_name)
 
             for i in range(images_per_tenant):
                 if image_name and i > 0:
@@ -115,10 +156,15 @@ class ImageGenerator(context.Context):
                 else:
                     cur_name = self.generate_random_name()
 
-                image = glance_wrap.create_image(
-                    image_container, image_url, image_type,
-                    name=cur_name, **kwargs)
-                current_images.append(image.id)
+                image_obj = image_service.create_image(
+                    image_name=cur_name,
+                    container_format=container_format,
+                    image_location=image_url,
+                    disk_format=disk_format,
+                    visibility=visibility,
+                    min_disk=min_disk,
+                    min_ram=min_ram)
+                current_images.append(image_obj.id)
 
             self.context["tenants"][tenant_id]["images"] = current_images
 
@@ -129,14 +175,15 @@ class ImageGenerator(context.Context):
             clients = osclients.Clients(
                 user["credential"],
                 api_info=self.context["config"].get("api_versions"))
-            glance_wrap = glance_wrapper.wrap(clients.glance, self)
-            for image in self.context["tenants"][tenant_id].get("images", []):
-                clients.glance().images.delete(image)
+            image_service = image.Image(clients)
+            for image_id in self.context["tenants"][tenant_id].get(
+                    "images", []):
+                image_service.delete_image(image_id=image_id)
                 utils.wait_for_status(
-                    clients.glance().images.get(image),
+                    image_service.get_image(image_id=image_id),
                     ["deleted", "pending_delete"],
                     check_deletion=True,
-                    update_resource=glance_wrap.get_image,
+                    update_resource=image_service.get_image,
                     timeout=CONF.benchmark.glance_image_delete_timeout,
                     check_interval=CONF.benchmark.
                     glance_image_delete_poll_interval)

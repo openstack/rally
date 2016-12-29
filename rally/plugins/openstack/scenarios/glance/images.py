@@ -16,8 +16,8 @@
 from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
-from rally.plugins.openstack.scenarios.glance import utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack.services.image import image
 from rally.task import types
 from rally.task import validation
 
@@ -26,13 +26,26 @@ LOG = logging.getLogger(__name__)
 """Scenarios for Glance images."""
 
 
+class GlanceBasic(scenario.OpenStackScenario):
+    def __init__(self, context=None, admin_clients=None, clients=None):
+        super(GlanceBasic, self).__init__(context, admin_clients, clients)
+        if hasattr(self, "_admin_clients"):
+            self.admin_glance = image.Image(
+                self._admin_clients, name_generator=self.generate_random_name,
+                atomic_inst=self.atomic_actions())
+        if hasattr(self, "_clients"):
+            self.glance = image.Image(
+                self._clients, name_generator=self.generate_random_name,
+                atomic_inst=self.atomic_actions())
+
+
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.required_services(consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_list_image")
-class CreateAndListImage(utils.GlanceScenario, nova_utils.NovaScenario):
+class CreateAndListImage(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format, **kwargs):
         """Create an image and then list all images.
@@ -52,12 +65,13 @@ class CreateAndListImage(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param kwargs: optional parameters to create image
         """
-        image = self._create_image(container_format,
-                                   image_location,
-                                   disk_format,
-                                   **kwargs)
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            **kwargs)
         self.assertTrue(image)
-        image_list = self._list_images()
+        image_list = self.glance.list_images()
         self.assertIn(image.id, [i.id for i in image_list])
 
 
@@ -65,7 +79,7 @@ class CreateAndListImage(utils.GlanceScenario, nova_utils.NovaScenario):
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.list_images")
-class ListImages(utils.GlanceScenario, nova_utils.NovaScenario):
+class ListImages(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self):
         """List all images.
@@ -77,7 +91,7 @@ class ListImages(utils.GlanceScenario, nova_utils.NovaScenario):
         uploaded for them we will be able to test the performance of
         glance image-list command in this case.
         """
-        self._list_images()
+        self.glance.list_images()
 
 
 @types.convert(image_location={"type": "path_or_url"},
@@ -86,7 +100,7 @@ class ListImages(utils.GlanceScenario, nova_utils.NovaScenario):
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_delete_image")
-class CreateAndDeleteImage(utils.GlanceScenario, nova_utils.NovaScenario):
+class CreateAndDeleteImage(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format, **kwargs):
         """Create and then delete an image.
@@ -98,11 +112,12 @@ class CreateAndDeleteImage(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param kwargs: optional parameters to create image
         """
-        image = self._create_image(container_format,
-                                   image_location,
-                                   disk_format,
-                                   **kwargs)
-        self._delete_image(image)
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            **kwargs)
+        self.glance.delete_image(image.id)
 
 
 @types.convert(flavor={"type": "nova_flavor"},
@@ -113,8 +128,7 @@ class CreateAndDeleteImage(utils.GlanceScenario, nova_utils.NovaScenario):
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance", "nova"]},
                     name="GlanceImages.create_image_and_boot_instances")
-class CreateImageAndBootInstances(utils.GlanceScenario,
-                                  nova_utils.NovaScenario):
+class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format,
             flavor, number_instances, create_image_kwargs=None,
@@ -140,9 +154,11 @@ class CreateImageAndBootInstances(utils.GlanceScenario,
                         "'boot_server_kwargs' for additional parameters when "
                         "booting servers.")
 
-        image = self._create_image(container_format,
-                                   image_location,
-                                   disk_format,
-                                   **create_image_kwargs)
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            **create_image_kwargs)
+
         self._boot_servers(image.id, flavor, number_instances,
                            **boot_server_kwargs)

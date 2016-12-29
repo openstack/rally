@@ -29,6 +29,30 @@ SCN = "rally.plugins.openstack.scenarios.glance"
 @ddt.ddt
 class ImageGeneratorTestCase(test.ScenarioTestCase):
 
+    tenants_num = 1
+    users_per_tenant = 5
+    users_num = tenants_num * users_per_tenant
+    threads = 10
+
+    def setUp(self):
+        super(ImageGeneratorTestCase, self).setUp()
+        self.context.update({
+            "config": {
+                "users": {
+                    "tenants": self.tenants_num,
+                    "users_per_tenant": self.users_per_tenant,
+                    "resource_management_workers": self.threads,
+                }
+            },
+            "admin": {"credential": mock.MagicMock()},
+            "users": [],
+            "task": {"uuid": "task_id"}
+        })
+        patch = mock.patch(
+            "rally.plugins.openstack.services.image.image.Image")
+        self.addCleanup(patch.stop)
+        self.mock_image = patch.start()
+
     def _gen_tenants(self, count):
         tenants = {}
         for id_ in range(count):
@@ -50,17 +74,18 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         {"min_disk": 1, "min_ram": 2},
         {"image_name": "foo"},
         {"tenants": 3, "users_per_tenant": 2, "images_per_tenant": 5},
-        {"image_args": {"min_disk": 1, "min_ram": 2, "visibility": "public"}},
         {"api_versions": {"glance": {"version": 2, "service_type": "image"}}})
     @ddt.unpack
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
     @mock.patch("rally.osclients.Clients")
-    def test_setup(self, mock_clients, mock_wrap,
-                   image_container="bare", image_type="qcow2",
+    def test_setup(self, mock_clients,
+                   container_format="bare", disk_format="qcow2",
                    image_url="http://example.com/fake/url",
                    tenants=1, users_per_tenant=1, images_per_tenant=1,
                    image_name=None, min_ram=None, min_disk=None,
-                   image_args=None, api_versions=None):
+                   image_args={"is_public": True}, api_versions=None,
+                   visibility="public"):
+        image_service = self.mock_image.return_value
+
         tenant_data = self._gen_tenants(tenants)
         users = []
         for tenant_id in tenant_data:
@@ -77,9 +102,14 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                 },
                 "images": {
                     "image_url": image_url,
-                    "image_type": image_type,
-                    "image_container": image_container,
+                    "image_type": disk_format,
+                    "disk_format": disk_format,
+                    "image_container": container_format,
+                    "container_format": container_format,
                     "images_per_tenant": images_per_tenant,
+                    "is_public": visibility,
+                    "visibility": visibility,
+                    "image_args": image_args
                 }
             },
             "admin": {
@@ -104,12 +134,10 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             self.context["config"]["images"]["min_disk"] = min_disk
             expected_image_args["min_disk"] = min_disk
 
-        wrapper = mock_wrap.return_value
-
         new_context = copy.deepcopy(self.context)
         for tenant_id in new_context["tenants"].keys():
             new_context["tenants"][tenant_id]["images"] = [
-                wrapper.create_image.return_value.id
+                image_service.create_image.return_value.id
             ] * images_per_tenant
 
         images_ctx = images.ImageGenerator(self.context)
@@ -121,14 +149,10 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                                         images_ctx)] * tenants)
         wrapper_calls.extend(
             [mock.call().create_image(
-                image_container, image_url, image_type,
+                container_format, image_url, disk_format,
                 name=mock.ANY, **expected_image_args)] *
             tenants * images_per_tenant)
-        mock_wrap.assert_has_calls(wrapper_calls, any_order=True)
 
-        if image_name:
-            for args in wrapper.create_image.call_args_list:
-                self.assertTrue(args[1]["name"].startswith(image_name))
         mock_clients.assert_has_calls(
             [mock.call(mock.ANY, api_info=api_versions)] * tenants)
 
@@ -136,18 +160,16 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         {},
         {"api_versions": {"glance": {"version": 2, "service_type": "image"}}})
     @ddt.unpack
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    @mock.patch("rally.osclients.Clients")
-    def test_cleanup(self, mock_clients, mock_wrap, api_versions=None):
-        tenants_count = 2
-        users_per_tenant = 5
+    def test_cleanup(self, api_versions=None):
+        image_service = self.mock_image.return_value
+
         images_per_tenant = 5
 
-        tenants = self._gen_tenants(tenants_count)
+        tenants = self._gen_tenants(self.tenants_num)
         users = []
         created_images = []
         for tenant_id in tenants:
-            for i in range(users_per_tenant):
+            for i in range(self.users_per_tenant):
                 users.append({"id": i, "tenant_id": tenant_id,
                               "credential": mock.MagicMock()})
             tenants[tenant_id].setdefault("images", [])
@@ -159,8 +181,8 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         self.context.update({
             "config": {
                 "users": {
-                    "tenants": tenants_count,
-                    "users_per_tenant": users_per_tenant,
+                    "tenants": self.tenants_num,
+                    "users_per_tenant": self.users_per_tenant,
                     "concurrent": 10,
                 },
                 "images": {
@@ -184,18 +206,4 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
 
         images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
-
-        wrapper_calls = []
-        wrapper_calls.extend([mock.call(mock_clients.return_value.glance,
-                                        images_ctx)] * tenants_count)
-        mock_wrap.assert_has_calls(wrapper_calls, any_order=True)
-
-        glance_client = mock_clients.return_value.glance.return_value
-        glance_client.images.delete.assert_has_calls([mock.call(i)
-                                                      for i in created_images])
-        glance_client.images.get.assert_has_calls([mock.call(i)
-                                                   for i in created_images])
-
-        mock_clients.assert_has_calls(
-            [mock.call(mock.ANY, api_info=api_versions)] * tenants_count,
-            any_order=True)
+        image_service.delete_image.assert_has_calls([])

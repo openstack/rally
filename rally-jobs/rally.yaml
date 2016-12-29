@@ -867,8 +867,8 @@
           users_per_tenant: 2
         images:
           image_url: "{{ cirros_image_url }}"
-          image_type: "qcow2"
-          image_container: "bare"
+          disk_format: "qcow2"
+          container_format: "bare"
           images_per_tenant: 1
       sla:
         failure_rate:
@@ -885,8 +885,8 @@
           users_per_tenant: 2
         images:
           image_url: "~/.rally/extra/fake-image.img"
-          image_type: "qcow2"
-          image_container: "bare"
+          disk_format: "qcow2"
+          container_format: "bare"
           images_per_tenant: 1
       sla:
         failure_rate:
@@ -913,6 +913,7 @@
 #        failure_rate:
 #          max: 0
 #
+
     -
       args:
         image_location: "{{ cirros_image_url }}"
@@ -932,6 +933,7 @@
       sla:
         failure_rate:
           max: 0
+
 #
 #    -
 #      args:
@@ -976,6 +978,7 @@
 #        failure_rate:
 #          max: 0
 #
+
     -
       args:
         image_location: "~/.rally/extra/fake-image.img"

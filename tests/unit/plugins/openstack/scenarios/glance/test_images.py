@@ -23,87 +23,106 @@ from tests.unit import test
 BASE = "rally.plugins.openstack.scenarios.glance.images"
 
 
-class GlanceImagesTestCase(test.ScenarioTestCase):
+class GlanceBasicTestCase(test.ScenarioTestCase):
 
-    @mock.patch("%s.CreateAndListImage._list_images" % BASE)
-    @mock.patch("%s.CreateAndListImage._create_image" % BASE)
-    def test_create_and_list_image(self,
-                                   mock_create_image,
-                                   mock_list_images):
+    def get_test_context(self):
+        context = super(GlanceBasicTestCase, self).get_test_context()
+        context.update({
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "tenant": {"id": "fake_tenant_id",
+                       "name": "fake_tenant_name"}
+        })
+        return context
 
-        fake_image = fakes.FakeImage(id=1, name="img_name1")
-        mock_create_image.return_value = fake_image
-        mock_list_images.return_value = [
-            fakes.FakeImage(id=0, name="img_name1"),
+    def setUp(self):
+        super(GlanceBasicTestCase, self).setUp()
+        patch = mock.patch(
+            "rally.plugins.openstack.services.image.image.Image")
+        self.addCleanup(patch.stop)
+        self.mock_image = patch.start()
+
+    def test_create_and_list_image(self):
+        image_service = self.mock_image.return_value
+        fake_image = mock.Mock(id=1, name="img_2")
+        image_service.create_image.return_value = fake_image
+        image_service.list_images.return_value = [
+            mock.Mock(id=0, name="img_1"),
             fake_image,
-            fakes.FakeImage(id=2, name="img_name1")
-        ]
+            mock.Mock(id=2, name="img_3")]
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "fakearg": "f"}
 
         # Positive case
         images.CreateAndListImage(self.context).run(
             "cf", "url", "df", fakearg="f")
-        mock_create_image.assert_called_once_with(
-            "cf", "url", "df", fakearg="f")
-        mock_list_images.assert_called_once_with()
+        image_service.create_image.assert_called_once_with(**call_args)
 
         # Negative case: image isn't created
-        mock_create_image.return_value = None
+        image_service.create_image.return_value = None
         self.assertRaises(exceptions.RallyAssertionError,
                           images.CreateAndListImage(self.context).run,
                           "cf", "url", "df", fakearg="f")
-        mock_create_image.assert_called_with(
-            "cf", "url", "df", fakearg="f")
+        image_service.create_image.assert_called_with(**call_args)
 
         # Negative case: created image n ot in the list of available images
-        mock_create_image.return_value = fakes.FakeImage(
+        image_service.create_image.return_value = mock.Mock(
             id=12, name="img_nameN")
         self.assertRaises(exceptions.RallyAssertionError,
                           images.CreateAndListImage(self.context).run,
                           "cf", "url", "df", fakearg="f")
-        mock_create_image.assert_called_with(
-            "cf", "url", "df", fakearg="f")
-        mock_list_images.assert_called_with()
+        image_service.create_image.assert_called_with(**call_args)
+        image_service.list_images.assert_called_with()
 
-    @mock.patch("%s.ListImages._list_images" % BASE)
-    def test_list_images(self, mock_list_images__list_images):
+    def test_list_images(self):
+        image_service = self.mock_image.return_value
+
         images.ListImages(self.context).run()
-        mock_list_images__list_images.assert_called_once_with()
+        image_service.list_images.assert_called_once_with()
 
-    @mock.patch("%s.CreateAndDeleteImage._delete_image" % BASE)
-    @mock.patch("%s.CreateAndDeleteImage._create_image" % BASE)
-    @mock.patch("%s.CreateAndDeleteImage.generate_random_name" % BASE,
-                return_value="test-rally-image")
-    def test_create_and_delete_image(self,
-                                     mock_random_name,
-                                     mock_create_image,
-                                     mock_delete_image):
-        fake_image = object()
-        mock_create_image.return_value = fake_image
+    def test_create_and_delete_image(self):
+        image_service = self.mock_image.return_value
+
+        fake_image = fakes.FakeImage(id=1, name="imagexxx")
+        image_service.create_image.return_value = fake_image
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "fakearg": "f"}
 
         images.CreateAndDeleteImage(self.context).run(
             "cf", "url", "df", fakearg="f")
 
-        mock_create_image.assert_called_once_with(
-            "cf", "url", "df", fakearg="f")
-        mock_delete_image.assert_called_once_with(fake_image)
+        image_service.create_image.assert_called_once_with(**call_args)
+        image_service.delete_image.assert_called_once_with(fake_image.id)
 
     @mock.patch("%s.CreateImageAndBootInstances._boot_servers" % BASE)
-    @mock.patch("%s.CreateImageAndBootInstances._create_image" % BASE)
-    def test_create_image_and_boot_instances(self,
-                                             mock_create_image,
-                                             mock_boot_servers):
+    def test_create_image_and_boot_instances(self, mock_boot_servers):
+        image_service = self.mock_image.return_value
+
         fake_image = fakes.FakeImage()
         fake_servers = [mock.Mock() for i in range(5)]
-        mock_create_image.return_value = fake_image
+        image_service.create_image.return_value = fake_image
         mock_boot_servers.return_value = fake_servers
         create_image_kwargs = {"fakeimagearg": "f"}
         boot_server_kwargs = {"fakeserverarg": "f"}
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "fakeimagearg": "f"}
 
         images.CreateImageAndBootInstances(self.context).run(
             "cf", "url", "df", "fid", 5,
             create_image_kwargs=create_image_kwargs,
             boot_server_kwargs=boot_server_kwargs)
-        mock_create_image.assert_called_once_with("cf", "url", "df",
-                                                  **create_image_kwargs)
+        image_service.create_image.assert_called_once_with(**call_args)
         mock_boot_servers.assert_called_once_with("image-id-0", "fid",
                                                   5, **boot_server_kwargs)
