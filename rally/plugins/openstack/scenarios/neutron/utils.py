@@ -784,3 +784,29 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").delete_bgpvpn_router_assoc(
             bgpvpn["bgpvpn"]["id"], router_assoc["router_association"]["id"])
+
+    @atomic.action_timer("neutron.create_security_group_rule")
+    def _create_security_group_rule(self, security_group_id,
+                                    **security_group_rule_args):
+        """Create Neutron security-group-rule.
+
+        param: security_group_id: id of neutron security_group
+        param: security_group_rule_args: dict, POST
+               /v2.0/security-group-rules request options
+        return: dict, neutron security-group-rule
+        """
+        security_group_rule_args["security_group_id"] = security_group_id
+        if "direction" not in security_group_rule_args:
+            security_group_rule_args["direction"] = "ingress"
+
+        return self.clients("neutron").create_security_group_rule(
+            {"security_group_rule": security_group_rule_args})
+
+    @atomic.action_timer("neutron.list_security_group_rules")
+    def _list_security_group_rules(self, **kwargs):
+        """List all security group rules.
+
+        :param kwargs: Optional additional arguments for roles list
+        :return: list of security group rules
+        """
+        return self.clients("neutron").list_security_group_rules(**kwargs)

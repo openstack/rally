@@ -788,6 +788,48 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_security_group")
 
+    def test_create_security_group_rule(self):
+        security_group_rule_args = {"description": "Fake Rule"}
+        expected_security_group_rule = {
+            "security_group_rule": {
+                "id": "fake-id",
+                "security_group_id": "security-group-id",
+                "direction": "ingress",
+                "description": "Fake Rule"
+            }
+        }
+        client = self.clients("neutron")
+        client.create_security_group_rule = mock.Mock(
+            return_value=expected_security_group_rule)
+
+        security_group_rule_data = {
+            "security_group_rule":
+                {"security_group_id": "security-group-id",
+                 "direction": "ingress",
+                 "description": "Fake Rule"}
+        }
+        result_security_group_rule = self.scenario._create_security_group_rule(
+            "security-group-id", **security_group_rule_args)
+        self.assertEqual(expected_security_group_rule,
+                         result_security_group_rule)
+        client.create_security_group_rule.assert_called_once_with(
+            security_group_rule_data)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_security_group_rule")
+
+    def test_list_security_group_rules(self):
+        security_group_rules_list = [{"id": "security-group-rule-id"}]
+        security_group_rules_dict = {
+            "security_group_rules": security_group_rules_list}
+
+        self.clients("neutron").list_security_group_rules = mock.Mock(
+            return_value=security_group_rules_dict)
+        self.assertEqual(
+            self.scenario._list_security_group_rules(),
+            self.clients("neutron").list_security_group_rules.return_value)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.list_security_group_rules")
+
     @ddt.data(
         {"networks": [{"subnets": "subnet-id"}]},
         {"pool_create_args": None, "networks": [{"subnets": ["subnet-id"]}]},
