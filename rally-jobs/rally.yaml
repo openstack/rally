@@ -556,6 +556,17 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        sleep: 0
+      runner:
+        type: "constant"
+        times: 4500
+        concurrency: 20
+      sla:
+        failure_rate:
+          max: 0
+
   Dummy.dummy_exception:
     -
       args:

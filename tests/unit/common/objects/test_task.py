@@ -385,9 +385,10 @@ class WorkloadTestCase(test.TestCase):
         mock_workload_create.return_value = self.workload
         workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
 
-        workload = workload.add_workload_data({"data": "foo"})
+        workload = workload.add_workload_data(0, {"data": "foo"})
         mock_workload_data_create.assert_called_once_with(
-            self.workload["task_uuid"], self.workload["uuid"], {"data": "foo"})
+            self.workload["task_uuid"], self.workload["uuid"],
+            0, {"data": "foo"})
 
     @mock.patch("rally.common.objects.task.db.workload_set_results")
     @mock.patch("rally.common.objects.task.db.workload_create")

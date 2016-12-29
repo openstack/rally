@@ -20,6 +20,7 @@ import time
 import traceback
 
 import jsonschema
+from oslo_config import cfg
 import six
 
 from rally.common.i18n import _
@@ -39,6 +40,14 @@ from rally.task import sla
 
 
 LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
+
+TASK_ENGINE_OPTS = [
+    cfg.IntOpt("raw_result_chunk_size", default=1000, min=1,
+               help="Size of raw result chunk in iterations"),
+]
+CONF.register_opts(TASK_ENGINE_OPTS)
 
 
 class ResultConsumer(object):
@@ -69,6 +78,7 @@ class ResultConsumer(object):
         self.runner = runner
         self.load_started_at = float("inf")
         self.load_finished_at = 0
+        self.workload_data_count = 0
 
         self.sla_checker = sla.SLAChecker(key["kw"])
         self.hook_executor = hook.HookExecutor(key["kw"], self.task)
@@ -109,6 +119,17 @@ class ResultConsumer(object):
                         self.task.update_status(
                             consts.TaskStatus.SOFT_ABORTING)
                         task_aborted = True
+
+                # save results chunks
+                chunk_size = CONF.raw_result_chunk_size
+                while len(self.results) >= chunk_size:
+                    results_chunk = self.results[:chunk_size]
+                    self.results = self.results[chunk_size:]
+                    results_chunk.sort(key=lambda x: x["timestamp"])
+                    self.workload.add_workload_data(self.workload_data_count,
+                                                    {"raw": results_chunk})
+                    self.workload_data_count += 1
+
             elif self.is_done.isSet():
                 break
             else:
@@ -136,9 +157,6 @@ class ResultConsumer(object):
                 self.task["uuid"]) == consts.TaskStatus.ABORTED:
             self.sla_checker.set_aborted_manually()
 
-        # NOTE(boris-42): Sort in order of starting instead of order of ending
-        self.results.sort(key=lambda x: x["timestamp"])
-
         load_duration = max(self.load_finished_at - self.load_started_at, 0)
 
         LOG.info("Load duration is: %s" % utils.format_float_to_str(
@@ -153,12 +171,17 @@ class ResultConsumer(object):
             "full_duration": self.finish - self.start,
             "sla": self.sla_checker.results(),
         }
-        self.runner.send_event(type="load_finished", value=results)
         if "hooks" in self.key["kw"]:
             self.event_thread.join()
             results["hooks"] = self.hook_executor.results()
 
-        self.workload.add_workload_data({"raw": self.results})
+        if self.results:
+            # NOTE(boris-42): Sort in order of starting
+            #                 instead of order of ending
+            self.results.sort(key=lambda x: x["timestamp"])
+            self.workload.add_workload_data(self.workload_data_count,
+                                            {"raw": self.results})
+
         self.workload.set_results(results)
 
     @staticmethod

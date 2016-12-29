@@ -111,6 +111,10 @@
 # value)
 #openstack_client_http_timeout = 180.0
 
+# Size of raw result chunk in iterations (integer value)
+# Minimum value: 1
+#raw_result_chunk_size = 1000
+
 
 [benchmark]
 
@@ -242,12 +246,12 @@
 # the status. (floating point value)
 #magnum_cluster_create_prepoll_delay = 5.0
 
-# Time(in sec) to wait for magnum cluster to be created. (floating point
-# value)
+# Time(in sec) to wait for magnum cluster to be created. (floating
+# point value)
 #magnum_cluster_create_timeout = 1200.0
 
-# Time interval(in sec) between checks when waiting for cluster creation.
-# (floating point value)
+# Time interval(in sec) between checks when waiting for cluster
+# creation. (floating point value)
 #magnum_cluster_create_poll_interval = 1.0
 
 # Delay between creating Manila share and polling for its status.

@@ -257,15 +257,17 @@ def workload_create(task_uuid, subtask_uuid, key):
     return get_impl().workload_create(task_uuid, subtask_uuid, key)
 
 
-def workload_data_create(task_uuid, workload_uuid, data):
+def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
     """Create a workload data.
 
     :param task_uuid: string with UUID of Task instance.
     :param workload_uuid: string with UUID of Workload instance.
+    :param chunk_order: ordinal index of workload data
     :param data: dict with record values on the workload data.
     :returns: a dict with data on the workload data.
     """
-    return get_impl().workload_data_create(task_uuid, workload_uuid, data)
+    return get_impl().workload_data_create(task_uuid, workload_uuid,
+                                           chunk_order, data)
 
 
 def workload_set_results(workload_uuid, data):
