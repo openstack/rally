@@ -3,7 +3,6 @@
 
 build-essential [platform:dpkg]
 gcc [platform:rpm]
-git
 gmp-devel [platform:rpm]
 libffi-dev [platform:dpkg]
 libffi-devel [platform:rpm !platform:opensuse]
@@ -20,4 +19,3 @@ postgresql93-devel [platform:opensuse]
 python-dev [platform:dpkg]
 python-devel [platform:rpm]
 redhat-rpm-config [platform:rpm]
-wget
