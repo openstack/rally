@@ -46,8 +46,8 @@ class VerifyCommands(object):
     @staticmethod
     def _print_totals(totals):
         print("\n======\n"
-              "Totals\n"
-              "======\n"
+              "Totals"
+              "\n======\n"
               "Ran: %(tests_count)s tests in %(tests_duration)s sec.\n"
               " - Success: %(success)s\n"
               " - Skipped: %(skipped)s\n"
@@ -283,7 +283,7 @@ class VerifyCommands(object):
                                             recreate=recreate)
 
         if show:
-            print("\n" + config)
+            print("\n" + config.strip() + "\n")
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -486,9 +486,12 @@ class VerifyCommands(object):
         cliutils.print_list([verification], fields, formatters=formatters,
                             normalize_field_names=True)
 
-        if detailed:
-            print(_("\nRun arguments:"))
-            print(json.dumps(verification.run_args, indent=4))
+        print(_("\nTotals:"))
+        fields = ["Tests count", "Tests duration, sec", "Success", "Skipped",
+                  "Expected failures", "Unexpected success", "Failures"]
+        formatters = {"Tests duration, sec": lambda v: v["tests_duration"]}
+        cliutils.print_list([verification], fields, formatters=formatters,
+                            normalize_field_names=True)
 
         print(_("\nTests:"))
         tests = verification.tests
@@ -499,16 +502,10 @@ class VerifyCommands(object):
         cliutils.print_list(values, fields, formatters=formatters,
                             normalize_field_names=True, sortby_index=index)
 
-        totals = {"tests_count": verification.tests_count,
-                  "tests_duration": verification.tests_duration,
-                  "success": verification.success,
-                  "skipped": verification.skipped,
-                  "expected_failures": verification.expected_failures,
-                  "unexpected_success": verification.unexpected_success,
-                  "failures": verification.failures}
-        self._print_totals(totals)
-
         if detailed:
+            print(_("\nRun arguments:"))
+            print(json.dumps(verification.run_args, indent=4))
+
             failures = [t for t in tests.values() if t["status"] == "fail"]
             if failures:
                 print(_("\nFailures:"))

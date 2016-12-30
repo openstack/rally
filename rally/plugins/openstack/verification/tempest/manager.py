@@ -34,8 +34,7 @@ LOG = logging.getLogger(__name__)
 
 @manager.configure(name="tempest", namespace="openstack",
                    default_repo="https://git.openstack.org/openstack/tempest",
-                   context={"tempest_configuration": {},
-                            "testr_verifier": {}})
+                   context={"tempest_configuration": {}, "testr_verifier": {}})
 class TempestManager(testr.TestrLauncher):
     """Plugin for Tempest management."""
 
@@ -57,8 +56,8 @@ class TempestManager(testr.TestrLauncher):
         return config.read_configfile(self.configfile)
 
     def configure(self, extra_options=None):
-        if not os.path.isdir(os.path.dirname(self.configfile)):
-            os.makedirs(os.path.dirname(self.configfile))
+        if not os.path.isdir(self.home_dir):
+            os.makedirs(self.home_dir)
 
         cm = config.TempestConfigfileManager(self.verifier.deployment)
         raw_configfile = cm.create(self.configfile, extra_options)
@@ -94,11 +93,12 @@ class TempestManager(testr.TestrLauncher):
         # for plugins are listed in the test-requirements.txt file.
         test_reqs_path = os.path.join(self.base_dir, "extensions",
                                       egg, "test-requirements.txt")
-        # TODO(andreykurilin): check that packages from test-requirements are
-        #   present in system in case of system_wide installation
-        if not self.verifier.system_wide and os.path.exists(test_reqs_path):
-            utils.check_output(["pip", "install", "-r", test_reqs_path],
-                               cwd=self.base_dir, env=self.environ)
+        if os.path.exists(test_reqs_path):
+            if not self.verifier.system_wide:
+                utils.check_output(["pip", "install", "-r", test_reqs_path],
+                                   cwd=self.base_dir, env=self.environ)
+            else:
+                self.check_system_wide(reqs_file_path=test_reqs_path)
 
     def list_extensions(self):
         """List all installed Tempest plugins."""
@@ -113,13 +113,15 @@ class TempestManager(testr.TestrLauncher):
                "    for p in plugins_manager.ext_plugins.extensions]; "
                "print(plugins_list)")
         try:
-            return yaml.load(
-                utils.check_output(["python", "-c", cmd], cwd=self.base_dir,
-                                   env=self.environ).strip())
+            output = utils.check_output(["python", "-c", cmd],
+                                        cwd=self.base_dir, env=self.environ,
+                                        debug_output=False).strip()
         except subprocess.CalledProcessError:
             raise exceptions.RallyException(
                 "Cannot list installed Tempest plugins for verifier %s." %
                 self.verifier)
+
+        return yaml.load(output)
 
     def uninstall_extension(self, name):
         """Uninstall a Tempest plugin."""
@@ -133,15 +135,14 @@ class TempestManager(testr.TestrLauncher):
                 "Are you sure that it was installed?" % name)
 
     def list_tests(self, pattern=""):
-        """List all tests."""
+        """List all Tempest tests."""
         if pattern:
             pattern = self._transform_pattern(pattern)
         return super(TempestManager, self).list_tests(pattern)
 
-    @classmethod
-    def validate_args(cls, args):
+    def validate_args(self, args):
         """Validate given arguments."""
-        super(TempestManager, cls).validate_args(args)
+        super(TempestManager, self).validate_args(args)
 
         if args.get("pattern"):
             pattern = args["pattern"].split("=", 1)
@@ -162,7 +163,7 @@ class TempestManager(testr.TestrLauncher):
                     "(format: 'tempest.api.identity.v3', 'set=smoke').")
 
     def _transform_pattern(self, pattern):
-        """Transforms tempest-specific pattern to testr format."""
+        """Transform pattern into Tempest-specific pattern."""
         parsed_pattern = pattern.split("=", 1)
         if len(parsed_pattern) == 2:
             if parsed_pattern[0] == "set":
@@ -172,9 +173,11 @@ class TempestManager(testr.TestrLauncher):
                     return "tempest.api.%s" % parsed_pattern[1]
                 else:
                     return "tempest.%s" % parsed_pattern[1]
-        return pattern
 
-    def _process_run_args(self, run_args):
+        return pattern  # it is just a regex
+
+    def prepare_run_args(self, run_args):
+        """Prepare 'run_args' for testr context."""
         if run_args.get("pattern"):
             run_args["pattern"] = self._transform_pattern(run_args["pattern"])
         return run_args

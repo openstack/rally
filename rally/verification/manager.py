@@ -68,8 +68,8 @@ class VerifierManager(plugin.Plugin):
 
     @property
     def base_dir(self):
-        return os.path.join(os.path.expanduser("~/.rally/verification"),
-                            "verifier-%s" % self.verifier.uuid)
+        return os.path.expanduser(
+            "~/.rally/verification/verifier-%s" % self.verifier.uuid)
 
     @property
     def home_dir(self):
@@ -90,11 +90,11 @@ class VerifierManager(plugin.Plugin):
         if not self.verifier.system_wide:
             # activate virtual environment
             env["VIRTUAL_ENV"] = self.venv_dir
-            env["PATH"] = "%s/bin:%s" % (self.venv_dir, env["PATH"])
+            env["PATH"] = "%s:%s" % (
+                os.path.join(self.venv_dir, "bin"), env["PATH"])
         return env
 
-    @staticmethod
-    def validate_args(args):
+    def validate_args(self, args):
         """Validate given arguments."""
 
         # NOTE(andreykurilin): By default we do not use jsonschema here.
@@ -124,10 +124,9 @@ class VerifierManager(plugin.Plugin):
                     "'xfail_list' argument should be a dict of tests "
                     "where keys are test names and values are reasons.")
 
-    @classmethod
-    def validate(cls, deployment, run_args):
-        context.ContextManager.validate(cls._meta_get("context"))
-        cls.validate_args(run_args)
+    def validate(self, run_args):
+        context.ContextManager.validate(self._meta_get("context"))
+        self.validate_args(run_args)
 
     def _clone(self):
         """Clone a repo and switch to a certain version."""
@@ -188,16 +187,18 @@ class VerifierManager(plugin.Plugin):
         utils.check_output(["pip", "install", "-e", "./"],
                            cwd=self.repo_dir, env=self.environ)
 
-    def check_system_wide(self):
+    def check_system_wide(self, reqs_file_path=None):
         """Check that all required verifier packages are installed."""
         LOG.debug("Checking system-wide packages for verifier.")
         import pip
-        requirements = set(
+        reqs_file_path = reqs_file_path or os.path.join(self.repo_dir,
+                                                        "requirements.txt")
+        required_packages = set(
             [r.name.lower() for r in pip.req.parse_requirements(
-                "%s/requirements.txt" % self.repo_dir, session=False)])
+                reqs_file_path, session=False)])
         installed_packages = set(
             [r.key for r in pip.get_installed_distributions()])
-        missed_packages = requirements - installed_packages
+        missed_packages = required_packages - installed_packages
         if missed_packages:
             raise VerifierSetupFailure(
                 "Missed package(s) for system-wide installation found. "

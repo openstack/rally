@@ -29,8 +29,8 @@ class TestrContextTestCase(test.TestCase):
     def setUp(self):
         super(TestrContextTestCase, self).setUp()
         self.verifier = mock.Mock()
-        self.process_run_args = self.verifier.manager._process_run_args
-        self.process_run_args.side_effect = lambda x: x
+        self.prepare_run_args = self.verifier.manager.prepare_run_args
+        self.prepare_run_args.side_effect = lambda x: x
 
     def assertEqualCmd(self, expected, actual, msg=""):
         cmd = ["testr", "run", "--subunit"]

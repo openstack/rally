@@ -1230,8 +1230,7 @@ class VerificationAPITestCase(test.TestCase):
         api._Verification.start(verifier_id, deployment_id, **run_args)
 
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
-        verifier_obj.manager.validate.assert_called_once_with(
-            verifier_obj.deployment, run_args)
+        verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
@@ -1266,8 +1265,7 @@ class VerificationAPITestCase(test.TestCase):
                           deployment_id, **run_args)
 
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
-        verifier_obj.manager.validate.assert_called_once_with(
-            verifier_obj.deployment, run_args)
+        verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
