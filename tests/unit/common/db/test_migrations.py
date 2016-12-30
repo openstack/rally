@@ -1019,3 +1019,94 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     deployment_table.c.uuid ==
                     self._484cd9413e66_deployment_uuid)
             )
+
+    def _pre_upgrade_37fdbb373e8d(self, engine):
+            self._37fdbb373e8d_deployment_uuid = "37fdbb373e8d-deployment"
+            self._37fdbb373e8d_verifier_uuid = "37fdbb373e8d-verifier"
+            self._37fdbb373e8d_verifications_tests = [
+                {
+                    "test_1[smoke, negative]": {
+                        "name": "test_1",
+                        "time": 2.32,
+                        "status": "success",
+                        "tags": ["smoke", "negative"]
+                    },
+                    "test_2[smoke, negative]": {
+                        "name": "test_2",
+                        "time": 4.32,
+                        "status": "success",
+                        "tags": ["smoke", "negative"]
+                    }
+                },
+                {
+                    "test_3[smoke, negative]": {
+                        "name": "test_3",
+                        "time": 6.32,
+                        "status": "success",
+                        "tags": ["smoke", "negative"]
+                    },
+                    "test_4[smoke, negative]": {
+                        "name": "test_4",
+                        "time": 8.32,
+                        "status": "success",
+                        "tags": ["smoke", "negative"]
+                    }
+                }
+            ]
+
+            deployment_table = db_utils.get_table(engine, "deployments")
+            verifiers_table = db_utils.get_table(engine, "verifiers")
+            verifications_table = db_utils.get_table(engine, "verifications")
+
+            deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+            with engine.connect() as conn:
+                conn.execute(
+                    deployment_table.insert(),
+                    [{"uuid": self._37fdbb373e8d_deployment_uuid,
+                      "name": self._37fdbb373e8d_deployment_uuid,
+                      "config": six.b(json.dumps([])),
+                      "enum_deployments_status": deployment_status,
+                      "credentials": six.b(json.dumps([])),
+                      "users": six.b(json.dumps([]))
+                      }])
+
+                conn.execute(
+                    verifiers_table.insert(),
+                    [{"uuid": self._37fdbb373e8d_verifier_uuid,
+                      "name": self._37fdbb373e8d_verifier_uuid,
+                      "type": "some-type",
+                      "status": consts.VerifierStatus.CONFIGURED
+                      }])
+
+                for i in range(len(self._37fdbb373e8d_verifications_tests)):
+                    tests = self._37fdbb373e8d_verifications_tests[i]
+                    conn.execute(
+                        verifications_table.insert(),
+                        [{"uuid": "verification-uuid-%s" % i,
+                          "deployment_uuid":
+                              self._37fdbb373e8d_deployment_uuid,
+                          "verifier_uuid": self._37fdbb373e8d_verifier_uuid,
+                          "status": consts.VerificationStatus.FINISHED,
+                          "tests": json.dumps(tests)
+                          }])
+
+    def _check_37fdbb373e8d(self, engine, data):
+        self.assertEqual("37fdbb373e8d",
+                         api.get_backend().schema_revision(engine=engine))
+
+        verifications_table = db_utils.get_table(engine, "verifications")
+        with engine.connect() as conn:
+            verifications = conn.execute(
+                verifications_table.select()).fetchall()
+            self.assertEqual(len(verifications),
+                             len(self._37fdbb373e8d_verifications_tests))
+
+            for i in range(len(verifications)):
+                v = verifications[i]
+                updated_tests = json.loads(v.tests)
+                expected_tests = self._37fdbb373e8d_verifications_tests[i]
+                for test in expected_tests.values():
+                    duration = test.pop("time")
+                    test["duration"] = duration
+
+                self.assertEqual(expected_tests, updated_tests)
