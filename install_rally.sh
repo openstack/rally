@@ -22,7 +22,6 @@ ASKCONFIRMATION=1
 RECREATEDEST="ask"
 USEVIRTUALENV="yes"
 DEVELOPMENT_MODE="false"
-SKIP_SW_CHECK=0
 
 # ansi colors for formatting heredoc
 ESC=$(printf "\e")
@@ -249,21 +248,30 @@ __EOF__
 }
 
 which_missing_packages () {
-    local missing=''
-    if have_command bindep; then
-        if ! missing="$(bindep -b)"; then
-            if [ -z "$missing" ]; then
-                abort $EX_PROTOCOL "Error While running bindep command. Please ensure that required command lsb_release is available."
-            fi
-        fi
-    else
-        missing="bindep"
+    if [ ! -f bindep.txt ]; then
+        abort $EX_PROTOCOL \
+            "bindep.txt not found. Unable to find missing packages."
     fi
-    if ! have_command pip; then
+    require_command "bindep"
+    require_command "lsb_release"
+    echo "$(bindep -b | tr '\n' ' ')"
+}
+
+which_missing_commands () {
+    # These commands are required to run install_rally.sh
+    local missing=""
+    if ! have_command "wget"; then
+        missing="wget"
+    fi
+    if ! have_command "git"; then
+        missing="$missing git"
+    fi
+    if ! have_command "pip"; then
         missing="$missing python-pip"
     fi
-    echo $missing
+    echo "$missing"
 }
+
 
 # Download command
 download() {
@@ -326,8 +334,7 @@ __EOF__
 In order to install the required software you would need to run as
 'root' the following command:
 $GREEN
-    $(if [[ "$missing" != "bindep" ]]; then echo "$pkg_manager ${missing//bindep/}"; fi) 
-    $(if [[ "$missing" == *bindep* ]]; then echo "pip install bindep"; fi)
+    $pkg_manager $missing
 $NO_COLOR
 __EOF__
             # ask if we have to install it
@@ -349,13 +356,6 @@ __EOF__
                         fi
                     fi
                 fi
-                if [[ "$missing" == *bindep* ]]; then
-                    missing=${missing//bindep/}
-                    if ! pip install bindep; then
-                         abort $EX_PROTOCOL "Error while installing bindep."
-                    fi
-                fi
-                missing=$(echo $missing) # If missing=' ', we must remove the space.
                 if [ -n "$missing" ] && ! $pkg_manager $missing; then
                     abort $EX_UNAVAILABLE "Error while installing $missing"
                 fi
@@ -377,7 +377,6 @@ likely to fail!
 __EOF__
             if ask_yn "Proceed with installation anyway?"
             then
-                SKIP_SW_CHECK=1
                 echo "Proceeding with installation at your request... keep fingers crossed!"
             else
                 die $EX_UNAVAILABLE "missing software prerequisites" <<__EOF__
@@ -385,8 +384,7 @@ Please ask your system administrator to install the missing packages,
 or, if you have root access, you can do that by running the following
 command from the 'root' account:
 $GREEN
-    $(if [[ "$missing" != "bindep" ]]; then echo "$pkg_manager ${missing//bindep/}"; fi) 
-    $(if [[ "$missing" == *bindep* ]]; then echo "pip install bindep"; fi)
+    $pkg_manager $missing
 $NO_COLOR
 __EOF__
             fi
@@ -646,16 +644,7 @@ __EOF__
 fi
 
 # check and install prerequisites
-while true; do
-    if [ $SKIP_SW_CHECK -ne 0 ]; then
-        break
-    fi
-    missing=$(which_missing_packages)
-    if [ -z "$missing" ]; then
-        break
-    fi
-    install_required_sw "$missing"
-done
+install_required_sw "$(which_missing_commands)"
 require_python
 
 
@@ -747,7 +736,11 @@ pip install -i "$BASE_PIP_URL" -U 'pip!=8'
 hash -r
 
 # Install dependencies
-pip install -i "$BASE_PIP_URL" pbr 'tox<=1.6.1'
+pip install -i "$BASE_PIP_URL" pbr 'tox<=1.6.1' bindep
+
+# Install binary dependencies
+install_required_sw "$(which_missing_packages)"
+
 # Uninstall possible previous version
 pip uninstall -y rally || true
 # Install rally
