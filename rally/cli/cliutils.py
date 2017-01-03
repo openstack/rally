@@ -17,8 +17,10 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import json
 import os
 import sys
+import textwrap
 import warnings
 
 import decorator
@@ -150,6 +152,97 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     table_body = pt.get_string(header=print_header,
                                border=print_border,
                                **kwargs) + "\n"
+
+    table_header = ""
+
+    if table_label:
+        table_width = table_body.index("\n")
+        table_header = make_table_header(table_label, table_width)
+        table_header += "\n"
+
+    if six.PY3:
+        if table_header:
+            out.write(encodeutils.safe_encode(table_header).decode())
+        out.write(encodeutils.safe_encode(table_body).decode())
+    else:
+        if table_header:
+            out.write(encodeutils.safe_encode(table_header))
+        out.write(encodeutils.safe_encode(table_body))
+
+
+def print_dict(obj, fields=None, formatters=None, mixed_case_fields=False,
+               normalize_field_names=False, property_label="Property",
+               value_label="Value", table_label=None, print_header=True,
+               print_border=True, wrap=0, out=sys.stdout):
+    """Print dict as a table.
+
+    :param obj: dict to print
+    :param fields: `dict` of keys to print from d. Defaults to all keys
+    :param formatters: `dict` of callables for field formatting
+    :param mixed_case_fields: fields corresponding to object attributes that
+        have mixed case names (e.g., 'serverId')
+    :param normalize_field_names: If True, field names will be transformed,
+        e.g. "Field Name" -> "field_name", otherwise they will be used
+        unchanged.
+    :param property_label: label of "property" column
+    :param value_label: label of "value" column
+    :param table_label: Label to use as header for the whole table.
+    :param print_header: print table header.
+    :param print_border: print table border.
+    :param out: stream to write output to.
+    """
+    formatters = formatters or {}
+    mixed_case_fields = mixed_case_fields or []
+    if not fields:
+        if isinstance(obj, dict):
+            fields = sorted(obj.keys())
+        else:
+            fields = [name for name in dir(obj)
+                      if (not name.startswith("_") and
+                          not callable(getattr(obj, name)))]
+
+    pt = prettytable.PrettyTable([property_label, value_label], caching=False)
+    pt.align = "l"
+    for field_name in fields:
+        if field_name in formatters:
+            data = formatters[field_name](obj)
+        else:
+            field = field_name
+            if normalize_field_names:
+                if field not in mixed_case_fields:
+                    field = field_name.lower()
+                field = field.replace(" ", "_").replace("-", "_")
+
+            if isinstance(obj, dict):
+                data = obj.get(field, "")
+            else:
+                data = getattr(obj, field, "")
+
+        # convert dict to str to check length
+        if isinstance(data, (dict, list)):
+            data = json.dumps(data)
+        if wrap > 0:
+            data = textwrap.fill(six.text_type(data), wrap)
+        # if value has a newline, add in multiple rows
+        # e.g. fault with stacktrace
+        if (data and
+                isinstance(data, six.string_types) and
+                (r"\n" in data or "\r" in data)):
+            # "\r" would break the table, so remove it.
+            if "\r" in data:
+                data = data.replace("\r", "")
+            lines = data.strip().split(r"\n")
+            col1 = field_name
+            for line in lines:
+                pt.add_row([col1, line])
+                col1 = ""
+        else:
+            if data is None:
+                data = "-"
+            pt.add_row([field_name, data])
+
+    table_body = pt.get_string(header=print_header,
+                               border=print_border) + "\n"
 
     table_header = ""
 

@@ -47,6 +47,106 @@ class CliUtilsTestCase(test.TestCase):
         self._unregister_opts()
         super(CliUtilsTestCase, self).tearDown()
 
+    def test_print_dict(self):
+        out = six.StringIO()
+        dict = {"key": "value"}
+        cliutils.print_dict(dict, out=out)
+        self.assertEqual("+----------+-------+\n"
+                         "| Property | Value |\n"
+                         "+----------+-------+\n"
+                         "| key      | value |\n"
+                         "+----------+-------+\n",
+                         out.getvalue())
+
+    def test_print_dict_wrap(self):
+        out = six.StringIO()
+        dict = {"key1": "not wrapped",
+                "key2": "this will be wrapped"}
+        cliutils.print_dict(dict, wrap=16, out=out)
+        self.assertEqual("+----------+--------------+\n"
+                         "| Property | Value        |\n"
+                         "+----------+--------------+\n"
+                         "| key1     | not wrapped  |\n"
+                         "| key2     | this will be |\n"
+                         "|          | wrapped      |\n"
+                         "+----------+--------------+\n",
+                         out.getvalue())
+
+    def test_print_dict_formatters_and_fields(self):
+        out = six.StringIO()
+        dict = {"key1": "value",
+                "key2": "Value",
+                "key3": "vvv"}
+        formatters = {"foo": lambda x: x["key1"],
+                      "bar": lambda x: x["key2"]}
+        fields = ["foo", "bar"]
+        cliutils.print_dict(dict, formatters=formatters, fields=fields,
+                            out=out)
+        self.assertEqual("+----------+-------+\n"
+                         "| Property | Value |\n"
+                         "+----------+-------+\n"
+                         "| foo      | value |\n"
+                         "| bar      | Value |\n"
+                         "+----------+-------+\n",
+                         out.getvalue())
+
+    def test_print_dict_header(self):
+        out = six.StringIO()
+        dict = {"key": "value"}
+        cliutils.print_dict(dict, table_label="Some Table", print_header=False,
+                            out=out)
+        self.assertEqual("+-------------+\n"
+                         "| Some Table  |\n"
+                         "+-----+-------+\n"
+                         "| key | value |\n"
+                         "+-----+-------+\n",
+                         out.getvalue())
+
+    def test_print_dict_objects(self):
+        class SomeStruct(object):
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
+
+            @property
+            def c(self):
+                return self.a + self.b
+
+            def foo(self):
+                pass
+
+            @classmethod
+            def bar(cls):
+                pass
+
+            @staticmethod
+            def foobar():
+                pass
+
+        out = six.StringIO()
+        formatters = {"c": lambda x: "a + b = %s" % x.c}
+        cliutils.print_dict(SomeStruct(1, 2), formatters=formatters, out=out)
+        self.assertEqual("+----------+-----------+\n"
+                         "| Property | Value     |\n"
+                         "+----------+-----------+\n"
+                         "| a        | 1         |\n"
+                         "| b        | 2         |\n"
+                         "| c        | a + b = 3 |\n"
+                         "+----------+-----------+\n",
+                         out.getvalue())
+
+    def test_print_dict_with_spec_chars(self):
+        out = six.StringIO()
+        dict = {"key": "line1\r\nline2"}
+        cliutils.print_dict(dict, out=out)
+        self.assertEqual("+----------+-------+\n"
+                         "| Property | Value |\n"
+                         "+----------+-------+\n"
+                         "| key      | line1 |\n"
+                         "|          | line2 |\n"
+                         "+----------+-------+\n",
+                         out.getvalue())
+
     def test_make_header(self):
         h1 = cliutils.make_header("msg", size=4, symbol="=")
         self.assertEqual(h1, "====\nmsg\n====\n")

@@ -470,42 +470,63 @@ class VerifyCommands(object):
              detailed=False):
         """Show a verification."""
         verification = api.verification.get(verification_uuid)
-        fields = ["UUID", "Verifier name", "Deployment name", "Started at",
-                  "Finished at", "Duration", "Status"]
+
+        # Main Table
+        def run_args_formatter(v):
+            run_args = []
+            for k in sorted(v.run_args):
+                if k in ("load_list", "skip_list", "xfail_list"):
+                    value = "(value is too long, %s)"
+                    if detailed:
+                        value %= "will be displayed separately"
+                    else:
+                        value %= "use 'detailed' flag to display it"
+                else:
+                    value = v.run_args[k]
+                run_args.append("%s: %s" % (k, value))
+            return "\n".join(run_args)
+
         formatters = {
-            "Verifier name": (
-                lambda v: api.verifier.get(v.verifier_uuid).name),
+            "Verifier name": lambda v: verifier.name,
+            "Verifier type": (
+                lambda v: "%s (namespace: %s)" % (verifier.type,
+                                                  verifier.namespace)),
             "Deployment name": (
                 lambda v: api.deployment.get(v.deployment_uuid)["name"]),
             "Started at": lambda v: v.created_at.replace(microsecond=0),
             "Finished at": lambda v: v.updated_at.replace(microsecond=0),
             "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
-                                   v.created_at.replace(microsecond=0))
+                                   v.created_at.replace(microsecond=0)),
+            "Run arguments": run_args_formatter,
+            "Tests duration, sec": lambda v: v.tests_duration
         }
-        print(_("Verification:"))
-        cliutils.print_list([verification], fields, formatters=formatters,
-                            normalize_field_names=True)
+        fields = ["UUID", "Verifier name", "Verifier type", "Deployment name",
+                  "Started at", "Finished at", "Duration", "Run arguments",
+                  "Tests count", "Tests duration, sec", "Success", "Skipped",
+                  "Expected failures", "Unexpected success", "Failures",
+                  "Status"]
+        verifier = api.verifier.get(verification.verifier_uuid)
+        cliutils.print_dict(verification, fields, formatters=formatters,
+                            normalize_field_names=True, print_header=False,
+                            table_label="Verification")
 
-        print(_("\nTotals:"))
-        fields = ["Tests count", "Tests duration, sec", "Success", "Skipped",
-                  "Expected failures", "Unexpected success", "Failures"]
-        formatters = {"Tests duration, sec": lambda v: v["tests_duration"]}
-        cliutils.print_list([verification], fields, formatters=formatters,
-                            normalize_field_names=True)
+        if detailed:
+            print(_("\nRun arguments:"))
+            print(json.dumps(verification.run_args, indent=4))
 
-        print(_("\nTests:"))
+        # Tests
+        print("\n")
         tests = verification.tests
         values = [tests[test_id] for test_id in tests]
         fields = ["Name", "Duration, sec", "Status"]
         formatters = {"Duration, sec": lambda v: v["duration"]}
         index = ("name", "duration", "status").index(sort_by)
         cliutils.print_list(values, fields, formatters=formatters,
-                            normalize_field_names=True, sortby_index=index)
+                            table_label="Tests", normalize_field_names=True,
+                            sortby_index=index)
 
         if detailed:
-            print(_("\nRun arguments:"))
-            print(json.dumps(verification.run_args, indent=4))
-
+            # Tracebacks
             failures = [t for t in tests.values() if t["status"] == "fail"]
             if failures:
                 print(_("\nFailures:"))
