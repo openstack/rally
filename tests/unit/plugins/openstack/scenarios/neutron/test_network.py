@@ -46,6 +46,29 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         mock__create_network.reset_mock()
         mock__list_networks.reset_mock()
 
+    @ddt.data(
+        {"network_create_args": {}},
+        {"network_create_args": {"name": "given-name"}},
+    )
+    @ddt.unpack
+    @mock.patch("%s.CreateAndShowNetwork._show_network" % BASE)
+    @mock.patch("%s.CreateAndShowNetwork._create_network" % BASE)
+    def test_create_and_show_network(self,
+                                     mock__create_network,
+                                     mock__show_network,
+                                     network_create_args):
+        scenario = network.CreateAndShowNetwork(self.context)
+        mock_net = mock.Mock()
+
+        mock__create_network.return_value = mock_net
+        scenario.run(network_create_args=network_create_args)
+
+        mock__create_network.assert_called_once_with(network_create_args)
+        mock__show_network.assert_called_once_with(mock_net)
+
+        mock__create_network.reset_mock()
+        mock__show_network.reset_mock()
+
     @mock.patch("%s.CreateAndUpdateNetworks._update_network" % BASE)
     @mock.patch("%s.CreateAndUpdateNetworks._create_network" % BASE,
                 return_value={

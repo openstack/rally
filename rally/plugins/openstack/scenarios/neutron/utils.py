@@ -98,6 +98,17 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").update_network(
             network["network"]["id"], body)
 
+    @atomic.action_timer("neutron.show_network")
+    def _show_network(self, network, **kwargs):
+        """show network details.
+
+        :param network: Network object
+        :param kwargs: dict, POST /v2.0/networks show options
+        :returns: details of the network
+        """
+        return self.clients("neutron").show_network(
+            network["network"]["id"], **kwargs)
+
     @atomic.action_timer("neutron.delete_network")
     def _delete_network(self, network):
         """Delete neutron network.

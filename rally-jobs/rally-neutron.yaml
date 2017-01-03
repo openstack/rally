@@ -42,6 +42,25 @@
         failure_rate:
           max: 20
 
+  NeutronNetworks.create_and_show_network:
+    -
+      args:
+        network_create_args: {}
+      runner:
+        type: "constant"
+        times: {{smoke or 10}}
+        concurrency: {{smoke or 2}}
+      context:
+        users:
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+            network: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NeutronNetworks.create_and_list_subnets:
     -
       args:
