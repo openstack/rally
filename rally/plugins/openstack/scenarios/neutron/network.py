@@ -154,6 +154,38 @@ class CreateAndUpdateSubnets(utils.NeutronScenario):
             self._update_subnet(subnet, subnet_update_args)
 
 
+@validation.number("subnets_per_network", minval=1, integer_only=True)
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronNetworks.create_and_show_subnets")
+class CreateAndShowSubnets(utils.NeutronScenario):
+
+    def run(self, network_create_args=None,
+            subnet_create_args=None, subnet_cidr_start=None,
+            subnets_per_network=1):
+        """Create and show a subnet details.
+
+        The scenario creates a network, a given number of subnets
+        and show the subnet details. This scenario measures the
+        "neutron subnet-show" command performance.
+
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options.
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        """
+        network = self._get_or_create_network(network_create_args)
+        subnets = self._create_subnets(network, subnet_create_args,
+                                       subnet_cidr_start, subnets_per_network)
+
+        with atomic.ActionTimer(self,
+                                "neutron.show_%s_subnets" % len(subnets)):
+            for subnet in subnets:
+                self._show_subnet(subnet, atomic_action=False)
+
+
 @validation.required_parameters("subnets_per_network")
 @validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},

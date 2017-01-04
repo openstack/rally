@@ -164,6 +164,17 @@ class NeutronScenario(scenario.OpenStackScenario):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
+    @atomic.optional_action_timer("neutron.show_subnet")
+    def _show_subnet(self, subnet, **kwargs):
+        """show subnet details.
+
+        :param: subnet: Subnet object
+        :param: kwargs: Optional additional arguments for subnet show
+        :returns: details of the subnet
+        """
+        return self.clients("neutron").show_subnet(subnet["subnet"]["id"],
+                                                   **kwargs)
+
     @atomic.action_timer("neutron.update_subnet")
     def _update_subnet(self, subnet, subnet_update_args):
         """Update the neutron subnet.
