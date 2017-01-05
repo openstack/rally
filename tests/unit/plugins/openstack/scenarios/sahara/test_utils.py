@@ -30,7 +30,7 @@ SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 class SaharaScenarioTestCase(test.ScenarioTestCase):
     # NOTE(stpierre): the Sahara utils generally do funny stuff with
-    # wait_for() calls -- frequently the the is_ready and
+    # wait_for() calls -- frequently the is_ready and
     # update_resource arguments are functions defined in the Sahara
     # utils themselves instead of the more standard resource_is() and
     # get_from_manager() calls. As a result, the tests below do more
