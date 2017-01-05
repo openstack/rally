@@ -806,6 +806,32 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_keypair")
 
+    def test__create_server_group(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._create_server_group(fakeargs="fakeargs")
+        self.assertEqual(
+            self.clients("nova").server_groups.create.return_value,
+            result)
+        self.clients("nova").server_groups.create.assert_called_once_with(
+            fakeargs="fakeargs")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_server_group")
+
+    def test__list_server_groups(self):
+        nova_scenario = utils.NovaScenario()
+        result1 = nova_scenario._list_server_groups(all_projects=False)
+        result2 = nova_scenario._list_server_groups(all_projects=True)
+        self.assertEqual(self.clients("nova").server_groups.list.return_value,
+                         result1)
+        admcli = self.admin_clients("nova")
+        self.assertEqual(admcli.server_groups.list.return_value, result2)
+        self.clients("nova").server_groups.list.assert_called_once_with(
+            False)
+        self.admin_clients("nova").server_groups.list.assert_called_once_with(
+            True)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_server_groups")
+
     def test__delete_keypair(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_keypair("fake_keypair")

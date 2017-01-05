@@ -185,6 +185,14 @@ class NovaServer(base.ResourceManager):
         super(NovaServer, self).delete()
 
 
+@base.resource("nova", "server_groups", order=next(_nova_order),
+               tenant_resource=True)
+class NovaServerGroups(base.ResourceManager):
+    def list(self):
+        return [r for r in self._manager().list()
+                if utils.name_matches_object(r.name, nova_utils.NovaScenario)]
+
+
 @base.resource("nova", "floating_ips", order=next(_nova_order))
 class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
 
