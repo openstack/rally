@@ -1,7 +1,4 @@
-# Copyright 2016: Mirantis Inc.
 # All Rights Reserved.
-#
-#    Author: Oleksandr Savatieiev osavatieiev@mirantis.com
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -16,25 +13,35 @@
 #    under the License.
 
 import collections
-import copy
 import json
 import re
 
 from rally.ui import utils
+from rally.verification import reporter
 
 
 SKIP_RE = re.compile("Skipped until Bug: ?(?P<bug_number>\d+) is resolved.")
 LP_BUG_LINK = "https://launchpad.net/bugs/%s"
 
 
-class VerificationReport(object):
-    """Generate a report for a verification or a few verifications."""
+@reporter.configure("json")
+class JSONReporter(reporter.VerificationReporter):
+    @classmethod
+    def validate(cls, output_destination):
+        """Validate destination of report.
 
-    def __init__(self, verifications_list):
+        :param output_destination: Destination of report
+        """
+        # nothing to check :)
+        pass
+
+    def _generate(self):
+        """Prepare raw report."""
+
         verifications = collections.OrderedDict()
         tests = {}
 
-        for v in verifications_list:
+        for v in self.verifications:
             verifications[v.uuid] = {
                 "started_at": v.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "finished_at": v.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -59,6 +66,11 @@ class VerificationReport(object):
                                       "name": result["name"],
                                       "by_verification": {}}
 
+                tests[test_id]["by_verification"][v.uuid] = {
+                    "status": result["status"],
+                    "duration": result["duration"]
+                }
+
                 reason = result.get("reason", "")
                 if reason:
                     match = SKIP_RE.match(reason)
@@ -68,19 +80,26 @@ class VerificationReport(object):
                                         reason)
                 traceback = result.get("traceback", "")
                 sep = "\n\n" if reason and traceback else ""
-                details = (reason + sep + traceback.strip()) or None
+                d = (reason + sep + traceback.strip()) or None
+                if d:
+                    tests[test_id]["by_verification"][v.uuid]["details"] = d
 
-                tests[test_id]["by_verification"][v.uuid] = {
-                    "status": result["status"],
-                    "duration": result["duration"],
-                    "details": details
-                }
+        return {"verifications": verifications, "tests": tests}
 
-        self.report = {"verifications": verifications, "tests": tests}
+    def generate(self):
+        raw_report = json.dumps(self._generate(), indent=4)
 
-    def to_html(self):
-        """Generate HTML report."""
-        report = copy.deepcopy(self.report)
+        if self.output_destination:
+            return {"files": {self.output_destination: raw_report},
+                    "open": self.output_destination}
+        else:
+            return {"print": raw_report}
+
+
+@reporter.configure("html")
+class HTMLReporter(JSONReporter):
+    def generate(self):
+        report = self._generate()
         uuids = report["verifications"].keys()
         show_comparison_note = False
 
@@ -89,9 +108,10 @@ class VerificationReport(object):
             # at JS side
             test["has_details"] = False
             for test_info in test["by_verification"].values():
-                if test_info["details"]:
+                if "details" not in test_info:
+                    test_info["details"] = None
+                elif not test["has_details"]:
                     test["has_details"] = True
-                    break
 
             durations = []
             # iter by uuids to store right order for comparison
@@ -125,8 +145,13 @@ class VerificationReport(object):
                    "tests": report["tests"],
                    "show_comparison_note": show_comparison_note}
 
-        return template.render(data=json.dumps(context), include_libs=False)
+        raw_report = template.render(data=json.dumps(context),
+                                     include_libs=False)
 
-    def to_json(self, indent=4):
-        """Generate JSON report."""
-        return json.dumps(self.report, indent=indent)
+        # in future we will support html_static and will need to save more
+        # files
+        if self.output_destination:
+            return {"files": {self.output_destination: raw_report},
+                    "open": self.output_destination}
+        else:
+            return {"print": raw_report}

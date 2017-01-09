@@ -39,6 +39,8 @@ LIST_DEPLOYMENTS_HINT = ("HINT: You can list all deployments, executing "
 LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
+DEFAULTS_REPORTERS = ("HTML", "JSON")
+
 
 class VerifyCommands(object):
     """Verify an OpenStack cloud via a verifier."""
@@ -592,32 +594,53 @@ class VerifyCommands(object):
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", nargs="+", dest="verification_uuid", type=str,
                    help="UUIDs of verifications. " + LIST_VERIFICATIONS_HINT)
-    @cliutils.args("--html", dest="html", action="store_true", required=False,
-                   help="Generate the report in HTML format instead of JSON.")
-    @cliutils.args("--file", dest="output_file", type=str,
-                   metavar="<path>", required=False,
-                   help="Path to a file to save the report to.")
+    @cliutils.args("--type", dest="output_type", type=str,
+                   required=False, default="json",
+                   help="Report type (Defaults to JSON). Out of the box types:"
+                        " %s. HINT: You can list all types by executing "
+                        "`rally plugins list` command."
+                        % ", ".join(DEFAULTS_REPORTERS))
+    @cliutils.args("--to", dest="output_dest", type=str,
+                   metavar="<dest>", required=False,
+                   help="Report destination. Can be a path to a file (in case"
+                        " of HTML, JSON types) to save the report to or "
+                        "a connection string. It depends on report type.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    required=False, help="Open the output file in a browser.")
     @envutils.with_default_verification_uuid
-    def report(self, api, verification_uuid=None, html=False, output_file=None,
-               open_it=False):
+    @plugins.ensure_plugins_are_loaded
+    def report(self, api, verification_uuid=None, output_type=None,
+               output_dest=None, open_it=None):
         """Generate a report for a verification or a few verifications."""
-
-        # TODO(ylobankov): Add support for CSV format.
 
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
-        raw_report = api.verification.report(verification_uuid, html)
 
-        if output_file:
-            with open(output_file, "w") as f:
-                f.write(raw_report)
+        result = api.verification.report(verification_uuid, output_type,
+                                         output_dest)
+        if "files" in result:
+            print("Saving the report to disk. It can take a moment.")
+            for path in result["files"]:
+                full_path = os.path.abspath(os.path.expanduser(path))
+                if not os.path.exists(os.path.dirname(full_path)):
+                    os.makedirs(os.path.dirname(full_path))
+                with open(full_path, "w") as f:
+                    f.write(result["files"][path])
+                print(_("The report has been successfully saved."))
+
             if open_it:
+                if "open" not in result:
+                    print(_("Cannot open '%s' report in the browser because "
+                            "report type doesn't support it.") % output_type)
+                    return 1
                 webbrowser.open_new_tab(
-                    "file://" + os.path.realpath(output_file))
-        else:
-            print(raw_report)
+                    "file://" + os.path.abspath(result["open"]))
+
+        if "print" in result:
+            # NOTE(andreykurilin): we need a separation between logs and
+            #   printed information to be able parsing output
+            print(cliutils.make_header("Verification Report"))
+            print(result["print"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--verifier-id", dest="verifier_id", type=str,
