@@ -470,8 +470,8 @@ class VerifyCommands(object):
              detailed=False):
         """Show a verification."""
         verification = api.verification.get(verification_uuid)
+        verifier = api.verifier.get(verification.verifier_uuid)
 
-        # Main Table
         def run_args_formatter(v):
             run_args = []
             for k in sorted(v.run_args):
@@ -486,6 +486,12 @@ class VerifyCommands(object):
                 run_args.append("%s: %s" % (k, value))
             return "\n".join(run_args)
 
+        # Main table
+        fields = ["UUID", "Status", "Started at", "Finished at", "Duration",
+                  "Run arguments", "Verifier name", "Verifier type",
+                  "Deployment name", "Tests count", "Tests duration, sec",
+                  "Success", "Skipped", "Expected failures",
+                  "Unexpected success", "Failures"]
         formatters = {
             "Verifier name": lambda v: verifier.name,
             "Verifier type": (
@@ -500,22 +506,15 @@ class VerifyCommands(object):
             "Run arguments": run_args_formatter,
             "Tests duration, sec": lambda v: v.tests_duration
         }
-        fields = ["UUID", "Verifier name", "Verifier type", "Deployment name",
-                  "Started at", "Finished at", "Duration", "Run arguments",
-                  "Tests count", "Tests duration, sec", "Success", "Skipped",
-                  "Expected failures", "Unexpected success", "Failures",
-                  "Status"]
-        verifier = api.verifier.get(verification.verifier_uuid)
         cliutils.print_dict(verification, fields, formatters=formatters,
                             normalize_field_names=True, print_header=False,
                             table_label="Verification")
 
         if detailed:
             print(_("\nRun arguments:"))
-            print(json.dumps(verification.run_args, indent=4))
+            print(json.dumps(verification.run_args, indent=4) + "\n")
 
-        # Tests
-        print("\n")
+        # Tests table
         tests = verification.tests
         values = [tests[test_id] for test_id in tests]
         fields = ["Name", "Duration, sec", "Status"]
