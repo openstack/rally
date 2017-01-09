@@ -1027,12 +1027,19 @@ class API(object):
 
     def _check_db_revision(self):
         rev = rally_version.database_revision()
-        if rev["revision"] == rev["current_head"]:
-            return
-        raise exceptions.RallyException(_LE(
-            "Database seems to be outdated. Run upgrade from "
-            "revision %(revision)s to %(current_head)s by command "
-            "`rally-manage db upgrade'") % rev)
+
+        # Check that db exists
+        if rev["revision"] is None:
+            raise exceptions.RallyException(_LE(
+                "Database is missing. Create database by command "
+                "`rally-manage db create'"))
+
+        # Check that db is updated
+        if rev["revision"] != rev["current_head"]:
+            raise exceptions.RallyException(_LE(
+                "Database seems to be outdated. Run upgrade from "
+                "revision %(revision)s to %(current_head)s by command "
+                "`rally-manage db upgrade'") % rev)
 
     @property
     def deployment(self):

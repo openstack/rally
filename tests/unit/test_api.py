@@ -565,7 +565,22 @@ class APITestCase(test.TestCase):
                                            mock_version_string,
                                            mock_database_revision,
                                            mock_isfile):
-        self.assertRaises(exceptions.RallyException, api.API)
+        exc = self.assertRaises(exceptions.RallyException, api.API)
+        self.assertIn("rally-manage db upgrade", str(exc))
+        mock_conf.assert_called_once_with(
+            [], default_config_files=None, project="rally", version="0.0.0")
+
+    @mock.patch("os.path.isfile", return_value=False)
+    @mock.patch("rally.common.version.database_revision",
+                return_value={"revision": None, "current_head": "foobar"})
+    @mock.patch("rally.common.version.version_string", return_value="0.0.0")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_init_check_revision_exception_no_db(self, mock_conf,
+                                                 mock_version_string,
+                                                 mock_database_revision,
+                                                 mock_isfile):
+        exc = self.assertRaises(exceptions.RallyException, api.API)
+        self.assertIn("rally-manage db create", str(exc))
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
