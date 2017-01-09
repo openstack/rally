@@ -1295,3 +1295,55 @@ class VerificationAPITestCase(test.TestCase):
         self.assertFalse(verification_obj.finish.called)
 
         self.assertFalse(mock_configure.called)
+
+    @mock.patch("rally.api._Verification.start")
+    @mock.patch("rally.api._Deployment.get")
+    @mock.patch("rally.api._Verification.get")
+    def test_rerun(self, mock___verification_get, mock___deployment_get,
+                   mock___verification_start):
+        tests = {"test_1": {"status": "success"},
+                 "test_2": {"status": "fail"}}
+        mock___verification_get.return_value = mock.Mock(
+            uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
+            tests=tests)
+        mock___deployment_get.return_value = {"name": "d_name",
+                                              "uuid": "d_uuid"}
+
+        api._Verification.rerun("uuid")
+        mock___verification_start.assert_called_once_with(
+            "v_uuid", "d_uuid", load_list=tests.keys())
+
+    @mock.patch("rally.api._Verification.start")
+    @mock.patch("rally.api._Deployment.get")
+    @mock.patch("rally.api._Verification.get")
+    def test_rerun_failed_tests(
+            self, mock___verification_get, mock___deployment_get,
+            mock___verification_start):
+        tests = {"test_1": {"status": "success"},
+                 "test_2": {"status": "fail"},
+                 "test_3": {"status": "fail"}}
+        mock___verification_get.return_value = mock.Mock(
+            uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
+            tests=tests)
+        mock___deployment_get.return_value = {"name": "d_name",
+                                              "uuid": "d_uuid"}
+
+        api._Verification.rerun("uuid", failed=True)
+        expected_tests = [t for t, r in tests.items() if r["status"] == "fail"]
+        mock___verification_start.assert_called_once_with(
+            "v_uuid", "d_uuid", load_list=expected_tests)
+
+    @mock.patch("rally.api._Verification.get")
+    def test_rerun_failed_tests_raise_exc(
+            self, mock___verification_get):
+        tests = {"test_1": {"status": "success"},
+                 "test_2": {"status": "success"},
+                 "test_3": {"status": "skip"}}
+        mock___verification_get.return_value = mock.Mock(
+            uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
+            tests=tests)
+
+        e = self.assertRaises(exceptions.RallyException,
+                              api._Verification.rerun, "uuid", failed=True)
+        self.assertEqual("There are no failed tests from verification "
+                         "(UUID=uuid).", "%s" % e)

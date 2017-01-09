@@ -832,6 +832,37 @@ class _Verification(object):
 
         return verification, results
 
+    @classmethod
+    def rerun(cls, verification_uuid, deployment_id=None, failed=False):
+        """Re-run tests from a verification.
+
+        :param verification_uuid: Verification UUID
+        :param deployment_id: Deployment name or UUID
+        :param failed: Re-run only failed tests
+        """
+        # TODO(ylobankov): Improve this method in the future: put some
+        #                  information about re-run in run_args.
+
+        verification = cls.get(verification_uuid)
+        tests = verification.tests
+
+        if failed:
+            tests = [t for t, r in tests.items() if r["status"] == "fail"]
+            if not tests:
+                raise exceptions.RallyException(
+                    "There are no failed tests from verification (UUID=%s)."
+                    % verification_uuid)
+        else:
+            tests = tests.keys()
+
+        deployment = _Deployment.get(deployment_id or
+                                     verification.deployment_uuid)
+        LOG.info("Re-running %stests from verification (UUID=%s) for "
+                 "deployment '%s' (UUID=%s).", "failed " if failed else "",
+                 verification.uuid, deployment["name"], deployment["uuid"])
+        return cls.start(verification.verifier_uuid, deployment["uuid"],
+                         load_list=tests)
+
     @staticmethod
     def get(verification_uuid):
         """Get a verification.

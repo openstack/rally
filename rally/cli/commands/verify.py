@@ -382,9 +382,6 @@ class VerifyCommands(object):
                         "considered as expected failures. "
                         "Format: json or yaml like a dictionary where keys "
                         "are test names and values are reasons.")
-    @cliutils.args("--failed", dest="failed", required=False,
-                   help="Re-run tests that failed in the last verification.",
-                   action="store_true")
     @cliutils.args("--no-use", dest="do_use", action="store_false",
                    help="Not to set the finished verification as the default "
                         "verification for future operations.")
@@ -393,19 +390,13 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def start(self, api, verifier_id=None, deployment=None, pattern=None,
               concur=0, load_list=None, skip_list=None, xfail_list=None,
-              failed=False, do_use=True):
+              do_use=True):
         """Start a verification (run verifier tests)."""
-        incompatible_args_map = [{"load-list": load_list, "pattern": pattern},
-                                 {"failed": failed, "pattern": pattern},
-                                 {"failed": failed, "load-list": load_list},
-                                 {"failed": failed, "skip-list": skip_list}]
-        msg = _("Arguments '--%s' and '--%s' cannot be used simultaneously. "
-                "You can use only one of the mentioned arguments.")
-        for args in incompatible_args_map:
-            args_keys = list(args)
-            if args[args_keys[0]] and args[args_keys[1]]:
-                print(msg % (args_keys[0], args_keys[1]))
-                return 1
+        if pattern and load_list:
+            print(_("Arguments '--pattern' and '--load-list' cannot be used "
+                    "simultaneously. You can use only one of the mentioned "
+                    "arguments."))
+            return 1
 
         def parse(filename):
             with open(filename, "r") as f:
@@ -433,7 +424,7 @@ class VerifyCommands(object):
         run_args = {key: value for key, value in (
             ("pattern", pattern), ("load_list", load_list),
             ("skip_list", skip_list), ("xfail_list", xfail_list),
-            ("concurrency", concur), ("failed", failed)) if value}
+            ("concurrency", concur)) if value}
 
         verification, results = api.verification.start(verifier_id, deployment,
                                                        **run_args)
@@ -454,6 +445,25 @@ class VerifyCommands(object):
             envutils.ENV_VERIFICATION, verification.uuid)
         print(_("Using verification (UUID=%s) as the default verification "
                 "for the future operations.") % verification.uuid)
+
+    @cliutils.help_group("verification")
+    @cliutils.args("--uuid", dest="verification_uuid", type=str,
+                   help="Verification UUID. " + LIST_VERIFICATIONS_HINT)
+    @cliutils.args("--deployment-id", dest="deployment", type=str,
+                   metavar="<id>",
+                   help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
+    @cliutils.args("--failed", dest="failed", required=False,
+                   help="Re-run only failed tests.", action="store_true")
+    @envutils.with_default_verification_uuid
+    @envutils.with_default_deployment(cli_arg_name="deployment-id")
+    @plugins.ensure_plugins_are_loaded
+    def rerun(self, api, verification_uuid=None, deployment=None,
+              failed=False):
+        """Re-run tests from a verification for a specific deployment."""
+        verification, results = api.verification.rerun(verification_uuid,
+                                                       deployment, failed)
+        self._print_totals(results.totals)
+        print(_("Verification UUID: %s.") % verification.uuid)
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
