@@ -69,7 +69,7 @@ class DBCommands(object):
 
 def main():
     categories = {"db": DBCommands}
-    return cliutils.run(sys.argv, categories, skip_db_check=True)
+    return cliutils.run(sys.argv, categories)
 
 
 if __name__ == "__main__":

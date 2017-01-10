@@ -28,8 +28,7 @@ class CmdManageTestCase(test.TestCase):
     def test_main(self, mock_cliutils):
         manage.main()
         categories = {"db": manage.DBCommands}
-        mock_cliutils.run.assert_called_once_with(sys.argv, categories,
-                                                  skip_db_check=True)
+        mock_cliutils.run.assert_called_once_with(sys.argv, categories)
 
 
 class DBCommandsTestCase(test.TestCase):

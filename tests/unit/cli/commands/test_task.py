@@ -38,7 +38,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.task = task.TaskCommands()
         self.fake_api = fakes.FakeAPI()
 
-        with mock.patch("rally.api.API._check_db_revision"):
+        with mock.patch("rally.api.API.check_db_revision"):
             self.real_api = api.API()
 
     @mock.patch("rally.cli.commands.task.open", create=True)
