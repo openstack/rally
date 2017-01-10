@@ -26,12 +26,17 @@ class PluginCommands(object):
 
     @staticmethod
     def _print_plugins_list(plugin_list):
-        rows = [utils.Struct(name=f.get_name(),
-                             namespace=f.get_namespace(),
-                             title=f.get_info()["title"])
-                for f in plugin_list]
+        formatters = {
+            "Name": lambda p: p.get_name(),
+            "Namespace": lambda p: p.get_namespace(),
+            "Title": lambda p: p.get_info()["title"],
+            "Plugin base": lambda p: p._get_base().__name__
+        }
 
-        cliutils.print_list(rows, fields=["name", "namespace", "title"])
+        cliutils.print_list(plugin_list, formatters=formatters,
+                            normalize_field_names=True,
+                            fields=["Plugin base", "Name", "Namespace",
+                                    "Title"])
 
     @cliutils.args("--name", dest="name", type=str,
                    help="Plugin name.")
@@ -74,13 +79,17 @@ class PluginCommands(object):
             print("Multiple plugins found:")
             self._print_plugins_list(found)
 
-    @cliutils.args("--name", dest="name", type=str,
-                   help="List only plugins that match the given name.")
+    @cliutils.args(
+        "--name", dest="name", type=str,
+        help="List only plugins that match the given name.")
     @cliutils.args(
         "--namespace", dest="namespace", type=str,
         help="List only plugins that are in the specified namespace.")
+    @cliutils.args(
+        "--plugin-base", dest="base_cls", type=str,
+        help="Plugin base class.")
     @plugins.ensure_plugins_are_loaded
-    def list(self, api, name=None, namespace=None):
+    def list(self, api, name=None, namespace=None, base_cls=None):
         """List all Rally plugins that match name and namespace."""
         all_plugins = plugin.Plugin.get_all(namespace=namespace)
         matched = all_plugins
@@ -88,6 +97,10 @@ class PluginCommands(object):
             name_lw = name.lower()
             matched = [p for p in all_plugins
                        if name_lw in p.get_name().lower()]
+
+        if base_cls:
+            matched = [p for p in matched
+                       if p._get_base().__name__ == base_cls]
 
         if not all_plugins:
             print("There is no plugin namespace: %s" % namespace)

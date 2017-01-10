@@ -15,7 +15,9 @@
 
 import ddt
 import mock
+import six
 
+from rally.cli import cliutils
 from rally.cli.commands import plugin as plugin_cmd
 from rally.common.plugin import plugin
 from rally.common import utils
@@ -62,18 +64,26 @@ class PluginCommandsTestCase(test.TestCase):
         self.Plugin2.unregister()
         self.Plugin3.unregister()
 
-    @mock.patch("rally.cli.commands.plugin.utils.Struct")
-    @mock.patch("rally.cli.commands.plugin.cliutils.print_list")
-    def test__print_plugins_list(self, mock_print_list, mock_struct):
-        mock1 = mock.MagicMock()
-        mock2 = mock.MagicMock()
-        mock_struct.side_effect = [mock1, mock2]
+    def test__print_plugins_list(self):
+        out = six.StringIO()
+        original_print_list = cliutils.print_list
 
-        plugin_cmd.PluginCommands._print_plugins_list(
-            [self.Plugin1, self.Plugin2])
+        def print_list(*args, **kwargs):
+            kwargs["out"] = out
+            original_print_list(*args, **kwargs)
 
-        mock_print_list.assert_called_once_with(
-            [mock1, mock2], fields=["name", "namespace", "title"])
+        with mock.patch.object(plugin_cmd.cliutils, "print_list",
+                               new=print_list):
+            plugin_cmd.PluginCommands._print_plugins_list(
+                [self.Plugin1, self.Plugin2])
+
+        self.assertEqual(
+            "+-------------+------+-----------+-------+\n"
+            "| Plugin base | Name | Namespace | Title |\n"
+            "+-------------+------+-----------+-------+\n"
+            "| Plugin      | p1   | p1_ns     | T1.   |\n"
+            "| Plugin      | p2   | p2_ns     | T2.   |\n"
+            "+-------------+------+-----------+-------+\n", out.getvalue())
 
     def test_show(self):
         with utils.StdOutCapture() as out:
