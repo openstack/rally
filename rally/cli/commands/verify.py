@@ -236,12 +236,17 @@ class VerifyCommands(object):
                         "from a given source.")
     @cliutils.args("--show", dest="show", action="store_true", required=False,
                    help="Show the verifier config file.")
+    @cliutils.args("--force", dest="force", action="store_true",
+                   required=False,
+                   help="Force reconfiguration (ignore current status of "
+                        "verifier). Should be used in case of stuck "
+                        "'configuring' status.")
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
     @plugins.ensure_plugins_are_loaded
     def configure_verifier(self, api, verifier_id=None, deployment=None,
                            recreate=False, extra_options=None, replace=None,
-                           show=False):
+                           show=False, force=False):
         """Configure a verifier for a specific deployment."""
 
         # TODO(ylobankov): Add an ability to read extra options from
@@ -257,7 +262,7 @@ class VerifyCommands(object):
                 print(_("File '%s' not found.") % replace)
                 return 1
 
-            with open(replace, "r") as f:
+            with open(replace) as f:
                 config = f.read()
             api.verifier.override_configuration(verifier_id,
                                                 deployment, config)
@@ -280,7 +285,7 @@ class VerifyCommands(object):
 
             config = api.verifier.configure(verifier_id, deployment,
                                             extra_options=extra_options,
-                                            recreate=recreate)
+                                            recreate=recreate, force=force)
 
         if show:
             print("\n" + config.strip() + "\n")

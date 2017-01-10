@@ -599,13 +599,15 @@ class _Verifier(object):
 
     @classmethod
     def configure(cls, verifier, deployment_id, extra_options=None,
-                  recreate=False):
+                  recreate=False, force=False):
         """Configure a verifier.
 
         :param verifier: Verifier Object or (name or UUID)
         :param deployment_id: Deployment name or UUID
         :param extra_options: Add extra options to the verifier configuration
         :param recreate: Recreate the verifier configuration
+        :param force: Force reconfiguration. Should be used in case of stuck
+            "configuring" status
         """
         if not isinstance(verifier, objects.Verifier):
             verifier = cls.get(verifier)
@@ -614,7 +616,7 @@ class _Verifier(object):
             "Configuring verifier %s for deployment '%s' (UUID=%s).",
             verifier, verifier.deployment["name"], verifier.deployment["uuid"])
 
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status not in cls.READY_TO_USE_STATES and not force:
             raise exceptions.RallyException(
                 "Failed to configure verifier %s for deployment '%s' "
                 "(UUID=%s) because verifier is in '%s' status, but should be "

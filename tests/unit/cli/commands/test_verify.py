@@ -115,7 +115,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.return_value = mock.mock_open(read_data="data").return_value
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
                                        replace="/p/a/t/h")
-        mock_open.assert_called_once_with("/p/a/t/h", "r")
+        mock_open.assert_called_once_with("/p/a/t/h")
         self.fake_api.verifier.override_configuration("v_id", "d_id", "data")
 
         tf = tempfile.NamedTemporaryFile()
@@ -126,13 +126,15 @@ class VerifyCommandsTestCase(test.TestCase):
         expected_options = {"foo": {"opt": "val"},
                             "DEFAULT": {"opt": "val"}}
         self.fake_api.verifier.configure.assert_called_once_with(
-            "v_id", "d_id", extra_options=expected_options, recreate=False)
+            "v_id", "d_id", extra_options=expected_options, recreate=False,
+            force=False)
 
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
                                        extra_options="{foo: {opt: val}, "
                                                      "DEFAULT: {opt: val}}")
         self.fake_api.verifier.configure.assert_called_with(
-            "v_id", "d_id", extra_options=expected_options, recreate=False)
+            "v_id", "d_id", extra_options=expected_options, recreate=False,
+            force=False)
 
     def test_list_verifier_tests(self):
         self.fake_api.verifier.list_tests.return_value = ["test_1", "test_2"]
