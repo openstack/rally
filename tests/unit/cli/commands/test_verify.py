@@ -170,7 +170,7 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.os.path.exists")
     def test_start(self, mock_exists, mock_update_globals_file):
         self.verify.start(self.fake_api, "v_id", "d_id", pattern="pattern",
-                          failed=True)
+                          load_list="load-list")
         self.assertFalse(self.fake_api.verification.start.called)
 
         mock_exists.return_value = False
@@ -239,6 +239,21 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verification.get.assert_called_once_with("v_uuid")
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_VERIFICATION, "v_uuid")
+
+    def test_rerun(self):
+        verification = mock.Mock(uuid="v_uuid")
+        results = mock.Mock(totals={"tests_count": 2,
+                                    "tests_duration": 4,
+                                    "success": 2,
+                                    "skipped": 0,
+                                    "expected_failures": 0,
+                                    "unexpected_success": 0,
+                                    "failures": 0})
+        self.fake_api.verification.rerun.return_value = (verification, results)
+
+        self.verify.rerun(self.fake_api, "v_uuid", "d_id", failed=True)
+        self.fake_api.verification.rerun.assert_called_once_with("v_uuid",
+                                                                 "d_id", True)
 
     def test_show(self):
         deployment_name = "Some Deploy"
