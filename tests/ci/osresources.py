@@ -21,6 +21,8 @@ import json
 import subprocess
 import sys
 
+import six
+
 from rally.cli import cliutils
 from rally.common import objects
 from rally.common.plugin import discover
@@ -344,7 +346,8 @@ class CloudResources(object):
             manager = cls(self.clients)
             if manager.is_available():
                 resources.extend(manager.get_resources())
-        return sorted(self._deduplicate(resources))
+        return sorted(self._deduplicate(resources),
+                      key=(lambda x: str(type(x)) + repr(x)))
 
     def compare(self, with_list):
         # NOTE(stpierre): Each resource is either a list of 2-tuples,
@@ -399,8 +402,9 @@ def main():
     if args.credentials:
         config = json.load(args.credentials)
     else:
-        config = json.loads(subprocess.check_output(["rally", "deployment",
-                                                     "config"]))
+        out = subprocess.check_output(["rally", "deployment",
+                                       "config"])
+        config = json.loads(out if six.PY2 else out.decode("utf-8"))
         config.update(config.pop("admin"))
         del config["type"]
         if "users" in config:
