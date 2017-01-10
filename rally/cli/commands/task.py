@@ -32,7 +32,7 @@ from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
 from rally.common.i18n import _
-from rally.common import junit
+from rally.common.io import junit
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import version
