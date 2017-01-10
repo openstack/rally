@@ -8,7 +8,7 @@ Use case
 
 A developer is working on a feature that is covered by one or more specific
 benchmarks/scenarios.  He/she would like to execute a rally task with an
-existing task template file (yaml or json) indicating exactly which
+existing task template file (YAML or JSON) indicating exactly which
 benchmark(s) will be executed.
 
 

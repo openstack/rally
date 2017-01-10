@@ -15,8 +15,8 @@
 
 .. _project_info:
 
-Project Info
-============
+Project Info and Release Notes
+==============================
 
 Maintainers
 -----------
@@ -123,20 +123,39 @@ Plugin Core reviewers
 
 Useful links
 ------------
-- `Source code <https://github.com/openstack/rally>`_
-- `Rally road map <https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0>`_
-- `Project space <http://launchpad.net/rally>`_
-- `Bugs <https://bugs.launchpad.net/rally>`_
-- `Patches on review <https://review.openstack.org/#/q/status:open+rally,n,z>`_
-- `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2016/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
-- `IRC logs <http://irclog.perlgeek.de/openstack-rally>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
-- `Gitter chat <https://gitter.im/rally-dev/Lobby>`_
-- `Trello board <https://trello.com/b/DoD8aeZy/rally>`_
+- `Source code`_
+- `Rally roadmap`_
+- `Project space`_
+- `Bugs`_
+- `Patches on review`_
+- `Meeting logs`_ (server: **irc.freenode.net**, channel:
+   **#openstack-meeting**)
+- `IRC logs`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
+- `Gitter chat`_
+- `Trello board`_
 
 
 Where can I discuss and propose changes?
 ----------------------------------------
 - Our IRC channel: **#openstack-rally** on **irc.freenode.net**;
-- Weekly Rally team meeting (in IRC): **#openstack-meeting** on **irc.freenode.net**, held on Mondays at 14:00 UTC;
-- OpenStack mailing list: **openstack-dev@lists.openstack.org** (see `subscription and usage instructions <http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev>`_);
-- `Rally team on Launchpad <https://launchpad.net/rally>`_: Answers/Bugs/Blueprints.
+- Weekly Rally team meeting (in IRC): **#openstack-meeting** on
+  **irc.freenode.net**, held on Mondays at 14:00 UTC;
+- OpenStack mailing list: **openstack-dev@lists.openstack.org** (see
+  `subscription and usage instructions`_);
+- `Rally team on Launchpad`_: Answers/Bugs/Blueprints.
+
+.. include:: release_notes.rst
+
+.. references:
+
+.. _Source code: https://github.com/openstack/rally
+.. _Rally roadmap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0
+.. _Project space: http://launchpad.net/rally
+.. _Bugs: https://bugs.launchpad.net/rally
+.. _Patches on review: https://review.openstack.org/#/q/status:open+rally,n,z
+.. _Meeting logs: http://eavesdrop.openstack.org/meetings/rally/2016/
+.. _IRC logs: http://irclog.perlgeek.de/openstack-rally
+.. _Gitter chat: https://gitter.im/rally-dev/Lobby
+.. _Trello board: https://trello.com/b/DoD8aeZy/rally
+.. _subscription and usage instructions: http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev
+.. _Rally team on Launchpad: https://launchpad.net/rally

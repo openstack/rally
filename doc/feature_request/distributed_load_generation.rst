@@ -11,7 +11,6 @@ like 10-100k request per second for benchmarking.
 To generate such huge load Rally have to create load from different
 servers.
 
-
 Problem Description
 -------------------
 
