@@ -581,7 +581,7 @@ def validate_deprecated_args(argv, fn):
                                                                 fn.__name__))
 
 
-def run(argv, categories, skip_db_check=False):
+def run(argv, categories):
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
     category_opt = cfg.SubCommandOpt("category",
                                      title="Command categories",
@@ -601,7 +601,7 @@ def run(argv, categories, skip_db_check=False):
                                       help=help_msg))
 
     try:
-        rapi = api.API(config_args=argv[1:], skip_db_check=skip_db_check)
+        rapi = api.API(config_args=argv[1:], skip_db_check=True)
     except exceptions.RallyException as e:
         print(e)
         return(2)
@@ -649,6 +649,10 @@ def run(argv, categories, skip_db_check=False):
     try:
         validate_deprecated_args(argv, fn)
 
+        # skip db check for db and plugin commands
+        if CONF.category.name not in ("db", "plugin"):
+            rapi.check_db_revision()
+
         if getattr(fn, "_suppress_warnings", False):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -657,8 +661,8 @@ def run(argv, categories, skip_db_check=False):
             ret = fn(*fn_args, **fn_kwargs)
         return(ret)
 
-    except (IOError, TypeError, ValueError, exceptions.DeploymentNotFound,
-            exceptions.TaskNotFound, jsonschema.ValidationError) as e:
+    except (IOError, TypeError, ValueError,
+            exceptions.RallyException, jsonschema.ValidationError) as e:
         if logging.is_debug():
             LOG.exception(e)
         print(e)

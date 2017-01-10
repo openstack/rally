@@ -1002,7 +1002,7 @@ class API(object):
 
         # Check that db is upgraded to the latest revision
         if not skip_db_check:
-            self._check_db_revision()
+            self.check_db_revision()
 
         # Load plugins
         plugin_paths = plugin_paths or []
@@ -1025,7 +1025,7 @@ class API(object):
             if os.path.isfile(fpath):
                 return [fpath]
 
-    def _check_db_revision(self):
+    def check_db_revision(self):
         rev = rally_version.database_revision()
 
         # Check that db exists
