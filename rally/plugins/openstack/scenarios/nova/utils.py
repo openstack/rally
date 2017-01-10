@@ -456,6 +456,30 @@ class NovaScenario(scenario.OpenStackScenario):
                     benchmark.nova_server_delete_poll_interval
                 )
 
+    @atomic.action_timer("nova.create_server_group")
+    def _create_server_group(self, **kwargs):
+        """Create (allocate) a server group.
+
+        :param kwargs: Server group name and policy
+
+        :returns: Nova server group
+        """
+        return self.clients("nova").server_groups.create(**kwargs)
+
+    @atomic.action_timer("nova.list_server_groups")
+    def _list_server_groups(self, all_projects=False):
+        """Get a list of all server groups.
+
+        :param all_projects: If True, display server groups from all
+            projects(Admin only)
+
+        :rtype: list of :class:`ServerGroup`.
+        """
+        if all_projects:
+            return self.admin_clients("nova").server_groups.list(all_projects)
+        else:
+            return self.clients("nova").server_groups.list(all_projects)
+
     @atomic.action_timer("nova.delete_image")
     def _delete_image(self, image):
         """Delete the given image.

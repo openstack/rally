@@ -190,6 +190,23 @@ class NovaAggregatesTestCase(test.TestCase):
             [mock.call(r.name, nutils.NovaScenario) for r in aggregates])
 
 
+class NovaServerGroupsTestCase(test.TestCase):
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object,
+                  mock_resource_manager__manager):
+        server_groups = [mock.MagicMock(name="rally_foo1"),
+                         mock.MagicMock(name="rally_foo2"),
+                         mock.MagicMock(name="foo3")]
+        mock_name_matches_object.side_effect = [False, True, True]
+        mock_resource_manager__manager().list.return_value = server_groups
+        self.assertEqual(server_groups[1:],
+                         resources.NovaServerGroups().list())
+        mock_name_matches_object.assert_has_calls(
+            [mock.call(r.name, nutils.NovaScenario) for r in server_groups])
+
+
 class NovaSecurityGroupTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
