@@ -22,6 +22,8 @@ import six
 from rally.cli import cliutils
 from rally.cli.commands import verify
 from rally.cli import envutils
+from rally import plugins
+from rally.verification import reporter
 from tests.unit import fakes
 from tests.unit import test
 
@@ -381,21 +383,39 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verification.delete.assert_has_calls(
             [mock.call("v1_uuid"), mock.call("v2_uuid")])
 
+    @mock.patch("rally.cli.commands.verify.os")
     @mock.patch("rally.cli.commands.verify.webbrowser.open_new_tab")
     @mock.patch("rally.cli.commands.verify.open", create=True)
-    def test_report(self, mock_open, mock_open_new_tab):
-        self.verify.report(self.fake_api, "v_uuid", html=True,
-                           output_file="/p/a/t/h", open_it=True)
+    def test_report(self, mock_open, mock_open_new_tab, mock_os):
+        output_dest = "/p/a/t/h"
+        output_type = "type"
+        content = "content"
+        self.fake_api.verification.report.return_value = {
+            "files": {output_dest: content}, "open": output_dest}
+        mock_os.path.exists.return_value = False
+
+        self.verify.report(self.fake_api, "v_uuid", output_type=output_type,
+                           output_dest=output_dest, open_it=True)
         self.fake_api.verification.report.assert_called_once_with(
-            ["v_uuid"], True)
-        mock_open.assert_called_once_with("/p/a/t/h", "w")
-        mock_open_new_tab.assert_called_once_with("file:///p/a/t/h")
+            ["v_uuid"], output_type, output_dest)
+        mock_open.assert_called_once_with(mock_os.path.abspath.return_value,
+                                          "w")
+        mock_os.makedirs.assert_called_once_with(
+            mock_os.path.dirname.return_value)
 
         mock_open.reset_mock()
         mock_open_new_tab.reset_mock()
-        self.verify.report(self.fake_api, "v_uuid")
-        self.assertFalse(mock_open.called)
+        mock_os.makedirs.reset_mock()
+
+        mock_os.path.exists.return_value = True
+        self.fake_api.verification.report.return_value = {
+            "files": {output_dest: content}, "print": "foo"}
+
+        self.verify.report(self.fake_api, "v_uuid", output_type=output_type,
+                           output_dest=output_dest)
+
         self.assertFalse(mock_open_new_tab.called)
+        self.assertFalse(mock_os.makedirs.called)
 
     @mock.patch("rally.cli.commands.verify.VerifyCommands.use")
     @mock.patch("rally.cli.commands.verify.open", create=True)
@@ -429,3 +449,19 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_use.reset_mock()
         self.verify.import_results(self.fake_api, "v_id", "d_id", do_use=False)
         self.assertFalse(mock_use.called)
+
+    @plugins.ensure_plugins_are_loaded
+    def test_default_reporters(self):
+        available_reporters = {
+            cls.get_name().lower()
+            for cls in reporter.VerificationReporter.get_all()
+            # ignore possible external plugins
+            if cls.__module__.startswith("rally")}
+        listed_in_cli = {name.lower() for name in verify.DEFAULTS_REPORTERS}
+        not_listed = available_reporters - listed_in_cli
+
+        if not_listed:
+            self.fail("All default reporters should be listed in "
+                      "%s.DEFAULTS_REPORTERS (case of letters doesn't matter)."
+                      " Missed reporters: %s" % (verify.__name__,
+                                                 ", ".join(not_listed)))

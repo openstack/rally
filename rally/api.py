@@ -35,9 +35,9 @@ from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally import osclients
 from rally.task import engine
-from rally.ui import report
 from rally.verification import context as vcontext
 from rally.verification import manager as vmanager
+from rally.verification import reporter as vreporter
 
 
 CONF = cfg.CONF
@@ -895,18 +895,25 @@ class _Verification(object):
         LOG.info("Verification has been successfully deleted!")
 
     @classmethod
-    def report(cls, uuids, html=False):
+    def report(cls, uuids, output_type, output_dest=None):
         """Generate a report for a verification or a few verifications.
 
         :param uuids: List of verifications UUIDs
-        :param html: Whether or not to create the report in HTML format
+        :param output_type: Plugin name of verification reporter
+        :param output_dest: Destination for verification report
         """
         verifications = [cls.get(uuid) for uuid in uuids]
 
-        if html:
-            return report.VerificationReport(verifications).to_html()
+        reporter_cls = vreporter.VerificationReporter.get(output_type)
+        reporter_cls.validate(output_dest)
 
-        return report.VerificationReport(verifications).to_json()
+        LOG.info("Building '%s' report for the following verification(s): "
+                 "'%s'.", output_type, "', '".join(uuids))
+        result = vreporter.VerificationReporter.make(reporter_cls,
+                                                     verifications,
+                                                     output_dest)
+        LOG.info(_LI("The report has been successfully built."))
+        return result
 
     @classmethod
     def import_results(cls, verifier_id, deployment_id, data, **run_args):

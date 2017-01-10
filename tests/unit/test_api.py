@@ -1130,31 +1130,27 @@ class VerificationAPITestCase(test.TestCase):
         mock_verification_list.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, status=status)
 
-    @mock.patch("rally.api.report.VerificationReport")
+    @mock.patch("rally.api.vreporter.VerificationReporter")
     @mock.patch("rally.api.objects.Verification.get")
-    def test_report(self, mock_verification_get, mock_verification_report):
+    def test_report(self, mock_verification_get, mock_verification_reporter):
         verifications = ["uuid-1", "uuid-2"]
+        output_type = mock.Mock()
+        output_dest = mock.Mock()
 
-        vreport_obj = mock_verification_report.return_value
+        reporter = mock_verification_reporter.get.return_value
 
-        self.assertEqual(vreport_obj.to_html.return_value,
-                         api._Verification.report(verifications, html=True))
-        vreport_obj.to_html.assert_called_once_with()
-        mock_verification_report.assert_called_once_with(
-            [mock_verification_get.return_value,
-             mock_verification_get.return_value])
-        self.assertEqual([mock.call(u) for u in verifications],
-                         mock_verification_get.call_args_list)
+        self.assertEqual(mock_verification_reporter.make.return_value,
+                         api._Verification.report(verifications,
+                                                  output_type=output_type,
+                                                  output_dest=output_dest))
+        mock_verification_reporter.get.assert_called_once_with(output_type)
 
-        mock_verification_get.reset_mock()
-        mock_verification_report.reset_mock()
+        reporter.validate.assert_called_once_with(output_dest)
 
-        self.assertEqual(vreport_obj.to_json.return_value,
-                         api._Verification.report(verifications))
-        vreport_obj.to_json.assert_called_once_with()
-        mock_verification_report.assert_called_once_with(
-            [mock_verification_get.return_value,
-             mock_verification_get.return_value])
+        mock_verification_reporter.make.assert_called_once_with(
+            reporter, [mock_verification_get.return_value,
+                       mock_verification_get.return_value],
+            output_dest)
         self.assertEqual([mock.call(u) for u in verifications],
                          mock_verification_get.call_args_list)
 

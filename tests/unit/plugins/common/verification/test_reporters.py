@@ -18,121 +18,132 @@ import datetime as dt
 import mock
 
 from rally.common import utils
-from rally.ui import report
+from rally.plugins.common.verification import reporters
 from tests.unit import test
 
 
-class VerificationReportTestCase(test.TestCase):
-    def get_verifications(self):
-        tests_1 = {
-            "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
-                {"name": "some.test.TestCase.test_foo",
-                 "tags": ["smoke", "id"],
-                 "status": "success",
-                 "duration": "8"},
-            "some.test.TestCase.test_skipped":
-                {"name": "some.test.TestCase.test_skipped",
-                 "status": "skip",
-                 "reason": "Skipped until Bug: 666 is resolved.",
-                 "duration": "0"},
-            "some.test.TestCase.test_xfail":
-                {"name": "some.test.TestCase.test_xfail",
-                 "status": "xfail",
-                 "reason": "something",
-                 "traceback": "HEEELP",
-                 "duration": "3"}
-        }
-        tests_2 = {
-            "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
-                {"name": "some.test.TestCase.test_foo",
-                 "tags": ["smoke", "id"],
-                 "status": "success",
-                 "duration": "8"},
-            "some.test.TestCase.test_failed":
-                {"name": "some.test.TestCase.test_failed",
-                 "status": "fail",
-                 "traceback": "HEEEEEEELP",
-                 "duration": "8"},
-            "some.test.TestCase.test_skipped":
-                {"name": "some.test.TestCase.test_skipped",
-                 "status": "skip",
-                 "reason": "Skipped until Bug: 666 is resolved.",
-                 "duration": "0"},
-            "some.test.TestCase.test_xfail":
-                {"name": "some.test.TestCase.test_xfail",
-                 "status": "xfail",
-                 "reason": "something",
-                 "traceback": "HEEELP",
-                 "duration": "4"}
-        }
-        tests_3 = {
-            "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
-                {"name": "some.test.TestCase.test_foo",
-                 "tags": ["smoke", "id"],
-                 "status": "success",
-                 "duration": "8"},
-            "some.test.TestCase.test_failed":
-                {"name": "some.test.TestCase.test_failed",
-                 "status": "fail",
-                 "traceback": "HEEEEEEELP",
-                 "duration": "7"},
-            "some.test.TestCase.test_skipped":
-                {"name": "some.test.TestCase.test_skipped",
-                 "status": "skip",
-                 "reason": "Skipped until Bug: 666 is resolved.",
-                 "duration": "0"},
-            "some.test.TestCase.test_xfail":
-                {"name": "some.test.TestCase.test_xfail",
-                 "status": "xfail",
-                 "reason": "something",
-                 "traceback": "HEEELP",
-                 "duration": "3"}
-        }
+PATH = "rally.plugins.common.verification.reporters"
 
-        return [
-            utils.Struct(uuid="foo-bar-1",
-                         created_at=dt.datetime(2001, 1, 1),
-                         updated_at=dt.datetime(2001, 1, 2),
-                         status="finished",
-                         run_args="set_name=compute",
-                         tests_duration=1.111,
-                         tests_count=9,
-                         skipped=0,
-                         success=3,
-                         expected_failures=3,
-                         unexpected_success=2,
-                         failures=1,
-                         tests=tests_1),
-            utils.Struct(uuid="foo-bar-2",
-                         created_at=dt.datetime(2002, 1, 1),
-                         updated_at=dt.datetime(2002, 1, 2),
-                         status="finished",
-                         run_args="set_name=full",
-                         tests_duration=22.222,
-                         tests_count=99,
-                         skipped=0,
-                         success=33,
-                         expected_failures=33,
-                         unexpected_success=22,
-                         failures=11,
-                         tests=tests_2),
-            utils.Struct(uuid="foo-bar-3",
-                         created_at=dt.datetime(2003, 1, 1),
-                         updated_at=dt.datetime(2003, 1, 2),
-                         status="finished",
-                         run_args="set_name=full",
-                         tests_duration=33.333,
-                         tests_count=99,
-                         skipped=0,
-                         success=33,
-                         expected_failures=33,
-                         unexpected_success=22,
-                         failures=11,
-                         tests=tests_3)
-        ]
 
-    def test__init__(self):
-        vreport = report.VerificationReport(self.get_verifications())
+def get_verifications():
+    tests_1 = {
+        "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
+            {"name": "some.test.TestCase.test_foo",
+             "tags": ["smoke", "id"],
+             "status": "success",
+             "duration": "8"},
+        "some.test.TestCase.test_skipped":
+            {"name": "some.test.TestCase.test_skipped",
+             "status": "skip",
+             "reason": "Skipped until Bug: 666 is resolved.",
+             "duration": "0"},
+        "some.test.TestCase.test_xfail":
+            {"name": "some.test.TestCase.test_xfail",
+             "status": "xfail",
+             "reason": "something",
+             "traceback": "HEEELP",
+             "duration": "3"}
+    }
+    tests_2 = {
+        "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
+            {"name": "some.test.TestCase.test_foo",
+             "tags": ["smoke", "id"],
+             "status": "success",
+             "duration": "8"},
+        "some.test.TestCase.test_failed":
+            {"name": "some.test.TestCase.test_failed",
+             "status": "fail",
+             "traceback": "HEEEEEEELP",
+             "duration": "8"},
+        "some.test.TestCase.test_skipped":
+            {"name": "some.test.TestCase.test_skipped",
+             "status": "skip",
+             "reason": "Skipped until Bug: 666 is resolved.",
+             "duration": "0"},
+        "some.test.TestCase.test_xfail":
+            {"name": "some.test.TestCase.test_xfail",
+             "status": "xfail",
+             "reason": "something",
+             "traceback": "HEEELP",
+             "duration": "4"}
+    }
+    tests_3 = {
+        "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
+            {"name": "some.test.TestCase.test_foo",
+             "tags": ["smoke", "id"],
+             "status": "success",
+             "duration": "8"},
+        "some.test.TestCase.test_failed":
+            {"name": "some.test.TestCase.test_failed",
+             "status": "fail",
+             "traceback": "HEEEEEEELP",
+             "duration": "7"},
+        "some.test.TestCase.test_skipped":
+            {"name": "some.test.TestCase.test_skipped",
+             "status": "skip",
+             "reason": "Skipped until Bug: 666 is resolved.",
+             "duration": "0"},
+        "some.test.TestCase.test_xfail":
+            {"name": "some.test.TestCase.test_xfail",
+             "status": "xfail",
+             "reason": "something",
+             "traceback": "HEEELP",
+             "duration": "3"}
+    }
+
+    return [
+        utils.Struct(uuid="foo-bar-1",
+                     created_at=dt.datetime(2001, 1, 1),
+                     updated_at=dt.datetime(2001, 1, 2),
+                     status="finished",
+                     run_args="set_name=compute",
+                     tests_duration=1.111,
+                     tests_count=9,
+                     skipped=0,
+                     success=3,
+                     expected_failures=3,
+                     unexpected_success=2,
+                     failures=1,
+                     tests=tests_1),
+        utils.Struct(uuid="foo-bar-2",
+                     created_at=dt.datetime(2002, 1, 1),
+                     updated_at=dt.datetime(2002, 1, 2),
+                     status="finished",
+                     run_args="set_name=full",
+                     tests_duration=22.222,
+                     tests_count=99,
+                     skipped=0,
+                     success=33,
+                     expected_failures=33,
+                     unexpected_success=22,
+                     failures=11,
+                     tests=tests_2),
+        utils.Struct(uuid="foo-bar-3",
+                     created_at=dt.datetime(2003, 1, 1),
+                     updated_at=dt.datetime(2003, 1, 2),
+                     status="finished",
+                     run_args="set_name=full",
+                     tests_duration=33.333,
+                     tests_count=99,
+                     skipped=0,
+                     success=33,
+                     expected_failures=33,
+                     unexpected_success=22,
+                     failures=11,
+                     tests=tests_3)
+    ]
+
+
+class JSONReporterTestCase(test.TestCase):
+    def test_validate(self):
+        # nothing should fail
+        reporters.JSONReporter.validate(mock.Mock())
+        reporters.JSONReporter.validate("")
+        reporters.JSONReporter.validate(None)
+
+    def test__generate(self):
+        reporter = reporters.JSONReporter(get_verifications(), None)
+        report = reporter._generate()
 
         self.assertEqual(
             collections.OrderedDict(
@@ -169,18 +180,15 @@ class VerificationReportTestCase(test.TestCase):
                                 "unexpected_success": 22,
                                 "expected_failures": 33,
                                 "failures": 11})]),
-            vreport.report["verifications"])
+            report["verifications"])
 
         self.assertEqual({
             "some.test.TestCase.test_foo[id=iiiidddd;smoke]": {
-                "by_verification": {"foo-bar-1": {"details": None,
-                                                  "duration": "8",
+                "by_verification": {"foo-bar-1": {"duration": "8",
                                                   "status": "success"},
-                                    "foo-bar-2": {"details": None,
-                                                  "duration": "8",
+                                    "foo-bar-2": {"duration": "8",
                                                   "status": "success"},
-                                    "foo-bar-3": {"details": None,
-                                                  "duration": "8",
+                                    "foo-bar-3": {"duration": "8",
                                                   "status": "success"}
                                     },
                 "name": "some.test.TestCase.test_foo",
@@ -226,16 +234,40 @@ class VerificationReportTestCase(test.TestCase):
                                   "status": "xfail"}},
                 "name": "some.test.TestCase.test_xfail",
                 "tags": []}},
-            vreport.report["tests"])
+            report["tests"])
 
-    @mock.patch("rally.ui.report.utils")
-    @mock.patch("rally.ui.report.json.dumps")
-    def test_to_html(self, mock_dumps, mock_utils):
+    @mock.patch("%s.json.dumps" % PATH)
+    @mock.patch("%s.JSONReporter._generate" % PATH)
+    def test_generate(self, mock__generate, mock_dumps):
+        reporter = reporters.JSONReporter([], output_destination=None)
+        self.assertEqual({"print": mock_dumps.return_value},
+                         reporter.generate())
+        mock__generate.assert_called_once_with()
+        mock_dumps.assert_called_once_with(mock__generate.return_value,
+                                           indent=4)
+
+        mock__generate.reset_mock()
+        mock_dumps.reset_mock()
+
+        path = "some_path"
+        reporter = reporters.JSONReporter([], output_destination=path)
+        self.assertEqual({"files": {path: mock_dumps.return_value},
+                          "open": path}, reporter.generate())
+        mock__generate.assert_called_once_with()
+        mock_dumps.assert_called_once_with(mock__generate.return_value,
+                                           indent=4)
+
+
+class HTMLReporterTestCase(test.TestCase):
+    @mock.patch("%s.utils" % PATH)
+    @mock.patch("%s.json.dumps" % PATH)
+    def test_generate(self, mock_dumps, mock_utils):
         mock_render = mock_utils.get_template.return_value.render
 
-        vreport = report.VerificationReport(self.get_verifications())
+        reporter = reporters.HTMLReporter(get_verifications(), None)
 
-        self.assertEqual(mock_render.return_value, vreport.to_html())
+        self.assertEqual({"print": mock_render.return_value},
+                         reporter.generate())
         mock_render.assert_called_once_with(data=mock_dumps.return_value,
                                             include_libs=False)
         mock_utils.get_template.assert_called_once_with(
@@ -251,8 +283,6 @@ class VerificationReportTestCase(test.TestCase):
                          set(ctx.keys()))
         self.assertEqual(["foo-bar-1", "foo-bar-2", "foo-bar-3"],
                          list(ctx["uuids"]))
-        self.assertEqual(vreport.report["verifications"],
-                         ctx["verifications"])
         self.assertTrue(ctx["show_comparison_note"])
         self.assertEqual({
             "some.test.TestCase.test_foo[id=iiiidddd;smoke]": {
@@ -310,15 +340,3 @@ class VerificationReportTestCase(test.TestCase):
                 "name": "some.test.TestCase.test_xfail",
                 "tags": []}},
             ctx["tests"])
-
-    @mock.patch("rally.ui.report.json.dumps")
-    def test_to_json(self, mock_dumps):
-        obj = mock.MagicMock()
-        indent = 777
-
-        vreport = report.VerificationReport([])
-        vreport.report = obj
-
-        self.assertEqual(mock_dumps.return_value, vreport.to_json(indent))
-
-        mock_dumps.assert_called_once_with(obj, indent=indent)
