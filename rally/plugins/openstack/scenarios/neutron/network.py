@@ -48,6 +48,23 @@ class CreateAndListNetworks(utils.NeutronScenario):
 @validation.required_services(consts.Service.NEUTRON)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronNetworks.create_and_show_network")
+class CreateAndShowNetwork(utils.NeutronScenario):
+
+    def run(self, network_create_args=None):
+        """Create a network and show network details.
+
+        Measure the "neutron net-show" command performance.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        """
+        network = self._create_network(network_create_args or {})
+        self._show_network(network)
+
+
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_networks")
 class CreateAndUpdateNetworks(utils.NeutronScenario):
 

@@ -1,0 +1,19 @@
+---
+  NeutronNetworks.create_and_show_network:
+    -
+      args:
+        network_create_args: {}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 3
+        quotas:
+          neutron:
+            network: -1
+      sla:
+        failure_rate:
+          max: 0
