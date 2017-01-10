@@ -26,7 +26,7 @@ _rally()
     OPTS["deployment_recreate"]="--deployment"
     OPTS["deployment_show"]="--deployment"
     OPTS["deployment_use"]="--deployment"
-    OPTS["plugin_list"]="--name --namespace"
+    OPTS["plugin_list"]="--name --namespace --plugin-base"
     OPTS["plugin_show"]="--name --namespace"
     OPTS["task_abort"]="--uuid --soft"
     OPTS["task_delete"]="--force --uuid"

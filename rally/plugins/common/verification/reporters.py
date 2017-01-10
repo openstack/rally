@@ -26,6 +26,8 @@ LP_BUG_LINK = "https://launchpad.net/bugs/%s"
 
 @reporter.configure("json")
 class JSONReporter(reporter.VerificationReporter):
+    """Generates verification report in JSON format."""
+
     @classmethod
     def validate(cls, output_destination):
         """Validate destination of report.
@@ -98,6 +100,8 @@ class JSONReporter(reporter.VerificationReporter):
 
 @reporter.configure("html")
 class HTMLReporter(JSONReporter):
+    """Generates verification report in HTML format."""
+
     def generate(self):
         report = self._generate()
         uuids = report["verifications"].keys()

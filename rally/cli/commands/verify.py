@@ -597,7 +597,8 @@ class VerifyCommands(object):
                    required=False, default="json",
                    help="Report type (Defaults to JSON). Out of the box types:"
                         " %s. HINT: You can list all types by executing "
-                        "`rally plugins list` command."
+                        "`rally plugins list --plugin-base "
+                        "VerificationReporter` command."
                         % ", ".join(DEFAULTS_REPORTERS))
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
