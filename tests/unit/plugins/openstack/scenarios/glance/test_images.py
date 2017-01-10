@@ -15,6 +15,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.glance import images
 from tests.unit import fakes
 from tests.unit import test
@@ -26,17 +27,42 @@ class GlanceImagesTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.CreateAndListImage._list_images" % BASE)
     @mock.patch("%s.CreateAndListImage._create_image" % BASE)
-    @mock.patch("%s.CreateAndListImage.generate_random_name" % BASE,
-                return_value="test-rally-image")
     def test_create_and_list_image(self,
-                                   mock_random_name,
                                    mock_create_image,
                                    mock_list_images):
+
+        fake_image = fakes.FakeImage(id=1, name="img_name1")
+        mock_create_image.return_value = fake_image
+        mock_list_images.return_value = [
+            fakes.FakeImage(id=0, name="img_name1"),
+            fake_image,
+            fakes.FakeImage(id=2, name="img_name1")
+        ]
+
+        # Positive case
         images.CreateAndListImage(self.context).run(
             "cf", "url", "df", fakearg="f")
         mock_create_image.assert_called_once_with(
             "cf", "url", "df", fakearg="f")
         mock_list_images.assert_called_once_with()
+
+        # Negative case: image isn't created
+        mock_create_image.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          images.CreateAndListImage(self.context).run,
+                          "cf", "url", "df", fakearg="f")
+        mock_create_image.assert_called_with(
+            "cf", "url", "df", fakearg="f")
+
+        # Negative case: created image n ot in the list of available images
+        mock_create_image.return_value = fakes.FakeImage(
+            id=12, name="img_nameN")
+        self.assertRaises(exceptions.RallyAssertionError,
+                          images.CreateAndListImage(self.context).run,
+                          "cf", "url", "df", fakearg="f")
+        mock_create_image.assert_called_with(
+            "cf", "url", "df", fakearg="f")
+        mock_list_images.assert_called_with()
 
     @mock.patch("%s.ListImages._list_images" % BASE)
     def test_list_images(self, mock_list_images__list_images):

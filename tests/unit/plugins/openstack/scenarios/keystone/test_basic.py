@@ -129,7 +129,6 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
     def test_create_and_list_tenants(self):
         identity_service = self.mock_identity.return_value
         scenario = basic.CreateAndListTenants(self.context)
-
         scenario.run(enabled=True)
         identity_service.create_project.assert_called_once_with(enabled=True)
         identity_service.list_projects.assert_called_once_with()

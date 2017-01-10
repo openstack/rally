@@ -104,4 +104,4 @@ class CeilometerResourcesTestCase(test.ScenarioTestCase):
         context = {"user": {"tenant_id": "fake"},
                    "tenant": {"id": "fake", "resources": resource_list}}
         scenario.context = context
-        self.assertRaises(exceptions.NotFoundException, scenario.run)
+        self.assertRaises(exceptions.RallyAssertionError, scenario.run)

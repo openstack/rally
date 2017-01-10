@@ -153,6 +153,7 @@ class CreateAndListUsers(KeystoneBasic):
         :param kwargs: Other optional parameters to create users like
                          "tenant_id", "enabled".
         """
+
         kwargs.pop("name", None)
         self.admin_keystone.create_user(**kwargs)
         self.admin_keystone.list_users()

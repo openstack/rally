@@ -13,7 +13,6 @@
 #    under the License.
 
 from rally import consts
-from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 from rally.task import validation
@@ -67,10 +66,9 @@ class GetTenantResources(ceiloutils.CeilometerScenario):
         GET /v2/resources/(resource_id)
         """
         resources = self.context["tenant"].get("resources", [])
-        if not resources:
-            msg = ("No resources found for tenant: %s"
-                   % self.context["tenant"].get("name"))
-            raise exceptions.NotFoundException(message=msg)
+        msg = ("No resources found for tenant: %s"
+               % self.context["tenant"].get("name"))
+        self.assertTrue(resources, msg)
         for res_id in resources:
             self._get_resource(res_id)
 

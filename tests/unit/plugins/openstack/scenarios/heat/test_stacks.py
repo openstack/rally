@@ -15,6 +15,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.heat import stacks
 from tests.unit import test
 
@@ -33,12 +34,14 @@ class HeatStacksTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.CreateAndListStack._list_stacks" % BASE)
     @mock.patch("%s.CreateAndListStack._create_stack" % BASE)
-    @mock.patch("%s.CreateAndListStack.generate_random_name" % BASE,
-                return_value="test-rally-stack")
     def test_create_and_list_stack(self,
-                                   mock_generate_random_name,
                                    mock__create_stack,
                                    mock__list_stacks):
+        stack = mock.Mock()
+        mock__create_stack.return_value = stack
+        mock__list_stacks.return_value = [stack] * 3
+
+        # Positive case:
         stacks.CreateAndListStack(self.context).run(
             template_path=self.default_template,
             parameters=self.default_parameters,
@@ -49,6 +52,34 @@ class HeatStacksTestCase(test.ScenarioTestCase):
             self.default_template, self.default_parameters,
             self.default_files, self.default_environment)
         mock__list_stacks.assert_called_once_with()
+
+        # Negative case1: stack isn't created
+        mock__create_stack.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          stacks.CreateAndListStack(self.context).run,
+                          template_path=self.default_template,
+                          parameters=self.default_parameters,
+                          files=self.default_files,
+                          environment=self.default_environment)
+
+        mock__create_stack.assert_called_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+
+        # Negative case2: created stack not in the list of available stacks
+        fake_stack = mock.Mock()
+        mock__create_stack.return_value = fake_stack
+        self.assertRaises(exceptions.RallyAssertionError,
+                          stacks.CreateAndListStack(self.context).run,
+                          template_path=self.default_template,
+                          parameters=self.default_parameters,
+                          files=self.default_files,
+                          environment=self.default_environment)
+
+        mock__create_stack.assert_called_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__list_stacks.assert_called_with()
 
     @mock.patch("%s.ListStacksAndResources._list_stacks" % BASE)
     def test_list_stack_and_resources(self, mock__list_stacks):

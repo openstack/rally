@@ -16,6 +16,7 @@
 
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.designate import basic
 from tests.unit import test
 
@@ -29,9 +30,30 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
     def test_create_and_list_domains(self,
                                      mock__create_domain,
                                      mock__list_domains):
+        mock__create_domain.return_value = "fake_domain.xyz"
+        mock__list_domains.return_value = (["fake_domain.org",
+                                            "fake_domain.xyz",
+                                            "ultimate_question.net"])
         basic.CreateAndListDomains(self.context).run()
         mock__create_domain.assert_called_once_with()
         mock__list_domains.assert_called_once_with()
+
+    @mock.patch("%s.CreateAndListDomains._list_domains" % BASE)
+    @mock.patch("%s.CreateAndListDomains._create_domain" % BASE)
+    def test_create_and_list_domains_fails(self,
+                                           mock__create_domain,
+                                           mock__list_domains):
+        mock__list_domains.return_value = (["fake_domain.org",
+                                            "fake_domain.xyz",
+                                            "ultimate_question.net"])
+        scenario = basic.CreateAndListDomains(self.context)
+        self.assertRaises(exceptions.RallyAssertionError, scenario.run)
+        mock__create_domain.assert_called_once_with()
+
+        mock__create_domain.return_value = "fake_not_existed_domain.xyz"
+        self.assertRaises(exceptions.RallyAssertionError, scenario.run)
+        mock__create_domain.assert_called_with()
+        mock__list_domains.assert_called_with()
 
     @mock.patch("%s.CreateAndDeleteDomain._delete_domain" % BASE)
     @mock.patch("%s.CreateAndDeleteDomain._create_domain" % BASE,
@@ -76,12 +98,16 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
             "id": "123"}
         mock__create_domain.return_value = domain
         records_per_domain = 5
+        return_value = mock.call(domain, atomic_action=False)
+        mock__create_record.return_value = return_value
+        mock__list_records.return_value = [return_value] * records_per_domain
 
         basic.CreateAndListRecords(self.context).run(
             records_per_domain=records_per_domain)
         mock__create_domain.assert_called_once_with()
+
         self.assertEqual(mock__create_record.mock_calls,
-                         [mock.call(domain, atomic_action=False)]
+                         [return_value]
                          * records_per_domain)
         mock__list_records.assert_called_once_with(domain["id"])
 
@@ -122,10 +148,31 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
     def test_create_and_list_servers(self,
                                      mock__create_server,
                                      mock__list_servers):
+        mock__create_server.return_value = "fake_server"
+        mock__list_servers.return_value = ["fake_srv1",
+                                           "fake_srv2",
+                                           "fake_server"]
+
+        # Positive case:
         basic.CreateAndListServers(self.context).run()
 
         mock__create_server.assert_called_once_with()
         mock__list_servers.assert_called_once_with()
+
+        # Negative case: server isn't created
+        mock__create_server.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          basic.CreateAndListServers(self.context).run)
+
+        mock__create_server.assert_called_with()
+
+        # Negative case: server not found in the list of existed servers
+        mock__create_server.return_value = "The_main_server_of_the_universe"
+        self.assertRaises(exceptions.RallyAssertionError,
+                          basic.CreateAndListServers(self.context).run)
+
+        mock__create_server.assert_called_with()
+        mock__list_servers.assert_called_with()
 
     @mock.patch("%s.CreateAndDeleteServer._delete_server" % BASE)
     @mock.patch("%s.CreateAndDeleteServer._create_server" % BASE,
@@ -149,9 +196,27 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
     def test_create_and_list_zones(self,
                                    mock__create_zone,
                                    mock__list_zones):
+        mock__create_zone.return_value = "Area_51"
+        mock__list_zones.return_value = ["Area_51",
+                                         "Siachen",
+                                         "Bagram"]
+        # Positive case:
         basic.CreateAndListZones(self.context).run()
         mock__create_zone.assert_called_once_with()
         mock__list_zones.assert_called_once_with()
+
+        # Negative case: zone isn't created
+        mock__create_zone.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          basic.CreateAndListZones(self.context).run)
+        mock__create_zone.assert_called_with()
+
+        # Negative case: created zone not in the list of available zones
+        mock__create_zone.return_value = "HAARP"
+        self.assertRaises(exceptions.RallyAssertionError,
+                          basic.CreateAndListZones(self.context).run)
+        mock__create_zone.assert_called_with()
+        mock__list_zones.assert_called_with()
 
     @mock.patch("%s.CreateAndDeleteZone._delete_zone" % BASE)
     @mock.patch("%s.CreateAndDeleteZone._create_zone" % BASE,

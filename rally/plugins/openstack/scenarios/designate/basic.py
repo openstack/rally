@@ -42,8 +42,11 @@ class CreateAndListDomains(utils.DesignateScenario):
         performance of the "designate domain-list" command depending on
         the number of domains owned by users.
         """
-        self._create_domain()
-        self._list_domains()
+        domain = self._create_domain()
+        msg = "Domain isn't created"
+        self.assertTrue(domain, msg)
+        list_domains = self._list_domains()
+        self.assertIn(domain, list_domains)
 
 
 @validation.required_services(consts.Service.DESIGNATE)
@@ -170,11 +173,14 @@ class CreateAndListRecords(utils.DesignateScenario):
         domain = self._create_domain()
 
         key = "designate.create_%s_records" % records_per_domain
+        records = []
         with atomic.ActionTimer(self, key):
             for i in range(records_per_domain):
-                self._create_record(domain, atomic_action=False)
+                records.append(
+                    self._create_record(domain, atomic_action=False))
 
-        self._list_records(domain["id"])
+        list_records = self._list_records(domain["id"])
+        self.assertEqual(records, list_records)
 
 
 @validation.required_services(consts.Service.DESIGNATE)
@@ -192,8 +198,10 @@ class CreateAndListServers(utils.DesignateScenario):
         performance of the "designate server-list" command depending on
         the number of servers owned by users.
         """
-        self._create_server()
-        self._list_servers()
+        server = self._create_server()
+        self.assertTrue(server)
+        list_servers = self._list_servers()
+        self.assertIn(server, list_servers)
 
 
 @validation.required_services(consts.Service.DESIGNATE)
@@ -245,8 +253,10 @@ class CreateAndListZones(utils.DesignateScenario):
         performance of the "openstack zone list" command depending on
         the number of zones owned by users.
         """
-        self._create_zone()
-        self._list_zones()
+        zone = self._create_zone()
+        self.assertTrue(zone)
+        list_zones = self._list_zones()
+        self.assertIn(zone, list_zones)
 
 
 @validation.required_services(consts.Service.DESIGNATE)

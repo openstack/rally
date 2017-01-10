@@ -44,8 +44,11 @@ class CreateAndListStack(utils.HeatScenario):
         :param files: files used in template
         :param environment: stack environment definition
         """
-        self._create_stack(template_path, parameters, files, environment)
-        self._list_stacks()
+        stack = self._create_stack(template_path, parameters,
+                                   files, environment)
+        self.assertTrue(stack)
+        list_stacks = self._list_stacks()
+        self.assertIn(stack.id, [i.id for i in list_stacks])
 
 
 @validation.required_services(consts.Service.HEAT)

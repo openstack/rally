@@ -106,8 +106,13 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
     )
     def test_create_share_network_and_list(self, params):
         scenario = shares.CreateShareNetworkAndList(self.context)
-        scenario._create_share_network = mock.MagicMock()
-        scenario._list_share_networks = mock.MagicMock()
+        fake_network = mock.Mock()
+        scenario._create_share_network = mock.Mock(
+            return_value=fake_network)
+        scenario._list_share_networks = mock.Mock(
+            return_value=[fake_network,
+                          mock.Mock(),
+                          mock.Mock()])
         expected_create_params = {
             "description": params.get("description"),
             "neutron_net_id": params.get("neutron_net_id"),
