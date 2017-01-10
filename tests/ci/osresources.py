@@ -33,7 +33,8 @@ from rally import osclients
 class ResourceManager(object):
 
     REQUIRED_SERVICE = None
-    REPR_KEYS = ("id", "name", "tenant_id", "zone", "zoneName", "pool")
+    REPR_KEYS = ("id", "name", "tenant_id", "zone", "zoneName", "pool",
+                 "blob")
 
     def __init__(self, clients):
         self.clients = clients
@@ -92,6 +93,14 @@ class Keystone(ResourceManager):
 
     def list_roles(self):
         return self.client.roles.list()
+
+    def list_ec2credentials(self):
+        users = self.list_users()
+        ec2_list = []
+        for user in users:
+            ec2_list.extend(
+                self.client.ec2.list(user.id))
+        return ec2_list
 
 
 class Magnum(ResourceManager):
