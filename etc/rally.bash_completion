@@ -43,7 +43,7 @@ _rally()
     OPTS["task_use"]="--uuid"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["verify_add-verifier-ext"]="--id --source --version --extra-settings"
-    OPTS["verify_configure-verifier"]="--verifier-id --deployment-id --recreate --add-options --replace-by --show"
+    OPTS["verify_configure-verifier"]="--verifier-id --deployment-id --recreate --add-options --replace-by --show --force"
     OPTS["verify_create-verifier"]="--name --type --namespace --source --version --system-wide --extra-settings --no-use"
     OPTS["verify_delete"]="--uuid"
     OPTS["verify_delete-verifier"]="--verifier-id --deployment-id --force"
