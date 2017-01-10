@@ -99,12 +99,19 @@ function run () {
 
     TASK=$1
     TASK_ARGS="$2 $3"
-    python $RALLY_DIR/tests/ci/osresources.py --dump-list resources_at_start.txt
+
+    if [ "$DEVSTACK_GATE_USE_PYTHON3" = "True" ]; then
+        PYTHON=python3
+    else
+        PYTHON=python
+    fi
+
+    $PYTHON $RALLY_DIR/tests/ci/osresources.py --dump-list resources_at_start.txt
 
     rally --rally-debug task start --task $TASK $TASK_ARGS
 
     mkdir -p rally-plot/extra
-    python $RALLY_DIR/tests/ci/render.py ci/index.html > rally-plot/extra/index.html
+    $PYTHON $RALLY_DIR/tests/ci/render.py ci/index.html > rally-plot/extra/index.html
     cp $TASK rally-plot/task.txt
     tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
     rally task results | python -m json.tool > rally-plot/results.json
@@ -124,7 +131,7 @@ function run () {
     set -e
 
     cp resources_at_start.txt rally-plot/
-    python $RALLY_DIR/tests/ci/osresources.py\
+    $PYTHON $RALLY_DIR/tests/ci/osresources.py\
         --compare-with-list resources_at_start.txt\
             | gzip > rally-plot/resources_diff.txt.gz
 
