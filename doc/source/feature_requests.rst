@@ -18,9 +18,12 @@
 Request New Features
 ====================
 
-To request a new feature, you should create a document similar to other feature requests and then contribute it to the **doc/feature_request** directory of the Rally repository (see the :ref:`How-to-contribute tutorial <contribute>`).
+To request a new feature, you should create a document similar to other feature
+requests and then contribute it to the **doc/feature_request** directory of the
+Rally repository (see the :ref:`How-to-contribute tutorial <contribute>`).
 
-If you don't have time to contribute your feature request via gerrit, please contact Boris Pavlovic (boris@pavlovic.me)
+If you don't have time to contribute your feature request via Gerrit, please
+contact Boris Pavlovic (boris@pavlovic.me)
 
 Active feature requests:
 

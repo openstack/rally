@@ -41,7 +41,8 @@ How to contribute
 `OpenStack team`_. You can also join the `Rally team`_ if you want to. Make
 sure Launchpad has your SSH key, Gerrit (the code review system) uses this.
 
-2. Sign the CLA as outlined in the `account setup`_ section of the developer guide.
+2. Sign the CLA as outlined in the `account setup`_ section of the developer
+guide.
 
 3. Tell git your details:
 
@@ -176,7 +177,7 @@ To debug issues on the unit test:
   #NOTE: use python 2.7
   #NOTE: <test_name> is the unit test case name
 
-  or 
+  or
 
 .. code-block:: console
 
