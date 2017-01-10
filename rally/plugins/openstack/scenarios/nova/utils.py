@@ -682,6 +682,15 @@ class NovaScenario(scenario.OpenStackScenario):
         )
         return attachment
 
+    @atomic.action_timer("nova.list_attachments")
+    def _list_attachments(self, server_id):
+        """Get a list of all the attached volumes for the given server ID.
+
+        :param server_id: The ID of the server
+        :rtype: list of :class:`Volume`
+        """
+        return self.clients("nova").volumes.get_server_volumes(server_id)
+
     @atomic.action_timer("nova.detach_volume")
     def _detach_volume(self, server, volume, attachment=None):
         server_id = server.id

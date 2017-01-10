@@ -559,6 +559,94 @@ class NovaServersTestCase(test.ScenarioTestCase):
             scenario._delete_server.assert_called_once_with(fake_server,
                                                             force=False)
 
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_list_attachments(self, mock_block_storage):
+        mock_volume_service = mock_block_storage.return_value
+        fake_volume = mock.MagicMock()
+        fake_server = mock.MagicMock()
+        flavor = mock.MagicMock()
+        fake_attachment = mock.MagicMock()
+        list_attachments = [mock.MagicMock(),
+                            fake_attachment,
+                            mock.MagicMock()]
+        context = self.context
+        context.update({
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake",
+                       "volumes": [{"id": "uuid", "size": 1}],
+                       "servers": [1]}})
+        scenario = servers.BootServerAttachVolumeAndListAttachments(
+            context)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._attach_volume = mock.MagicMock()
+        scenario._list_attachments = mock.MagicMock()
+        mock_volume_service.create_volume.return_value = fake_volume
+        scenario._list_attachments.return_value = list_attachments
+
+        img_name = "img"
+        volume_size = 10
+        volume_num = 1
+
+        scenario._attach_volume.return_value = fake_attachment
+        scenario.run(img_name, flavor, volume_size, volume_num)
+
+        scenario._boot_server.assert_called_once_with(img_name, flavor)
+        mock_volume_service.create_volume.assert_called_once_with(volume_size)
+        scenario._attach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._list_attachments.assert_called_once_with(fake_server.id)
+
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_list_attachments_fails(self, mock_block_storage):
+        mock_volume_service = mock_block_storage.return_value
+        fake_volume = mock.MagicMock()
+        fake_server = mock.MagicMock()
+        flavor = mock.MagicMock()
+        fake_attachment = mock.MagicMock()
+        list_attachments = [mock.MagicMock(),
+                            mock.MagicMock(),
+                            mock.MagicMock()]
+
+        context = self.context
+        context.update({
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake",
+                       "volumes": [{"id": "uuid", "size": 1}],
+                       "servers": [1]}})
+        scenario = servers.BootServerAttachVolumeAndListAttachments(
+            context)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        mock_volume_service.create_volume.return_value = fake_volume
+        scenario._attach_volume = mock.MagicMock()
+        scenario._list_attachments = mock.MagicMock()
+        scenario._attach_volume.return_value = fake_attachment
+        scenario._list_attachments.return_value = list_attachments
+
+        img_name = "img"
+        volume_size = 10
+
+        # Negative case: attachment not included into list of
+        # available attachments
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          img_name, flavor, volume_size)
+
+        scenario._boot_server.assert_called_with(img_name, flavor)
+        mock_volume_service.create_volume.assert_called_with(volume_size)
+        scenario._attach_volume.assert_called_with(fake_server,
+                                                   fake_volume)
+        scenario._list_attachments.assert_called_with(fake_server.id)
+
     @ddt.data({"confirm": True, "do_delete": True},
               {"confirm": False, "do_delete": True})
     @ddt.unpack

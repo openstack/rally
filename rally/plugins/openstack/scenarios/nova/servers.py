@@ -483,6 +483,55 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
             self._delete_server(server, force=force_delete)
 
 
+@validation.add("number", param_name="volume_num", minval=1,
+                integer_only=True)
+@validation.add("number", param_name="volume_size", minval=1,
+                integer_only=True)
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", validate_disk=False)
+@validation.add("required_services", services=[consts.Service.NOVA,
+                                               consts.Service.CINDER])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["cinder", "nova"]},
+                    name=("NovaServers.boot_server"
+                          "_attach_volume_and_list_attachments"))
+class BootServerAttachVolumeAndListAttachments(utils.NovaScenario,
+                                               cinder_utils.CinderBasic):
+
+    def run(self, image, flavor, volume_size=1, volume_num=2,
+            boot_server_kwargs=None, create_volume_kwargs=None):
+        """Create a VM, attach N volume to it and list server's attachemnt.
+
+        Measure the "nova volume-attachments" command performance.
+
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
+        :param volume_size: volume size (in GB), default 1G
+        :param volume_num: the num of attached volume
+        :param boot_server_kwargs: optional arguments for VM creation
+        :param create_volume_kwargs: optional arguments for volume creation
+        """
+        boot_server_kwargs = boot_server_kwargs or {}
+        create_volume_kwargs = create_volume_kwargs or {}
+
+        server = self._boot_server(image, flavor, **boot_server_kwargs)
+        attachments = []
+        for i in range(volume_num):
+            volume = self.cinder.create_volume(volume_size,
+                                               **create_volume_kwargs)
+            attachments.append(self._attach_volume(server, volume))
+
+        list_attachments = self._list_attachments(server.id)
+
+        for attachment in attachments:
+            msg = ("attachment not included into list of available"
+                   "attachments\n attachment: {}\n"
+                   "list attachments: {}").format(attachment, list_attachments)
+            self.assertIn(attachment, list_attachments, err_msg=msg)
+
+
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})

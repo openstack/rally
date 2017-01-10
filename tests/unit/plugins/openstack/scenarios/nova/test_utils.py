@@ -610,6 +610,18 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.attach_volume")
 
+    def test__list_attachments(self):
+        expect_attachments = [mock.MagicMock()]
+        (self.clients("nova").volumes.get_server_volumes
+         .return_value) = expect_attachments
+        nova_scenario = utils.NovaScenario(context=self.context)
+        list_attachments = nova_scenario._list_attachments(self.server.id)
+        self.assertEqual(expect_attachments, list_attachments)
+        (self.clients("nova").volumes.get_server_volumes
+         .assert_called_once_with(self.server.id))
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_attachments")
+
     def test__detach_volume(self):
         attach = mock.MagicMock(id="attach_id")
         self.clients("nova").volumes.delete_server_volume.return_value = None
