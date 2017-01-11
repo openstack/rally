@@ -217,6 +217,13 @@ class Connection(object):
 
         return list(set(t.tag for t in tags))
 
+    def _uuids_by_tags_get(self, tag_type, tags):
+        tags = (self.model_query(models.Tag).
+                filter(models.Tag.type == tag_type,
+                       models.Tag.tag.in_(tags)).all())
+
+        return list(set(tag.uuid for tag in tags))
+
     def _task_get(self, uuid, load_only=None, session=None):
         pre_query = self.model_query(models.Task, session=session)
         if load_only:
@@ -722,7 +729,8 @@ class Connection(object):
         return verifier
 
     @db_api.serialize
-    def verification_create(self, verifier_id, deployment_id, run_args):
+    def verification_create(self, verifier_id, deployment_id, tags=None,
+                            run_args=None):
         verifier = self._verifier_get(verifier_id)
         deployment = self._deployment_get(deployment_id)
         verification = models.Verification()
@@ -730,11 +738,23 @@ class Connection(object):
                              "deployment_uuid": deployment["uuid"],
                              "run_args": run_args})
         verification.save()
+
+        if tags:
+            for t in set(tags):
+                tag = models.Tag()
+                tag.update({"uuid": verification.uuid,
+                            "type": consts.TagType.VERIFICATION,
+                            "tag": t})
+                tag.save()
+
         return verification
 
     @db_api.serialize
     def verification_get(self, verification_uuid):
-        return self._verification_get(verification_uuid)
+        verification = self._verification_get(verification_uuid)
+        verification.tags = sorted(self._tags_get(verification.uuid,
+                                                  consts.TagType.VERIFICATION))
+        return verification
 
     def _verification_get(self, verification_uuid, session=None):
         verification = self.model_query(
@@ -746,7 +766,7 @@ class Connection(object):
 
     @db_api.serialize
     def verification_list(self, verifier_id=None, deployment_id=None,
-                          status=None):
+                          tags=None, status=None):
         session = get_session()
         with session.begin():
             filter_by = {}
@@ -763,7 +783,19 @@ class Connection(object):
             query = self.model_query(models.Verification, session=session)
             if filter_by:
                 query = query.filter_by(**filter_by)
-        return query.all()
+
+            def add_tags_to_verifications(verifications):
+                for verification in verifications:
+                    verification.tags = sorted(self._tags_get(
+                        verification.uuid, consts.TagType.VERIFICATION))
+                return verifications
+
+            if tags:
+                uuids = self._uuids_by_tags_get(
+                    consts.TagType.VERIFICATION, tags)
+                query = query.filter(models.Verification.uuid.in_(uuids))
+
+        return add_tags_to_verifications(query.all())
 
     def verification_delete(self, verification_uuid):
         session = get_session()

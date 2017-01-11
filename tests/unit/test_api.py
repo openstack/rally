@@ -1110,14 +1110,15 @@ class VerificationAPITestCase(test.TestCase):
     def test_list(self, mock_verification_list):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
+        tags = ["foo", "bar"]
         status = "some_status"
 
         self.assertEqual(mock_verification_list.return_value,
                          api._Verification.list(verifier_id,
                                                 deployment_id=deployment_id,
-                                                status=status))
+                                                tags=tags, status=status))
         mock_verification_list.assert_called_once_with(
-            verifier_id, deployment_id=deployment_id, status=status)
+            verifier_id, deployment_id=deployment_id, tags=tags, status=status)
 
     @mock.patch("rally.api.vreporter.VerificationReporter")
     @mock.patch("rally.api.objects.Verification.get")
@@ -1222,17 +1223,20 @@ class VerificationAPITestCase(test.TestCase):
                    mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
+        tags = ["foo", "bar"]
         run_args = {"arg": "value"}
         verifier_obj = mock___verifier_get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         verification_obj = mock_verification_create.return_value
 
-        api._Verification.start(verifier_id, deployment_id, **run_args)
+        api._Verification.start(verifier_id, deployment_id, tags=tags,
+                                **run_args)
 
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
-            verifier_id, deployment_id=deployment_id, run_args=run_args)
+            verifier_id=verifier_id, deployment_id=deployment_id, tags=tags,
+            run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
             consts.VerificationStatus.RUNNING)
 
@@ -1255,6 +1259,7 @@ class VerificationAPITestCase(test.TestCase):
                                  mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
+        tags = ["foo", "bar"]
         run_args = {"arg": "value"}
         verifier_obj = mock___verifier_get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
@@ -1262,12 +1267,13 @@ class VerificationAPITestCase(test.TestCase):
         verifier_obj.manager.run.side_effect = RuntimeError
 
         self.assertRaises(RuntimeError, api._Verification.start, verifier_id,
-                          deployment_id, **run_args)
+                          deployment_id, tags=tags, **run_args)
 
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
-            verifier_id, deployment_id=deployment_id, run_args=run_args)
+            verifier_id=verifier_id, deployment_id=deployment_id, tags=tags,
+            run_args=run_args)
         verification_obj.update_status.assert_called_once_with(
             consts.VerificationStatus.RUNNING)
 

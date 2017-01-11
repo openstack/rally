@@ -35,9 +35,9 @@ class VerificationTestCase(test.TestCase):
 
     @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_create(self, mock_verification_create):
-        objects.Verification.create("some-verifier", "some-deployment", {})
-        mock_verification_create.assert_called_once_with("some-verifier",
-                                                         "some-deployment", {})
+        objects.Verification.create("some-verifier", "some-deployment", [], {})
+        mock_verification_create.assert_called_once_with(
+            "some-verifier", "some-deployment", [], {})
 
     @mock.patch("rally.common.objects.verification.db.verification_get")
     def test_get(self, mock_verification_get):
@@ -50,7 +50,7 @@ class VerificationTestCase(test.TestCase):
     def test_list(self, mock_verification_list):
         mock_verification_list.return_value = [self.db_obj]
         vs = objects.Verification.list()
-        mock_verification_list.assert_called_once_with(None, None, None)
+        mock_verification_list.assert_called_once_with(None, None, None, None)
         self.assertEqual(self.db_obj["uuid"], vs[0].uuid)
 
     @mock.patch("rally.common.objects.verification.db.verification_delete")

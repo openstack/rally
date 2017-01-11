@@ -423,16 +423,18 @@ def verifier_update(verifier_id, **properties):
     return get_impl().verifier_update(verifier_id, properties)
 
 
-def verification_create(verifier_uuid, deployment_uuid, run_args):
+def verification_create(verifier_uuid, deployment_uuid, tags=None,
+                        run_args=None):
     """Create a verification record.
 
     :param verifier_uuid: verification UUID
     :param deployment_uuid: deployment UUID
+    :param tags: a list of tags to assign them to verification
     :param run_args: a dict with run arguments for verification
     :returns: a dict with verification data
     """
     return get_impl().verification_create(verifier_uuid, deployment_uuid,
-                                          run_args)
+                                          tags, run_args)
 
 
 def verification_get(verification_uuid):
@@ -445,15 +447,18 @@ def verification_get(verification_uuid):
     return get_impl().verification_get(verification_uuid)
 
 
-def verification_list(verifier_id=None, deployment_id=None, status=None):
+def verification_list(verifier_id=None, deployment_id=None, tags=None,
+                      status=None):
     """List all verification records.
 
     :param verifier_id: verifier name or UUID to filter verifications by
     :param deployment_id: deployment name or UUID to filter verifications by
+    :param tags: tags to filter verifications by
     :param status: status to filter verifications by
     :returns: a list of dicts with verifications data
     """
-    return get_impl().verification_list(verifier_id, deployment_id, status)
+    return get_impl().verification_list(verifier_id, deployment_id, tags,
+                                        status)
 
 
 def verification_delete(verification_uuid):

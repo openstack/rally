@@ -262,8 +262,8 @@ def main():
     # Start a verification, show results and generate reports
     skip_list_path = write_file("skip-list.yaml", SKIP_TESTS)
     xfail_list_path = write_file("xfail-list.yaml", XFAIL_TESTS)
-    run_args = ("%s --skip-list %s --xfail-list %s"
-                % (MODES[args.mode], skip_list_path, xfail_list_path))
+    run_args = ("%s --skip-list %s --xfail-list %s --tag first-run %s-set" %
+                (MODES[args.mode], skip_list_path, xfail_list_path, args.mode))
     render_vars["verifications"].append(start_verification(run_args))
 
     if args.compare:
@@ -271,7 +271,8 @@ def main():
         with gzip.open(render_vars["list_verifier_tests"]["stdout_file"]) as f:
             tests = [t for t in f.read().split("\n") if TEST_NAME_RE.match(t)]
             load_list_path = write_file("load-list.txt", "\n".join(tests))
-        run_args = "--load-list %s" % load_list_path
+        run_args = "--load-list %s --tag second-run %s-set" % (load_list_path,
+                                                               args.mode)
         render_vars["verifications"].append(start_verification(run_args))
 
         # Generate trends reports for two verifications

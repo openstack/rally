@@ -75,6 +75,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.fake_api.verifier.list.return_value = []
         self.verify.list_verifiers(self.fake_api, "foo")
+        self.verify.list_verifiers(self.fake_api)
 
         self.fake_api.verifier.list.assert_has_calls([mock.call(None),
                                                       mock.call("foo")])
@@ -195,9 +196,10 @@ class VerifyCommandsTestCase(test.TestCase):
         tf = tempfile.NamedTemporaryFile()
         with open(tf.name, "w") as f:
             f.write("test_1\ntest_2")
-        self.verify.start(self.fake_api, "v_id", "d_id", load_list=tf.name)
+        self.verify.start(self.fake_api, "v_id", "d_id", tags=["foo"],
+                          load_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
-            "v_id", "d_id", load_list=["test_1", "test_2"])
+            "v_id", "d_id", tags=["foo"], load_list=["test_1", "test_2"])
 
         mock_exists.return_value = False
         self.fake_api.verification.start.reset_mock()
@@ -210,7 +212,8 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_exists.return_value = True
         self.verify.start(self.fake_api, "v_id", "d_id", skip_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
-            "v_id", "d_id", skip_list={"test_1": None, "test_2": "Reason"})
+            "v_id", "d_id", tags=None, skip_list={"test_1": None,
+                                                  "test_2": "Reason"})
 
         mock_exists.return_value = False
         self.fake_api.verification.start.reset_mock()
@@ -223,7 +226,8 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_exists.return_value = True
         self.verify.start(self.fake_api, "v_id", "d_id", xfail_list=tf.name)
         self.fake_api.verification.start.assert_called_once_with(
-            "v_id", "d_id", xfail_list={"test_1": None, "test_2": "Reason"})
+            "v_id", "d_id", tags=None, xfail_list={"test_1": None,
+                                                   "test_2": "Reason"})
 
         self.fake_api.verification.get.assert_called_with("v_uuid")
         mock_update_globals_file.assert_called_with(
@@ -270,6 +274,7 @@ class VerifyCommandsTestCase(test.TestCase):
         verifier.uuid = verifier_uuid
         verification = {
             "uuid": "uuuiiiiddd",
+            "tags": ["bar", "foo"],
             "status": "success",
             "created_at": dt.datetime(2016, 1, 1, 17, 0, 3, 66),
             "updated_at": dt.datetime(2016, 1, 1, 17, 1, 5, 77),
@@ -344,6 +349,8 @@ class VerifyCommandsTestCase(test.TestCase):
             "splayed separately) |\n"
             "|                     | skip_list: (value is too long, will be di"
             "splayed separately) |\n"
+            "| Tags                | bar, foo                                 "
+            "                    |\n"
             "| Verifier name       | My Verifier (UUID: my-verifier-uuid)     "
             "                    |\n"
             "| Verifier type       | OldSchoolTestTool (namespace: OpenStack) "
@@ -374,11 +381,13 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.list(self.fake_api, "v_id", "d_id")
 
         self.fake_api.verification.list.return_value = []
-        self.verify.list(self.fake_api, "v_id", "d_id", "foo")
+        self.verify.list(self.fake_api, "v_id", "d_id", "foo", "bar")
+        self.verify.list(self.fake_api)
 
         self.fake_api.verification.list.assert_has_calls(
-            [mock.call("v_id", "d_id", None), mock.call("v_id", "d_id", "foo")]
-        )
+            [mock.call("v_id", "d_id", None, None),
+             mock.call("v_id", "d_id", "foo", "bar"),
+             mock.call(None, None, None, None)])
 
     def test_delete(self):
         self.verify.delete(self.fake_api, "v_uuid")

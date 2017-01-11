@@ -189,6 +189,7 @@ class _HookStatus(utils.ImmutableMixin, utils.EnumMixin):
 class _TagType(utils.ImmutableMixin, utils.EnumMixin):
     TASK = "task"
     SUBTASK = "subtask"
+    VERIFICATION = "verification"
 
 
 class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):

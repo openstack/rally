@@ -358,9 +358,7 @@ class Tag(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
 
-    type = sa.Column(sa.Enum(*list(consts.TagType),
-                     name="enum_tag_types"),
-                     nullable=False)
+    type = sa.Column(sa.String(36), nullable=False)
 
     tag = sa.Column(sa.String(255), nullable=False)
 

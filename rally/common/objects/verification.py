@@ -35,18 +35,19 @@ class Verification(object):
         return self._db_entry[item]
 
     @classmethod
-    def create(cls, verifier_id, deployment_id, run_args):
+    def create(cls, verifier_id, deployment_id, tags=None, run_args=None):
         return cls(db.verification_create(
-            verifier_id, deployment_id, run_args))
+            verifier_id, deployment_id, tags, run_args))
 
     @classmethod
     def get(cls, verification_uuid):
         return cls(db.verification_get(verification_uuid))
 
     @classmethod
-    def list(cls, verifier_id=None, deployment_id=None, status=None):
-        verification_list = db.verification_list(verifier_id,
-                                                 deployment_id, status)
+    def list(cls, verifier_id=None, deployment_id=None, tags=None,
+             status=None):
+        verification_list = db.verification_list(verifier_id, deployment_id,
+                                                 tags, status)
         return [cls(db_entry) for db_entry in verification_list]
 
     def delete(self):
