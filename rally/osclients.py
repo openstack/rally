@@ -354,9 +354,14 @@ class Neutron(OSClient):
         """Return neutron client."""
         from neutronclient.neutron import client as neutron
 
+        kw_args = {}
+        if self.credential.endpoint_type:
+            kw_args["endpoint_type"] = self.credential.endpoint_type
+
         client = neutron.Client(self.choose_version(version),
                                 session=self.keystone.get_session()[0],
-                                endpoint_url=self._get_endpoint(service_type))
+                                endpoint_url=self._get_endpoint(service_type),
+                                **kw_args)
         return client
 
 

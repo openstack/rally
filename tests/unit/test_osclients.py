@@ -369,6 +369,27 @@ class OSClientsTestCase(test.TestCase):
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
+    @mock.patch("rally.osclients.Neutron._get_endpoint")
+    def test_neutron_endpoint_type(self, mock_neutron__get_endpoint):
+        fake_neutron = fakes.FakeNeutronClient()
+        mock_neutron__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_neutron = mock.MagicMock()
+        mock_keystoneauth1 = mock.MagicMock()
+        mock_neutron.client.Client.return_value = fake_neutron
+        self.assertNotIn("neutron", self.clients.cache)
+        self.credential.endpoint_type = "internal"
+        with mock.patch.dict("sys.modules",
+                             {"neutronclient.neutron": mock_neutron,
+                              "keystoneauth1": mock_keystoneauth1}):
+            client = self.clients.neutron()
+            self.assertEqual(fake_neutron, client)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint_url": mock_neutron__get_endpoint.return_value,
+                "endpoint_type": "internal"}
+            mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
+            self.assertEqual(fake_neutron, self.clients.cache["neutron"])
+
     @mock.patch("rally.osclients.Glance._get_endpoint")
     def test_glance(self, mock_glance__get_endpoint):
         fake_glance = fakes.FakeGlanceClient()
