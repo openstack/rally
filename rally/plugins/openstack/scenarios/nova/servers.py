@@ -378,6 +378,41 @@ class ResizeServer(utils.NovaScenario, cinder_utils.CinderScenario):
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaServers.resize_shutoff_server")
+class ResizeShutoffServer(utils.NovaScenario):
+
+    def run(self, image, flavor, to_flavor, confirm=True,
+            force_delete=False, **kwargs):
+        """Boot a server and stop it, then resize and delete it.
+
+        This test will confirm the resize by default,
+        or revert the resize if confirm is set to false.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param to_flavor: flavor to be used to resize the booted instance
+        :param confirm: True if need to confirm resize else revert resize
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._stop_server(server)
+        self._resize(server, to_flavor)
+
+        if confirm:
+            self._resize_confirm(server, "SHUTOFF")
+        else:
+            self._resize_revert(server, "SHUTOFF")
+        self._delete_server(server, force=force_delete)
+
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"},
+               to_flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},

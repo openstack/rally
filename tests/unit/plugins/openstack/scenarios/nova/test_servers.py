@@ -475,6 +475,39 @@ class NovaServersTestCase(test.ScenarioTestCase):
     def test_resize_with_revert(self):
         self._test_resize(confirm=False)
 
+    @ddt.data({"confirm": True},
+              {"confirm": False})
+    @ddt.unpack
+    def test_resize_shoutoff_server(self, confirm=False):
+        fake_server = object()
+        flavor = mock.MagicMock()
+        to_flavor = mock.MagicMock()
+
+        scenario = servers.ResizeShutoffServer(self.context)
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._stop_server = mock.MagicMock()
+        scenario._resize_confirm = mock.MagicMock()
+        scenario._resize_revert = mock.MagicMock()
+        scenario._resize = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        scenario.run("img", flavor, to_flavor, confirm=confirm)
+
+        scenario._boot_server.assert_called_once_with("img", flavor)
+        scenario._stop_server.assert_called_once_with(fake_server)
+        scenario._resize.assert_called_once_with(fake_server, to_flavor)
+
+        if confirm:
+            scenario._resize_confirm.assert_called_once_with(fake_server,
+                                                             "SHUTOFF")
+        else:
+            scenario._resize_revert.assert_called_once_with(fake_server,
+                                                            "SHUTOFF")
+
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
+
     @ddt.data({"confirm": True, "do_delete": True},
               {"confirm": False, "do_delete": True})
     @ddt.unpack
