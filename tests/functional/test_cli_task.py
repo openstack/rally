@@ -373,7 +373,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("finished", rally("task list --deployment MAIN"))
 
         self.assertIn("There are no tasks",
-                      rally("task list --status failed"))
+                      rally("task list --status crashed"))
 
         self.assertIn("finished", rally("task list --status finished"))
 

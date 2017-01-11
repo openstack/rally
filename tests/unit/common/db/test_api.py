@@ -158,18 +158,18 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_update(self):
         task = self._create_task({})
-        db.task_update(task["uuid"], {"status": consts.TaskStatus.FAILED})
+        db.task_update(task["uuid"], {"status": consts.TaskStatus.CRASHED})
         db_task = self._get_task(task["uuid"])
-        self.assertEqual(db_task["status"], consts.TaskStatus.FAILED)
+        self.assertEqual(db_task["status"], consts.TaskStatus.CRASHED)
 
     def test_task_update_with_tag(self):
         task = self._create_task({})
         db.task_update(task["uuid"], {
-            "status": consts.TaskStatus.FAILED,
+            "status": consts.TaskStatus.CRASHED,
             "tag": "test_tag"
         })
         db_task = self._get_task(task["uuid"])
-        self.assertEqual(db_task["status"], consts.TaskStatus.FAILED)
+        self.assertEqual(db_task["status"], consts.TaskStatus.CRASHED)
         self.assertEqual(db_task["tag"], "test_tag")
 
     def test_task_update_not_found(self):

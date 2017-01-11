@@ -354,19 +354,19 @@ class Connection(object):
 
     def task_update_status(self, uuid, statuses, status_value):
         session = get_session()
-        query = (
+        result = (
             session.query(models.Task).filter(
                 models.Task.uuid == uuid, models.Task.status.in_(
                     statuses)).
             update({"status": status_value}, synchronize_session=False)
         )
-        if not query:
+        if not result:
             status = " or ".join(statuses)
             msg = _("Task with uuid='%(uuid)s' and in statuses:'"
                     "%(statuses)s' not found.'") % {"uuid": uuid,
                                                     "statuses": status}
             raise exceptions.RallyException(msg)
-        return query
+        return result
 
     # @db_api.serialize
     def task_list(self, status=None, deployment=None):

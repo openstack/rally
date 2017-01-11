@@ -428,8 +428,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     task_table.insert(),
                     [{"uuid": i,
                       "verification_log": log,
-                      "status": consts.TaskStatus.FAILED,
-                      "enum_tasks_status": consts.TaskStatus.FAILED,
+                      "status": "failed",
+                      "enum_tasks_status": "failed",
                       "deployment_uuid": self._08e1515a576c_deployment_uuid
                       }])
 
@@ -1124,35 +1124,35 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             )
 
     def _pre_upgrade_a6f364988fc2(self, engine):
-            self._a6f364988fc2_tags = [
-                {
-                    "uuid": "uuid-1",
-                    "type": "task",
-                    "tag": "tag-1"
-                },
-                {
-                    "uuid": "uuid-2",
-                    "type": "subtask",
-                    "tag": "tag-2"
-                },
-                {
-                    "uuid": "uuid-3",
-                    "type": "task",
-                    "tag": "tag-3"
-                }
-            ]
+        self._a6f364988fc2_tags = [
+            {
+                "uuid": "uuid-1",
+                "type": "task",
+                "tag": "tag-1"
+            },
+            {
+                "uuid": "uuid-2",
+                "type": "subtask",
+                "tag": "tag-2"
+            },
+            {
+                "uuid": "uuid-3",
+                "type": "task",
+                "tag": "tag-3"
+            }
+        ]
 
-            tags_table = db_utils.get_table(engine, "tags")
-            with engine.connect() as conn:
-                for t in self._a6f364988fc2_tags:
-                    conn.execute(
-                        tags_table.insert(),
-                        [{
-                            "uuid": t["uuid"],
-                            "enum_tag_types": t["type"],
-                            "type": t["type"],
-                            "tag": t["tag"]
-                        }])
+        tags_table = db_utils.get_table(engine, "tags")
+        with engine.connect() as conn:
+            for t in self._a6f364988fc2_tags:
+                conn.execute(
+                    tags_table.insert(),
+                    [{
+                        "uuid": t["uuid"],
+                        "enum_tag_types": t["type"],
+                        "type": t["type"],
+                        "tag": t["tag"]
+                    }])
 
     def _check_a6f364988fc2(self, engine, data):
         self.assertEqual("a6f364988fc2",
@@ -1251,4 +1251,122 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.delete().where(
                     deployment_table.c.uuid ==
                     self._37fdbb373e8d_deployment_uuid)
+            )
+
+    def _pre_upgrade_4ef544102ba7(self, engine):
+        self._4ef544102ba7_deployment_uuid = "4ef544102ba7-deploy"
+        self.tasks = {
+            "should-not-be-changed-1": {
+                "uuid": "should-not-be-changed-1",
+                "deployment_uuid": self._4ef544102ba7_deployment_uuid,
+                "validation_result": {
+                    "etype": "SomeCls",
+                    "msg": "msg",
+                    "trace": "Traceback (most recent call last):\n"
+                             "File some1.py, line ...\n"
+                             "File some2.py, line ...\nSomeCls: msg"},
+                "status": "finished"},
+            "should-be-changed-1": {
+                "uuid": "should-be-changed-1",
+                "deployment_uuid": self._4ef544102ba7_deployment_uuid,
+                "validation_result": {},
+                "status": "failed"},
+            "should-be-changed-2": {
+                "uuid": "should-be-changed-2",
+                "deployment_uuid": self._4ef544102ba7_deployment_uuid,
+                "validation_result": {},
+                "status": "verifying"},
+        }
+        deployment_table = db_utils.get_table(engine, "deployments")
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{"uuid": self._4ef544102ba7_deployment_uuid,
+                  "name": self._4ef544102ba7_deployment_uuid,
+                  "config": six.b(json.dumps([])),
+                  "enum_deployments_status":
+                      consts.DeployStatus.DEPLOY_FINISHED,
+                  "credentials": six.b(json.dumps([])),
+                  "users": six.b(json.dumps([]))
+                  }])
+
+        task_table = db_utils.get_table(engine, "tasks")
+        with engine.connect() as conn:
+            for task in self.tasks:
+                conn.execute(
+                    task_table.insert(),
+                    [{
+                        "deployment_uuid": self.tasks[task][
+                            "deployment_uuid"],
+                        "status": self.tasks[task]["status"],
+                        "validation_result": json.dumps(
+                            self.tasks[task]["validation_result"]),
+                        "uuid": self.tasks[task]["uuid"]
+                    }])
+
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        with engine.connect() as conn:
+            for task in self.tasks:
+                conn.execute(
+                    subtask_table.insert(),
+                    [{
+                        "task_uuid": self.tasks[task]["uuid"],
+                        "status": consts.SubtaskStatus.RUNNING,
+                        "context": json.dumps({}),
+                        "sla": json.dumps({}),
+                        "run_in_parallel": False,
+                        "uuid": "subtask_" + self.tasks[task]["uuid"]
+                    }])
+
+    def _check_4ef544102ba7(self, engine, data):
+        self.assertEqual("4ef544102ba7",
+                         api.get_backend().schema_revision(engine=engine))
+
+        org_tasks = self.tasks
+
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        with engine.connect() as conn:
+            subtasks_found = conn.execute(
+                subtask_table.select()).fetchall()
+            for subtask in subtasks_found:
+                conn.execute(
+                    subtask_table.delete().where(
+                        subtask_table.c.id == subtask.id)
+                )
+
+        with engine.connect() as conn:
+            tasks_found = conn.execute(
+                task_table.select()).fetchall()
+            self.assertEqual(3, len(tasks_found))
+            for task in tasks_found:
+                self.assertIn("uuid", task)
+                self.assertIn("status", task)
+
+                if task.status != org_tasks[task.uuid]["status"]:
+                    if task.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is changes, but "
+                                  "should not." % task.uuid)
+                    if task.status != "crashed" and task.uuid == (
+                            "should-be-changed-1"):
+                        self.fail("Task '%s' status should be changed to "
+                                  "crashed." % task.uuid)
+                    if task.status != "validating" and task.uuid == (
+                            "should-be-changed-2"):
+                        self.fail("Task '%s' status should be changed to "
+                                  "validating." % task.uuid)
+                else:
+                    if not task.uuid.startswith("should-not-be-changed"):
+                        self.fail("Config of deployment '%s' is not changes, "
+                                  "but should." % task.uuid)
+
+                conn.execute(
+                    task_table.delete().where(
+                        task_table.c.id == task.id)
+                )
+            deployment_table = db_utils.get_table(engine, "deployments")
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid ==
+                    self._4ef544102ba7_deployment_uuid)
             )

@@ -626,7 +626,7 @@ class ResultConsumerTestCase(test.TestCase):
                                                   mock_task_get_status):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
-        mock_task_get_status.return_value = consts.TaskStatus.FAILED
+        mock_task_get_status.return_value = consts.TaskStatus.CRASHED
         mock_sla_instance.add_iteration.side_effect = [True, True, False,
                                                        False]
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}

@@ -229,7 +229,7 @@ class TaskAPITestCase(test.TestCase):
     def test_abort_sync(self, soft, mock_task, mock_time):
         mock_task.get_status.side_effect = (
             consts.TaskStatus.INIT,
-            consts.TaskStatus.VERIFYING,
+            consts.TaskStatus.VALIDATING,
             consts.TaskStatus.RUNNING,
             consts.TaskStatus.ABORTING,
             consts.TaskStatus.SOFT_ABORTING,
@@ -262,7 +262,7 @@ class TaskAPITestCase(test.TestCase):
                "expected_status": consts.TaskStatus.FINISHED},
               {"task_status": consts.TaskStatus.INIT,
                "expected_status": consts.TaskStatus.FINISHED},
-              {"task_status": consts.TaskStatus.VERIFYING,
+              {"task_status": consts.TaskStatus.VALIDATING,
                "expected_status": consts.TaskStatus.FINISHED},
               {"task_status": consts.TaskStatus.ABORTING,
                "expected_status": consts.TaskStatus.FINISHED},
@@ -274,13 +274,13 @@ class TaskAPITestCase(test.TestCase):
                "expected_status": None},
               {"task_status": consts.TaskStatus.FINISHED,
                "expected_status": None},
-              {"task_status": consts.TaskStatus.FAILED,
+              {"task_status": consts.TaskStatus.CRASHED,
                "expected_status": None},
               {"task_status": "strange value",
                "force": True, "expected_status": None},
               {"task_status": consts.TaskStatus.INIT,
                "force": True, "expected_status": None},
-              {"task_status": consts.TaskStatus.VERIFYING,
+              {"task_status": consts.TaskStatus.VALIDATING,
                "force": True, "expected_status": None},
               {"task_status": consts.TaskStatus.RUNNING,
                "force": True, "expected_status": None},
@@ -292,7 +292,7 @@ class TaskAPITestCase(test.TestCase):
                "force": True, "expected_status": None},
               {"task_status": consts.TaskStatus.FINISHED,
                "force": True, "expected_status": None},
-              {"task_status": consts.TaskStatus.FAILED,
+              {"task_status": consts.TaskStatus.CRASHED,
                "force": True, "expected_status": None})
     @ddt.unpack
     @mock.patch("rally.api.objects.Task.get_status")

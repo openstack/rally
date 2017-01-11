@@ -320,13 +320,25 @@ TASK_EXTENDED_RESULT_SCHEMA = {
 
 
 class Task(object):
-    """Represents a task object."""
+    """Represents a task object.
+
+    Task states graph
+
+    INIT -> VALIDATING |-> VALIDATION_FAILED
+                       |-> ABORTING -> ABORTED
+                       |-> SOFT_ABORTING -> ABORTED
+                       |-> CRASHED
+                       |-> VALIDATED |-> RUNNING |-> FINISHED
+                                                 |-> ABORTING -> ABORTED
+                                                 |-> SOFT_ABORTING -> ABORTED
+                                                 |-> CRASHED
+    """
 
     # NOTE(andreykurilin): The following stages doesn't contain check for
     #   current status of task. We should add it in the future, since "abort"
     #   cmd should work everywhere.
     # TODO(andreykurilin): allow abort for each state.
-    NOT_IMPLEMENTED_STAGES_FOR_ABORT = [consts.TaskStatus.VERIFYING,
+    NOT_IMPLEMENTED_STAGES_FOR_ABORT = [consts.TaskStatus.VALIDATING,
                                         consts.TaskStatus.INIT]
 
     def __init__(self, task=None, temporary=False, **attributes):
@@ -386,11 +398,12 @@ class Task(object):
         else:
             self._update({"status": status})
 
-    def update_verification_log(self, log):
-        self._update({"validation_result": log})
+    def set_validation_failed(self, log):
+        self._update({"status": consts.TaskStatus.VALIDATION_FAILED,
+                      "validation_result": log})
 
     def set_failed(self, etype, msg, etraceback):
-        self._update({"status": consts.TaskStatus.FAILED,
+        self._update({"status": consts.TaskStatus.CRASHED,
                       "validation_result": {
                           "etype": etype, "msg": msg, "trace": etraceback}})
 
@@ -538,7 +551,7 @@ class Task(object):
                 {"uuid": self.task["uuid"], "status": current_status,
                  "stages": ", ".join(self.NOT_IMPLEMENTED_STAGES_FOR_ABORT)})
         elif current_status in [consts.TaskStatus.FINISHED,
-                                consts.TaskStatus.FAILED,
+                                consts.TaskStatus.CRASHED,
                                 consts.TaskStatus.ABORTED]:
             raise exceptions.RallyException(
                 _LE("Failed to abort task '%s', since it already "

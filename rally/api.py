@@ -386,7 +386,7 @@ class _Task(object):
             LOG.info(_LI("Waiting until the task stops."))
             finished_stages = [consts.TaskStatus.ABORTED,
                                consts.TaskStatus.FINISHED,
-                               consts.TaskStatus.FAILED]
+                               consts.TaskStatus.CRASHED]
             while objects.Task.get_status(task_uuid) not in finished_stages:
                 time.sleep(1)
 
@@ -406,7 +406,7 @@ class _Task(object):
         elif objects.Task.get_status(task_uuid) in (
                 consts.TaskStatus.ABORTED,
                 consts.TaskStatus.FINISHED,
-                consts.TaskStatus.FAILED):
+                consts.TaskStatus.CRASHED):
             objects.Task.delete_by_uuid(task_uuid, status=None)
         else:
             objects.Task.delete_by_uuid(

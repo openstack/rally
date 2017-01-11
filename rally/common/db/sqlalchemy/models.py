@@ -187,11 +187,7 @@ class Task(BASE, RallyBase):
     validation_duration = sa.Column(sa.Float)
     task_duration = sa.Column(sa.Float)
     pass_sla = sa.Column(sa.Boolean)
-
-    status = sa.Column(sa.Enum(*list(consts.TaskStatus),
-                       name="enum_tasks_status"),
-                       default=consts.TaskStatus.INIT,
-                       nullable=False)
+    status = sa.Column(sa.String(36), default=consts.TaskStatus.INIT)
 
 
 class Subtask(BASE, RallyBase):
@@ -229,11 +225,7 @@ class Subtask(BASE, RallyBase):
     run_in_parallel = sa.Column(sa.Boolean, default=False, nullable=False)
     duration = sa.Column(sa.Float)
     pass_sla = sa.Column(sa.Boolean)
-
-    status = sa.Column(sa.Enum(*list(consts.SubtaskStatus),
-                       name="enum_subtasks_status"),
-                       default=consts.SubtaskStatus.RUNNING,
-                       nullable=False)
+    status = sa.Column(sa.String(36), default=consts.SubtaskStatus.RUNNING)
 
 
 class Workload(BASE, RallyBase):

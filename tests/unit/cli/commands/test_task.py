@@ -345,7 +345,7 @@ class TaskCommandsTestCase(test.TestCase):
         value = {
             "id": "task",
             "uuid": test_uuid,
-            "status": consts.TaskStatus.FAILED,
+            "status": consts.TaskStatus.CRASHED,
             "results": [],
             "verification_log": json.dumps({"etype": "error_type",
                                             "msg": "error_message",
@@ -357,11 +357,11 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.detailed(self.fake_api, test_uuid)
         verification = yaml.safe_load(value["verification_log"])
         if debug:
-            expected_calls = [mock.call("Task test_task_id: failed"),
+            expected_calls = [mock.call("Task test_task_id: crashed"),
                               mock.call("%s" % verification["trace"])]
             mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
         else:
-            expected_calls = [mock.call("Task test_task_id: failed"),
+            expected_calls = [mock.call("Task test_task_id: crashed"),
                               mock.call("%s" % verification["etype"]),
                               mock.call("%s" % verification["msg"]),
                               mock.call("\nFor more details run:\nrally "
@@ -432,7 +432,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.sys.stdout")
     def test_results_no_data(self, mock_stdout):
         task_id = "foo_task_id"
-        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FAILED})
+        fake_task = fakes.FakeTask({"status": consts.TaskStatus.CRASHED})
         self.fake_api.task.get.return_value = fake_task
 
         self.assertEqual(1, self.task.results(self.fake_api, task_id))
@@ -441,7 +441,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         expected_out = ("Task status is %s. Results "
                         "available when it is one of %s.") % (
-            consts.TaskStatus.FAILED,
+            consts.TaskStatus.CRASHED,
             ", ".join((consts.TaskStatus.FINISHED,
                        consts.TaskStatus.ABORTED)))
         mock_stdout.write.assert_has_calls([mock.call(expected_out)])
