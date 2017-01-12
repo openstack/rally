@@ -113,8 +113,6 @@ class HookExecutor(object):
 class Hook(plugin.Plugin):
     """Factory for hook classes."""
 
-    CONFIG_SCHEMA = {}
-
     def __init__(self, task, config, triggered_by):
         self.task = task
         self.config = config
@@ -129,9 +127,10 @@ class Hook(plugin.Plugin):
             "triggered_by": self._triggered_by,
         }
 
-    @classmethod
-    def validate(cls, config):
-        jsonschema.validate(config["args"], cls.CONFIG_SCHEMA)
+    @staticmethod
+    def validate(config):
+        config_schema = Hook.get(config["name"]).CONFIG_SCHEMA
+        jsonschema.validate(config["args"], config_schema)
 
         trigger.Trigger.validate(config["trigger"])
 

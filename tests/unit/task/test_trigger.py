@@ -50,10 +50,10 @@ class TriggerTestCase(test.TestCase):
     @ddt.unpack
     def test_validate(self, config, valid):
         if valid:
-            DummyTrigger.validate(config)
+            trigger.Trigger.validate(config)
         else:
             self.assertRaises(jsonschema.ValidationError,
-                              DummyTrigger.validate, config)
+                              trigger.Trigger.validate, config)
 
     def test_on_event_and_get_results(self):
         # get_results requires launched hooks, so if we want to test it, we

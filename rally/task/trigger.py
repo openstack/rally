@@ -32,8 +32,6 @@ LOG = logging.getLogger(__name__)
 class Trigger(plugin.Plugin):
     """Factory for trigger classes."""
 
-    CONFIG_SCHEMA = {}
-
     def __init__(self, context, task, hook_cls):
         self.context = context
         self.config = self.context["trigger"]["args"]
@@ -41,9 +39,10 @@ class Trigger(plugin.Plugin):
         self.hook_cls = hook_cls
         self._runs = []
 
-    @classmethod
-    def validate(cls, config):
-        jsonschema.validate(config["args"], cls.CONFIG_SCHEMA)
+    @staticmethod
+    def validate(config):
+        config_schema = Trigger.get(config["name"]).CONFIG_SCHEMA
+        jsonschema.validate(config["args"], config_schema)
 
     @abc.abstractmethod
     def get_listening_event(self):
