@@ -101,6 +101,7 @@ class JSONReporter(reporter.VerificationReporter):
 @reporter.configure("html")
 class HTMLReporter(JSONReporter):
     """Generates verification report in HTML format."""
+    INCLUDE_LIBS = False
 
     def generate(self):
         report = self._generate()
@@ -150,7 +151,7 @@ class HTMLReporter(JSONReporter):
                    "show_comparison_note": show_comparison_note}
 
         raw_report = template.render(data=json.dumps(context),
-                                     include_libs=False)
+                                     include_libs=self.INCLUDE_LIBS)
 
         # in future we will support html_static and will need to save more
         # files
@@ -159,3 +160,8 @@ class HTMLReporter(JSONReporter):
                     "open": self.output_destination}
         else:
             return {"print": raw_report}
+
+
+@reporter.configure("html-static")
+class HTMLStaticReporter(HTMLReporter):
+    INCLUDE_LIBS = True
