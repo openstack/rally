@@ -1278,6 +1278,19 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.uptime_hypervisor")
 
+    def test__attach_interface(self):
+        fake_server = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+
+        result = nova_scenario._attach_interface(fake_server, net_id="id")
+        self.assertEqual(
+            self.clients("nova").servers.interface_attach.return_value,
+            result)
+        self.clients("nova").servers.interface_attach.assert_called_once_with(
+            fake_server, None, "id", None)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.attach_interface")
+
     def test_aggregate_set_metadata(self):
         nova_scenario = utils.NovaScenario(context=self.context)
         fake_metadata = {"test_metadata": "true"}

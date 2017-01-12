@@ -1,0 +1,30 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+{% set image_name = "^(cirros.*-disk|TestVM)$" %}
+---
+  NovaServers.boot_server_and_attach_interface:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: "{{image_name}}"
+        network_create_args: {}
+        subnet_create_args: {}
+        subnet_cidr_start: "1.1.0.0/30"
+        boot_server_args: {}
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        network: {}
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+      sla:
+        failure_rate:
+          max: 0

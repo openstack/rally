@@ -20,6 +20,7 @@ from rally import consts
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
+from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 from rally.plugins.openstack.scenarios.nova import utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import types
@@ -835,6 +836,38 @@ class BootAndAssociateFloatingIp(utils.NovaScenario,
         address = network_wrapper.wrap(self.clients, self).create_floating_ip(
             tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])
+
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA, consts.Service.NEUTRON)
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["nova", "neutron"]},
+                    name="NovaServers.boot_server_and_attach_interface")
+class BootServerAndAttachInterface(utils.NovaScenario,
+                                   neutron_utils.NeutronScenario):
+    def run(self, image, flavor, network_create_args=None,
+            subnet_create_args=None, subnet_cidr_start=None,
+            boot_server_args=None):
+        """Create server and subnet, then attach the interface to it.
+
+        This scenario measures the "nova interface-attach" command performance.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options.
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param boot_server_args: Optional additional arguments for
+                                 server creation
+        """
+        network = self._get_or_create_network(network_create_args)
+        self._create_subnet(network, subnet_create_args, subnet_cidr_start)
+
+        server = self._boot_server(image, flavor, **boot_server_args)
+        self._attach_interface(server, net_id=network["network"]["id"])
 
 
 @types.convert(image={"type": "glance_image"},

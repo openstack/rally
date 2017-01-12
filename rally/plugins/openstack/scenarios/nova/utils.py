@@ -1282,3 +1282,18 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").aggregates.set_metadata(aggregate,
                                                                   metadata)
+
+    @atomic.action_timer("nova.attach_interface")
+    def _attach_interface(self, server, port_id=None,
+                          net_id=None, fixed_ip=None):
+        """Attach a network_interface to an instance.
+
+        :param server: The :class:`Server` (or its ID) to attach to.
+        :param port_id: The port to attach.
+        :param network_id: the Network to attach
+        :param fixed_ip: the Fix_ip to attach
+        :returns the server that has attach interface
+        """
+        return self.clients("nova").servers.interface_attach(server,
+                                                             port_id, net_id,
+                                                             fixed_ip)
