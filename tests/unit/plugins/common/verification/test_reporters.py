@@ -14,6 +14,7 @@
 
 import collections
 import datetime as dt
+import os
 
 import ddt
 import mock
@@ -32,38 +33,52 @@ def get_verifications():
             {"name": "some.test.TestCase.test_foo",
              "tags": ["smoke", "id"],
              "status": "success",
+             "timestamp": "2001-01-01T00:01:00",
              "duration": "8"},
         "some.test.TestCase.test_skipped":
             {"name": "some.test.TestCase.test_skipped",
              "status": "skip",
+             "timestamp": "2001-01-01T00:02:00",
              "reason": "Skipped until Bug: 666 is resolved.",
              "duration": "0"},
         "some.test.TestCase.test_xfail":
             {"name": "some.test.TestCase.test_xfail",
              "status": "xfail",
+             "timestamp": "2001-01-01T00:03:00",
              "reason": "something",
              "traceback": "HEEELP",
+             "duration": "3"},
+        "some.test.TestCase.test_uxsuccess":
+            {"name": "some.test.TestCase.test_uxsuccess",
+             "status": "uxsuccess",
+             "timestamp": "2001-01-01T00:04:00",
+             "reason": "It should fail since I expect it",
              "duration": "3"}
+
     }
     tests_2 = {
         "some.test.TestCase.test_foo[id=iiiidddd;smoke]":
             {"name": "some.test.TestCase.test_foo",
              "tags": ["smoke", "id"],
              "status": "success",
+             "timestamp": "2001-02-01T00:01:00",
              "duration": "8"},
         "some.test.TestCase.test_failed":
             {"name": "some.test.TestCase.test_failed",
              "status": "fail",
+             "timestamp": "2001-02-01T00:02:00",
              "traceback": "HEEEEEEELP",
              "duration": "8"},
         "some.test.TestCase.test_skipped":
             {"name": "some.test.TestCase.test_skipped",
              "status": "skip",
+             "timestamp": "2001-02-01T00:03:00",
              "reason": "Skipped until Bug: 666 is resolved.",
              "duration": "0"},
         "some.test.TestCase.test_xfail":
             {"name": "some.test.TestCase.test_xfail",
              "status": "xfail",
+             "timestamp": "2001-02-01T00:04:00",
              "reason": "something",
              "traceback": "HEEELP",
              "duration": "4"}
@@ -73,20 +88,24 @@ def get_verifications():
             {"name": "some.test.TestCase.test_foo",
              "tags": ["smoke", "id"],
              "status": "success",
+             "timestamp": "2001-03-01T00:01:00",
              "duration": "8"},
         "some.test.TestCase.test_failed":
             {"name": "some.test.TestCase.test_failed",
              "status": "fail",
+             "timestamp": "2001-03-01T00:02:00",
              "traceback": "HEEEEEEELP",
              "duration": "7"},
         "some.test.TestCase.test_skipped":
             {"name": "some.test.TestCase.test_skipped",
              "status": "skip",
+             "timestamp": "2001-03-01T00:03:00",
              "reason": "Skipped until Bug: 666 is resolved.",
              "duration": "0"},
         "some.test.TestCase.test_xfail":
             {"name": "some.test.TestCase.test_xfail",
              "status": "xfail",
+             "timestamp": "2001-03-01T00:04:00",
              "reason": "something",
              "traceback": "HEEELP",
              "duration": "3"}
@@ -234,7 +253,14 @@ class JSONReporterTestCase(test.TestCase):
                                   "duration": "3",
                                   "status": "xfail"}},
                 "name": "some.test.TestCase.test_xfail",
-                "tags": []}},
+                "tags": []},
+            "some.test.TestCase.test_uxsuccess": {
+                "name": "some.test.TestCase.test_uxsuccess",
+                "tags": [],
+                "by_verification": {"foo-bar-1": {
+                    "details": "It should fail since I expect it",
+                    "duration": "3",
+                    "status": "uxsuccess"}}}},
             report["tests"])
 
     @mock.patch("%s.json.dumps" % PATH)
@@ -343,5 +369,34 @@ class HTMLReporterTestCase(test.TestCase):
                                   "status": "xfail"}},
                 "has_details": True,
                 "name": "some.test.TestCase.test_xfail",
-                "tags": []}},
+                "tags": []},
+            "some.test.TestCase.test_uxsuccess": {
+                "name": "some.test.TestCase.test_uxsuccess",
+                "tags": [],
+                "has_details": True,
+                "by_verification": {"foo-bar-1": {
+                    "details": "It should fail since I expect it",
+                    "duration": "3",
+                    "status": "uxsuccess"}}}},
             ctx["tests"])
+
+
+class JUnitXMLReporterTestCase(test.TestCase):
+    @mock.patch("%s.dt" % PATH)
+    @mock.patch("%s.version.version_string" % PATH)
+    def test_generate(self, mock_version_string, mock_dt):
+        mock_dt.datetime.utcnow.return_value.strftime.return_value = "TIME"
+        # release when junit reporter was introduced
+        mock_version_string.return_value = "0.8.0"
+        with open(os.path.join(os.path.dirname(__file__),
+                               "junit_report.xml")) as f:
+            expected_report = f.read()
+
+        junit_reporter = reporters.JUnitXMLReporter(get_verifications(), None)
+        self.assertEqual({"print": expected_report}, junit_reporter.generate())
+
+        dest = "path"
+        junit_reporter = reporters.JUnitXMLReporter(get_verifications(), dest)
+        self.assertEqual({"open": dest,
+                          "files": {dest: expected_report}},
+                         junit_reporter.generate())

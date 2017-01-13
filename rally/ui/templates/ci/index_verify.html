@@ -84,6 +84,9 @@
     <span class="{{ verifications[i].json.status }}">[{{ verifications[i].json.status }}]</span>
     <a href="{{ verifications[i].json.output_file }}">Generate the verification report in JSON format</a> [<a href="{{ verifications[i].json.stdout_file }}">Output from CLI</a>]
     <code>$ {{ verifications[i].json.cmd }}</code>
+    <span class="{{ verifications[i].junit_xml.status }}">[{{ verifications[i].junit_xml.status }}]</span>
+    <a href="{{ verifications[i].junit_xml.output_file }}">Generate the verification report in JUnit-XML format</a> [<a href="{{ verifications[i].junit_xml.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ verifications[i].junit_xml.cmd }}</code>
     <span class="{{ verifications[i].html.status }}">[{{ verifications[i].html.status }}]</span>
     <a href="{{ verifications[i].html.output_file }}">Generate the verification report in HTML format</a> [<a href="{{ verifications[i].html.stdout_file }}">Output from CLI</a>]
     <code>$ {{ verifications[i].html.cmd }}</code><br>
@@ -96,6 +99,9 @@
     <span class="{{ compare.json.status }}">[{{ compare.json.status }}]</span>
     <a href="{{ compare.json.output_file }}">Generate the trends report for two verifications in JSON format</a> [<a href="{{ compare.json.stdout_file }}">Output from CLI</a>]
     <code>$ {{ compare.json.cmd }}</code>
+    <span class="{{ compare.junit_xml.status }}">[{{ compare.junit_xml.status }}]</span>
+    <a href="{{ compare.junit_xml.output_file }}">Generate the trends report for two verifications in JUnit-XML format</a> [<a href="{{ compare.junit_xml.stdout_file }}">Output from CLI</a>]
+    <code>$ {{ compare.junit_xml.cmd }}</code><br>
     <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
     <a href="{{ compare.html.output_file }}">Generate the trends report for two verifications in HTML format</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
     <code>$ {{ compare.html.cmd }}</code><br>

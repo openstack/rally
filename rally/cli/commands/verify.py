@@ -39,7 +39,7 @@ LIST_DEPLOYMENTS_HINT = ("HINT: You can list all deployments, executing "
 LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
-DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON")
+DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON", "JUnit-XML")
 
 
 class VerifyCommands(object):
