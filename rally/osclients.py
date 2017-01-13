@@ -365,7 +365,7 @@ class Neutron(OSClient):
         return client
 
 
-@configure("glance", default_version="1", default_service_type="image",
+@configure("glance", default_version="2", default_service_type="image",
            supported_versions=["1", "2"])
 class Glance(OSClient):
     def create_client(self, version=None, service_type=None):

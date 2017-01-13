@@ -268,7 +268,7 @@ class ValidatorsTestCase(test.TestCase):
                          result[1])
         mock_glance_image_transform.assert_called_once_with(
             clients=clients, resource_config="test")
-        clients.glance().images.get.assert_called_with(image="image_id")
+        clients.glance().images.get.assert_called_with("image_id")
 
     @mock.patch(MODULE + "openstack_types.GlanceImage.transform",
                 side_effect=exceptions.InvalidScenarioArgument)

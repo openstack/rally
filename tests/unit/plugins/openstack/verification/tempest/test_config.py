@@ -270,10 +270,12 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.mock_isfile.return_value = False
         img_path = os.path.join(self.context.data_dir, "foo")
         img = mock.MagicMock()
-        img.data.return_value = "data"
+        glanceclient = self.context.clients.glance()
+        glanceclient.images.data.return_value = "data"
 
-        config._download_image(img_path, img)
+        self.context._do_download_image(img_path, img)
         mock_open.assert_called_once_with(img_path, "wb")
+        glanceclient.images.data.assert_called_once_with(img.id)
         mock_open().write.assert_has_calls([mock.call("d"),
                                             mock.call("a"),
                                             mock.call("t"),
@@ -286,7 +288,7 @@ class TempestResourcesContextTestCase(test.TestCase):
         img_path = os.path.join(self.context.data_dir, "foo")
         mock_get.return_value.iter_content.return_value = "data"
 
-        config._download_image(img_path)
+        self.context._do_download_image(img_path)
         mock_get.assert_called_once_with(CONF.tempest.img_url, stream=True)
         mock_open.assert_called_once_with(img_path, "wb")
         mock_open().write.assert_has_calls([mock.call("d"),
@@ -300,7 +302,8 @@ class TempestResourcesContextTestCase(test.TestCase):
         self.mock_isfile.return_value = False
         mock_get.return_value = mock.MagicMock(status_code=status_code)
         self.assertRaises(
-            exceptions.TempestConfigCreationFailure, config._download_image,
+            exceptions.TempestConfigCreationFailure,
+            self.context._do_download_image,
             os.path.join(self.context.data_dir, "foo"))
 
     @mock.patch("requests.get", side_effect=requests.ConnectionError())
@@ -308,7 +311,8 @@ class TempestResourcesContextTestCase(test.TestCase):
             self, mock_requests_get):
         self.mock_isfile.return_value = False
         self.assertRaises(
-            exceptions.TempestConfigCreationFailure, config._download_image,
+            exceptions.TempestConfigCreationFailure,
+            self.context._do_download_image,
             os.path.join(self.context.data_dir, "foo"))
 
     @mock.patch("rally.plugins.openstack.wrappers."
@@ -372,11 +376,15 @@ class TempestResourcesContextTestCase(test.TestCase):
         img_1.name = "Foo"
         img_2 = mock.MagicMock()
         img_2.name = "CirrOS"
-        img_2.data.return_value = "data"
+        glanceclient = self.context.clients.glance()
+        glanceclient.images.data.return_value = "data"
         mock_wrap.return_value.list_images.return_value = [img_1, img_2]
 
         self.context._download_image()
         img_path = os.path.join(self.context.data_dir, self.context.image_name)
+        mock_wrap.return_value.list_images.assert_called_once_with(
+            status="active", visibility="public")
+        glanceclient.images.data.assert_called_once_with(img_2.id)
         mock_open.assert_called_once_with(img_path, "wb")
         mock_open().write.assert_has_calls([mock.call("d"),
                                             mock.call("a"),

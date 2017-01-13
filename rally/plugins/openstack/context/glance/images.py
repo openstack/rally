@@ -102,6 +102,10 @@ class ImageGenerator(context.Context):
                 LOG.warning("The 'min_disk' argument is deprecated; specify "
                             "arbitrary arguments with 'image_args' instead")
                 kwargs["min_disk"] = self.config["min_disk"]
+            if "is_public" in kwargs:
+                LOG.warning("The 'is_public' argument is deprecated since "
+                            "Rally 0.8.0; specify visibility arguments "
+                            "instead")
 
             for i in range(images_per_tenant):
                 if image_name and i > 0:

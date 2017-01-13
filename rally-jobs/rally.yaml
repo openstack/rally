@@ -880,6 +880,9 @@
         users:
           tenants: 2
           users_per_tenant: 3
+        api_versions:
+          glance:
+            version: 1
       sla:
         failure_rate:
           max: 0
