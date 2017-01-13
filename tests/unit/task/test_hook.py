@@ -231,7 +231,7 @@ class HookExecutorTestCase(test.TestCase):
 class HookTestCase(test.TestCase):
 
     def test_validate(self):
-        DummyHook.validate(
+        hook.Hook.validate(
             {
                 "name": "dummy_hook",
                 "description": "dummy_action",
@@ -261,7 +261,7 @@ class HookTestCase(test.TestCase):
                 }
             }
         }
-        self.assertRaises(jsonschema.ValidationError, DummyHook.validate, conf)
+        self.assertRaises(jsonschema.ValidationError, hook.Hook.validate, conf)
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result(self, mock_timer):
