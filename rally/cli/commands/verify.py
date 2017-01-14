@@ -39,7 +39,7 @@ LIST_DEPLOYMENTS_HINT = ("HINT: You can list all deployments, executing "
 LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
-DEFAULTS_REPORTERS = ("HTML", "JSON")
+DEFAULT_REPORT_TYPES = ("HTML", "JSON")
 
 
 class VerifyCommands(object):
@@ -224,50 +224,48 @@ class VerifyCommands(object):
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>",
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
-    @cliutils.args("--recreate", dest="recreate", action="store_true",
-                   required=False, help="Recreate the verifier config file.")
-    @cliutils.args("--add-options", dest="extra_options", type=str,
-                   metavar="<path/json/yaml>", required=False,
-                   help="Add options to the verifier config file. If options "
-                        "are already present in the verifier config file, the "
-                        "given ones will override them. Can be a path to a "
-                        "regular config file or just a json/yaml.")
-    @cliutils.args("--replace-by", dest="replace", type=str, metavar="<path>",
-                   required=False,
-                   help="Replace the verifier config file by another one "
-                        "from a given source.")
-    @cliutils.args("--show", dest="show", action="store_true", required=False,
-                   help="Show the verifier config file.")
+    @cliutils.args("--reconfigure", dest="reconfigure", action="store_true",
+                   required=False, help="Reconfigure verifier.")
     @cliutils.args("--force", dest="force", action="store_true",
                    required=False,
-                   help="Force reconfiguration (ignore current status of "
-                        "verifier). Should be used in case of stuck "
-                        "'configuring' status.")
+                   help="(Re)configure verifier regardless of its status.")
+    @cliutils.args("--extend", dest="extra_options", type=str,
+                   metavar="<path/json/yaml>", required=False,
+                   help="Extend verifier configuration with extra options. "
+                        "If options are already present, the given ones will "
+                        "override them. Can be a path to a regular config "
+                        "file or just a json/yaml.")
+    @cliutils.args("--override", dest="new_configuration", type=str,
+                   metavar="<path>", required=False,
+                   help="Override verifier configuration by another one "
+                        "from a given source.")
+    @cliutils.args("--show", dest="show", action="store_true", required=False,
+                   help="Show verifier configuration.")
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
     @plugins.ensure_plugins_are_loaded
     def configure_verifier(self, api, verifier_id=None, deployment=None,
-                           recreate=False, extra_options=None, replace=None,
-                           show=False, force=False):
+                           reconfigure=False, force=False, extra_options=None,
+                           new_configuration=None, show=False):
         """Configure a verifier for a specific deployment."""
 
         # TODO(ylobankov): Add an ability to read extra options from
         #                  a json or yaml file.
 
-        if replace and (extra_options or recreate):
-            print(_("Argument '--replace-by' cannot be used with arguments "
-                    "'--recreate' and '--add-options'."))
+        if new_configuration and (extra_options or reconfigure):
+            print(_("Argument '--override' cannot be used with arguments "
+                    "'--reconfigure' and '--extend'."))
             return 1
 
-        if replace:
-            if not os.path.exists(replace):
-                print(_("File '%s' not found.") % replace)
+        if new_configuration:
+            if not os.path.exists(new_configuration):
+                print(_("File '%s' not found.") % new_configuration)
                 return 1
 
-            with open(replace) as f:
+            with open(new_configuration) as f:
                 config = f.read()
-            api.verifier.override_configuration(verifier_id,
-                                                deployment, config)
+            api.verifier.override_configuration(verifier_id, deployment,
+                                                config, force)
         else:
             if extra_options:
                 if os.path.isfile(extra_options):
@@ -287,7 +285,8 @@ class VerifyCommands(object):
 
             config = api.verifier.configure(verifier_id, deployment,
                                             extra_options=extra_options,
-                                            recreate=recreate, force=force)
+                                            reconfigure=reconfigure,
+                                            force=force)
 
         if show:
             print("\n" + config.strip() + "\n")
@@ -302,7 +301,7 @@ class VerifyCommands(object):
     @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def list_verifier_tests(self, api, verifier_id=None, pattern=""):
-        """Show all verifier tests."""
+        """List all verifier tests."""
         tests = api.verifier.list_tests(verifier_id, pattern)
         if tests:
             for test in tests:
@@ -460,13 +459,13 @@ class VerifyCommands(object):
                    metavar="<id>",
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
     @cliutils.args("--failed", dest="failed", required=False,
-                   help="Re-run only failed tests.", action="store_true")
+                   help="Rerun only failed tests.", action="store_true")
     @envutils.with_default_verification_uuid
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @plugins.ensure_plugins_are_loaded
     def rerun(self, api, verification_uuid=None, deployment=None,
               failed=False):
-        """Re-run tests from a verification for a specific deployment."""
+        """Rerun tests from a verification for a specific deployment."""
         verification, results = api.verification.rerun(verification_uuid,
                                                        deployment, failed)
         self._print_totals(results.totals)
@@ -600,11 +599,10 @@ class VerifyCommands(object):
                    help="UUIDs of verifications. " + LIST_VERIFICATIONS_HINT)
     @cliutils.args("--type", dest="output_type", type=str,
                    required=False, default="json",
-                   help="Report type (Defaults to JSON). Out of the box types:"
-                        " %s. HINT: You can list all types by executing "
-                        "`rally plugins list --plugin-base "
-                        "VerificationReporter` command."
-                        % ", ".join(DEFAULTS_REPORTERS))
+                   help="Report type (Defaults to JSON). Out-of-the-box types:"
+                        " %s. HINT: You can list all types, executing `rally "
+                        "plugins list --plugin-base VerificationReporter` "
+                        "command." % ", ".join(DEFAULT_REPORT_TYPES))
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
                    help="Report destination. Can be a path to a file (in case"
@@ -624,14 +622,15 @@ class VerifyCommands(object):
         result = api.verification.report(verification_uuid, output_type,
                                          output_dest)
         if "files" in result:
-            print("Saving the report to disk. It can take a moment.")
+            print(_("Saving the report to '%s' file. It may take some time.")
+                  % output_dest)
             for path in result["files"]:
                 full_path = os.path.abspath(os.path.expanduser(path))
                 if not os.path.exists(os.path.dirname(full_path)):
                     os.makedirs(os.path.dirname(full_path))
                 with open(full_path, "w") as f:
                     f.write(result["files"][path])
-                print(_("The report has been successfully saved."))
+            print(_("The report has been successfully saved."))
 
             if open_it:
                 if "open" not in result:
@@ -644,8 +643,8 @@ class VerifyCommands(object):
         if "print" in result:
             # NOTE(andreykurilin): we need a separation between logs and
             #   printed information to be able parsing output
-            print(cliutils.make_header("Verification Report"))
-            print(result["print"])
+            print(cliutils.make_header("Verification Report") +
+                  result["print"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--verifier-id", dest="verifier_id", type=str,

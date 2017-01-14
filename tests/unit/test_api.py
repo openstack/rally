@@ -934,7 +934,7 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate and no extra options
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          api._Verifier.configure(verifier_id, deployment_id,
-                                                 recreate=False))
+                                                 reconfigure=False))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
         self.assertFalse(verifier_obj.manager.configure.called)
         self.assertFalse(verifier_obj.update_status.called)
@@ -942,7 +942,7 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate, just extend existing configuration
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          api._Verifier.configure(verifier_id, deployment_id,
-                                                 recreate=False,
+                                                 reconfigure=False,
                                                  extra_options=extra))
         verifier_obj.manager.extend_configuration.assert_called_once_with(
             extra)
@@ -957,7 +957,7 @@ class VerifierAPITestCase(test.TestCase):
         # recreate with extra options
         self.assertEqual(verifier_obj.manager.configure.return_value,
                          api._Verifier.configure(verifier_id, deployment_id,
-                                                 recreate=True,
+                                                 reconfigure=True,
                                                  extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
         self.assertEqual([mock.call(consts.VerifierStatus.CONFIGURING),
@@ -989,16 +989,16 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj = mock___verifier_get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
-        new_content = {"key": "value"}
+        new_config = {"key": "value"}
         verifier_obj.status = consts.VerifierStatus.CONFIGURED
 
         api._Verifier.override_configuration(verifier_id, deployment_id,
-                                             new_content=new_content)
+                                             new_configuration=new_config)
         self.assertEqual([mock.call(consts.VerifierStatus.CONFIGURING),
                           mock.call(consts.VerifierStatus.CONFIGURED)],
                          verifier_obj.update_status.call_args_list)
         verifier_obj.manager.override_configuration.assert_called_once_with(
-            new_content)
+            new_config)
 
     @mock.patch("rally.api._Verifier.get")
     def test_list_tests(self, mock___verifier_get):

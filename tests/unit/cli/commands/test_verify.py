@@ -105,18 +105,19 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.verify.os.path.exists")
     def test_configure_verifier(self, mock_exists, mock_open):
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
-                                       replace="/p/a/t/h", recreate=True)
+                                       new_configuration="/p/a/t/h",
+                                       reconfigure=True)
         self.assertFalse(self.fake_api.verifier.configure.called)
 
         mock_exists.return_value = False
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
-                                       replace="/p/a/t/h")
+                                       new_configuration="/p/a/t/h")
         self.assertFalse(self.fake_api.verifier.override_configuration.called)
 
         mock_exists.return_value = True
         mock_open.return_value = mock.mock_open(read_data="data").return_value
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
-                                       replace="/p/a/t/h")
+                                       new_configuration="/p/a/t/h")
         mock_open.assert_called_once_with("/p/a/t/h")
         self.fake_api.verifier.override_configuration("v_id", "d_id", "data")
 
@@ -128,14 +129,14 @@ class VerifyCommandsTestCase(test.TestCase):
         expected_options = {"foo": {"opt": "val"},
                             "DEFAULT": {"opt": "val"}}
         self.fake_api.verifier.configure.assert_called_once_with(
-            "v_id", "d_id", extra_options=expected_options, recreate=False,
+            "v_id", "d_id", extra_options=expected_options, reconfigure=False,
             force=False)
 
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
                                        extra_options="{foo: {opt: val}, "
                                                      "DEFAULT: {opt: val}}")
         self.fake_api.verifier.configure.assert_called_with(
-            "v_id", "d_id", extra_options=expected_options, recreate=False,
+            "v_id", "d_id", extra_options=expected_options, reconfigure=False,
             force=False)
 
     def test_list_verifier_tests(self):
@@ -459,7 +460,7 @@ class VerifyCommandsTestCase(test.TestCase):
             for cls in reporter.VerificationReporter.get_all()
             # ignore possible external plugins
             if cls.__module__.startswith("rally")}
-        listed_in_cli = {name.lower() for name in verify.DEFAULTS_REPORTERS}
+        listed_in_cli = {name.lower() for name in verify.DEFAULT_REPORT_TYPES}
         not_listed = available_reporters - listed_in_cli
 
         if not_listed:

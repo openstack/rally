@@ -599,15 +599,14 @@ class _Verifier(object):
 
     @classmethod
     def configure(cls, verifier, deployment_id, extra_options=None,
-                  recreate=False, force=False):
+                  reconfigure=False, force=False):
         """Configure a verifier.
 
-        :param verifier: Verifier Object or (name or UUID)
+        :param verifier: Verifier object or (name or UUID)
         :param deployment_id: Deployment name or UUID
-        :param extra_options: Add extra options to the verifier configuration
-        :param recreate: Recreate the verifier configuration
-        :param force: Force reconfiguration. Should be used in case of stuck
-            "configuring" status
+        :param extra_options: Extend verifier configuration with extra options
+        :param reconfigure: Reconfigure verifier
+        :param force: (Re)configure verifier regardless of its status
         """
         if not isinstance(verifier, objects.Verifier):
             verifier = cls.get(verifier)
@@ -630,7 +629,7 @@ class _Verifier(object):
         vm = verifier.manager
         if verifier.status == consts.VerifierStatus.CONFIGURED:
             LOG.info("Verifier is already configured!")
-            if not recreate:
+            if not reconfigure:
                 if not extra_options:
                     return vm.get_configuration()
                 else:
@@ -658,15 +657,18 @@ class _Verifier(object):
         return raw_config
 
     @classmethod
-    def override_configuration(cls, verifier_id, deployment_id, new_content):
+    def override_configuration(cls, verifier_id, deployment_id,
+                               new_configuration, force=False):
         """Override verifier configuration (e.g., rewrite the config file).
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
-        :param new_content: New content for the verifier configuration
+        :param new_configuration: New configuration for verifier
+        :param force: Override verifier configuration regardless of
+                      verifier status
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status not in cls.READY_TO_USE_STATES and not force:
             raise exceptions.RallyException(
                 "Failed to override verifier configuration for deployment "
                 "'%s' (UUID=%s) because verifier %s is in '%s' status, but "
@@ -674,13 +676,13 @@ class _Verifier(object):
                     verifier.deployment["name"], verifier.deployment["uuid"],
                     verifier, verifier.status, cls.READY_TO_USE_STATES))
 
+        verifier.set_deployment(deployment_id)
         LOG.info("Overriding configuration of verifier %s for deployment '%s' "
                  "(UUID=%s).", verifier, verifier.deployment["name"],
                  verifier.deployment["uuid"])
 
-        verifier.set_deployment(deployment_id)
         verifier.update_status(consts.VerifierStatus.CONFIGURING)
-        verifier.manager.override_configuration(new_content)
+        verifier.manager.override_configuration(new_configuration)
         verifier.update_status(consts.VerifierStatus.CONFIGURED)
 
         LOG.info("Configuration of verifier %s has been successfully "
@@ -836,11 +838,11 @@ class _Verification(object):
 
     @classmethod
     def rerun(cls, verification_uuid, deployment_id=None, failed=False):
-        """Re-run tests from a verification.
+        """Rerun tests from a verification.
 
         :param verification_uuid: Verification UUID
         :param deployment_id: Deployment name or UUID
-        :param failed: Re-run only failed tests
+        :param failed: Rerun only failed tests
         """
         # TODO(ylobankov): Improve this method in the future: put some
         #                  information about re-run in run_args.
