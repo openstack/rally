@@ -155,7 +155,7 @@ agreement* is not displayed and its result is assumed to be always passed
 Total durations
 +++++++++++++++
 
-There is a durations analysis, which is is represented by statistics table and
+There is a durations analysis, which is represented by statistics table and
 duration StackedArea chart.
 
 .. image:: ../images/Report-Task-Total-durations.png
