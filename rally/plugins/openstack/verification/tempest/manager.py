@@ -121,7 +121,7 @@ class TempestManager(testr.TestrLauncher):
                 "Cannot list installed Tempest plugins for verifier %s." %
                 self.verifier)
 
-        return yaml.load(output)
+        return yaml.safe_load(output)
 
     def uninstall_extension(self, name):
         """Uninstall a Tempest plugin."""
