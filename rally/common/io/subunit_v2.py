@@ -177,6 +177,8 @@ class SubunitV2StreamResult(object):
             if test_status == "inprogress":
                 # timestamp of test start
                 self._timestamps[test_id] = timestamp
+                self._tests[test_id]["timestamp"] = timestamp.strftime(
+                    "%Y-%m-%dT%H:%M:%S%z")
             elif test_status:
                 self._tests[test_id]["duration"] = "%.3f" % (
                     timestamp - self._timestamps[test_id]).total_seconds()

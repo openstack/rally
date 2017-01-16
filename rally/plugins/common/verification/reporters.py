@@ -28,6 +28,9 @@ LP_BUG_LINK = "https://launchpad.net/bugs/%s"
 class JSONReporter(reporter.VerificationReporter):
     """Generates verification report in JSON format."""
 
+    # ISO 8601
+    TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+
     @classmethod
     def validate(cls, output_destination):
         """Validate destination of report.
@@ -45,8 +48,8 @@ class JSONReporter(reporter.VerificationReporter):
 
         for v in self.verifications:
             verifications[v.uuid] = {
-                "started_at": v.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "finished_at": v.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "started_at": v.created_at.strftime(self.TIME_FORMAT),
+                "finished_at": v.updated_at.strftime(self.TIME_FORMAT),
                 "status": v.status,
                 "run_args": v.run_args,
                 "tests_count": v.tests_count,
@@ -101,6 +104,9 @@ class JSONReporter(reporter.VerificationReporter):
 @reporter.configure("html")
 class HTMLReporter(JSONReporter):
     """Generates verification report in HTML format."""
+
+    # "T" separator of ISO 8601 is not user-friendly enough.
+    TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def generate(self):
         report = self._generate()
