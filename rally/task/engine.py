@@ -163,7 +163,7 @@ class ResultConsumer(object):
             load_duration))
         LOG.info("Full runner duration is: %s" %
                  utils.format_float_to_str(self.runner.run_duration))
-        LOG.info("Full duration is %s" % utils.format_float_to_str(
+        LOG.info("Full duration is: %s" % utils.format_float_to_str(
             self.finish - self.start))
 
         results = {
