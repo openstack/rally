@@ -1007,3 +1007,25 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
             tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])
         self._dissociate_floating_ip(server, address["ip"])
+
+
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.image_valid_on_flavor("flavor", "image")
+@validation.required_services(consts.Service.NOVA)
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.required_contexts("network")
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaServers.boot_server_and_list_interfaces")
+class BootServerAndListInterfaces(utils.NovaScenario):
+    def run(self, image, flavor, **kwargs):
+        """Boot a server and list interfaces attached to it.
+
+        Measure the "nova boot" and "nova interface-list" command performance.
+
+        :param image: ID of the image to be used for server creation
+        :param flavor: ID of the flavor to be used for server creation
+        :param **kwargs: Optional arguments for booting the instance
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._list_interfaces(server)
