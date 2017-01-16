@@ -358,10 +358,11 @@ class Neutron(OSClient):
         if self.credential.endpoint_type:
             kw_args["endpoint_type"] = self.credential.endpoint_type
 
-        client = neutron.Client(self.choose_version(version),
-                                session=self.keystone.get_session()[0],
-                                endpoint_url=self._get_endpoint(service_type),
-                                **kw_args)
+        client = neutron.Client(
+            self.choose_version(version),
+            session=self.keystone.get_session()[0],
+            endpoint_override=self._get_endpoint(service_type),
+            **kw_args)
         return client
 
 
