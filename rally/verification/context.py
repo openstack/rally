@@ -12,19 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common.plugin import plugin
 from rally.task import context
 
 configure = context.configure
 
 
-class VerifierContext(context.Context):
+@plugin.base()
+class VerifierContext(context.BaseContext):
     """Verifier context that will be run before starting a verification."""
 
     def __init__(self, ctx):
         super(VerifierContext, self).__init__(ctx)
-
-        # There is no term "task" in verification.
-        del self.task
         self.verification = self.context.get("verification", {})
         self.verifier = self.context["verifier"]
 
