@@ -319,7 +319,7 @@ class Keystone(OSClient):
             from keystoneauth1 import plugin
             kw["auth_url"] = sess.get_endpoint(interface=plugin.AUTH_INTERFACE)
         if self.credential.endpoint_type:
-            kw["endpoint_type"] = self.credential.endpoint_type
+            kw["interface"] = self.credential.endpoint_type
         return client.Client(**kw)
 
 
