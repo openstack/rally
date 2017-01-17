@@ -405,6 +405,21 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.cinder.volume_encryption_types.delete.assert_called_once_with(
             "type")
 
+    def test_update_encryption_type(self):
+        volume_type = mock.Mock()
+        specs = {
+            "provider": "foo_pro",
+            "cipher": "foo_cip",
+            "key_size": 512,
+            "control_location": "foo_con"
+        }
+        result = self.service.update_encryption_type(volume_type, specs)
+
+        self.assertEqual(
+            self.cinder.volume_encryption_types.update.return_value, result)
+        self.cinder.volume_encryption_types.update.assert_called_once_with(
+            volume_type, specs)
+
 
 class FullUnifiedCinder(cinder_common.UnifiedCinderMixin,
                         service.Service):
@@ -633,3 +648,8 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         self.service.delete_encryption_type("type")
         self.service._impl.delete_encryption_type.assert_called_once_with(
             "type")
+
+    def test_update_encryption_type(self):
+        self.service.update_encryption_type("type", specs=3)
+        self.service._impl.update_encryption_type.assert_called_once_with(
+            "type", specs=3)

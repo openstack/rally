@@ -1,0 +1,28 @@
+  CinderVolumeTypes.create_and_update_encryption_type:
+    -
+      args:
+        create_provider: "LuksEncryptor"
+        create_cipher: "aes-xts-plain64"
+        create_key_size: 512
+        create_control_location: "front-end"
+        update_provider: "CryptsetupEncryptor"
+        update_cipher: "aes-xts-plain"
+        update_key_size: 256
+        update_control_location: "back-end"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
+      sla:
+        failure_rate:
+          max: 0

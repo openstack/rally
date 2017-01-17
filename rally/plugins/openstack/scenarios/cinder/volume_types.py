@@ -250,3 +250,55 @@ class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
         self.admin_cinder.create_encryption_type(volume_type["id"],
                                                  specs=specs)
         self.admin_cinder.delete_encryption_type(volume_type["id"])
+
+
+@validation.required_services(consts.Service.CINDER)
+@validation.required_contexts("volume_types")
+@validation.add("required_platform", platform="openstack", admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_and_update_encryption_type")
+class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
+
+    def run(self, create_provider=None, create_cipher=None,
+            create_key_size=None, create_control_location="front-end",
+            update_provider=None, update_cipher=None,
+            update_key_size=None, update_control_location=None):
+        """Create and update encryption type
+
+          This scenario firstly creates a volume type, secondly creates an
+          encryption type for the volume type, thirdly updates the encryption
+          type.
+
+        :param create_provider: The class that provides encryption support. For
+                                example, LuksEncryptor.
+        :param create_cipher: The encryption algorithm or mode.
+        :param create_key_size: Size of encryption key, in bits.
+        :param create_control_location: Notional service where encryption is
+                                        performed. Valid values are "front-end"
+                                        or "back-end."
+        :param update_provider: The class that provides encryption support. For
+                                example, LuksEncryptor.
+        :param update_cipher: The encryption algorithm or mode.
+        :param update_key_size: Size of encryption key, in bits.
+        :param update_control_location: Notional service where encryption is
+                                        performed. Valid values are "front-end"
+                                        or "back-end."
+        """
+        vt_idx = self.context["iteration"] % len(self.context["volume_types"])
+        volume_type = self.context["volume_types"][vt_idx]
+        create_specs = {
+            "provider": create_provider,
+            "cipher": create_cipher,
+            "key_size": create_key_size,
+            "control_location": create_control_location
+        }
+        update_specs = {
+            "provider": update_provider,
+            "cipher": update_cipher,
+            "key_size": update_key_size,
+            "control_location": update_control_location
+        }
+        self.admin_cinder.create_encryption_type(volume_type["id"],
+                                                 specs=create_specs)
+        self.admin_cinder.update_encryption_type(volume_type["id"],
+                                                 specs=update_specs)

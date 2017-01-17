@@ -247,3 +247,10 @@ class BlockTestCase(test.TestCase):
         self.service.delete_encryption_type("type")
         self.service._impl.delete_encryption_type.assert_called_once_with(
             "type")
+
+    def test_update_encryption_type(self):
+        self.assertEqual(
+            self.service._impl.update_encryption_type.return_value,
+            self.service.update_encryption_type("type", specs=3))
+        self.service._impl.update_encryption_type.assert_called_once_with(
+            "type", specs=3)

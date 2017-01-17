@@ -413,6 +413,19 @@ class CinderMixin(object):
             if (resp[0].status_code != 202):
                 raise exceptions.EncryptionTypeDeleteException()
 
+    def update_encryption_type(self, volume_type, specs):
+        """Update the encryption type information for the specified volume type.
+
+        :param volume_type: the volume type whose encryption type information
+                            must be updated
+        :param specs: the encryption type specifications to update
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        aname = "cinder_v%s.update_encryption_type" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().volume_encryption_types.update(
+                volume_type, specs)
+
 
 class UnifiedCinderMixin(object):
 
@@ -633,3 +646,13 @@ class UnifiedCinderMixin(object):
                             must be deleted
         """
         return self._impl.delete_encryption_type(volume_type)
+
+    def update_encryption_type(self, volume_type, specs):
+        """Update the encryption type information for the specified volume type.
+
+        :param volume_type: the volume type whose encryption type information
+                            must be updated
+        :param specs: the encryption type specifications to update
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        return self._impl.update_encryption_type(volume_type, specs=specs)
