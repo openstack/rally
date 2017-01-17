@@ -202,6 +202,10 @@ class ImageCleanUpException(CleanUpException):
     msg_fmt = _("Image Deletion Failed")
 
 
+class EncryptionTypeDeleteException(CleanUpException):
+    msg_fmt = _("EncryptionType Deletion Failed")
+
+
 class IncompatiblePythonVersion(RallyException):
     msg_fmt = _("Incompatible python version found '%(version)s', "
                 "required '%(required_version)s'")

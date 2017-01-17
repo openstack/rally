@@ -381,6 +381,13 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume_type")
 
+    def test__delete_encryption_type(self):
+        volume_type = mock.Mock()
+
+        self.assertRaises(exceptions.EncryptionTypeDeleteException,
+                          self.scenario._delete_encryption_type,
+                          volume_type)
+
     def test__create_encryption_type(self):
         volume_type = mock.Mock()
         specs = {

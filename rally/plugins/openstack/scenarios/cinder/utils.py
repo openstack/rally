@@ -473,3 +473,15 @@ class CinderScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("cinder").volume_encryption_types.list(
             search_opts)
+
+    @atomic.action_timer("cinder.delete_encryption_type")
+    def _delete_encryption_type(self, volume_type):
+        """Delete the encryption type information for the specified volume type.
+
+        :param volume_type: the volume type whose encryption type information
+                            must be deleted
+        """
+        resp = self.admin_clients("cinder").volume_encryption_types.delete(
+            volume_type)
+        if (resp[0].status_code != 202):
+            raise exceptions.EncryptionTypeDeleteException()

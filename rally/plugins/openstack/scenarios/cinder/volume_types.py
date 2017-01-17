@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
@@ -98,3 +100,24 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderScenario):
         volume_type = self._create_volume_type(**kwargs)
 
         self._set_volume_type_keys(volume_type, volume_type_key)
+
+
+@validation.required_services(consts.Service.CINDER)
+@validation.required_contexts("volume_types")
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_and_delete_"
+                         "encryption_type")
+class CreateAndDeleteEncryptionType(cinder_utils.CinderScenario):
+
+    def run(self, create_specs):
+        """Create and delete encryption type
+
+          This scenario firstly creates an encryption type for a given
+          volume type, then deletes the created encryption type.
+
+        :param create_specs: the encryption type specifications to add
+        """
+        volume_type = random.choice(self.context["volume_types"])
+        self._create_encryption_type(volume_type["id"], create_specs)
+        self._delete_encryption_type(volume_type["id"])
