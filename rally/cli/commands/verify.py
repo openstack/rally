@@ -39,7 +39,7 @@ LIST_DEPLOYMENTS_HINT = ("HINT: You can list all deployments, executing "
 LIST_VERIFICATIONS_HINT = ("HINT: You can list all verifications, executing "
                            "command `rally verify list`.")
 
-DEFAULT_REPORT_TYPES = ("HTML", "JSON")
+DEFAULT_REPORT_TYPES = ("HTML", "HTML-Static", "JSON")
 
 
 class VerifyCommands(object):
@@ -601,7 +601,7 @@ class VerifyCommands(object):
                    required=False, default="json",
                    help="Report type (Defaults to JSON). Out-of-the-box types:"
                         " %s. HINT: You can list all types, executing `rally "
-                        "plugins list --plugin-base VerificationReporter` "
+                        "plugin list --plugin-base VerificationReporter` "
                         "command." % ", ".join(DEFAULT_REPORT_TYPES))
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
