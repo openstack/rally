@@ -453,3 +453,13 @@ class CinderScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("cinder").volume_encryption_types.create(
             volume_type, specs)
+
+    @atomic.action_timer("cinder.list_encryption_type")
+    def _list_encryption_type(self, search_opts=None):
+        """List all volume encryption types.
+
+        :param search_opts: Options used when search for encryption types
+        :return: a list of :class: VolumeEncryptionType instances
+        """
+        return self.admin_clients("cinder").volume_encryption_types.list(
+            search_opts)

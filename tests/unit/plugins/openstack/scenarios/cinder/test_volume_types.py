@@ -43,3 +43,17 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             fakeargs="fakeargs")
         scenario._create_encryption_type.assert_called_once_with(
             scenario._create_volume_type.return_value, "fakespecs")
+
+    def test_create_and_list_encryption_type(self):
+        scenario = volume_types.CreateAndListEncryptionType(self.context)
+        scenario._create_volume_type = mock.Mock()
+        scenario._create_encryption_type = mock.Mock()
+        scenario._list_encryption_type = mock.Mock()
+        scenario.run(specs="fakespecs", search_opts="fakeopts",
+                     fakeargs="fakeargs")
+        scenario._create_volume_type.assert_called_once_with(
+            fakeargs="fakeargs")
+        scenario._create_encryption_type.assert_called_once_with(
+            scenario._create_volume_type.return_value, "fakespecs")
+        scenario._list_encryption_type.assert_called_once_with(
+            "fakeopts")
