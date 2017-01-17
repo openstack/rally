@@ -170,4 +170,5 @@ class HTMLReporter(JSONReporter):
 
 @reporter.configure("html-static")
 class HTMLStaticReporter(HTMLReporter):
+    """Generates verification report in HTML format with embedded JS/CSS."""
     INCLUDE_LIBS = True
