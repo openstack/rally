@@ -103,12 +103,14 @@ class ArgsValidatorTestCase(test.TestCase):
 class RequiredParameterValidatorTestCase(test.TestCase):
 
     @ddt.data(({"args": {"a": 10, "b": 20}}, "a", None, None),
-              ({"args": {"a": 10, "b": 20}}, ("a", "b", "c"), None,
+              ({"args": {"a": 10, "b": 20}}, "c", None,
                "c parameters are not defined in the benchmark config file"),
-              ({"args": {"a": 10, "b": {"c": 20, "d": 30}}}, ("c", "d"),
-               "b", None),
-              ({"args": {"a": 10, "b": {"c": 20, "d": 30}}}, ("c", "e"), "b",
-               "e parameters are not defined in the benchmark config file"))
+              ({"args": {"a": 10, "b": {"c": 20}}}, [("b", "c")],
+               None, None),
+              ({"args": {"a": 10, "c": 20}}, [("b", "c")],
+               None, None),
+              ({"args": {"a": 10}}, [("b", "c")], None,
+               "c parameters are not defined in the benchmark config file"))
     @ddt.unpack
     def test_validate(self, config, params, subdict, err_msg):
         validator = validators.RequiredParameterValidator(params, subdict)

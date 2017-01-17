@@ -883,6 +883,29 @@
   CinderVolumeTypes.create_and_delete_encryption_type:
     -
       args:
+        provider: "LuksEncryptor"
+        cipher: "aes-xts-plain64"
+        key_size: 512
+        control_location: "front-end"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
         create_specs:
           provider: "LuksEncryptor"
           cipher: "aes-xts-plain64"
@@ -896,7 +919,12 @@
         users:
           tenants: 2
           users_per_tenant: 2
-        volume_types: ["test_type"]
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
       sla:
         failure_rate:
           max: 0
@@ -904,14 +932,13 @@
   CinderVolumeTypes.create_volume_type_and_encryption_type:
     -
       args:
-        specs:
-          provider: "LuksEncryptor"
-          cipher: "aes-xts-plain64"
-          key_size: 512
-          control_location: "front-end"
+        provider: "LuksEncryptor"
+        cipher: "aes-xts-plain64"
+        key_size: 512
+        control_location: "front-end"
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -920,11 +947,9 @@
       sla:
         failure_rate:
           max: 0
-
-  CinderVolumeTypes.create_and_list_encryption_type:
     -
       args:
-        specs:
+        create_specs:
           provider: "LuksEncryptor"
           cipher: "aes-xts-plain64"
           key_size: 512
@@ -937,6 +962,55 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  CinderVolumeTypes.create_and_list_encryption_type:
+    -
+      args:
+        provider: "LuksEncryptor"
+        cipher: "aes-xts-plain64"
+        key_size: 512
+        control_location: "front-end"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        create_specs:
+          provider: "LuksEncryptor"
+          cipher: "aes-xts-plain64"
+          key_size: 512
+          control_location: "front-end"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
       sla:
         failure_rate:
           max: 0
@@ -1022,6 +1096,31 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  CinderVolumeTypes.create_get_and_delete_encryption_type:
+    -
+      args:
+        provider: "LuksEncryptor"
+        cipher: "aes-xts-plain64"
+        key_size: 512
+        control_location: "front-end"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        volume_types: [
+          "test_type1",
+          "test_type2",
+          "test_type3",
+          "test_type4"
+        ]
       sla:
         failure_rate:
           max: 0
