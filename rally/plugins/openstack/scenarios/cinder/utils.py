@@ -448,6 +448,15 @@ class CinderScenario(scenario.OpenStackScenario):
         """
         return volume_type.set_keys(metadata)
 
+    @atomic.action_timer("cinder.get_volume_type")
+    def _get_volume_type(self, volume_type):
+        """get details of volume_type.
+
+        :param volume_type: The ID of the :class:`VolumeType` to get
+        :rtype: :class:`VolumeType`
+        """
+        return self.admin_clients("cinder").volume_types.get(volume_type)
+
     @atomic.action_timer("cinder.transfer_create")
     def _transfer_create(self, volume_id):
         """Create a volume transfer.

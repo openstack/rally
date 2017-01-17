@@ -31,6 +31,15 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
                               "name": "fake_name"}]})
         return context
 
+    def test_create_and_get_volume_type(self):
+        scenario = volume_types.CreateAndGetVolumeType(self.context)
+        scenario._create_volume_type = mock.Mock()
+        scenario._get_volume_type = mock.Mock()
+        scenario.run(fakeargs="f")
+        scenario._create_volume_type.assert_called_once_with(fakeargs="f")
+        scenario._get_volume_type.assert_called_once_with(
+            scenario._create_volume_type.return_value)
+
     def test_create_and_delete_volume_type(self):
         scenario = volume_types.CreateAndDeleteVolumeType(self.context)
         scenario._create_volume_type = mock.Mock()
