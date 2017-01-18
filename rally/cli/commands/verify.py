@@ -187,7 +187,7 @@ class VerifyCommands(object):
                 "verifier virtual environment, you do it at your own risk!"))
 
     @cliutils.help_group("verifier")
-    @cliutils.args("--id", dest="verifier_id", type=str,
+    @cliutils.args("--id", dest="verifier_id", type=str, required=True,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>", required=False,
@@ -201,10 +201,8 @@ class VerifyCommands(object):
                         "verifications of this deployment will be deleted. "
                         "Use this argument carefully! You can delete "
                         "verifications that may be important to you.")
-    @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
-    def delete_verifier(self, api, verifier_id=None, deployment=None,
-                        force=False):
+    def delete_verifier(self, api, verifier_id, deployment=None, force=False):
         """Delete a verifier."""
         api.verifier.delete(verifier_id, deployment, force)
 
@@ -640,11 +638,9 @@ class VerifyCommands(object):
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", nargs="+", dest="verification_uuid", type=str,
-                   help="UUIDs of verifications. HINT: You can list all "
-                        "verifications, executing command `rally verify "
-                        "list`")
-    @envutils.with_default_verification_uuid
-    def delete(self, api, verification_uuid=None):
+                   required=True,
+                   help="UUIDs of verifications. " + LIST_VERIFICATIONS_HINT)
+    def delete(self, api, verification_uuid):
         """Delete a verification or a few verifications."""
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]

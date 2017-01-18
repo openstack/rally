@@ -37,3 +37,4 @@ more complicated cases.
    tutorial/step_7_working_with_multple_openstack_clouds
    tutorial/step_8_discovering_more_plugins
    tutorial/step_9_deploying_openstack
+   tutorial/step_10_verifying_cloud_via_tempest_verifier
