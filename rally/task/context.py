@@ -50,10 +50,10 @@ def configure(name, order, hidden=False):
     return wrapper
 
 
-@plugin.base()
+# TODO(andreykurilin): move it to some common place.
 @six.add_metaclass(abc.ABCMeta)
-class Context(plugin.Plugin, functional.FunctionalMixin,
-              utils.RandomNameGeneratorMixin):
+class BaseContext(plugin.Plugin, functional.FunctionalMixin,
+                  utils.RandomNameGeneratorMixin):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement
@@ -88,7 +88,6 @@ class Context(plugin.Plugin, functional.FunctionalMixin,
             #                   however we handle this
             self.config = config
         self.context = ctx
-        self.task = self.context.get("task", {})
 
     def __lt__(self, other):
         return self.get_order() < other.get_order()
@@ -145,6 +144,13 @@ class Context(plugin.Plugin, functional.FunctionalMixin,
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.cleanup()
+
+
+@plugin.base()
+class Context(BaseContext):
+    def __init__(self, ctx):
+        super(Context, self).__init__(ctx)
+        self.task = self.context.get("task", {})
 
 
 class ContextManager(object):
