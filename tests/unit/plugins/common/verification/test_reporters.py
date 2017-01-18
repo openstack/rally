@@ -15,6 +15,7 @@
 import collections
 import datetime as dt
 
+import ddt
 import mock
 
 from rally.common import utils
@@ -258,102 +259,22 @@ class JSONReporterTestCase(test.TestCase):
                                            indent=4)
 
 
+@ddt.ddt
 class HTMLReporterTestCase(test.TestCase):
     @mock.patch("%s.utils" % PATH)
     @mock.patch("%s.json.dumps" % PATH)
-    def test_generate(self, mock_dumps, mock_utils):
+    @ddt.data((reporters.HTMLReporter, False),
+              (reporters.HTMLStaticReporter, True))
+    @ddt.unpack
+    def test_generate(self, cls, include_libs, mock_dumps, mock_utils):
         mock_render = mock_utils.get_template.return_value.render
 
-        reporter = reporters.HTMLReporter(get_verifications(), None)
+        reporter = cls(get_verifications(), None)
 
         self.assertEqual({"print": mock_render.return_value},
                          reporter.generate())
         mock_render.assert_called_once_with(data=mock_dumps.return_value,
-                                            include_libs=False)
-        mock_utils.get_template.assert_called_once_with(
-            "verification/report.html")
-
-        self.assertEqual(1, mock_dumps.call_count)
-        args, kwargs = mock_dumps.call_args
-        self.assertTrue(not kwargs)
-        self.assertEqual(1, len(args))
-        ctx = args[0]
-        self.assertEqual({"uuids", "verifications", "tests",
-                          "show_comparison_note"},
-                         set(ctx.keys()))
-        self.assertEqual(["foo-bar-1", "foo-bar-2", "foo-bar-3"],
-                         list(ctx["uuids"]))
-        self.assertTrue(ctx["show_comparison_note"])
-        self.assertEqual({
-            "some.test.TestCase.test_foo[id=iiiidddd;smoke]": {
-                "by_verification": {"foo-bar-1": {"details": None,
-                                                  "duration": "8",
-                                                  "status": "success"},
-                                    "foo-bar-2": {"details": None,
-                                                  "duration": "8 (+0.0)",
-                                                  "status": "success"},
-                                    "foo-bar-3": {"details": None,
-                                                  "duration": "8 (+0.0)",
-                                                  "status": "success"}},
-                "has_details": False,
-                "name": "some.test.TestCase.test_foo",
-                "tags": ["smoke", "id"]},
-            "some.test.TestCase.test_failed": {
-                "by_verification": {"foo-bar-2": {"details": "HEEEEEEELP",
-                                                  "duration": "8",
-                                                  "status": "fail"},
-                                    "foo-bar-3": {"details": "HEEEEEEELP",
-                                                  "duration": "7 (-1.0)",
-                                                  "status": "fail"}},
-                "has_details": True,
-                "name": "some.test.TestCase.test_failed",
-                "tags": []},
-            "some.test.TestCase.test_skipped": {
-                "by_verification": {
-                    "foo-bar-1": {"details": "Skipped until Bug: https://laun"
-                                             "chpad.net/bugs/666 is resolved.",
-                                  "duration": "",
-                                  "status": "skip"},
-                    "foo-bar-2": {"details": "Skipped until Bug: https://laun"
-                                             "chpad.net/bugs/666 is resolved.",
-                                  "duration": "",
-                                  "status": "skip"},
-                    "foo-bar-3": {"details": "Skipped until Bug: https://laun"
-                                             "chpad.net/bugs/666 is resolved.",
-                                  "duration": "",
-                                  "status": "skip"}},
-                "has_details": True,
-                "name": "some.test.TestCase.test_skipped",
-                "tags": []},
-            "some.test.TestCase.test_xfail": {
-                "by_verification": {
-                    "foo-bar-1": {"details": "something\n\nHEEELP",
-                                  "duration": "3",
-                                  "status": "xfail"},
-                    "foo-bar-2": {"details": "something\n\nHEEELP",
-                                  "duration": "4 (+1.0)",
-                                  "status": "xfail"},
-                    "foo-bar-3": {"details": "something\n\nHEEELP",
-                                  "duration": "3 (+0.0)",
-                                  "status": "xfail"}},
-                "has_details": True,
-                "name": "some.test.TestCase.test_xfail",
-                "tags": []}},
-            ctx["tests"])
-
-
-class HTMLStaticReporterTestCase(test.TestCase):
-    @mock.patch("%s.utils" % PATH)
-    @mock.patch("%s.json.dumps" % PATH)
-    def test_generate(self, mock_dumps, mock_utils):
-        mock_render = mock_utils.get_template.return_value.render
-
-        reporter = reporters.HTMLStaticReporter(get_verifications(), None)
-
-        self.assertEqual({"print": mock_render.return_value},
-                         reporter.generate())
-        mock_render.assert_called_once_with(data=mock_dumps.return_value,
-                                            include_libs=True)
+                                            include_libs=include_libs)
         mock_utils.get_template.assert_called_once_with(
             "verification/report.html")
 
