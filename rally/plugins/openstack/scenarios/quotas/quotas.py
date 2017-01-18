@@ -73,6 +73,21 @@ class CinderUpdate(utils.QuotasScenario):
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
+                    name="Quotas.cinder_get")
+class CinderGet(utils.QuotasScenario):
+
+    def run(self):
+        """Get quotas for Cinder.
+
+        Measure the "cinder quota-show" command performance
+
+        """
+        self._get_quotas("cinder", self.context["tenant"]["id"])
+
+
+@validation.required_services(consts.Service.CINDER)
+@validation.required_openstack(admin=True, users=True)
+@scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
                     name="Quotas.cinder_update_and_delete")
 class CinderUpdateAndDelete(utils.QuotasScenario):
 
