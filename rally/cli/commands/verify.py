@@ -133,14 +133,13 @@ class VerifyCommands(object):
         verifiers = api.verifier.list(status)
         if verifiers:
             fields = ["UUID", "Name", "Type", "Namespace", "Created at",
-                      "Status", "Version", "System-wide", "Active"]
-            if logging.is_debug():
-                fields.append("Location")
+                      "Updated at", "Status", "Version", "System-wide",
+                      "Active"]
             cv = envutils.get_global(envutils.ENV_VERIFIER)
             formatters = {
                 "Created at": lambda v: v.created_at.replace(microsecond=0),
+                "Updated at": lambda v: v.updated_at.replace(microsecond=0),
                 "Active": lambda v: u"\u2714" if v.uuid == cv else "",
-                "Location": lambda v: v.manager.repo_dir
             }
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
@@ -149,22 +148,21 @@ class VerifyCommands(object):
                     "command `rally verify create-verifier`."))
 
     @cliutils.help_group("verifier")
-    @cliutils.args("--verifier-id", dest="verifier_id", type=str,
-                   metavar="<id>",
+    @cliutils.args("--id", dest="verifier_id", type=str,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>", required=False,
-                   help="Deployment name or UUID. If specified, only "
+                   help="Deployment name or UUID. If specified, only the "
                         "deployment-specific data will be deleted for "
                         "verifier. " + LIST_DEPLOYMENTS_HINT)
     @cliutils.args("--force", dest="force", action="store_true",
                    required=False,
                    help="Delete all stored verifications of the specified "
-                        "verifier. If deployment specified, only verifications"
-                        " of this deployment will be deleted. Use this "
-                        "argument carefully! You can delete verifications "
-                        "that may be important to you.")
-    @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
+                        "verifier. If a deployment specified, only "
+                        "verifications of this deployment will be deleted. "
+                        "Use this argument carefully! You can delete "
+                        "verifications that may be important to you.")
+    @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def delete_verifier(self, api, verifier_id=None, deployment=None,
                         force=False):
@@ -218,17 +216,13 @@ class VerifyCommands(object):
                 "command to update the config file."))
 
     @cliutils.help_group("verifier")
-    @cliutils.args("--verifier-id", dest="verifier_id", type=str,
-                   metavar="<id>",
+    @cliutils.args("--id", dest="verifier_id", type=str,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>",
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
     @cliutils.args("--reconfigure", dest="reconfigure", action="store_true",
                    required=False, help="Reconfigure verifier.")
-    @cliutils.args("--force", dest="force", action="store_true",
-                   required=False,
-                   help="(Re)configure verifier regardless of its status.")
     @cliutils.args("--extend", dest="extra_options", type=str,
                    metavar="<path/json/yaml>", required=False,
                    help="Extend verifier configuration with extra options. "
@@ -242,10 +236,10 @@ class VerifyCommands(object):
     @cliutils.args("--show", dest="show", action="store_true", required=False,
                    help="Show verifier configuration.")
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
-    @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
+    @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def configure_verifier(self, api, verifier_id=None, deployment=None,
-                           reconfigure=False, force=False, extra_options=None,
+                           reconfigure=False, extra_options=None,
                            new_configuration=None, show=False):
         """Configure a verifier for a specific deployment."""
 
@@ -265,11 +259,10 @@ class VerifyCommands(object):
             with open(new_configuration) as f:
                 config = f.read()
             api.verifier.override_configuration(verifier_id, deployment,
-                                                config, force)
+                                                config)
         else:
             if extra_options:
                 if os.path.isfile(extra_options):
-                    print(extra_options)
                     conf = configparser.ConfigParser()
                     conf.read(extra_options)
                     extra_options = dict(conf._sections)
@@ -285,11 +278,10 @@ class VerifyCommands(object):
 
             config = api.verifier.configure(verifier_id, deployment,
                                             extra_options=extra_options,
-                                            reconfigure=reconfigure,
-                                            force=force)
+                                            reconfigure=reconfigure)
 
         if show:
-            print("\n" + config.strip() + "\n")
+            print("\n%s\n" % config.strip())
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -360,8 +352,7 @@ class VerifyCommands(object):
         api.verifier.delete_extension(verifier_id, name)
 
     @cliutils.help_group("verification")
-    @cliutils.args("--verifier-id", dest="verifier_id", type=str,
-                   metavar="<id>",
+    @cliutils.args("--id", dest="verifier_id", type=str,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>",
@@ -392,7 +383,7 @@ class VerifyCommands(object):
                    help="Not to set the finished verification as the default "
                         "verification for future operations.")
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
-    @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
+    @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def start(self, api, verifier_id=None, deployment=None, pattern=None,
               concur=0, load_list=None, skip_list=None, xfail_list=None,
@@ -487,6 +478,7 @@ class VerifyCommands(object):
         """Show a verification."""
         verification = api.verification.get(verification_uuid)
         verifier = api.verifier.get(verification.verifier_uuid)
+        deployment = api.deployment.get(verification.deployment_uuid)
 
         def run_args_formatter(v):
             run_args = []
@@ -509,12 +501,14 @@ class VerifyCommands(object):
                   "Success", "Skipped", "Expected failures",
                   "Unexpected success", "Failures"]
         formatters = {
-            "Verifier name": lambda v: verifier.name,
+            "Verifier name": lambda v: "%s (UUID: %s)" % (verifier.name,
+                                                          verifier.uuid),
             "Verifier type": (
                 lambda v: "%s (namespace: %s)" % (verifier.type,
                                                   verifier.namespace)),
             "Deployment name": (
-                lambda v: api.deployment.get(v.deployment_uuid)["name"]),
+                lambda v: "%s (UUID: %s)" % (deployment["name"],
+                                             deployment["uuid"])),
             "Started at": lambda v: v.created_at.replace(microsecond=0),
             "Finished at": lambda v: v.updated_at.replace(microsecond=0),
             "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
@@ -527,8 +521,9 @@ class VerifyCommands(object):
                             table_label="Verification")
 
         if detailed:
-            print(_("\nRun arguments:"))
-            print(json.dumps(verification.run_args, indent=4) + "\n")
+            h = _("Run arguments")
+            print("\n%s" % cliutils.make_header(h, len(h)).strip())
+            print("\n%s\n" % json.dumps(verification.run_args, indent=4))
 
         # Tests table
         tests = verification.tests
@@ -541,18 +536,20 @@ class VerifyCommands(object):
                             sortby_index=index)
 
         if detailed:
-            # Tracebacks
             failures = [t for t in tests.values() if t["status"] == "fail"]
             if failures:
-                print(_("\nFailures:"))
-                for t in failures:
-                    header = cliutils.make_header("FAIL: %s" % t["name"])
-                    formatted_test = "%s\n" % (header + t["traceback"].strip())
-                    print(formatted_test)
+                h = _("Failures")
+                print("\n%s" % cliutils.make_header(h, len(h)).strip())
+                for f in failures:
+                    header = "%s\n%s\n" % (f["name"], "-" * len(f["name"]))
+                    failure = "\n%s%s\n" % (header, f["traceback"].strip())
+                    print(failure)
+            else:
+                print(_("\nCongratulations! Verification doesn't have failed "
+                        "tests! :)"))
 
     @cliutils.help_group("verification")
-    @cliutils.args("--verifier-id", dest="verifier_id", type=str,
-                   metavar="<id>", required=False,
+    @cliutils.args("--id", dest="verifier_id", type=str, required=False,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>", required=False,
@@ -642,13 +639,13 @@ class VerifyCommands(object):
 
         if "print" in result:
             # NOTE(andreykurilin): we need a separation between logs and
-            #   printed information to be able parsing output
-            print(cliutils.make_header("Verification Report") +
-                  result["print"])
+            #   printed information to be able to parse output
+            h = _("Verification Report")
+            print("\n%s\n%s" % (cliutils.make_header(h, len(h)),
+                                result["print"]))
 
     @cliutils.help_group("verification")
-    @cliutils.args("--verifier-id", dest="verifier_id", type=str,
-                   metavar="<id>", required=False,
+    @cliutils.args("--id", dest="verifier_id", type=str, required=False,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>", required=False,
@@ -664,7 +661,7 @@ class VerifyCommands(object):
                         "verification for future operations.")
     @cliutils.alias("import")
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
-    @envutils.with_default_verifier_id(cli_arg_name="verifier-id")
+    @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def import_results(self, api, verifier_id=None, deployment=None,
                        file_to_parse=None, run_args=None, do_use=True):

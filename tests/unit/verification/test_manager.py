@@ -20,7 +20,7 @@ from rally.verification import manager
 from tests.unit import test
 
 
-DEFAULT_REPO = "git.example.com"
+DEFAULT_REPO = "https://git.example.com"
 DEFAULT_VERSION = 3.14159
 
 
@@ -72,7 +72,9 @@ class VerifierManagerTestCase(test.TestCase):
             mock_context_manager_validate.assert_called_once_with(
                 mock__meta_get.return_value)
 
-    def test__clone(self):
+    @mock.patch("rally.verification.manager.os.path.exists",
+                side_effect=[False, True])
+    def test__clone(self, mock_exists):
         verifier = mock.Mock(source=None)
         vmanager = FakeVerifier(verifier)
         verifier.version = None
@@ -86,8 +88,10 @@ class VerifierManagerTestCase(test.TestCase):
 
         self.check_output.reset_mock()
         verifier.version = "master"
-
         verifier.source = "some_source"
+
+        e = self.assertRaises(exceptions.RallyException, vmanager._clone)
+        self.assertEqual("Source path 'some_source' is not valid.", "%s" % e)
 
         vmanager._clone()
         self.check_output.assert_called_once_with(
@@ -216,9 +220,12 @@ class VerifierManagerTestCase(test.TestCase):
 
     def test_configure(self):
         vmanager = FakeVerifier(mock.Mock())
-        vmanager.configure()
         self.assertRaises(NotImplementedError, vmanager.configure,
                           extra_options={"key": "value"})
+
+    def test_is_configured(self):
+        vmanager = FakeVerifier(mock.Mock())
+        self.assertTrue(vmanager.is_configured())
 
     def test_override_configuration(self):
         # coverage should be 100%...

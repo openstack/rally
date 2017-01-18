@@ -1075,7 +1075,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     [{"uuid": self._37fdbb373e8d_verifier_uuid,
                       "name": self._37fdbb373e8d_verifier_uuid,
                       "type": "some-type",
-                      "status": consts.VerifierStatus.CONFIGURED
+                      "status": consts.VerifierStatus.INSTALLED
                       }])
 
                 for i in range(len(self._37fdbb373e8d_verifications_tests)):

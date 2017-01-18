@@ -14,6 +14,7 @@
 
 import abc
 import os
+import re
 import shutil
 import sys
 
@@ -29,6 +30,15 @@ from rally.verification import utils
 
 
 LOG = logging.getLogger(__name__)
+
+URL_RE = re.compile(
+    r"^(?:http|ftp)s?://"  # http:// or https://
+    r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+"  # domain
+    r"(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain
+    r"localhost|"  # localhost
+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # IP
+    r"(?::\d+)?"  # optional port
+    r"(?:/?|[/?]\S+)$", re.IGNORECASE)
 
 
 class VerifierSetupFailure(exceptions.RallyException):
@@ -125,12 +135,16 @@ class VerifierManager(plugin.Plugin):
                     "where keys are test names and values are reasons.")
 
     def validate(self, run_args):
+        """Validate a verifier context and run arguments."""
         context.ContextManager.validate(self._meta_get("context"))
         self.validate_args(run_args)
 
     def _clone(self):
         """Clone a repo and switch to a certain version."""
         source = self.verifier.source or self._meta_get("default_repo")
+        if not URL_RE.match(source) and not os.path.exists(source):
+            raise exceptions.RallyException("Source path '%s' is not valid."
+                                            % source)
         if logging.is_debug():
             LOG.debug("Cloning verifier repo from %s into %s.", source,
                       self.repo_dir)
@@ -215,20 +229,15 @@ class VerifierManager(plugin.Plugin):
 
     def configure(self, extra_options=None):
         """Configure a verifier."""
-        # NOTE(andreykurilin): Verifier may not require any kind of
-        #   configuration and works with cli arguments or with environment
-        #   variables. Since we do not store anywhere information about require
-        #   verifier configuration or not and we have hardcoded calls to
-        #   configure from different places, let's do not raise
-        #   NotImplementedError by default. Only do it in case of extra options
-        if extra_options is not None:
-            raise NotImplementedError(
-                _LE("'%s' verifiers don't support configuration at all.") %
-                self.get_name())
-        LOG.info(_LI("Nothing to do. '%s' verifiers don't support "
-                     "configuration.") % self.get_name())
+        raise NotImplementedError(
+            _LI("'%s' verifiers don't support configuration at all.")
+            % self.get_name())
 
-    def override_configuration(self, new_content):
+    def is_configured(self):
+        """Check whether a verifier is configured or not."""
+        return True
+
+    def override_configuration(self, new_configuration):
         """Override verifier configuration."""
         raise NotImplementedError(
             _LE("'%s' verifiers don't support configuration at all.")
