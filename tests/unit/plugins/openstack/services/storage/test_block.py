@@ -113,6 +113,24 @@ class BlockTestCase(test.TestCase):
         self.service._impl.upload_volume_to_image.assert_called_once_with(
             "volume", container_format="bare", disk_format="raw", force=False)
 
+    def test_create_qos(self):
+        spaces = {"consumer": "both",
+                  "write_iops_sec": "10",
+                  "read_iops_sec": "1000"}
+
+        self.assertEqual(
+            self.service._impl.create_qos.return_value,
+            self.service.create_qos(spaces)
+        )
+        self.service._impl.create_qos.assert_called_once_with(spaces)
+
+    def test_list_qos(self):
+        self.assertEqual(
+            self.service._impl.list_qos.return_value,
+            self.service.list_qos(True)
+        )
+        self.service._impl.list_qos.assert_called_once_with(True)
+
     def test_create_snapshot(self):
         self.assertEqual(
             self.service._impl.create_snapshot.return_value,

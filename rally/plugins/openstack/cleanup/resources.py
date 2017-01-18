@@ -547,6 +547,11 @@ class CinderQuotas(QuotaMixin, base.ResourceManager):
     pass
 
 
+@base.resource("cinder", "qos_specs", order=next(_cinder_order),
+               admin_required=True, perform_for_admin_only=True)
+class CinderQos(base.ResourceManager):
+    pass
+
 # MANILA
 
 _manila_order = get_order(450)

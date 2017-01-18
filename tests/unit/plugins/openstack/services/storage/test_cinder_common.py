@@ -227,6 +227,30 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         ])
         glance.get_image.assert_called_once_with(1)
 
+    def test_create_qos(self):
+        specs = {"consumer": "both",
+                 "write_iops_sec": "10",
+                 "read_iops_sec": "1000"}
+        random_name = "random_name"
+        self.service.generate_random_name = mock.MagicMock(
+            return_value=random_name)
+
+        result = self.service.create_qos(specs)
+        self.assertEqual(
+            self.cinder.qos_specs.create.return_value,
+            result
+        )
+        self.cinder.qos_specs.create.assert_called_once_with(random_name,
+                                                             specs)
+
+    def test_list_qos(self):
+        result = self.service.list_qos(True)
+        self.assertEqual(
+            self.cinder.qos_specs.list.return_value,
+            result
+        )
+        self.cinder.qos_specs.list.assert_called_once_with(True)
+
     def test_delete_snapshot(self):
         snapshot = mock.Mock()
         self.service.delete_snapshot(snapshot)
@@ -451,6 +475,23 @@ class UnifiedCinderMixinTestCase(test.TestCase):
                                                 disk_format="raw"))
         self.service._impl.upload_volume_to_image.assert_called_once_with(
             "volume", container_format="bare", disk_format="raw", force=False)
+
+    def test_create_qos(self):
+        specs = {"consumer": "both",
+                 "write_iops_sec": "10",
+                 "read_iops_sec": "1000"}
+        self.assertEqual(
+            self.service._impl.create_qos.return_value,
+            self.service.create_qos(specs)
+        )
+        self.service._impl.create_qos.assert_called_once_with(specs)
+
+    def test_list_qos(self):
+        self.assertEqual(
+            self.service._impl.list_qos.return_value,
+            self.service.list_qos(True)
+        )
+        self.service._impl.list_qos.assert_called_once_with(True)
 
     def test_delete_snapshot(self):
         self.service.delete_snapshot("snapshot")
