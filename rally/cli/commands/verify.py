@@ -50,12 +50,21 @@ class VerifyCommands(object):
         print("\n======\n"
               "Totals"
               "\n======\n"
-              "Ran: %(tests_count)s tests in %(tests_duration)s sec.\n"
+              "\nRan: %(tests_count)s tests in %(tests_duration)s sec.\n"
               " - Success: %(success)s\n"
               " - Skipped: %(skipped)s\n"
               " - Expected failures: %(expected_failures)s\n"
               " - Unexpected success: %(unexpected_success)s\n"
               " - Failures: %(failures)s\n" % totals)
+
+    @staticmethod
+    def _print_failures(h_text, failures, symbol="-"):
+        print("\n%s" % cliutils.make_header(
+            h_text, size=len(h_text), symbol=symbol).strip())
+        for f in failures:
+            header = "%s\n%s\n" % (f["name"], "-" * len(f["name"]))
+            failure = "\n%s%s\n" % (header, f["traceback"].strip())
+            print(failure)
 
     @cliutils.args("--namespace", dest="namespace", type=str, metavar="<name>",
                    required=False,
@@ -383,6 +392,10 @@ class VerifyCommands(object):
                         "considered as expected failures. "
                         "Format: json or yaml like a dictionary where keys "
                         "are test names and values are reasons.")
+    @cliutils.args("--detailed", dest="detailed", action="store_true",
+                   required=False,
+                   help="Show verification details such as errors of failed "
+                        "tests.")
     @cliutils.args("--no-use", dest="do_use", action="store_false",
                    help="Not to set the finished verification as the default "
                         "verification for future operations.")
@@ -391,7 +404,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def start(self, api, verifier_id=None, deployment=None, tags=None,
               pattern=None, concur=0, load_list=None, skip_list=None,
-              xfail_list=None, do_use=True):
+              xfail_list=None, detailed=False, do_use=True):
         """Start a verification (run verifier tests)."""
         if pattern and load_list:
             print(_("Arguments '--pattern' and '--load-list' cannot be used "
@@ -429,6 +442,17 @@ class VerifyCommands(object):
 
         verification, results = api.verification.start(verifier_id, deployment,
                                                        tags=tags, **run_args)
+
+        if detailed:
+            failures = results.filter_tests("fail").values()
+            if failures:
+                h_text = "Failed %d %s - output below:" % (
+                    len(failures), "tests" if len(failures) > 1 else "test")
+                self._print_failures(h_text, failures, "=")
+            else:
+                print(_("\nCongratulations! Verification doesn't have failed "
+                        "tests! :)"))
+
         self._print_totals(results.totals)
 
         if do_use:
@@ -543,12 +567,7 @@ class VerifyCommands(object):
         if detailed:
             failures = [t for t in tests.values() if t["status"] == "fail"]
             if failures:
-                h = _("Failures")
-                print("\n%s" % cliutils.make_header(h, len(h)).strip())
-                for f in failures:
-                    header = "%s\n%s\n" % (f["name"], "-" * len(f["name"]))
-                    failure = "\n%s%s\n" % (header, f["traceback"].strip())
-                    print(failure)
+                self._print_failures("Failures", failures)
             else:
                 print(_("\nCongratulations! Verification doesn't have failed "
                         "tests! :)"))
