@@ -210,11 +210,13 @@ class UserGenerator(context.Context):
             user_credential = objects.Credential(
                 self.credential.auth_url, user.name, password,
                 self.context["tenants"][tenant_id]["name"],
-                consts.EndpointPermission.USER, self.credential.region_name,
-                project_domain_name=project_dom, user_domain_name=user_dom,
+                consts.EndpointPermission.USER,
+                project_domain_name=project_dom,
+                user_domain_name=user_dom,
                 endpoint_type=self.credential.endpoint_type,
                 https_insecure=self.credential.insecure,
-                https_cacert=self.credential.cacert)
+                https_cacert=self.credential.cacert,
+                region_name=self.credential.region_name)
             users.append({"id": user.id,
                           "credential": user_credential,
                           "tenant_id": tenant_id})
