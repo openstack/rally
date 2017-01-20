@@ -55,6 +55,7 @@ REPORT_RESPONSE_SCHEMA = {
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class VerificationReporter(plugin.Plugin):
+    """Base class for all reporters for verifications."""
     def __init__(self, verifications, output_destination):
         """Init reporter
 
@@ -78,9 +79,10 @@ class VerificationReporter(plugin.Plugin):
         """Generate report
 
         :returns: a dict with 3 optional elements:
+
             - key "files" with a dictionary of files to save on disk.
               keys are paths, values are contents;
-            - key "print" - data to print at cli level
+            - key "print" - data to print at CLI level
             - key "open" - path to file which should be open in case of
               --open flag
         """
@@ -89,12 +91,12 @@ class VerificationReporter(plugin.Plugin):
     def make(reporter_cls, verifications, output_destination):
         """Initialize reporter, generate and validate report.
 
+        It is a base method which is called from API layer. It cannot be
+        overridden. Do not even try! :)
+
         :param reporter_cls: class of VerificationReporter to be used
         :param verifications: list of results to generate report for
         :param output_destination: destination of report
-
-        NOTE(andreykurilin): this staticmethod is designed to ensure that
-         output of reporter in right format.
         """
         report = reporter_cls(verifications, output_destination).generate()
 

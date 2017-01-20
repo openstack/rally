@@ -80,6 +80,7 @@ class TestrContext(context.VerifierContext):
 
 
 class TestrLauncher(manager.VerifierManager):
+    """Testr wrapper."""
 
     @property
     def run_environ(self):

@@ -13,6 +13,7 @@
 #    under the License.
 
 import abc
+import inspect
 import os
 import re
 import shutil
@@ -58,7 +59,7 @@ def configure(name, namespace="default", default_repo=None,
     def decorator(plugin):
         plugin._configure(name, namespace)
         plugin._meta_set("default_repo", default_repo)
-        plugin._meta_set("default_version", default_version)
+        plugin._meta_set("default_version", default_version or "master")
         plugin._meta_set("context", context or {})
         return plugin
 
@@ -68,6 +69,46 @@ def configure(name, namespace="default", default_repo=None,
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class VerifierManager(plugin.Plugin):
+    """Verifier base class
+
+    This class provides an interface for operating specific tool.
+    """
+
+    # These dicts will be used for building docs. PS: we should find a better
+    # place for them
+    RUN_ARGS = {"pattern": "a regular expression of tests to launch.",
+                "concurrency": "Number of processes to be used for launching "
+                               "tests. In case of 0 value, number of processes"
+                               " will be equal to number of CPU cores.",
+                "load_list": "a list of tests to launch.",
+                "skip_list": "a list of tests to skip (actually, it is dict "
+                             "where keys are names of tests, values are "
+                             "reasons)."}
+
+    @classmethod
+    def _get_doc(cls):
+        run_args = {}
+        for parent in inspect.getmro(cls):
+            if hasattr(parent, "RUN_ARGS"):
+                for k, v in parent.RUN_ARGS.items():
+                    run_args.setdefault(k, v)
+
+        doc = cls.__doc__ or ""
+        doc += "\n**Running arguments**:\n%s" % "\n".join(
+            sorted(["  * *%s*: %s" % (k, v) for k, v in run_args.items()]))
+
+        doc += "\n**Installation arguments**:\n"
+        doc += ("  * *system_wide*: Whether or not to use the system-wide "
+                "environment for verifier instead of a virtual environment. "
+                "Defaults to False.\n"
+                "  * *version*: Branch, tag or commit ID to checkout before "
+                "verifier installation. Defaults to %(default_version)s\n"
+                "  * *source*: Path or URL to the repo to clone verifier from."
+                " Default to %(default_source)s" % {
+                    "default_version": cls._meta_get("default_version"),
+                    "default_source": cls._meta_get("default_repo")})
+
+        return doc
 
     def __init__(self, verifier):
         """Init a verifier manager.
@@ -105,7 +146,10 @@ class VerifierManager(plugin.Plugin):
         return env
 
     def validate_args(self, args):
-        """Validate given arguments."""
+        """Validate given arguments to be used for running verification
+
+        :param args: a dict of arguments with values
+        """
 
         # NOTE(andreykurilin): By default we do not use jsonschema here.
         # So it cannot be extended by inheritors => requires duplication.
@@ -158,7 +202,7 @@ class VerifierManager(plugin.Plugin):
             utils.check_output(["git", "checkout", version], cwd=self.repo_dir)
 
     def install(self):
-        """Install a verifier."""
+        """Clone and install a verifier."""
         utils.create_dir(self.base_dir)
 
         self._clone()
@@ -171,7 +215,8 @@ class VerifierManager(plugin.Plugin):
     def uninstall(self, full=False):
         """Uninstall a verifier.
 
-        :param full: If False, only deployment-specific data will be removed
+        :param full: If False (default behaviour), only deployment-specific
+            data will be removed
         """
         path = self.base_dir if full else self.home_dir
         if os.path.exists(path):
@@ -228,7 +273,14 @@ class VerifierManager(plugin.Plugin):
         utils.check_output(["git", "checkout", version], cwd=self.repo_dir)
 
     def configure(self, extra_options=None):
-        """Configure a verifier."""
+        """Configure a verifier.
+
+        :param extra_options: a dictionary with external verifier specific
+            options for configuration.
+        :raises NotImplementedError: this feature is verifier-specific, so you
+            should override this method in your plugin if it supports
+            configuration
+        """
         raise NotImplementedError(
             _LI("'%s' verifiers don't support configuration at all.")
             % self.get_name())
@@ -238,13 +290,26 @@ class VerifierManager(plugin.Plugin):
         return True
 
     def override_configuration(self, new_configuration):
-        """Override verifier configuration."""
+        """Override verifier configuration
+
+        :param new_configuration: Content which should ve used while overriding
+            existing configuration
+        :raises NotImplementedError: this feature is verifier-specific, so you
+            should override this method in your plugin if it supports
+            configuration
+        """
         raise NotImplementedError(
             _LE("'%s' verifiers don't support configuration at all.")
             % self.get_name())
 
     def extend_configuration(self, extra_options):
-        """Extend verifier configuration with new options."""
+        """Extend verifier configuration with new options.
+
+        :param extra_options: Options to be used for extending configuration
+        :raises NotImplementedError: this feature is verifier-specific, so you
+            should override this method in your plugin if it supports
+            configuration
+        """
         raise NotImplementedError(
             _LE("'%s' verifiers don't support configuration at all.")
             % self.get_name())
@@ -254,7 +319,17 @@ class VerifierManager(plugin.Plugin):
         return ""
 
     def install_extension(self, source, version=None, extra_settings=None):
-        """Install a verifier extension."""
+        """Install a verifier extension.
+
+        :param source: Path or URL to the repo to clone verifier extension from
+        :param version: Branch, tag or commit ID to checkout before verifier
+            extension installation
+        :param extra_settings: Extra installation settings for verifier
+            extension
+        :raises NotImplementedError: this feature is verifier-specific, so you
+            should override this method in your plugin if it supports
+            extensions
+        """
         raise NotImplementedError(
             _LE("'%s' verifiers don't support extensions.") % self.get_name())
 
@@ -263,13 +338,22 @@ class VerifierManager(plugin.Plugin):
         return []
 
     def uninstall_extension(self, name):
-        """Uninstall a verifier extension."""
+        """Uninstall a verifier extension.
+
+        :param name: Name of extension to uninstall
+        :raises NotImplementedError: this feature is verifier-specific, so you
+            should override this method in your plugin if it supports
+            extensions
+        """
         raise NotImplementedError(
             _LE("'%s' verifiers don't support extensions.") % self.get_name())
 
     @abc.abstractmethod
     def list_tests(self, pattern=""):
-        """List all verifier tests."""
+        """List all verifier tests.
+
+        :param pattern: filter list of tests with given regular expression
+        """
 
     def parse_results(self, results_data):
         """Parse subunit results data of a test run."""
@@ -280,7 +364,9 @@ class VerifierManager(plugin.Plugin):
     def run(self, context):
         """Run verifier tests.
 
-        This method should return an object with the following attributes:
+        Verification Component API expects that this method should return an
+        object. There is no special class, you do it as you want, but it should
+        have the following properties:
 
         <object>.totals = {
             "tests_count": <total tests count>,
@@ -302,4 +388,5 @@ class VerifierManager(plugin.Plugin):
             },
             ...
         }
+
         """
