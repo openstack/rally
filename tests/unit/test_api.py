@@ -656,20 +656,23 @@ class VerifierAPITestCase(test.TestCase):
         system_wide = True
         extra_settings = {"verifier_specific_option": "value_for_it"}
 
-        uuid_of_verifier = api._Verifier.create(
-            name, vtype=vtype, namespace=namespace, source=source,
-            version=version, system_wide=system_wide,
+        verifier_obj = mock_verifier_create.return_value
+        verifier_obj.manager._meta_get.side_effect = [namespace, source]
+
+        verifier_uuid = api._Verifier.create(
+            name, vtype=vtype, version=version, system_wide=system_wide,
             extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          namespace=namespace)
+                                                          namespace=None)
         mock___verifier_get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
-            name=name, source=source, system_wide=system_wide, version=version,
-            vtype=vtype, namespace=namespace, extra_settings=extra_settings)
+            name=name, source=None, system_wide=system_wide, version=version,
+            vtype=vtype, namespace=None, extra_settings=extra_settings)
 
-        verifier_obj = mock_verifier_create.return_value
-        self.assertEqual(verifier_obj.uuid, uuid_of_verifier)
+        self.assertEqual(verifier_obj.uuid, verifier_uuid)
+        verifier_obj.update_properties.assert_called_once_with(
+            namespace=namespace, source=source)
         self.assertEqual([mock.call(consts.VerifierStatus.INSTALLING),
                           mock.call(consts.VerifierStatus.INSTALLED)],
                          verifier_obj.update_status.call_args_list)

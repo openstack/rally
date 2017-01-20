@@ -436,9 +436,18 @@ class _Verifier(object):
                 "Verifier with name '%s' already exists! Please, specify "
                 "another name for verifier and try again." % verifier.name)
 
+        properties = {}
+
+        default_namespace = verifier.manager._meta_get("namespace")
+        if not namespace and default_namespace:
+            properties["namespace"] = default_namespace
+
         default_source = verifier.manager._meta_get("default_repo")
         if not source and default_source:
-            verifier.update_properties(source=default_source)
+            properties["source"] = default_source
+
+        if properties:
+            verifier.update_properties(**properties)
 
         verifier.update_status(consts.VerifierStatus.INSTALLING)
         try:

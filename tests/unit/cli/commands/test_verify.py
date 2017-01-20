@@ -80,6 +80,64 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.list.assert_has_calls([mock.call(None),
                                                       mock.call("foo")])
 
+    @mock.patch("rally.cli.commands.verify.envutils.get_global")
+    def test_show_verifier(self, mock_get_global):
+        fake_verifier = self.fake_api.verifier.get.return_value
+        fake_verifier.uuid = "v_uuid"
+        fake_verifier.name = "Verifier!"
+        fake_verifier.type = "CoolTool"
+        fake_verifier.namespace = "ExampleNamespace"
+        fake_verifier.description = "The best tool in the world"
+        fake_verifier.created_at = dt.datetime(2016, 1, 1, 17, 0, 3, 66)
+        fake_verifier.updated_at = dt.datetime(2016, 1, 1, 17, 1, 5, 77)
+        fake_verifier.status = "installed"
+        fake_verifier.source = "https://example.com"
+        fake_verifier.version = "master"
+        fake_verifier.system_wide = False
+        fake_verifier.extra_settings = {}
+        fake_verifier.manager.repo_dir = "./verifiers/repo"
+        fake_verifier.manager.venv_dir = "./verifiers/.venv"
+
+        # It is a hard task to mock default value of function argument, so we
+        # need to apply this workaround
+        original_print_dict = cliutils.print_dict
+        print_dict_calls = []
+
+        def print_dict(*args, **kwargs):
+            print_dict_calls.append(six.StringIO())
+            kwargs["out"] = print_dict_calls[-1]
+            original_print_dict(*args, **kwargs)
+
+        with mock.patch.object(verify.cliutils, "print_dict",
+                               new=print_dict):
+            self.verify.show_verifier(self.fake_api, "v_uuid")
+
+        self.assertEqual(1, len(print_dict_calls))
+
+        self.assertEqual(
+            "+----------------+----------------------------+\n"
+            "| Property       | Value                      |\n"
+            "+----------------+----------------------------+\n"
+            "| UUID           | v_uuid                     |\n"
+            "| Status         | installed                  |\n"
+            "| Created at     | 2016-01-01 17:00:03        |\n"
+            "| Updated at     | 2016-01-01 17:01:05        |\n"
+            "| Active         | -                          |\n"
+            "| Name           | Verifier!                  |\n"
+            "| Description    | The best tool in the world |\n"
+            "| Type           | CoolTool                   |\n"
+            "| Namespace      | ExampleNamespace           |\n"
+            "| Source         | https://example.com        |\n"
+            "| Version        | master                     |\n"
+            "| System-wide    | False                      |\n"
+            "| Extra settings | -                          |\n"
+            "| Location       | ./verifiers/repo           |\n"
+            "| Venv location  | ./verifiers/.venv          |\n"
+            "+----------------+----------------------------+\n",
+            print_dict_calls[0].getvalue())
+
+        self.fake_api.verifier.get.assert_called_once_with("v_uuid")
+
     def test_delete_verifier(self):
         self.verify.delete_verifier(self.fake_api, "v_id", "d_id", force=True)
         self.fake_api.verifier.delete.assert_called_once_with(
