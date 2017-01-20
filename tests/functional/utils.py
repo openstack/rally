@@ -86,6 +86,7 @@ class Rally(object):
         self.tmp_dir = tempfile.mkdtemp()
         self.env = copy.deepcopy(os.environ)
         self.env["HOME"] = self.tmp_dir
+        self.config_filename = None
 
         if force_new_db or ("RCI_KEEP_DB" not in os.environ):
             config_filename = os.path.join(self.tmp_dir, "conf")
@@ -98,6 +99,7 @@ class Rally(object):
             self.args = ["rally", "--config-file", config_filename]
             subprocess.call(["rally-manage", "--config-file", config_filename,
                              "db", "recreate"], env=self.env)
+            self.config_filename = config_filename
         else:
             self.args = ["rally"]
             subprocess.call(["rally-manage", "db", "recreate"], env=self.env)
