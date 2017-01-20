@@ -39,9 +39,9 @@ Contents
    overview/index
    install_and_upgrade/index
    quick_start/index
-   cli/cli_reference
-   components/task
-   components/verification
+   cli_reference
+   task/index
+   verification/index
    plugins/index
    contribute
    feature_requests
