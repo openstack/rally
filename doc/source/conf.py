@@ -60,7 +60,8 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "ext.cli_reference",
-    "ext.plugin_reference"
+    "ext.plugin_reference",
+    "ext.include_vars"
 ]
 todo_include_todos = True
 
