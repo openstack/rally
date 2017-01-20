@@ -302,8 +302,6 @@ class DeploymentCommands(object):
                 deployment["uuid"],
                 deployment["admin"] or deployment["users"][0])
             print("~/.rally/openrc was updated\n\nHINTS:\n"
-                  "* To get your cloud resources, run:\n\t"
-                  "rally show [flavors|images|keypairs|networks|secgroups]\n"
                   "\n* To use standard OpenStack clients, set up your env by "
                   "running:\n\tsource ~/.rally/openrc\n"
                   "  OpenStack clients are now configured, e.g run:\n\t"
