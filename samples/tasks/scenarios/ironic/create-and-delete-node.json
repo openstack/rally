@@ -2,7 +2,10 @@
     "IronicNodes.create_and_delete_node": [
         {
             "args": {
-                "driver": "pxe_ssh"
+                "driver": "pxe_ssh",
+                "properties": {
+                    "capabilities": "boot_option:local"
+                }
             },
             "runner": {
                 "type": "constant",

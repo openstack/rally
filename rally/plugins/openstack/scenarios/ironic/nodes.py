@@ -32,12 +32,14 @@ from rally.task import validation
                     name="IronicNodes.create_and_list_node")
 class CreateAndListNode(utils.IronicScenario):
 
-    def run(self, driver, associated=None, maintenance=None, detail=False,
-            sort_dir=None, marker=None, limit=None, sort_key=None,
-            **kwargs):
+    def run(self, driver, properties=None, associated=None, maintenance=None,
+            detail=False, sort_dir=None, marker=None, limit=None,
+            sort_key=None, **kwargs):
         """Create and list nodes.
 
         :param driver: The name of the driver used to manage this Node.
+        :param properties: Key/value pair describing the physical
+            characteristics of the node.
         :param associated: Optional argument of list request. Either a Boolean
             or a string representation of a Boolean that indicates whether to
             return a list of associated (True or "True") or unassociated
@@ -56,7 +58,7 @@ class CreateAndListNode(utils.IronicScenario):
         :param kwargs: Optional additional arguments for node creation
         """
 
-        node = self._create_node(driver, **kwargs)
+        node = self._create_node(driver, properties, **kwargs)
         list_nodes = self._list_nodes(
             associated=associated, maintenance=maintenance, detail=detail,
             sort_dir=sort_dir)
@@ -70,11 +72,13 @@ class CreateAndListNode(utils.IronicScenario):
                     name="IronicNodes.create_and_delete_node")
 class CreateAndDeleteNode(utils.IronicScenario):
 
-    def run(self, driver, **kwargs):
+    def run(self, driver, properties=None, **kwargs):
         """Create and delete node.
 
         :param driver: The name of the driver used to manage this Node.
+        :param properties: Key/value pair describing the physical
+            characteristics of the node.
         :param kwargs: Optional additional arguments for node creation
         """
-        node = self._create_node(driver, **kwargs)
+        node = self._create_node(driver, properties, **kwargs)
         self._delete_node(node)

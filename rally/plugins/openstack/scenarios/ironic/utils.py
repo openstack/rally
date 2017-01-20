@@ -61,15 +61,18 @@ class IronicScenario(scenario.OpenStackScenario):
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits
 
     @atomic.action_timer("ironic.create_node")
-    def _create_node(self, driver, **kwargs):
+    def _create_node(self, driver, properties, **kwargs):
         """Create node immediately.
 
         :param driver: The name of the driver used to manage this Node.
+        :param properties: Key/value pair describing the physical
+            characteristics of the node.
         :param kwargs: optional parameters to create image
         :returns: node object
         """
         kwargs["name"] = self.generate_random_name()
         node = self.admin_clients("ironic").node.create(driver=driver,
+                                                        properties=properties,
                                                         **kwargs)
 
         self.sleep_between(CONF.benchmark.ironic_node_create_poll_interval)
