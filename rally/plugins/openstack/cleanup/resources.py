@@ -386,6 +386,27 @@ class NeutronV1Pool(NeutronLbaasV1Mixin):
     pass
 
 
+class NeutronLbaasV2Mixin(NeutronMixin):
+
+    def list(self):
+        if self.supports_extension("lbaasv2"):
+            return super(NeutronLbaasV2Mixin, self).list()
+        return []
+
+
+@base.resource("neutron", "loadbalancer", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronV2Loadbalancer(NeutronLbaasV2Mixin):
+
+    def is_deleted(self):
+        try:
+            self._manager().show_loadbalancer(self.id())
+        except Exception as e:
+            return getattr(e, "status_code", 400) == 404
+
+        return False
+
+
 @base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronPort(NeutronMixin):

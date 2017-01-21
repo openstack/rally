@@ -15,12 +15,32 @@
 
 import random
 
+from oslo_config import cfg
+
 from rally.common.i18n import _
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
+from rally.task import utils
+
+NEUTRON_BENCHMARK_OPTS = [
+    cfg.FloatOpt(
+        "neutron_create_loadbalancer_timeout",
+        default=float(500),
+        help="Neutron create loadbalancer timeout"),
+    cfg.FloatOpt(
+        "neutron_create_loadbalancer_poll_interval",
+        default=float(2),
+        help="Neutron create loadbalancer poll interval")
+]
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name="benchmark",
+                               title="benchmark options")
+CONF.register_group(benchmark_group)
+CONF.register_opts(NEUTRON_BENCHMARK_OPTS, group=benchmark_group)
 
 LOG = logging.getLogger(__name__)
 
@@ -588,3 +608,50 @@ class NeutronScenario(scenario.OpenStackScenario):
         body = {"security_group": security_group_update_args}
         return self.clients("neutron").update_security_group(
             security_group["security_group"]["id"], body)
+
+    def update_loadbalancer_resource(self, lb):
+        try:
+            new_lb = self.clients("neutron").show_loadbalancer(lb["id"])
+        except Exception as e:
+            if getattr(e, "status_code", 400) == 404:
+                raise exceptions.GetResourceNotFound(resource=lb)
+            raise exceptions.GetResourceFailure(resource=lb, err=e)
+        return new_lb["loadbalancer"]
+
+    @atomic.optional_action_timer("neutron.create_lbaasv2_loadbalancer")
+    def _create_lbaasv2_loadbalancer(self, subnet_id, **lb_create_args):
+        """Create LB loadbalancer(v2)
+
+        :param subnet_id: str, neutron subnet-id
+        :param lb_create_args: dict, POST /lbaas/loadbalancers request options
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
+        :returns: dict, neutron lb
+        """
+        args = {"name": self.generate_random_name(),
+                "vip_subnet_id": subnet_id}
+        args.update(lb_create_args)
+        neutronclient = self.clients("neutron")
+        lb = neutronclient.create_loadbalancer({"loadbalancer": args})
+        lb = lb["loadbalancer"]
+        lb = utils.wait_for_status(
+            lb,
+            ready_statuses=["ACTIVE"],
+            status_attr="provisioning_status",
+            update_resource=self.update_loadbalancer_resource,
+            timeout=CONF.benchmark.neutron_create_loadbalancer_timeout,
+            check_interval=(
+                CONF.benchmark.neutron_create_loadbalancer_poll_interval)
+        )
+        return lb
+
+    @atomic.action_timer("neutron.list_lbaasv2_loadbalancers")
+    def _list_lbaasv2_loadbalancers(self, retrieve_all=True, **lb_list_args):
+        """List LB loadbalancers(v2)
+
+        :param lb_list_args: dict, POST /lbaas/loadbalancers request options
+        :returns: dict, neutron lb loadbalancers(v2)
+        """
+        return self.clients("neutron").list_loadbalancers(retrieve_all,
+                                                          **lb_list_args)

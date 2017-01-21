@@ -20,7 +20,6 @@ from rally import exceptions
 from rally.plugins.openstack.scenarios.neutron import utils
 from tests.unit import test
 
-
 NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils."
 
 
@@ -879,6 +878,74 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             hm["health_monitor"]["id"], expected_hm)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_healthmonitor")
+
+    def test_update_loadbalancer_resource(self):
+        lb = {"id": "1", "provisioning_status": "READY"}
+        new_lb = {"id": "1", "provisioning_status": "ACTIVE"}
+        self.clients("neutron").show_loadbalancer.return_value = {
+            "loadbalancer": new_lb}
+
+        return_lb = self.scenario.update_loadbalancer_resource(lb)
+
+        self.clients("neutron").show_loadbalancer.assert_called_once_with(
+            lb["id"])
+        self.assertEqual(new_lb, return_lb)
+
+    def test_update_loadbalancer_resource_not_found(self):
+        from neutronclient.common import exceptions as n_exceptions
+        lb = {"id": "1", "provisioning_status": "READY"}
+        self.clients("neutron").show_loadbalancer.side_effect = (
+            n_exceptions.NotFound)
+
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          self.scenario.update_loadbalancer_resource,
+                          lb)
+        self.clients("neutron").show_loadbalancer.assert_called_once_with(
+            lb["id"])
+
+    def test_update_loadbalancer_resource_failure(self):
+        from neutronclient.common import exceptions as n_exceptions
+        lb = {"id": "1", "provisioning_status": "READY"}
+        self.clients("neutron").show_loadbalancer.side_effect = (
+            n_exceptions.Forbidden)
+
+        self.assertRaises(exceptions.GetResourceFailure,
+                          self.scenario.update_loadbalancer_resource,
+                          lb)
+        self.clients("neutron").show_loadbalancer.assert_called_once_with(
+            lb["id"])
+
+    def test__create_lbaasv2_loadbalancer(self):
+        neutronclient = self.clients("neutron")
+        create_args = {"name": "s_rally", "vip_subnet_id": "1",
+                       "fake": "fake"}
+        new_lb = {"id": "1", "provisioning_status": "ACTIVE"}
+
+        self.scenario.generate_random_name = mock.Mock(
+            return_value="s_rally")
+        self.mock_wait_for_status.mock.return_value = new_lb
+
+        return_lb = self.scenario._create_lbaasv2_loadbalancer(
+            "1", fake="fake")
+
+        neutronclient.create_loadbalancer.assert_called_once_with(
+            {"loadbalancer": create_args})
+        self.assertEqual(new_lb, return_lb)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_lbaasv2_loadbalancer")
+
+    def test__list_lbaasv2_loadbalancers(self):
+        value = {"loadbalancer": [{"id": "1", "name": "s_rally"}]}
+        self.clients("neutron").list_loadbalancers.return_value = value
+
+        return_value = self.scenario._list_lbaasv2_loadbalancers(
+            True, fake="fake")
+
+        (self.clients("neutron").list_loadbalancers
+         .assert_called_once_with(True, fake="fake"))
+        self.assertEqual(value, return_value)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.list_lbaasv2_loadbalancers")
 
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
