@@ -22,6 +22,8 @@ import six
 from rally.cli import cliutils
 from rally.cli.commands import verify
 from rally.cli import envutils
+from rally import consts
+from rally import exceptions
 from rally import plugins
 from rally.verification import reporter
 from tests.unit import fakes
@@ -165,18 +167,21 @@ class VerifyCommandsTestCase(test.TestCase):
     def test_configure_verifier(self, mock_exists, mock_open):
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
                                        new_configuration="/p/a/t/h",
-                                       reconfigure=True)
+                                       reconfigure=True,
+                                       show=True)
         self.assertFalse(self.fake_api.verifier.configure.called)
 
         mock_exists.return_value = False
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
-                                       new_configuration="/p/a/t/h")
+                                       new_configuration="/p/a/t/h",
+                                       show=True)
         self.assertFalse(self.fake_api.verifier.override_configuration.called)
 
         mock_exists.return_value = True
         mock_open.return_value = mock.mock_open(read_data="data").return_value
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
-                                       new_configuration="/p/a/t/h")
+                                       new_configuration="/p/a/t/h",
+                                       show=True)
         mock_open.assert_called_once_with("/p/a/t/h")
         self.fake_api.verifier.override_configuration("v_id", "d_id", "data")
 
@@ -320,6 +325,20 @@ class VerifyCommandsTestCase(test.TestCase):
                           do_use=False)
         self.assertFalse(self.fake_api.verification.get.called)
         self.assertFalse(mock_update_globals_file.called)
+
+    @mock.patch("rally.cli.commands.verify.os.path.exists")
+    @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
+    def test_start_on_unfinished_deployment(self, mock_update_globals_file,
+                                            mock_exists):
+        deployment_id = "d_id"
+        deployment_name = "xxx_name"
+        exc = exceptions.DeploymentNotFinishedStatus(
+            name=deployment_name,
+            uuid=deployment_id,
+            status=consts.DeployStatus.DEPLOY_INIT)
+        self.fake_api.verification.start.side_effect = exc
+        self.assertEqual(
+            1, self.verify.start(self.fake_api, "v_id", deployment_id))
 
     @mock.patch("rally.cli.commands.verify.fileutils.update_globals_file")
     def test_use(self, mock_update_globals_file):

@@ -153,13 +153,26 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual("2", api._Task.render_template(template))
 
     @mock.patch("rally.common.objects.Deployment.get",
-                return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
+                return_value={
+                    "uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257",
+                    "status": consts.DeployStatus.DEPLOY_FINISHED})
     @mock.patch("rally.common.objects.Task")
     def test_create(self, mock_task, mock_deployment_get):
         tag = "a"
         api._Task.create(mock_deployment_get.return_value["uuid"], tag)
         mock_task.assert_called_once_with(
             deployment_uuid=mock_deployment_get.return_value["uuid"], tag=tag)
+
+    @mock.patch("rally.common.objects.Deployment.get",
+                return_value={
+                    "name": "xxx_name",
+                    "uuid": "u_id",
+                    "status": consts.DeployStatus.DEPLOY_INIT})
+    def test_create_on_unfinished_deployment(self, mock_deployment_get):
+        deployment_id = mock_deployment_get.return_value["uuid"]
+        tag = "a"
+        self.assertRaises(exceptions.DeploymentNotFinishedStatus,
+                          api._Task.create, deployment_id, tag)
 
     @mock.patch("rally.api.objects.Task",
                 return_value=fakes.FakeTask(uuid="some_uuid"))
@@ -1232,8 +1245,12 @@ class VerificationAPITestCase(test.TestCase):
         self.assertTrue(averification.set_failed.called)
 
     @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(
+                    uuid="deployment_uuid",
+                    status=consts.DeployStatus.DEPLOY_FINISHED))
     def test_start_failed_due_to_wrong_status_of_verifier(
-            self, mock___verifier_get):
+            self, mock_deployment_get, mock___verifier_get):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
         verifier_obj = mock___verifier_get.return_value
@@ -1252,7 +1269,12 @@ class VerificationAPITestCase(test.TestCase):
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
     @mock.patch("rally.api._Verifier.get")
-    def test_start_with_configuring(self, mock___verifier_get, mock_configure,
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(
+                    uuid="deployment_uuid",
+                    status=consts.DeployStatus.DEPLOY_FINISHED))
+    def test_start_with_configuring(self, mock_deployment_get,
+                                    mock___verifier_get, mock_configure,
                                     mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
@@ -1261,14 +1283,19 @@ class VerificationAPITestCase(test.TestCase):
         verifier_obj.manager.is_configured.return_value = False
 
         api._Verification.start(verifier_id, deployment_id)
+        mock_deployment_get.assert_called_once_with(deployment_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         mock_configure.assert_called_once_with(verifier_obj, deployment_id)
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
     @mock.patch("rally.api._Verifier.get")
-    def test_start(self, mock___verifier_get, mock_configure,
-                   mock_verification_create):
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(
+                    uuid="deployment_uuid",
+                    status=consts.DeployStatus.DEPLOY_FINISHED))
+    def test_start(self, mock_deployment_get, mock___verifier_get,
+                   mock_configure, mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
         tags = ["foo", "bar"]
@@ -1280,6 +1307,7 @@ class VerificationAPITestCase(test.TestCase):
         api._Verification.start(verifier_id, deployment_id, tags=tags,
                                 **run_args)
 
+        mock_deployment_get.assert_called_once_with(deployment_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
@@ -1300,10 +1328,29 @@ class VerificationAPITestCase(test.TestCase):
 
         self.assertFalse(mock_configure.called)
 
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(
+                    name="xxx_name",
+                    uuid="deployment_uuid",
+                    status=consts.DeployStatus.DEPLOY_INIT))
+    def test_start_on_unfinished_deployment(self, mock_deployment_get):
+        verifier_id = "v_id"
+        deployment_id = mock_deployment_get.return_value["uuid"]
+        tags = ["foo", "bar"]
+        run_args = {"arg": "value"}
+        self.assertRaises(exceptions.DeploymentNotFinishedStatus,
+                          api._Verification.start, verifier_id, deployment_id,
+                          tags=tags, **run_args)
+
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
     @mock.patch("rally.api._Verifier.get")
-    def test_start_failed_to_run(self, mock___verifier_get, mock_configure,
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(
+                    uuid="deployment_uuid",
+                    status=consts.DeployStatus.DEPLOY_FINISHED))
+    def test_start_failed_to_run(self, mock_deployment_get,
+                                 mock___verifier_get, mock_configure,
                                  mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"

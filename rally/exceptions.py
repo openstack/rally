@@ -112,6 +112,11 @@ class DeploymentNameExists(RallyException):
     msg_fmt = _("Deployment name '%(deployment)s' already registered.")
 
 
+class DeploymentNotFinishedStatus(RallyException):
+    msg_fmt = _("Deployment '%(name)s' (UUID=%(uuid)s) is in"
+                " '%(status)s' status.")
+
+
 class DeploymentIsBusy(RallyException):
     msg_fmt = _("There are allocated resources for the deployment with "
                 "uuid=%(uuid)s.")
