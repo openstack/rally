@@ -1005,7 +1005,7 @@ class VerificationTestCase(test.DBTestCase):
     def _create_verification(self):
         verifier_uuid = self.verifier["uuid"]
         deployment_uuid = self.deploy["uuid"]
-        return db.verification_create(verifier_uuid, deployment_uuid, {})
+        return db.verification_create(verifier_uuid, deployment_uuid, [], {})
 
     def test_verification_create(self):
         v = self._create_verification()
@@ -1023,7 +1023,8 @@ class VerificationTestCase(test.DBTestCase):
 
     def test_verification_list(self):
         deploy = db.deployment_create({})
-        v1 = db.verification_create(self.verifier["uuid"], deploy["uuid"], {})
+        v1 = db.verification_create(
+            self.verifier["uuid"], deploy["uuid"], ["foo", "bar"], {})
         v2 = self._create_verification()
 
         vs = db.verification_list(self.verifier["uuid"])
@@ -1031,6 +1032,10 @@ class VerificationTestCase(test.DBTestCase):
                          sorted([v["uuid"] for v in vs]))
 
         vs = db.verification_list(self.verifier["uuid"], deploy["uuid"])
+        self.assertEqual(len(vs), 1)
+        self.assertEqual(v1["uuid"], vs[0]["uuid"])
+
+        vs = db.verification_list(tags=["bar"])
         self.assertEqual(len(vs), 1)
         self.assertEqual(v1["uuid"], vs[0]["uuid"])
 

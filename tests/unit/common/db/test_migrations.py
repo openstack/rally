@@ -1110,3 +1110,63 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     test["duration"] = duration
 
                 self.assertEqual(expected_tests, updated_tests)
+
+                conn.execute(
+                    verifications_table.delete().where(
+                        verifications_table.c.uuid == v.uuid)
+                )
+
+            deployment_table = db_utils.get_table(engine, "deployments")
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid ==
+                    self._37fdbb373e8d_deployment_uuid)
+            )
+
+    def _pre_upgrade_a6f364988fc2(self, engine):
+            self._a6f364988fc2_tags = [
+                {
+                    "uuid": "uuid-1",
+                    "type": "task",
+                    "tag": "tag-1"
+                },
+                {
+                    "uuid": "uuid-2",
+                    "type": "subtask",
+                    "tag": "tag-2"
+                },
+                {
+                    "uuid": "uuid-3",
+                    "type": "task",
+                    "tag": "tag-3"
+                }
+            ]
+
+            tags_table = db_utils.get_table(engine, "tags")
+            with engine.connect() as conn:
+                for t in self._a6f364988fc2_tags:
+                    conn.execute(
+                        tags_table.insert(),
+                        [{
+                            "uuid": t["uuid"],
+                            "enum_tag_types": t["type"],
+                            "type": t["type"],
+                            "tag": t["tag"]
+                        }])
+
+    def _check_a6f364988fc2(self, engine, data):
+        self.assertEqual("a6f364988fc2",
+                         api.get_backend().schema_revision(engine=engine))
+
+        tags_table = db_utils.get_table(engine, "tags")
+        with engine.connect() as conn:
+            tags = conn.execute(tags_table.select()).fetchall()
+            self.assertEqual(len(tags), len(self._a6f364988fc2_tags))
+
+            for i in range(len(tags)):
+                for k in ("uuid", "type", "tag"):
+                    self.assertEqual(self._a6f364988fc2_tags[i][k], tags[i][k])
+
+                conn.execute(
+                    tags_table.delete().where(
+                        tags_table.c.uuid == tags[i].uuid))

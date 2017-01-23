@@ -775,12 +775,13 @@ class _Verifier(object):
 class _Verification(object):
 
     @classmethod
-    def start(cls, verifier_id, deployment_id, **run_args):
+    def start(cls, verifier_id, deployment_id, tags=None, **run_args):
         """Start a verification.
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
-        :param run_args: Dictionary with run arguments
+        :param tags: List of tags to assign them to verification
+        :param run_args: Dictionary with run arguments for verification
         """
         # TODO(ylobankov): Add an ability to skip tests by specifying only test
         #                  names (without test IDs). Also, it would be nice to
@@ -802,9 +803,9 @@ class _Verification(object):
         # TODO(andreykurilin): save validation results to db
         verifier.manager.validate(run_args)
 
-        verification = objects.Verification.create(verifier_id,
-                                                   deployment_id=deployment_id,
-                                                   run_args=run_args)
+        verification = objects.Verification.create(
+            verifier_id=verifier_id, deployment_id=deployment_id, tags=tags,
+            run_args=run_args)
         LOG.info("Starting verification (UUID=%s) for deployment '%s' "
                  "(UUID=%s) by verifier %s.", verification.uuid,
                  verifier.deployment["name"], verifier.deployment["uuid"],
@@ -873,16 +874,17 @@ class _Verification(object):
         return objects.Verification.get(verification_uuid)
 
     @staticmethod
-    def list(verifier_id=None, deployment_id=None, status=None):
+    def list(verifier_id=None, deployment_id=None, tags=None, status=None):
         """List all verifications.
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
+        :param tags: Tags to filter verifications by
         :param status: Status to filter verifications by
         """
         return objects.Verification.list(verifier_id,
                                          deployment_id=deployment_id,
-                                         status=status)
+                                         tags=tags, status=status)
 
     @classmethod
     def delete(cls, verification_uuid):

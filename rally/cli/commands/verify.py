@@ -143,6 +143,8 @@ class VerifyCommands(object):
             }
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
+        elif status:
+            print(_("There are no verifiers with status '%s'.") % status)
         else:
             print(_("There are no verifiers. You can create verifier, using "
                     "command `rally verify create-verifier`."))
@@ -357,6 +359,8 @@ class VerifyCommands(object):
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>",
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Mark verification with a tag or a few tags.")
     @cliutils.args("--pattern", dest="pattern", type=str, required=False,
                    help="Pattern which will be used for running tests. Can be "
                         "a regexp or a verifier-specific entity (for example, "
@@ -385,9 +389,9 @@ class VerifyCommands(object):
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
-    def start(self, api, verifier_id=None, deployment=None, pattern=None,
-              concur=0, load_list=None, skip_list=None, xfail_list=None,
-              do_use=True):
+    def start(self, api, verifier_id=None, deployment=None, tags=None,
+              pattern=None, concur=0, load_list=None, skip_list=None,
+              xfail_list=None, do_use=True):
         """Start a verification (run verifier tests)."""
         if pattern and load_list:
             print(_("Arguments '--pattern' and '--load-list' cannot be used "
@@ -424,7 +428,7 @@ class VerifyCommands(object):
             ("concurrency", concur)) if value}
 
         verification, results = api.verification.start(verifier_id, deployment,
-                                                       **run_args)
+                                                       tags=tags, **run_args)
         self._print_totals(results.totals)
 
         if do_use:
@@ -496,11 +500,17 @@ class VerifyCommands(object):
 
         # Main table
         fields = ["UUID", "Status", "Started at", "Finished at", "Duration",
-                  "Run arguments", "Verifier name", "Verifier type",
+                  "Run arguments", "Tags", "Verifier name", "Verifier type",
                   "Deployment name", "Tests count", "Tests duration, sec",
                   "Success", "Skipped", "Expected failures",
                   "Unexpected success", "Failures"]
         formatters = {
+            "Started at": lambda v: v.created_at.replace(microsecond=0),
+            "Finished at": lambda v: v.updated_at.replace(microsecond=0),
+            "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
+                                   v.created_at.replace(microsecond=0)),
+            "Run arguments": run_args_formatter,
+            "Tags": lambda v: ", ".join(v.tags) or None,
             "Verifier name": lambda v: "%s (UUID: %s)" % (verifier.name,
                                                           verifier.uuid),
             "Verifier type": (
@@ -509,11 +519,6 @@ class VerifyCommands(object):
             "Deployment name": (
                 lambda v: "%s (UUID: %s)" % (deployment["name"],
                                              deployment["uuid"])),
-            "Started at": lambda v: v.created_at.replace(microsecond=0),
-            "Finished at": lambda v: v.updated_at.replace(microsecond=0),
-            "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
-                                   v.created_at.replace(microsecond=0)),
-            "Run arguments": run_args_formatter,
             "Tests duration, sec": lambda v: v.tests_duration
         }
         cliutils.print_dict(verification, fields, formatters=formatters,
@@ -554,15 +559,20 @@ class VerifyCommands(object):
     @cliutils.args("--deployment-id", dest="deployment", type=str,
                    metavar="<id>", required=False,
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Tags to filter verifications by.")
     @cliutils.args("--status", dest="status", type=str, required=False,
                    help="Status to filter verifications by.")
-    def list(self, api, verifier_id=None, deployment=None, status=None):
+    def list(self, api, verifier_id=None, deployment=None, tags=None,
+             status=None):
         """List all verifications."""
-        verifications = api.verification.list(verifier_id, deployment, status)
+        verifications = api.verification.list(verifier_id, deployment, tags,
+                                              status)
         if verifications:
-            fields = ["UUID", "Verifier name", "Deployment name", "Started at",
-                      "Finished at", "Duration", "Status"]
+            fields = ["UUID", "Tags", "Verifier name", "Deployment name",
+                      "Started at", "Finished at", "Duration", "Status"]
             formatters = {
+                "Tags": lambda v: ", ".join(v.tags) or "-",
                 "Verifier name": (
                     lambda v: api.verifier.get(v.verifier_uuid).name),
                 "Deployment name": (
@@ -573,7 +583,10 @@ class VerifyCommands(object):
                                        v.created_at.replace(microsecond=0))
             }
             cliutils.print_list(verifications, fields, formatters=formatters,
-                                normalize_field_names=True, sortby_index=3)
+                                normalize_field_names=True, sortby_index=4)
+        elif verifier_id or deployment or status or tags:
+            print(_("There are no verifications that meet specified filter "
+                    "arguments."))
         else:
             print(_("There are no verifications. You can start verification, "
                     "using command `rally verify start`."))
