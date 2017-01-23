@@ -208,6 +208,7 @@ class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
     RUNNING = "running"
     FINISHED = "finished"
     FAILED = "failed"
+    CRASHED = "crashed"
 
 
 TaskStatus = _TaskStatus()

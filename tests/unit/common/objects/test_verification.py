@@ -70,7 +70,7 @@ class VerificationTestCase(test.TestCase):
         v = objects.Verification(self.db_obj)
         totals = {
             "tests_count": 2,
-            "tests_duration": "0.54",
+            "tests_duration": 0.54,
             "success": 2,
             "skip": 0,
             "expected_failures": 0,
@@ -80,13 +80,13 @@ class VerificationTestCase(test.TestCase):
         tests = {
             "foo_test[gate,negative]": {
                 "name": "foo_test",
-                "duration": "0.25",
+                "duration": 0.25,
                 "status": "success",
                 "tags": ["gate", "negative"]
             },
             "bar_test[gate,negative]": {
-                "name": "bar.Test",
-                "duration": "0.29",
+                "name": "bar_test",
+                "duration": 0.29,
                 "status": "success",
                 "tags": ["gate", "negative"]
             }
@@ -96,9 +96,25 @@ class VerificationTestCase(test.TestCase):
             self.db_obj["uuid"], status=consts.VerificationStatus.FINISHED,
             tests=tests, **totals)
 
+        v = objects.Verification(self.db_obj)
+        totals.update(failures=1)
+        mock_verification_update.reset_mock()
+        v.finish(totals, tests)
+        mock_verification_update.assert_called_once_with(
+            self.db_obj["uuid"], status=consts.VerificationStatus.FAILED,
+            tests=tests, **totals)
+
+        v = objects.Verification(self.db_obj)
+        totals.update(failures=0, unexpected_success=1)
+        mock_verification_update.reset_mock()
+        v.finish(totals, tests)
+        mock_verification_update.assert_called_once_with(
+            self.db_obj["uuid"], status=consts.VerificationStatus.FAILED,
+            tests=tests, **totals)
+
     @mock.patch("rally.common.objects.verification.db.verification_update")
     def test_set_error(self, mock_verification_update):
         v = objects.Verification(self.db_obj)
         v.set_error("Some error")
         mock_verification_update.assert_called_once_with(
-            self.db_obj["uuid"], status=consts.VerificationStatus.FAILED)
+            self.db_obj["uuid"], status=consts.VerificationStatus.CRASHED)

@@ -1170,3 +1170,85 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 conn.execute(
                     tags_table.delete().where(
                         tags_table.c.uuid == tags[i].uuid))
+
+    def _pre_upgrade_f33f4610dcda(self, engine):
+        self._f33f4610dcda_deployment_uuid = "f33f4610dcda-deployment"
+        self._f33f4610dcda_verifier_uuid = "f33f4610dcda-verifier"
+        self._f33f4610dcda_verifications = [
+            {"status": "init", "failures": 0, "unexpected_success": 0},
+            {"status": "running", "failures": 0, "unexpected_success": 0},
+            {"status": "finished", "failures": 0, "unexpected_success": 0},
+            {"status": "finished", "failures": 1, "unexpected_success": 0,
+             "new_status": "failed"},
+            {"status": "finished", "failures": 1, "unexpected_success": 1,
+             "new_status": "failed"},
+            {"status": "finished", "failures": 0, "unexpected_success": 1,
+             "new_status": "failed"},
+            {"status": "failed", "failures": 0, "unexpected_success": 0,
+             "new_status": "crashed"},
+        ]
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+        verifiers_table = db_utils.get_table(engine, "verifiers")
+        verifications_table = db_utils.get_table(engine, "verifications")
+
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{"uuid": self._f33f4610dcda_deployment_uuid,
+                  "name": self._f33f4610dcda_deployment_uuid,
+                  "config": six.b(json.dumps([])),
+                  "enum_deployments_status": deployment_status,
+                  "credentials": six.b(json.dumps([])),
+                  "users": six.b(json.dumps([]))
+                  }])
+
+            conn.execute(
+                verifiers_table.insert(),
+                [{"uuid": self._f33f4610dcda_verifier_uuid,
+                  "name": self._f33f4610dcda_verifier_uuid,
+                  "type": "some-type",
+                  "status": consts.VerifierStatus.INSTALLED
+                  }])
+
+            for i in range(len(self._f33f4610dcda_verifications)):
+                v = self._f33f4610dcda_verifications[i]
+                conn.execute(
+                    verifications_table.insert(),
+                    [{"uuid": "verification-uuid-%s" % i,
+                      "deployment_uuid": self._f33f4610dcda_deployment_uuid,
+                      "verifier_uuid": self._f33f4610dcda_verifier_uuid,
+                      "status": v["status"],
+                      "failures": v["failures"],
+                      "unexpected_success": v["unexpected_success"]
+                      }])
+
+    def _check_f33f4610dcda(self, engine, data):
+        self.assertEqual("f33f4610dcda",
+                         api.get_backend().schema_revision(engine=engine))
+
+        verifications_table = db_utils.get_table(engine, "verifications")
+        with engine.connect() as conn:
+            verifications = conn.execute(
+                verifications_table.select()).fetchall()
+            self.assertEqual(len(verifications),
+                             len(self._f33f4610dcda_verifications))
+
+            for i in range(len(verifications)):
+                if "new_status" in self._f33f4610dcda_verifications[i]:
+                    self.assertEqual(
+                        self._f33f4610dcda_verifications[i]["new_status"],
+                        verifications[i].status)
+
+                conn.execute(
+                    verifications_table.delete().where(
+                        verifications_table.c.uuid == verifications[i].uuid)
+                )
+
+            deployment_table = db_utils.get_table(engine, "deployments")
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid ==
+                    self._37fdbb373e8d_deployment_uuid)
+            )

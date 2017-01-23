@@ -60,9 +60,13 @@ class Verification(object):
         self._update(status=status)
 
     def finish(self, totals, tests):
-        self._update(status=consts.VerificationStatus.FINISHED, tests=tests,
-                     **totals)
+        if (totals.get("failures", 0) == 0 and
+                totals.get("unexpected_success", 0) == 0):
+            status = consts.VerificationStatus.FINISHED
+        else:
+            status = consts.VerificationStatus.FAILED
+        self._update(status=status, tests=tests, **totals)
 
     def set_error(self, error_message):
         # TODO(andreykurilin): Save error message in the database.
-        self.update_status(consts.VerificationStatus.FAILED)
+        self.update_status(consts.VerificationStatus.CRASHED)
