@@ -436,6 +436,10 @@ class _Verifier(object):
                 "Verifier with name '%s' already exists! Please, specify "
                 "another name for verifier and try again." % verifier.name)
 
+        default_source = verifier.manager._meta_get("default_repo")
+        if not source and default_source:
+            verifier.update_properties(source=default_source)
+
         verifier.update_status(consts.VerifierStatus.INSTALLING)
         try:
             verifier.manager.install()
