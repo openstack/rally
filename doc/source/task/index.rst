@@ -1,6 +1,4 @@
-.. contents::
-  :depth: 3
-  :local:
+.. _task-component:
 
 ==============
 Task Component
@@ -8,6 +6,10 @@ Task Component
 
 This section describes Rally Task Component (including feature presented since
 Rally v0.5.0, allowing to analyze statistics trends for the given tasks).
+
+.. contents::
+  :depth: 2
+  :local:
 
 HTML Reports
 ============

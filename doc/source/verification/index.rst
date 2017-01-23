@@ -1,6 +1,4 @@
 ..
-      Copyright 2015 Mirantis Inc. All Rights Reserved.
-
       Licensed under the Apache License, Version 2.0 (the "License"); you may
       not use this file except in compliance with the License. You may obtain
       a copy of the License at
@@ -13,12 +11,17 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. contents::
-  :depth: 2
-  :local:
-
 ======================
 Verification Component
 ======================
 
-This section describes Rally Verification Component.
+Functional testing is a first step to ensuring that your product works as
+expected and API covers all use-cases. Rally Verification Component is all
+about this. It is not designed to generate a real big load (for this job we
+have :ref:`task-component`), but it should be enough to check that your
+environment works by different tools (we call them
+:ref:`glossary-verification`).
+
+.. toctree::
+    :maxdepth: 3
+    :glob:
