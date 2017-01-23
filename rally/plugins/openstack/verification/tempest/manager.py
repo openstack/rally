@@ -53,22 +53,31 @@ class TempestManager(testr.TestrLauncher):
         return os.path.join(self.home_dir, "tempest.conf")
 
     def get_configuration(self):
+        """Get Tempest configuration."""
         return config.read_configfile(self.configfile)
 
     def configure(self, extra_options=None):
+        """Configure Tempest."""
         if not os.path.isdir(self.home_dir):
             os.makedirs(self.home_dir)
 
         cm = config.TempestConfigfileManager(self.verifier.deployment)
         raw_configfile = cm.create(self.configfile, extra_options)
+
         return raw_configfile
 
+    def is_configured(self):
+        """Check whether Tempest is configured or not."""
+        return os.path.exists(self.configfile)
+
     def extend_configuration(self, extra_options):
+        """Extend Tempest configuration with extra options."""
         return config.extend_configfile(self.configfile, extra_options)
 
-    def override_configuration(self, new_content):
+    def override_configuration(self, new_configuration):
+        """Override Tempest configuration by new configuration."""
         with open(self.configfile, "w") as f:
-            f.write(new_content)
+            f.write(new_configuration)
 
     def install_extension(self, source, version=None, extra_settings=None):
         """Install a Tempest plugin."""

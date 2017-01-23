@@ -129,15 +129,13 @@ class VerifyCommandsTestCase(test.TestCase):
         expected_options = {"foo": {"opt": "val"},
                             "DEFAULT": {"opt": "val"}}
         self.fake_api.verifier.configure.assert_called_once_with(
-            "v_id", "d_id", extra_options=expected_options, reconfigure=False,
-            force=False)
+            "v_id", "d_id", extra_options=expected_options, reconfigure=False)
 
         self.verify.configure_verifier(self.fake_api, "v_id", "d_id",
                                        extra_options="{foo: {opt: val}, "
                                                      "DEFAULT: {opt: val}}")
         self.fake_api.verifier.configure.assert_called_with(
-            "v_id", "d_id", extra_options=expected_options, reconfigure=False,
-            force=False)
+            "v_id", "d_id", extra_options=expected_options, reconfigure=False)
 
     def test_list_verifier_tests(self):
         self.fake_api.verifier.list_tests.return_value = ["test_1", "test_2"]
@@ -262,11 +260,14 @@ class VerifyCommandsTestCase(test.TestCase):
 
     def test_show(self):
         deployment_name = "Some Deploy"
+        deployment_uuid = "some-deploy-uuid"
         verifier_name = "My Verifier"
+        verifier_uuid = "my-verifier-uuid"
         verifier_type = "OldSchoolTestTool"
         verifier_namespace = "OpenStack"
         verifier = mock.Mock(type=verifier_type, namespace=verifier_namespace)
         verifier.name = verifier_name
+        verifier.uuid = verifier_uuid
         verification = {
             "uuid": "uuuiiiiddd",
             "status": "success",
@@ -301,7 +302,8 @@ class VerifyCommandsTestCase(test.TestCase):
         }
         self.fake_api.verifier.get.return_value = verifier
         self.fake_api.verification.get.return_value = mock.Mock(**verification)
-        self.fake_api.deployment.get.return_value = {"name": deployment_name}
+        self.fake_api.deployment.get.return_value = {"name": deployment_name,
+                                                     "uuid": deployment_uuid}
 
         # It is a hard task to mock default value of function argument, so we
         # need to apply this workaround
@@ -342,11 +344,11 @@ class VerifyCommandsTestCase(test.TestCase):
             "splayed separately) |\n"
             "|                     | skip_list: (value is too long, will be di"
             "splayed separately) |\n"
-            "| Verifier name       | My Verifier                              "
+            "| Verifier name       | My Verifier (UUID: my-verifier-uuid)     "
             "                    |\n"
             "| Verifier type       | OldSchoolTestTool (namespace: OpenStack) "
             "                    |\n"
-            "| Deployment name     | Some Deploy                              "
+            "| Deployment name     | Some Deploy (UUID: some-deploy-uuid)     "
             "                    |\n"
             "| Tests count         | 2                                        "
             "                    |\n"

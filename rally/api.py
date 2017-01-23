@@ -390,9 +390,6 @@ class _Task(object):
 
 class _Verifier(object):
 
-    READY_TO_USE_STATES = (consts.VerifierStatus.INSTALLED,
-                           consts.VerifierStatus.CONFIGURED)
-
     @classmethod
     def list_plugins(cls, namespace=None):
         """List all plugins for verifiers management.
@@ -473,11 +470,11 @@ class _Verifier(object):
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID. If specified,
-                              only deployment-specific data will be deleted
+                              only the deployment-specific data will be deleted
                               for verifier
         :param force: Delete all stored verifier verifications.
-                      If deployment_id specified, only deployment-specific
-                      verifications will be deleted
+                      If deployment_id specified, only verifications of this
+                      deployment will be deleted
         """
         verifier = cls.get(verifier_id)
         verifications = _Verification.list(verifier_id, deployment_id)
@@ -528,11 +525,12 @@ class _Verifier(object):
         verifier = cls.get(verifier_id)
         LOG.info("Updating verifier %s.", verifier)
 
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to update verifier %s because verifier is in '%s' "
-                "status, but should be in %s." % (verifier, verifier.status,
-                                                  cls.READY_TO_USE_STATES))
+                "status, but should be in '%s'." % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         system_wide_in_use = (system_wide or
                               (system_wide is None and verifier.system_wide))
@@ -599,14 +597,13 @@ class _Verifier(object):
 
     @classmethod
     def configure(cls, verifier, deployment_id, extra_options=None,
-                  reconfigure=False, force=False):
+                  reconfigure=False):
         """Configure a verifier.
 
         :param verifier: Verifier object or (name or UUID)
         :param deployment_id: Deployment name or UUID
         :param extra_options: Extend verifier configuration with extra options
         :param reconfigure: Reconfigure verifier
-        :param force: (Re)configure verifier regardless of its status
         """
         if not isinstance(verifier, objects.Verifier):
             verifier = cls.get(verifier)
@@ -615,19 +612,19 @@ class _Verifier(object):
             "Configuring verifier %s for deployment '%s' (UUID=%s).",
             verifier, verifier.deployment["name"], verifier.deployment["uuid"])
 
-        if verifier.status not in cls.READY_TO_USE_STATES and not force:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to configure verifier %s for deployment '%s' "
                 "(UUID=%s) because verifier is in '%s' status, but should be "
-                "in %s." % (verifier, verifier.deployment["name"],
-                            verifier.deployment["uuid"], verifier.status,
-                            cls.READY_TO_USE_STATES))
+                "in '%s'." % (verifier, verifier.deployment["name"],
+                              verifier.deployment["uuid"], verifier.status,
+                              consts.VerifierStatus.INSTALLED))
 
         msg = ("Verifier %s has been successfully configured for deployment "
                "'%s' (UUID=%s)!" % (verifier, verifier.deployment["name"],
                                     verifier.deployment["uuid"]))
         vm = verifier.manager
-        if verifier.status == consts.VerifierStatus.CONFIGURED:
+        if vm.is_configured():
             LOG.info("Verifier is already configured!")
             if not reconfigure:
                 if not extra_options:
@@ -640,17 +637,13 @@ class _Verifier(object):
                     else:
                         LOG.info(
                             "Adding extra options to verifier configuration.")
-                    verifier.update_status(consts.VerifierStatus.CONFIGURING)
                     vm.extend_configuration(extra_options)
-                    verifier.update_status(consts.VerifierStatus.CONFIGURED)
                     LOG.info(msg)
                     return vm.get_configuration()
 
             LOG.info("Reconfiguring verifier.")
 
-        verifier.update_status(consts.VerifierStatus.CONFIGURING)
         raw_config = vm.configure(extra_options=extra_options)
-        verifier.update_status(consts.VerifierStatus.CONFIGURED)
 
         LOG.info(msg)
 
@@ -658,33 +651,28 @@ class _Verifier(object):
 
     @classmethod
     def override_configuration(cls, verifier_id, deployment_id,
-                               new_configuration, force=False):
+                               new_configuration):
         """Override verifier configuration (e.g., rewrite the config file).
 
         :param verifier_id: Verifier name or UUID
         :param deployment_id: Deployment name or UUID
         :param new_configuration: New configuration for verifier
-        :param force: Override verifier configuration regardless of
-                      verifier status
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES and not force:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to override verifier configuration for deployment "
                 "'%s' (UUID=%s) because verifier %s is in '%s' status, but "
-                "should be in %s." % (
+                "should be in '%s'." % (
                     verifier.deployment["name"], verifier.deployment["uuid"],
-                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         verifier.set_deployment(deployment_id)
         LOG.info("Overriding configuration of verifier %s for deployment '%s' "
                  "(UUID=%s).", verifier, verifier.deployment["name"],
                  verifier.deployment["uuid"])
-
-        verifier.update_status(consts.VerifierStatus.CONFIGURING)
         verifier.manager.override_configuration(new_configuration)
-        verifier.update_status(consts.VerifierStatus.CONFIGURED)
-
         LOG.info("Configuration of verifier %s has been successfully "
                  "overridden for deployment '%s' (UUID=%s)!", verifier,
                  verifier.deployment["name"], verifier.deployment["uuid"])
@@ -697,11 +685,12 @@ class _Verifier(object):
         :param pattern: Pattern which will be used for matching
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier tests because verifier %s is in '%s' "
-                "status, but should be in %s." % (verifier, verifier.status,
-                                                  cls.READY_TO_USE_STATES))
+                "status, but should be in '%s'." % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         if pattern:
             verifier.manager.validate_args({"pattern": pattern})
@@ -721,11 +710,12 @@ class _Verifier(object):
                                extension
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to add verifier extension because verifier %s "
-                "is in '%s' status, but should be in %s." % (
-                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+                "is in '%s' status, but should be in '%s'." % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         LOG.info("Adding extension for verifier %s.", verifier)
 
@@ -748,11 +738,12 @@ class _Verifier(object):
         :param verifier_id: Verifier name or UUID
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier extensions because verifier %s "
-                "is in '%s' status, but should be in %s." % (
-                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+                "is in '%s' status, but should be in '%s.'" % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         return verifier.manager.list_extensions()
 
@@ -764,11 +755,12 @@ class _Verifier(object):
         :param name: Verifier extension name
         """
         verifier = cls.get(verifier_id)
-        if verifier.status not in cls.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to delete verifier extension because verifier %s "
-                "is in '%s' status, but should be in %s." % (
-                    verifier, verifier.status, cls.READY_TO_USE_STATES))
+                "is in '%s' status, but should be in '%s'." % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         LOG.info("Deleting extension for verifier %s.", verifier)
         verifier.manager.uninstall_extension(name)
@@ -792,14 +784,15 @@ class _Verification(object):
         #                  in the class or module.
 
         verifier = _Verifier.get(verifier_id)
-        if verifier.status not in _Verifier.READY_TO_USE_STATES:
+        if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to start verification because verifier %s is in '%s' "
-                "status, but should be in %s." % (
-                    verifier, verifier.status, _Verifier.READY_TO_USE_STATES))
+                "status, but should be in '%s'." % (
+                    verifier, verifier.status, consts.VerifierStatus.INSTALLED)
+            )
 
         verifier.set_deployment(deployment_id)
-        if verifier.status != consts.VerifierStatus.CONFIGURED:
+        if not verifier.manager.is_configured():
             _Verifier.configure(verifier, deployment_id)
 
         # TODO(andreykurilin): save validation results to db

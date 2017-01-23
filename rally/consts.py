@@ -198,8 +198,6 @@ class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
     INSTALLED = "installed"
     UPDATING = "updating"
     EXTENDING = "extending"
-    CONFIGURING = "configuring"
-    CONFIGURED = "configured"
     FAILED = "failed"
 
 

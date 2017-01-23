@@ -805,8 +805,7 @@ class VerifierAPITestCase(test.TestCase):
         self.assertIn("At least one of the following parameters should be",
                       "%s" % e)
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.update,
@@ -913,8 +912,7 @@ class VerifierAPITestCase(test.TestCase):
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.configure,
@@ -922,14 +920,16 @@ class VerifierAPITestCase(test.TestCase):
                 self.assertIn("because verifier is in '%s' status" % status,
                               "%s" % e)
 
+    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
+                "os.path.exists")
     @mock.patch("rally.api._Verifier.get")
-    def test_configure_when_it_is_already_configured(self,
-                                                     mock___verifier_get):
+    def test_configure_when_it_is_already_configured(self, mock___verifier_get,
+                                                     mock_exists):
         verifier_obj = mock___verifier_get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         extra = {"key": "value"}
-        verifier_obj.status = consts.VerifierStatus.CONFIGURED
+        verifier_obj.status = consts.VerifierStatus.INSTALLED
 
         # no recreate and no extra options
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
@@ -946,9 +946,6 @@ class VerifierAPITestCase(test.TestCase):
                                                  extra_options=extra))
         verifier_obj.manager.extend_configuration.assert_called_once_with(
             extra)
-        self.assertEqual([mock.call(consts.VerifierStatus.CONFIGURING),
-                          mock.call(consts.VerifierStatus.CONFIGURED)],
-                         verifier_obj.update_status.call_args_list)
         self.assertFalse(verifier_obj.manager.configure.called)
 
         verifier_obj.update_status.reset_mock()
@@ -960,9 +957,6 @@ class VerifierAPITestCase(test.TestCase):
                                                  reconfigure=True,
                                                  extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
-        self.assertEqual([mock.call(consts.VerifierStatus.CONFIGURING),
-                          mock.call(consts.VerifierStatus.CONFIGURED)],
-                         verifier_obj.update_status.call_args_list)
         verifier_obj.manager.configure.asset_called_once_with(
             extra_options=extra)
 
@@ -974,8 +968,7 @@ class VerifierAPITestCase(test.TestCase):
         deployment_id = "deployment"
         new_content = {}
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.override_configuration,
@@ -983,20 +976,19 @@ class VerifierAPITestCase(test.TestCase):
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
 
+    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
+                "os.path.exists")
     @mock.patch("rally.api._Verifier.get")
     def test_override_config_when_it_is_already_configured(
-            self, mock___verifier_get):
+            self, mock___verifier_get, mock_exists):
         verifier_obj = mock___verifier_get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         new_config = {"key": "value"}
-        verifier_obj.status = consts.VerifierStatus.CONFIGURED
+        verifier_obj.status = consts.VerifierStatus.INSTALLED
 
         api._Verifier.override_configuration(verifier_id, deployment_id,
                                              new_configuration=new_config)
-        self.assertEqual([mock.call(consts.VerifierStatus.CONFIGURING),
-                          mock.call(consts.VerifierStatus.CONFIGURED)],
-                         verifier_obj.update_status.call_args_list)
         verifier_obj.manager.override_configuration.assert_called_once_with(
             new_config)
 
@@ -1028,8 +1020,7 @@ class VerifierAPITestCase(test.TestCase):
         extra_settings = {}
 
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.add_extension,
@@ -1064,8 +1055,7 @@ class VerifierAPITestCase(test.TestCase):
         verifier_id = "uuiiiidd"
 
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.list_extensions,
@@ -1086,8 +1076,7 @@ class VerifierAPITestCase(test.TestCase):
         name = "some"
 
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verifier.delete_extension,
@@ -1201,8 +1190,7 @@ class VerificationAPITestCase(test.TestCase):
         verifier_obj = mock___verifier_get.return_value
 
         for status in consts.VerifierStatus:
-            if status not in (consts.VerifierStatus.INSTALLED,
-                              consts.VerifierStatus.CONFIGURED):
+            if status != consts.VerifierStatus.INSTALLED:
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       api._Verification.start,
@@ -1221,6 +1209,7 @@ class VerificationAPITestCase(test.TestCase):
         deployment_id = "duuuiidd"
         verifier_obj = mock___verifier_get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
+        verifier_obj.manager.is_configured.return_value = False
 
         api._Verification.start(verifier_id, deployment_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
@@ -1235,7 +1224,7 @@ class VerificationAPITestCase(test.TestCase):
         deployment_id = "duuuiidd"
         run_args = {"arg": "value"}
         verifier_obj = mock___verifier_get.return_value
-        verifier_obj.status = consts.VerifierStatus.CONFIGURED
+        verifier_obj.status = consts.VerifierStatus.INSTALLED
         verification_obj = mock_verification_create.return_value
 
         api._Verification.start(verifier_id, deployment_id, **run_args)
@@ -1268,7 +1257,7 @@ class VerificationAPITestCase(test.TestCase):
         deployment_id = "duuuiidd"
         run_args = {"arg": "value"}
         verifier_obj = mock___verifier_get.return_value
-        verifier_obj.status = consts.VerifierStatus.CONFIGURED
+        verifier_obj.status = consts.VerifierStatus.INSTALLED
         verification_obj = mock_verification_create.return_value
         verifier_obj.manager.run.side_effect = RuntimeError
 

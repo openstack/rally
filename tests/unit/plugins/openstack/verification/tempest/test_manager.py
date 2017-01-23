@@ -62,6 +62,11 @@ class TempestManagerTestCase(test.TestCase):
             tempest.verifier.deployment)
         cm.create.assert_called_once_with(tempest.configfile, extra_options)
 
+    @mock.patch("%s.config.os.path.exists" % PATH)
+    def test_is_configured(self, mock_exists):
+        tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
+        self.assertTrue(tempest.is_configured())
+
     @mock.patch("%s.config.extend_configfile" % PATH)
     def test_extend_configuration(self, mock_extend_configfile):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
