@@ -69,7 +69,7 @@ class FileExporterTestCase(test.TestCase):
             }
         ]
         mock_dumps.assert_called_once_with(expected_dict, sort_keys=False,
-                                           indent=4)
+                                           indent=4, separators=(",", ": "))
 
     @mock.patch("rally.api.Task.get")
     def test_file_exporter_export_running_task(self, mock_task_get):

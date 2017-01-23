@@ -76,7 +76,8 @@ class FileExporter(exporter.Exporter):
 
         if self.type == "json":
             if task_results:
-                res = json.dumps(task_results, sort_keys=False, indent=4)
+                res = json.dumps(task_results, sort_keys=False, indent=4,
+                                 separators=(",", ": "))
                 LOG.debug("Got the task %s results." % uuid)
             else:
                 msg = ("Task %s results would be available when it will "

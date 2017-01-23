@@ -351,7 +351,8 @@ class TaskEngine(object):
             self._validate_config_syntax(self.config)
             self._validate_config_semantic(self.config)
         except Exception as e:
-            exception_info = json.dumps(traceback.format_exc(), indent=2)
+            exception_info = json.dumps(traceback.format_exc(), indent=2,
+                                        separators=(",", ": "))
             self.task.set_failed(type(e).__name__,
                                  str(e), exception_info)
             LOG.debug(exception_info)
