@@ -18,15 +18,16 @@
 Rally Plugins
 =============
 
-
-Rally Plugin Reference
-----------------------
-
 Rally has a plugin oriented architecture - in other words Rally team is trying
 to make all places of code pluggable. Such architecture leads to the big amount
-of plugins. :ref:`Rally Plugins Reference page <plugin_reference>` contains
-a full list with detailed descriptions of all official Rally plugins.
+of plugins. :ref:`plugin-reference` contains a full list of all official Rally
+plugins with detailed descriptions.
 
+
+.. toctree::
+    :maxdepth: 1
+
+    plugin_reference
 
 How plugins work
 ----------------

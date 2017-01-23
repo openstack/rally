@@ -1,12 +1,13 @@
 :tocdepth: 1
-.. _plugin_reference:
+
+.. _plugin-reference:
 
 
-Rally Plugins Reference
-=======================
+Plugins Reference
+=================
 
 .. contents::
-  :depth: 1
+  :depth: 2
   :local:
 
 .. generate_plugin_reference::

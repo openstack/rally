@@ -37,6 +37,7 @@ hint = lambda msg: nodes.hint("", *parse_text(msg))
 warning = lambda msg: nodes.warning("", paragraph(msg))
 category = lambda title: parse_text("%s\n%s" % (title, "-" * len(title)))[0]
 subcategory = lambda title: parse_text("%s\n%s" % (title, "~" * len(title)))[0]
+section = lambda title: parse_text("%s\n%s" % (title, "\"" * len(title)))[0]
 
 
 def make_definition(term, ref, descriptions):

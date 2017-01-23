@@ -188,11 +188,16 @@ def make_category_section(name, parser):
 
 
 class CLIReferenceDirective(rst.Directive):
+    optional_arguments = 1
+    option_spec = {"group": str}
 
     def run(self):
         parser = Parser()
         categories = copy.copy(main.categories)
         categories["db"] = manage.DBCommands
+        if "group" in self.options:
+            categories = {k: v for k,v in categories.items()
+                          if k == self.options["group"]}
         cliutils._add_command_parsers(categories, parser)
 
         content = []
