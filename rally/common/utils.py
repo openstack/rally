@@ -109,6 +109,9 @@ class Struct(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
+    def __getitem__(self, item, default=None):
+        return getattr(self, item, default)
+
 
 class RAMInt(object):
     """Share RAM integer, for IPC.

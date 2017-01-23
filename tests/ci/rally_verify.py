@@ -112,9 +112,9 @@ def start_verification(args):
     results["uuid"] = envutils.get_global(envutils.ENV_VERIFICATION)
     results["show"] = call_rally("verify show")
     results["show_detailed"] = call_rally("verify show --detailed")
-    for output_type in ("json", "html"):
-        results[output_type] = call_rally("verify report",
-                                          output_type=output_type)
+    for output_type in ("json", "html", "junit-xml"):
+        results[output_type.replace("-", "_")] = call_rally(
+            "verify report", output_type=output_type)
     # NOTE(andreykurilin): we need to clean verification uuid from global
     # environment to be able to load it next time(for another verification).
     envutils.clear_global(envutils.ENV_VERIFICATION)
@@ -132,8 +132,8 @@ def write_file(filename, data):
 def generate_trends_reports(uuid_1, uuid_2):
     """Generate trends reports."""
     results = {}
-    for output_type in ("json", "html"):
-        results[output_type] = call_rally(
+    for output_type in ("json", "html", "junit-xml"):
+        results[output_type.replace("-", "_")] = call_rally(
             "verify report --uuid %s %s" % (uuid_1, uuid_2),
             output_type=output_type)
     return results
