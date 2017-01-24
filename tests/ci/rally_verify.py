@@ -229,6 +229,9 @@ def main():
         "verify create-verifier --type %s --name my-verifier --source %s"
         % (VERIFIER_TYPE, VERIFIER_SOURCE))
 
+    # Show the verifier
+    render_vars["show_verifier"] = call_rally("verify show-verifier")
+
     # List verifiers
     render_vars["list_verifiers"] = call_rally("verify list-verifiers")
 

@@ -112,7 +112,7 @@ class VerifyCommands(object):
                    help="Not to set the created verifier as the default "
                         "verifier for future operations.")
     @plugins.ensure_plugins_are_loaded
-    def create_verifier(self, api, name, vtype, namespace="openstack",
+    def create_verifier(self, api, name, vtype, namespace="",
                         source=None, version="master", system_wide=False,
                         extra=None, do_use=True):
         """Create a verifier."""
@@ -157,6 +157,34 @@ class VerifyCommands(object):
         else:
             print(_("There are no verifiers. You can create verifier, using "
                     "command `rally verify create-verifier`."))
+
+    @cliutils.help_group("verifier")
+    @cliutils.args("--id", dest="verifier_id", type=str,
+                   help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
+    @envutils.with_default_verifier_id()
+    @plugins.ensure_plugins_are_loaded
+    def show_verifier(self, api, verifier_id=None):
+        """Show detailed information about a verifier."""
+        verifier = api.verifier.get(verifier_id)
+        fields = ["UUID", "Status", "Created at", "Updated at", "Active",
+                  "Name", "Description", "Type", "Namespace", "Source",
+                  "Version", "System-wide", "Extra settings", "Location"]
+        used_verifier = envutils.get_global(envutils.ENV_VERIFIER)
+        formatters = {
+            "Created at": lambda v: v.created_at.replace(microsecond=0),
+            "Updated at": lambda v: v.updated_at.replace(microsecond=0),
+            "Active": lambda v: u"\u2714" if v.uuid == used_verifier else None,
+            "Extra settings": lambda v: (json.dumps(v.extra_settings, indent=4)
+                                         if v.extra_settings else None),
+            "Location": lambda v: v.manager.repo_dir
+        }
+        if not verifier.system_wide:
+            fields.append("Venv location")
+            formatters["Venv location"] = lambda v: v.manager.venv_dir
+        cliutils.print_dict(verifier, fields=fields, formatters=formatters,
+                            normalize_field_names=True)
+        print(_("Attention! All you do in the verifier repository or "
+                "verifier virtual environment, you do it at your own risk!"))
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -503,7 +531,7 @@ class VerifyCommands(object):
     @envutils.with_default_verification_uuid
     def show(self, api, verification_uuid=None, sort_by="name",
              detailed=False):
-        """Show a verification."""
+        """Show detailed information about a verification."""
         verification = api.verification.get(verification_uuid)
         verifier = api.verifier.get(verification.verifier_uuid)
         deployment = api.deployment.get(verification.deployment_uuid)
