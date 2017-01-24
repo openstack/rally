@@ -185,7 +185,7 @@ class TaskTestCase(test.TestCase):
              "atomic_actions": {
                  "keystone.create_user": i + 10}} for i in range(10)]
         obsolete = [
-            {"task_uuid": "foo_uuid", "created_at": now, "updated_at": None,
+            {"task_uuid": "foo_uuid", "created_at": now, "updated_at": now,
              "id": 11, "key": {"kw": {"foo": 42},
                                "name": "Foo.bar", "pos": 0},
              "data": {"raw": iterations, "sla": [],
@@ -208,6 +208,8 @@ class TaskTestCase(test.TestCase):
         self.assertIsInstance(results[0]["iterations"], type(iter([])))
         self.assertEqual(list(results[0]["iterations"]), iterations)
         results[0]["iterations"] = "foo_iterations"
+        expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
+        expected[0]["updated_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
         self.assertEqual(results, expected)
 
         # serializable is False
@@ -220,8 +222,6 @@ class TaskTestCase(test.TestCase):
         # serializable is True
         results = objects.Task.extend_results(obsolete, serializable=True)
         self.assertEqual(list(results[0]["iterations"]), iterations)
-        expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
-        expected[0]["updated_at"] = None
         jsonschema.validate(results[0],
                             objects.task.TASK_EXTENDED_RESULT_SCHEMA)
         results[0]["iterations"] = "foo_iterations"

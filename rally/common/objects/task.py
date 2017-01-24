@@ -290,14 +290,12 @@ TASK_EXTENDED_RESULT_SCHEMA = {
         },
         "created_at": {
             "anyOf": [
-                {"type": "string", "format": "date-time"},
-                {"type": "null"}
+                {"type": "string", "format": "date-time"}
             ]
         },
         "updated_at": {
             "anyOf": [
-                {"type": "string", "format": "date-time"},
-                {"type": "null"}
+                {"type": "string", "format": "date-time"}
             ]
         },
         "info": {
@@ -465,10 +463,8 @@ class Task(object):
                   sla - list, SLA results
                   iterations - if serializable, then iterator with
                                iterations data, otherwise a list
-                  created_at - if serializable, then str datetime,
-                               otherwise absent
-                  updated_at - if serializable, then str datetime,
-                               otherwise absent
+                  created_at - str datetime,
+                  updated_at - str datetime,
                   info:
                       atomic - dict where key is one of atomic action names
                                and value is dict {min_duration: number,
@@ -530,13 +526,8 @@ class Task(object):
                         max_duration = duration
 
             for k in "created_at", "updated_at":
-                if serializable:
-                    # NOTE(amaretskiy): convert datetime to str,
-                    #     because json.dumps() does not like datetime
-                    if scenario[k] and isinstance(scenario[k], dt.datetime):
-                        scenario[k] = scenario[k].strftime("%Y-%d-%m %H:%M:%S")
-                else:
-                    del scenario[k]
+                if scenario[k] and isinstance(scenario[k], dt.datetime):
+                    scenario[k] = scenario[k].strftime("%Y-%d-%m %H:%M:%S")
 
             durations_stat = charts.MainStatsTable(
                 {"iterations_count": len(scenario["data"]["raw"]),
