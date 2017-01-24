@@ -194,6 +194,27 @@ class CinderV2Service(service.Service, cinder_common.CinderMixin):
         return self._get_client().volume_types.update(volume_type, name,
                                                       description, is_public)
 
+    @atomic.action_timer("cinder_v2.add_type_access")
+    def add_type_access(self, volume_type, project):
+        """Add a project to the given volume type access list.
+
+        :param volume_type: Volume type name or ID to add access for the given
+                            project
+        :project: Project ID to add volume type access for
+        :return: An instance of cinderclient.apiclient.base.TupleWithMeta
+        """
+        return self._get_client().volume_type_access.add_project_access(
+            volume_type, project)
+
+    @atomic.action_timer("cinder_v2.list_type_access")
+    def list_type_access(self, volume_type):
+        """Print access information about the given volume type
+
+        :param volume_type: Filter results by volume type name or ID
+        :return: VolumeTypeAcces of specific project
+        """
+        return self._get_client().volume_type_access.list(volume_type)
+
 
 @service.compat_layer(CinderV2Service)
 class UnifiedCinderV2Service(cinder_common.UnifiedCinderMixin,

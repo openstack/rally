@@ -366,3 +366,30 @@ class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
                                                  specs=create_specs)
         self.admin_cinder.update_encryption_type(volume_type["id"],
                                                  specs=update_specs)
+
+
+@validation.add("required_platform", platform="openstack", admin=True)
+@validation.add("required_api_versions", component="cinder", versions=["2"])
+@validation.add("required_services", services=consts.Service.CINDER)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_volume_type_"
+                         "add_and_list_type_access")
+class CreateVolumeTypeAddAndListTypeAccess(scenario.OpenStackScenario):
+
+    def run(self, description=None, is_public=False):
+        """Add and list volume type access for the given project.
+
+          This scenario first creates a private volume type, then add project
+          access and list project access to it.
+
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
+        """
+        service = cinder_v2.CinderV2Service(self._admin_clients,
+                                            self.generate_random_name,
+                                            atomic_inst=self.atomic_actions())
+        volume_type = service.create_volume_type(description=description,
+                                                 is_public=is_public)
+        service.add_type_access(volume_type,
+                                project=self.context["tenant"]["id"])
+        service.list_type_access(volume_type)
