@@ -113,7 +113,7 @@ New DB schema
   for getting overview of what happened. As we have multiple chunks per
   Workload, we won't be able to store them without creating this table.
 
-* Tag - contains tags binded to tasks and subtasks by uuid and type
+* Tag - contains tags bound to tasks and subtasks by uuid and type
 
 
 Task table
