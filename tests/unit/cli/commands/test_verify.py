@@ -177,20 +177,43 @@ class VerifyCommandsTestCase(test.TestCase):
                           load_list="load-list")
         self.assertFalse(self.fake_api.verification.start.called)
 
+        verification = mock.Mock(uuid="v_uuid")
+        failed_test = {
+            "test_2": {
+                "name": "test_2",
+                "status": "fail",
+                "duration": 2,
+                "traceback": "Some traceback"
+            }
+        }
+        test_results = {
+            "tests": {
+                "test_1": {
+                    "name": "test_1",
+                    "status": "success",
+                    "duration": 2,
+                    "tags": []
+                }
+            },
+            "totals": {
+                "tests_count": 2,
+                "tests_duration": 4,
+                "success": 2,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_success": 0,
+                "failures": 0
+            }
+        }
+        test_results["tests"].update(failed_test)
+        results = mock.Mock(**test_results)
+        results.filter_tests.return_value = failed_test
+        self.fake_api.verification.start.return_value = (verification, results)
+        self.fake_api.verification.get.return_value = verification
+
         mock_exists.return_value = False
         self.verify.start(self.fake_api, "v_id", "d_id", load_list="/p/a/t/h")
         self.assertFalse(self.fake_api.verification.start.called)
-
-        verification = mock.Mock(uuid="v_uuid")
-        results = mock.Mock(totals={"tests_count": 2,
-                                    "tests_duration": 4,
-                                    "success": 2,
-                                    "skipped": 0,
-                                    "expected_failures": 0,
-                                    "unexpected_success": 0,
-                                    "failures": 0})
-        self.fake_api.verification.start.return_value = (verification, results)
-        self.fake_api.verification.get.return_value = verification
 
         mock_exists.return_value = True
         tf = tempfile.NamedTemporaryFile()
@@ -235,7 +258,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.fake_api.verification.get.reset_mock()
         mock_update_globals_file.reset_mock()
-        self.verify.start(self.fake_api, "v_id", "d_id", do_use=False)
+        self.verify.start(self.fake_api, "v_id", "d_id", detailed=True,
+                          do_use=False)
         self.assertFalse(self.fake_api.verification.get.called)
         self.assertFalse(mock_update_globals_file.called)
 
