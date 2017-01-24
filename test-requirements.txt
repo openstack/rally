@@ -5,24 +5,24 @@
 # [do-not-touch] we need to modify our code to support latest release
 hacking>=0.9.2,<0.10                                   # Apache Software License
 
-pytest>=2.7                                            # MIT
+pytest>=2.7,<=3.0.6                                    # MIT
 # py.test plugin for measuring coverage.
-pytest-cov>=2.2.1                                      # MIT
+pytest-cov>=2.2.1,<=2.4.0                              # MIT
 # py.test plugin for generating HTML reports
-pytest-html>=1.10.0                                    # Mozilla Public License 2.0 (MPL 2.0)
+pytest-html>=1.10.0,<=1.13.0                           # Mozilla Public License 2.0 (MPL 2.0)
 # py.test xdist plugin for distributed testing and loop-on-failing modes
-pytest-xdist                                           # MIT
+pytest-xdist<=1.15.0                                   # MIT
 # py.test plugin to abort hanging tests
-pytest-timeout                                         # MIT
+pytest-timeout<=1.2.0                                  # MIT
 
-coverage>=4.0                                          # Apache License, Version 2.0
-ddt>=1.0.1
-mock>=2.0
-python-dateutil>=2.4.2                                 # Simplified BSD
-testtools>=1.4.0
+coverage>=4.0,<=4.3.4                                  # Apache License, Version 2.0
+ddt>=1.0.1,<=1.1.1
+mock>=2.0,<=2.0.0
+python-dateutil>=2.4.2,<=2.6.0                         # Simplified BSD
+testtools>=1.4.0,<=2.2.0
 
-oslosphinx>=4.7.0                                      # Apache Software License
-oslotest>=1.10.0                                       # Apache Software License
+oslosphinx>=4.7.0,<=4.10.0                             # Apache Software License
+oslotest>=1.10.0,<=2.13.0                              # Apache Software License
 
-testresources>=0.2.4                                   # Apache-2.0/BSD
-testscenarios>=0.4                                     # Apache-2.0/BSD
+testresources>=0.2.4,<=2.0.1
+testscenarios>=0.4,<=0.5.0
