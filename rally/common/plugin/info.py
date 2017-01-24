@@ -81,10 +81,18 @@ def parse_docstring(docstring):
 class InfoMixin(object):
 
     @classmethod
+    def _get_doc(cls):
+        """Return documentary of class
+
+        By default it returns docstring of class, but it can be overridden
+        for example for cases like merging own docstring with parent
+        """
+        return cls.__doc__
+
+    @classmethod
     def get_info(cls):
         plugin_ = getattr(cls, "func_ref", cls)
-        doc_source = getattr(plugin_, "_doc_source_", plugin_)
-        doc = parse_docstring(doc_source.__doc__)
+        doc = parse_docstring(cls._get_doc())
 
         return {
             "name": plugin_.get_name(),

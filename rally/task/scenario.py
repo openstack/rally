@@ -50,8 +50,6 @@ def configure(name=None, namespace="default", context=None):
         scen.is_classbased = hasattr(scen, "run") and callable(scen.run)
         if not scen.is_classbased:
             plugin.from_func(Scenario)(scen)
-        else:
-            scen._doc_source_ = scen.run
 
         scen._meta_init()
         if name:
@@ -261,3 +259,9 @@ class Scenario(plugin.Plugin,
                 if message:
                     raise exceptions.RallyException(message)
                 self._output[key].append(value)
+
+    @classmethod
+    def _get_doc(cls):
+        if cls.is_classbased:
+            return cls.run.__doc__
+        return cls.__doc__
