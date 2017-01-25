@@ -423,7 +423,7 @@ __EOF__
     "$PYTHON" "$VIRTUALENV_DST" $VERBOSE --no-setuptools --no-pip --no-wheel \
         -p "$PYTHON" "$DESTDIR"
 
-    cd "${DESTDIR}" && . bin/activate
+    . "$DESTDIR/bin/activate"
 
     download - https://bootstrap.pypa.io/get-pip.py | python -\
         || die $EX_PROTOCOL \
