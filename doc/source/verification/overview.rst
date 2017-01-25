@@ -30,7 +30,7 @@ What is Verification Component and why do you need it?
 ------------------------------------------------------
 
 The primary goal of Rally Product is to provide a simple way to do complex
-things. As for functional testing, Verification component includes interfaces
+things. As for functional testing, Verification Component includes interfaces
 for:
 
 * **Managing things**. Create an isolated virtual environment and install
@@ -43,7 +43,7 @@ for:
   automatically.
 * **Launching verifiers**. Launchers of specific tools don't always contain all
   required features, Rally team tries to fix this omission. Verification
-  Component support some of them like expected failures, the list of tests to
+  Component supports some of them like expected failures, a list of tests to
   skip, a list of tests to launch, re-running previous verification or just
   failed tests from it and so on. Btw, all verification runs arguments are
   stored in the database.

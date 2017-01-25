@@ -292,7 +292,7 @@ class VerifierManager(plugin.Plugin):
     def override_configuration(self, new_configuration):
         """Override verifier configuration
 
-        :param new_configuration: Content which should ve used while overriding
+        :param new_configuration: Content which should be used while overriding
             existing configuration
         :raises NotImplementedError: this feature is verifier-specific, so you
             should override this method in your plugin if it supports
