@@ -1,0 +1,357 @@
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import mock
+from oslo_config import cfg
+
+from rally.plugins.openstack.services.storage import cinder_v2
+from tests.unit import fakes
+from tests.unit import test
+
+BASE_PATH = "rally.plugins.openstack.services.storage"
+CONF = cfg.CONF
+
+
+class CinderV2ServiceTestCase(test.ScenarioTestCase):
+    def setUp(self):
+        super(CinderV2ServiceTestCase, self).setUp()
+        self.clients = mock.MagicMock()
+        self.cinder = self.clients.cinder.return_value
+        self.name_generator = mock.MagicMock()
+        self.service = cinder_v2.CinderV2Service(
+            self.clients, name_generator=self.name_generator)
+
+    def atomic_actions(self):
+        return self.service._atomic_actions
+
+    def test_create_volume(self):
+        self.service.generate_random_name = mock.MagicMock(
+            return_value="volume")
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+
+        return_volume = self.service.create_volume(1)
+
+        kwargs = {"name": "volume",
+                  "description": None,
+                  "consistencygroup_id": None,
+                  "snapshot_id": None,
+                  "source_volid": None,
+                  "volume_type": None,
+                  "user_id": None,
+                  "project_id": None,
+                  "availability_zone": None,
+                  "metadata": None,
+                  "imageRef": None,
+                  "scheduler_hints": None,
+                  "source_replica": None,
+                  "multiattach": False}
+        self.cinder.volumes.create.assert_called_once_with(1, **kwargs)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.volumes.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_volume)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_volume")
+
+    @mock.patch("%s.cinder_v2.random" % BASE_PATH)
+    def test_create_volume_with_size_range(self, mock_random):
+        mock_random.randint.return_value = 3
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+
+        return_volume = self.service.create_volume(
+            size={"min": 1, "max": 5}, name="volume")
+
+        kwargs = {"name": "volume",
+                  "description": None,
+                  "consistencygroup_id": None,
+                  "snapshot_id": None,
+                  "source_volid": None,
+                  "volume_type": None,
+                  "user_id": None,
+                  "project_id": None,
+                  "availability_zone": None,
+                  "metadata": None,
+                  "imageRef": None,
+                  "scheduler_hints": None,
+                  "source_replica": None,
+                  "multiattach": False}
+        self.cinder.volumes.create.assert_called_once_with(
+            3, **kwargs)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.volumes.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_volume)
+
+    def test_update_volume(self):
+        self.service.generate_random_name = mock.MagicMock(
+            return_value="volume")
+
+        return_volume = self.service.update_volume(1, description="fake")
+
+        self.service.generate_random_name.assert_called_once_with()
+        self.cinder.volumes.update.assert_called_once_with(1, name="volume",
+                                                           description="fake")
+        self.assertEqual(self.cinder.volumes.update.return_value,
+                         return_volume)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.update_volume")
+
+    def test_update_volume_with_name(self):
+        return_volume = self.service.update_volume(1, name="volume",
+                                                   description="fake")
+
+        self.cinder.volumes.update.assert_called_once_with(1, name="volume",
+                                                           description="fake")
+        self.assertEqual(self.cinder.volumes.update.return_value,
+                         return_volume)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.update_volume")
+
+    def test_list_types(self):
+        self.assertEqual(self.cinder.volume_types.list.return_value,
+                         self.service.list_types(search_opts=None,
+                                                 is_public=None))
+
+        self.cinder.volume_types.list.assert_called_once_with(
+            search_opts=None, is_public=None)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.list_types")
+
+    def test_create_snapshot(self):
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+        self.service.generate_random_name = mock.MagicMock(
+            return_value="snapshot")
+
+        return_snapshot = self.service.create_snapshot(1)
+
+        self.cinder.volume_snapshots.create.assert_called_once_with(
+            1, name="snapshot", description=None, force=False,
+            metadata=None)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.volume_snapshots.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_snapshot)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_snapshot")
+
+    def test_create_snapshot_with_name(self):
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+
+        return_snapshot = self.service.create_snapshot(1, name="snapshot")
+
+        self.cinder.volume_snapshots.create.assert_called_once_with(
+            1, name="snapshot", description=None, force=False,
+            metadata=None)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.volume_snapshots.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_snapshot)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_snapshot")
+
+    def test_create_backup(self):
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+        self.service.generate_random_name = mock.MagicMock(
+            return_value="backup")
+
+        return_backup = self.service.create_backup(1)
+
+        self.cinder.backups.create.assert_called_once_with(
+            1, name="backup", description=None, container=None,
+            incremental=False, force=False, snapshot_id=None)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.backups.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_backup)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_backup")
+
+    def test_create_backup_with_name(self):
+        self.service._wait_available_volume = mock.MagicMock()
+        self.service._wait_available_volume.return_value = fakes.FakeVolume()
+
+        return_backup = self.service.create_backup(1, name="backup")
+
+        self.cinder.backups.create.assert_called_once_with(
+            1, name="backup", description=None, container=None,
+            incremental=False, force=False, snapshot_id=None)
+        self.service._wait_available_volume.assert_called_once_with(
+            self.cinder.backups.create.return_value)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         return_backup)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_backup")
+
+    def test_create_volume_type(self):
+        self.service.generate_random_name = mock.MagicMock(
+            return_value="volume_type")
+        return_type = self.service.create_volume_type(name=None,
+                                                      description=None,
+                                                      is_public=True)
+
+        self.cinder.volume_types.create.assert_called_once_with(
+            name="volume_type", description=None, is_public=True)
+        self.assertEqual(self.cinder.volume_types.create.return_value,
+                         return_type)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_volume_type")
+
+    def test_create_volume_type_with_name_(self):
+        return_type = self.service.create_volume_type(name="type",
+                                                      description=None,
+                                                      is_public=True)
+
+        self.cinder.volume_types.create.assert_called_once_with(
+            name="type", description=None, is_public=True)
+        self.assertEqual(self.cinder.volume_types.create.return_value,
+                         return_type)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.create_volume_type")
+
+
+class UnifiedCinderV2ServiceTestCase(test.TestCase):
+    def setUp(self):
+        super(UnifiedCinderV2ServiceTestCase, self).setUp()
+        self.clients = mock.MagicMock()
+        self.service = cinder_v2.UnifiedCinderV2Service(self.clients)
+        self.service._impl = mock.MagicMock()
+
+    def test__unify_volume(self):
+        class SomeVolume(object):
+            id = 1
+            name = "volume"
+            size = 1
+        volume = self.service._unify_volume(SomeVolume())
+        self.assertEqual(1, volume.id)
+        self.assertEqual("volume", volume.name)
+        self.assertEqual(1, volume.size)
+
+    def test__unify_snapshot(self):
+        class SomeSnapshot(object):
+            id = 1
+            name = "snapshot"
+            volume_id = "volume"
+        snapshot = self.service._unify_snapshot(SomeSnapshot())
+        self.assertEqual(1, snapshot.id)
+        self.assertEqual("snapshot", snapshot.name)
+        self.assertEqual("volume", snapshot.volume_id)
+
+    def test_create_volume(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.assertEqual(self.service._unify_volume.return_value,
+                         self.service.create_volume(1))
+        self.service._impl.create_volume.assert_called_once_with(
+            1, availability_zone=None, consistencygroup_id=None,
+            description=None, imageRef=None,
+            metadata=None, multiattach=False, name=None, project_id=None,
+            scheduler_hints=None, snapshot_id=None, source_replica=None,
+            source_volid=None, user_id=None, volume_type=None)
+        self.service._unify_volume.assert_called_once_with(
+            self.service._impl.create_volume.return_value)
+
+    def test_list_volumes(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.service._impl.list_volumes.return_value = ["vol"]
+        self.assertEqual([self.service._unify_volume.return_value],
+                         self.service.list_volumes(detailed=True))
+        self.service._impl.list_volumes.assert_called_once_with(detailed=True)
+        self.service._unify_volume.assert_called_once_with("vol")
+
+    def test_get_volume(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.assertEqual(self.service._unify_volume.return_value,
+                         self.service.get_volume(1))
+        self.service._impl.get_volume.assert_called_once_with(1)
+        self.service._unify_volume.assert_called_once_with(
+            self.service._impl.get_volume.return_value)
+
+    def test_extend_volume(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.assertEqual(self.service._unify_volume.return_value,
+                         self.service.extend_volume("volume", new_size=1))
+        self.service._impl.extend_volume.assert_called_once_with("volume",
+                                                                 new_size=1)
+        self.service._unify_volume.assert_called_once_with(
+            self.service._impl.extend_volume.return_value)
+
+    def test_update_volume(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_volume.return_value,
+            self.service.update_volume(1, name="volume",
+                                       description="fake"))
+        self.service._impl.update_volume.assert_called_once_with(
+            1, description="fake", name="volume")
+        self.service._unify_volume.assert_called_once_with(
+            self.service._impl.update_volume.return_value)
+
+    def test_list_types(self):
+        self.assertEqual(
+            self.service._impl.list_types.return_value,
+            self.service.list_types(search_opts=None, is_public=True))
+        self.service._impl.list_types.assert_called_once_with(
+            search_opts=None, is_public=True)
+
+    def test_create_snapshot(self):
+        self.service._unify_snapshot = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_snapshot.return_value,
+            self.service.create_snapshot(1, force=False,
+                                         name=None,
+                                         description=None,
+                                         metadata=None))
+        self.service._impl.create_snapshot.assert_called_once_with(
+            1, force=False, name=None, description=None, metadata=None)
+        self.service._unify_snapshot.assert_called_once_with(
+            self.service._impl.create_snapshot.return_value)
+
+    def test_list_snapshots(self):
+        self.service._unify_snapshot = mock.MagicMock()
+        self.service._impl.list_snapshots.return_value = ["snapshot"]
+        self.assertEqual([self.service._unify_snapshot.return_value],
+                         self.service.list_snapshots(detailed=True))
+        self.service._impl.list_snapshots.assert_called_once_with(
+            detailed=True)
+        self.service._unify_snapshot.assert_called_once_with(
+            "snapshot")
+
+    def test_create_backup(self):
+        self.service._unify_backup = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_backup.return_value,
+            self.service.create_backup(1, container=None,
+                                       name=None,
+                                       description=None,
+                                       incremental=False,
+                                       force=False,
+                                       snapshot_id=None))
+        self.service._impl.create_backup.assert_called_once_with(
+            1, container=None, name=None, description=None,
+            incremental=False, force=False, snapshot_id=None)
+        self.service._unify_backup(
+            self.service._impl.create_backup.return_value)
+
+    def test_create_volume_type(self):
+        self.assertEqual(
+            self.service._impl.create_volume_type.return_value,
+            self.service.create_volume_type(name="type",
+                                            description="desp",
+                                            is_public=True))
+        self.service._impl.create_volume_type.assert_called_once_with(
+            name="type", description="desp", is_public=True)
