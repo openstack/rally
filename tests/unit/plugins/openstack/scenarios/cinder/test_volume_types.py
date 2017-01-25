@@ -18,6 +18,9 @@ from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.cinder import volume_types
 from tests.unit import test
 
+CINDER_V2_PATH = ("rally.plugins.openstack.services.storage"
+                  ".cinder_v2.CinderV2Service")
+
 
 class CinderVolumeTypesTestCase(test.ScenarioTestCase):
 
@@ -148,6 +151,26 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
         mock_service.create_volume_type.assert_called_once_with(
             description=description, is_public=is_public)
         mock_service.list_types.assert_called_once_with()
+
+    @mock.patch("%s.create_volume_type" % CINDER_V2_PATH)
+    @mock.patch("%s.update_volume_type" % CINDER_V2_PATH)
+    def test_create_and_update_volume_type(self, mock_update_volume_type,
+                                           mock_create_volume_type):
+        scenario = volume_types.CreateAndUpdateVolumeType(self._get_context())
+        fake_type = mock.Mock()
+        create_description = "test create"
+        update_description = "test update"
+        mock_create_volume_type.return_value = fake_type
+        scenario.run(description=create_description,
+                     update_description=update_description)
+
+        mock_create_volume_type.assert_called_once_with(
+            description=create_description,
+            is_public=True)
+        mock_update_volume_type.assert_called_once_with(
+            fake_type, update_name=False,
+            description=update_description,
+            is_public=None)
 
     def test_create_volume_type_and_encryption_type(self):
         mock_service = self.mock_cinder.return_value

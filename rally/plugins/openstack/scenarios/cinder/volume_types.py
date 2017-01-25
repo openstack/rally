@@ -16,6 +16,7 @@ from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
+from rally.plugins.openstack.services.storage import cinder_v2
 from rally.task import validation
 
 
@@ -57,6 +58,39 @@ class CreateAndGetVolumeType(cinder_utils.CinderBasic):
         """
         volume_type = self.admin_cinder.create_volume_type(**kwargs)
         self.admin_cinder.get_volume_type(volume_type)
+
+
+@validation.add("required_services", services=[consts.Service.CINDER])
+@validation.required_api_versions(component="cinder", versions=["2"])
+@validation.add("required_platform", platform="openstack", admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_and_update_volume_type")
+class CreateAndUpdateVolumeType(scenario.OpenStackScenario):
+
+    def run(self, description=None, is_public=True, update_name=False,
+            update_description=None, update_is_public=None):
+        """create a volume type, then update the type.
+
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
+        :param update_name: if True, can update name by generating random name.
+                            if False, don't update name.
+        :param update_description: update Description of the volume type
+        :param update_is_public: update Volume type visibility
+        """
+        service = cinder_v2.CinderV2Service(self._admin_clients,
+                                            self.generate_random_name,
+                                            atomic_inst=self.atomic_actions())
+
+        volume_type = service.create_volume_type(
+            description=description,
+            is_public=is_public)
+
+        service.update_volume_type(
+            volume_type,
+            update_name=update_name,
+            description=update_description,
+            is_public=update_is_public)
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])

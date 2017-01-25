@@ -175,6 +175,25 @@ class CinderV2Service(service.Service, cinder_common.CinderMixin):
                   "is_public": is_public}
         return self._get_client().volume_types.create(**kwargs)
 
+    @atomic.action_timer("cinder_v2.update_volume_type")
+    def update_volume_type(self, volume_type, update_name=False,
+                           description=None, is_public=None):
+        """Update the name and/or description for a volume type.
+
+        :param volume_type: The ID or a instance of the :class:`VolumeType`
+                            to update.
+        :param update_name: if True, can update name by generating random name.
+                            if False, don't update name.
+        :param description: Description of the the volume type.
+        :rtype: :class:`VolumeType`
+        """
+        name = None
+        if update_name:
+            name = self.generate_random_name()
+
+        return self._get_client().volume_types.update(volume_type, name,
+                                                      description, is_public)
+
 
 @service.compat_layer(CinderV2Service)
 class UnifiedCinderV2Service(cinder_common.UnifiedCinderMixin,
