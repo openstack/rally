@@ -1,0 +1,227 @@
+============
+Rally v0.8.0
+============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |      **1/25/2017**    |
++------------------+-----------------------+
+
+Details
+-------
+
+Specs & Feature Requests
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* `[Implemented] Refactor Verification Component
+  <https://github.com/openstack/rally/blob/0.8.0/doc/specs/implemented/verification_refactoring.rst>`_
+
+* `[Implemented] Scaling & Refactoring Rally DB
+  <https://github.com/openstack/rally/blob/0.8.0/doc/specs/implemented/db_refactoring.rst>`_
+
+Installation
+~~~~~~~~~~~~
+
+We switched to use bindep library for checking required system packages.
+All our dependencies moved to separate file (like requirements.txt for python
+packages) `bindep.txt
+<https://github.com/openstack/rally/blob/0.8.0/bindep.txt>`_.
+
+Database
+~~~~~~~~
+
+.. warning:: Database schema is changed, you must run
+     `rally-manage db upgrade <http://rally.readthedocs.io/en/0.8.0/cli/cli_reference.html#rally-manage-db-upgrade>`_
+     to be able to use old Rally installation with latest release.
+* change structure of database to be more flexible
+* save raw task results in chunks (see raw_result_chunk_size option of
+  [DEFAULT] rally configuration section)
+* add db revision check in rally API, so it is impossible to use rally with
+  wrong db now.
+
+Rally API
+~~~~~~~~~
+
+Single entry point for Rally API is added - rally.api.API . Old API classes
+(``rally.api.Task``, ``rally.api.Verification``, ``rally.api.Deployment``) are
+deprecated now.
+
+Rally CLI
+~~~~~~~~~
+
+* ``rally task sla_check`` is deprecated now in favor of
+  ``rally task sla-check``
+
+* Deprecated category ``rally show`` was removed.
+
+* `rally plugin list` is extended with plugin base column
+
+Task Component
+~~~~~~~~~~~~~~
+
+- [Random names] scenario for checking performance of generate_random_name
+  method is added to our CI with proper SLA. Be sure, whatever number of random
+  names you need, it will not affect performance of Rally at all, we checked.
+
+- [atomic actions] scenario for checking performance of calculating atomic
+  actions is added to our CI with proper SLA. Be sure, whatever number atomics
+  you have in scenarios, it will not affect performance of Rally at all, we
+  checked.
+
+- [services] new entity is introduced for helping to provide compatibility
+  layer between different API versions of one service.
+
+Verification component
+~~~~~~~~~~~~~~~~~~~~~~
+
+We completely redesign the whole Verification component. For more details see
+`our new docs for that component
+<http://rally.readthedocs.ioen/0.8.0/verification/index.html>`_
+
+Unfortunately, such big change could not be done in backward compatible way,
+so old code is not compatible with new one. See `HowTo migrate from
+Verification component 0.7.0 to 0.8.0
+<http://rally.readthedocs.ioen/0.8.0/verification/howto/migrate_from_old_design.html>`_
+
+Plugins
+~~~~~~~
+
+**Services**:
+
+* Glance:
+
+  Switched from V1 to V2 API by default.
+
+* Keystone:
+
+ - Transmit endpoint_type to keystoneclient
+ - Full keystone V3 support
+
+**Scenarios**:
+
+* *Updated*:
+ - The meaning of the volume_type argument is changes in
+   `CinderVolumes.create_snapshot_and_attach_volume
+    <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#cindervolumes-create-snapshot-and-attach-volume-scenario>`_
+   scenario. It should contain actual volume type instead of boolean value to
+   choose random volume type.
+ - Extend `GlanceImages.create_image_and_boot_instances
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#glanceimages-create-image-and-boot-instances-scenario>`_
+   with create_image_kwargs and boot_server_kwargs arguments.
+
+* *NEW!!*:
+ - `CeilometerAlarms.create_and_get_alarm
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#ceilometeralarms-create-and-get-alarm-scenario>`_
+ - `CinderVolumeBackups.create_incremental_volume_backup
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumebackups-create-incremental-volume-backup-scenario>`_
+ - `CinderVolumeTypes.create_and_delete_volume_type
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumetypes-create-and-delete-volume-type-scenario>`_
+ - `CinderVolumeTypes.create_volume_type_and_encryption_type
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumetypes-create-volume-type-and-encryption-type-scenario>`_
+ - `CinderVolumes.create_and_accept_transfer
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumes-create-and-accept-transfer-scenario>`_
+ - `CinderVolumes.create_and_get_volume
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumes-create-and-get-volume-scenario>`_
+ - `CinderVolumes.create_volume_and_update_readonly_flag
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumes-create-volume-and-update-readonly-flag-scenario>`_
+ - `CinderVolumes.list_transfers
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumes-list-transfers-scenario>`_
+ - `CinderVolumes.list_types
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#cindervolumes-list-types-scenario>`_
+ - `KeystoneBasic.create_and_get_role
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#keystonebasic-create-and-get-role-scenario>`_
+ - `ManilaShares.create_and_list_share
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#manilashares-create-and-list-share-scenario>`_
+ - `ManilaShares.set_and_delete_metadata
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#manilashares-set-and-delete-metadata-scenario>`_
+ - `MistralExecutions.create_execution_from_workbook
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#mistralexecutions-create-execution-from-workbook-scenario>`_
+ - `MistralExecutions.list_executions
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#mistralexecutions-list-executions-scenario>`_
+ - `NeutronLoadbalancerV2.create_and_list_loadbalancers
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#neutronloadbalancerv2-create-and-list-loadbalancers-scenario>`_
+ - `NeutronNetworks.create_and_show_network
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#neutronnetworks-create-and-show-network-scenario>`_
+ - `NeutronNetworks.list_agents
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#neutronnetworks-list-agents-scenario>`_
+ - `NovaAggregates.create_aggregate_add_host_and_boot_server
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novaaggregates-create-aggregate-add-host-and-boot-server-scenario>`_
+ - `NovaAggregates.create_and_get_aggregate_details
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novaaggregates-create-and-get-aggregate-details-scenario>`_
+ - `NovaFlavors.create_and_delete_flavor
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novaflavors-create-and-delete-flavor-scenario>`_
+ - `NovaFlavors.create_flavor_and_add_tenant_access
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novaflavors-create-flavor-and-add-tenant-access-scenario>`_
+ - `NovaHosts.list_and_get_hosts
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novahosts-list-and-get-hosts-scenario>`_
+ - `NovaHypervisors.list_and_get_uptime_hypervisors
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novahypervisors-list-and-get-uptime-hypervisors-scenario>`_
+ - `NovaHypervisors.list_and_search_hypervisors
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novahypervisors-list-and-search-hypervisors-scenario>`_
+ - `NovaHypervisors.statistics_hypervisors
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novahypervisors-statistics-hypervisors-scenario>`_
+ - `NovaSecGroup.boot_server_and_add_secgroups
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novasecgroup-boot-server-and-add-secgroups-scenario>`_
+ - `NovaServerGroups.create_and_list_server_groups
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#novaservergroups-create-and-list-server-groups-scenario>`_
+ - `Quotas.nova_get
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#quotas-nova-get-scenario>`_
+
+**Hooks**:
+
+* *NEW!!*:
+ - `fault_injection
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#fault-injection-hook>`_
+
+**Runners**
+
+* *Updated*:
+ - `RPS runner
+   <http://rally.readthedocs.ioen/0.8.0/plugins/plugin_reference.html#rps-scenario-runner>`_
+   is extended with ability to increase 'rps' value by arithmetic progression
+   across certain duration. Now it can be also a dict specifying progression
+   parameters:
+
+   .. code-block:: json
+
+        rps": {
+            "start": 1,
+            "end": 10,
+            "step": 1,
+            "duration": 2
+        }
+
+   This will generate rps value: ``start, start + step, start + 2 * step, ..,
+   end`` across certain 'duration' seconds each step. If iteration count not
+   ended at the last step of progression, then rps will continue to generate
+   with "end" value. Note that the last rps could be generated smaller.
+
+Fixed bugs
+~~~~~~~~~~
+
+* [hooks] incorrect encoding of stdout/stderr streams opened by sys_call hook
+  for py3
+
+* [hooks] sorting Hook column at HTML report doesn't work
+
+* [tasks][scenarios][neutron] L3 HA: Unable to complete operation on subnet
+
+  `Launchpad bug-report #1562878 <https://bugs.launchpad.net/rally/+bug/1562878>`_
+
+* [tasks] JSON report doesn't save order of atomics
+
+* [tasks][cleanup][nova] Failed to remove aggregate which has hosts in it
+
+* [tasks] `--abort-on-sla-failure
+  <http://rally.readthedocs.ioen/0.8.0/cli_reference.html#task-start-abortonslafailure>`_
+  mechanism works only for current workload, but does not stop the next ones.
+
+* [hooks] hooks section isn't displayed in HTML report
+
+
+Thanks
+~~~~~~
+
+ 2 Everybody!
