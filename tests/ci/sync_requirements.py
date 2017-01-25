@@ -309,7 +309,7 @@ def format_requirements():
 def add_uppers():
     """Obtains latest version of packages and put them to requirements."""
     for filename, requirements in _sync():
-        LOG.info("Obtaining latest versions of packages from %s." % filename)
+        LOG.info("Obtaining latest versions of packages for %s." % filename)
         for req in requirements:
             if isinstance(req, Requirement):
                 if isinstance(req.version, dict) and not req.version["max"]:
