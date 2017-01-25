@@ -83,6 +83,18 @@ class DeploymentTestCase(unittest.TestCase):
         self.rally("deployment recreate --deployment t_create_env")
         self.assertIn("t_create_env", self.rally("deployment list"))
 
+    def test_recreate_from_file(self):
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
+        config = json.loads(self.rally("deployment config"))
+        config["auth_url"] = "http://foo/"
+        file = utils.JsonTempFile(config)
+        self.rally("deployment recreate --deployment t_create_env "
+                   "--filename %s" % file.filename)
+        self.assertIn("t_create_env", self.rally("deployment list"))
+        self.assertEqual(config,
+                         json.loads(self.rally("deployment config")))
+
     def test_use(self):
         self.rally.env.update(utils.TEST_ENV)
         output = self.rally(

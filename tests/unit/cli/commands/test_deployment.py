@@ -131,7 +131,17 @@ class DeploymentCommandsTestCase(test.TestCase):
         deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
         self.deployment.recreate(self.fake_api, deployment_id)
         self.fake_api.deployment.recreate.assert_called_once_with(
-            deployment_id)
+            deployment_id, None)
+
+    @mock.patch("rally.cli.commands.deployment.open",
+                side_effect=mock.mock_open(read_data="{\"some\": \"json\"}"),
+                create=True)
+    def test_recreate_config(self, mock_open):
+        deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
+        self.deployment.recreate(self.fake_api, deployment_id,
+                                 filename="my.json")
+        self.fake_api.deployment.recreate.assert_called_once_with(
+            deployment_id, {"some": "json"})
 
     @mock.patch("rally.cli.commands.deployment.envutils.get_global")
     def test_recreate_no_deployment_id(self, mock_get_global):

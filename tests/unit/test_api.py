@@ -15,6 +15,7 @@
 
 """Test for api."""
 
+import copy
 import os
 
 import ddt
@@ -420,6 +421,50 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                                          "users": self.credentials["users"]}]]
                        })
         ])
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_recreate_config(self, mock_deployment_get,
+                             mock_deployment_update):
+        mock_deployment_get.return_value = self.deployment
+        mock_deployment_update.return_value = self.deployment
+        config = copy.deepcopy(self.deployment_config)
+        config["admin"] = {"username": "admin",
+                           "password": "pass1",
+                           "tenant_name": "demo"}
+        config["users"] = [{"username": "user1",
+                            "password": "pass2",
+                            "tenant_name": "demo"}]
+
+        api._Deployment.recreate(self.deployment_uuid, config)
+        mock_deployment_get.assert_called_once_with(self.deployment_uuid)
+        mock_deployment_update.assert_has_calls([
+            mock.call(self.deployment_uuid, {"config": config}),
+        ])
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_recreate_config_invalid(self, mock_deployment_get,
+                                     mock_deployment_update):
+        mock_deployment_get.return_value = self.deployment
+        mock_deployment_update.return_value = self.deployment
+        config = copy.deepcopy(self.deployment_config)
+        config["admin"] = {"foo": "bar"}
+
+        self.assertRaises(jsonschema.ValidationError, api._Deployment.recreate,
+                          self.deployment_uuid, config)
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    def test_recreate_config_wrong_type(self, mock_deployment_get,
+                                        mock_deployment_update):
+        mock_deployment_get.return_value = self.deployment
+        mock_deployment_update.return_value = self.deployment
+        config = copy.deepcopy(self.deployment_config)
+        config["type"] = "foo"
+
+        self.assertRaises(exceptions.RallyException, api._Deployment.recreate,
+                          self.deployment_uuid, config)
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):

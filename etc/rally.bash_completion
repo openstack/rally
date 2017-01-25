@@ -23,7 +23,7 @@ _rally()
     OPTS["deployment_create"]="--name --fromenv --filename --no-use"
     OPTS["deployment_destroy"]="--deployment"
     OPTS["deployment_list"]=""
-    OPTS["deployment_recreate"]="--deployment"
+    OPTS["deployment_recreate"]="--filename --deployment"
     OPTS["deployment_show"]="--deployment"
     OPTS["deployment_use"]="--deployment"
     OPTS["plugin_list"]="--name --namespace --plugin-base"

@@ -73,11 +73,11 @@ class Engine(plugin.Plugin):
         self.deployment = deployment
         self.config = deployment["config"]
 
-    def validate(self):
+    def validate(self, config=None):
         # TODO(sskripnick): remove this checking when config schema
         # is done for all available engines
         if hasattr(self, "CONFIG_SCHEMA"):
-            jsonschema.validate(self.config, self.CONFIG_SCHEMA)
+            jsonschema.validate(config or self.config, self.CONFIG_SCHEMA)
 
     # FIXME(boris-42): Get rid of this method
     def get_provider(self):

@@ -111,12 +111,14 @@ class DeploymentCommands(object):
         if do_use:
             self.use(api, deployment["uuid"])
 
+    @cliutils.args("--filename", type=str, required=False, metavar="<path>",
+                   help="Path to the configuration file of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
-    def recreate(self, api, deployment=None):
+    def recreate(self, api, deployment=None, filename=None):
         """Destroy and create an existing deployment.
 
         Unlike 'deployment destroy', the deployment database record
@@ -124,7 +126,12 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        api.deployment.recreate(deployment)
+        config = None
+        if filename:
+            with open(filename, "rb") as deploy_file:
+                config = yaml.safe_load(deploy_file.read())
+
+        api.deployment.recreate(deployment, config)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,

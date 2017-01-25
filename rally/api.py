@@ -103,16 +103,33 @@ class _Deployment(object):
         deployment.delete()
 
     @classmethod
-    def recreate(cls, deployment):
+    def recreate(cls, deployment, config=None):
         """Performs a cleanup and then makes a deployment again.
 
         :param deployment: UUID or name of the deployment
+        :param config: an optional dict with deployment config to update before
+                       redeploy
         """
         deployment = objects.Deployment.get(deployment)
         deployer = deploy_engine.Engine.get_engine(
             deployment["config"]["type"], deployment)
+
+        if config:
+            if deployment["config"]["type"] != config["type"]:
+                raise exceptions.RallyException(
+                    "Can't change deployment type.")
+            try:
+                deployer.validate(config)
+            except jsonschema.ValidationError:
+                LOG.error(_LE("Config schema validation error."))
+                raise
+
         with deployer:
             deployer.make_cleanup()
+
+            if config:
+                deployment.update_config(config)
+
             credentials = deployer.make_deploy()
             deployment.update_credentials(credentials)
 

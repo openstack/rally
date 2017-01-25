@@ -53,7 +53,7 @@ class RallyCliError(Exception):
         return self.msg
 
 
-class TaskConfig(object):
+class JsonTempFile(object):
 
     def __init__(self, config):
         config_file = tempfile.NamedTemporaryFile(delete=False)
@@ -63,6 +63,10 @@ class TaskConfig(object):
 
     def __del__(self):
         os.unlink(self.filename)
+
+
+class TaskConfig(JsonTempFile):
+    pass
 
 
 class Rally(object):
