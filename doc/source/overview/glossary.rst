@@ -1,5 +1,7 @@
 :tocdepth: 1
 
+.. _glossary:
+
 ========
 Glossary
 ========
@@ -164,6 +166,8 @@ Verify
 Rally can run different subunit-based testing tools against a target
 environment, for example `tempest
 <http://docs.openstack.org/developer/tempest/>`_ for OpenStack.
+
+.. _glossary-verification:
 
 Verification
 ------------

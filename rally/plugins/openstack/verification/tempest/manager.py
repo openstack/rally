@@ -30,13 +30,45 @@ from rally.verification import utils
 
 
 LOG = logging.getLogger(__name__)
+AVAILABLE_SETS = (list(consts.TempestTestSets) +
+                  list(consts.TempestApiTestSets) +
+                  list(consts.TempestScenarioTestSets))
 
 
 @manager.configure(name="tempest", namespace="openstack",
                    default_repo="https://git.openstack.org/openstack/tempest",
                    context={"tempest_configuration": {}, "testr_verifier": {}})
 class TempestManager(testr.TestrLauncher):
-    """Plugin for Tempest management."""
+    """Tempest verifier.
+
+    **Description**:
+
+    Quote from official documentation:
+
+      This is a set of integration tests to be run against a live OpenStack
+      cluster. Tempest has batteries of tests for OpenStack API validation,
+      Scenarios, and other specific tests useful in validating an OpenStack
+      deployment.
+
+    Rally supports features listed below:
+
+      * *cloning Tempest*: repository and version can be specified
+      * *installation*: system-wide with checking existence of required
+        packages or in virtual environment
+      * *configuration*: options are discovered via OpenStack API, but you can
+        override them if you need
+      * *running*: pre-creating all required resources(i.e images, tenants,
+        etc), prepare arguments, launching Tempest, live-progress output
+      * *results*: all verifications are stored in db, you can built reports,
+        compare verification at whatever you want time.
+
+    Appeared in Rally 0.8.0 *(actually, it appeared long time ago with first
+    revision of Verification Component, but 0.8.0 is mentioned since it is
+    first release after Verification Component redesign)*
+    """
+
+    RUN_ARGS = {"set_name": "Name of predefined sets of tests. Known names: "
+                            "%s" % ", ".join(AVAILABLE_SETS)}
 
     @property
     def run_environ(self):
@@ -158,14 +190,11 @@ class TempestManager(testr.TestrLauncher):
             if len(pattern) == 1:
                 pass  # it is just a regex
             elif pattern[0] == "set":
-                available_sets = (list(consts.TempestTestSets) +
-                                  list(consts.TempestApiTestSets) +
-                                  list(consts.TempestScenarioTestSets))
-                if pattern[1] not in available_sets:
+                if pattern[1] not in AVAILABLE_SETS:
                     raise exceptions.ValidationError(
                         "Test set '%s' not found in available "
                         "Tempest test sets. Available sets are '%s'."
-                        % (pattern[1], "', '".join(available_sets)))
+                        % (pattern[1], "', '".join(AVAILABLE_SETS)))
             else:
                 raise exceptions.ValidationError(
                     "'pattern' argument should be a regexp or set name "

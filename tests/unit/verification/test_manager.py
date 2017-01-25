@@ -312,3 +312,24 @@ class VerifierManagerTestCase(test.TestCase):
         self.assertEqual("'xfail_list' argument should be a dict of tests "
                          "where keys are test names and values are reasons.",
                          e.kwargs["message"])
+
+    def test__get_doc(self):
+        self.assertEqual(
+            "\n"
+            "**Running arguments**:\n"
+            "  * *concurrency*: Number of processes to be used for launching "
+            "tests. In case of 0 value, number of processes will be equal to "
+            "number of CPU cores.\n"
+            "  * *load_list*: a list of tests to launch.\n"
+            "  * *pattern*: a regular expression of tests to launch.\n"
+            "  * *skip_list*: a list of tests to skip (actually, it is dict "
+            "where keys are names of tests, values are reasons).\n"
+            "**Installation arguments**:\n"
+            "  * *system_wide*: Whether or not to use the system-wide "
+            "environment for verifier instead of a virtual environment. "
+            "Defaults to False.\n"
+            "  * *version*: Branch, tag or commit ID to checkout before "
+            "verifier installation. Defaults to 3.14159\n"
+            "  * *source*: Path or URL to the repo to clone verifier from. "
+            "Default to https://git.example.com",
+            FakeVerifier._get_doc())

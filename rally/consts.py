@@ -202,6 +202,8 @@ class _VerifierStatus(utils.ImmutableMixin, utils.EnumMixin):
     FAILED = "failed"
 
 
+# NOTE(andreykurilin): In case of updating these statuses, please do not forget
+#   to update doc reference too
 class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
     """Verification statuses."""
     INIT = "init"
