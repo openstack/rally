@@ -90,7 +90,6 @@ FakeTool is a tool which doesn't require configuration and installation.
 
            # Let's implement method `run` to return random data.
            def run(self, context):
-
                totals = {"tests_count": len(self.TESTS),
                          "tests_duration": 0,
                          "failures": 0,

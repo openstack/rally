@@ -69,7 +69,7 @@ def configure(name, namespace="default", default_repo=None,
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class VerifierManager(plugin.Plugin):
-    """Verifier base class
+    """Verifier base class.
 
     This class provides an interface for operating specific tool.
     """
@@ -81,9 +81,12 @@ class VerifierManager(plugin.Plugin):
                                "tests. In case of 0 value, number of processes"
                                " will be equal to number of CPU cores.",
                 "load_list": "a list of tests to launch.",
-                "skip_list": "a list of tests to skip (actually, it is dict "
+                "skip_list": "a list of tests to skip (actually, it is a dict "
                              "where keys are names of tests, values are "
-                             "reasons)."}
+                             "reasons).",
+                "xfail_list": "a list of tests that are expected to fail "
+                              "(actually, it is a dict where keys are names "
+                              "of tests, values are reasons)."}
 
     @classmethod
     def _get_doc(cls):
@@ -146,9 +149,9 @@ class VerifierManager(plugin.Plugin):
         return env
 
     def validate_args(self, args):
-        """Validate given arguments to be used for running verification
+        """Validate given arguments to be used for running verification.
 
-        :param args: a dict of arguments with values
+        :param args: A dict of arguments with values
         """
 
         # NOTE(andreykurilin): By default we do not use jsonschema here.
@@ -277,7 +280,7 @@ class VerifierManager(plugin.Plugin):
 
         :param extra_options: a dictionary with external verifier specific
             options for configuration.
-        :raises NotImplementedError: this feature is verifier-specific, so you
+        :raises NotImplementedError: This feature is verifier-specific, so you
             should override this method in your plugin if it supports
             configuration
         """
@@ -290,11 +293,11 @@ class VerifierManager(plugin.Plugin):
         return True
 
     def override_configuration(self, new_configuration):
-        """Override verifier configuration
+        """Override verifier configuration.
 
         :param new_configuration: Content which should be used while overriding
             existing configuration
-        :raises NotImplementedError: this feature is verifier-specific, so you
+        :raises NotImplementedError: This feature is verifier-specific, so you
             should override this method in your plugin if it supports
             configuration
         """
@@ -306,7 +309,7 @@ class VerifierManager(plugin.Plugin):
         """Extend verifier configuration with new options.
 
         :param extra_options: Options to be used for extending configuration
-        :raises NotImplementedError: this feature is verifier-specific, so you
+        :raises NotImplementedError: This feature is verifier-specific, so you
             should override this method in your plugin if it supports
             configuration
         """
@@ -326,7 +329,7 @@ class VerifierManager(plugin.Plugin):
             extension installation
         :param extra_settings: Extra installation settings for verifier
             extension
-        :raises NotImplementedError: this feature is verifier-specific, so you
+        :raises NotImplementedError: This feature is verifier-specific, so you
             should override this method in your plugin if it supports
             extensions
         """
@@ -341,7 +344,7 @@ class VerifierManager(plugin.Plugin):
         """Uninstall a verifier extension.
 
         :param name: Name of extension to uninstall
-        :raises NotImplementedError: this feature is verifier-specific, so you
+        :raises NotImplementedError: This feature is verifier-specific, so you
             should override this method in your plugin if it supports
             extensions
         """
@@ -352,7 +355,7 @@ class VerifierManager(plugin.Plugin):
     def list_tests(self, pattern=""):
         """List all verifier tests.
 
-        :param pattern: filter list of tests with given regular expression
+        :param pattern: Filter tests by given pattern
         """
 
     def parse_results(self, results_data):
