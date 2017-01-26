@@ -12,45 +12,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
 import subprocess
 
 import mock
+from six.moves import configparser
 
 from rally.verification import utils
 from tests.unit import test
 
 
-class SomeException(OSError):
-    def __init__(self, errno):
-        super(SomeException, self).__init__()
-        self.errno = errno
-
-
 class UtilsTestCase(test.TestCase):
-    @mock.patch("rally.verification.utils.os")
-    def test_create_dir(self, mock_os):
+
+    @mock.patch("rally.verification.utils.os.makedirs")
+    @mock.patch("rally.verification.utils.os.path.isdir",
+                side_effect=[False, True])
+    def test_create_dir(self, mock_isdir, mock_makedirs):
         utils.create_dir("some")
-        mock_os.makedirs.assert_called_once_with("some")
+        mock_makedirs.assert_called_once_with("some")
 
-        # directory exists
-        mock_os.makedirs.reset_mock()
-        mock_os.makedirs.side_effect = SomeException(errno=errno.EEXIST)
-        mock_os.path.isdir.return_value = True
+        mock_makedirs.reset_mock()
         utils.create_dir("some")
-        mock_os.makedirs.assert_called_once_with("some")
-
-        # directory doesn't exist
-        mock_os.makedirs.reset_mock()
-        mock_os.makedirs.side_effect = SomeException(errno=666)
-        self.assertRaises(SomeException, utils.create_dir, "some")
-        mock_os.makedirs.assert_called_once_with("some")
-
-        mock_os.makedirs.reset_mock()
-        mock_os.makedirs.side_effect = SomeException(errno=errno.EEXIST)
-        mock_os.path.isdir.return_value = False
-        self.assertRaises(SomeException, utils.create_dir, "some")
-        mock_os.makedirs.assert_called_once_with("some")
+        mock_makedirs.assert_not_called()
 
     @mock.patch("rally.verification.utils.encodeutils")
     @mock.patch("rally.verification.utils.LOG")
@@ -73,3 +55,35 @@ class UtilsTestCase(test.TestCase):
                           msg_on_err=msg)
         self.assertEqual(3, mock_log.error.call_count)
         mock_log.error.assert_any_call(msg)
+
+    @mock.patch("rally.verification.utils.six.StringIO")
+    @mock.patch("rally.verification.utils.add_extra_options")
+    @mock.patch("rally.verification.utils.configparser.ConfigParser")
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_extend_configfile(self, mock_open, mock_config_parser,
+                               mock_add_extra_options, mock_string_io):
+        extra_options = mock.Mock()
+        conf_path = "/path/to/fake/conf"
+
+        utils.extend_configfile(extra_options, conf_path)
+
+        conf = mock_config_parser.return_value
+        conf.read.assert_called_once_with(conf_path)
+
+        mock_add_extra_options.assert_called_once_with(extra_options, conf)
+        conf = mock_add_extra_options.return_value
+        conf.write.assert_has_calls([mock.call(mock_open.side_effect()),
+                                     mock.call(mock_string_io.return_value)])
+        mock_string_io.return_value.getvalue.assert_called_once_with()
+
+    def test_add_extra_options(self):
+        conf = configparser.ConfigParser()
+        extra_options = {"section": {"foo": "bar"},
+                         "section2": {"option": "value"}}
+
+        conf = utils.add_extra_options(extra_options, conf)
+
+        expected = {"section": ("foo", "bar"), "section2": ("option", "value")}
+        for section, option in expected.items():
+            result = conf.items(section)
+            self.assertIn(option, result)

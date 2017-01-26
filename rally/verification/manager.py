@@ -292,6 +292,10 @@ class VerifierManager(plugin.Plugin):
         """Check whether a verifier is configured or not."""
         return True
 
+    def get_configuration(self):
+        """Get verifier configuration (e.g., the config file content)."""
+        return ""
+
     def override_configuration(self, new_configuration):
         """Override verifier configuration.
 
@@ -316,10 +320,6 @@ class VerifierManager(plugin.Plugin):
         raise NotImplementedError(
             _LE("'%s' verifiers don't support configuration at all.")
             % self.get_name())
-
-    def get_configuration(self):
-        """Get verifier configuration (e.g., the config file content)."""
-        return ""
 
     def install_extension(self, source, version=None, extra_settings=None):
         """Install a verifier extension.

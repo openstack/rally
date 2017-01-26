@@ -241,10 +241,6 @@ class MultipleMatchesFound(RallyException):
         super(MultipleMatchesFound, self).__init__(**kwargs)
 
 
-class TempestConfigCreationFailure(RallyException):
-    msg_fmt = _("Unable to create Tempest config file: %(message)s")
-
-
 class SSHTimeout(RallyException):
     pass
 

@@ -26,6 +26,7 @@ PATH = "rally.plugins.openstack.verification.tempest.manager"
 
 
 class TempestManagerTestCase(test.TestCase):
+
     def test_run_environ_property(self):
         mock.patch("%s.testr.TestrLauncher.run_environ" % PATH,
                    new={"some": "key"}).start()
@@ -43,12 +44,13 @@ class TempestManagerTestCase(test.TestCase):
         self.assertEqual(os.path.join(tempest.home_dir, "tempest.conf"),
                          tempest.configfile)
 
-    @mock.patch("%s.config.read_configfile" % PATH)
-    def test_get_configuration(self, mock_read_configfile):
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_get_configuration(self, mock_open):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
-        self.assertEqual(mock_read_configfile.return_value,
-                         tempest.get_configuration())
-        mock_read_configfile.assert_called_once_with(tempest.configfile)
+        tempest.get_configuration()
+
+        mock_open.assert_called_once_with(tempest.configfile)
+        mock_open.side_effect().read.assert_called_once_with()
 
     @mock.patch("%s.config.TempestConfigfileManager" % PATH)
     def test_configure(self, mock_tempest_configfile_manager):
@@ -67,14 +69,14 @@ class TempestManagerTestCase(test.TestCase):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
         self.assertTrue(tempest.is_configured())
 
-    @mock.patch("%s.config.extend_configfile" % PATH)
+    @mock.patch("rally.verification.utils.extend_configfile")
     def test_extend_configuration(self, mock_extend_configfile):
         tempest = manager.TempestManager(mock.MagicMock(uuid="uuuiiiddd"))
         extra_options = mock.Mock()
         self.assertEqual(mock_extend_configfile.return_value,
                          tempest.extend_configuration(extra_options))
-        mock_extend_configfile.assert_called_once_with(tempest.configfile,
-                                                       extra_options)
+        mock_extend_configfile.assert_called_once_with(extra_options,
+                                                       tempest.configfile)
 
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
     def test_override_configuration(self, mock_open):
