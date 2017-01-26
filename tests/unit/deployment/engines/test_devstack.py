@@ -20,6 +20,8 @@ from rally.deployment.engines import devstack
 from tests.unit import test
 
 
+RALLY_CONFIG = "rally https://github.com/openstack/rally master"
+
 SAMPLE_CONFIG = {
     "type": "DevstackEngine",
     "provider": {
@@ -28,6 +30,7 @@ SAMPLE_CONFIG = {
     },
     "local_conf": {
         "ADMIN_PASSWORD": "secret",
+        "ENABLE_PLUGIN": [RALLY_CONFIG],
     },
 }
 
@@ -105,3 +108,4 @@ class DevstackEngineTestCase(test.TestCase):
         self.assertEqual(ds_calls, ds_server.mock_calls)
         local_conf = ds_server.mock_calls[0][2]["stdin"]
         self.assertIn("ADMIN_PASSWORD=secret", local_conf)
+        self.assertIn("enable_plugin " + RALLY_CONFIG, local_conf)
