@@ -400,6 +400,14 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_encryption_type")
 
+    def test__list_encryption_type(self):
+        return_encryption_types_list = self.scenario._list_encryption_type()
+        client = self.admin_clients("cinder")
+        self.assertEqual(client.volume_encryption_types.list.return_value,
+                         return_encryption_types_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.list_encryption_type")
+
     def test__delete_volume_type(self):
         volume_type = mock.Mock()
         self.scenario._delete_volume_type(volume_type)
