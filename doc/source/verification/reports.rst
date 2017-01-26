@@ -21,7 +21,7 @@ Rally stores all verifications results in its DataBase so that you can access
 and process results at any time. No matter what verifier you use, results will
 be stored in a unified way and reports will be unified too.
 
-Out of the box, we support several types of reports out of the
+We support several types of reports out of the
 box: :include-var:`rally.cli.commands.verify.DEFAULT_REPORT_TYPES`; but our
 reporting system is pluggable so that you can write your own plugin to build
 some specific reports or to export results to the specific system (see
@@ -68,12 +68,12 @@ one of the next colours:
   like failure
 * *Green* - Everything is ok. The test succeeded.
 * *Yellow* - It is "expected failure".
-* *Light Blue* - Test is skipped. It is nor good neither bad.
+* *Light Blue* - Test is skipped. It is not good and not bad
 
 Several verifications comparison is a default embedded behaviour of reports.
 The difference between verifications is displayed in brackets after actual
 test duration. Sign **+** means that current result is bigger that standard by
-the number going after the sign. Sign **-** is an opposite to **-**. Please,
+the number going after the sign. Sign **-** is an opposite to **+**. Please,
 note that all diffs are comparisons with the first verification in a row.
 
 Filtering results
@@ -102,9 +102,12 @@ Tracebacks & Reasons
 Tests with "failed" and "expected failure" statuses have tracebacks of
 failures. Tests with "skipped", "expected failure", "unexpected success" status
 has "reason" of events. By default, both tracebacks and reasons are hidden,
-but you can show them by clicking to the appropriate test.
+but you can show them by clicking on the appropriate test.
 
 .. image:: ../images/Report-Verify-tracebacks.png
+   :align: center
+
+.. image:: ../images/Report-Verify-xfail.png
    :align: center
 
 Plugins Reference for all out-of-the-box reporters

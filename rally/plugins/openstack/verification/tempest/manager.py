@@ -67,8 +67,8 @@ class TempestManager(testr.TestrLauncher):
     first release after Verification Component redesign)*
     """
 
-    RUN_ARGS = {"set_name": "Name of predefined sets of tests. Known names: "
-                            "%s" % ", ".join(AVAILABLE_SETS)}
+    RUN_ARGS = {"set": "Name of predefined sets of tests. Known names: %s"
+                       % ", ".join(AVAILABLE_SETS)}
 
     @property
     def run_environ(self):

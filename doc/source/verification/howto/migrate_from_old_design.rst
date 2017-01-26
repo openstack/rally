@@ -60,24 +60,25 @@ Verification statuses
 | running    |            | It was used right after checking status of        |
 |            |            | verifier. It is redundant in terms of new design. |
 +------------+------------+---------------------------------------------------+
-| verifying  | running    | Identifies the process of execution tool.         |
+| verifying  | running    | Identifies the process of tool execution.         |
 +------------+------------+---------------------------------------------------+
-| finished   | finished   | Previously, finished state was used for           |
+| finished   | finished   | Previously, "finished" state was used for an      |
 |            |            | identification of just finished verification. By  |
 |            |            | "finished" meant that verification has any test   |
 |            |            | result. Now it means that verification was        |
 |            |            | executed and doesn't have failures, unexpected    |
 |            |            | success or any kind of errors.                    |
 |            +------------+---------------------------------------------------+
-|            | failed     | Old purpose is identification "errors", situations|
-|            |            | when results are empty. The right use is          |
-|            |            | an identification finished verification with      |
-|            |            | tests in failed and unexpected success statuses.  |
+|            | failed     | Old purpose is an identification of "errors",     |
+|            |            | situations when results are empty. The right use  |
+|            |            | is an identification of finished verification     |
+|            |            | with tests in "failed" and "uxsuccess"            |
+|            |            | (unexpected success) statuses.                    |
 +------------+------------+---------------------------------------------------+
 | failed     | crashed    | Something went wrong while launching verification.|
 +------------+------------+---------------------------------------------------+
 
-Latest information about verification statuses you can find at
+The latest information about verification statuses you can find at
 :ref:`verification_statuses`.
 
 Command Line Interface
@@ -102,7 +103,7 @@ Command for Rally 0.8.0:
 .. code-block:: console
 
   $ rally verify create-verifier --type "tempest" --source <url> \
-    --version <version> --system-wide
+    --version <version> --system-wide --name <name>
 
 Here you can find several important improvements:
 
@@ -341,7 +342,7 @@ Changes:
 
   We do not have a separate command for that task.
   ``rally verify configure-verifier --show`` shows an existing configuration
-  (if it exists) in case of not specified ``--reconfigure`` argument.
+  (if it exists) if ``--reconfigure`` argument is not specified.
 
 Running verification
 """"""""""""""""""""
@@ -362,7 +363,7 @@ Command for Rally 0.8.0:
 
   $ rally verify start --id <id> --deployment-id <uuid> --pattern <pattern> \
     --load-list <path> --skip-list <path> --xfail-list <path> \
-    --concurrency <N> --no-use
+    --concurrency <N> --no-use --detailed
 
 Changes:
 
@@ -370,11 +371,11 @@ Changes:
 
 2) Arguments ``--set`` and ``--regex`` are merged in the new model to single
    ``--pattern`` argument. Name of tests set should be specified like
-   ``--pattern set_name=<set_name>``. It was done to provide a way for each
+   ``--pattern set=<set_name>``. It was done to provide a way for each
    verifier to support custom arguments.
 
 3) The argument ``--tests-file`` was deprecated in Rally 0.6.0 and
-   time&ability come to delete it.
+   we are ready to remove it.
 4) Arguments ``--skip-list`` and ``--xfail-list`` accept path to file in
    JSON/YAML format. Content should be a dictionary, where keys are tests
    names (full name with id and tags) and values are reasons.
@@ -382,6 +383,8 @@ Changes:
    ``rally verify configure-verifier --id <id> --deployment-id <uuid>
    --override <path>`` instead.
 6) The argument ``--system-wide`` is gone like in most of other commands.
+7) In case of specified ``--detailed`` arguments, traces of failed tests will
+   be displayed (default behaviour in old verification design)
 
 Show verification result
 """"""""""""""""""""""""
@@ -395,7 +398,7 @@ Commands for Rally 0.7.0:
 
     $ rally verify show --uuid <uuid> --sort-by <query> --detailed
 
-* Separate command witch call ``rally verify show`` with hardcoded
+* Separate command which calls ``rally verify show`` with hardcoded
   ``--detailed`` flag `rally verify showconfig
   <http://rally.readthedocs.io/en/0.7.0/cli/cli_reference.html#rally-verify-detailed>`_
 
@@ -434,7 +437,7 @@ Command for Rally 0.8.0:
 
 Changes:
 
-  You can filter verifications by verifiers, by deployments and by results
+  You can filter verifications by verifiers, by deployments and results
   statuses.
 
 Importing results
@@ -451,7 +454,7 @@ Command for Rally 0.8.0:
 
 .. code-block:: console
 
-  $ rally verify import --id <id> --deployment <uuid> --file <path> \
+  $ rally verify import --id <id> --deployment-id <uuid> --file <path> \
     --run-args <run_args> --no-use
 
 Changes:
@@ -495,12 +498,15 @@ Changes:
 2) The argument ``--type`` expects type of report (HTML/JSON). There are no
    more separate arguments for each report type.
 
+   .. hint:: You can list all supported types, executing ``rally plugin list
+     --plugin-base VerificationReporter`` command.
+
 3) Reports are not aligned to only local types, so the argument ``--to``
    replaces ``--output-file``. In case of HTML/JSON reports, it can include a
    path to the local file like it was previously or URL to some external system
    with credentials like ``https://username:password@example.com:777``.
 
-4) The comparison is embedded into main reports and it is now limited by two
+4) The comparison is embedded into main reports and it is not limited by two
    verifications results. There are no reasons for the separate command for
    that task.
 
