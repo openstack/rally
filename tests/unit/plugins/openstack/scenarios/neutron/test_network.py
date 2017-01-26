@@ -141,7 +141,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         net = mock.MagicMock()
 
         scenario = network.CreateAndListSubnets(self.context)
-        scenario._get_or_create_network = mock.Mock(return_value=net)
+        scenario._create_network = mock.Mock(return_value=net)
         scenario._create_subnets = mock.Mock()
         scenario._list_subnets = mock.Mock()
 
@@ -150,7 +150,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                      subnet_cidr_start=subnet_cidr_start,
                      subnets_per_network=subnets_per_network)
 
-        scenario._get_or_create_network.assert_called_once_with(
+        scenario._create_network.assert_called_once_with(
             network_create_args)
         scenario._create_subnets.assert_called_once_with(
             net, subnet_create_args, subnet_cidr_start, subnets_per_network)
@@ -167,7 +167,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         subnets = [mock.MagicMock() for _ in range(subnets_per_network)]
 
         scenario = network.CreateAndUpdateSubnets(self.context)
-        scenario._get_or_create_network = mock.Mock(return_value=net)
+        scenario._create_network = mock.Mock(return_value=net)
         scenario._create_subnets = mock.Mock(return_value=subnets)
         scenario._update_subnet = mock.Mock()
 
@@ -177,7 +177,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                      subnet_cidr_start=subnet_cidr_start,
                      subnets_per_network=subnets_per_network)
 
-        scenario._get_or_create_network.assert_called_once_with(
+        scenario._create_network.assert_called_once_with(
             network_create_args)
         scenario._create_subnets.assert_called_once_with(
             net, subnet_create_args, subnet_cidr_start, subnets_per_network)

@@ -116,7 +116,7 @@ class CreateAndListSubnets(utils.NeutronScenario):
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        network = self._get_or_create_network(network_create_args)
+        network = self._create_network(network_create_args or {})
         self._create_subnets(network, subnet_create_args, subnet_cidr_start,
                              subnets_per_network)
         self._list_subnets()
@@ -145,7 +145,7 @@ class CreateAndUpdateSubnets(utils.NeutronScenario):
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        network = self._get_or_create_network(network_create_args)
+        network = self._create_network(network_create_args or {})
         subnets = self._create_subnets(network, subnet_create_args,
                                        subnet_cidr_start, subnets_per_network)
 
