@@ -80,7 +80,7 @@ Add custom labels for "Scenario Output" charts
   tables - it becomes column name in case if chart with
   single iteration is transformed into table
 
-* As mentiones above, if we have output chart
+* As mentioned above, if we have output chart
   with single iteration, then it is transformed to table,
   because chart with single value is useless
 
