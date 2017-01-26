@@ -292,7 +292,7 @@ def main():
         "verify delete-verifier-ext --name %s" % VERIFIER_EXT_NAME)
     # Delete the verifier and all verifications
     render_vars["delete_verifier"] = call_rally(
-        "verify delete-verifier --force")
+        "verify delete-verifier --id %s --force" % verifier_id)
 
     render_page(**render_vars)
 
