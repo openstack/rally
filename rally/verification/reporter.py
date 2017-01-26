@@ -56,6 +56,7 @@ REPORT_RESPONSE_SCHEMA = {
 @six.add_metaclass(abc.ABCMeta)
 class VerificationReporter(plugin.Plugin):
     """Base class for all reporters for verifications."""
+
     def __init__(self, verifications, output_destination):
         """Init reporter
 
