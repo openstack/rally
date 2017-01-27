@@ -1,0 +1,36 @@
+============
+Rally v0.8.1
+============
+
+Overview
+--------
+
++------------------+-----------------------+
+| Release date     |      **1/27/2017**    |
++------------------+-----------------------+
+
+Details
+-------
+
+Fix for python requirements list.
+
+Plugins
+~~~~~~~
+
+**Scenarios**:
+
+* *Updated*:
+ - Use new network for each subnet at
+   `NeutronNetworks.create_and_list_subnets
+    <http://rally.readthedocs.io/en/0.8.1/plugins/plugin_reference.html#neutronnetworks-create-and-list-subnets-scenario>`_
+   scenario.
+
+* *NEW!!*:
+ - `CinderVolumeTypes.create_and_list_encryption_type
+   <http://rally.readthedocs.io/en/0.8.1/plugins/plugin_reference.html#cindervolumetypes-create-and-list-encryption-type-scenario>`_
+ - `Quotas.cinder_get
+   <http://rally.readthedocs.io/en/0.8.1/plugins/plugin_reference.html#quotas-cinder-get-scenario>`_
+Thanks
+~~~~~~
+
+ 2 Everybody!
