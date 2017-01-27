@@ -41,7 +41,7 @@ of hook plugins that should be executed on this iteration.
                         "args": {
                             "cmd": "bash enable_factor_1"
                         },
-                        "trigger: {
+                        "trigger": {
                             "name": "event",
                             "args": {
                                 "unit": "time",
@@ -54,7 +54,7 @@ of hook plugins that should be executed on this iteration.
                         "args": {
                             "cmd": "bash enable_factor_2"
                         },
-                        "trigger: {
+                        "trigger": {
                             "name": "event",
                             "args": {
                                 "unit": "iteration",
@@ -67,7 +67,7 @@ of hook plugins that should be executed on this iteration.
                         "args": {
                             "cmd": "bash enable_factor_3"
                         },
-                        "trigger: {
+                        "trigger": {
                             "name": "periodic",
                             "args": {
                                 "unit": "iteration",
@@ -82,7 +82,7 @@ of hook plugins that should be executed on this iteration.
                         "args": {
                             "cmd": "bash enable_factor_4"
                         },
-                        "trigger: {
+                        "trigger": {
                             "name": "periodic",
                             "args": {
                                 "unit": "time",
