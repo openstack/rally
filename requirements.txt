@@ -42,7 +42,7 @@ python-mistralclient>=2.0.0,<=3.0.0                    # Apache Software License
 python-monascaclient>=1.1.0,<=1.4.0                    # Apache Software License
 python-muranoclient>=0.8.2,<=0.11.1                    # Apache License, Version 2.0
 python-neutronclient>=5.1.0,<=6.0.0                    # Apache Software License
-python-novaclient>=6.0.0,!=7.0.0<=7.1.0                # Apache License, Version 2.0
+python-novaclient>=6.0.0,!=7.0.0,<=7.1.0               # Apache License, Version 2.0
 python-saharaclient==1.1.0                             # Apache License, Version 2.0
 python-senlinclient==1.1.0                             # Apache Software License
 python-swiftclient==3.2.0                              # Apache Software License
