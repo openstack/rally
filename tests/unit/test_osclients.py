@@ -566,26 +566,22 @@ class OSClientsTestCase(test.TestCase):
         mock_zaqar = mock.MagicMock()
         mock_zaqar.client.Client = mock.MagicMock(return_value=fake_zaqar)
         self.assertNotIn("zaqar", self.clients.cache)
-        p_id = self.auth_ref.project_id
+        mock_keystoneauth1 = mock.MagicMock()
         with mock.patch.dict("sys.modules", {"zaqarclient.queues":
-                                             mock_zaqar}):
+                                             mock_zaqar,
+                                             "keystoneauth1":
+                                             mock_keystoneauth1}):
             client = self.clients.zaqar()
             self.assertEqual(fake_zaqar, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="messaging",
                 region_name=self.credential.region_name)
             fake_zaqar_url = self.service_catalog.url_for.return_value
-            conf = {"auth_opts": {"backend": "keystone", "options": {
-                "os_username": self.credential.username,
-                "os_password": self.credential.password,
-                "os_project_name": self.credential.tenant_name,
-                "os_project_id": p_id,
-                "os_auth_url": self.credential.auth_url,
-                "insecure": self.credential.insecure,
-            }}}
             mock_zaqar.client.Client.assert_called_once_with(
-                url=fake_zaqar_url, version=1.1, conf=conf)
-            self.assertEqual(fake_zaqar, self.clients.cache["zaqar"])
+                url=fake_zaqar_url, version=1.1,
+                session=mock_keystoneauth1.session.Session())
+            self.assertEqual(fake_zaqar, self.clients.cache["zaqar"],
+                             mock_keystoneauth1.session.Session())
 
     @mock.patch("rally.osclients.Trove._get_endpoint")
     def test_trove(self, mock_trove__get_endpoint):
