@@ -534,13 +534,27 @@ def required_clients(config, clients, deployment, *components, **kwargs):
 def required_contexts(config, clients, deployment, *context_names):
     """Validator checks if required benchmark contexts are specified.
 
-    :param *context_names: list of context names that should be specified
+    :param *context_names: list of strings and tuples with context names that
+        should be specified. Tuple represent 'at least one of the'.
     """
-    missing_contexts = set(context_names) - set(config.get("context", {}))
+    missing_contexts = []
+    context = config.get("context", {})
+
+    for name in context_names:
+        if isinstance(name, tuple):
+            if not set(name) & set(context):
+                # formatted string like: 'foo or bar or baz'
+                formatted_names = "'{}'".format(" or ".join(name))
+                missing_contexts.append(formatted_names)
+        else:
+            if name not in context:
+                missing_contexts.append(name)
+
     if missing_contexts:
         message = (_("The following contexts are required but missing from "
                      "the benchmark configuration file: %s") %
                    ", ".join(missing_contexts))
+
         return ValidationResult(False, message)
 
 
