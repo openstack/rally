@@ -1,15 +1,28 @@
-========================
+=====
+Rally
+=====
+
 Team and repository tags
 ========================
 
 .. image:: http://governance.openstack.org/badges/rally.svg
     :target: http://governance.openstack.org/reference/tags/index.html
 
-.. Change things from this point on
+.. image:: https://img.shields.io/pypi/v/rally.svg
+    :target: https://pypi.python.org/pypi/rally/
+    :alt: Latest Version
 
-=====
-Rally
-=====
+.. image:: https://img.shields.io/badge/gitter-join_chat-ff69b4.svg
+    :target: https://gitter.im/rally-dev/Lobby
+    :alt: Gitter Chat
+
+.. image:: https://img.shields.io/badge/tasks-trello_board-blue.svg
+    :target: https://trello.com/b/DoD8aeZy/rally
+    :alt: Trello Board
+
+.. image:: https://img.shields.io/github/license/openstack/rally.svg
+    :target: https://www.apache.org/licenses/LICENSE-2.0
+    :alt: Apache License, Version 2.0
 
 
 What is Rally
