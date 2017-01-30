@@ -15,6 +15,8 @@
 
 import os
 
+import six
+
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import objects
@@ -111,7 +113,14 @@ class DevstackEngine(engine.Engine):
         devstack_branch = self.config.get("devstack_branch", DEVSTACK_BRANCH)
         local_conf = "[[local|localrc]]\n"
         for k, v in self.local_conf.items():
-            local_conf += "%s=%s\n" % (k, v)
+            if k.upper() == "ENABLE_PLUGIN":
+                if isinstance(v, list):
+                    for plugin in v:
+                        local_conf += "enable_plugin %s\n" % (plugin)
+                elif isinstance(v, six.string_types):
+                    local_conf += "enable_plugin %s\n" % (v)
+            else:
+                local_conf += "%s=%s\n" % (k, v)
 
         for server in self.servers:
             self.deployment.add_resource(provider_name="DevstackEngine",
