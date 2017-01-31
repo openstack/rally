@@ -595,6 +595,23 @@ class ValidatorsTestCase(test.TestCase):
                            None, None)
         self.assertTrue(result.is_valid, result.msg)
 
+    def test_required_contexts_with_or(self):
+        validator = self._unwrap_validator(validation.required_contexts,
+                                           ("a1", "a2"), "c1", ("b1", "b2"),
+                                           "c2")
+        result = validator({"context": {"c1": 1, "c2": 2}},
+                           None, None)
+        self.assertFalse(result.is_valid, result.msg)
+
+        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3,
+                                        "b1": 1, "a1": 1}}, None, None)
+        self.assertTrue(result.is_valid, result.msg)
+
+        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3,
+                                        "b1": 1, "b2": 2, "a1": 1}},
+                           None, None)
+        self.assertTrue(result.is_valid, result.msg)
+
     def test_required_openstack_with_admin(self):
         validator = self._unwrap_validator(validation.required_openstack,
                                            admin=True)
