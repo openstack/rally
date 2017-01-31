@@ -660,3 +660,25 @@
           users_per_tenant: 1
         network:
           dns_nameservers: []
+
+  VMTasks.dd_load_test:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        floating_network: "public"
+        force_delete: false
+        command:
+            interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network: {}
