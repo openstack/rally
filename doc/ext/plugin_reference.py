@@ -19,7 +19,8 @@ import re
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
 from rally import plugins
-from utils import category, subcategory, section, paragraph, parse_text
+from utils import category, subcategory, section, paragraph, parse_text, \
+    make_definition
 
 
 CATEGORIES = {
@@ -41,14 +42,19 @@ class PluginsReferenceDirective(rst.Directive):
     option_spec = {"base_cls": str}
 
     @staticmethod
-    def _make_pretty_parameters(parameters):
+    def _make_pretty_parameters(parameters, ref_prefix):
         if not parameters:
-            return ""
+            return []
 
-        result = "**Parameters**:\n\n"
+        results = [paragraph("**Parameters**:")]
         for p in parameters:
-            result += "* %(name)s: %(doc)s\n" % p
-        return result
+            pname = p["name"]
+            ref = ("%s%s" % (ref_prefix, pname)).lower().replace(".", "-")
+            if "type" in p:
+                pname += " (%s)" % p["type"]
+            pdoc = "\n  ".join(p["doc"].split("\n"))
+            results.extend(make_definition(pname, ref, [pdoc]))
+        return results
 
     def _make_plugin_section(self, plugin_cls, base_name=None):
         section_name = plugin_cls.get_name()
@@ -68,11 +74,18 @@ class PluginsReferenceDirective(rst.Directive):
                 "**Namespace**: %s" % info["namespace"]))
 
         if info["parameters"]:
-            section_obj.extend(parse_text(
-                self._make_pretty_parameters(info["parameters"])))
+            if base_name:
+                ref_prefix = "%s-%s-" % (base_name, plugin_cls.get_name())
+            else:
+                ref_prefix = "%s-" % plugin_cls.get_name()
+
+            section_obj.extend(self._make_pretty_parameters(info["parameters"],
+                                                            ref_prefix))
+
             if info["returns"]:
                 section_obj.extend(parse_text(
                     "**Returns**:\n%s" % info["returns"]))
+
         filename = info["module"].replace(".", "/")
         ref = "https://github.com/openstack/rally/blob/master/%s.py" % filename
         section_obj.extend(parse_text("**Module**:\n`%s`__\n\n__ %s"

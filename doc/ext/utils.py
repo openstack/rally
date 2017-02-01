@@ -20,6 +20,7 @@ from docutils import frontend
 from docutils import nodes
 from docutils import utils
 from docutils.parsers import rst
+import string
 
 import six
 
@@ -44,10 +45,13 @@ def make_definition(term, ref, descriptions):
     """Constructs definition with reference to it"""
     ref = ref.replace("_", "-").replace(" ", "-")
     definition = parse_text(
-            ".. _%(ref)s:\n\n*%(term)s* (ref__)\n\n__ #%(ref)s" %
+            ".. _%(ref)s:\n\n* *%(term)s* [ref__]\n\n__ #%(ref)s" %
             {"ref": ref, "term": term})
     for descr in descriptions:
-        if isinstance(descr, (six.text_type, six.binary_type)):
-            descr = paragraph("  %s" % descr)
-        definition.append(descr)
+        if descr:
+            if isinstance(descr, (six.text_type, six.binary_type)):
+                if descr[0] not in string.ascii_uppercase:
+                    descr = descr.capitalize()
+                descr = paragraph("  %s" % descr)
+            definition.append(descr)
     return definition

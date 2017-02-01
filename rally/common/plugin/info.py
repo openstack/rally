@@ -62,7 +62,8 @@ def parse_docstring(docstring):
 
             if params_returns_desc:
                 params = [
-                    {"name": name, "doc": doc}
+                    {"name": name,
+                     "doc": "\n".join(docstrings.prepare_docstring(doc))}
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
