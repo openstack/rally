@@ -195,8 +195,8 @@ The scenario running strategy is specified by its **type** and also by some
 type-specific parameters. Available types include:
 
 * **constant**, for creating a constant load by running the scenario for a
-fixed number of **times**, possibly in parallel (that's controlled by the
-*"concurrency"* parameter).
+  fixed number of **times**, possibly in parallel (that's controlled by the
+  *"concurrency"* parameter).
 
 * **constant_for_duration** that works exactly as **constant**, but runs the
   benchmark scenario until a specified number of seconds elapses
@@ -387,9 +387,9 @@ follows:
     context1.cleanup()
 
 - where the order of contexts in which they are set up depends on the value of
-their *order* attribute. Contexts with lower *order* have higher priority:
-*1xx* contexts are reserved for users-related stuff (e.g. users/tenants
-creation, roles assignment etc.), *2xx* - for quotas etc.
+  their *order* attribute. Contexts with lower *order* have higher priority:
+  *1xx* contexts are reserved for users-related stuff (e.g. users/tenants
+  creation, roles assignment etc.), *2xx* - for quotas etc.
 
 The *hidden* attribute defines whether the context should be a *hidden* one.
 **Hidden contexts** cannot be configured by end-users through the task

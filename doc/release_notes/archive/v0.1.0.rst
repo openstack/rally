@@ -134,6 +134,7 @@ New Features & API changes
   * Samples of NEW vs OLD context, sla, scenario and runner plugins:
 
     * Context
+
     .. code-block:: python
 
         # Old
@@ -167,6 +168,7 @@ New Features & API changes
 
 
     * Scenario
+
     .. code-block:: python
 
         # Old Scenario
@@ -205,6 +207,7 @@ New Features & API changes
     ..
 
     * Runner
+
     .. code-block:: python
 
         ## Old
@@ -237,6 +240,7 @@ New Features & API changes
     ..
 
     * SLA
+
     .. code-block:: python
 
         # Old
@@ -495,7 +499,7 @@ Documentation
 
 * **Add plugin reference page**
 
-  :ref:`Rally Plugins Reference page <plugin_reference>` page contains a
+  :ref:`Rally Plugins Reference page <plugin-reference>` page contains a
   full list with
 
 * **Add maintainers section on project info page**

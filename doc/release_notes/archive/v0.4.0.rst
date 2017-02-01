@@ -180,7 +180,8 @@ Bug fixes
   for each TestCase. In this case, Rally did not check partial test with x-fail
   list and marked test as "fail" insted of "x-fail".
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1568133>`_
+  `Launchpad bug-report #1568133
+  <https://bugs.launchpad.net/rally/+bug/1568133>`_
 
 * Weak isolation of scenario arguments between iterations
 
@@ -201,7 +202,8 @@ Bug fixes
   Results of failed task validations saved in incorrect format. It broke and
   made un-userfriendly `rally task detailed` command.
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1562713>`_
+  `Launchpad bug-report #1562713
+  <https://bugs.launchpad.net/rally/+bug/1562713>`_
 
 * Hardcoded task's status in `rally task results`
 
@@ -209,14 +211,16 @@ Bug fixes
   task has failed status, but it can be not true(tasks in running state do not
   have results).
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1539096>`_
+  `Launchpad bug-report #1539096
+  <https://bugs.launchpad.net/rally/+bug/1539096>`_
 
 * Tempest context failed to create network resources
 
   While we merged improvement for keystoneclient, we used wrong way to obtain
   tenant id in TempestContext.
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1550848>`_
+  `Launchpad bug-report #1550848
+  <https://bugs.launchpad.net/rally/+bug/1550848>`_
 
 * Tasks based on Tempest failed to parse execution time.
 
@@ -226,7 +230,8 @@ Bug fixes
 
   There was an issue while converting task execution time.
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1566712>`_
+  `Launchpad bug-report #1566712
+  <https://bugs.launchpad.net/rally/+bug/1566712>`_
 
 * JSONSchema huge impact on task performance
 
@@ -256,13 +261,15 @@ Bug fixes
 * Rally did not show "missing argument" error raised by argparse while parsing
   cli args
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1562916>`_
+  `Launchpad bug-report #1562916
+  <https://bugs.launchpad.net/rally/+bug/1562916>`_
 
 * Issue while checking required arguments in CLI
 
   There was a possible issue in case of several required arguments
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1555764>`_
+  `Launchpad bug-report #1555764
+  <https://bugs.launchpad.net/rally/+bug/1555764>`_
 
 * Prepare step of verification did not check visibility of obtained image
 
@@ -270,7 +277,8 @@ Bug fixes
   make sure all images are active and they are PUBLIC. If images are not
   public, we will have failures of Tempest tests as described in the bug.
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1564431>`_
+  `Launchpad bug-report #1564431
+  <https://bugs.launchpad.net/rally/+bug/1564431>`_
 
 Thanks
 ~~~~~~

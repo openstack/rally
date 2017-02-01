@@ -67,7 +67,7 @@ Rally Task
 
 * Rally supports different API versions now via api_versions context:
 
-.. code:: none
+.. code-block:: none
 
   CinderVolumes.create_and_delete_volume:
     -

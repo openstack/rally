@@ -95,6 +95,7 @@ Plugins
   .. warning:: This plugin is not available anymore in 0.7.0
 
 * *NEW!!*:
+
  - `MagnumClusterTemplates.list_cluster_templates <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#magnumclustertemplates-list-cluster-templates-scenario>`_
  - `MagnumClusters.list_clusters <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#magnumclusters-list-clusters-scenario>`_
  - `MagnumClusters.create_and_list_clusters <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#magnumclusters-create-and-list-clusters-scenario>`_
@@ -111,6 +112,7 @@ Plugins
 **Contexts**:
 
 * *NEW!!*:
+
  - `Manila manila_security_services <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#manila-security-services-context>`_
  - `Magnum cluster_templates <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#cluster-templates-context>`_
  - `Magnum clusters <http://rally.readthedocs.io/en/0.7.0/plugin/plugin_reference.html#clusters-context>`_

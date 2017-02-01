@@ -31,7 +31,7 @@ CLI changes
 ~~~~~~~~~~~
 
 * .. warning:: [Removed] ``rally info`` in favor of ``rally plugin *``.
-  It was deprecated for a long time.
+      It was deprecated for a long time.
 
 * [Modified] ``rally deployment check`` now prints services, which don't have
   names, since such services can be used via api_versions context.

@@ -122,6 +122,7 @@ Sometimes plugins of different bases can have equal names(i.e ceilometer
 OSClient and ceilometer Context). It is normal and we should allow such
 conflicts. To support such cases we introduced new entity - plugin base.
 Statements of plugin bases:
+
  - Each plugin base is unique entity;
  - Names of plugin bases can't conflict with each other;
  - Names of two or more plugins in one plugin base can't conflict with each
@@ -129,6 +130,7 @@ Statements of plugin bases:
  - Names of two or more plugins in different plugin base can conflict
 
 Current list of plugin bases:
+
  - rally.task.context.Context
  - rally.task.scenario.Scenario
  - rally.task.types.ResourceType
@@ -182,16 +184,13 @@ Current list of plugin bases:
 
   Add nested_level argument for nested cloning volume to new volume
 
-  `Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-volume-and-clone>`_
-
-* Extend CinderVolumes.create_nested_snapshots_and_attach_volume
+* Extend `CinderVolumes.create_nested_snapshots_and_attach_volume
+  <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-nested-snapshots-and-attach-volume-scenario>`_
 
   Two new arguments were added: create_volume_kwargs and create_snapshot_kwargs
 
   .. warning:: All arguments related to snapshot creation should be transmitted
         only via create_snapshot_kwargs.
-
-  `Plugin Reference <http://rally.readthedocs.io/en/0.5.0/plugin/plugin_reference.html#cindervolumes-create-nested-snapshots-and-attach-volume>`_
 
 * Introduce new style of scenarios - class based.
 
@@ -289,7 +288,8 @@ Bug fixes
 
 * AttributeError while disabling urllib3 warnings on old installations
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1573650>`_
+  `Launchpad bug-report #1573650
+  <https://bugs.launchpad.net/rally/+bug/1573650>`_
 
 * install_rally.sh script is failed while obtaining setuptools
 
@@ -298,7 +298,8 @@ Bug fixes
 
 * Strange input task in the report
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1570328>`_
+  `Launchpad bug-report #1570328
+  <https://bugs.launchpad.net/rally/+bug/1570328>`_
 
 * Wrong behaviour of boot_server_from_volume scenarios in case of booting
   server from image.
@@ -312,7 +313,8 @@ Bug fixes
     NovaServers.boot_server_from_volume_and_resize
     NovaServers.boot_server_from_volume_and_live_migrate
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1578556>`_
+  `Launchpad bug-report #1578556
+  <https://bugs.launchpad.net/rally/+bug/1578556>`_
 
 * Weak validation of json schema of RPS runner
 
@@ -322,70 +324,85 @@ Bug fixes
 
 * Rally doesn't take cacert setting while creating keystone session
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1577360>`_
+  `Launchpad bug-report #1577360
+  <https://bugs.launchpad.net/rally/+bug/1577360>`_
 
 * Heat scenarios fail when API uses TLS
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1585456>`_
+  `Launchpad bug-report #1585456
+  <https://bugs.launchpad.net/rally/+bug/1585456>`_
 
 * Example in comment of context manila_share_networks wrong
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587164>`_
+  `Launchpad bug-report #1587164
+  <https://bugs.launchpad.net/rally/+bug/1587164>`_
 
 * There is no way to get UUID of a verification after it is created by
   "rally verify start" or "rally verify import_results" when --no-use is set
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587034>`_
+  `Launchpad bug-report #1587034
+  <https://bugs.launchpad.net/rally/+bug/1587034>`_
 
 * Exposed ssh timeout and interval in vm scenario
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1587728>`_
+  `Launchpad bug-report #1587728
+  <https://bugs.launchpad.net/rally/+bug/1587728>`_
 
 * Ceilometer scenario doesn't require "ceilometer" ctx
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1557642>`_
+  `Launchpad bug-report #1557642
+  <https://bugs.launchpad.net/rally/+bug/1557642>`_
 
 * "servers" context requires setting network id for multiple possible networks
   found.
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1592292>`_
+  `Launchpad bug-report #1592292
+  <https://bugs.launchpad.net/rally/+bug/1592292>`_
 
 * nested_level data type incorrect in create_nested_snapshots_and_attach_volume
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1594656>`_
+  `Launchpad bug-report #1594656
+  <https://bugs.launchpad.net/rally/+bug/1594656>`_
 
 * Rally cleanup servers raises exception
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1584104>`_
+  `Launchpad bug-report #1584104
+  <https://bugs.launchpad.net/rally/+bug/1584104>`_
 
 * Stopping server is redundant before cold-migrating server
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1594730>`_
+  `Launchpad bug-report #1594730
+  <https://bugs.launchpad.net/rally/+bug/1594730>`_
 
 * existing_users context doesn't work in case of Keystone v3
 
 * Whether validates flavor's disk or not depends on booting type of the instance
 
-  `Launchpad bug-report <https://bugs.launchpad.net/rally/+bug/1596756>`_
+  `Launchpad bug-report #1596756
+  <https://bugs.launchpad.net/rally/+bug/1596756>`_
 
 Documentation
 ~~~~~~~~~~~~~
 
 * Re-use openstack theme for building docs outside rtd.
 
-  `Rally Docs at docs.openstack.org <http://docs.openstack.org/developer/rally/>`_
+  `Rally Docs at docs.openstack.org
+  <http://docs.openstack.org/developer/rally/>`_
 
 * Add page for Verification component
 
-  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/step_10_verifying_cloud_via_tempest.html>`_
+  `RTD page for Verification component
+  <http://rally.readthedocs.io/en/0.5.0/tutorial/step_10_verifying_cloud_via_tempest.html>`_
 
 * Add glossary page
 
-  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/glossary.html>`_
+  `RTD page for Glossary
+  <http://rally.readthedocs.io/en/0.5.0/tutorial/glossary.html>`_
 
 * Adjust docs reference to "KeystoneBasic.authenticate" scenario
 
-  `RTD page <http://rally.readthedocs.io/en/0.5.0/tutorial/step_6_aborting_load_generation_on_sla_failure.html>`_
+  `Step 6. Aborting load generation on success criteria failure
+  <http://rally.readthedocs.io/en/0.5.0/tutorial/step_6_aborting_load_generation_on_sla_failure.html>`_
 
 Thanks
 ~~~~~~

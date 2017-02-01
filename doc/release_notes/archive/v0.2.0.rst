@@ -120,7 +120,8 @@ Plugins
 
  * [improved] CinderVolumes.create_and_attach_volume
 
-    .. warning:: Use "create_vm_params" dict argument instead of **kwargs for instance parameters.
+   .. warning:: Use "create_vm_params" dict argument instead of ``**kwargs``
+    for instance parameters.
 
 
 * **Context**:

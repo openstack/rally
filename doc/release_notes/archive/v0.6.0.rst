@@ -98,6 +98,7 @@ Rally Verify
 ~~~~~~~~~~~~
 
 * Updating Tempest config file
+
  - Some tests (for boto, horizon, etc.) were removed from Tempest and now there
    is no need to keep the corresponding  options in Tempest config file.
 
@@ -134,6 +135,7 @@ Plugins
  - `SaharaNodeGroupTemplates.create_delete_node_group_templates <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#saharanodegrouptemplates-create-delete-node-group-templates-scenario>`_
 
 * *NEW!!*:
+
  - `MonascaMetrics.list_metrics <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#monascametrics-list-metrics-scenario>`_
  - `SenlinClusters.create_and_delete_cluster <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#senlinclusters-create-and-delete-cluster-scenario>`_
  - `Watcher.create_audit_template_and_delete <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#watcher-create-audit-template-and-delete-scenario>`_
@@ -149,6 +151,7 @@ Plugins
 **Contexts**:
 
 * *NEW!!*:
+
  - `Monasca monasca_metrics <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#monasca-metrics-context>`_
  - `Senlin profiles <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#profiles-context>`_
  - `Watcher audit_templates <http://rally.readthedocs.io/en/0.6.0/plugin/plugin_reference.html#audit-templates-context>`_

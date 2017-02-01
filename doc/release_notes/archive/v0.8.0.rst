@@ -35,6 +35,7 @@ Database
 .. warning:: Database schema is changed, you must run
      `rally-manage db upgrade <http://rally.readthedocs.io/en/0.8.0/cli/cli_reference.html#rally-manage-db-upgrade>`_
      to be able to use old Rally installation with latest release.
+
 * change structure of database to be more flexible
 * save raw task results in chunks (see raw_result_chunk_size option of
   [DEFAULT] rally configuration section)
@@ -102,9 +103,10 @@ Plugins
 **Scenarios**:
 
 * *Updated*:
+
  - The meaning of the volume_type argument is changes in
    `CinderVolumes.create_snapshot_and_attach_volume
-    <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#cindervolumes-create-snapshot-and-attach-volume-scenario>`_
+   <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#cindervolumes-create-snapshot-and-attach-volume-scenario>`_
    scenario. It should contain actual volume type instead of boolean value to
    choose random volume type.
  - Extend `GlanceImages.create_image_and_boot_instances
@@ -112,6 +114,7 @@ Plugins
    with create_image_kwargs and boot_server_kwargs arguments.
 
 * *NEW!!*:
+
  - `CeilometerAlarms.create_and_get_alarm
    <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#ceilometeralarms-create-and-get-alarm-scenario>`_
  - `CinderVolumeBackups.create_incremental_volume_backup
@@ -172,12 +175,14 @@ Plugins
 **Hooks**:
 
 * *NEW!!*:
+
  - `fault_injection
    <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#fault-injection-hook>`_
 
 **Runners**
 
 * *Updated*:
+
  - `RPS runner
    <http://rally.readthedocs.io/en/0.8.0/plugins/plugin_reference.html#rps-scenario-runner>`_
    is extended with ability to increase 'rps' value by arithmetic progression

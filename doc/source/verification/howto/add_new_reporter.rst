@@ -44,8 +44,8 @@ Basically, you need to implement only two methods "validate" and "generate".
 
 Method "validate" should check that destination of the report is right.
 Method "generate" should build a report or export results somewhere; actually,
-it is up to you what it should do but return format is strict, see :ref:`spec`
-section for what it can return.
+it is up to you what it should do but return format is strict, see
+`Spec <#spec>`_ section for what it can return.
 
 .. code-block:: python
 

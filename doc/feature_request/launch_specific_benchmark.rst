@@ -24,4 +24,4 @@ Possible solution
 -----------------
 
 * Add optional flag to rally task start command to specify one or more
-benchmarks to execute as part of that test run.
+  benchmarks to execute as part of that test run.

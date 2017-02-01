@@ -124,23 +124,23 @@ input file.
 
 For example, having this in task input file:
 
-.. code-block:: json
+  .. code-block:: json
 
-  "sla": {
-    "performance_degradation": {
-      "max_degradation": 50
-    },
-    "max_seconds_per_iteration": 1.0,
-    "failure_rate": {
-      "max": 0
-    },
-    "outliers": {
-      "max": 1,
-      "min_iterations": 10,
-      "sigmas": 10
-    },
-    "max_avg_duration": 0.5
-  }
+    "sla": {
+      "performance_degradation": {
+        "max_degradation": 50
+      },
+      "max_seconds_per_iteration": 1.0,
+      "failure_rate": {
+        "max": 0
+      },
+      "outliers": {
+        "max": 1,
+        "min_iterations": 10,
+        "sigmas": 10
+      },
+      "max_avg_duration": 0.5
+    }
 
 will result SLA section similar to the following:
 
@@ -168,7 +168,7 @@ Table with statistics data
 **Action**
  Name of the workload metric that has some duration saved.
  This is either an atomic action name or *Total* which points to workload
-`load duration <#load-duration>`_.
+ `load duration <#load-duration>`_.
 
 **Min (sec)**
  `Minimal`_ duration value

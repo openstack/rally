@@ -286,14 +286,6 @@ Commands for Rally 0.7.0:
     $ rally verify genconfig --deployment <uuid> --tempest-config <path> \
       --add-options <path> --override
 
-* The command for showing configs `rally verify showconfig
-  <http://rally.readthedocs.io/en/0.7.0/cli/cli_reference.html#rally-verify-showconfig>`_
-
-  .. code-block:: console
-
-    $ rally verify showconfig --deployment <uuid>
-
-
 Command since Rally 0.8.0:
 
 .. code-block:: console
@@ -314,13 +306,6 @@ Changes:
 
 3) The argument ``--reconfigure`` replaces old ``--override``. It means that
    existing file will be ignored and new one will be used/created.
-
-4) If the argument ``--show`` is specified, a configuration of verifier will be
-   displayed at the end of command execution.
-
-   .. note:: We do not have a separate command for showing configurations
-     anymore. ``rally verify configure-verifier --show`` shows an existing
-     configuration if it exists and ``--reconfigure`` argument is not specified
 
 Show config
 """""""""""
@@ -399,7 +384,7 @@ Commands for Rally 0.7.0:
     $ rally verify show --uuid <uuid> --sort-by <query> --detailed
 
 * Separate command which calls ``rally verify show`` with hardcoded
-  ``--detailed`` flag `rally verify showconfig
+  ``--detailed`` flag `rally verify detailed
   <http://rally.readthedocs.io/en/0.7.0/cli/cli_reference.html#rally-verify-detailed>`_
 
   .. code-block:: console
