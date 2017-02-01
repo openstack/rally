@@ -228,7 +228,7 @@ class JUnitXMLReporter(reporter.VerificationReporter):
                 class_name, name = result["name"].rsplit(".", 1)
                 test_case = {
                     "time": result["duration"],
-                    "name": name, "class_name": class_name
+                    "name": name, "classname": class_name
                 }
 
                 test_id = [tag[3:] for tag in result.get("tags", [])
