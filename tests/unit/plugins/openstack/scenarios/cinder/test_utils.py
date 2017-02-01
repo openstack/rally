@@ -323,21 +323,33 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
                                        "cinder.delete_backup")
 
     def test__restore_backup(self):
+        # NOTE(mdovgal): added for pep8 visual indent test passing
+        bench_cfg = cfg.CONF.benchmark
+
         backup = mock.Mock()
         restore = mock.Mock()
         self.clients("cinder").restores.restore.return_value = backup
+        self.clients("cinder").backups.get.return_value = backup
         self.clients("cinder").volumes.get.return_value = restore
 
         return_restore = self.scenario._restore_backup(backup.id, None)
+        self.mock_wait_for.mock.assert_has_calls([
+            mock.call(
+                backup,
+                ready_statuses=["available"],
+                update_resource=self.mock_get_from_manager.mock.return_value,
+                timeout=bench_cfg.cinder_backup_restore_timeout,
+                check_interval=bench_cfg.cinder_backup_restore_poll_interval),
+            mock.call(
+                restore,
+                ready_statuses=["available"],
+                update_resource=self.mock_get_from_manager.mock.return_value,
+                timeout=bench_cfg.cinder_volume_create_timeout,
+                check_interval=bench_cfg.cinder_volume_create_poll_interval)
+        ])
 
-        self.mock_wait_for.mock.assert_called_once_with(
-            restore,
-            ready_statuses=["available"],
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
-            .cinder_volume_create_poll_interval)
-        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.mock_get_from_manager.mock.assert_has_calls([mock.call(),
+                                                          mock.call()])
         self.assertEqual(self.mock_wait_for.mock.return_value, return_restore)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.restore_backup")

@@ -42,7 +42,14 @@ CINDER_BENCHMARK_OPTS = [
     cfg.FloatOpt("cinder_volume_delete_poll_interval",
                  default=2.0,
                  help="Interval between checks when waiting for volume"
-                      " deletion.")
+                      " deletion."),
+    cfg.FloatOpt("cinder_backup_restore_timeout",
+                 default=600.0,
+                 help="Time to wait for cinder backup to be restored."),
+    cfg.FloatOpt("cinder_backup_restore_poll_interval",
+                 default=2.0,
+                 help="Interval between checks when waiting for backup"
+                      " restoring."),
 ]
 
 CONF = cfg.CONF
@@ -369,6 +376,14 @@ class CinderScenario(scenario.OpenStackScenario):
         """
         restore = self.clients("cinder").restores.restore(backup_id, volume_id)
         restored_volume = self.clients("cinder").volumes.get(restore.volume_id)
+        backup_for_restore = self.clients("cinder").backups.get(backup_id)
+        bench_utils.wait_for(
+            backup_for_restore,
+            ready_statuses=["available"],
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_backup_restore_timeout,
+            check_interval=CONF.benchmark.cinder_backup_restore_poll_interval
+        )
         return bench_utils.wait_for(
             restored_volume,
             ready_statuses=["available"],
