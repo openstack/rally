@@ -533,7 +533,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             routers.append(mock.MagicMock())
             router_create_calls.append(mock.call(router_create_args))
 
-        self.scenario._get_or_create_network = mock.Mock(return_value=network)
+        self.scenario._create_network = mock.Mock(return_value=network)
         self.scenario._create_subnets = mock.Mock(return_value=subnets)
         self.scenario._create_router = mock.Mock(side_effect=routers)
         self.scenario._add_interface_router = mock.Mock()
@@ -544,8 +544,8 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                          subnets_per_network,
                                                          router_create_args)
         self.assertEqual(actual, (network, subnets, routers))
-        self.scenario._get_or_create_network.assert_called_once_with(
-            network_create_args)
+        self.scenario._create_network.assert_called_once_with(
+            network_create_args or {})
         self.scenario._create_subnets.assert_called_once_with(
             network,
             subnet_create_args,
