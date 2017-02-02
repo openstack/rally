@@ -13,6 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
+
+DEFAULT_META_CONCATENATION = {
+    "context": "dict",
+    "validators": "list",
+}
+
 
 class MetaMixin(object):
     """Safe way to store meta information related to class object.
@@ -61,6 +69,20 @@ class MetaMixin(object):
         """Initialize meta for this class."""
         cls._meta = {}
 
+        # set default values defined in all parent classes
+        for class_ in reversed(cls.__mro__):
+            default_meta = vars(class_).get("DEFAULT_META", {})
+            for key, value in default_meta.items():
+                if key in DEFAULT_META_CONCATENATION:
+                    if DEFAULT_META_CONCATENATION[key] == "list":
+                        cls._meta.setdefault(key, [])
+                        cls._meta[key].extend(value)
+                    elif DEFAULT_META_CONCATENATION[key] == "dict":
+                        cls._meta.setdefault(key, {})
+                        cls._meta[key].update(value)
+                else:
+                    cls._meta[key] = copy.deepcopy(value)
+
     @classmethod
     def _meta_clear(cls):
         cls._meta.clear()    # NOTE(boris-42): make sure that meta is deleted
@@ -72,14 +94,8 @@ class MetaMixin(object):
 
         It means that this class has own cls._meta object (not pointer
         to parent cls._meta)
-
-        To do this we should check 2 things:
-        1) cls has attribute _meta
-        2) cls._meta is not pointer to parent._meta
-
         """
-        if (not hasattr(cls, "_meta")
-           or cls._meta is getattr(super(cls, cls), "_meta", None)):
+        if vars(cls).get("_meta") is None:
             if raise_exc:
                 raise ReferenceError(
                     "Trying to use MetaMixin before initialization %s. "
