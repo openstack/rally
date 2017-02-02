@@ -406,6 +406,30 @@
         failure_rate:
           max: 0
 
+  NovaServers.resize_shutoff_server:
+  {% for s in ("true", "false") %}
+    -
+      args:
+        flavor:
+            name: {{flavor_name}}
+        image:
+            name: {{image_name}}
+        to_flavor:
+            name: "m1.small"
+        confirm: {{s}}
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}
+
   NovaServers.boot_server_attach_created_volume_and_resize:
     -
       args:
