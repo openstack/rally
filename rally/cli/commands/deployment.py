@@ -25,13 +25,13 @@ import sys
 import jsonschema
 from keystoneclient import exceptions as keystone_exceptions
 from six.moves.urllib import parse
-import yaml
 
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import utils
+from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally import plugins
 
