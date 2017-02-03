@@ -34,8 +34,8 @@ class CreateAndListLoadbalancers(utils.NeutronScenario):
         The scenario creates a loadbalancer for every subnet and then lists
         loadbalancers.
 
-        :param loadbalancer_create_args: dict, POST /lbaas/loadbalancers
-                                         request options
+        :param lb_create_args: dict, POST /lbaas/loadbalancers
+                               request options
         """
         lb_create_args = lb_create_args or {}
         subnets = []

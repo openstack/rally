@@ -70,6 +70,7 @@ class CreateAndDeleteAggregate(utils.NovaScenario):
         """Create an aggregate and then delete it.
 
         This scenario first creates an aggregate and then delete it.
+        :param availability_zone: The availability zone of the aggregate
         """
         aggregate = self._create_aggregate(availability_zone)
         self._delete_aggregate(aggregate)
@@ -125,6 +126,7 @@ class CreateAndGetAggregateDetails(utils.NovaScenario):
         """Create an aggregate and then get its details.
 
         This scenario first creates an aggregate and then get details of it.
+        :param availability_zone: The availability zone of the aggregate
         """
         aggregate = self._create_aggregate(availability_zone)
         self._get_aggregate_details(aggregate)

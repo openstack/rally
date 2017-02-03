@@ -784,7 +784,7 @@ class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderScenario,
 
         :param size: volume size (integer, in GB)
         :param image: image to be used to create volume
-        :param read_only:The value to indicate whether to update volume to
+        :param read_only: The value to indicate whether to update volume to
             read-only access mode
         :param kwargs: optional args to create a volume
         """
