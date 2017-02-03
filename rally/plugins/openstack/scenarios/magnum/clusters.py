@@ -15,6 +15,7 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.magnum import utils
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import validation
 
 """Scenarios for Magnum clusters."""
@@ -45,8 +46,7 @@ class ListClusters(utils.MagnumScenario):
 
 @validation.required_services(consts.Service.MAGNUM)
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("cluster_templates")
-@scenario.configure(context={"cleanup": ["magnum.clusters"]},
+@scenario.configure(context={"cleanup": ["magnum.clusters", "nova.keypairs"]},
                     name="MagnumClusters.create_and_list_clusters")
 class CreateAndListClusters(utils.MagnumScenario):
 
@@ -61,8 +61,19 @@ class CreateAndListClusters(utils.MagnumScenario):
         cluster_template_uuid = kwargs.get("cluster_template_uuid", None)
         if cluster_template_uuid is None:
             cluster_template_uuid = self.context["tenant"]["cluster_template"]
-        new_cluster = self._create_cluster(cluster_template_uuid,
-                                           node_count, **kwargs)
+        else:
+            del kwargs["cluster_template_uuid"]
+
+        nova_scenario = nova_utils.NovaScenario({
+            "user": self.context["user"],
+            "task": self.context["task"],
+            "config": {"api_versions": self.context["config"].get(
+                "api_versions", [])}
+        })
+        keypair = nova_scenario._create_keypair()
+
+        new_cluster = self._create_cluster(cluster_template_uuid, node_count,
+                                           keypair=keypair, **kwargs)
         self.assertTrue(new_cluster, "Failed to create new cluster")
         clusters = self._list_clusters(**kwargs)
         self.assertIn(new_cluster.uuid, [cluster.uuid for cluster in clusters],

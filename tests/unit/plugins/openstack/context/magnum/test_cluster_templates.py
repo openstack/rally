@@ -14,7 +14,6 @@ import mock
 
 from rally.plugins.openstack.context.magnum import cluster_templates
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -37,10 +36,7 @@ class ClusterTemplatesGeneratorTestCase(test.ScenarioTestCase):
     @mock.patch("%s.magnum.utils.MagnumScenario."
                 "_create_cluster_template" % SCN,
                 return_value=fakes.FakeClusterTemplate(id="uuid"))
-    @mock.patch("%s.nova.utils.NovaScenario._create_keypair" % SCN,
-                return_value="key1")
-    def test_setup(self, mock_nova_scenario__create_keypair,
-                   mock__create_cluster_template):
+    def test_setup(self, mock__create_cluster_template):
         tenants_count = 2
         users_per_tenant = 5
 
@@ -84,7 +80,7 @@ class ClusterTemplatesGeneratorTestCase(test.ScenarioTestCase):
         docker_volume_size = ct_ctx_config.get("docker_volume_size")
         network_driver = ct_ctx_config.get("network_driver")
         coe = ct_ctx_config.get("coe")
-        mock_calls = [mock.call(image_id=image_id, keypair_id="key1",
+        mock_calls = [mock.call(image_id=image_id,
                                 external_network_id=external_network_id,
                                 dns_nameserver=dns_nameserver,
                                 flavor_id=flavor_id,
@@ -105,14 +101,8 @@ class ClusterTemplatesGeneratorTestCase(test.ScenarioTestCase):
         })
         ct_ctx = cluster_templates.ClusterTemplateGenerator(self.context)
         ct_ctx.cleanup()
-        mock_cleanup.assert_has_calls((
-            mock.call(
-                names=["nova.keypairs"],
-                users=self.context["users"],
-                superclass=nova_utils.NovaScenario,
-                task_id=self.context["owner_id"]),
-            mock.call(
-                names=["magnum.cluster_templates"],
-                users=self.context["users"],
-                superclass=magnum_utils.MagnumScenario,
-                task_id=self.context["owner_id"])))
+        mock_cleanup.assert_called_once_with(
+            names=["magnum.cluster_templates"],
+            users=self.context["users"],
+            superclass=magnum_utils.MagnumScenario,
+            task_id=self.context["owner_id"])

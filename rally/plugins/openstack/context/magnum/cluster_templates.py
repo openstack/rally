@@ -19,7 +19,6 @@ from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import context
 
 
@@ -108,15 +107,6 @@ class ClusterTemplateGenerator(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
 
-            nova_scenario = nova_utils.NovaScenario({
-                "user": user,
-                "task": self.context["task"],
-                "owner_id": self.context["owner_id"],
-                "config": {"api_versions": self.context["config"].get(
-                    "api_versions", [])}
-            })
-            keypair = nova_scenario._create_keypair()
-
             magnum_scenario = magnum_utils.MagnumScenario({
                 "user": user,
                 "task": self.context["task"],
@@ -126,18 +116,13 @@ class ClusterTemplateGenerator(context.Context):
             })
 
             cluster_template = magnum_scenario._create_cluster_template(
-                keypair_id=keypair, **self.config)
+                **self.config)
 
             ct_uuid = cluster_template.uuid
             self.context["tenants"][tenant_id]["cluster_template"] = ct_uuid
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `ClusterTemplate`"))
     def cleanup(self):
-        resource_manager.cleanup(
-            names=["nova.keypairs"],
-            users=self.context.get("users", []),
-            superclass=nova_utils.NovaScenario,
-            task_id=self.get_owner_id())
         resource_manager.cleanup(
             names=["magnum.cluster_templates"],
             users=self.context.get("users", []),

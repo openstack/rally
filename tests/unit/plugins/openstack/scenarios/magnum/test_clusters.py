@@ -28,9 +28,11 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
         context = test.get_test_context()
         context.update({
             "tenant": {
-                "id": "rally_tenant_id",
-                "cluster_template": "rally_cluster_template_uuid"
-            }
+                "id": "rally_tenant_id"
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "config": {}
         })
         return context
 
@@ -46,9 +48,9 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
         scenario._list_clusters.assert_called_once_with(**kwargs)
 
     def test_create_cluster_with_existing_ct_and_list_clusters(self):
-        scenario = clusters.CreateAndListClusters()
-        kwargs = {"cluster_template_uuid": "existing_cluster_template_uuid",
-                  "fakearg": "f"}
+        context = self._get_context()
+        scenario = clusters.CreateAndListClusters(context)
+        kwargs = {"fakearg": "f"}
         fake_cluster1 = mock.Mock(uuid="a")
         fake_cluster2 = mock.Mock(uuid="b")
         fake_cluster3 = mock.Mock(uuid="c")
@@ -57,30 +59,38 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
                                                           fake_cluster2,
                                                           fake_cluster3])
 
+        run_kwargs = kwargs.copy()
+        run_kwargs["cluster_template_uuid"] = "existing_cluster_template_uuid"
         # Positive case
-        scenario.run(2, **kwargs)
+        scenario.run(2, **run_kwargs)
 
         scenario._create_cluster.assert_called_once_with(
-            "existing_cluster_template_uuid", 2, **kwargs)
+            "existing_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
         scenario._list_clusters.assert_called_once_with(**kwargs)
 
         # Negative case1: cluster isn't created
         scenario._create_cluster.return_value = None
         self.assertRaises(exceptions.RallyAssertionError,
-                          scenario.run, 2, **kwargs)
+                          scenario.run, 2, **run_kwargs)
         scenario._create_cluster.assert_called_with(
-            "existing_cluster_template_uuid", 2, **kwargs)
+            "existing_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
 
         # Negative case2: created cluster not in the list of available clusters
         scenario._create_cluster.return_value = mock.Mock(uuid="foo")
         self.assertRaises(exceptions.RallyAssertionError,
-                          scenario.run, 2, **kwargs)
+                          scenario.run, 2, **run_kwargs)
         scenario._create_cluster.assert_called_with(
-            "existing_cluster_template_uuid", 2, **kwargs)
+            "existing_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
         scenario._list_clusters.assert_called_with(**kwargs)
 
     def test_create_and_list_clusters(self):
         context = self._get_context()
+        context.update({
+            "tenant": {
+                "cluster_template": "rally_cluster_template_uuid"
+            }
+        })
+
         scenario = clusters.CreateAndListClusters(context)
         fake_cluster1 = mock.Mock(uuid="a")
         fake_cluster2 = mock.Mock(uuid="b")
@@ -95,7 +105,7 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
         scenario.run(2, **kwargs)
 
         scenario._create_cluster.assert_called_once_with(
-            "rally_cluster_template_uuid", 2, **kwargs)
+            "rally_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
         scenario._list_clusters.assert_called_once_with(**kwargs)
 
         # Negative case1: cluster isn't created
@@ -103,12 +113,12 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
         self.assertRaises(exceptions.RallyAssertionError,
                           scenario.run, 2, **kwargs)
         scenario._create_cluster.assert_called_with(
-            "rally_cluster_template_uuid", 2, **kwargs)
+            "rally_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
 
         # Negative case2: created cluster not in the list of available clusters
         scenario._create_cluster.return_value = mock.Mock(uuid="foo")
         self.assertRaises(exceptions.RallyAssertionError,
                           scenario.run, 2, **kwargs)
         scenario._create_cluster.assert_called_with(
-            "rally_cluster_template_uuid", 2, **kwargs)
+            "rally_cluster_template_uuid", 2, keypair=mock.ANY, **kwargs)
         scenario._list_clusters.assert_called_with(**kwargs)

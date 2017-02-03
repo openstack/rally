@@ -42,7 +42,10 @@ class ClustersGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.magnum.utils.MagnumScenario._create_cluster" % SCN,
                 return_value=mock.Mock())
-    def test_setup_using_existing_cluster_template(self, mock__create_cluster):
+    @mock.patch("%s.nova.utils.NovaScenario._create_keypair" % SCN,
+                return_value="key1")
+    def test_setup_using_existing_cluster_template(
+            self, mock__create_keypair, mock__create_cluster):
         tenants_count = 2
         users_per_tenant = 5
 
@@ -82,13 +85,15 @@ class ClustersGeneratorTestCase(test.ScenarioTestCase):
         node_count = cluster_ctx_config.get("node_count")
         cluster_template_uuid = cluster_ctx_config.get("cluster_template_uuid")
         mock_calls = [mock.call(cluster_template=cluster_template_uuid,
-                                node_count=node_count)
+                                keypair="key1", node_count=node_count)
                       for i in range(tenants_count)]
         mock__create_cluster.assert_has_calls(mock_calls)
 
     @mock.patch("%s.magnum.utils.MagnumScenario._create_cluster" % SCN,
                 return_value=mock.Mock())
-    def test_setup(self, mock__create_cluster):
+    @mock.patch("%s.nova.utils.NovaScenario._create_keypair" % SCN,
+                return_value="key1")
+    def test_setup(self, mock__create_keypair, mock__create_cluster):
         tenants_count = 2
         users_per_tenant = 5
 
@@ -135,7 +140,7 @@ class ClustersGeneratorTestCase(test.ScenarioTestCase):
         cluster_ctx_config = self.context["config"]["clusters"]
         node_count = cluster_ctx_config.get("node_count")
         mock_calls = [mock.call(cluster_template="rally_ct_uuid",
-                                node_count=node_count)
+                                keypair="key1", node_count=node_count)
                       for i in range(tenants_count)]
         mock__create_cluster.assert_has_calls(mock_calls)
 
@@ -147,7 +152,7 @@ class ClustersGeneratorTestCase(test.ScenarioTestCase):
         clusters_ctx = clusters.ClusterGenerator(self.context)
         clusters_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
-            names=["magnum.clusters"],
+            names=["magnum.clusters", "nova.keypairs"],
             users=self.context["users"],
             superclass=magnum_utils.MagnumScenario,
             task_id=self.context["owner_id"])
