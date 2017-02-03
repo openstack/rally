@@ -117,11 +117,13 @@ def from_func(plugin_baseclass=None):
                             % Plugin)
 
         class FuncPlugin(plugin_baseclass):
-            pass
+
+            is_classbased = False
 
     else:
         class FuncPlugin(Plugin):
-            pass
+
+            is_classbased = False
 
     def decorator(func):
         func._plugin = FuncPlugin
