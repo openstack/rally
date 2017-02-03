@@ -75,12 +75,12 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
         # NOTE(amaretskiy): self.config is a constant data and must be
         #                   immutable or write-protected type to prevent
         #                   unexpected changes in runtime
-        if type(config) == dict:
+        if isinstance(config, dict):
             if hasattr(self, "DEFAULT_CONFIG"):
                 for key, value in self.DEFAULT_CONFIG.items():
                     config.setdefault(key, value)
             self.config = utils.LockedDict(config)
-        elif type(config) == list:
+        elif isinstance(config, list):
             self.config = tuple(config)
         else:
             # NOTE(amaretskiy): It is improbable that config can be a None,
