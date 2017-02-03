@@ -348,7 +348,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param router_create_args: dict, POST /v2.0/routers request options
         :returns: tuple of (network, subnets, routers)
         """
-        network = self._get_or_create_network(network_create_args)
+        network = self._create_network(network_create_args or {})
         subnets = self._create_subnets(network, subnet_create_args,
                                        subnet_cidr_start,
                                        subnets_per_network)
