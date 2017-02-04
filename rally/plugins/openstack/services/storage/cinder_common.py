@@ -28,11 +28,30 @@ class CinderMixin(object):
     def _get_client(self):
         return self._clients.cinder(self.version)
 
+    def _update_resource(self, resource):
+        try:
+            manager = getattr(resource, "manager", None)
+            if manager:
+                res = manager.get(resource.id)
+            else:
+                if isinstance(resource, block.Volume):
+                    attr = "volumes"
+                elif isinstance(resource, block.VolumeSnapshot):
+                    attr = "volume_snapshots"
+                elif isinstance(resource, block.VolumeBackup):
+                    attr = "backups"
+                res = getattr(self._get_client(), attr).get(resource.id)
+        except Exception as e:
+            if getattr(e, "code", getattr(e, "http_status", 400)) == 404:
+                raise exceptions.GetResourceNotFound(resource=resource)
+            raise exceptions.GetResourceFailure(resource=resource, err=e)
+        return res
+
     def _wait_available_volume(self, volume):
         return bench_utils.wait_for_status(
             volume,
             ready_statuses=["available"],
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=self._update_resource,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
@@ -58,7 +77,7 @@ class CinderMixin(object):
                 volume,
                 ready_statuses=["deleted"],
                 check_deletion=True,
-                update_resource=bench_utils.get_from_manager(),
+                update_resource=self._update_resource,
                 timeout=CONF.benchmark.cinder_volume_delete_timeout,
                 check_interval=(CONF.benchmark
                                 .cinder_volume_delete_poll_interval)
@@ -72,7 +91,7 @@ class CinderMixin(object):
         aname = "cinder_v%s.extend_volume" % self.version
         with atomic.ActionTimer(self, aname):
             self._get_client().volumes.extend(volume, new_size)
-            self._wait_available_volume(volume)
+            return self._wait_available_volume(volume)
 
     def list_snapshots(self, detailed=True):
         """Get a list of all snapshots."""
@@ -199,7 +218,7 @@ class CinderMixin(object):
                 snapshot,
                 ready_statuses=["deleted"],
                 check_deletion=True,
-                update_resource=bench_utils.get_from_manager(),
+                update_resource=self._update_resource,
                 timeout=CONF.benchmark.cinder_volume_delete_timeout,
                 check_interval=(CONF.benchmark
                                 .cinder_volume_delete_poll_interval)
@@ -219,7 +238,7 @@ class CinderMixin(object):
                 backup,
                 ready_statuses=["deleted"],
                 check_deletion=True,
-                update_resource=bench_utils.get_from_manager(),
+                update_resource=self._update_resource,
                 timeout=CONF.benchmark.cinder_volume_delete_timeout,
                 check_interval=(CONF.benchmark
                                 .cinder_volume_delete_poll_interval)
@@ -258,6 +277,16 @@ class CinderMixin(object):
         aname = "cinder_v%s.list_transfers" % self.version
         with atomic.ActionTimer(self, aname):
             return self._get_client().transfers.list(detailed, search_opts)
+
+    def get_volume_type(self, volume_type):
+        """get details of volume_type.
+
+        :param volume_type: The ID of the :class:`VolumeType` to get
+        :returns: :class:`VolumeType`
+        """
+        aname = "cinder_v%s.get_volume_type" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().volume_types.get(volume_type)
 
     def delete_volume_type(self, volume_type):
         """delete a volume type.
@@ -348,12 +377,15 @@ class UnifiedCinderMixin(object):
     @staticmethod
     def _unify_backup(backup):
         return block.VolumeBackup(id=backup.id, name=backup.name,
-                                  volume_id=backup.volume_id)
+                                  volume_id=backup.volume_id,
+                                  status=backup.status)
 
     @staticmethod
     def _unify_transfer(transfer):
+        auth_key = transfer.auth_key if hasattr(transfer, "auth_key") else None
         return block.VolumeTransfer(id=transfer.id, name=transfer.name,
-                                    volume_id=transfer.volume_id)
+                                    volume_id=transfer.volume_id,
+                                    auth_key=auth_key)
 
     @staticmethod
     def _unify_encryption_type(encryption_type):
@@ -431,17 +463,6 @@ class UnifiedCinderMixin(object):
         """Delete a volume backup."""
         self._impl.delete_backup(backup)
 
-    def restore_backup(self, backup_id, volume_id=None):
-        """Restore the given backup.
-
-        :param backup_id: The ID of the backup to restore.
-        :param volume_id: The ID of the volume to restore the backup to.
-
-        :returns: Return the restored backup.
-        """
-        return self._unify_backup(self._impl.restore_backup(
-            backup_id, volume_id=volume_id))
-
     def list_backups(self, detailed=True):
         """Return user volume backups list."""
         return [self._unify_backup(backup)
@@ -458,6 +479,14 @@ class UnifiedCinderMixin(object):
         return [self._unify_transfer(transfer)
                 for transfer in self._impl.list_transfers(
                     detailed=detailed, search_opts=search_opts)]
+
+    def get_volume_type(self, volume_type):
+        """get details of volume_type.
+
+        :param volume_type: The ID of the :class:`VolumeType` to get
+        :returns: :class:`VolumeType`
+        """
+        return self._impl.get_volume_type(volume_type)
 
     def delete_volume_type(self, volume_type):
         """delete a volume type.

@@ -3,7 +3,6 @@
   CinderVolumes.create_snapshot_and_attach_volume:
     -
       args:
-          volume_type: false
           size:
               min: 1
               max: 5
@@ -23,7 +22,7 @@
           servers_per_tenant: 2
     -
       args:
-          volume_type: true
+          volume_type: "test"
           size:
               min: 1
               max: 5
@@ -41,4 +40,5 @@
           flavor:
             name: "{{flavor_name}}"
           servers_per_tenant: 2
-
+        volume_types:
+          - "test"

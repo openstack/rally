@@ -37,8 +37,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.volume = mock.Mock()
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
-        self.context["iteration"] = 3
-        self.context["config"] = {"users": {"tenants": 2}}
+        self.context.update(
+            {"user": {"id": "fake_user_id", "credential": mock.MagicMock()}})
 
     def _context_with_networks(self, networks):
         retval = {"tenant": {"networks": networks}}
@@ -595,6 +595,15 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             timeout=CONF.benchmark.nova_server_resize_revert_timeout)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_revert")
+
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test__update_volume_resource(self, mock_block_storage):
+        volume = fakes.FakeVolume(id=1)
+        cinder = mock_block_storage.return_value
+        cinder.get_volume = mock.MagicMock()
+        nova_scenario = utils.NovaScenario(context=self.context)
+        self.assertEqual(cinder.get_volume.return_value,
+                         nova_scenario._update_volume_resource(volume))
 
     def test__attach_volume(self):
         expect_attach = mock.MagicMock()

@@ -167,6 +167,13 @@ class BlockTestCase(test.TestCase):
         self.service._impl.create_volume_type.assert_called_once_with(
             name="type", description=None, is_public=True)
 
+    def test_get_volume_type(self):
+        self.assertEqual(
+            self.service._impl.get_volume_type.return_value,
+            self.service.get_volume_type("volume_type"))
+        self.service._impl.get_volume_type.assert_called_once_with(
+            "volume_type")
+
     def test_delete_volume_type(self):
         self.service.delete_volume_type("volume_type")
         self.service._impl.delete_volume_type.assert_called_once_with(

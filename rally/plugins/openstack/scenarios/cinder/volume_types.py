@@ -23,11 +23,12 @@ from rally.task import validation
 """Scenarios for Cinder Volume Type."""
 
 
+@validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_volume_type")
-class CreateAndDeleteVolumeType(cinder_utils.CinderScenario):
+class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
 
     def run(self, **kwargs):
         """Create and delete a volume Type.
@@ -35,15 +36,16 @@ class CreateAndDeleteVolumeType(cinder_utils.CinderScenario):
         :param kwargs: Optional parameters used during volume
                        type creation.
         """
-        volume_type = self._create_volume_type(**kwargs)
-        self._delete_volume_type(volume_type)
+        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        self.admin_cinder.delete_volume_type(volume_type)
 
 
+@validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_get_volume_type")
-class CreateAndGetVolumeType(cinder_utils.CinderScenario):
+class CreateAndGetVolumeType(cinder_utils.CinderBasic):
 
     def run(self, **kwargs):
         """Create a volume Type, then get the details of the type.
@@ -51,16 +53,17 @@ class CreateAndGetVolumeType(cinder_utils.CinderScenario):
         :param kwargs: Optional parameters used during volume
                        type creation.
         """
-        volume_type = self._create_volume_type(**kwargs)
-        self._get_volume_type(volume_type)
+        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        self.admin_cinder.get_volume_type(volume_type)
 
 
+@validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_volume_type"
                          "_and_encryption_type")
-class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderScenario):
+class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, specs, **kwargs):
         """Create encryption type
@@ -72,16 +75,18 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderScenario):
         :param kwargs: Optional parameters used during volume
                        type creation.
         """
-        volume_type = self._create_volume_type(**kwargs)
-        self._create_encryption_type(volume_type, specs)
+        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        self.admin_cinder.create_encryption_type(volume_type,
+                                                 specs=specs)
 
 
+@validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_list_"
                          "encryption_type")
-class CreateAndListEncryptionType(cinder_utils.CinderScenario):
+class CreateAndListEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, specs, search_opts=None, **kwargs):
         """Create and list encryption type
@@ -95,16 +100,18 @@ class CreateAndListEncryptionType(cinder_utils.CinderScenario):
         :param kwargs: Optional parameters used during volume
                        type creation.
         """
-        volume_type = self._create_volume_type(**kwargs)
-        self._create_encryption_type(volume_type, specs)
-        self._list_encryption_type(search_opts)
+        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        self.admin_cinder.create_encryption_type(volume_type,
+                                                 specs=specs)
+        self.admin_cinder.list_encryption_type(search_opts)
 
 
+@validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_set_volume_type_keys")
-class CreateAndSetVolumeTypeKeys(cinder_utils.CinderScenario):
+class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
 
     def run(self, volume_type_key, **kwargs):
         """Create and set a volume type's extra specs.
@@ -113,9 +120,9 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderScenario):
         :param kwargs: Optional parameters used during volume
                        type creation.
         """
-        volume_type = self._create_volume_type(**kwargs)
-
-        self._set_volume_type_keys(volume_type, volume_type_key)
+        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        self.admin_cinder.set_volume_type_keys(volume_type,
+                                               metadata=volume_type_key)
 
 
 @validation.required_services(consts.Service.CINDER)
@@ -124,7 +131,7 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderScenario):
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_"
                          "encryption_type")
-class CreateAndDeleteEncryptionType(cinder_utils.CinderScenario):
+class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, create_specs):
         """Create and delete encryption type
@@ -135,5 +142,6 @@ class CreateAndDeleteEncryptionType(cinder_utils.CinderScenario):
         :param create_specs: the encryption type specifications to add
         """
         volume_type = random.choice(self.context["volume_types"])
-        self._create_encryption_type(volume_type["id"], create_specs)
-        self._delete_encryption_type(volume_type["id"])
+        self.admin_cinder.create_encryption_type(volume_type["id"],
+                                                 specs=create_specs)
+        self.admin_cinder.delete_encryption_type(volume_type["id"])

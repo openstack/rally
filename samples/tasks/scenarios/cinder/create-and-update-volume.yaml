@@ -3,8 +3,7 @@
     -
       args:
         update_volume_kwargs:
-           display_name: "name_updated"
-           display_description: "desc_updated"
+           description: "desc_updated"
         create_volume_kwargs: {}
         size: 1
       runner:

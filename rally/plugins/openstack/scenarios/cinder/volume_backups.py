@@ -22,13 +22,17 @@ from rally.task import validation
 
 
 @validation.number("size", minval=1, integer_only=True)
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters("name",
+                                  subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumeBackups."
                     "create_incremental_volume_backup")
-class CreateIncrementalVolumeBackup(cinder_utils.CinderScenario):
+class CreateIncrementalVolumeBackup(cinder_utils.CinderBasic):
     def run(self, size, do_delete=True, create_volume_kwargs=None,
             create_backup_kwargs=None):
         """Create a incremental volume backup.
@@ -45,12 +49,12 @@ class CreateIncrementalVolumeBackup(cinder_utils.CinderScenario):
         create_volume_kwargs = create_volume_kwargs or {}
         create_backup_kwargs = create_backup_kwargs or {}
 
-        volume = self._create_volume(size, **create_volume_kwargs)
-        backup1 = self._create_backup(volume.id, **create_backup_kwargs)
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
+        backup1 = self.cinder.create_backup(volume.id, **create_backup_kwargs)
 
-        backup2 = self._create_backup(volume.id, incremental=True)
+        backup2 = self.cinder.create_backup(volume.id, incremental=True)
 
         if do_delete:
-            self._delete_backup(backup2)
-            self._delete_backup(backup1)
-            self._delete_volume(volume)
+            self.cinder.delete_backup(backup2)
+            self.cinder.delete_backup(backup1)
+            self.cinder.delete_volume(volume)

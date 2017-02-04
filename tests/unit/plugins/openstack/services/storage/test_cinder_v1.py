@@ -88,28 +88,25 @@ class CinderV1ServiceTestCase(test.ScenarioTestCase):
                          return_volume)
 
     def test_update_volume(self):
-        self.service.generate_random_name = mock.MagicMock(
-            return_value="volume")
+        return_value = {"volume": fakes.FakeVolume()}
+        self.cinder.volumes.update.return_value = return_value
 
-        return_volume = self.service.update_volume(
-            1, display_description="fake")
-
-        self.service.generate_random_name.assert_called_once_with()
-        self.cinder.volumes.update.assert_called_once_with(
-            1, display_name="volume", display_description="fake")
-        self.assertEqual(self.cinder.volumes.update.return_value,
-                         return_volume)
+        self.assertEqual(return_value["volume"],
+                         self.service.update_volume(1))
+        self.cinder.volumes.update.assert_called_once_with(1)
         self._test_atomic_action_timer(self.atomic_actions(),
                                        "cinder_v1.update_volume")
 
-    def test_update_volume_with_name(self):
+    def test_update_volume_with_name_description(self):
+        return_value = {"volume": fakes.FakeVolume()}
+        self.cinder.volumes.update.return_value = return_value
+
         return_volume = self.service.update_volume(
             1, display_name="volume", display_description="fake")
 
         self.cinder.volumes.update.assert_called_once_with(
             1, display_name="volume", display_description="fake")
-        self.assertEqual(self.cinder.volumes.update.return_value,
-                         return_volume)
+        self.assertEqual(return_value["volume"], return_volume)
         self._test_atomic_action_timer(self.atomic_actions(),
                                        "cinder_v1.update_volume")
 
@@ -224,20 +221,33 @@ class UnifiedCinderV1ServiceTestCase(test.TestCase):
             id = 1
             display_name = "volume"
             size = 1
+            status = "st"
         volume = self.service._unify_volume(SomeVolume())
         self.assertEqual(1, volume.id)
         self.assertEqual("volume", volume.name)
         self.assertEqual(1, volume.size)
+        self.assertEqual("st", volume.status)
+
+    def test__unify_volume_with_dict(self):
+        some_volume = {"display_name": "volume", "id": 1,
+                       "size": 1, "status": "st"}
+        volume = self.service._unify_volume(some_volume)
+        self.assertEqual(1, volume.id)
+        self.assertEqual("volume", volume.name)
+        self.assertEqual(1, volume.size)
+        self.assertEqual("st", volume.status)
 
     def test__unify_snapshot(self):
         class SomeSnapshot(object):
             id = 1
             display_name = "snapshot"
             volume_id = "volume"
+            status = "st"
         snapshot = self.service._unify_snapshot(SomeSnapshot())
         self.assertEqual(1, snapshot.id)
         self.assertEqual("snapshot", snapshot.name)
         self.assertEqual("volume", snapshot.volume_id)
+        self.assertEqual("st", snapshot.status)
 
     def test_create_volume(self):
         self.service._unify_volume = mock.MagicMock()
@@ -334,3 +344,12 @@ class UnifiedCinderV1ServiceTestCase(test.TestCase):
             self.service.create_volume_type(name="type"))
         self.service._impl.create_volume_type.assert_called_once_with(
             name="type")
+
+    def test_restore_backup(self):
+        self.service._unify_volume = mock.MagicMock()
+        self.assertEqual(self.service._unify_volume.return_value,
+                         self.service.restore_backup(1, volume_id=1))
+        self.service._impl.restore_backup.assert_called_once_with(1,
+                                                                  volume_id=1)
+        self.service._unify_volume.assert_called_once_with(
+            self.service._impl.restore_backup.return_value)
