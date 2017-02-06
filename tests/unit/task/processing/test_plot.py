@@ -55,6 +55,7 @@ class PlotTestCase(test.TestCase):
                          "max_duration": 14, "min_duration": 5,
                          "output_names": [],
                          "tstamp_end": 25, "tstamp_start": 2},
+                "created_at": "xxx_time",
                 "hooks": []}
 
         result = plot._process_scenario(data, 1)
@@ -63,6 +64,7 @@ class PlotTestCase(test.TestCase):
              "runner": "constant", "config": json.dumps(
                  {"Foo.bar": [{"runner": {"type": "constant"}}]},
                  indent=2),
+             "created_at": "xxx_time",
              "full_duration": 40, "load_duration": 32, "hooks": [],
              "atomic": {"histogram": "atomic_histogram",
                         "iter": "atomic_stacked", "pie": "atomic_avg"},
@@ -214,6 +216,7 @@ class PlotTestCase(test.TestCase):
              "hooks": "%s_hooks" % k,
              "full_duration": "%s_full_duration" % k,
              "load_duration": "%s_load_duration" % k,
+             "created_at": "%s_time" % k,
              "result": "%s_result" % k} for k in ("foo", "bar", "spam")]
         generic_results = [
             {"id": None, "created_at": None, "updated_at": None,
@@ -222,9 +225,10 @@ class PlotTestCase(test.TestCase):
                       "full_duration": "%s_full_duration" % k,
                       "load_duration": "%s_load_duration" % k,
                       "hooks": "%s_hooks" % k,
-                      "sla": "%s_sla" % k}} for k in ("foo", "bar", "spam")]
+                      "sla": "%s_sla" % k},
+             "created_at": "%s_time" % k} for k in ("foo", "bar", "spam")]
         results = plot._extend_results(tasks_results)
-        self.assertEqual([mock.call([r]) for r in generic_results],
+        self.assertEqual([mock.call([r], True) for r in generic_results],
                          mock_task_extend_results.mock_calls)
         self.assertEqual(["extended_foo", "extended_bar", "extended_spam"],
                          results)

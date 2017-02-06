@@ -381,16 +381,20 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("json.dumps")
     def test_results(self, mock_json_dumps):
         task_id = "foo_task_id"
+        created_at = dt.datetime(2017, 2, 6, 1, 1, 1)
         data = [
             {"key": "foo_key", "data": {"raw": "foo_raw", "sla": [],
                                         "hooks": [],
                                         "load_duration": 1.0,
-                                        "full_duration": 2.0}}
+                                        "full_duration": 2.0},
+             "created_at": created_at}
         ]
         result = map(lambda x: {"key": x["key"],
                                 "result": x["data"]["raw"],
                                 "load_duration": x["data"]["load_duration"],
                                 "full_duration": x["data"]["full_duration"],
+                                "created_at": x.get("created_at").strftime(
+                                    "%Y-%d-%mT%H:%M:%S"),
                                 "hooks": x["data"]["hooks"],
                                 "sla": x["data"]["sla"]}, data)
         fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED})
@@ -559,19 +563,22 @@ class TaskCommandsTestCase(test.TestCase):
              "data": {"raw": "foo_raw", "sla": "foo_sla",
                       "hooks": "foo_hooks",
                       "load_duration": 0.1,
-                      "full_duration": 1.2}},
+                      "full_duration": 1.2},
+             "created_at": "2017-06-02T07:33:04"},
             {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "hooks": "bar_hooks",
                       "load_duration": 2.1,
-                      "full_duration": 2.2}}]
+                      "full_duration": 2.2},
+             "created_at": "2017-06-02T07:33:04"}]
 
         results = [{"key": x["key"],
                     "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "hooks": x["data"]["hooks"],
                     "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"]}
+                    "full_duration": x["data"]["full_duration"],
+                    "created_at": x["created_at"]}
                    for x in data]
         mock_results = mock.Mock(return_value=data)
         self.fake_api.task.get.return_value.get_results = mock_results
@@ -629,12 +636,14 @@ class TaskCommandsTestCase(test.TestCase):
              "data": {"raw": "foo_raw", "sla": "foo_sla",
                       "hooks": "foo_hooks",
                       "load_duration": 0.1,
-                      "full_duration": 1.2}},
+                      "full_duration": 1.2},
+             "created_at": "2017-06-02T07:33:04"},
             {"key": {"name": "test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "hooks": "bar_hooks",
                       "load_duration": 2.1,
-                      "full_duration": 2.2}}]
+                      "full_duration": 2.2},
+             "created_at": "2017-06-02T07:33:04"}]
 
         results = []
         for task_uuid in tasks:
@@ -644,7 +653,8 @@ class TaskCommandsTestCase(test.TestCase):
                                "sla": x["data"]["sla"],
                                "hooks": x["data"]["hooks"],
                                "load_duration": x["data"]["load_duration"],
-                               "full_duration": x["data"]["full_duration"]},
+                               "full_duration": x["data"]["full_duration"],
+                               "created_at": x["created_at"]},
                     data))
 
         mock_results = mock.Mock(return_value=data)
@@ -680,17 +690,20 @@ class TaskCommandsTestCase(test.TestCase):
             {"key": {"name": "test", "pos": 0},
              "data": {"raw": "foo_raw", "sla": "foo_sla",
                       "load_duration": 0.1,
-                      "full_duration": 1.2}},
+                      "full_duration": 1.2},
+             "created_at": "2017-06-02T07:33:04"},
             {"key": {"name": "test", "pos": 1},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "load_duration": 2.1,
-                      "full_duration": 2.2}}]
+                      "full_duration": 2.2},
+             "created_at": "2017-06-02T07:33:04"}]
 
         results = [{"key": x["key"],
                     "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"]}
+                    "full_duration": x["data"]["full_duration"],
+                    "created_at": x["created_at"]}
                    for x in data]
 
         mock_plot.plot.return_value = "html_report"

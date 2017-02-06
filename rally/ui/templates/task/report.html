@@ -489,7 +489,8 @@
             Load duration: <b>{{scenario.load_duration | number:3}} s</b> &nbsp;
             Full duration: <b>{{scenario.full_duration | number:3}} s</b> &nbsp;
             Iterations: <b>{{scenario.iterations_count}}</b> &nbsp;
-            Failures: <b>{{scenario.errors.length}}</b>
+            Failures: <b>{{scenario.errors.length}}</b> &nbsp;
+            Started at: <b>{{scenario.created_at}}</b>
           </p>
 
           <div ng-show="scenario.sla.length">

@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import datetime as dt
 import uuid
 
 from rally.common import db
@@ -214,6 +215,9 @@ TASK_RESULT_SCHEMA = {
         "full_duration": {
             "type": "number",
         },
+        "created_at": {
+            "type": "string"
+        }
     },
     "required": ["key", "sla", "result", "load_duration", "full_duration"],
     "additionalProperties": False
@@ -484,7 +488,7 @@ class Task(object):
                 if serializable:
                     # NOTE(amaretskiy): convert datetime to str,
                     #     because json.dumps() does not like datetime
-                    if scenario[k]:
+                    if scenario[k] and isinstance(scenario[k], dt.datetime):
                         scenario[k] = scenario[k].strftime("%Y-%d-%mT%H:%M:%S")
                 else:
                     del scenario[k]
