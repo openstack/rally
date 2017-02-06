@@ -1,6 +1,54 @@
 {% set image_name = "^(cirros.*-disk|TestVM)$" %}
 {% set flavor_name = "m1.tiny" %}
 ---
+  CinderVolumes.create_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        size:
+          min: 1
+          max: 2
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        size: 1
+        image:
+          name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   Authenticate.validate_cinder:
     -
       args:
@@ -108,8 +156,8 @@
           name: "image-context-test"
       runner:
         type: "constant"
-        times: 2
-        concurrency: 2
+        times: 1
+        concurrency: 1
       context:
         users:
           tenants: 1
@@ -270,10 +318,10 @@
       args:
         size:
           min: 1
-          max: 3
+          max: 2
       runner:
         type: "constant"
-        times: 5
+        times: 2
         concurrency: 2
       context:
         users:
@@ -335,54 +383,6 @@
         failure_rate:
           max: 0
   {% endfor %}
-
-  CinderVolumes.create_volume:
-    -
-      args:
-        size: 1
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 3
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
 
   CinderVolumes.create_and_accept_transfer:
     -
