@@ -42,7 +42,7 @@ This means that class represents single scenario which is actually implemented
 in method *Scenario.run()*.
 
 So input task can contain scenario names that does not have method part
-splitted by dot from class part.
+split by dot from class part.
 
 For example, here we have two scenarios, first one is in old manner
 and another is class-based:

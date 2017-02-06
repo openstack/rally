@@ -287,7 +287,7 @@ Old commands:
   uninstall       Remove the deployment's local Tempest installation.
   use             Set active verification.
 
-There is another problem of old CLI. Management is splitted across all commands
+There is another problem of old CLI. Management is split across all commands
 and you can do the same things via different commands. Moreover, you can
 install Tempest in virtual environment via ``rally verify install`` and use
 ``--system-wide`` option in ``rally verify start``.

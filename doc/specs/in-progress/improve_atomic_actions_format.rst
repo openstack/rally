@@ -31,7 +31,7 @@ Also, atomic actions data does not include timestamps for each action
 start and end time. Having this data will allow us to inspect atomic
 actions runtime better and generate detailed reports.
 
-Since word "atomic" means something that can not be splitted into parts
+Since word "atomic" means something that can not be split into parts
 and we introduce nested atomic actions, we should use different term
 instead of "atomic actions".
 
