@@ -441,3 +441,14 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             fake_transfer.id, "fake_key")
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.transfer_accept")
+
+    def test__set_volume_type_keys(self):
+        volume_type = mock.MagicMock()
+        volume_type.set_keys = mock.MagicMock()
+        volume_type_key = {"volume_backend_name": "LVM_iSCSI"}
+        result = self.scenario._set_volume_type_keys(volume_type,
+                                                     volume_type_key)
+        self.assertEqual(volume_type.set_keys.return_value, result)
+        volume_type.set_keys.assert_called_once_with(volume_type_key)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.set_volume_type_keys")

@@ -57,3 +57,19 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             scenario._create_volume_type.return_value, "fakespecs")
         scenario._list_encryption_type.assert_called_once_with(
             "fakeopts")
+
+    def test_create_and_set_volume_type_keys(self):
+        scenario = volume_types.CreateAndSetVolumeTypeKeys(self.context)
+
+        volume_type = mock.MagicMock()
+        volume_type_key = {"volume_backend_name": "LVM_iSCSI"}
+        scenario._create_volume_type = mock.MagicMock()
+        scenario._set_volume_type_keys = mock.MagicMock()
+
+        scenario._create_volume_type.return_value = volume_type
+        scenario.run(volume_type_key, fakeargs="fakeargs")
+
+        scenario._create_volume_type.assert_called_once_with(
+            fakeargs="fakeargs")
+        scenario._set_volume_type_keys.assert_called_once_with(volume_type,
+                                                               volume_type_key)
