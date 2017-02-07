@@ -305,6 +305,25 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         identity_service.update_user.assert_called_once_with(
             fake_user.id, password=fake_password)
 
+    def test_create_and_update_user(self):
+        identity_service = self.mock_identity.return_value
+
+        scenario = basic.CreateAndUpdateUser(self.context)
+        scenario.admin_clients("keystone").users.get = mock.MagicMock()
+        fake_user = identity_service.create_user.return_value
+
+        create_args = {"fakearg1": "f"}
+        update_args = {"fakearg1": "fakearg"}
+        setattr(self.admin_clients("keystone").users.get.return_value,
+                "fakearg1", "fakearg")
+
+        scenario.run(create_user_kwargs=create_args,
+                     update_user_kwargs=update_args)
+
+        identity_service.create_user.assert_called_once_with(**create_args)
+        identity_service.update_user.assert_called_once_with(
+            fake_user.id, **update_args)
+
     def test_create_and_list_services(self):
         identity_service = self.mock_identity.return_value
 

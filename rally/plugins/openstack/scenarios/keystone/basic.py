@@ -388,3 +388,28 @@ class CreateAddListRoles(KeystoneBasic):
         msg = ("Created role is not in the"
                " list of all available roles")
         self.assertIn(role, all_roles, err_msg=msg)
+
+
+@validation.required_openstack(admin=True)
+@scenario.configure(context={"admin_cleanup": ["keystone"]},
+                    name="KeystoneBasic.create_and_update_user")
+class CreateAndUpdateUser(KeystoneBasic):
+
+    def run(self, create_user_kwargs=None, update_user_kwargs=None):
+        """Create user and update the user.
+
+        :param create_user_kwargs: Optional additional arguments for user
+                                   creation
+        :param update_user_kwargs: Optional additional arguments for user
+                                   updation
+        """
+        create_user_kwargs = create_user_kwargs or {}
+
+        user = self.admin_keystone.create_user(**create_user_kwargs)
+        self.admin_keystone.update_user(user.id, **update_user_kwargs)
+        user_data = self.admin_clients("keystone").users.get(user.id)
+
+        for args in update_user_kwargs:
+            msg = ("%s isn't updated" % args)
+            self.assertEqual(getattr(user_data, str(args)),
+                             update_user_kwargs[args], err_msg=msg)

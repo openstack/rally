@@ -200,6 +200,24 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.create_and_update_user:
+    -
+      args:
+        create_user_kwargs: {}
+        update_user_kwargs:
+          enabled: False
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_update_and_delete_tenant:
     -
       args: {}
