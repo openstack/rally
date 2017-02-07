@@ -53,14 +53,14 @@ class DeploymentCommands(object):
         """Create new deployment.
 
         This command will create a new deployment record in rally
-        database. In the case of ExistingCloud deployment engine it
+        database. In the case of ExistingCloud deployment engine, it
         will use the cloud represented in the configuration. If the
         cloud doesn't exist, Rally can deploy a new one for you with
         Devstack or Fuel. Different deployment engines exist for these
         cases.
 
-        If you use the ExistingCloud deployment engine you can pass
-        a deployment config by environment variables with ``--fromenv``:
+        If you use the ExistingCloud deployment engine, you can pass
+        the deployment config by environment variables with ``--fromenv``:
 
             OS_USERNAME
             OS_PASSWORD
