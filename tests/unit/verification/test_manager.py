@@ -75,56 +75,98 @@ class VerifierManagerTestCase(test.TestCase):
     @mock.patch("rally.verification.manager.os.path.exists",
                 side_effect=[False, True])
     def test__clone(self, mock_exists):
-        verifier = mock.Mock(source=None)
+        verifier = mock.Mock(version=None)
         vmanager = FakeVerifier(verifier)
-        verifier.version = None
 
-        vmanager._clone()
-        self.assertEqual(
-            [mock.call(["git", "clone", DEFAULT_REPO, vmanager.repo_dir]),
-             mock.call(["git", "checkout", DEFAULT_VERSION],
-                       cwd=vmanager.repo_dir)],
-            self.check_output.call_args_list)
-
-        self.check_output.reset_mock()
-        verifier.version = "master"
+        # Check source validation
         verifier.source = "some_source"
-
         e = self.assertRaises(exceptions.RallyException, vmanager._clone)
         self.assertEqual("Source path 'some_source' is not valid.", "%s" % e)
 
-        vmanager._clone()
-        self.check_output.assert_called_once_with(
-            ["git", "clone", verifier.source, vmanager.repo_dir])
+        verifier.source = None
 
+        # Version to switch repo is provided
+        verifier.version = "1.0.0"
+        vmanager._clone()
+        self.assertEqual(
+            [mock.call(["git", "clone", DEFAULT_REPO,
+                        vmanager.repo_dir, "-b", DEFAULT_VERSION]),
+             mock.call(["git", "checkout", "1.0.0"], cwd=vmanager.repo_dir)],
+            self.check_output.call_args_list)
+        verifier.update_properties.assert_not_called()
+
+        # Version to switch repo is not provided
+        verifier.version = None
+        self.check_output.side_effect = [
+            "Output from cloning", "heads/master", "Output from cloning",
+            "0.1.0-72-g4a39bd4", "4a39bd4qwerty12345", "Output from cloning",
+            "2.0.0", "12345qwerty4a39bd4"]
+
+        # Case 1: verifier is switched to a branch
+        self.check_output.reset_mock()
+        verifier.update_properties.reset_mock()
+        vmanager._clone()
+        self.assertEqual(
+            [mock.call(["git", "clone", DEFAULT_REPO,
+                        vmanager.repo_dir, "-b", DEFAULT_VERSION]),
+             mock.call(["git", "describe", "--all"], cwd=vmanager.repo_dir)],
+            self.check_output.call_args_list)
+        verifier.update_properties.assert_called_once_with(version="master")
+
+        # Case 2: verifier is switched to a commit ID
+        self.check_output.reset_mock()
+        verifier.update_properties.reset_mock()
+        vmanager._clone()
+        self.assertEqual(
+            [mock.call(["git", "clone", DEFAULT_REPO,
+                        vmanager.repo_dir, "-b", DEFAULT_VERSION]),
+             mock.call(["git", "describe", "--all"], cwd=vmanager.repo_dir),
+             mock.call(["git", "rev-parse", "HEAD"], cwd=vmanager.repo_dir)],
+            self.check_output.call_args_list)
+        verifier.update_properties.assert_called_once_with(
+            version="4a39bd4qwerty12345")
+
+        # Case 3: verifier is switched to a tag
+        self.check_output.reset_mock()
+        verifier.update_properties.reset_mock()
+        vmanager._clone()
+        self.assertEqual(
+            [mock.call(["git", "clone", DEFAULT_REPO,
+                        vmanager.repo_dir, "-b", DEFAULT_VERSION]),
+             mock.call(["git", "describe", "--all"], cwd=vmanager.repo_dir),
+             mock.call(["git", "rev-parse", "HEAD"], cwd=vmanager.repo_dir)],
+            self.check_output.call_args_list)
+        verifier.update_properties.assert_called_once_with(version="2.0.0")
+
+    @mock.patch("rally.verification.manager.VerifierManager.install_venv")
+    @mock.patch("rally.verification.manager.VerifierManager.check_system_wide")
+    @mock.patch("rally.verification.manager.VerifierManager._clone")
     @mock.patch("rally.verification.utils.create_dir")
-    def test_install(self, mock_create_dir):
+    def test_install(self, mock_create_dir, mock__clone,
+                     mock_check_system_wide, mock_install_venv):
         verifier = mock.Mock()
         vmanager = FakeVerifier(verifier)
-        vmanager._clone = mock.Mock()
-        vmanager.check_system_wide = mock.Mock()
-        vmanager.install_venv = mock.Mock()
 
         # venv case
         verifier.system_wide = False
 
         vmanager.install()
 
-        vmanager._clone.assert_called_once_with()
-        self.assertFalse(vmanager.check_system_wide.called)
-        vmanager.install_venv.assert_called_once_with()
+        mock__clone.assert_called_once_with()
+        self.assertFalse(mock_check_system_wide.called)
+        mock_install_venv.assert_called_once_with()
 
         # system-wide case
-        vmanager._clone.reset_mock()
-        vmanager.check_system_wide.reset_mock()
-        vmanager.install_venv.reset_mock()
+        mock__clone.reset_mock()
+        mock_check_system_wide.reset_mock()
+        mock_install_venv.reset_mock()
         verifier.system_wide = True
 
         vmanager.install()
 
-        vmanager._clone.assert_called_once_with()
-        vmanager.check_system_wide.assert_called_once_with()
-        self.assertFalse(vmanager.install_venv.called)
+        mock__clone.assert_called_once_with()
+        mock_check_system_wide.assert_called_once_with()
+        self.assertFalse(mock_install_venv.called)
 
     @mock.patch("rally.verification.manager.shutil.rmtree")
     @mock.patch("rally.verification.manager.os.path.exists", return_value=True)
@@ -331,8 +373,8 @@ class VerifierManagerTestCase(test.TestCase):
             "  * *system_wide*: Whether or not to use the system-wide "
             "environment for verifier instead of a virtual environment. "
             "Defaults to False.\n"
-            "  * *version*: Branch, tag or commit ID to checkout before "
-            "verifier installation. Defaults to 3.14159\n"
             "  * *source*: Path or URL to the repo to clone verifier from. "
-            "Default to https://git.example.com",
+            "Defaults to https://git.example.com\n"
+            "  * *version*: Branch, tag or commit ID to checkout before "
+            "verifier installation. Defaults to '%s'." % DEFAULT_VERSION,
             FakeVerifier._get_doc())

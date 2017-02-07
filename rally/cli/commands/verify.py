@@ -113,9 +113,9 @@ class VerifyCommands(object):
                    help="Not to set the created verifier as the default "
                         "verifier for future operations.")
     @plugins.ensure_plugins_are_loaded
-    def create_verifier(self, api, name, vtype, namespace="",
-                        source=None, version="master", system_wide=False,
-                        extra=None, do_use=True):
+    def create_verifier(self, api, name, vtype, namespace="", source=None,
+                        version=None, system_wide=False, extra=None,
+                        do_use=True):
         """Create a verifier."""
         verifier_uuid = api.verifier.create(
             name, vtype=vtype, namespace=namespace, source=source,
