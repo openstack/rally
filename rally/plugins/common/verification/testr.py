@@ -29,11 +29,10 @@ from rally.verification import utils
 
 LOG = logging.getLogger(__name__)
 
-CTX_NAME = "verification_testr"
 TEST_NAME_RE = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-,=0-9]*\])?$")
 
 
-@context.configure("testr_verifier", order=999)
+@context.configure("testr", order=999)
 class TestrContext(context.VerifierContext):
     """Context to transform 'run_args' into CLI arguments for testr."""
 

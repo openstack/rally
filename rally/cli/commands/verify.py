@@ -182,7 +182,8 @@ class VerifyCommands(object):
             fields.append("Venv location")
             formatters["Venv location"] = lambda v: v.manager.venv_dir
         cliutils.print_dict(verifier, fields=fields, formatters=formatters,
-                            normalize_field_names=True)
+                            normalize_field_names=True, print_header=False,
+                            table_label="Verifier")
         print(_("Attention! All you do in the verifier repository or "
                 "verifier virtual environment, you do it at your own risk!"))
 
@@ -326,7 +327,7 @@ class VerifyCommands(object):
     @cliutils.args("--pattern", dest="pattern", type=str, required=False,
                    help="Pattern which will be used for matching. Can be a "
                         "regexp or a verifier-specific entity (for example, "
-                        "in case of Tempest you can specify 'set=smoke'.")
+                        "in case of Tempest you can specify 'set=smoke').")
     @envutils.with_default_verifier_id()
     @plugins.ensure_plugins_are_loaded
     def list_verifier_tests(self, api, verifier_id=None, pattern=""):
@@ -399,7 +400,7 @@ class VerifyCommands(object):
     @cliutils.args("--pattern", dest="pattern", type=str, required=False,
                    help="Pattern which will be used for running tests. Can be "
                         "a regexp or a verifier-specific entity (for example, "
-                        "in case of Tempest you can specify 'set=smoke'.")
+                        "in case of Tempest you can specify 'set=smoke').")
     @cliutils.args("--concurrency", dest="concur", type=int, metavar="<N>",
                    required=False,
                    help="How many processes to use to run verifier tests. "
@@ -658,9 +659,9 @@ class VerifyCommands(object):
                         "command." % ", ".join(DEFAULT_REPORT_TYPES))
     @cliutils.args("--to", dest="output_dest", type=str,
                    metavar="<dest>", required=False,
-                   help="Report destination. Can be a path to a file (in case"
-                        " of HTML, JSON types) to save the report to or "
-                        "a connection string. It depends on report type.")
+                   help="Report destination. Can be a path to a file (in case "
+                        "of HTML, JSON, etc. types) to save the report to or "
+                        "a connection string. It depends on the report type.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    required=False, help="Open the output file in a browser.")
     @envutils.with_default_verification_uuid
@@ -668,7 +669,6 @@ class VerifyCommands(object):
     def report(self, api, verification_uuid=None, output_type=None,
                output_dest=None, open_it=None):
         """Generate a report for a verification or a few verifications."""
-
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
 

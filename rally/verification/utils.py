@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import errno
 import os
 import subprocess
 
 from oslo_utils import encodeutils
+import six
+from six.moves import configparser
 
 from rally.common import logging
 
@@ -64,10 +65,31 @@ def check_output(*args, **kwargs):
 
 
 def create_dir(dir_path):
-    try:
+    if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(dir_path):
-            # directory already exists
-            return
-        raise
+
+    return dir_path
+
+
+def extend_configfile(extra_options, conf_path):
+    conf_object = configparser.ConfigParser()
+    conf_object.read(conf_path)
+
+    conf_object = add_extra_options(extra_options, conf_object)
+    with open(conf_path, "w") as configfile:
+        conf_object.write(configfile)
+
+    raw_conf = six.StringIO()
+    conf_object.write(raw_conf)
+
+    return raw_conf.getvalue()
+
+
+def add_extra_options(extra_options, conf_object):
+    for section in extra_options:
+        if section not in (conf_object.sections() + ["DEFAULT"]):
+            conf_object.add_section(section)
+        for option, value in extra_options[section].items():
+            conf_object.set(section, option, value)
+
+    return conf_object

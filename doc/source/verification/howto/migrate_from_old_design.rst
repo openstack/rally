@@ -98,7 +98,7 @@ Command for Rally 0.7.0 - `rally verify install
   $ rally verify install --deployment <uuid> --source <url> --version <vers> \
     --system-wide
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -133,7 +133,7 @@ Command for Rally 0.7.0 - `rally verify reinstall
   $ rally verify reinstall --deployment <uuid> --source <url> --version <vers> \
     --system-wide
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -159,7 +159,7 @@ Command for Rally 0.7.0 - `rally verify uninstall
 
   $ rally verify uninstall --deployment <uuid>
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -185,7 +185,7 @@ Command for Rally 0.7.0 - `rally verify installplugin
   $ rally verify installplugin --deployment <uuid> --source <url> \
     --version <vers> --system-wide
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -214,7 +214,7 @@ Command for Rally 0.7.0 - `rally verify uninstallplugin
   $ rally verify uninstallplugin --deployment <uuid> --repo-name <repo_name> \
     --system-wide
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -239,7 +239,7 @@ Command for Rally 0.7.0 - `rally verify listplugins
 
   $ rally verify listplugins --deployment <uuid> --system-wide
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -261,7 +261,7 @@ Command for Rally 0.7.0 - `rally verify discover
 
   $ rally verify discover --deployment <uuid> --system-wide --pattern <pattern>
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -294,7 +294,7 @@ Commands for Rally 0.7.0:
     $ rally verify showconfig --deployment <uuid>
 
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -332,7 +332,7 @@ Command for Rally 0.7.0 - `rally verify showconfig
 
   $ rally verify showconfig --deployment <uuid>
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -357,7 +357,7 @@ Command for Rally 0.7.0 - `rally verify start
     --tempest-config <path> --xfail-list <path> --system-wide \
     --concurrency <N> --failing --no-use
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -407,7 +407,7 @@ Commands for Rally 0.7.0:
     $ rally verify detailed --uuid <uuid> --sort-by <query>
 
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -429,7 +429,7 @@ Command for Rally 0.7.0 - `rally verify list
 
   $ rally verify list
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -450,7 +450,7 @@ Command for Rally 0.7.0 - `rally verify import
 
   $ rally verify import --deployment <uuid> --set <set_name> --file <path> --no-use
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 
@@ -484,7 +484,7 @@ Commands for Rally 0.7.0:
     $ rally verify compare --uuid-1 <uuid_1> --uuid-2 <uuid_2> --csv --html \
       --json --output-file <output_file> --threshold <threshold>
 
-Command for Rally 0.8.0:
+Command since Rally 0.8.0:
 
 .. code-block:: console
 

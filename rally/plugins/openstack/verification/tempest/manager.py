@@ -30,6 +30,8 @@ from rally.verification import utils
 
 
 LOG = logging.getLogger(__name__)
+
+
 AVAILABLE_SETS = (list(consts.TempestTestSets) +
                   list(consts.TempestApiTestSets) +
                   list(consts.TempestScenarioTestSets))
@@ -37,7 +39,7 @@ AVAILABLE_SETS = (list(consts.TempestTestSets) +
 
 @manager.configure(name="tempest", namespace="openstack",
                    default_repo="https://git.openstack.org/openstack/tempest",
-                   context={"tempest_configuration": {}, "testr_verifier": {}})
+                   context={"tempest": {}, "testr": {}})
 class TempestManager(testr.TestrLauncher):
     """Tempest verifier.
 
@@ -67,7 +69,7 @@ class TempestManager(testr.TestrLauncher):
     first release after Verification Component redesign)*
     """
 
-    RUN_ARGS = {"set": "Name of predefined sets of tests. Known names: %s"
+    RUN_ARGS = {"set": "Name of predefined set of tests. Known names: %s"
                        % ", ".join(AVAILABLE_SETS)}
 
     @property
@@ -84,27 +86,43 @@ class TempestManager(testr.TestrLauncher):
     def configfile(self):
         return os.path.join(self.home_dir, "tempest.conf")
 
-    def get_configuration(self):
-        """Get Tempest configuration."""
-        return config.read_configfile(self.configfile)
+    def validate_args(self, args):
+        """Validate given arguments."""
+        super(TempestManager, self).validate_args(args)
+
+        if args.get("pattern"):
+            pattern = args["pattern"].split("=", 1)
+            if len(pattern) == 1:
+                pass  # it is just a regex
+            elif pattern[0] == "set":
+                if pattern[1] not in AVAILABLE_SETS:
+                    raise exceptions.ValidationError(
+                        "Test set '%s' not found in available "
+                        "Tempest test sets. Available sets are '%s'."
+                        % (pattern[1], "', '".join(AVAILABLE_SETS)))
+            else:
+                raise exceptions.ValidationError(
+                    "'pattern' argument should be a regexp or set name "
+                    "(format: 'tempest.api.identity.v3', 'set=smoke').")
 
     def configure(self, extra_options=None):
         """Configure Tempest."""
-        if not os.path.isdir(self.home_dir):
-            os.makedirs(self.home_dir)
-
-        cm = config.TempestConfigfileManager(self.verifier.deployment)
-        raw_configfile = cm.create(self.configfile, extra_options)
-
-        return raw_configfile
+        utils.create_dir(self.home_dir)
+        tcm = config.TempestConfigfileManager(self.verifier.deployment)
+        return tcm.create(self.configfile, extra_options)
 
     def is_configured(self):
         """Check whether Tempest is configured or not."""
         return os.path.exists(self.configfile)
 
+    def get_configuration(self):
+        """Get Tempest configuration."""
+        with open(self.configfile) as f:
+            return f.read()
+
     def extend_configuration(self, extra_options):
         """Extend Tempest configuration with extra options."""
-        return config.extend_configfile(self.configfile, extra_options)
+        return utils.extend_configfile(extra_options, self.configfile)
 
     def override_configuration(self, new_configuration):
         """Override Tempest configuration by new configuration."""
@@ -181,26 +199,14 @@ class TempestManager(testr.TestrLauncher):
             pattern = self._transform_pattern(pattern)
         return super(TempestManager, self).list_tests(pattern)
 
-    def validate_args(self, args):
-        """Validate given arguments."""
-        super(TempestManager, self).validate_args(args)
+    def prepare_run_args(self, run_args):
+        """Prepare 'run_args' for testr context."""
+        if run_args.get("pattern"):
+            run_args["pattern"] = self._transform_pattern(run_args["pattern"])
+        return run_args
 
-        if args.get("pattern"):
-            pattern = args["pattern"].split("=", 1)
-            if len(pattern) == 1:
-                pass  # it is just a regex
-            elif pattern[0] == "set":
-                if pattern[1] not in AVAILABLE_SETS:
-                    raise exceptions.ValidationError(
-                        "Test set '%s' not found in available "
-                        "Tempest test sets. Available sets are '%s'."
-                        % (pattern[1], "', '".join(AVAILABLE_SETS)))
-            else:
-                raise exceptions.ValidationError(
-                    "'pattern' argument should be a regexp or set name "
-                    "(format: 'tempest.api.identity.v3', 'set=smoke').")
-
-    def _transform_pattern(self, pattern):
+    @staticmethod
+    def _transform_pattern(pattern):
         """Transform pattern into Tempest-specific pattern."""
         parsed_pattern = pattern.split("=", 1)
         if len(parsed_pattern) == 2:
@@ -213,9 +219,3 @@ class TempestManager(testr.TestrLauncher):
                     return "tempest.%s" % parsed_pattern[1]
 
         return pattern  # it is just a regex
-
-    def prepare_run_args(self, run_args):
-        """Prepare 'run_args' for testr context."""
-        if run_args.get("pattern"):
-            run_args["pattern"] = self._transform_pattern(run_args["pattern"])
-        return run_args

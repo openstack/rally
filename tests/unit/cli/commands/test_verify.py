@@ -115,8 +115,8 @@ class VerifyCommandsTestCase(test.TestCase):
         self.assertEqual(1, len(print_dict_calls))
 
         self.assertEqual(
-            "+----------------+----------------------------+\n"
-            "| Property       | Value                      |\n"
+            "+---------------------------------------------+\n"
+            "|                  Verifier                   |\n"
             "+----------------+----------------------------+\n"
             "| UUID           | v_uuid                     |\n"
             "| Status         | installed                  |\n"
