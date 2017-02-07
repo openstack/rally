@@ -1,0 +1,23 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+---
+  VMTasks.dd_load_test:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: "^cirros.*uec$"
+        floating_network: "public"
+        force_delete: false
+        command:
+            interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network: {}
