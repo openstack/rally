@@ -90,14 +90,14 @@ def pack_dir(source_directory, zip_name=None):
     """Archive content of the directory into .zip
 
     Zip content of the source folder excluding root directory
-    into zip archive. When zip_name is specified it would be used
-    as a destination for the archive otherwise method would
+    into zip archive. When zip_name is specified, it would be used
+    as a destination for the archive. Otherwise method would
     try to use temporary file as a destination for the archive.
 
     :param source_directory: root of the newly created archive.
         Directory is added recursively.
     :param zip_name: destination zip file name.
-    :raises IOError: whenever there is IO issues.
+    :raises IOError: whenever there are IO issues.
     :returns: path to the newly created zip archive either specified via
         zip_name or a temporary one.
     """
