@@ -26,7 +26,6 @@ import jsonschema
 from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
-import yaml
 
 from rally.cli import cliutils
 from rally.cli import envutils
@@ -36,6 +35,7 @@ from rally.common.io import junit
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import version
+from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally import plugins
@@ -80,7 +80,7 @@ class TaskCommands(object):
             try:
                 kw = args and yaml.safe_load(args)
                 kw = {} if kw is None else kw
-            except yaml.parser.ParserError as e:
+            except yaml.ParserError as e:
                 print_invalid_header(src_name, args)
                 print(_("%(source)s has to be YAML or JSON. Details:"
                         "\n\n%(err)s\n")

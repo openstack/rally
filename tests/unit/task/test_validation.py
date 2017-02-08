@@ -923,7 +923,7 @@ class ValidatorsTestCase(test.TestCase):
                          valid)
 
     @mock.patch(
-        "yaml.safe_load",
+        "rally.common.yamlutils.safe_load",
         return_value={
             "version": "2.0",
             "name": "wb",

@@ -21,10 +21,10 @@ import re
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 import six
-import yaml
 
 from rally.common.i18n import _
 from rally.common import objects
+from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -171,7 +171,7 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
 def check_command_dict(command):
     """Check command-specifying dict `command', raise ValueError on error."""
 
-    if type(command) != dict:
+    if not isinstance(command, dict):
         raise ValueError("Command must be a dictionary")
 
     # NOTE(pboldin): Here we check for the values not for presence of the keys

@@ -229,17 +229,6 @@
         failure_rate:
           max: 0
 
-  KeystoneBasic.create_delete_user:
-    -
-      args: {}
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      sla:
-        failure_rate:
-          max: 0
-
   KeystoneBasic.create_and_delete_service:
     -
       runner:
