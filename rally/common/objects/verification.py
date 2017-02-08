@@ -19,6 +19,7 @@ from rally import consts
 
 class Verification(object):
     """Represents a verification object."""
+    TIME_FORMAT = consts.TimeFormat.TIME_FORMAT_ISO8601
 
     def __init__(self, verification):
         """Init a verification object.
@@ -33,6 +34,20 @@ class Verification(object):
 
     def __getitem__(self, item):
         return self._db_entry[item]
+
+    def to_dict(self, item=None):
+        data = {}
+        formatters = ["created_at", "updated_at"]
+        fields = ["deployment_uuid", "verifier_uuid", "uuid", "id",
+                  "unexpected_success", "status", "tests", "skipped",
+                  "tags", "tests_duration", "run_args", "success",
+                  "expected_failures", "tests_count", "failures"]
+        for field in fields:
+            data[field] = self._db_entry.get(field, "")
+        for field in formatters:
+            data[field] = self._db_entry.get(field, "").strftime(
+                self.TIME_FORMAT)
+        return data
 
     @classmethod
     def create(cls, verifier_id, deployment_id, tags=None, run_args=None):

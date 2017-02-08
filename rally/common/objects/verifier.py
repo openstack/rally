@@ -14,12 +14,14 @@
 #    under the License.
 
 from rally.common import db
+from rally import consts
 from rally import exceptions
 from rally.verification import manager
 
 
 class Verifier(object):
     """Represents a verifier object."""
+    TIME_FORMAT = consts.TimeFormat.TIME_FORMAT_ISO8601
 
     def __init__(self, verifier):
         """Init a verifier object.
@@ -39,6 +41,19 @@ class Verifier(object):
 
     def __str__(self):
         return "'%s' (UUID=%s)" % (self.name, self.uuid)
+
+    def to_dict(self, item=None):
+        data = {}
+        formatters = ["created_at", "updated_at"]
+        fields = ["status", "system_wide", "uuid", "type", "namespace",
+                  "name", "source", "version", "extra_settings",
+                  "id", "description"]
+        for field in fields:
+            data[field] = self._db_entry.get(field, "")
+        for field in formatters:
+            data[field] = self._db_entry.get(field, "").strftime(
+                self.TIME_FORMAT)
+        return data
 
     @classmethod
     def create(cls, name, vtype, namespace, source, version, system_wide,

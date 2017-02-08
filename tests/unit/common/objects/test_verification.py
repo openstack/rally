@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as dt
+
 import mock
 
 from rally.common import objects
@@ -25,6 +27,7 @@ class VerificationTestCase(test.TestCase):
         super(VerificationTestCase, self).setUp()
 
         self.db_obj = {"uuid": "uuid-1"}
+        self._db_entry = {}
 
     @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_init(self, mock_verification_create):
@@ -32,6 +35,33 @@ class VerificationTestCase(test.TestCase):
         self.assertEqual(0, mock_verification_create.call_count)
         self.assertEqual(self.db_obj["uuid"], v.uuid)
         self.assertEqual(self.db_obj["uuid"], v["uuid"])
+
+    def test_to_dict(self):
+        TIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+        data = {"created_at": dt.date(2017, 2, 3),
+                "updated_at": dt.date(2017, 3, 3),
+                "id": "v_id",
+                "deployment_uuid": "d_uuid",
+                "uuid": "v_uuid",
+                "verifier_uuid": "v_uuid",
+                "unexpected_success": "2",
+                "status": "False",
+                "tests": {"test1": "tdata1",
+                          "test2": "tdata2"},
+                "skipped": 2,
+                "tests_duration": "",
+                "tags": None,
+                "run_args": "args",
+                "success": 0,
+                "expected_failures": 2,
+                "tests_count": 3,
+                "failures": 2}
+        verification = objects.Verification("verification_id")
+        verification._db_entry = data
+        result = objects.Verification.to_dict(verification)
+        data["created_at"] = data["created_at"].strftime(TIME_FORMAT)
+        data["updated_at"] = data["updated_at"].strftime(TIME_FORMAT)
+        self.assertEqual(data, result)
 
     @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_create(self, mock_verification_create):

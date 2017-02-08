@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 
+import datetime as dt
 import json
 import os
 import webbrowser
@@ -32,6 +33,7 @@ from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally import plugins
 
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 LIST_VERIFIERS_HINT = ("HINT: You can list all verifiers, executing "
                        "command `rally verify list-verifiers`.")
@@ -66,6 +68,25 @@ class VerifyCommands(object):
             header = "%s\n%s\n" % (f["name"], "-" * len(f["name"]))
             failure = "\n%s%s\n" % (header, f["traceback"].strip())
             print(failure)
+
+    def _print_details_after_run(self, results):
+        failures = [t for t in results["tests"].values()
+                    if t["status"] == "fail"]
+        if failures:
+            h_text = "Failed %d %s - output below:" % (
+                len(failures), "tests" if len(failures) > 1 else "test")
+            self._print_failures(h_text, failures, "=")
+        else:
+            print(_("\nCongratulations! Verification doesn't have failed "
+                    "tests! :)"))
+
+    @staticmethod
+    def _base_dir(uuid):
+        return os.path.expanduser(
+            "~/.rally/verification/verifier-%s" % uuid)
+
+    def _get_location(self, uuid, loc):
+        return os.path.join(self._base_dir(uuid), loc)
 
     @cliutils.args("--namespace", dest="namespace", type=str, metavar="<name>",
                    required=False,
@@ -130,9 +151,10 @@ class VerifyCommands(object):
     def use_verifier(self, api, verifier_id):
         """Choose a verifier to use for the future operations."""
         verifier = api.verifier.get(verifier_id)
-        fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier.uuid)
+        fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
         print(_("Using verifier '%s' (UUID=%s) as the default verifier "
-                "for the future operations.") % (verifier.name, verifier.uuid))
+                "for the future operations.") % (verifier["name"],
+                                                 verifier["uuid"]))
 
     @cliutils.help_group("verifier")
     @cliutils.args("--status", dest="status", type=str, required=False,
@@ -147,9 +169,9 @@ class VerifyCommands(object):
                       "Active"]
             cv = envutils.get_global(envutils.ENV_VERIFIER)
             formatters = {
-                "Created at": lambda v: v.created_at.replace(microsecond=0),
-                "Updated at": lambda v: v.updated_at.replace(microsecond=0),
-                "Active": lambda v: u"\u2714" if v.uuid == cv else "",
+                "Created at": lambda v: v["created_at"],
+                "Updated at": lambda v: v["updated_at"],
+                "Active": lambda v: u"\u2714" if v["uuid"] == cv else "",
             }
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
@@ -169,19 +191,22 @@ class VerifyCommands(object):
         verifier = api.verifier.get(verifier_id)
         fields = ["UUID", "Status", "Created at", "Updated at", "Active",
                   "Name", "Description", "Type", "Namespace", "Source",
-                  "Version", "System-wide", "Extra settings", "Location"]
+                  "Version", "System-wide", "Extra settings", "Location",
+                  "Venv location"]
         used_verifier = envutils.get_global(envutils.ENV_VERIFIER)
         formatters = {
-            "Created at": lambda v: v.created_at.replace(microsecond=0),
-            "Updated at": lambda v: v.updated_at.replace(microsecond=0),
-            "Active": lambda v: u"\u2714" if v.uuid == used_verifier else None,
-            "Extra settings": lambda v: (json.dumps(v.extra_settings, indent=4)
-                                         if v.extra_settings else None),
-            "Location": lambda v: v.manager.repo_dir
+            "Created at": lambda v: v["created_at"].replace("T", " "),
+            "Updated at": lambda v: v["updated_at"].replace("T", " "),
+            "Active": lambda v: u"\u2714"
+                                if v["uuid"] == used_verifier else None,
+            "Extra settings": lambda v: (json.dumps(v["extra_settings"],
+                                                    indent=4)
+                                         if v["extra_settings"] else None),
+            "Location": lambda v: self._get_location((v["uuid"]), "repo")
         }
-        if not verifier.system_wide:
-            fields.append("Venv location")
-            formatters["Venv location"] = lambda v: v.manager.venv_dir
+        if not verifier["system_wide"]:
+            formatters["Venv location"] = lambda v: self._get_location(
+                v["uuid"], ".venv")
         cliutils.print_dict(verifier, fields=fields, formatters=formatters,
                             normalize_field_names=True, print_header=False,
                             table_label="Verifier")
@@ -379,16 +404,6 @@ class VerifyCommands(object):
                     "verifier extension, using command `rally verify "
                     "add-verifier-ext`."))
 
-    def _print_details_after_run(self, results):
-        failures = results.filter_tests("fail").values()
-        if failures:
-            h_text = "Failed %d %s - output below:" % (
-                len(failures), "tests" if len(failures) > 1 else "test")
-            self._print_failures(h_text, failures, "=")
-        else:
-            print(_("\nCongratulations! Verification doesn't have failed "
-                    "tests! :)"))
-
     @cliutils.help_group("verifier-ext")
     @cliutils.args("--id", dest="verifier_id", type=str,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
@@ -480,8 +495,9 @@ class VerifyCommands(object):
             ("concurrency", concur)) if value}
 
         try:
-            verification, results = api.verification.start(
+            results = api.verification.start(
                 verifier_id, deployment, tags=tags, **run_args)
+            verification_uuid = results["verification"]["uuid"]
         except exceptions.DeploymentNotFinishedStatus as e:
             print(_("Cannot start a verefication on "
                     "unfinished deployment: %s") % e)
@@ -490,12 +506,12 @@ class VerifyCommands(object):
         if detailed:
             self._print_details_after_run(results)
 
-        self._print_totals(results.totals)
+        self._print_totals(results["totals"])
 
         if do_use:
-            self.use(api, verification.uuid)
+            self.use(api, verification_uuid)
         else:
-            print(_("Verification UUID: %s.") % verification.uuid)
+            print(_("Verification UUID: %s.") % verification_uuid)
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str, required=True,
@@ -504,9 +520,9 @@ class VerifyCommands(object):
         """Choose a verification to use for the future operations."""
         verification = api.verification.get(verification_uuid)
         fileutils.update_globals_file(
-            envutils.ENV_VERIFICATION, verification.uuid)
+            envutils.ENV_VERIFICATION, verification["uuid"])
         print(_("Using verification (UUID=%s) as the default verification "
-                "for the future operations.") % verification.uuid)
+                "for the future operations.") % verification["uuid"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
@@ -536,20 +552,21 @@ class VerifyCommands(object):
     def rerun(self, api, verification_uuid=None, deployment=None, tags=None,
               concur=None, failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
-        verification, results = api.verification.rerun(verification_uuid,
-                                                       deployment=deployment,
-                                                       failed=failed,
-                                                       tags=tags,
-                                                       concur=concur)
+        results = api.verification.rerun(verification_uuid,
+                                         deployment=deployment,
+                                         failed=failed,
+                                         tags=tags,
+                                         concur=concur)
         if detailed:
             self._print_details_after_run(results)
 
-        self._print_totals(results.totals)
+        self._print_totals(results["totals"])
 
         if do_use:
-            self.use(api, verification.uuid)
+            self.use(api, results["verification"]["uuid"])
         else:
-            print(_("Verification UUID: %s.") % verification.uuid)
+            print(_("Verification UUID: %s.")
+                  % results["verification"]["uuid"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
@@ -566,12 +583,12 @@ class VerifyCommands(object):
              detailed=False):
         """Show detailed information about a verification."""
         verification = api.verification.get(verification_uuid)
-        verifier = api.verifier.get(verification.verifier_uuid)
-        deployment = api.deployment.get(verification.deployment_uuid)
+        verifier = api.verifier.get(verification["verifier_uuid"])
+        deployment = api.deployment.get(verification["deployment_uuid"])
 
         def run_args_formatter(v):
             run_args = []
-            for k in sorted(v.run_args):
+            for k in sorted(v["run_args"]):
                 if k in ("load_list", "skip_list", "xfail_list"):
                     value = "(value is too long, %s)"
                     if detailed:
@@ -579,7 +596,7 @@ class VerifyCommands(object):
                     else:
                         value %= "use 'detailed' flag to display it"
                 else:
-                    value = v.run_args[k]
+                    value = v["run_args"][k]
                 run_args.append("%s: %s" % (k, value))
             return "\n".join(run_args)
 
@@ -590,21 +607,23 @@ class VerifyCommands(object):
                   "Success", "Skipped", "Expected failures",
                   "Unexpected success", "Failures"]
         formatters = {
-            "Started at": lambda v: v.created_at.replace(microsecond=0),
-            "Finished at": lambda v: v.updated_at.replace(microsecond=0),
-            "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
-                                   v.created_at.replace(microsecond=0)),
+            "Started at": lambda v: v["created_at"].replace("T", " "),
+            "Finished at": lambda v: v["updated_at"].replace("T", " "),
+            "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
+                                                        TIME_FORMAT) -
+                                   dt.datetime.strptime(v["created_at"],
+                                                        TIME_FORMAT)),
             "Run arguments": run_args_formatter,
-            "Tags": lambda v: ", ".join(v.tags) or None,
-            "Verifier name": lambda v: "%s (UUID: %s)" % (verifier.name,
-                                                          verifier.uuid),
+            "Tags": lambda v: ", ".join(v["tags"]) or None,
+            "Verifier name": lambda v: "%s (UUID: %s)" % (verifier["name"],
+                                                          verifier["uuid"]),
             "Verifier type": (
-                lambda v: "%s (namespace: %s)" % (verifier.type,
-                                                  verifier.namespace)),
+                lambda v: "%s (namespace: %s)" % (verifier["type"],
+                                                  verifier["namespace"])),
             "Deployment name": (
                 lambda v: "%s (UUID: %s)" % (deployment["name"],
                                              deployment["uuid"])),
-            "Tests duration, sec": lambda v: v.tests_duration
+            "Tests duration, sec": lambda v: v["tests_duration"]
         }
         cliutils.print_dict(verification, fields, formatters=formatters,
                             normalize_field_names=True, print_header=False,
@@ -613,10 +632,10 @@ class VerifyCommands(object):
         if detailed:
             h = _("Run arguments")
             print("\n%s" % cliutils.make_header(h, len(h)).strip())
-            print("\n%s\n" % json.dumps(verification.run_args, indent=4))
+            print("\n%s\n" % json.dumps(verification["run_args"], indent=4))
 
         # Tests table
-        tests = verification.tests
+        tests = verification["tests"]
         values = [tests[test_id] for test_id in tests]
         fields = ["Name", "Duration, sec", "Status"]
         formatters = {"Duration, sec": lambda v: v["duration"]}
@@ -646,21 +665,23 @@ class VerifyCommands(object):
     def list(self, api, verifier_id=None, deployment=None, tags=None,
              status=None):
         """List all verifications."""
-        verifications = api.verification.list(verifier_id, deployment, tags,
-                                              status)
+        verifications = api.verification.list(verifier_id, deployment,
+                                              tags, status)
         if verifications:
             fields = ["UUID", "Tags", "Verifier name", "Deployment name",
                       "Started at", "Finished at", "Duration", "Status"]
             formatters = {
-                "Tags": lambda v: ", ".join(v.tags) or "-",
-                "Verifier name": (
-                    lambda v: api.verifier.get(v.verifier_uuid).name),
-                "Deployment name": (
-                    lambda v: api.deployment.get(v.deployment_uuid)["name"]),
-                "Started at": lambda v: v.created_at.replace(microsecond=0),
-                "Finished at": lambda v: v.updated_at.replace(microsecond=0),
-                "Duration": lambda v: (v.updated_at.replace(microsecond=0) -
-                                       v.created_at.replace(microsecond=0))
+                "Tags": lambda v: ", ".join(v["tags"]) or "-",
+                "Verifier name": (lambda v: api.verifier.get(
+                    v["verifier_uuid"])["name"]),
+                "Deployment name": (lambda v: api.deployment.get(
+                    v["deployment_uuid"])["name"]),
+                "Started at": lambda v: v["created_at"],
+                "Finished at": lambda v: v["updated_at"],
+                "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
+                                                            TIME_FORMAT) -
+                                       dt.datetime.strptime(v["created_at"],
+                                                            TIME_FORMAT))
             }
             cliutils.print_list(verifications, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
@@ -765,9 +786,10 @@ class VerifyCommands(object):
         run_args = yaml.safe_load(run_args) if run_args else {}
         verification, results = api.verification.import_results(
             verifier_id, deployment, data, **run_args)
-        self._print_totals(results.totals)
+        self._print_totals(results["totals"])
 
+        verification_uuid = verification["uuid"]
         if do_use:
-            self.use(verification.uuid)
+            self.use(api, verification_uuid)
         else:
-            print(_("Verification UUID: %s.") % verification.uuid)
+            print(_("Verification UUID: %s.") % verification_uuid)

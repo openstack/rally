@@ -26,6 +26,17 @@ class VerifierTestCase(test.TestCase):
 
         self.db_obj = {"uuid": "uuid-1"}
 
+    def test___str__(self):
+        v = objects.Verifier(self.db_obj)
+        self.db_obj["name"] = "name"
+        self.db_obj["uuid"] = "uuid"
+        self.assertEqual("'name' (UUID=uuid)", "%s" % v)
+
+    def test_to_dict(self):
+        v = objects.Verifier(self.db_obj)
+        v._db_entry = mock.Mock()
+        self.assertIsInstance(v.to_dict(), dict)
+
     @mock.patch("rally.common.objects.verifier.db.verifier_create")
     def test_init(self, mock_verifier_create):
         v = objects.Verifier(self.db_obj)

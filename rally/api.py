@@ -452,7 +452,7 @@ class _Verifier(object):
         LOG.info("Creating verifier '%s'.", name)
 
         try:
-            verifier = cls.get(name)
+            verifier = cls._get(name)
         except exceptions.ResourceNotFound:
             verifier = objects.Verifier.create(
                 name=name, source=source, system_wide=system_wide,
@@ -489,20 +489,28 @@ class _Verifier(object):
         return verifier.uuid
 
     @staticmethod
-    def get(verifier_id):
+    def _get(verifier_id):
         """Get a verifier.
 
         :param verifier_id: Verifier name or UUID
         """
         return objects.Verifier.get(verifier_id)
 
+    @classmethod
+    def get(cls, verifier_id):
+        return cls._get(verifier_id).to_dict()
+
     @staticmethod
-    def list(status=None):
+    def _list(status=None):
         """List all verifiers.
 
         :param status: Status to filter verifiers by
         """
         return objects.Verifier.list(status)
+
+    @classmethod
+    def list(cls, status=None):
+        return [item.to_dict() for item in cls._list(status)]
 
     @classmethod
     def delete(cls, verifier_id, deployment_id=None, force=False):
@@ -516,7 +524,7 @@ class _Verifier(object):
                       If deployment_id specified, only verifications of this
                       deployment will be deleted
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         verifications = _Verification.list(verifier_id, deployment_id)
         if verifications:
             d_msg = ((" for deployment '%s'" % deployment_id)
@@ -525,7 +533,7 @@ class _Verifier(object):
                 LOG.info("Deleting all verifications created by verifier "
                          "%s%s.", verifier, d_msg)
                 for verification in verifications:
-                    _Verification.delete(verification.uuid)
+                    _Verification.delete(verification["uuid"])
             else:
                 raise exceptions.RallyException(
                     "Failed to delete verifier {0} because there are stored "
@@ -562,7 +570,7 @@ class _Verifier(object):
                 "At least one of the following parameters should be "
                 "specified: 'system_wide', 'version', 'update_venv'.")
 
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         LOG.info("Updating verifier %s.", verifier)
 
         if verifier.status != consts.VerifierStatus.INSTALLED:
@@ -646,7 +654,7 @@ class _Verifier(object):
         :param reconfigure: Reconfigure verifier
         """
         if not isinstance(verifier, objects.Verifier):
-            verifier = cls.get(verifier)
+            verifier = cls._get(verifier)
         verifier.set_deployment(deployment_id)
         LOG.info(
             "Configuring verifier %s for deployment '%s' (UUID=%s).",
@@ -698,7 +706,7 @@ class _Verifier(object):
         :param deployment_id: Deployment name or UUID
         :param new_configuration: New configuration for verifier
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to override verifier configuration for deployment "
@@ -724,7 +732,7 @@ class _Verifier(object):
         :param verifier_id: Verifier name or UUID
         :param pattern: Pattern which will be used for matching
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier tests because verifier %s is in '%s' "
@@ -749,7 +757,7 @@ class _Verifier(object):
         :param extra_settings: Extra installation settings for verifier
                                extension
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to add verifier extension because verifier %s "
@@ -777,7 +785,7 @@ class _Verifier(object):
 
         :param verifier_id: Verifier name or UUID
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier extensions because verifier %s "
@@ -794,7 +802,7 @@ class _Verifier(object):
         :param verifier_id: Verifier name or UUID
         :param name: Verifier extension name
         """
-        verifier = cls.get(verifier_id)
+        verifier = cls._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to delete verifier extension because verifier %s "
@@ -832,7 +840,7 @@ class _Verification(object):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
-        verifier = _Verifier.get(verifier_id)
+        verifier = _Verifier._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to start verification because verifier %s is in '%s' "
@@ -876,7 +884,9 @@ class _Verification(object):
                  "deployment '%s' (UUID=%s)!", verification.uuid,
                  verifier.deployment["name"], verifier.deployment["uuid"])
 
-        return verification, results
+        return {"verification": verification.to_dict(),
+                "totals": results.totals,
+                "tests": results.tests}
 
     @classmethod
     def rerun(cls, verification_uuid, deployment_id=None, failed=False,
@@ -896,7 +906,7 @@ class _Verification(object):
         if concurrency:
             run_args["concurrency"] = concurrency
 
-        verification = cls.get(verification_uuid)
+        verification = cls._get(verification_uuid)
         tests = verification.tests
 
         if failed:
@@ -913,17 +923,21 @@ class _Verification(object):
         LOG.info("Re-running %stests from verification (UUID=%s) for "
                  "deployment '%s' (UUID=%s).", "failed " if failed else "",
                  verification.uuid, deployment["name"], deployment["uuid"])
-        return cls.start(
-            verification.verifier_uuid, deployment["uuid"], load_list=tests,
-            tags=tags, **run_args)
+        return cls.start(verification.verifier_uuid,
+                         deployment["uuid"], load_list=tests,
+                         tags=tags, **run_args)
 
     @staticmethod
-    def get(verification_uuid):
+    def _get(verification_uuid):
         """Get a verification.
 
         :param verification_uuid: Verification UUID
         """
         return objects.Verification.get(verification_uuid)
+
+    @classmethod
+    def get(cls, verification_uuid):
+        return cls._get(verification_uuid).to_dict()
 
     @staticmethod
     def list(verifier_id=None, deployment_id=None, tags=None, status=None):
@@ -934,9 +948,9 @@ class _Verification(object):
         :param tags: Tags to filter verifications by
         :param status: Status to filter verifications by
         """
-        return objects.Verification.list(verifier_id,
-                                         deployment_id=deployment_id,
-                                         tags=tags, status=status)
+        return [item.to_dict() for item in objects.Verification.list(
+            verifier_id, deployment_id=deployment_id,
+            tags=tags, status=status)]
 
     @classmethod
     def delete(cls, verification_uuid):
@@ -944,7 +958,7 @@ class _Verification(object):
 
         :param verification_uuid: Verification UUID
         """
-        verification = cls.get(verification_uuid)
+        verification = cls._get(verification_uuid)
         LOG.info("Deleting verification (UUID=%s).", verification.uuid)
         verification.delete()
         LOG.info("Verification has been successfully deleted!")
@@ -957,7 +971,7 @@ class _Verification(object):
         :param output_type: Plugin name of verification reporter
         :param output_dest: Destination for verification report
         """
-        verifications = [cls.get(uuid) for uuid in uuids]
+        verifications = [cls._get(uuid) for uuid in uuids]
 
         reporter_cls = vreporter.VerificationReporter.get(output_type)
         reporter_cls.validate(output_dest)
@@ -983,7 +997,7 @@ class _Verification(object):
         # required in the blueprint [1].
         # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
 
-        verifier = _Verifier.get(verifier_id)
+        verifier = _Verifier._get(verifier_id)
         verifier.set_deployment(deployment_id)
         LOG.info("Importing test results into a new verification for "
                  "deployment '%s' (UUID=%s), using verifier %s.",
@@ -1006,7 +1020,9 @@ class _Verification(object):
 
         LOG.info("Test results have been successfully imported.")
 
-        return verification, results
+        return {"verification": verification.to_dict(),
+                "totals": results.totals,
+                "tests": results.tests}
 
 
 class _DeprecatedAPIClass(object):

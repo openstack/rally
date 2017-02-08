@@ -140,7 +140,6 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
                     data = o.get(field_name, "")
                 else:
                     data = getattr(o, field_name, "")
-
                 row.append(data)
         pt.add_row(row)
 
