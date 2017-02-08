@@ -24,8 +24,8 @@ Why Hooks?
 ----------
 
 All Rally workloads repeat their actions as many times as it is configured by
-runner. Once run, there is no way to interupt the runner to evaluate any change
-or restart event on the stability of the cloud under test.
+runner. Once run, there is no way to interrupt the runner to evaluate any
+change or restart event on the stability of the cloud under test.
 For example we would like to test how configuration change or cloud component
 restart would affect performance and stability.
 
