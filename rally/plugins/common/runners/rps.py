@@ -148,12 +148,17 @@ class RPSScenarioRunner(runner.ScenarioRunner):
             "rps": {
                 "anyOf": [
                     {
+                        "description": "Generate constant requests per second "
+                                       "during the whole workload.",
                         "type": "number",
                         "exclusiveMinimum": True,
                         "minimum": 0
                     },
                     {
                         "type": "object",
+                        "description": "Increase requests per second for "
+                                       "specified value each time after a "
+                                       "certain number of seconds.",
                         "properties": {
                             "start": {
                                 "type": "number",

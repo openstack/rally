@@ -52,9 +52,11 @@ class SaharaImage(context.Context):
             }
         },
         "oneOf": [
-            {"required": ["image_url", "username", "plugin_name",
+            {"description": "Create an image.",
+             "required": ["image_url", "username", "plugin_name",
                           "hadoop_version"]},
-            {"required": ["image_uuid"]}
+            {"description": "Use an existing image.",
+             "required": ["image_uuid"]}
         ],
         "additionalProperties": False
     }

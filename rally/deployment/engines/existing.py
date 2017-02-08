@@ -88,7 +88,7 @@ class ExistingCloud(engine.Engine):
                 "type": "object",
                 "oneOf": [
                     {
-                        # v2.0 authentication
+                        "description": "Keystone V2.0",
                         "properties": {
                             "username": {"type": "string"},
                             "password": {"type": "string"},
@@ -98,7 +98,7 @@ class ExistingCloud(engine.Engine):
                         "additionalProperties": False
                     },
                     {
-                        # Authentication in project scope
+                        "description": "Keystone V3.0",
                         "properties": {
                             "username": {"type": "string"},
                             "password": {"type": "string"},
@@ -118,7 +118,11 @@ class ExistingCloud(engine.Engine):
             "type": {"type": "string"},
             "auth_url": {"type": "string"},
             "region_name": {"type": "string"},
-            "endpoint": {"type": ["string", "null"]},
+            "endpoint": {"oneOf": [
+                # NOTE(andreykurilin): it looks like we do not use endpoint
+                #   var at all
+                {"type": "string", "description": ""},
+                {"type": "null", "description": ""}]},
             "endpoint_type": {"enum": [consts.EndpointType.ADMIN,
                                        consts.EndpointType.INTERNAL,
                                        consts.EndpointType.PUBLIC,

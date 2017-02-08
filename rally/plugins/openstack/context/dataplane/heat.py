@@ -52,12 +52,15 @@ class HeatDataplane(context.Context):
         key_name: name of nova ssh keypair to use for "gate" node
     """
     FILE_SCHEMA = {
+        "description": "",
         "type": "string",
     }
     RESOURCE_SCHEMA = {
+        "description": "",
         "type": "array",
         "minItems": 2,
         "maxItems": 2,
+        "items": {"type": "string"}
     }
     CONFIG_SCHEMA = {
         "type": "object",

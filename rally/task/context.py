@@ -68,7 +68,7 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
     """
     RESOURCE_NAME_FORMAT = "c_rally_XXXXXXXX_XXXXXXXX"
 
-    CONFIG_SCHEMA = {}
+    CONFIG_SCHEMA = {"type": "null"}
 
     def __init__(self, ctx):
         config = ctx.get("config", {}).get(self.get_name(), {})

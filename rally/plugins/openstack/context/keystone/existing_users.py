@@ -38,10 +38,6 @@ class ExistingUsers(context.Context):
        "existing_users" context.
     """
 
-    # NOTE(boris-42): We don't need to check config schema because
-    #                 this is used only by benchmark engine
-    CONFIG_SCHEMA = {}
-
     @logging.log_task_wrapper(LOG.info, _("Enter context: `existing_users`"))
     def setup(self):
         super(ExistingUsers, self).setup()

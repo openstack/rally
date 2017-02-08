@@ -29,8 +29,7 @@ class CleanupMixin(object):
         "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "string",
-        },
-        "additionalProperties": False
+        }
     }
 
     def setup(self):

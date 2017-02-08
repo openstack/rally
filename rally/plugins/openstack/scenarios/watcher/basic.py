@@ -37,7 +37,7 @@ class CreateAuditTemplateAndDelete(utils.WatcherScenario):
 
         :param goal: The goal audit template is based on
         :param strategy: The strategy used to provide resource optimization
-        algorithm
+            algorithm
         """
 
         audit_template = self._create_audit_template(goal, strategy)
@@ -59,12 +59,13 @@ class ListAuditTemplates(utils.WatcherScenario):
         :param goal: Name of the goal
         :param strategy: Name of the strategy
         :param limit: The maximum number of results to return per
-                      request, if:
-            1) limit > 0, the maximum number of audit templates to return.
-            2) limit == 0, return the entire list of audit_templates.
-            3) limit param is NOT specified (None), the number of items
-               returned respect the maximum imposed by the Watcher API
-               (see Watcher's api.max_limit option).
+            request, if:
+
+              1) limit > 0, the maximum number of audit templates to return.
+              2) limit == 0, return the entire list of audit_templates.
+              3) limit param is NOT specified (None), the number of items
+                 returned respect the maximum imposed by the Watcher API
+                (see Watcher's api.max_limit option).
         :param sort_key: Optional, field used for sorting.
         :param sort_dir: Optional, direction of sorting, either 'asc' (the
                          default) or 'desc'.

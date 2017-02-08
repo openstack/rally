@@ -35,14 +35,15 @@ class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
     CONFIG_SCHEMA["definitions"] = {
         "stringOrStringList": {
             "anyOf": [
-                {"type": "string"},
+                {"type": "string", "description": "just a string"},
                 {
-                    "type": "array",
+                    "type": "array", "description": "just a list of strings",
                     "items": {"type": "string"}
                 }
             ]
         },
         "scriptFile": {
+            "type": "object",
             "properties": {
                 "script_file": {"$ref": "#/definitions/stringOrStringList"},
                 "interpreter": {"$ref": "#/definitions/stringOrStringList"},
@@ -52,6 +53,7 @@ class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
             "additionalProperties": False,
         },
         "scriptInline": {
+            "type": "object",
             "properties": {
                 "script_inline": {"type": "string"},
                 "interpreter": {"$ref": "#/definitions/stringOrStringList"},
@@ -61,6 +63,7 @@ class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
             "additionalProperties": False,
         },
         "commandPath": {
+            "type": "object",
             "properties": {
                 "remote_path": {"$ref": "#/definitions/stringOrStringList"},
                 "local_path": {"type": "string"},
@@ -70,7 +73,6 @@ class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
             "additionalProperties": False,
         },
         "commandDict": {
-            "type": "object",
             "oneOf": [
                 {"$ref": "#/definitions/scriptFile"},
                 {"$ref": "#/definitions/scriptInline"},
