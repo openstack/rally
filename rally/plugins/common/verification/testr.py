@@ -29,7 +29,7 @@ from rally.verification import utils
 
 LOG = logging.getLogger(__name__)
 
-TEST_NAME_RE = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-,=0-9]*\])?$")
+TEST_NAME_RE = re.compile(r"^[a-zA-Z_.0-9]+(\[[a-zA-Z-_,=0-9]*\])?$")
 
 
 @context.configure("testr", order=999)
