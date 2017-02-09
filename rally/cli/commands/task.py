@@ -235,9 +235,9 @@ class TaskCommands(object):
                                      for it fails
         """
 
-        task_instance = api.task.create(deployment, tag)
-
         try:
+            task_instance = api.task.create(deployment, tag)
+
             print("Running Rally version", version.version_string())
             input_task = self._load_and_validate_task(
                 api, task, task_args, task_args_file, deployment,
@@ -258,6 +258,9 @@ class TaskCommands(object):
                            abort_on_sla_failure=abort_on_sla_failure)
             self.detailed(api, task_id=task_instance["uuid"])
 
+        except exceptions.DeploymentNotFinishedStatus as e:
+            print(_("Cannot start a task on unfinished deployment: %s") % e)
+            return 1
         except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
             task_instance.set_failed(type(e).__name__,
                                      str(e),

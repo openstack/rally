@@ -29,6 +29,7 @@ from rally.cli import envutils
 from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import logging
+from rally import exceptions
 from rally import plugins
 
 
@@ -467,8 +468,13 @@ class VerifyCommands(object):
             ("skip_list", skip_list), ("xfail_list", xfail_list),
             ("concurrency", concur)) if value}
 
-        verification, results = api.verification.start(verifier_id, deployment,
-                                                       tags=tags, **run_args)
+        try:
+            verification, results = api.verification.start(
+                verifier_id, deployment, tags=tags, **run_args)
+        except exceptions.DeploymentNotFinishedStatus as e:
+            print(_("Cannot start a verefication on "
+                    "unfinished deployment: %s") % e)
+            return 1
 
         if detailed:
             failures = results.filter_tests("fail").values()

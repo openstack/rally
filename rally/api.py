@@ -297,8 +297,15 @@ class _Task(object):
         :returns: Task object
         """
 
-        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
-        return objects.Task(deployment_uuid=deployment_uuid, tag=tag)
+        deployment = objects.Deployment.get(deployment)
+        if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
+            raise exceptions.DeploymentNotFinishedStatus(
+                name=deployment["name"],
+                uuid=deployment["uuid"],
+                status=deployment["status"])
+
+        return objects.Task(deployment_uuid=deployment["uuid"],
+                            tag=tag)
 
     @classmethod
     def validate(cls, deployment, config, task_instance=None):
@@ -329,6 +336,7 @@ class _Task(object):
                                      stop when any SLA check for it fails
         """
         deployment = objects.Deployment.get(deployment)
+
         task = task or objects.Task(deployment_uuid=deployment["uuid"])
 
         if task.is_temporary:
@@ -813,6 +821,14 @@ class _Verification(object):
         #                  names (without test IDs). Also, it would be nice to
         #                  skip the whole test suites. For example, all tests
         #                  in the class or module.
+
+        deployment = objects.Deployment.get(deployment_id)
+
+        if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
+            raise exceptions.DeploymentNotFinishedStatus(
+                name=deployment["name"],
+                uuid=deployment["uuid"],
+                status=deployment["status"])
 
         verifier = _Verifier.get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:

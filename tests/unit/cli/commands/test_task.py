@@ -184,6 +184,26 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
                 return_value="some_config")
+    def test_start_on_unfinished_deployment(
+            self, mock__load_task, mock_detailed, mock_os_path_isfile):
+        deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
+        deployment_name = "xxx_name"
+        task_path = "path_to_config.json"
+        self.fake_api.task.create.return_value = fakes.FakeTask(
+            uuid="some_new_uuid", tag="tag")
+
+        exc = exceptions.DeploymentNotFinishedStatus(
+            name=deployment_name,
+            uuid=deployment_id,
+            status=consts.DeployStatus.DEPLOY_INIT)
+        self.fake_api.task.create.side_effect = exc
+        self.assertEqual(1, self.task.start(self.fake_api, task_path,
+                                            deployment="any", tag="some_tag"))
+
+    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
+    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
+                return_value="some_config")
     def test_start_with_task_args(self, mock__load_task, mock_detailed,
                                   mock_os_path_isfile):
         self.fake_api.task.create.return_value = fakes.FakeTask(
