@@ -388,6 +388,14 @@ class TaskAPITestCase(test.TestCase):
         mock_task.get_detailed.assert_called_once_with("task_uuid")
 
     @mock.patch("rally.api.objects.Task")
+    def test_list(self, mock_task):
+        task = mock.Mock()
+        task.to_dict.return_value = self.task
+        mock_task.list.return_value = [task]
+        tasks = api._Task.list()
+        self.assertEqual([self.task], tasks)
+
+    @mock.patch("rally.api.objects.Task")
     def test_get_detailed_with_extended_results(self, mock_task):
         mock_task.get_detailed.return_value = (("uuid", "foo_uuid"),
                                                ("results", "raw_results"))
@@ -1612,9 +1620,10 @@ class VerificationAPITestCase(test.TestCase):
             mock.Mock(totals=self.results_data["totals"],
                       tests=self.results_data["tests"]))
 
-        api._Verification.rerun("uuid")
+        api._Verification.rerun("uuid", concurrency=1)
         mock_start.assert_called_once_with(
-            "v_uuid", "d_uuid", load_list=tests.keys(), tags=None)
+            "v_uuid", "d_uuid", load_list=tests.keys(),
+            tags=None, concurrency=1)
 
     @mock.patch("rally.api._Verification.start")
     @mock.patch("rally.api._Deployment.get")

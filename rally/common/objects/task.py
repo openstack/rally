@@ -338,6 +338,7 @@ class Task(object):
     # TODO(andreykurilin): allow abort for each state.
     NOT_IMPLEMENTED_STAGES_FOR_ABORT = [consts.TaskStatus.VALIDATING,
                                         consts.TaskStatus.INIT]
+    TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, task=None, temporary=False, **attributes):
         """Task object init
@@ -364,11 +365,35 @@ class Task(object):
         deployment_name = db.deployment_get(
             self.task["deployment_uuid"])["name"]
         db_task["deployment_name"] = deployment_name
+        db_task["duration"] = db_task.get(
+            "updated_at") - db_task.get("created_at")
+        db_task["created_at"] = db_task.get("created_at",
+                                            "").strftime(self.TIME_FORMAT)
+        db_task["updated_at"] = db_task.get("updated_at",
+                                            "").strftime(self.TIME_FORMAT)
+        db_results = self.get_results()
+        results = []
+        for result in db_results:
+            result["created_at"] = result.get("created_at",
+                                              "").strftime(self.TIME_FORMAT)
+            result["updated_at"] = result.get("updated_at",
+                                              "").strftime(self.TIME_FORMAT)
+            results.append(result)
+        db_task["results"] = results
         return db_task
 
     @staticmethod
     def get_detailed(task_id):
-        return db.api.task_get_detailed(task_id)
+        task_detail = db.api.task_get_detailed(task_id)
+        results = []
+        for result in task_detail["results"]:
+            result["created_at"] = result.get("created_at", "").strftime(
+                Task.TIME_FORMAT)
+            result["updated_at"] = result.get("updated_at", "").strftime(
+                Task.TIME_FORMAT)
+            results.append(result)
+        task_detail["results"] = results
+        return task_detail
 
     @staticmethod
     def get(uuid):

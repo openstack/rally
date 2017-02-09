@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import datetime as dt
 import json
 import os.path
@@ -464,18 +463,17 @@ class TaskCommandsTestCase(test.TestCase):
                                         "hooks": [],
                                         "load_duration": 1.0,
                                         "full_duration": 2.0},
-             "created_at": created_at}
+             "created_at": created_at.strftime("%Y-%d-%mT%H:%M:%S")}
         ]
         result = map(lambda x: {"key": x["key"],
                                 "result": x["data"]["raw"],
                                 "load_duration": x["data"]["load_duration"],
                                 "full_duration": x["data"]["full_duration"],
-                                "created_at": x.get("created_at").strftime(
-                                    "%Y-%d-%mT%H:%M:%S"),
+                                "created_at": x.get("created_at"),
                                 "hooks": x["data"]["hooks"],
                                 "sla": x["data"]["sla"]}, data)
-        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED})
-        fake_task.get_results = mock.Mock(return_value=data)
+        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED,
+                                    "results": data})
         self.fake_api.task.get.return_value = fake_task
 
         self.task.results(self.fake_api, task_id)
@@ -522,10 +520,9 @@ class TaskCommandsTestCase(test.TestCase):
         mock_os_path.exists = lambda p: p.startswith("path_to_")
         mock_os_path.expanduser = lambda p: p + "_expanded"
         mock_os_path.realpath.side_effect = lambda p: "realpath_" + p
-        results_iter = iter([self._make_result(["bar"]),
-                             self._make_result(["spam"])])
-        fake_task = self.fake_api.task.get.return_value
-        fake_task.get_results.side_effect = results_iter
+
+        self.fake_api.task.get_detailed.return_value = {
+            "results": self._make_result(["bar"])}
         mock_plot.trends.return_value = "rendered_trends_report"
         mock_fd = mock.mock_open(
             read_data="[\"result_1_from_file\", \"result_2_from_file\"]")
@@ -539,9 +536,9 @@ class TaskCommandsTestCase(test.TestCase):
             {"load_duration": 1.2, "full_duration": 2.3, "sla": "bar_sla",
              "hooks": "bar_hooks",
              "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
-            {"load_duration": 1.2, "full_duration": 2.3, "sla": "spam_sla",
-             "hooks": "spam_hooks",
-             "key": {"name": "spam", "pos": 0}, "result": "spam_raw"},
+            {"load_duration": 1.2, "full_duration": 2.3, "sla": "bar_sla",
+             "hooks": "bar_hooks",
+             "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
             "result_1_from_file", "result_2_from_file"]
         mock_plot.trends.assert_called_once_with(expected)
         self.assertEqual([mock.call("path_to_file_expanded", "r"),
@@ -553,11 +550,6 @@ class TaskCommandsTestCase(test.TestCase):
                           mock.call("result_2_from_file",
                                     self.fake_api.task.TASK_RESULT_SCHEMA)],
                          mock_validate.mock_calls)
-        self.assertEqual([mock.call("ab123456-38d8-4c8f-bbcc-fc8f74b004ae"),
-                          mock.call().get_results(),
-                          mock.call("cd654321-38d8-4c8f-bbcc-fc8f74b004ae"),
-                          mock.call().get_results()],
-                         self.fake_api.task.get.mock_calls)
         self.assertFalse(mock_webbrowser.open_new_tab.called)
         mock_fd.return_value.write.assert_called_once_with(
             "rendered_trends_report")
@@ -588,8 +580,8 @@ class TaskCommandsTestCase(test.TestCase):
     def test_trends_task_id_is_not_uuid_like(self, mock_plot,
                                              mock_open, mock_os_path):
         mock_os_path.exists.return_value = False
-        self.fake_api.task.get.return_value.get_results.return_value = (
-            self._make_result(["foo"]))
+        self.fake_api.task.get_detailed.return_value = {
+            "results": self._make_result(["foo"])}
 
         ret = self.task.trends(self.fake_api,
                                tasks=["ab123456-38d8-4c8f-bbcc-fc8f74b004ae"],
@@ -657,12 +649,11 @@ class TaskCommandsTestCase(test.TestCase):
                     "full_duration": x["data"]["full_duration"],
                     "created_at": x["created_at"]}
                    for x in data]
-        mock_results = mock.Mock(return_value=data)
-        self.fake_api.task.get.return_value.get_results = mock_results
+        self.fake_api.task.get_detailed.return_value = {"results": data}
         mock_plot.plot.return_value = "html_report"
 
         def reset_mocks():
-            for m in (self.fake_api.task.get, mock_webbrowser,
+            for m in (self.fake_api.task.get_detailed, mock_webbrowser,
                       mock_plot, mock_open):
                 m.reset_mock()
         self.task.report(self.fake_api, tasks=task_id,
@@ -671,7 +662,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
-        self.fake_api.task.get.assert_called_once_with(task_id)
+        self.fake_api.task.get_detailed.assert_called_once_with(task_id)
 
         # JUnit
         reset_mocks()
@@ -734,12 +725,11 @@ class TaskCommandsTestCase(test.TestCase):
                                "created_at": x["created_at"]},
                     data))
 
-        mock_results = mock.Mock(return_value=data)
-        self.fake_api.task.get.return_value.get_results = mock_results
+        self.fake_api.task.get_detailed.return_value = {"results": data}
         mock_plot.plot.return_value = "html_report"
 
         def reset_mocks():
-            for m in (self.fake_api.task.get, mock_webbrowser,
+            for m in (self.fake_api.task.get_detailed, mock_webbrowser,
                       mock_plot, mock_open):
                 m.reset_mock()
         self.task.report(self.fake_api, tasks=tasks, out="/tmp/1_test.html")
@@ -748,7 +738,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         expected_get_calls = [mock.call(task) for task in tasks]
-        self.fake_api.task.get.assert_has_calls(
+        self.fake_api.task.get_detailed.assert_has_calls(
             expected_get_calls, any_order=True)
 
     @mock.patch("rally.cli.commands.task.json.load")
@@ -930,14 +920,12 @@ class TaskCommandsTestCase(test.TestCase):
                                    "success": False,
                                    "detail": "Max foo, actually bar"}]}}]
 
-        fake_task = self.fake_api.task.get.return_value
-        fake_task.get_results.return_value = copy.deepcopy(data)
+        self.fake_api.task.get_detailed.return_value = {"results": data}
         result = self.task.sla_check(self.fake_api, task_id="fake_task_id")
         self.assertEqual(1, result)
-        self.fake_api.task.get.assert_called_with("fake_task_id")
+        self.fake_api.task.get_detailed.assert_called_with("fake_task_id")
 
         data[0]["data"]["sla"][0]["success"] = True
-        fake_task.get_results.return_value = data
 
         result = self.task.sla_check(self.fake_api, task_id="fake_task_id",
                                      tojson=True)

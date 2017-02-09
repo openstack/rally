@@ -63,7 +63,7 @@ class FileExporter(exporter.Exporter):
 
         :param uuid: uuid of the task object
         """
-        task = api.Task.get(uuid)
+        task = api.Task.get_detailed(uuid)
 
         LOG.debug("Got the task object by it's uuid %s. " % uuid)
 
@@ -72,7 +72,7 @@ class FileExporter(exporter.Exporter):
                          "hooks": x["data"].get("hooks"),
                          "load_duration": x["data"]["load_duration"],
                          "full_duration": x["data"]["full_duration"]}
-                        for x in task.get_results()]
+                        for x in task["results"]]
 
         if self.type == "json":
             if task_results:

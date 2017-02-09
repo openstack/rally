@@ -33,13 +33,11 @@ class FileExporterTestCase(test.TestCase):
     @mock.patch("rally.plugins.common.exporter.file_system.os.path.exists")
     @mock.patch.object(__builtin__, "open", autospec=True)
     @mock.patch("rally.plugins.common.exporter.file_system.json.dumps")
-    @mock.patch("rally.api.Task.get")
-    def test_file_exporter_export(self, mock_task_get, mock_dumps, mock_open,
-                                  mock_exists):
-        mock_task = mock.Mock()
+    @mock.patch("rally.api.Task.get_detailed")
+    def test_file_exporter_export(self, mock_task_get_detailed, mock_dumps,
+                                  mock_open, mock_exists):
         mock_exists.return_value = True
-        mock_task_get.return_value = mock_task
-        mock_task.get_results.return_value = [{
+        mock_task_get_detailed.return_value = {"results": [{
             "key": "fake_key",
             "data": {
                 "raw": "bar_raw",
@@ -47,8 +45,7 @@ class FileExporterTestCase(test.TestCase):
                 "hooks": "baz_hooks",
                 "load_duration": "foo_load_duration",
                 "full_duration": "foo_full_duration",
-            }
-        }]
+            }}]}
         mock_dumps.return_value = "fake_results"
         input_mock = mock.MagicMock(spec=file)
         mock_open.return_value = input_mock
@@ -57,7 +54,7 @@ class FileExporterTestCase(test.TestCase):
         exporter.export("fake_uuid")
 
         mock_open().__enter__().write.assert_called_once_with("fake_results")
-        mock_task_get.assert_called_once_with("fake_uuid")
+        mock_task_get_detailed.assert_called_once_with("fake_uuid")
         expected_dict = [
             {
                 "load_duration": "foo_load_duration",
@@ -71,11 +68,9 @@ class FileExporterTestCase(test.TestCase):
         mock_dumps.assert_called_once_with(expected_dict, sort_keys=False,
                                            indent=4, separators=(",", ": "))
 
-    @mock.patch("rally.api.Task.get")
-    def test_file_exporter_export_running_task(self, mock_task_get):
-        mock_task = mock.Mock()
-        mock_task_get.return_value = mock_task
-        mock_task.get_results.return_value = []
+    @mock.patch("rally.api.Task.get_detailed")
+    def test_file_exporter_export_running_task(self, mock_task_get_detailed):
+        mock_task_get_detailed.return_value = {"results": []}
 
         exporter = file_system.FileExporter("file-exporter:///fake_path.json")
         self.assertRaises(exceptions.RallyException, exporter.export,
