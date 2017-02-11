@@ -78,7 +78,7 @@ def _alembic_config():
 
 
 def fix_deployment(fn):
-    # NOTE(ikhudoshyn): Remove this once new deployment model
+    # NOTE(ikhudoshyn): Remove this once a new deployment model
     # get adopted.
     # New DB schema for Deployment was introduced in
     # https://github.com/openstack/rally/
