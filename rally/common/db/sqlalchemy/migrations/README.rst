@@ -56,7 +56,7 @@ It is highly recommended to get familiar with it's documentation
 available by the link_ before proceeding.
 
 If developer is about to change existing DB schema they should
-create new DB revision and migration script with the following command
+create a new DB revision and a migration script with the following command.
 
 .. code-block:: shell
 
