@@ -16,17 +16,18 @@ import os
 import traceback
 
 import mock
-import yaml
 
+import rally
 from rally import api
 from rally.common.plugin import discover
+from rally.common import yamlutils as yaml
 from rally.task import engine
 from tests.unit import test
 
 
 class RallyJobsTestCase(test.TestCase):
     rally_jobs_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "rally-jobs")
+        os.path.dirname(rally.__file__), "..", "rally-jobs")
 
     @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic")
@@ -34,8 +35,14 @@ class RallyJobsTestCase(test.TestCase):
             self, mock_task_engine__validate_config_semantic):
         discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
-        for filename in ["rally.yaml", "rally-neutron.yaml",
-                         "rally-zaqar.yaml", "rally-designate.yaml"]:
+        files = {f for f in os.listdir(self.rally_jobs_path)
+                 if (os.path.isfile(os.path.join(self.rally_jobs_path, f)) and
+                     f.endswith(".yaml") and not f.endswith("_args.yaml"))}
+
+        # TODO(andreykurilin): figure out why it fails
+        files -= {"rally-mos.yaml", "sahara-clusters.yaml"}
+
+        for filename in files:
             full_path = os.path.join(self.rally_jobs_path, filename)
 
             with open(full_path) as task_file:
@@ -52,7 +59,7 @@ class RallyJobsTestCase(test.TestCase):
                                 "args file %s must be dict in yaml or json "
                                 "presenatation" % args_file)
 
-                    task = api.Task.render_template(task_file.read(), **args)
+                    task = api._Task.render_template(task_file.read(), **args)
                     task = yaml.safe_load(task)
 
                     eng = engine.TaskEngine(task, mock.MagicMock())

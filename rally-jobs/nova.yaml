@@ -141,8 +141,6 @@
       sla:
         failure_rate:
           max: 0
-
-  NovaServers.boot_and_list_server:
     -
       args:
         flavor:
