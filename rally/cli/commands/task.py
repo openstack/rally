@@ -473,12 +473,13 @@ class TaskCommands(object):
             print(_("Task status is %s. Results available when it is one "
                     "of %s.") % (task["status"], ", ".join(finished_statuses)))
             return 1
-
         results = [{"key": x["key"], "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "hooks": x["data"].get("hooks", []),
                     "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"]}
+                    "full_duration": x["data"]["full_duration"],
+                    "created_at": x.get("created_at").strftime(
+                        "%Y-%d-%mT%H:%M:%S")}
                    for x in task.get_results()]
 
         print(json.dumps(results, sort_keys=False, indent=4))
@@ -670,7 +671,8 @@ class TaskCommands(object):
                                "hooks": x["data"].get("hooks", []),
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
-                               "full_duration": x["data"]["full_duration"]},
+                               "full_duration": x["data"]["full_duration"],
+                               "created_at": x["created_at"]},
                     api.task.get(task_file_or_uuid).get_results())
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"

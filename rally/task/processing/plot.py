@@ -158,6 +158,7 @@ def _process_scenario(data, pos):
         "errors": errors,
         "load_duration": data["info"]["load_duration"],
         "full_duration": data["info"]["full_duration"],
+        "created_at": data["created_at"],
         "sla": data["sla"],
         "sla_success": all([s["success"] for s in data["sla"]]),
         "iterations_count": iterations_count,
@@ -200,10 +201,10 @@ def _extend_results(results):
                             "raw": result["result"],
                             "full_duration": result["full_duration"],
                             "load_duration": result["load_duration"]},
-                   "created_at": None,
+                   "created_at": result.get("created_at"),
                    "updated_at": None}
         extended_results.extend(
-            objects.Task.extend_results([generic]))
+            objects.Task.extend_results([generic], True))
     return extended_results
 
 
