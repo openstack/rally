@@ -187,7 +187,7 @@ def task_update_status(task_uuid, status, allowed_statuses):
     """Update task status with specified value.
 
     :param task_uuid: string with UUID of Task instance.
-    :param status: new value to wrote into db instead of status.
+    :param status: new value to be written into db instead of status.
     :param allowed_statuses: list of expected statuses to update in db.
     :raises RallyException: if task not found with specified status.
     :returns: the count of rows match as returned by the database's
@@ -202,8 +202,8 @@ def task_list(status=None, deployment=None):
 
     :param status: Task status to filter the returned list on. If set to
                    None, all the tasks will be returned.
-    :param deployment: deployment UUID to filter the returned list on.
-                      if set to None tasks from all deployments well be
+    :param deployment: Deployment UUID to filter the returned list on.
+                      If set to None, tasks from all deployments will be
                       returned.
     :returns: A list of dicts with data on the tasks.
     """
@@ -262,7 +262,7 @@ def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
 
     :param task_uuid: string with UUID of Task instance.
     :param workload_uuid: string with UUID of Workload instance.
-    :param chunk_order: ordinal index of workload data
+    :param chunk_order: ordinal index of workload data.
     :param data: dict with record values on the workload data.
     :returns: a dict with data on the workload data.
     """
@@ -326,7 +326,7 @@ def deployment_list(status=None, parent_uuid=None, name=None):
     :param status: if None returns any deployments with any status.
     :param parent_uuid: filter by parent. If None, return only "root"
                         deployments.
-    :param name: Name of deployment
+    :param name: name of deployment.
     :returns: a list of dicts with data on the deployments.
     """
     return get_impl().deployment_list(status=status, parent_uuid=parent_uuid,
