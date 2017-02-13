@@ -17,10 +17,9 @@ import re
 import shutil
 import subprocess
 
-import yaml
-
 from rally.common.i18n import _LE
 from rally.common import logging
+from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally.plugins.common.verification import testr
 from rally.plugins.openstack.verification.tempest import config
