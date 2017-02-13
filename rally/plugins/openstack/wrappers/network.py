@@ -427,10 +427,10 @@ class NeutronWrapper(NetworkWrapper):
                     "no external networks found")
             net_id = ext_networks[0]["id"]
 
-        kwargs = {"floatingip": {"floating_network_id": net_id},
-                  "tenant_id": tenant_id}
+        kwargs = {"floatingip": {"floating_network_id": net_id,
+                                 "tenant_id": tenant_id}}
         if port_id:
-            kwargs["port_id"] = port_id
+            kwargs["floatingip"]["port_id"] = port_id
 
         fip = self.client.create_floatingip(kwargs)["floatingip"]
         return {"id": fip["id"], "ip": fip["floating_ip_address"]}

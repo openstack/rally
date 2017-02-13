@@ -461,16 +461,18 @@ class NeutronWrapperTestCase(test.TestCase):
         mock_neutron_wrapper_external_networks.__get__ = (
             lambda *args: [{"id": "ext_id"}]
         )
-        fip = wrap.create_floating_ip(tenant_id="foo_tenant")
+        fip = wrap.create_floating_ip(tenant_id="foo_tenant",
+                                      port_id="port_id")
         self.assertEqual(fip, {"id": "fip_id", "ip": "fip_ip"})
 
         wrap.get_network = mock.Mock(
             return_value={"id": "foo_net", "external": True})
-        wrap.create_floating_ip(tenant_id="foo_tenant", ext_network="ext_net")
+        wrap.create_floating_ip(tenant_id="foo_tenant", ext_network="ext_net",
+                                port_id="port_id")
 
         wrap.get_network = mock.Mock(
             return_value={"id": "foo_net", "external": False})
-        wrap.create_floating_ip(tenant_id="foo_tenant")
+        wrap.create_floating_ip(tenant_id="foo_tenant", port_id="port_id")
 
         self.assertRaises(network.NetworkWrapperException,
                           wrap.create_floating_ip, tenant_id="foo_tenant",
