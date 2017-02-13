@@ -388,9 +388,12 @@ class Heat(OSClient):
         """Return heat client."""
         from heatclient import client as heat
 
+        # ToDo: Remove explicit endpoint_type or interface initialization
+        #       when heatclient no longer uses it.
         kw_args = {}
         if self.credential.endpoint_type:
             kw_args["endpoint_type"] = self.credential.endpoint_type
+            kw_args["interface"] = self.credential.endpoint_type
 
         client = heat.Client(
             self.choose_version(version),

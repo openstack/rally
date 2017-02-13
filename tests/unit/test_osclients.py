@@ -390,6 +390,50 @@ class OSClientsTestCase(test.TestCase):
             mock_neutron.client.Client.assert_called_once_with("2.0", **kw)
             self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
+    @mock.patch("rally.osclients.Heat._get_endpoint")
+    def test_heat(self, mock_heat__get_endpoint):
+        fake_heat = fakes.FakeHeatClient()
+        mock_heat__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_heat = mock.MagicMock()
+        mock_keystoneauth1 = mock.MagicMock()
+        mock_heat.client.Client.return_value = fake_heat
+        self.assertNotIn("heat", self.clients.cache)
+        with mock.patch.dict("sys.modules",
+                             {"heatclient": mock_heat,
+                              "keystoneauth1": mock_keystoneauth1}):
+            client = self.clients.heat()
+            self.assertEqual(fake_heat, client)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint": mock_heat__get_endpoint.return_value,
+                "endpoint_override": mock_heat__get_endpoint.return_value}
+            mock_heat.client.Client.assert_called_once_with("1", **kw)
+        self.assertEqual(fake_heat, self.clients.cache["heat"])
+
+    @mock.patch("rally.osclients.Heat._get_endpoint")
+    def test_heat_endpoint_type_interface(self, mock_heat__get_endpoint):
+        fake_heat = fakes.FakeHeatClient()
+        mock_heat__get_endpoint.return_value = "http://fake.to:2/fake"
+        mock_heat = mock.MagicMock()
+        mock_keystoneauth1 = mock.MagicMock()
+        mock_heat.client.Client.return_value = fake_heat
+        self.assertNotIn("heat", self.clients.cache)
+        self.credential.endpoint_type = "internal"
+        self.credential.interface = "internal"
+        with mock.patch.dict("sys.modules",
+                             {"heatclient": mock_heat,
+                              "keystoneauth1": mock_keystoneauth1}):
+            client = self.clients.heat()
+            self.assertEqual(fake_heat, client)
+            kw = {
+                "session": mock_keystoneauth1.session.Session(),
+                "endpoint": mock_heat__get_endpoint.return_value,
+                "endpoint_override": mock_heat__get_endpoint.return_value,
+                "endpoint_type": "internal",
+                "interface": "internal"}
+            mock_heat.client.Client.assert_called_once_with("1", **kw)
+        self.assertEqual(fake_heat, self.clients.cache["heat"])
+
     @mock.patch("rally.osclients.Glance._get_endpoint")
     def test_glance(self, mock_glance__get_endpoint):
         fake_glance = fakes.FakeGlanceClient()
