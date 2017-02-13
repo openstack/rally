@@ -392,6 +392,11 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, "clients", "deployment")
         self.assertTrue(result.is_valid, result.msg)
 
+    def test_image_exists_failed(self):
+        validator = self._unwrap_validator(validation.image_exists, "param")
+        result = validator({}, None, None)
+        self.assertFalse(result.is_valid)
+
     def test_flavor_exists(self):
         validator = self._unwrap_validator(validation.flavor_exists, "param")
         result = validator({}, "clients", "deployment")
@@ -419,7 +424,15 @@ class ValidatorsTestCase(test.TestCase):
         }
         flavor = mock.MagicMock()
         success = validation.ValidationResult(True)
+        fail = validation.ValidationResult(False)
         mock__get_validated_flavor.return_value = (success, flavor)
+
+        mock__get_validated_image.return_value = (fail, image)
+        validator = self._unwrap_validator(validation.image_valid_on_flavor,
+                                           "flavor", "image")
+        result = validator(None, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+
         mock__get_validated_image.return_value = (success, image)
 
         # test flavor.disk None
@@ -611,6 +624,42 @@ class ValidatorsTestCase(test.TestCase):
                                         "b1": 1, "b2": 2, "a1": 1}},
                            None, None)
         self.assertTrue(result.is_valid, result.msg)
+
+    def test_required_param_or_context(self):
+        validator = self._unwrap_validator(
+            validation.required_param_or_context, "image", "custom_image")
+        result = validator({"args": {"image": {"name": ""}},
+                            "context": {"custom_image": {
+                                        "name": "fake_image"}}},
+                           None, None)
+        self.assertTrue(result.is_valid)
+
+        result = validator({"context": {"custom_image": {
+                                        "name": "fake_image"}}},
+                           None, None)
+        self.assertTrue(result.is_valid)
+
+        validator = self._unwrap_validator(
+            validation.required_param_or_context, "image", "custom_image")
+        result = validator({"args": {"image": {"name": "fake_image"}},
+                            "context": {"custom_image": ""}}, None, None)
+        self.assertTrue(result.is_valid)
+
+        result = validator({"args": {"image": {"name": "fake_image"}}},
+                           None, None)
+        self.assertTrue(result.is_valid)
+
+        validator = self._unwrap_validator(
+            validation.required_param_or_context, "image", "custom_image")
+        result = validator({"args": {"image": {"name": ""}},
+                            "context": {"custom_image": {"name": ""}}}, None,
+                           None)
+        self.assertTrue(result.is_valid)
+
+        validator = self._unwrap_validator(
+            validation.required_param_or_context, "image", "custom_image")
+        result = validator({}, None, None)
+        self.assertFalse(result.is_valid)
 
     def test_required_openstack_with_admin(self):
         validator = self._unwrap_validator(validation.required_openstack,

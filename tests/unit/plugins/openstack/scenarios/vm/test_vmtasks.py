@@ -49,7 +49,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario = self.create_env(vmtasks.BootRuncommandDelete(self.context))
         scenario._run_command = mock.MagicMock(
             return_value=(0, "{\"foo\": 42}", "foo_err"))
-        scenario.run("foo_image", "foo_flavor",
+        scenario.run("foo_flavor", image="foo_image",
                      command={"script_file": "foo_script",
                               "interpreter": "foo_interpreter"},
                      username="foo_username",
@@ -100,7 +100,9 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario = self.create_env(vmtasks.BootRuncommandDelete(self.context))
 
         scenario._run_command.return_value = output
-        kwargs = {"command": {"remote_path": "foo"},
+        kwargs = {"flavor": "foo_flavor",
+                  "image": "foo_image",
+                  "command": {"remote_path": "foo"},
                   "username": "foo_username",
                   "password": "foo_password",
                   "use_floating_ip": "use_fip",
@@ -109,11 +111,10 @@ class VMTasksTestCase(test.ScenarioTestCase):
                   "volume_args": {"size": 16},
                   "foo_arg": "foo_value"}
         if raises:
-            self.assertRaises(raises, scenario.run,
-                              "foo_image", "foo_flavor", **kwargs)
+            self.assertRaises(raises, scenario.run, **kwargs)
             self.assertFalse(scenario.add_output.called)
         else:
-            scenario.run("foo_image", "foo_flavor", **kwargs)
+            scenario.run(**kwargs)
             calls = [mock.call(**kw) for kw in expected]
             scenario.add_output.assert_has_calls(calls, any_order=True)
 
@@ -136,7 +137,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario._run_command.side_effect = exceptions.SSHTimeout()
         self.assertRaises(exceptions.SSHTimeout,
                           scenario.run,
-                          "foo_image", "foo_flavor", "foo_interpreter",
+                          "foo_flavor", "foo_image", "foo_interpreter",
                           "foo_script", "foo_username")
         scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
@@ -179,31 +180,49 @@ class VMTasksTestCase(test.ScenarioTestCase):
             "foo_server", self.ip, force_delete=False)
         self.assertFalse(scenario.add_output.called)
 
-    @mock.patch("%s.BootRuncommandDelete.run" % BASE)
-    def test_boot_runcommand_delete_custom_image(self, mock_scenario):
+    def test_boot_runcommand_delete_custom_image(self):
         context = {
             "user": {
                 "tenant_id": "tenant_id",
+                "keypair": {"name": "foo_keypair_name"},
                 "credential": mock.Mock()
             },
             "tenant": {
                 "custom_image": {"id": "image_id"}
             }
         }
-        scenario = vmtasks.BootRuncommandDeleteCustomImage(context)
 
-        scenario.run(flavor="flavor_id",
-                     command={
-                         "script_file": "foo_script",
-                         "interpreter": "bar_interpreter"},
-                     username="username")
+        scenario = self.create_env(vmtasks.BootRuncommandDelete(context))
+        scenario._run_command = mock.MagicMock(
+            return_value=(0, "{\"foo\": 42}", "foo_err"))
+        scenario.run("foo_flavor",
+                     command={"script_file": "foo_script",
+                              "interpreter": "foo_interpreter"},
+                     username="foo_username",
+                     password="foo_password",
+                     use_floating_ip="use_fip",
+                     floating_network="ext_network",
+                     force_delete="foo_force",
+                     volume_args={"size": 16},
+                     foo_arg="foo_value")
 
-        mock_scenario.assert_called_once_with(
-            image="image_id", flavor="flavor_id", username="username",
-            command={
-                "script_file": "foo_script",
-                "interpreter": "bar_interpreter"}
-        )
+        scenario._create_volume.assert_called_once_with(16, imageRef=None)
+        scenario._boot_server_with_fip.assert_called_once_with(
+            "image_id", "foo_flavor", key_name="foo_keypair_name",
+            use_floating_ip="use_fip", floating_network="ext_network",
+            block_device_mapping={"vdrally": "foo_volume:::1"},
+            foo_arg="foo_value")
+
+        scenario._wait_for_ping.assert_called_once_with("foo_ip")
+        scenario._run_command.assert_called_once_with(
+            "foo_ip", 22, "foo_username", "foo_password",
+            command={"script_file": "foo_script",
+                     "interpreter": "foo_interpreter"})
+        scenario._delete_server_with_fip.assert_called_once_with(
+            "foo_server", self.ip, force_delete="foo_force")
+        scenario.add_output.assert_called_once_with(
+            additive={"title": "Command output", "chart_plugin": "Lines",
+                      "data": [["foo", 42.0]]})
 
     @mock.patch("%s.heat" % BASE)
     @mock.patch("%s.sshutils" % BASE)

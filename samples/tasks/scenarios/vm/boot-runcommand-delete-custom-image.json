@@ -1,5 +1,5 @@
 {
-    "VMTasks.boot_runcommand_delete_custom_image": [
+    "VMTasks.boot_runcommand_delete": [
         {
             "args": {
                 "flavor": {"name": "m1.small"},

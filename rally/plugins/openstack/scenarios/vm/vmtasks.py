@@ -36,11 +36,13 @@ LOG = logging.getLogger(__name__)
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.image_valid_on_flavor("flavor", "image", fail_on_404_image=False)
 @validation.valid_command("command")
 @validation.number("port", minval=1, maxval=65535, nullable=True,
                    integer_only=True)
 @validation.external_network_exists("floating_network")
+@validation.required_param_or_context(arg_name="image",
+                                      ctx_name="image_command_customizer")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
@@ -48,13 +50,16 @@ LOG = logging.getLogger(__name__)
                     name="VMTasks.boot_runcommand_delete")
 class BootRuncommandDelete(vm_utils.VMScenario):
 
-    def run(self, image, flavor, username, password=None, command=None,
+    def run(self, flavor, username, password=None,
+            image=None,
+            command=None,
             volume_args=None, floating_network=None, port=22,
             use_floating_ip=True, force_delete=False, wait_for_ping=True,
             max_log_length=None, **kwargs):
         """Boot a server, run script specified in command and delete server.
 
-        :param image: glance image name to use for the vm
+        :param image: glance image name to use for the vm. Optional
+            in case of specified "image_command_customizer" context
         :param flavor: VM flavor name
         :param username: ssh username on server, str
         :param password: Password on SSH authentication
@@ -137,10 +142,12 @@ class BootRuncommandDelete(vm_utils.VMScenario):
                   data: dict, JSON output from the script
                   errors: str, raw data from the script's stderr stream
         """
-
         if volume_args:
             volume = self._create_volume(volume_args["size"], imageRef=None)
             kwargs["block_device_mapping"] = {"vdrally": "%s:::1" % volume.id}
+
+        if not image:
+            image = self.context["tenant"]["custom_image"]["id"]
 
         server, fip = self._boot_server_with_fip(
             image, flavor, use_floating_ip=use_floating_ip,
@@ -209,30 +216,6 @@ class BootRuncommandDelete(vm_utils.VMScenario):
             for chart_type, charts in data.items():
                 for chart in charts:
                     self.add_output(**{chart_type: chart})
-
-
-@types.convert(image={"type": "glance_image"},
-               flavor={"type": "nova_flavor"})
-@validation.number("port", minval=1, maxval=65535, nullable=True,
-                   integer_only=True)
-@validation.valid_command("command")
-@validation.external_network_exists("floating_network")
-@validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
-@validation.required_contexts("image_command_customizer")
-@scenario.configure(context={"cleanup": ["nova", "cinder"],
-                             "keypair": {}, "allow_ssh": {}},
-                    name="VMTasks.boot_runcommand_delete_custom_image")
-class BootRuncommandDeleteCustomImage(vm_utils.VMScenario):
-
-    def run(self, **kwargs):
-        """Boot a server from a custom image, run a command that outputs JSON.
-
-        Example Script in rally-jobs/extra/install_benchmark.sh
-        """
-        boot_runcommand_delete = BootRuncommandDelete(self.context)
-        return boot_runcommand_delete.run(
-            image=self.context["tenant"]["custom_image"]["id"], **kwargs)
 
 
 @scenario.configure(context={"cleanup": ["nova", "heat"],

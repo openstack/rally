@@ -66,10 +66,10 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
     @mock.patch("%s.types.GlanceImage.transform" % BASE, return_value="image")
     @mock.patch("%s.types.Flavor.transform" % BASE, return_value="flavor")
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    @mock.patch("%s.vmtasks.BootRuncommandDeleteCustomImage" % BASE)
+    @mock.patch("%s.vmtasks.BootRuncommandDelete" % BASE)
     def test_create_one_image(
-            self, mock_scenario, mock_glance_wrap, mock_flavor_transform,
-            mock_glance_image_transform, mock_clients
+            self, mock_boot_runcommand_delete, mock_glance_wrap,
+            mock_flavor_transform, mock_glance_image_transform, mock_clients
     ):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
@@ -77,7 +77,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         fake_image = mock.MagicMock(
             to_dict=mock.MagicMock(return_value={"id": "image"}))
 
-        scenario = mock_scenario.return_value = mock.MagicMock(
+        scenario = mock_boot_runcommand_delete.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
                 return_value=(fake_server, ip))
@@ -103,7 +103,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         mock_glance_image_transform.assert_called_once_with(
             clients=mock_clients.return_value,
             resource_config={"name": "image"})
-        mock_scenario.assert_called_once_with(
+        mock_boot_runcommand_delete.assert_called_once_with(
             self.context, clients=mock_clients.return_value)
 
         scenario._boot_server_with_fip.assert_called_once_with(
@@ -132,10 +132,10 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
     @mock.patch("%s.types.Flavor.transform" % BASE,
                 return_value="flavor")
     @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    @mock.patch("%s.vmtasks.BootRuncommandDeleteCustomImage" % BASE)
+    @mock.patch("%s.vmtasks.BootRuncommandDelete" % BASE)
     def test_create_one_image_cleanup(
-            self, mock_scenario, mock_glance_wrap, mock_flavor_transform,
-            mock_glance_image_transform, mock_clients
+            self, mock_boot_runcommand_delete, mock_glance_wrap,
+            mock_flavor_transform, mock_glance_image_transform, mock_clients
     ):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
@@ -143,7 +143,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         fake_image = mock.MagicMock(
             to_dict=mock.MagicMock(return_value={"id": "image"}))
 
-        scenario = mock_scenario.return_value = mock.MagicMock(
+        scenario = mock_boot_runcommand_delete.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
                 return_value=(fake_server, ip)),
