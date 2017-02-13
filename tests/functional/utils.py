@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import errno
 import inspect
 import json
 import os
@@ -118,6 +119,15 @@ class Rally(object):
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
 
+    def _safe_make_dirs(self, dirs):
+        try:
+            os.makedirs(dirs)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(dirs):
+                pass
+            else:
+                raise
+
     def gen_report_path(self, suffix=None, extension=None, keep_old=False):
         """Report file path/name modifier
 
@@ -137,8 +147,7 @@ class Rally(object):
         test_object = caller_frame.f_locals["self"]
         class_name = test_object.__class__.__name__
 
-        if not os.path.exists("%s/%s" % (self.reports_root, class_name)):
-            os.makedirs("%s/%s" % (self.reports_root, class_name))
+        self._safe_make_dirs("%s/%s" % (self.reports_root, class_name))
 
         suff = suffix or ""
         ext = extension or "txt"
