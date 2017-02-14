@@ -586,13 +586,13 @@ class TaskCommandsTestCase(test.TestCase):
                       "hooks": "foo_hooks",
                       "load_duration": 0.1,
                       "full_duration": 1.2},
-             "created_at": "2017-06-02T07:33:04"},
+             "created_at": "2017-06-02 07:33:04"},
             {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "hooks": "bar_hooks",
                       "load_duration": 2.1,
                       "full_duration": 2.2},
-             "created_at": "2017-06-02T07:33:04"}]
+             "created_at": "2017-06-02 07:33:04"}]
 
         results = [{"key": x["key"],
                     "result": x["data"]["raw"],
@@ -659,13 +659,13 @@ class TaskCommandsTestCase(test.TestCase):
                       "hooks": "foo_hooks",
                       "load_duration": 0.1,
                       "full_duration": 1.2},
-             "created_at": "2017-06-02T07:33:04"},
+             "created_at": "2017-06-02 07:33:04"},
             {"key": {"name": "test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "hooks": "bar_hooks",
                       "load_duration": 2.1,
                       "full_duration": 2.2},
-             "created_at": "2017-06-02T07:33:04"}]
+             "created_at": "2017-06-02 07:33:04"}]
 
         results = []
         for task_uuid in tasks:
@@ -713,12 +713,12 @@ class TaskCommandsTestCase(test.TestCase):
              "data": {"raw": "foo_raw", "sla": "foo_sla",
                       "load_duration": 0.1,
                       "full_duration": 1.2},
-             "created_at": "2017-06-02T07:33:04"},
+             "created_at": "2017-06-02 07:33:04"},
             {"key": {"name": "test", "pos": 1},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "load_duration": 2.1,
                       "full_duration": 2.2},
-             "created_at": "2017-06-02T07:33:04"}]
+             "created_at": "2017-06-02 07:33:04"}]
 
         results = [{"key": x["key"],
                     "result": x["data"]["raw"],
