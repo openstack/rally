@@ -83,7 +83,7 @@ def from_func(plugin_baseclass=None):
     1 class can contain any amount of scenarios that are just methods
     of this class.
 
-    To make Rally code cleaner these methods should look/work like other
+    To make Rally code cleaner, these methods should look/work like other
     Plugins.
 
     This decorator makes all dirty work for us, it creates dynamically new
@@ -152,7 +152,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
     def _configure(cls, name, namespace="default"):
         """Init plugin and set common meta information.
 
-        For now it sets only name of plugin, that is actually identifier.
+        For now it sets only name of plugin, that is an actual identifier.
         Plugin name should be unique, otherwise exception is raised.
 
         :param name: Plugin name
@@ -210,7 +210,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         This method iterates over all subclasses of cls and returns plugin
         by name from specified namespace.
 
-        If namespace is not specified it will return first found plugin from
+        If namespace is not specified, it will return first found plugin from
         any of namespaces.
 
         :param name: Plugin's name
