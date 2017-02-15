@@ -352,6 +352,34 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         scenario._delete_router.assert_has_calls(
             [mock.call(router) for router in routers])
 
+    def test_create_and_show_routers(self):
+        network_create_args = {"router:external": True}
+        subnet_create_args = {"allocation_pools": []}
+        subnet_cidr_start = "default_cidr"
+        subnets_per_network = 5
+        router_create_args = {"admin_state_up": True}
+        net = mock.MagicMock()
+        subnets = [mock.MagicMock() for i in range(subnets_per_network)]
+        routers = [mock.MagicMock() for i in range(subnets_per_network)]
+
+        scenario = network.CreateAndShowRouters(self.context)
+        scenario._create_network_structure = mock.Mock(
+            return_value=(net, subnets, routers))
+        scenario._show_router = mock.Mock()
+
+        scenario.run(network_create_args=network_create_args,
+                     subnet_create_args=subnet_create_args,
+                     subnet_cidr_start=subnet_cidr_start,
+                     subnets_per_network=subnets_per_network,
+                     router_create_args=router_create_args)
+
+        scenario._create_network_structure.assert_called_once_with(
+            network_create_args, subnet_create_args, subnet_cidr_start,
+            subnets_per_network, router_create_args)
+
+        scenario._show_router.assert_has_calls(
+            [mock.call(router) for router in routers])
+
     def test_create_and_list_ports(self):
         port_create_args = {"allocation_pools": []}
         ports_per_network = 10

@@ -1,0 +1,29 @@
+{
+    "NeutronNetworks.create_and_show_routers": [
+        {
+            "args": {
+                "subnet_cidr_start": "1.1.0.0/30",
+                "subnets_per_network": 2
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "network": {},
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                },
+                "quotas": {
+                    "neutron": {
+                        "network": -1,
+                        "subnet": -1,
+                        "router": -1
+                    }
+                }
+            }
+        }
+    ]
+}

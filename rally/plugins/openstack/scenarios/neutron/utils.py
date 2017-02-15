@@ -211,6 +211,17 @@ class NeutronScenario(scenario.OpenStackScenario):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
+    @atomic.action_timer("neutron.show_router")
+    def _show_router(self, router, **kwargs):
+        """Show information of a given router.
+
+        :param router: ID or name of router to look up
+        :kwargs: dict, POST /v2.0/routers show options
+        :return: details of the router
+        """
+        return self.clients("neutron").show_router(
+            router["router"]["id"], **kwargs)
+
     @atomic.action_timer("neutron.delete_router")
     def _delete_router(self, router):
         """Delete neutron router

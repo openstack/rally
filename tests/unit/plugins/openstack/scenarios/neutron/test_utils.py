@@ -108,6 +108,21 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.show_network")
 
+    def test_show_router(self):
+        router = {
+            "router": {
+                "id": "fake-id",
+                "name": "fake-name",
+                "admin_state_up": False
+            }
+        }
+
+        return_router = self.scenario._show_router(router)
+        self.assertEqual(self.clients("neutron").show_router.return_value,
+                         return_router)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.show_router")
+
     def test_update_network(self):
         expected_network = {
             "network": {
