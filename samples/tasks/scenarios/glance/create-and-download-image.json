@@ -1,0 +1,28 @@
+{
+    "GlanceImages.create_and_download_image": [
+        {
+            "args": {
+                "image_location": "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img",
+                "container_format": "bare",
+                "disk_format": "qcow2"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 3
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+
+        }
+    ]
+}

@@ -156,6 +156,26 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         image_service.get_image.assert_called_with(
             image_service.create_image.return_value)
 
+    def test_create_and_download_image(self):
+        image_service = self.mock_image.return_value
+
+        fake_image = fakes.FakeImage()
+        image_service.create_image.return_value = fake_image
+        properties = {"fakeprop": "fake"}
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0,
+                     "properties": properties}
+
+        images.CreateAndDownloadImage(self.context).run(
+            "cf", "url", "df", "vs", 0, 0, properties=properties)
+
+        image_service.create_image.assert_called_once_with(**call_args)
+        image_service.download_image.assert_called_once_with(fake_image.id)
+
     @mock.patch("%s.CreateImageAndBootInstances._boot_servers" % BASE)
     def test_create_image_and_boot_instances(self, mock_boot_servers):
         image_service = self.mock_image.return_value

@@ -121,3 +121,13 @@ class Image(service.UnifiedService):
     def delete_image(self, image_id):
         """delete image."""
         self._impl.delete_image(image_id)
+
+    @service.should_be_overridden
+    def download_image(self, image, do_checksum=True):
+        """Download data for an image.
+
+        :param image: image object or id to look up
+        :param do_checksum: Enable/disable checksum validation
+        :rtype: iterable containing image data or None
+        """
+        return self._impl.download_image(image, do_checksum=do_checksum)

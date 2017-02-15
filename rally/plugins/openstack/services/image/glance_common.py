@@ -43,6 +43,18 @@ class GlanceMixin(object):
         with atomic.ActionTimer(self, aname):
             self._get_client().images.delete(image_id)
 
+    def download_image(self, image_id, do_checksum=True):
+        """Retrieve data of an image.
+
+        :param image_id: ID of the image to download.
+        :param do_checksum: Enable/disable checksum validation.
+        :returns: An iterable body or None
+        """
+        aname = "glance_v%s.download_image" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().images.data(image_id,
+                                                  do_checksum=do_checksum)
+
 
 class UnifiedGlanceMixin(object):
 
@@ -69,3 +81,12 @@ class UnifiedGlanceMixin(object):
     def delete_image(self, image_id):
         """Delete image."""
         self._impl.delete_image(image_id=image_id)
+
+    def download_image(self, image_id, do_checksum=True):
+        """Download data for an image.
+
+        :param image_id: image id to look up
+        :param do_checksum: Enable/disable checksum validation
+        :rtype: iterable containing image data or None
+        """
+        return self._impl.download_image(image_id, do_checksum=do_checksum)
