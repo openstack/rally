@@ -61,7 +61,7 @@ primary author and contact.
 Primary assignee:
   <launchpad-id or None>
 
-Can optionally can list additional ids if they intend on doing
+Can optionally list additional ids if they intend on doing
 substantial implementation work on this blueprint.
 
 Work Items
