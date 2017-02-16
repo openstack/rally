@@ -1,4 +1,4 @@
-{% set image_name = "^cirros.*uec$" %}
+{% set image_name = "^cirros.*-disk$" %}
 {% set flavor_name = "m1.nano" %}
 {% set smoke = 0 %}
 ---

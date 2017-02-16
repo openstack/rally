@@ -140,6 +140,14 @@
 # point value)
 #cinder_volume_delete_poll_interval = 2.0
 
+# Time to wait for cinder backup to be restored. (floating point
+# value)
+#cinder_backup_restore_timeout = 600.0
+
+# Interval between checks when waiting for backup restoring. (floating
+# point value)
+#cinder_backup_restore_poll_interval = 2.0
+
 # Time to sleep after boot before polling for status (floating point
 # value)
 #ec2_server_boot_prepoll_delay = 1.0
@@ -616,7 +624,7 @@
 # Deprecated group/name - [DATABASE]/sql_max_retries
 #max_retries = 10
 
-# Interval between retries of opening an SQL connection. (integer
+# Interval between retries of opening a SQL connection. (integer
 # value)
 # Deprecated group/name - [DEFAULT]/sql_retry_interval
 # Deprecated group/name - [DATABASE]/reconnect_interval
@@ -683,15 +691,12 @@
 #
 
 # image URL (string value)
-# Deprecated group/name - [image]/cirros_img_url
-#img_url = http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+#img_url = http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img
 
 # Image disk format to use when creating the image (string value)
-# Deprecated group/name - [image]/disk_format
 #img_disk_format = qcow2
 
 # Image container format to use when creating the image (string value)
-# Deprecated group/name - [image]/container_format
 #img_container_format = bare
 
 # Regular expression for name of a public image to discover it in the
@@ -701,25 +706,20 @@
 # this case Rally will create needed resources by itself if the values
 # for the corresponding config options are not specified in the
 # Tempest config file (string value)
-# Deprecated group/name - [image]/name_regex
 #img_name_regex = ^.*(cirros|testvm).*$
 
 # Role required for users to be able to create Swift containers
 # (string value)
-# Deprecated group/name - [role]/swift_operator_role
 #swift_operator_role = Member
 
 # User role that has reseller admin (string value)
-# Deprecated group/name - [role]/swift_reseller_admin_role
 #swift_reseller_admin_role = ResellerAdmin
 
 # Role required for users to be able to manage Heat stacks (string
 # value)
-# Deprecated group/name - [role]/heat_stack_owner_role
 #heat_stack_owner_role = heat_stack_owner
 
 # Role for Heat template-defined users (string value)
-# Deprecated group/name - [role]/heat_stack_user_role
 #heat_stack_user_role = heat_stack_user
 
 # Primary flavor RAM size used by most of the test cases (integer

@@ -6,7 +6,7 @@
         flavor:
             name: "{{flavor_name}}"
         image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
         force_delete: false
       runner:
         type: "constant"
@@ -22,7 +22,7 @@
         flavor:
             name: "{{flavor_name}}"
         image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
         auto_assign_nic: true
       runner:
         type: "constant"

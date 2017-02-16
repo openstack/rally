@@ -1,4 +1,4 @@
-{% set image_name = "^(cirros.*uec|TestVM)$" %}
+{% set image_name = "^(cirros.*-disk|TestVM)$" %}
 {% set flavor_name = "m1.tiny" %}
 ---
   Authenticate.validate_cinder:

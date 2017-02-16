@@ -3,7 +3,7 @@
     -
       args:
         image:
-          name: "^cirros.*uec$"
+          name: "^cirros.*-disk$"
         metadata:
           test_metadata: "true"
         availability_zone: "nova"

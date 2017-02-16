@@ -8,7 +8,7 @@ parameters:
       - custom_constraint: nova.flavor
   image:
     type: string
-    default: cirros-0.3.4-x86_64-uec
+    default: cirros-0.3.5-x86_64-disk
     constraints:
       - custom_constraint: glance.image
   scaling_adjustment:

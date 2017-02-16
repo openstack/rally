@@ -39,7 +39,7 @@ runs a set of Nova scenarios:
             flavor:
                 name: "m1.tiny"
             image:
-                name: "^cirros.*uec$"
+                name: "^cirros.*-disk$"
           runner:
             type: "constant"
             times: 2
@@ -55,7 +55,7 @@ runs a set of Nova scenarios:
             flavor:
                 name: "m1.tiny"
             image:
-                name: "^cirros.*uec$"
+                name: "^cirros.*-disk$"
             to_flavor:
                 name: "m1.small"
           runner:
@@ -67,11 +67,11 @@ runs a set of Nova scenarios:
               tenants: 1
               users_per_tenant: 1
 
-In both scenarios above, the *"^cirros.*uec$"* image is passed to the scenario
-as an argument (so that these scenarios use an appropriate image while booting
-servers). Let’s say you want to run the same set of scenarios with the same
-runner/context/sla, but you want to try another image while booting server to
-compare the performance. The most elegant solution is then to turn the image
+In both scenarios above, the *"^cirros.*-disk$"* image is passed to the
+scenario as an argument (so that these scenarios use an appropriate image while
+booting servers). Let’s say you want to run the same set of scenarios with the
+same runner/context/sla, but you want to try another image while booting server
+to compare the performance. The most elegant solution is then to turn the image
 name into a template variable:
 
 .. code-block:: yaml
@@ -121,8 +121,8 @@ a JSON or YAML dictionary):
 
 .. code-block:: bash
 
-    rally task start task.yaml --task-args '{"image_name": "^cirros.*uec$"}'
-    rally task start task.yaml --task-args 'image_name: "^cirros.*uec$"'
+    rally task start task.yaml --task-args '{"image_name": "^cirros.*-disk$"}'
+    rally task start task.yaml --task-args 'image_name: "^cirros.*-disk$"'
 
 2. Refer to a file that specifies the argument values (JSON/YAML):
 
@@ -138,7 +138,7 @@ where the files containing argument values should look as follows:
 .. code-block:: json
 
     {
-        "image_name": "^cirros.*uec$"
+        "image_name": "^cirros.*-disk$"
     }
 
 *args.yaml*:
@@ -146,14 +146,14 @@ where the files containing argument values should look as follows:
 .. code-block:: yaml
 
     ---
-      image_name: "^cirros.*uec$"
+      image_name: "^cirros.*-disk$"
 
 Passed in either way, these parameter values will be substituted by Rally when
 starting a task:
 
 .. code-block:: console
 
-    $ rally task start task.yaml --task-args "image_name: "^cirros.*uec$""
+    $ rally task start task.yaml --task-args "image_name: "^cirros.*-disk$""
     --------------------------------------------------------------------------------
      Preparing input task
     --------------------------------------------------------------------------------
@@ -167,7 +167,7 @@ starting a task:
             flavor:
                 name: "m1.tiny"
             image:
-                name: ^cirros.*uec$
+                name: ^cirros.*-disk$
           runner:
             type: "constant"
             times: 2
@@ -183,7 +183,7 @@ starting a task:
             flavor:
                 name: "m1.tiny"
             image:
-                name: ^cirros.*uec$
+                name: ^cirros.*-disk$
             to_flavor:
                 name: "m1.small"
           runner:
@@ -212,7 +212,7 @@ should be set using the *{% set ... %}* clause (*task.yaml*):
 
 .. code-block:: yaml
 
-    {% set image_name = image_name or "^cirros.*uec$" %}
+    {% set image_name = image_name or "^cirros.*-disk$" %}
     ---
 
       NovaServers.boot_and_delete_server:
@@ -252,7 +252,7 @@ default one will be used:
             flavor:
                 name: "m1.tiny"
             image:
-                name: ^cirros.*uec$
+                name: ^cirros.*-disk$
           runner:
             type: "constant"
             times: 2

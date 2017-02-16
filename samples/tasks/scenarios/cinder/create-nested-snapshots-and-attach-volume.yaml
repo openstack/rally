@@ -17,7 +17,7 @@
           users_per_tenant: 1
         servers:
           image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
           flavor:
             name: "{{flavor_name}}"
           servers_per_tenant: 2

@@ -4,7 +4,7 @@ parameters:
   # set all correct defaults for parameters before launch test
   image:
     type: string
-    default: cirros-0.3.4-x86_64-uec
+    default: cirros-0.3.5-x86_64-disk
   flavor:
     type: string
     default: m1.tiny

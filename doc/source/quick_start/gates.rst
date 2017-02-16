@@ -170,7 +170,7 @@ values:
 
     ---
 
-      image_name: "^cirros.*uec$"
+      image_name: "^cirros.*-disk$"
 
 this file will be automatically used by Rally to substitute the variables in
 *myscenario.yaml*.

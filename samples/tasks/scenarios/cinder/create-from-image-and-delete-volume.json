@@ -4,7 +4,7 @@
             "args": {
                 "size": 1,
                 "image": {
-                    "name": "^cirros.*uec$"
+                    "name": "^cirros.*-disk$"
                 }
             },
             "runner": {

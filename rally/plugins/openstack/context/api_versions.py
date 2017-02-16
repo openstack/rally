@@ -82,7 +82,7 @@ class OpenStackAPIVersions(context.Context):
                     "args": {
                         "size": 10,
                         "image": {
-                            "name": "^cirros.*uec$"
+                            "name": "^cirros.*-disk$"
                         },
                         "flavor": {
                             "name": "m1.tiny"
@@ -126,7 +126,7 @@ class OpenStackAPIVersions(context.Context):
                     "args": {
                         "size": 10,
                         "image": {
-                            "name": "^cirros.*uec$"
+                            "name": "^cirros.*-disk$"
                         },
                         "flavor": {
                             "name": "m1.tiny"

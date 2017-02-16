@@ -153,7 +153,7 @@ to use existing users, like in the following configuration file
                         "name": "m1.tiny"
                     },
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "force_delete": false
                 },

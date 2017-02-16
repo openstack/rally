@@ -21,7 +21,7 @@
                 },
                 "servers": {
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "flavor": {
                         "name": "{{flavor_name}}"

@@ -1,5 +1,5 @@
 {% set flavor_name = flavor_name or "m1.tiny" %}
-{% set image_name = image_name or "^cirros.*uec$" %}
+{% set image_name = image_name or "^cirros.*-disk$" %}
 ---
   NovaServers.boot_and_show_server:
     -

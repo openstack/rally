@@ -1,5 +1,5 @@
-{%- set cirros_image_url = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img" %}
-{% set image_name = "^(cirros.*uec|TestVM)$" %}
+{%- set cirros_image_url = "http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img" %}
+{% set image_name = "^(cirros.*-disk|TestVM)$" %}
 {% set flavor_name = "m1.tiny" %}
 {% set volume_type = "" %}
 ---

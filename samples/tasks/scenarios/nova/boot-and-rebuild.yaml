@@ -5,9 +5,9 @@
       flavor:
         name: "{{flavor_name}}"
       from_image:
-        name: "^cirros.*uec$"
+        name: "^cirros.*-disk$"
       to_image:
-        name: "^cirros.*uec$"
+        name: "^cirros.*-disk$"
     runner:
       type: "constant"
       times: 5

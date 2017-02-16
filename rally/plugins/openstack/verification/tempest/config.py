@@ -29,7 +29,7 @@ from rally.verification import utils
 TEMPEST_OPTS = [
     cfg.StrOpt("img_url",
                default="http://download.cirros-cloud.net/"
-                       "0.3.4/cirros-0.3.4-x86_64-disk.img",
+                       "0.3.5/cirros-0.3.5-x86_64-disk.img",
                help="image URL"),
     cfg.StrOpt("img_disk_format",
                default="qcow2",

@@ -6,7 +6,7 @@
         flavor:
             name: "{{flavor_name}}"
         image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
         boot_server_kwargs: {}
       runner:
         type: "constant"

@@ -71,7 +71,7 @@ JSON file:
                         "name": "m1.tiny"
                     },
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "force_delete": false
                 },
@@ -168,7 +168,7 @@ you want to run the **boot_and_delete_server** scenario twice: first using the
                         "name": "m1.tiny"
                     },
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "force_delete": false
                 },
@@ -181,7 +181,7 @@ you want to run the **boot_and_delete_server** scenario twice: first using the
                         "name": "m1.small"
                     },
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "force_delete": false
                 },

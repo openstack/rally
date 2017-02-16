@@ -6,7 +6,7 @@
                 "size": 10,
                 "block_migration": false,
                 "image": {
-                    "name": "^cirros.*uec$"
+                    "name": "^cirros.*-disk$"
                 },
                 "flavor": {
                     "name": "{{flavor_name}}"

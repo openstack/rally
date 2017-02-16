@@ -1,5 +1,5 @@
-{%- set glance_image_location = glance_image_location|default("https://download.cirros-cloud.net/0.3.4/cirros-0.3.4-i386-disk.img") %}
-{%- set image_name = image_name|default("^(cirros.*uec|TestVM)$") %}
+{%- set glance_image_location = glance_image_location|default("https://download.cirros-cloud.net/0.3.5/cirros-0.3.5-i386-disk.img") %}
+{%- set image_name = image_name|default("^(cirros.*-disk|TestVM)$") %}
 {%- set flavor_name = flavor_name|default("m1.tiny") %}
 {%- set use_existing_users = use_existing_users|default(false) %}
 {%- set service_list = service_list|default(["authentication", "cinder", "keystone", "nova", "glance", "neutron"]) %}

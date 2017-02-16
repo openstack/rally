@@ -1,4 +1,4 @@
-{% set image_name = "^cirros.*uec$" %}
+{% set image_name = "^cirros.*-disk$" %}
 {% set smoke = 0 %}
 
 ---

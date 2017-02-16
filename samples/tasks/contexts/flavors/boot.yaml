@@ -5,7 +5,7 @@
         flavor:
             name: "^ram64$"
         image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
       runner:
         type: "constant"
         times: 10

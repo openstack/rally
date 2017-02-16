@@ -5,7 +5,7 @@
       flavor:
         name: "{{flavor_name}}"
       image:
-        name: "^cirros.*uec$"
+        name: "^cirros.*-disk$"
       size: 10
       block_migration: false
       boot_server_kwargs: {}

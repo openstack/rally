@@ -8,7 +8,7 @@
                     "name": "{{flavor_name}}"
                 },
                 "image": {
-                    "name": "^cirros.*uec$"
+                    "name": "^cirros.*-disk$"
                 },
                 "volume_size": 10,
                 "volume_type": "{{volume_type}}",

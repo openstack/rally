@@ -6,7 +6,7 @@
         flavor:
             name: "{{flavor_name}}"
         image:
-            name: "^cirros.*uec$"
+            name: "^cirros.*-disk$"
         force_delete: false
       runner:
         type: "constant"

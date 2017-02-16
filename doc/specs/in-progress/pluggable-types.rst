@@ -23,7 +23,7 @@ file a user can specify:
 .. code-block:: yaml
 
     image:
-      regex: cirros-.*-uec
+      regex: cirros-.*-disk
     flavor:
       name: m1.tiny
 

@@ -8,7 +8,7 @@
                 "disk_format": "raw",
                 "do_delete": true,
                 "image": {
-                    "name": "^cirros.*uec$"
+                    "name": "^cirros.*-disk$"
                 }
             },
             "runner": {
@@ -34,7 +34,7 @@
                 "disk_format": "raw",
                 "do_delete": true,
                 "image": {
-                    "name": "^cirros.*uec$"
+                    "name": "^cirros.*-disk$"
                 }
             },
             "runner": {

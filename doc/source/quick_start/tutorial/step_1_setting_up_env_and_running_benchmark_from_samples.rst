@@ -115,7 +115,7 @@ servers (*samples/tasks/scenarios/nova/boot-and-delete.json*):
                         "name": "m1.tiny"
                     },
                     "image": {
-                        "name": "^cirros.*uec$"
+                        "name": "^cirros.*-disk$"
                     },
                     "force_delete": false
                 },
@@ -169,7 +169,7 @@ To start a benchmark task, run the ``task start`` command (you can also add the
     args values:
     {u'args': {u'flavor': {u'name': u'm1.tiny'},
                u'force_delete': False,
-               u'image': {u'name': u'^cirros.*uec$'}},
+               u'image': {u'name': u'^cirros.*-disk$'}},
      u'context': {u'users': {u'project_domain': u'default',
                              u'resource_management_workers': 30,
                              u'tenants': 3,
