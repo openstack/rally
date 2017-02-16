@@ -118,7 +118,7 @@ class TaskCommands(object):
                       file=sys.stderr)
                 raise FailedToLoadTask()
 
-            print(_("Input task is:\n%s\n") % rendered_task)
+            print(_("Task is:\n%s\n") % rendered_task)
             try:
                 parsed_task = yaml.safe_load(rendered_task)
 
@@ -137,9 +137,10 @@ class TaskCommands(object):
             input_task = self._load_task(api, task, task_args, task_args_file)
         except Exception as err:
             if task_instance:
-                task_instance.set_failed(err.__class__.__name__,
-                                         str(err),
-                                         json.dumps(traceback.format_exc()))
+                task_instance.set_validation_failed({
+                    "etype": err.__class__.__name__,
+                    "msg": str(err),
+                    "trace": json.dumps(traceback.format_exc())})
             raise
         api.task.validate(deployment, input_task, task_instance)
         print(_("Task config is valid :)"))
@@ -262,9 +263,10 @@ class TaskCommands(object):
             print(_("Cannot start a task on unfinished deployment: %s") % e)
             return 1
         except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
-            task_instance.set_failed(type(e).__name__,
-                                     str(e),
-                                     json.dumps(traceback.format_exc()))
+            task_instance.set_validation_failed({
+                "etype": type(e).__name__,
+                "msg": str(e),
+                "trace": json.dumps(traceback.format_exc())})
             print(e, file=sys.stderr)
             return(1)
 
@@ -327,7 +329,8 @@ class TaskCommands(object):
         print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
-        if task["status"] == consts.TaskStatus.FAILED:
+        if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
+                consts.TaskStatus.VALIDATION_FAILED):
             print("-" * 80)
             verification = yaml.safe_load(task["verification_log"])
             if logging.is_debug():

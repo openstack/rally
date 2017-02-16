@@ -345,7 +345,7 @@ class TaskEngine(object):
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):
         """Perform full task configuration validation."""
-        self.task.update_status(consts.TaskStatus.VERIFYING)
+        self.task.update_status(consts.TaskStatus.VALIDATING)
         try:
             self._validate_config_scenarios_name(self.config)
             self._validate_config_syntax(self.config)

@@ -28,36 +28,37 @@ JSON_SCHEMA = "http://json-schema.org/draft-04/schema"
 
 
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
-    # TODO(ikhudoshyn): new statuses
-    # INIT = "init"
-    # VALIDATING = "validating"
-    # VALIDATED = "validated"
-    # VALIDATION_FAILED = "validation_failed"
-    # ABORTING = "aborting"
-    # SOFT_ABORTING = "soft_aborting"
-    # ABORTED = "aborted"
-    # CRASHED = "crashed"
-    # RUNNING = "running"
-    # FINISHED = "finished"
 
-    # TODO(ikhudoshyn): deprecated statuses
+    """Consts that represents task possible states."""
     INIT = "init"
-    VERIFYING = "verifying"
-    SETTING_UP = "setting up"
+    VALIDATING = "validating"
+    VALIDATED = "validated"
+    VALIDATION_FAILED = "validation_failed"
     RUNNING = "running"
-    CLEANING_UP = "cleaning up"
     FINISHED = "finished"
-    FAILED = "failed"
+    CRASHED = "crashed"
     ABORTING = "aborting"
+    SLA_FAILED = "sla_failed"
     SOFT_ABORTING = "soft_aborting"
     ABORTED = "aborted"
     PAUSED = "paused"
 
 
 class _SubtaskStatus(utils.ImmutableMixin, utils.EnumMixin):
+
+    """Consts that represents task possible states."""
+    INIT = "init"
+    VALIDATING = "validating"
+    VALIDATED = "validated"
+    VALIDATION_FAILED = "validation_failed"
     RUNNING = "running"
     FINISHED = "finished"
     CRASHED = "crashed"
+    ABORTING = "aborting"
+    SLA_FAILED = "sla_failed"
+    SOFT_ABORTING = "soft_aborting"
+    ABORTED = "aborted"
+    PAUSED = "paused"
 
 
 class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):

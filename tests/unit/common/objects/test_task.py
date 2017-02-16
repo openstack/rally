@@ -40,9 +40,9 @@ class TaskTestCase(test.TestCase):
     @mock.patch("rally.common.objects.task.db.task_create")
     def test_init_with_create(self, mock_task_create):
         mock_task_create.return_value = self.task
-        task = objects.Task(status=consts.TaskStatus.FAILED)
+        task = objects.Task(status=consts.TaskStatus.CRASHED)
         mock_task_create.assert_called_once_with({
-            "status": consts.TaskStatus.FAILED})
+            "status": consts.TaskStatus.CRASHED})
         self.assertEqual(task["uuid"], self.task["uuid"])
 
     @mock.patch("rally.common.objects.task.db.task_create")
@@ -108,7 +108,7 @@ class TaskTestCase(test.TestCase):
     @mock.patch("rally.common.objects.task.db.task_list",
                 return_value=[{"uuid": "a",
                                "created_at": "b",
-                               "status": consts.TaskStatus.FAILED,
+                               "status": consts.TaskStatus.CRASHED,
                                "tag": "d",
                                "deployment_name": "some_name"}])
     def list(self, mock_db_task_list):
@@ -163,10 +163,11 @@ class TaskTestCase(test.TestCase):
     def test_update_verification_log(self, mock_task_update):
         mock_task_update.return_value = self.task
         task = objects.Task(task=self.task)
-        task.update_verification_log({"a": "fake"})
+        task.set_validation_failed({"a": "fake"})
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
-            {"validation_result": {"a": "fake"}}
+            {"status": consts.TaskStatus.VALIDATION_FAILED,
+             "validation_result": {"a": "fake"}}
         )
 
     @mock.patch("rally.common.objects.task.charts")
@@ -242,7 +243,7 @@ class TaskTestCase(test.TestCase):
         task.set_failed("foo_type", "foo_error_message", "foo_trace")
         mock_task_update.assert_called_once_with(
             self.task["uuid"],
-            {"status": consts.TaskStatus.FAILED,
+            {"status": consts.TaskStatus.CRASHED,
              "validation_result": {"etype": "foo_type",
                                    "msg": "foo_error_message",
                                    "trace": "foo_trace"}},
@@ -261,35 +262,14 @@ class TaskTestCase(test.TestCase):
             "soft": True, "status": consts.TaskStatus.INIT
         },
         {
-            "soft": True, "status": consts.TaskStatus.VERIFYING
-        },
-        {
-            "soft": False, "status": consts.TaskStatus.INIT
-        },
-        {
-            "soft": False, "status": consts.TaskStatus.VERIFYING
-        }
-    )
-    @ddt.unpack
-    def test_abort_with_init_and_verifying_states(self, soft, status):
-        task = objects.Task(mock.MagicMock(), fake=True)
-        task.get_status = mock.MagicMock(
-            side_effect=(status, status, "running"))
-        task._update_status_in_abort = mock.MagicMock()
-
-        self.assertRaises(exceptions.RallyException, task.abort, soft)
-        self.assertEqual(1, task.get_status.call_count)
-        self.assertFalse(task._update_status_in_abort.called)
-
-    @ddt.data(
-        {
+            "soft": True, "status": consts.TaskStatus.VALIDATING,
             "soft": True, "status": consts.TaskStatus.ABORTED
         },
         {
             "soft": True, "status": consts.TaskStatus.FINISHED
         },
         {
-            "soft": True, "status": consts.TaskStatus.FAILED
+            "soft": True, "status": consts.TaskStatus.CRASHED
         },
         {
             "soft": False, "status": consts.TaskStatus.ABORTED
@@ -298,7 +278,7 @@ class TaskTestCase(test.TestCase):
             "soft": False, "status": consts.TaskStatus.FINISHED
         },
         {
-            "soft": False, "status": consts.TaskStatus.FAILED
+            "soft": False, "status": consts.TaskStatus.CRASHED
         }
     )
     @ddt.unpack

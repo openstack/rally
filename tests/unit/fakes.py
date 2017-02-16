@@ -1834,6 +1834,7 @@ class FakeTask(dict):
         self.is_temporary = temporary
         self.task = task or kwargs
         self.set_failed = mock.Mock()
+        self.set_validation_failed = mock.Mock()
 
     def __getitem__(self, key):
         if key in self:
