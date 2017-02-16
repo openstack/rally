@@ -37,7 +37,12 @@ class VolumeGenerator(context.Context):
                 "minimum": 1
             },
             "type": {
-                "type": ["string", "null"]
+                "oneOf": [{"type": "string",
+                           "description": "a string-like type of volume to "
+                                          "create."},
+                          {"type": "null",
+                           "description": "Use default type for volume to "
+                                          "create."}]
             },
             "volumes_per_tenant": {
                 "type": "integer",

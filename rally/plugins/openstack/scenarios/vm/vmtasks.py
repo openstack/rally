@@ -46,7 +46,7 @@ LOG = logging.getLogger(__name__)
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
-                             "keypair": {}, "allow_ssh": {}},
+                             "keypair": {}, "allow_ssh": None},
                     name="VMTasks.boot_runcommand_delete")
 class BootRuncommandDelete(vm_utils.VMScenario):
 
@@ -80,8 +80,9 @@ class BootRuncommandDelete(vm_utils.VMScenario):
             `local_path' is given). Uploading an interpreter is possible
             but requires that `remote_path' and `interpreter' path do match.
 
+            Examples:
 
-            Examples::
+              .. code-block:: python
 
                 # Run a `local_script.pl' file sending it to a remote
                 # Perl interpreter
@@ -228,10 +229,11 @@ class RuncommandHeat(vm_utils.VMScenario):
 
          Workload can be either file or resource:
 
-         .. code-block: json
+           .. code-block:: json
 
              {"file": "/path/to/file.sh"}
              {"resource": ["package.module", "workload.py"]}
+
 
          Also it should contain "username" key.
 
@@ -415,7 +417,7 @@ EOF
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
-                             "keypair": {}, "allow_ssh": {}},
+                             "keypair": {}, "allow_ssh": None},
                     name="VMTasks.dd_load_test")
 class DDLoadTest(BootRuncommandDelete):
 

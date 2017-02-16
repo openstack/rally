@@ -26,6 +26,8 @@ class PeriodicTrigger(trigger.Trigger):
         "$schema": consts.JSON_SCHEMA,
         "oneOf": [
             {
+                "description": "Periodically triage hook based on elapsed time"
+                               " after start of workload.",
                 "properties": {
                     "unit": {"enum": ["time"]},
                     "start": {"type": "integer", "minimum": 0},
@@ -36,6 +38,7 @@ class PeriodicTrigger(trigger.Trigger):
                 "additionalProperties": False,
             },
             {
+                "description": "Periodically triage hook based on iterations.",
                 "properties": {
                     "unit": {"enum": ["iteration"]},
                     "start": {"type": "integer", "minimum": 1},

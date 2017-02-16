@@ -166,7 +166,10 @@ class OpenStackAPIVersions(context.Context):
                 "type": "object",
                 "properties": {
                     "version": {
-                        "anyOf": [{"type": "string"}, {"type": "number"}]
+                        "anyOf": [{"type": "string",
+                                   "description": "a string-like version."},
+                                  {"type": "number",
+                                   "description": "a number-like version."}]
                     },
                     "service_name": {
                         "type": "string"

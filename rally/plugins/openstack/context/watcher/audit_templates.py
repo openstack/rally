@@ -36,34 +36,37 @@ class AuditTemplateGenerator(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
-        "fill_strategy": {"enum": ["round_robin", "random", None]},
-        "params": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": True,
-            "items": {
-                "type": "object",
-                "properties": {
-                    "goal": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
+        "properties": {
+            "audit_templates_per_admin": {"type": "integer", "minimum": 1},
+            "fill_strategy": {"enum": ["round_robin", "random", None]},
+            "params": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": True,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "goal": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                }
                             }
-                        }
-                    },
-                    "strategy": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
+                        },
+                        "strategy": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                }
                             }
-                        }
+                        },
                     },
                 },
-            },
+            }
         },
-        "additionalProperties": True,
+        "additionalProperties": False,
         "required": ["params"]
     }
 

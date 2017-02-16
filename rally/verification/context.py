@@ -34,6 +34,11 @@ class VerifierContext(context.BaseContext):
             return True
         return super(VerifierContext, cls)._meta_get(key, default)
 
+    @classmethod
+    def validate(cls, config, non_hidden=False):
+        # do not validate jsonschema.
+        pass
+
 
 class ContextManager(context.ContextManager):
 

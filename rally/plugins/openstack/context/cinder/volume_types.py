@@ -29,7 +29,7 @@ class VolumeTypeGenerator(context.Context):
     CONFIG_SCHEMA = {
         "type": "array",
         "$schema": consts.JSON_SCHEMA,
-        "additionalProperties": False
+        "items": {"type": "string"}
     }
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `volume_types`"))

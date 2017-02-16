@@ -58,7 +58,7 @@ class ClusterTemplateGenerator(context.Context):
                 "type": "integer"
             },
             "labels": {
-                "type": ["string"]
+                "type": "string"
             },
             "coe": {
                 "type": "string"

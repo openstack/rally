@@ -49,8 +49,7 @@ class RoleGenerator(context.Context):
         "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "string",
-        },
-        "additionalProperties": False
+        }
     }
 
     def __init__(self, ctx):

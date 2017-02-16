@@ -266,8 +266,7 @@ class ScenarioTestCase(test.TestCase):
                 context.ContextManager.validate(s._meta_get("default_context"))
             except Exception:
                 print(traceback.format_exc())
-                self.assertTrue(False,
-                                "Scenario `%s` has wrong context" % scenario)
+                self.fail("Scenario `%s` has wrong context" % scenario)
 
     def test_add_output(self):
         scenario_inst = scenario.Scenario()

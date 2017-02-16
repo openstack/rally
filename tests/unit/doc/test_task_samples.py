@@ -55,7 +55,7 @@ class TaskSampleTestCase(test.TestCase):
 
                 with open(full_path) as task_file:
                     try:
-                        task_config = yaml.safe_load(api.Task.render_template
+                        task_config = yaml.safe_load(api._Task.render_template
                                                      (task_file.read()))
                         eng = engine.TaskEngine(task_config,
                                                      mock.MagicMock())
@@ -82,7 +82,7 @@ class TaskSampleTestCase(test.TestCase):
                 full_path = os.path.join(dirname, filename)
                 with open(full_path) as task_file:
                     try:
-                        json.loads(api.Task.render_template(task_file.read()))
+                        json.loads(api._Task.render_template(task_file.read()))
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid JSON file: %s" % full_path)
@@ -122,10 +122,10 @@ class TaskSampleTestCase(test.TestCase):
 
                 if os.path.exists(yaml_path) and os.path.exists(json_path):
                     with open(json_path) as json_file:
-                        json_config = yaml.safe_load(api.Task.render_template
+                        json_config = yaml.safe_load(api._Task.render_template
                                                      (json_file.read()))
                     with open(yaml_path) as yaml_file:
-                        yaml_config = yaml.safe_load(api.Task.render_template
+                        yaml_config = yaml.safe_load(api._Task.render_template
                                                      (yaml_file.read()))
                     self.assertEqual(json_config, yaml_config,
                                      "Sample task configs are not equal:"

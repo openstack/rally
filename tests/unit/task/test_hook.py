@@ -30,7 +30,7 @@ class DummyHook(hook.Hook):
         "type": "object",
         "properties": {
             "status": {"type": "string"},
-            "error": {"type": "array"},
+            "error": {"type": "object"},
             "output": {"type": "object"},
         },
         "required": ["status"],

@@ -38,19 +38,26 @@ class SecurityServices(context.Context):
         "type": "object",
         "$schema": rally_consts.JSON_SCHEMA,
         "properties": {
-            # NOTE(vponomaryov): context arg 'security_services' is expected
-            # to be list of dicts with data for creation of security services.
-            # Example:
-            # security_services = [
-            #     {'type': 'LDAP', 'dns_ip': 'foo_ip', 'server': 'bar_ip',
-            #      'domain': 'quuz_domain', 'user': 'ololo',
-            #      'password': 'fake_password'}
-            # ]
-            # Where 'type' is required key and should have one of following
-            # values: 'active_directory', 'kerberos' or 'ldap'.
-            # This context arg is used only if share networks are used and
-            # autocreated.
-            "security_services": {"type": "array"},
+            "security_services": {
+                "type": "array",
+                "description":
+                    "It is expected to be list of dicts with data for creation"
+                    " of security services.",
+                "items": {
+                    "type": "object",
+                    "properties": {"type": {"enum": ["active_directory",
+                                                     "kerberos", "ldap"]}},
+                    "required": ["type"],
+                    "additionalProperties": True,
+                    "description":
+                        "Data for creation of security services. \n "
+                        "Example:\n\n"
+                        "   .. code-block:: json\n\n"
+                        "     {'type': 'LDAP', 'dns_ip': 'foo_ip', \n"
+                        "      'server': 'bar_ip', 'domain': 'quuz_domain',\n"
+                        "      'user': 'ololo', 'password': 'fake_password'}\n"
+                }
+            },
         },
         "additionalProperties": False
     }

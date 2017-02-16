@@ -17,7 +17,6 @@ import ddt
 import mock
 import six
 
-from rally import consts as rally_consts
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.context.manila import manila_security_services
 from tests.unit import test
@@ -90,12 +89,6 @@ class SecurityServicesTestCase(test.ScenarioTestCase):
 
         self.assertEqual(inst.config.get("foo"), "bar")
         self.assertFalse(inst.config.get("security_services"))
-        self.assertIn(
-            rally_consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
-        self.assertEqual(False, inst.CONFIG_SCHEMA.get("additionalProperties"))
-        self.assertEqual("object", inst.CONFIG_SCHEMA.get("type"))
-        props = inst.CONFIG_SCHEMA.get("properties", {})
-        self.assertEqual({"type": "array"}, props.get("security_services"))
         self.assertEqual(445, inst.get_order())
         self.assertEqual(CONTEXT_NAME, inst.get_name())
 

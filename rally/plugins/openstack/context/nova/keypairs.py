@@ -26,6 +26,12 @@ LOG = logging.getLogger(__name__)
 @context.configure(name="keypair", order=310)
 class Keypair(context.Context):
 
+    # NOTE(andreykurilin): "type" != "null", since we need to support backward
+    #   compatibility(previously empty dict was valid) and I hope in near
+    #   future, we will extend this context to accept keys.
+    CONFIG_SCHEMA = {"type": "object",
+                     "additionalProperties": False}
+
     def _generate_keypair(self, credential):
         nova_client = osclients.Clients(credential).nova()
         # NOTE(hughsaunders): If keypair exists, it should re-generate name.

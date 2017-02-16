@@ -26,6 +26,8 @@ class EventTrigger(trigger.Trigger):
         "$schema": consts.JSON_SCHEMA,
         "oneOf": [
             {
+                "description": "Triage hook based on specified seconds after "
+                               "start of workload.",
                 "properties": {
                     "unit": {"enum": ["time"]},
                     "at": {
@@ -42,6 +44,7 @@ class EventTrigger(trigger.Trigger):
                 "additionalProperties": False,
             },
             {
+                "description": "Triage hook based on specific iterations.",
                 "properties": {
                     "unit": {"enum": ["iteration"]},
                     "at": {

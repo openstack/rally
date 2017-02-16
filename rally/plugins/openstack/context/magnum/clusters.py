@@ -38,11 +38,12 @@ class ClusterGenerator(context.Context):
             "node_count": {
                 "type": "integer",
                 "minimum": 1,
-                "default": 1
             },
         },
         "additionalProperties": False
     }
+
+    DEFAULT_CONFIG = {"node_count": 1}
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Cluster`"))
     def setup(self):

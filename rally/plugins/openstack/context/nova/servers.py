@@ -15,7 +15,6 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
-from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
@@ -35,9 +34,9 @@ class ServerGenerator(context.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "image": {
+                "description": "Name of image to boot server(s) from.",
                 "type": "object",
                 "properties": {
                     "name": {
@@ -46,6 +45,7 @@ class ServerGenerator(context.Context):
                 }
             },
             "flavor": {
+                "description": "Name of flavor to boot server(s) with.",
                 "type": "object",
                 "properties": {
                     "name": {
@@ -54,19 +54,23 @@ class ServerGenerator(context.Context):
                 }
             },
             "servers_per_tenant": {
+                "description": "Number of servers to boot in each Tenant.",
                 "type": "integer",
                 "minimum": 1
             },
             "auto_assign_nic": {
+                "description": "True if NICs should be assigned.",
                 "type": "boolean",
             },
             "nics": {
                 "type": "array",
-                "properties": {
-                    "net-id": {
-                        "type": "string"
-                    }
-                }
+                "description": "List of networks to attach to server.",
+                "items": {"oneOf": [
+                    {"type": "object",
+                     "properties": {"net-id": {"type": "string"}},
+                     "description": "Network ID in a format like OpenStack API"
+                                    " expects to see."},
+                    {"type": "string", "description": "Network ID."}]}
             }
         },
         "required": ["image", "flavor"],

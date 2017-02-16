@@ -97,14 +97,18 @@ class OpenStackProvider(provider.ProviderFactory):
             "deployment_name": {"type": "string"},
             "amount": {"type": "integer"},
             "user": {"type": "string"},
-            "nics": {"type": "array"},
+            "nics": {"type": "array",
+                     "items": {"type": "object",
+                               "properties": {"net-id": {"type": "string"}},
+                               "additionalProperties": False,
+                               "required": ["net-id"]}},
             "password": {"type": "string"},
             "tenant": {"type": "string"},
             "auth_url": {"type": "string"},
             "region": {"type": "string"},
             "config_drive": {"type": "boolean"},
             "flavor_id": {"type": "string"},
-            "wait_for_cloud_init": {"type": "boolean", "default": False},
+            "wait_for_cloud_init": {"type": "boolean"},
             "image": {
                 "type": "object",
                 "properties": {
@@ -118,15 +122,15 @@ class OpenStackProvider(provider.ProviderFactory):
                 "additionalProperties": False,
                 "anyOf": [
                     {
-                        "title": "Create Image",
+                        "description": "Create Image",
                         "required": ["name", "format", "url", "checksum"],
                     },
                     {
-                        "title": "Existing image from checksum",
+                        "description": "Existing image from checksum",
                         "required": ["checksum"]
                     },
                     {
-                        "title": "Existing image from uuid",
+                        "description": "Existing image from uuid",
                         "required": ["uuid"]
                     }
                 ]

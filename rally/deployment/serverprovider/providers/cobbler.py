@@ -44,9 +44,10 @@ class CobblerProvider(provider.ProviderFactory):
     COBBLER_SELECTOR_SCHEMA = {
         "type": "object",
         "properties": {
-            "profile": "string",
-            "owners": "string"
-        }
+            "profile": {"type": "string"},
+            "owners": {"type": "string"}
+        },
+        "additionalProperties": False,
     }
 
     CONFIG_SCHEMA = {
@@ -56,7 +57,7 @@ class CobblerProvider(provider.ProviderFactory):
             "user": {"type": "string"},
             "password": {"type": "string"},
             "system_password": {"type": "string"},
-            "selector": {"type": "object", "item": COBBLER_SELECTOR_SCHEMA},
+            "selector": COBBLER_SELECTOR_SCHEMA,
         },
         "required": ["host", "user", "password", "selector"]
     }

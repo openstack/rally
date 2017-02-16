@@ -371,25 +371,28 @@ class VerifierManager(plugin.Plugin):
         object. There is no special class, you do it as you want, but it should
         have the following properties:
 
-        <object>.totals = {
-            "tests_count": <total tests count>,
-            "tests_duration": <total tests duration>,
-            "failures": <total count of failed tests>,
-            "skipped": <total count of skipped tests>,
-            "success": <total count of successful tests>,
-            "unexpected_success": <total count of unexpected successful tests>,
-            "expected_failures": <total count of expected failed tests>
-        }
+          .. code-block:: none
 
-        <object>.tests = {
-            <test_id>: {
-                "status": <test status>,
-                "name": <test name>,
-                "duration": <test duration>,
-                "reason": <reason>,  # optional
-                "traceback": <traceback>  # optional
-            },
-            ...
-        }
+            <object>.totals = {
+              "tests_count": <total tests count>,
+              "tests_duration": <total tests duration>,
+              "failures": <total count of failed tests>,
+              "skipped": <total count of skipped tests>,
+              "success": <total count of successful tests>,
+              "unexpected_success":
+                  <total count of unexpected successful tests>,
+              "expected_failures": <total count of expected failed tests>
+            }
+
+            <object>.tests = {
+              <test_id>: {
+                  "status": <test status>,
+                  "name": <test name>,
+                  "duration": <test duration>,
+                  "reason": <reason>,  # optional
+                  "traceback": <traceback>  # optional
+              },
+              ...
+            }
 
         """
