@@ -31,8 +31,8 @@ class AdminCleanup(base.CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
 
     @classmethod
-    def validate(cls, config, non_hidden=False):
-        super(AdminCleanup, cls).validate(config, non_hidden)
+    def validate(cls, config):
+        super(AdminCleanup, cls).validate(config)
 
         missing = set(config)
         missing -= manager.list_resource_names(admin_required=True)

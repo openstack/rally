@@ -284,10 +284,12 @@ class TaskEngine(object):
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
             for pos, workload in enumerate(subtask.workloads):
+                scenario_context = self._get_defualt_context(workload.name)
                 try:
                     runner.ScenarioRunner.validate(workload.runner)
-                    context.ContextManager.validate(
-                        workload.context, non_hidden=True)
+                    context.ContextManager.validate(workload.context)
+                    context.ContextManager.validate(scenario_context,
+                                                    allow_hidden=True)
                     sla.SLA.validate(workload.sla)
                     for hook_conf in workload.hooks:
                         hook.Hook.validate(hook_conf)
@@ -362,9 +364,13 @@ class TaskEngine(object):
         config = config or {"type": "serial"}
         return runner.ScenarioRunner.get(config["type"])(self.task, config)
 
-    def _prepare_context(self, ctx, name, credential):
-        scenario_context = copy.deepcopy(
+    @staticmethod
+    def _get_defualt_context(name):
+        return copy.deepcopy(
             scenario.Scenario.get(name)._meta_get("default_context"))
+
+    def _prepare_context(self, ctx, name, credential):
+        scenario_context = self._get_defualt_context(name)
         if self.existing_users and "users" not in ctx:
             scenario_context.setdefault("existing_users", self.existing_users)
         elif "users" not in ctx:

@@ -21,7 +21,6 @@ import six
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils
-from rally import exceptions
 from rally.task import functional
 
 LOG = logging.getLogger(__name__)
@@ -42,9 +41,8 @@ def configure(name, order, hidden=False):
                    task config
     """
     def wrapper(cls):
-        cls = plugin.configure(name=name)(cls)
+        cls = plugin.configure(name=name, hidden=hidden)(cls)
         cls._meta_set("order", order)
-        cls._meta_set("hidden", hidden)
         return cls
 
     return wrapper
@@ -102,12 +100,7 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
         return not self.__eq__(other)
 
     @classmethod
-    def validate(cls, config, non_hidden=False):
-        # TODO(boris-42): This is going to be replaced with common validation
-        #                 mechanism (generalization of scenario validation)
-        if non_hidden and cls._meta_get("hidden"):
-            raise exceptions.PluginNotFound(name=cls.get_name(),
-                                            namespace="context")
+    def validate(cls, config):
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @classmethod
@@ -161,13 +154,14 @@ class ContextManager(object):
         self.context_obj = context_obj
 
     @staticmethod
-    def validate(ctx, non_hidden=False):
+    def validate(ctx, allow_hidden=False):
         for name, config in ctx.items():
-            Context.get(name).validate(config, non_hidden=non_hidden)
+            Context.get(name, allow_hidden=allow_hidden).validate(config)
 
     def _get_sorted_context_lst(self):
-        ctxlst = map(Context.get, self.context_obj["config"])
-        return sorted(map(lambda ctx: ctx(self.context_obj), ctxlst))
+        return sorted([
+            Context.get(ctx_name, allow_hidden=True)(self.context_obj)
+            for ctx_name in self.context_obj["config"].keys()])
 
     def setup(self):
         """Creates benchmark environment from config."""

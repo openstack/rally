@@ -59,15 +59,18 @@ def base():
     return wrapper
 
 
-def configure(name, namespace="default"):
+def configure(name, namespace="default", hidden=False):
     """Use this decorator to configure plugin's attributes.
 
     :param name: name of plugin that is used for searching purpose
     :param namespace: plugin namespace
+    :param hidden: if True the plugin will be marked as hidden and can be
+        loaded only explicitly
     """
 
     def decorator(plugin):
         plugin._configure(name, namespace)
+        plugin._meta_set("hidden", hidden)
         return plugin
 
     return decorator
@@ -204,7 +207,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         return cls
 
     @classmethod
-    def get(cls, name, namespace=None):
+    def get(cls, name, namespace=None, allow_hidden=False):
         """Return plugin by its name from specified namespace.
 
         This method iterates over all subclasses of cls and returns plugin
@@ -215,15 +218,20 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
 
         :param name: Plugin's name
         :param namespace: Namespace where to search for plugins
+        :param allow_hidden: if False and found plugin is hidden then
+            PluginNotFound will be raised
         """
         potential_result = []
 
-        for p in cls.get_all(namespace=namespace):
+        for p in cls.get_all(namespace=namespace, allow_hidden=True):
             if p.get_name() == name:
                 potential_result.append(p)
 
         if len(potential_result) == 1:
-            return potential_result[0]
+            plugin = potential_result[0]
+            if allow_hidden or not plugin.is_hidden():
+                return plugin
+
         elif potential_result:
             hint = _LE("Try to choose the correct Plugin base or namespace to "
                        "search in.")
@@ -240,19 +248,27 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
             name=name, namespace=namespace or "any of")
 
     @classmethod
-    def get_all(cls, namespace=None):
+    def get_all(cls, namespace=None, allow_hidden=False):
         """Return all subclass plugins of plugin.
 
         All plugins that are not configured will be ignored.
 
         :param namespace: return only plugins from specified namespace.
+        :param allow_hidden: if False return only non hidden plugins
         """
         plugins = []
 
         for p in discover.itersubclasses(cls):
-            if issubclass(p, Plugin) and p._meta_is_inited(raise_exc=False):
-                if not namespace or namespace == p.get_namespace():
-                    plugins.append(getattr(p, "func_ref", p))
+            if not issubclass(p, Plugin):
+                continue
+            if not p._meta_is_inited(raise_exc=False):
+                continue
+            if namespace and namespace != p.get_namespace():
+                continue
+            if not allow_hidden and p.is_hidden():
+                continue
+
+            plugins.append(getattr(p, "func_ref", p))
 
         return plugins
 
@@ -265,6 +281,11 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
     def get_namespace(cls):
         """"Return namespace of plugin, e.g. default or openstack."""
         return cls._meta_get("namespace")
+
+    @classmethod
+    def is_hidden(cls):
+        """Return True if plugin is hidden."""
+        return cls._meta_get("hidden", False)
 
     @classmethod
     def is_deprecated(cls):

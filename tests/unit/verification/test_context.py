@@ -28,17 +28,15 @@ class FakeContext(context.VerifierContext):
 class VerifierContextTestCase(test.TestCase):
     def test__meta_get(self):
 
-        data = {"key1": "value1", "key2": "value2", "hidden": False}
+        data = {"key1": "value1", "key2": "value2"}
 
         for k, v in data.items():
             FakeContext._meta_set(k, v)
 
         for k, v in data.items():
-            if k != "hidden":
-                self.assertEqual(v, FakeContext._meta_get(k))
+            self.assertEqual(v, FakeContext._meta_get(k))
 
-        self.assertTrue(FakeContext._meta_get("hidden"))
-        self.assertNotEqual(data["hidden"], FakeContext._meta_get("hidden"))
+        self.assertTrue(FakeContext.is_hidden())
 
 
 class ContextManagerTestCase(test.TestCase):
@@ -48,8 +46,9 @@ class ContextManagerTestCase(test.TestCase):
 
         context.ContextManager.validate(config)
 
-        self.assertEqual([mock.call(k) for k, v in config.items()],
+        self.assertEqual([mock.call(k, allow_hidden=True)
+                          for k, v in config.items()],
                          mock_verifier_context.get.call_args_list)
         self.assertEqual(
-            [mock.call(v, non_hidden=False) for k, v in config.items()],
+            [mock.call(v) for k, v in config.items()],
             mock_verifier_context.get.return_value.validate.call_args_list)

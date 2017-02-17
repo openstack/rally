@@ -221,9 +221,8 @@ class OpenStackAPIVersions(context.Context):
         pass
 
     @classmethod
-    def validate(cls, config, non_hidden=False):
-        super(OpenStackAPIVersions, cls).validate(config,
-                                                  non_hidden=non_hidden)
+    def validate(cls, config):
+        super(OpenStackAPIVersions, cls).validate(config)
         for client in config:
             client_cls = osclients.OSClient.get(client)
             if ("service_type" in config[client] and

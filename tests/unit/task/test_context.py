@@ -69,12 +69,6 @@ class BaseContextTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           fakes.FakeContext.validate, {"nonexisting": 2})
 
-    def test_validate__hidden(self):
-        fakes.FakeHiddenContext.validate({"test": 2})
-        self.assertRaises(exceptions.PluginNotFound,
-                          fakes.FakeHiddenContext.validate,
-                          {"test": 2}, non_hidden=True)
-
     def test_setup_is_abstract(self):
 
         @context.configure("test_abstract_setup", 0)
@@ -154,22 +148,22 @@ class ContextManagerTestCase(test.TestCase):
         context.ContextManager.validate(config)
         for ctx in ("ctx1", "ctx2"):
             mock_context_get.assert_has_calls([
-                mock.call(ctx),
-                mock.call().validate(config[ctx], non_hidden=False),
+                mock.call(ctx, allow_hidden=False),
+                mock.call().validate(config[ctx]),
             ])
 
     @mock.patch("rally.task.context.Context.get")
-    def test_validate_non_hidden(self, mock_context_get):
+    def test_validate_hidden(self, mock_context_get):
         config = {
             "ctx1": mock.MagicMock(),
             "ctx2": mock.MagicMock()
         }
 
-        context.ContextManager.validate(config, non_hidden=True)
+        context.ContextManager.validate(config, allow_hidden=True)
         for ctx in ("ctx1", "ctx2"):
             mock_context_get.assert_has_calls([
-                mock.call(ctx),
-                mock.call().validate(config[ctx], non_hidden=True),
+                mock.call(ctx, allow_hidden=True),
+                mock.call().validate(config[ctx]),
             ])
 
     def test_validate__non_existing_context(self):
@@ -191,7 +185,8 @@ class ContextManagerTestCase(test.TestCase):
 
         self.assertEqual(result, ctx_object)
         mock_context_get.assert_has_calls(
-            [mock.call("a"), mock.call("b")], any_order=True)
+            [mock.call("a", allow_hidden=True),
+             mock.call("b", allow_hidden=True)], any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         self.assertEqual([mock_context(), mock_context()], manager._visited)
@@ -208,7 +203,8 @@ class ContextManagerTestCase(test.TestCase):
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
         mock_context_get.assert_has_calls(
-            [mock.call("a"), mock.call("b")], any_order=True)
+            [mock.call("a", allow_hidden=True),
+             mock.call("b", allow_hidden=True)], any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls(
@@ -225,7 +221,8 @@ class ContextManagerTestCase(test.TestCase):
         manager.cleanup()
 
         mock_context_get.assert_has_calls(
-            [mock.call("a"), mock.call("b")], any_order=True)
+            [mock.call("a", allow_hidden=True),
+             mock.call("b", allow_hidden=True)], any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls(
