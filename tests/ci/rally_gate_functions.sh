@@ -55,10 +55,10 @@ function setUp () {
         set -e
         if [ "$NEUTRON_EXISTS" ]; then
             OS_QUOTA_STR="--networks -1 --subnets -1 --routers -1 --floating-ips -1 --subnetpools -1 --secgroups -1 --secgroup-rules -1 --ports -1"
-            openstack --debug --os-interface admin quota set $OS_QUOTA_STR rally-test-project-1
-            openstack --debug --os-interface admin quota show rally-test-project-1
-            openstack --debug --os-interface admin quota set $OS_QUOTA_STR rally-test-project-2
-            openstack --debug --os-interface admin quota show rally-test-project-2
+            openstack --debug quota set $OS_QUOTA_STR rally-test-project-1
+            openstack --debug quota show rally-test-project-1
+            openstack --debug quota set $OS_QUOTA_STR rally-test-project-2
+            openstack --debug quota show rally-test-project-2
         fi
 
         DEPLOYMENT_CONFIG_FILE=~/.rally/with-existing-users-config
