@@ -16,8 +16,9 @@ from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
+from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
+from rally.plugins.openstack.services.storage import block
 from rally.task import context
 
 
@@ -66,13 +67,16 @@ class VolumeGenerator(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             self.context["tenants"][tenant_id].setdefault("volumes", [])
-            cinder_util = cinder_utils.CinderScenario(
-                {"user": user,
-                 "task": self.context["task"],
-                 "config": self.context["config"]})
+            clients = osclients.Clients(
+                user["credential"],
+                api_info=self.context["config"].get("api_versions"))
+            cinder_service = block.BlockStorage(
+                clients, name_generator=self.generate_random_name)
             for i in range(volumes_per_tenant):
-                vol = cinder_util._create_volume(size, volume_type=volume_type)
-                self.context["tenants"][tenant_id]["volumes"].append(vol._info)
+                vol = cinder_service.create_volume(size,
+                                                   volume_type=volume_type)
+                self.context["tenants"][tenant_id]["volumes"].append(
+                    vol._asdict())
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):
@@ -80,5 +84,5 @@ class VolumeGenerator(context.Context):
             names=["cinder.volumes"],
             users=self.context.get("users", []),
             api_versions=self.context["config"].get("api_versions"),
-            superclass=cinder_utils.CinderScenario,
+            superclass=self.__class__,
             task_id=self.context["task"]["uuid"])

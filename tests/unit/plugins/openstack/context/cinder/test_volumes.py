@@ -19,12 +19,10 @@ import jsonschema
 import mock
 
 from rally.plugins.openstack.context.cinder import volumes
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from tests.unit import fakes
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
-SCN = "rally.plugins.openstack.scenarios"
+SERVICE = "rally.plugins.openstack.services.storage"
 
 
 @ddt.ddt
@@ -54,9 +52,8 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
               {"config": {"size": 1, "type": -1, "volumes_per_tenant": 5},
                "validation_raises": jsonschema.exceptions.ValidationError})
     @ddt.unpack
-    @mock.patch("%s.cinder.utils.CinderScenario._create_volume" % SCN,
-                return_value=fakes.FakeVolume(id="uuid"))
-    def test_setup(self, mock_cinder_scenario__create_volume, config,
+    @mock.patch("%s.block.BlockStorage" % SERVICE)
+    def test_setup(self, mock_block_storage, config,
                    validation_raises=None):
         try:
             volumes.VolumeGenerator.validate(config)
@@ -64,6 +61,12 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             if not isinstance(e, validation_raises):
                 raise
 
+        from rally.plugins.openstack.services.storage import block
+        created_volume = block.Volume(id="uuid", size=config["size"],
+                                      name="vol", status="avaiable")
+
+        mock_service = mock_block_storage.return_value
+        mock_service.create_volume.return_value = created_volume
         users_per_tenant = 5
         volumes_per_tenant = config.get("volumes_per_tenant", 5)
         tenants = self._gen_tenants(2)
@@ -93,7 +96,8 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         for id_ in tenants.keys():
             new_context["tenants"][id_].setdefault("volumes", [])
             for i in range(volumes_per_tenant):
-                new_context["tenants"][id_]["volumes"].append({"id": "uuid"})
+                new_context["tenants"][id_]["volumes"].append(
+                    mock_service.create_volume.return_value._asdict())
 
         volumes_ctx = volumes.VolumeGenerator(self.context)
         volumes_ctx.setup()
@@ -139,7 +143,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
 
         mock_cleanup.assert_called_once_with(
             names=["cinder.volumes"], users=self.context["users"],
-            api_versions=None, superclass=cinder_utils.CinderScenario,
+            api_versions=None, superclass=volumes_ctx.__class__,
             task_id=self.context["task"]["uuid"])
 
     @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
@@ -193,5 +197,5 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             names=["cinder.volumes"],
             users=self.context["users"],
             api_versions=api_version,
-            superclass=cinder_utils.CinderScenario,
+            superclass=volumes_ctx.__class__,
             task_id=self.context["task"]["uuid"])
