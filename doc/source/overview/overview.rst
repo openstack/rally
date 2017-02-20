@@ -101,7 +101,7 @@ Performance of Nova list command
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another interesting result comes from the *NovaServers.boot_and_list_server*
-scenario, which enabled us to we launched the following benchmark with Rally:
+scenario, which enabled us to launch the following benchmark with Rally:
 
     * **Benchmark environment** (which we also call **"Context"**): 1 temporary
       OpenStack user.
