@@ -767,14 +767,28 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__create_server_group(self):
         nova_scenario = utils.NovaScenario()
+        nova_scenario.generate_random_name = mock.Mock(
+            return_value="random_name")
         result = nova_scenario._create_server_group(fakeargs="fakeargs")
         self.assertEqual(
             self.clients("nova").server_groups.create.return_value,
             result)
         self.clients("nova").server_groups.create.assert_called_once_with(
-            fakeargs="fakeargs")
+            name="random_name", fakeargs="fakeargs")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_server_group")
+
+    def test__delete_server_group(self):
+        nova_scenario = utils.NovaScenario()
+        fakeid = 12345
+        result = nova_scenario._delete_server_group(fakeid)
+        self.assertEqual(
+            self.clients("nova").server_groups.delete.return_value,
+            result)
+        self.clients("nova").server_groups.delete.assert_called_once_with(
+            fakeid)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_server_group")
 
     def test__list_server_groups(self):
         nova_scenario = utils.NovaScenario()

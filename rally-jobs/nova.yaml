@@ -185,8 +185,7 @@
   {% for s in (["affinity"], ["anti-affinity"]) %}
     -
       args:
-        kwargs:
-          policies: {{s}}
+        policies: {{s}}
       runner:
         type: "constant"
         times: 4
@@ -204,9 +203,26 @@
   {% for s in (["affinity"], ["anti-affinity"]) %}
     -
       args:
-        kwargs:
-          policies: {{s}}
+        policies: {{s}}
         all_projects: false
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}
+
+  NovaServerGroups.create_and_delete_server_group:
+  {% for s in (["affinity"], ["anti-affinity"]) %}
+    -
+      args:
+        policies: {{s}}
       runner:
         type: "constant"
         times: 4

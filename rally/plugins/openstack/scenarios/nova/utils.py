@@ -418,11 +418,13 @@ class NovaScenario(scenario.OpenStackScenario):
     def _create_server_group(self, **kwargs):
         """Create (allocate) a server group.
 
-        :param kwargs: Server group name and policy
+        :param kwargs: Optional additional arguments for Server group creating
 
         :returns: Nova server group
         """
-        return self.clients("nova").server_groups.create(**kwargs)
+        group_name = self.generate_random_name()
+        return self.clients("nova").server_groups.create(name=group_name,
+                                                         **kwargs)
 
     @atomic.action_timer("nova.get_server_group")
     def _get_server_group(self, id):
@@ -447,6 +449,16 @@ class NovaScenario(scenario.OpenStackScenario):
             return self.admin_clients("nova").server_groups.list(all_projects)
         else:
             return self.clients("nova").server_groups.list(all_projects)
+
+    @atomic.action_timer("nova.delete_server_group")
+    def _delete_server_group(self, group_id):
+        """Delete a specific server group.
+
+        :param id: The ID of the :class:`ServerGroup` to delete
+
+        :returns: An instance of novaclient.base.TupleWithMeta
+        """
+        return self.clients("nova").server_groups.delete(group_id)
 
     @atomic.action_timer("nova.delete_image")
     def _delete_image(self, image):

@@ -1,4 +1,4 @@
-  NovaServerGroups.create_and_get_server_group:
+  NovaServerGroups.create_and_delete_server_group:
     -
       args:
         policies: ["affinity"]
