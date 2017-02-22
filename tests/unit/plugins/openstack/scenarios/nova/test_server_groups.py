@@ -60,3 +60,61 @@ class NovaServerGroupsTestCase(test.ScenarioTestCase):
                           kwargs=create_args)
         scenario._create_server_group.assert_called_with(**create_args)
         scenario._list_server_groups.assert_called_with(all_projects)
+
+    @ddt.data(
+        {},
+        {"create_args": {"policies": ["fake_policy"]}}
+    )
+    @ddt.unpack
+    def test_create_and_get_server_group_positive(self, create_args=None):
+        scenario = server_groups.CreateAndGetServerGroup(self.context)
+        gen_name = mock.MagicMock()
+        scenario.generate_random_name = gen_name
+        fake_server_group = mock.MagicMock()
+        fake_server_group_info = mock.MagicMock()
+        fake_server_group.id = 123
+        fake_server_group_info.id = 123
+        scenario._create_server_group = mock.MagicMock()
+        scenario._get_server_group = mock.MagicMock()
+        create_args = create_args or {}
+        # Positive case
+        scenario._create_server_group.return_value = fake_server_group
+        scenario._get_server_group.return_value = fake_server_group_info
+        scenario.run(create_args)
+        scenario._create_server_group.assert_called_once_with(**create_args)
+        scenario._get_server_group.assert_called_once_with(
+            fake_server_group.id)
+
+    @ddt.data(
+        {},
+        {"create_args": {"policies": ["fake_policy"]}}
+    )
+    @ddt.unpack
+    def test_create_and_get_server_group_negative(self, create_args=None):
+        scenario = server_groups.CreateAndGetServerGroup(self.context)
+        gen_name = mock.MagicMock()
+        scenario.generate_random_name = gen_name
+        fake_server_group = mock.MagicMock()
+        fake_server_group_info = mock.MagicMock()
+        fake_server_group.id = 123
+        fake_server_group_info.id = 123
+        scenario._create_server_group = mock.MagicMock()
+        scenario._get_server_group = mock.MagicMock()
+        create_args = create_args or {}
+
+        # Negative case1: server group isn't created
+        scenario._create_server_group.return_value = None
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          create_args)
+        scenario._create_server_group.assert_called_with(**create_args)
+
+        # Negative case2: server group to get information not the created one
+        fake_server_group_info.id = 456
+        scenario._create_server_group.return_value = fake_server_group
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          create_args)
+        scenario._create_server_group.assert_called_with(**create_args)
+        scenario._get_server_group.assert_called_with(
+            fake_server_group.id)

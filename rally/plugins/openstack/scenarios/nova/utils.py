@@ -466,6 +466,16 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.clients("nova").server_groups.create(**kwargs)
 
+    @atomic.action_timer("nova.get_server_group")
+    def _get_server_group(self, id):
+        """Get a specific server group.
+
+        :param id: Unique ID of the server group to get
+
+        :rtype: :class:`ServerGroup`
+        """
+        return self.clients("nova").server_groups.get(id)
+
     @atomic.action_timer("nova.list_server_groups")
     def _list_server_groups(self, all_projects=False):
         """Get a list of all server groups.
