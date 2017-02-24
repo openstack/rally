@@ -1,0 +1,25 @@
+---
+  NeutronNetworks.set_and_clear_router_gateway:
+    -
+      args:
+        network_create_args:
+          router:external: True
+        router_create_args: {}
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        network: {}
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        quotas:
+          neutron:
+            network: -1
+            router: -1
+        roles:
+          - "admin"
+      sla:
+        failure_rate:
+          max: 0

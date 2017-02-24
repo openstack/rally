@@ -403,6 +403,28 @@ class NeutronScenario(scenario.OpenStackScenario):
         self.clients("neutron").remove_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
 
+    @atomic.action_timer("neutron.add_gateway_router")
+    def _add_gateway_router(self, router, ext_net, enable_snat):
+        """Set the external network gateway for a router.
+
+        :param router: dict, neutron router
+        :param ext_net: external network for the gateway
+        :param enable_snat: True if enable snat
+        """
+        gw_info = {"network_id": ext_net["network"]["id"],
+                   "enable_snat": enable_snat}
+        self.clients("neutron").add_gateway_router(
+            router["router"]["id"], gw_info)
+
+    @atomic.action_timer("neutron.remove_gateway_router")
+    def _remove_gateway_router(self, router):
+        """Removes an external network gateway from the specified router.
+
+        :param router: dict, neutron router
+        """
+        self.clients("neutron").remove_gateway_router(
+            router["router"]["id"])
+
     @atomic.optional_action_timer("neutron.create_pool")
     def _create_lb_pool(self, subnet_id, **pool_create_args):
         """Create LB pool(v1)

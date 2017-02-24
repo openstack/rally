@@ -304,6 +304,33 @@ class CreateAndDeleteRouters(utils.NeutronScenario):
             self._delete_router(router)
 
 
+@validation.required_services(consts.Service.NEUTRON)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronNetworks.set_and_clear_router_gateway")
+class SetAndClearRouterGateway(utils.NeutronScenario):
+
+    def run(self, enable_snat=True, network_create_args=None,
+            router_create_args=None):
+        """Set and Remove the external network gateway from a router.
+
+        create an external network and a router, set external network
+        gateway for the router, remove the external network gateway from
+        the router.
+
+        :param enable_snat: True if enable snat
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options
+        :param router_create_args: dict, POST /v2.0/routers request options
+        """
+        network_create_args = network_create_args or {}
+        router_create_args = router_create_args or {}
+        ext_net = self._create_network(network_create_args)
+        router = self._create_router(router_create_args)
+        self._add_gateway_router(router, ext_net, enable_snat)
+        self._remove_gateway_router(router)
+
+
 @validation.number("ports_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
