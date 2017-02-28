@@ -349,7 +349,7 @@ class CreateAndDeletePorts(utils.NeutronScenario):
 @validation.external_network_exists("floating_network")
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_floating_ips")
-class CeateAndListFloatingIps(utils.NeutronScenario):
+class CreateAndListFloatingIps(utils.NeutronScenario):
 
     def run(self, floating_network=None, floating_ip_args=None):
         """Create and list floating IPs.

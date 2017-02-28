@@ -383,7 +383,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     @ddt.unpack
     def test_create_and_list_floating_ips(self, floating_network=None,
                                           floating_ip_args=None):
-        scenario = network.CeateAndListFloatingIps(self.context)
+        scenario = network.CreateAndListFloatingIps(self.context)
         floating_ip_args = floating_ip_args or {}
         scenario._create_floatingip = mock.Mock()
         scenario._list_floating_ips = mock.Mock()
