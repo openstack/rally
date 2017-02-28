@@ -28,11 +28,11 @@ Project Team Lead (PTL)
 +------------------------------+------------------------------------------------+
 |       Contact                |             Area of interest                   |
 +------------------------------+------------------------------------------------+
-| | Andrey Kurilin             |  * Road Map                                    |
+| | Andrey Kurilin             |  * Chief Architect                             |
 | | andreykurilin (irc)        |  * Release management                          |
-| | andr.kurilin@gmail.com     |  * Community management                        |
-| | akurilin@mirantis.com      |  * Core team management                        |
-|                              |  * Chief Architect                             |
+| | andreykurilin (gitter)     |  * Community management                        |
+| | andr.kurilin@gmail.com     |  * Core team management                        |
+| | akurilin@mirantis.com      |  * Road Map                                    |
 +------------------------------+------------------------------------------------+
 
 | *If you would like to refactor whole Rally or have UX/community/other
@@ -48,6 +48,10 @@ Project Core maintainers
 | | Alexander Maretskiy        |  * Rally reports                               |
 | | amaretskiy (irc)           |  * Front-end                                   |
 | | amaretskiy@mirantis.com    |                                                |
++------------------------------+------------------------------------------------+
+| | Anton Studenov             |  * Rally Deployment                            |
+| | tohin (irc)                |  * Task Hooks                                  |
+| | astudenov@mirantis.com     |                                                |
 +------------------------------+------------------------------------------------+
 | | Boris Pavlovic             |  * Founder and ideological leader              |
 | | boris-42 (irc)             |  * Architect                                   |
@@ -71,7 +75,7 @@ Project Core maintainers
 +------------------------------+------------------------------------------------+
 | | Roman Vasilets             |  * Rally task & benchmark                      |
 | | rvasilets (irc)            |                                                |
-| | rvasilets@mirantis.com     |                                                |
+| | pomeo92@gmail.com          |                                                |
 +------------------------------+------------------------------------------------+
 | | Sergey Skripnick           |  * Rally CI/CD                                 |
 | | redixin (irc)              |  * Rally deploy                                |
@@ -80,6 +84,10 @@ Project Core maintainers
 | | Yair Fried                 |  * Rally-Tempest integration                   |
 | | yfried (irc)               |  * Rally task & benchmark                      |
 | | yfried@redhat.com          |                                                |
++------------------------------+------------------------------------------------+
+| | Yaroslav Lobankov          |  * Rally Verification                          |
+| | ylobankov (irc)            |                                                |
+| | ylobankov@mirantis.com     |                                                |
 +------------------------------+------------------------------------------------+
 
 | *All cores from this list are reviewing all changes that are proposed to Rally.
@@ -109,9 +117,9 @@ Plugin Core reviewers
 | | skraynev (irc)             |                                                |
 | | skraynev@mirantis.com      |                                                |
 +------------------------------+------------------------------------------------+
-| | Yaroslav Lobankov          |  * Rally Verification                          |
-| | ylobankov (irc)            |                                                |
-| | ylobankov@mirantis.com     |                                                |
+| | Spyros Trigazis            |  * Magnum plugins                              |
+| | strigazi (irc)             |                                                |
+| | strigazi@gmail.com         |                                                |
 +------------------------------+------------------------------------------------+
 
 
