@@ -59,7 +59,7 @@ def configure(name, namespace="default", default_repo=None,
     def decorator(plugin):
         plugin._configure(name, namespace)
         plugin._meta_set("default_repo", default_repo)
-        plugin._meta_set("default_version", default_version or "master")
+        plugin._meta_set("default_version", default_version)
         plugin._meta_set("context", context or {})
         return plugin
 
@@ -104,12 +104,13 @@ class VerifierManager(plugin.Plugin):
         doc += ("  * *system_wide*: Whether or not to use the system-wide "
                 "environment for verifier instead of a virtual environment. "
                 "Defaults to False.\n"
-                "  * *version*: Branch, tag or commit ID to checkout before "
-                "verifier installation. Defaults to %(default_version)s\n"
                 "  * *source*: Path or URL to the repo to clone verifier from."
-                " Default to %(default_source)s" % {
-                    "default_version": cls._meta_get("default_version"),
-                    "default_source": cls._meta_get("default_repo")})
+                " Defaults to %(default_source)s\n"
+                "  * *version*: Branch, tag or commit ID to checkout before "
+                "verifier installation. Defaults to '%(default_version)s'."
+                % {"default_source": cls._meta_get("default_repo"),
+                   "default_version": cls._meta_get(
+                       "default_version") or "master"})
 
         return doc
 
@@ -192,17 +193,39 @@ class VerifierManager(plugin.Plugin):
         if not URL_RE.match(source) and not os.path.exists(source):
             raise exceptions.RallyException("Source path '%s' is not valid."
                                             % source)
+
         if logging.is_debug():
             LOG.debug("Cloning verifier repo from %s into %s.", source,
                       self.repo_dir)
         else:
             LOG.info("Cloning verifier repo from %s.", source)
-        utils.check_output(["git", "clone", source, self.repo_dir])
 
-        version = self.verifier.version or self._meta_get("default_version")
-        if version and version != "master":
+        cmd = ["git", "clone", source, self.repo_dir]
+
+        default_version = self._meta_get("default_version")
+        if default_version and default_version != "master":
+            cmd.extend(["-b", default_version])
+
+        utils.check_output(cmd)
+
+        version = self.verifier.version
+        if version:
             LOG.info("Switching verifier repo to the '%s' version." % version)
             utils.check_output(["git", "checkout", version], cwd=self.repo_dir)
+        else:
+            output = utils.check_output(["git", "describe", "--all"],
+                                        cwd=self.repo_dir).strip()
+            if output.startswith("heads/"):  # it is a branch
+                version = output[6:]
+            else:
+                head = utils.check_output(["git", "rev-parse", "HEAD"],
+                                          cwd=self.repo_dir).strip()
+                if output.endswith(head[:7]):  # it is a commit ID
+                    version = head
+                else:  # it is a tag
+                    version = output
+
+            self.verifier.update_properties(version=version)
 
     def install(self):
         """Clone and install a verifier."""
