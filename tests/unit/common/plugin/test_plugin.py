@@ -41,6 +41,7 @@ class PluginModuleTestCase(test.TestCase):
             return a
 
         self.assertEqual("configure_func_plugin_test", func.get_name())
+        self.assertFalse(func.is_hidden())
         self.assertEqual(42, func(42))
 
     def test_deprecated_cls(self):
@@ -148,6 +149,11 @@ class SomePlugin(BasePlugin):
     pass
 
 
+@plugin.configure(name="test_hidden_plugin", hidden=True)
+class HiddenPlugin(BasePlugin):
+    pass
+
+
 @plugin.deprecated("some_reason", "0.1.1")
 @plugin.configure(name="test_deprecated_plugin")
 class DeprecatedPlugin(BasePlugin):
@@ -174,6 +180,15 @@ class PluginTestCase(test.TestCase):
         self.assertEqual(SomePlugin,
                          BasePlugin.get("test_some_plugin"))
 
+    def test_get_hidden(self):
+        self.assertEqual(HiddenPlugin,
+                         BasePlugin.get("test_hidden_plugin",
+                                        allow_hidden=True))
+
+    def test_get_hidden_not_found(self):
+        self.assertRaises(exceptions.PluginNotFound,
+                          BasePlugin.get, "test_hidden_plugin")
+
     def test_get_not_found(self):
         self.assertRaises(exceptions.PluginNotFound,
                           BasePlugin.get, "non_existing")
@@ -197,6 +212,10 @@ class PluginTestCase(test.TestCase):
         self.assertEqual(set([SomePlugin, DeprecatedPlugin]),
                          set(BasePlugin.get_all()))
         self.assertEqual([], SomePlugin.get_all())
+
+    def test_get_all_hidden(self):
+        self.assertEqual(set([SomePlugin, DeprecatedPlugin, HiddenPlugin]),
+                         set(BasePlugin.get_all(allow_hidden=True)))
 
     def test_is_deprecated(self):
         self.assertFalse(SomePlugin.is_deprecated())

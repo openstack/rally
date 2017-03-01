@@ -40,44 +40,44 @@ class OpenStackServicesTestCase(test.TestCase):
         })
 
     def test_validate_wrong_configs(self):
+        # Non-existing clients should be caught
         self.assertRaises(
             exceptions.PluginNotFound,
             api_versions.OpenStackAPIVersions.validate,
-            {"invalid": {"service_type": "some_type"}},
-            "Non-existing clients should be caught.")
+            {"invalid": {"service_type": "some_type"}})
 
+        # Additional properties should be restricted
         self.assertRaises(
             jsonschema.ValidationError,
             api_versions.OpenStackAPIVersions.validate,
-            {"nova": {"some_key": "some_value"}},
-            "Additional properties should be restricted.")
+            {"nova": {"some_key": "some_value"}})
 
+        # Setting service_type is allowed only
+        # for those clients, which support it
         self.assertRaises(
             exceptions.ValidationError,
             api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"service_type": "identity"}},
-            "Setting service_type is allowed only for those clients, which "
-            "support it.")
+            {"keystone": {"service_type": "identity"}})
 
+        # Setting service_name is allowed only
+        # for those clients, which support it
         self.assertRaises(
             exceptions.ValidationError,
             api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"service_name": "keystone"}},
-            "Setting service_name is allowed only for those clients, which "
-            "support it.")
+            {"keystone": {"service_name": "keystone"}})
 
+        # Setting version is allowed only
+        # for those clients, which support it
         self.assertRaises(
             exceptions.ValidationError,
             api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"version": 1}},
-            "Setting version is allowed only for those clients, which "
-            "support it.")
+            {"keystone": {"version": 1}})
 
+        # Unsupported version should be caught
         self.assertRaises(
             exceptions.ValidationError,
             api_versions.OpenStackAPIVersions.validate,
-            {"nova": {"version": 666}},
-            "Unsupported version should be caught.")
+            {"nova": {"version": 666}})
 
     def test_setup_with_wrong_service_name(self):
         context = {

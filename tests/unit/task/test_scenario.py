@@ -263,7 +263,8 @@ class ScenarioTestCase(test.TestCase):
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
             try:
-                context.ContextManager.validate(s._meta_get("default_context"))
+                context.ContextManager.validate(s._meta_get("default_context"),
+                                                allow_hidden=True)
             except Exception:
                 print(traceback.format_exc())
                 self.fail("Scenario `%s` has wrong context" % scenario)

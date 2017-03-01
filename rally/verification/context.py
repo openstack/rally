@@ -12,10 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+
 from rally.common.plugin import plugin
 from rally.task import context
 
-configure = context.configure
+# all VerifierContexts should be always hidden
+configure = functools.partial(context.configure, hidden=True)
 
 
 @plugin.base()
@@ -28,14 +31,7 @@ class VerifierContext(context.BaseContext):
         self.verifier = self.context["verifier"]
 
     @classmethod
-    def _meta_get(cls, key, default=None):
-        # It should be always hidden
-        if key == "hidden":
-            return True
-        return super(VerifierContext, cls)._meta_get(key, default)
-
-    @classmethod
-    def validate(cls, config, non_hidden=False):
+    def validate(cls, config):
         # do not validate jsonschema.
         pass
 
@@ -43,10 +39,11 @@ class VerifierContext(context.BaseContext):
 class ContextManager(context.ContextManager):
 
     @staticmethod
-    def validate(ctx, non_hidden=False):
+    def validate(ctx):
         for name, config in ctx.items():
-            VerifierContext.get(name).validate(config, non_hidden=non_hidden)
+            VerifierContext.get(name, allow_hidden=True).validate(config)
 
     def _get_sorted_context_lst(self):
-        return sorted([VerifierContext.get(name)(self.context_obj)
-                       for name in self.context_obj["config"].keys()])
+        return sorted([
+            VerifierContext.get(name, allow_hidden=True)(self.context_obj)
+            for name in self.context_obj["config"].keys()])

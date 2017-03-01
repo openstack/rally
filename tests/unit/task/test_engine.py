@@ -157,6 +157,7 @@ class TaskEngineTestCase(test.TestCase):
                           eng._validate_config_scenarios_name,
                           mock_task_instance)
 
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.hook.Hook.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
@@ -165,8 +166,11 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_context_manager_validate,
             mock_scenario_runner_validate,
             mock_task_config,
-            mock_hook_validate
+            mock_hook_validate,
+            mock_scenario_get
     ):
+        default_context = {"foo": 1}
+        mock_scenario_get.return_value._meta_get.return_value = default_context
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
@@ -180,16 +184,24 @@ class TaskEngineTestCase(test.TestCase):
         mock_scenario_runner_validate.assert_has_calls(
             [mock.call({}), mock.call("b")], any_order=True)
         mock_context_manager_validate.assert_has_calls(
-            [mock.call("a", non_hidden=True), mock.call({}, non_hidden=True)],
-            any_order=True)
+            [mock.call("a"),
+             mock.call(default_context, allow_hidden=True),
+             mock.call({}),
+             mock.call(default_context, allow_hidden=True),
+             mock.call({}),
+             mock.call(default_context, allow_hidden=True)],
+            any_order=True
+        )
         mock_hook_validate.assert_called_once_with("c")
 
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
     @mock.patch("rally.task.engine.context.ContextManager.validate")
     def test__validate_config_syntax__wrong_runner(
             self, mock_context_manager_validate,
-            mock_scenario_runner, mock_task_config):
+            mock_scenario_runner, mock_task_config, mock_scenario_get):
+        mock_scenario_get.return_value._meta_get.return_value = {}
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
@@ -204,12 +216,14 @@ class TaskEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_syntax, mock_task_instance)
 
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
     @mock.patch("rally.task.engine.context.ContextManager")
     def test__validate_config_syntax__wrong_context(
             self, mock_context_manager, mock_scenario_runner_validate,
-            mock_task_config):
+            mock_task_config, mock_scenario_get):
+        mock_scenario_get.return_value._meta_get.return_value = {}
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
