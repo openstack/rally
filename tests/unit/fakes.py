@@ -1827,6 +1827,16 @@ class FakeUserContext(FakeContext):
 class FakeDeployment(dict):
     update_status = mock.Mock()
 
+    def __init__(self, **kwargs):
+        namespace = kwargs.pop("namespace", "openstack")
+        kwargs["credentials"] = {
+            namespace: [{"admin": kwargs.pop("admin", None),
+                         "users": kwargs.pop("users", [])}]}
+        dict.__init__(self, **kwargs)
+
+    def get_credentials_for(self, namespace):
+        return self["credentials"][namespace][0]
+
 
 class FakeTask(dict):
 

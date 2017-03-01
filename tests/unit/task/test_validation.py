@@ -26,6 +26,7 @@ from rally import consts
 from rally import exceptions
 import rally.osclients
 from rally.task import validation
+from tests.unit import fakes
 from tests.unit import test
 
 
@@ -572,7 +573,8 @@ class ValidatorsTestCase(test.TestCase):
         with mock.patch("rally.osclients.Clients") as clients_cls:
             nova_client = clients_cls.return_value.nova.return_value
             nova_client.services.list.return_value = [fake_service]
-            result = validator({}, clients, {"admin": {"info": "admin"}})
+            deployment = fakes.FakeDeployment(admin={"info": "admin"})
+            result = validator({}, clients, deployment)
             clients_cls.assert_called_once_with(mock_credential.return_value)
             mock_credential.assert_called_once_with(info="admin")
         self.assertTrue(result.is_valid, result.msg)
@@ -666,11 +668,11 @@ class ValidatorsTestCase(test.TestCase):
                                            admin=True)
 
         # admin presented in deployment
-        fake_deployment = {"admin": "admin_credential", "users": []}
+        fake_deployment = fakes.FakeDeployment(admin="admin_credential")
         self.assertTrue(validator(None, None, fake_deployment).is_valid)
 
         # admin not presented in deployment
-        fake_deployment = {"admin": None, "users": ["u1", "h2"]}
+        fake_deployment = fakes.FakeDeployment(users=["u1", "h2"])
         self.assertFalse(validator(None, None, fake_deployment).is_valid)
 
     def test_required_openstack_with_users(self):
@@ -678,34 +680,35 @@ class ValidatorsTestCase(test.TestCase):
                                            users=True)
 
         # users presented in deployment
-        fake_deployment = {"admin": None, "users": ["u_credential"]}
+        fake_deployment = fakes.FakeDeployment(
+            admin=None, users=["u_credential"])
         self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and users presented in deployment
-        fake_deployment = {"admin": "a", "users": ["u1", "h2"]}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=["u1", "h2"])
         self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and user context
-        fake_deployment = {"admin": "a", "users": []}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
         context = {"context": {"users": True}}
         self.assertTrue(validator(context, None, fake_deployment).is_valid)
 
         # just admin presented
-        fake_deployment = {"admin": "a", "users": []}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
         self.assertFalse(validator({}, None, fake_deployment).is_valid)
 
     def test_required_openstack_with_admin_and_users(self):
         validator = self._unwrap_validator(validation.required_openstack,
                                            admin=True, users=True)
 
-        fake_deployment = {"admin": "a", "users": []}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
         self.assertFalse(validator({}, None, fake_deployment).is_valid)
 
-        fake_deployment = {"admin": "a", "users": ["u"]}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=["u"])
         self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and user context
-        fake_deployment = {"admin": "a", "users": []}
+        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
         context = {"context": {"users": True}}
         self.assertTrue(validator(context, None, fake_deployment).is_valid)
 
@@ -756,12 +759,13 @@ class ValidatorsTestCase(test.TestCase):
         clients = mock.MagicMock()
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
-        result = validator({}, clients, {})
+        deployment = fakes.FakeDeployment()
+        result = validator({}, clients, deployment)
         self.assertTrue(result.is_valid, result.msg)
         self.assertFalse(mock_osclients.Clients.called)
 
         clients.nova.side_effect = ImportError
-        result = validator({}, clients, {})
+        result = validator({}, clients, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
     @mock.patch(MODULE + "objects")
@@ -774,12 +778,13 @@ class ValidatorsTestCase(test.TestCase):
         clients.nova.return_value = "nova"
         mock_osclients.Clients.return_value = clients
         mock_objects.Credential.return_value = "foo_credential"
-        result = validator({}, clients, {"admin": {"foo": "bar"}})
+        deployment = fakes.FakeDeployment(admin={"foo": "bar"})
+        result = validator({}, clients, deployment)
         self.assertTrue(result.is_valid, result.msg)
         mock_objects.Credential.assert_called_once_with(foo="bar")
         mock_osclients.Clients.assert_called_once_with("foo_credential")
         clients.nova.side_effect = ImportError
-        result = validator({}, clients, {"admin": {"foo": "bar"}})
+        result = validator({}, clients, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
     @ddt.data(
@@ -813,9 +818,10 @@ class ValidatorsTestCase(test.TestCase):
             cinder_client.services = services
             c.return_value = cinder_client
 
-            deployment = {"admin": {"auth_url": "fake_credential",
-                                    "username": "username",
-                                    "password": "password"}}
+            deployment = fakes.FakeDeployment(
+                admin={"auth_url": "fake_credential",
+                       "username": "username",
+                       "password": "password"})
             result = validator({}, None, deployment)
             self.assertTrue(result.is_valid, result.msg)
 

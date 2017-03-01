@@ -460,8 +460,9 @@ def required_services(config, clients, deployment, *required_services):
     available_services = list(clients.services().values())
 
     if consts.Service.NOVA_NET in required_services:
+        creds = deployment.get_credentials_for("openstack")
         nova = osclients.Clients(
-            objects.Credential(**deployment["admin"])).nova()
+            objects.Credential(**creds["admin"])).nova()
         for service in nova.services.list():
             if (service.binary == consts.Service.NOVA_NET and
                     service.status == "enabled"):
@@ -505,9 +506,9 @@ def required_cinder_services(config, clients, deployment, service_name):
 
     :param service_name: Cinder service name
     """
-
+    creds = deployment.get_credentials_for("openstack")
     admin_client = osclients.Clients(
-        objects.Credential(**deployment["admin"])).cinder()
+        objects.Credential(**creds["admin"])).cinder()
 
     for service in admin_client.services.list():
         if (service.binary == six.text_type(service_name) and
@@ -527,7 +528,8 @@ def required_clients(config, clients, deployment, *components, **kwargs):
                      admin - bool, whether to use admin clients
     """
     if kwargs.get("admin", False):
-        clients = osclients.Clients(objects.Credential(**deployment["admin"]))
+        creds = deployment.get_credentials_for("openstack")
+        clients = osclients.Clients(objects.Credential(**creds["admin"]))
 
     for client_component in components:
         try:
@@ -602,16 +604,17 @@ def required_openstack(config, clients, deployment, admin=False, users=False):
         return ValidationResult(
             False, _("You should specify admin=True or users=True or both."))
 
-    if deployment["admin"] and deployment["users"]:
+    creds = deployment.get_credentials_for("openstack")
+    if creds["admin"] and creds["users"]:
         return ValidationResult(True)
 
-    if deployment["admin"]:
+    if creds["admin"]:
         if users and not config.get("context", {}).get("users"):
             return ValidationResult(False,
                                     _("You should specify 'users' context"))
         return ValidationResult(True)
 
-    if deployment["users"] and admin:
+    if creds["users"] and admin:
         return ValidationResult(False, _("Admin credentials required"))
 
 

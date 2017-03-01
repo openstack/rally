@@ -17,6 +17,7 @@
 
 import copy
 import json
+import pickle
 import pprint
 import uuid
 
@@ -1250,7 +1251,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid ==
-                    self._37fdbb373e8d_deployment_uuid)
+                    self._f33f4610dcda_deployment_uuid)
             )
 
     def _pre_upgrade_4ef544102ba7(self, engine):
@@ -1370,3 +1371,49 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     deployment_table.c.uuid ==
                     self._4ef544102ba7_deployment_uuid)
             )
+
+    def _pre_upgrade_92aaaa2a6bb3(self, engine):
+        self._92aaaa2a6bb3_deployments = [
+            ("1-cred", [["openstack", {"foo": "bar"}]]),
+            ("2-cred", [["openstack", {"foo": "bar1"}],
+                        ["openstack", {"foo": "bar2"}]]),
+            ("multi-cred", [["spam", {"foo": "bar1"}],
+                            ["eggs", {"foo": "bar2"}]]),
+        ]
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+        deployment_status = consts.DeployStatus.DEPLOY_FINISHED
+
+        with engine.connect() as conn:
+            for deployment, creds in self._92aaaa2a6bb3_deployments:
+                conn.execute(
+                    deployment_table.insert(),
+                    [{"uuid": deployment, "name": deployment,
+                      "config": json.dumps({}),
+                      "enum_deployments_status": deployment_status,
+                      "credentials": pickle.dumps(creds),
+                      }])
+
+    def _check_92aaaa2a6bb3(self, engine, data):
+        expected_credentials = [
+            ("1-cred", {"openstack": [{"foo": "bar"}]}),
+            ("2-cred", {"openstack": [{"foo": "bar1"},
+                                      {"foo": "bar2"}]}),
+            ("multi-cred", {"spam": [{"foo": "bar1"}],
+                            "eggs": [{"foo": "bar2"}]}),
+        ]
+
+        deployment_table = db_utils.get_table(engine, "deployments")
+
+        with engine.connect() as conn:
+            for deployment, expected_creds in expected_credentials:
+
+                dep_obj = conn.execute(
+                    deployment_table.select().where(
+                        deployment_table.c.uuid == deployment)).fetchone()
+                self.assertEqual(
+                    expected_creds, json.loads(dep_obj.credentials))
+
+                conn.execute(
+                    deployment_table.delete().where(
+                        deployment_table.c.uuid == deployment))

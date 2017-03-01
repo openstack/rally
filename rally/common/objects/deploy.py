@@ -15,8 +15,38 @@
 
 import datetime as dt
 
+import jsonschema
+
+from rally.common.i18n import _, _LW
 from rally.common import db
+from rally.common import logging
 from rally import consts
+from rally import exceptions
+
+
+LOG = logging.getLogger(__name__)
+
+CREDENTIALS_SCHEMA = {
+    "type": "object",
+    "patternProperties": {
+        ".*": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "admin": {"type": "object"},
+                    "users": {
+                        "type": "array",
+                        "items": {"type": "object"}
+                    }
+                },
+                "required": ["admin", "users"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "minProperties": 1,
+}
 
 
 class Deployment(object):
@@ -29,6 +59,12 @@ class Deployment(object):
             self.deployment = db.deployment_create(attributes)
 
     def __getitem__(self, key):
+        # TODO(astudenov): remove this in future releases
+        if key == "admin" or key == "users":
+            LOG.warning(_LW("deployment.%s is deprecated in Rally 0.9.0. "
+                            "Use deployment.get_credentials_for('openstack')"
+                            "['%s'] to get credentials.") % (key, key))
+            return self.get_credentials_for("openstack")[key]
         return self.deployment[key]
 
     @staticmethod
@@ -56,15 +92,16 @@ class Deployment(object):
         self._update({"config": config})
 
     def update_credentials(self, credentials):
-        admin = credentials.get("admin", {})
-        if admin:
-            admin = admin.to_dict(include_permission=True)
-        users = [e.to_dict(include_permission=True)
-                 for e in credentials.get("users", [])]
+        jsonschema.validate(credentials, CREDENTIALS_SCHEMA)
+        self._update({"credentials": credentials})
 
-        self._update({
-            "credentials": [["openstack", {"admin": admin, "users": users}]]
-        })
+    def get_credentials_for(self, namespace):
+        try:
+            return self.deployment["credentials"][namespace][0]
+        except (KeyError, IndexError) as e:
+            LOG.exception(e)
+            raise exceptions.RallyException(_(
+                "No credentials found for %s") % namespace)
 
     def set_started(self):
         self._update({"started_at": dt.datetime.now(),

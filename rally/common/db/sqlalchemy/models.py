@@ -24,7 +24,6 @@ from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import schema
-from sqlalchemy import types
 
 from rally.common.db.sqlalchemy import types as sa_types
 from rally import consts
@@ -83,7 +82,8 @@ class Deployment(BASE, RallyBase):
         nullable=False,
     )
 
-    credentials = sa.Column(types.PickleType, default=[], nullable=False)
+    credentials = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     status = sa.Column(
         sa.Enum(*consts.DeployStatus, name="enum_deploy_status"),
@@ -98,24 +98,6 @@ class Deployment(BASE, RallyBase):
         remote_side=[uuid],
         foreign_keys=parent_uuid,
     )
-
-    # TODO(rpromyshlennikov): remove admin after credentials refactoring
-    @property
-    def admin(self):
-        return self.credentials[0][1]["admin"]
-
-    @admin.setter
-    def admin(self, value):
-        pass
-
-    # TODO(rpromyshlennikov): remove users after credentials refactoring
-    @property
-    def users(self):
-        return self.credentials[0][1]["users"]
-
-    @users.setter
-    def users(self, value):
-        pass
 
 
 class Resource(BASE, RallyBase):

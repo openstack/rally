@@ -160,12 +160,14 @@ class ExistingCloud(engine.Engine):
 
         users = [self._create_credential(self.config, user, permissions.USER)
                  for user in self.config.get("users", [])]
+        users = [user.to_dict(include_permission=True) for user in users]
 
         admin = self._create_credential(self.config,
                                         self.config.get("admin"),
                                         permissions.ADMIN)
+        admin = admin.to_dict(include_permission=True)
 
-        return {"admin": admin, "users": users}
+        return {"openstack": [{"admin": admin, "users": users}]}
 
     def cleanup(self):
         pass

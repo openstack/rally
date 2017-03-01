@@ -61,8 +61,8 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin=mock.MagicMock(),
-                                                  users=[]))
+                                                  admin="fake_admin",
+                                                  users=["fake_user"]))
     @mock.patch("rally.api.engine.TaskEngine")
     def test_validate(
             self, mock_task_engine, mock_deployment_get, mock_task):
@@ -70,8 +70,8 @@ class TaskAPITestCase(test.TestCase):
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
-                      admin=mock_deployment_get.return_value["admin"],
-                      users=[]),
+                      admin="fake_admin",
+                      users=["fake_user"]),
             mock.call().validate()
         ])
 
@@ -83,9 +83,7 @@ class TaskAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment",
-                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin=mock.MagicMock(),
-                                                  users=[]))
+                return_value=fakes.FakeDeployment(uuid="deployment_uuid"))
     @mock.patch("rally.api.engine.TaskEngine")
     def test_validate_engine_exception(self, mock_task_engine,
                                        mock_deployment, mock_task):
@@ -178,8 +176,8 @@ class TaskAPITestCase(test.TestCase):
                 return_value=fakes.FakeTask(uuid="some_uuid"))
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin=mock.MagicMock(),
-                                                  users=[]))
+                                                  admin="fake_admin",
+                                                  users=["fake_user"]))
     @mock.patch("rally.api.engine.TaskEngine")
     def test_start(self, mock_task_engine, mock_deployment_get,
                    mock_task):
@@ -187,8 +185,8 @@ class TaskAPITestCase(test.TestCase):
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
-                      admin=mock_deployment_get.return_value["admin"],
-                      users=[], abort_on_sla_failure=False),
+                      admin="fake_admin", users=["fake_user"],
+                      abort_on_sla_failure=False),
             mock.call().run(),
         ])
 
@@ -203,8 +201,8 @@ class TaskAPITestCase(test.TestCase):
                                             temporary=True))
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin=mock.MagicMock(),
-                                                  users=[]))
+                                                  admin="fake_admin",
+                                                  users=["fake_user"]))
     def test_start_temporary_task(self, mock_deployment_get,
                                   mock_task):
 
@@ -331,9 +329,9 @@ class TaskAPITestCase(test.TestCase):
 class BaseDeploymentTestCase(test.TestCase):
     def setUp(self):
         super(BaseDeploymentTestCase, self).setUp()
-        self.deployment_config = FAKE_DEPLOYMENT_CONFIG
+        self.deployment_config = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
         self.deployment_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
-        admin_credential = FAKE_DEPLOYMENT_CONFIG.copy()
+        admin_credential = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
         admin_credential.pop("type")
         admin_credential["endpoint"] = None
         admin_credential.update(admin_credential.pop("admin"))
@@ -345,8 +343,7 @@ class BaseDeploymentTestCase(test.TestCase):
             "uuid": self.deployment_uuid,
             "name": "fake_name",
             "config": self.deployment_config,
-            "admin": self.credentials["admin"],
-            "users": []
+            "credentials": {"openstack": [self.credentials]}
         }
 
 
@@ -358,18 +355,16 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        api._Deployment.create(self.deployment_config, "fake_deployment")
+        dep = api._Deployment.create(self.deployment_config, "fake_deployment")
+        self.assertIsInstance(dep, objects.Deployment)
         mock_deployment_create.assert_called_once_with({
             "name": "fake_deployment",
             "config": self.deployment_config,
         })
-        mock_engine_validate.assert_called_with()
+        mock_engine_validate.assert_called_once_with()
         mock_deployment_update.assert_has_calls([
             mock.call(self.deployment_uuid,
-                      {"credentials": [["openstack",
-                                        {"admin": self.credentials["admin"],
-                                         "users": self.credentials["users"]}]]
-                       })
+                      {"credentials": {"openstack": [self.credentials]}})
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -428,11 +423,11 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         api._Deployment.recreate(self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
-            mock.call(self.deployment_uuid,
-                      {"credentials": [["openstack",
-                                        {"admin": self.credentials["admin"],
-                                         "users": self.credentials["users"]}]]
-                       })
+            mock.call(
+                self.deployment_uuid,
+                {"credentials":
+                    {"openstack": [{"admin": self.credentials["admin"],
+                                    "users": self.credentials["users"]}]}})
         ])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -501,8 +496,9 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
                                                "admin",
                                                "adminpass").to_dict()
-        deployment = {"admin": sample_credential,
-                      "users": [sample_credential]}
+        deployment = mock.Mock(spec=objects.Deployment)
+        deployment.get_credentials_for.return_value = {
+            "admin": sample_credential, "users": [sample_credential]}
         api._Deployment.check(deployment)
         mock_keystone_create_client.assert_called_with()
         mock_clients_services.assert_called_once_with()
@@ -512,7 +508,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                                                "admin",
                                                "adminpass").to_dict()
         sample_credential["not-exist-key"] = "error"
-        deployment = {"admin": sample_credential}
+        deployment = mock.Mock(spec=objects.Deployment)
         self.assertRaises(TypeError, api._Deployment.check, deployment)
 
     @mock.patch("rally.osclients.Clients.services")
@@ -520,7 +516,9 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
                                                "admin",
                                                "adminpass").to_dict()
-        deployment = {"admin": sample_credential}
+        deployment = mock.Mock(spec=objects.Deployment)
+        deployment.get_credentials_for.return_value = {
+            "admin": sample_credential, "users": []}
         refused = keystone_exceptions.ConnectionRefused()
         mock_clients_services.side_effect = refused
         self.assertRaises(

@@ -202,8 +202,9 @@ class DeploymentCommands(object):
         table_rows = []
 
         deployment = api.deployment.get(deployment)
-        users = deployment["users"]
-        admin = deployment["admin"]
+        creds = deployment.get_credentials_for("openstack")
+        users = creds["users"]
+        admin = creds["admin"]
         credentials = users + [admin] if admin else users
 
         for ep in credentials:
@@ -233,7 +234,8 @@ class DeploymentCommands(object):
         try:
             services = api.deployment.check(deployment)
         except keystone_exceptions.ConnectionRefused:
-            print(_("Unable to connect %s.") % deployment["admin"]["auth_url"])
+            admin = deployment.get_credentials_for("openstack")["admin"]
+            print(_("Unable to connect %s.") % admin["auth_url"])
             return(1)
 
         except exceptions.InvalidArgumentsException:
@@ -305,9 +307,10 @@ class DeploymentCommands(object):
 
             fileutils.update_globals_file("RALLY_DEPLOYMENT",
                                           deployment["uuid"])
+
+            creds = deployment.get_credentials_for("openstack")
             self._update_openrc_deployment_file(
-                deployment["uuid"],
-                deployment["admin"] or deployment["users"][0])
+                deployment["uuid"], creds["admin"] or creds["users"][0])
             print("~/.rally/openrc was updated\n\nHINTS:\n"
                   "\n* To use standard OpenStack clients, set up your env by "
                   "running:\n\tsource ~/.rally/openrc\n"

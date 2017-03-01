@@ -24,7 +24,6 @@ from six import moves
 
 from rally.common import db
 from rally.common.db import api as db_api
-import rally.common.db.sqlalchemy.api as s_api
 from rally import consts
 from rally import exceptions
 from tests.unit import test
@@ -88,25 +87,6 @@ class ConnectionTestCase(test.DBTestCase):
         drev = db.schema_revision(detailed=True)
         self.assertEqual(drev["revision"], rev)
         self.assertEqual(drev["revision"], drev["current_head"])
-
-
-class FixDeploymentTestCase(test.DBTestCase):
-    def test_fix_deployment(self):
-        deployment = {
-            "credentials": [("bong", {"admin": "foo", "users": "bar"})]}
-
-        expected = {
-            "credentials": [("bong", {"admin": "foo", "users": "bar"})],
-            "admin": "foo",
-            "users": "bar"
-        }
-
-        @s_api.fix_deployment
-        def get_deployment():
-            return deployment
-
-        fixed_deployment = get_deployment()
-        self.assertEqual(fixed_deployment, expected)
 
 
 class TasksTestCase(test.DBTestCase):
@@ -743,8 +723,7 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(deploy["uuid"], deploys[0]["uuid"])
         self.assertEqual(deploy["status"], consts.DeployStatus.DEPLOY_INIT)
         self.assertEqual(deploy["config"], {"opt": "val"})
-        self.assertEqual(deploy["credentials"],
-                         [["openstack", {"admin": None, "users": []}]])
+        self.assertEqual(deploy["credentials"], {})
 
     def test_deployment_create_several(self):
         # Create a deployment
@@ -768,21 +747,21 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(deploy_two["config"], {"opt2": "val2"})
 
     def test_deployment_update(self):
-        credentials = {"admin": {"foo": "bar"}, "users": ["foo_user"]}
-        deploy = db.deployment_create(copy.deepcopy(credentials))
+        credentials = {
+            "openstack": [{"admin": {"foo": "bar"}, "users": ["foo_user"]}]}
+        deploy = db.deployment_create({})
         self.assertEqual(deploy["config"], {})
-        self.assertEqual(deploy["credentials"], [["openstack", credentials]])
-        update_deploy = db.deployment_update(deploy["uuid"],
-                                             {"config": {"opt": "val"}})
+        self.assertEqual(deploy["credentials"], {})
+        update_deploy = db.deployment_update(
+            deploy["uuid"], {"config": {"opt": "val"},
+                             "credentials": copy.deepcopy(credentials)})
         self.assertEqual(update_deploy["uuid"], deploy["uuid"])
         self.assertEqual(update_deploy["config"], {"opt": "val"})
-        self.assertEqual(update_deploy["credentials"],
-                         [["openstack", credentials]])
+        self.assertEqual(update_deploy["credentials"], credentials)
         get_deploy = db.deployment_get(deploy["uuid"])
         self.assertEqual(get_deploy["uuid"], deploy["uuid"])
         self.assertEqual(get_deploy["config"], {"opt": "val"})
-        self.assertEqual(update_deploy["credentials"],
-                         [["openstack", credentials]])
+        self.assertEqual(update_deploy["credentials"], credentials)
 
     def test_deployment_update_several(self):
         # Create a deployment and update it
