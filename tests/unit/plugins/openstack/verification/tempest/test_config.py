@@ -18,6 +18,7 @@ import mock
 from oslo_config import cfg
 
 from rally.plugins.openstack.verification.tempest import config
+from tests.unit import fakes
 from tests.unit import test
 
 
@@ -51,7 +52,8 @@ class TempestConfigfileManagerTestCase(test.TestCase):
 
         mock.patch("rally.osclients.Clients").start()
 
-        self.tempest = config.TempestConfigfileManager(CREDS)
+        deployment = fakes.FakeDeployment(**CREDS)
+        self.tempest = config.TempestConfigfileManager(deployment)
 
     def test__configure_auth(self):
         self.tempest.conf.add_section("auth")

@@ -77,37 +77,6 @@ def _alembic_config():
     return config
 
 
-def fix_deployment(fn):
-    # NOTE(ikhudoshyn): Remove this once a new deployment model
-    # get adopted.
-    # New DB schema for Deployment was introduced in
-    # https://github.com/openstack/rally/
-    #        commit/433cf080ea02f448df1ce33c620c8b30910338cd
-    # yet old one is used over the codebase.
-    # This decorator restores attributes that are missing from
-    # the new model.
-    """Restore old deployment model's attributes
-
-    This decorator restores deployment properties "admin" and "users"
-    moved into "credentials" attribute of DB model.
-    """
-
-    def fix(o):
-        if isinstance(o, list):
-            return [fix(deployment) for deployment in o]
-        else:
-            if not o.get("admin"):
-                o["admin"] = o["credentials"][0][1]["admin"]
-            if not o.get("users"):
-                o["users"] = o["credentials"][0][1]["users"]
-            return o
-
-    def wrapper(*args, **kwargs):
-        deployment = fn(*args, **kwargs)
-        return fix(deployment)
-    return wrapper
-
-
 class Connection(object):
 
     def engine_reset(self):
@@ -594,20 +563,10 @@ class Connection(object):
             raise exceptions.DeploymentNotFound(deployment=deployment)
         return stored_deployment
 
-    @fix_deployment
     @db_api.serialize
     def deployment_create(self, values):
         deployment = models.Deployment()
         try:
-            # TODO(rpromyshlennikov): remove after credentials refactoring
-            values.setdefault(
-                "credentials",
-                [
-                    ["openstack",
-                     {"admin": values.get("admin"),
-                      "users": values.get("users", [])}]
-                ]
-            )
             deployment.update(values)
             deployment.save()
         except db_exc.DBDuplicateEntry:
@@ -627,12 +586,10 @@ class Connection(object):
             if not count:
                 raise exceptions.DeploymentNotFound(deployment=uuid)
 
-    @fix_deployment
     @db_api.serialize
     def deployment_get(self, deployment):
         return self._deployment_get(deployment)
 
-    @fix_deployment
     @db_api.serialize
     def deployment_update(self, deployment, values):
         session = get_session()
@@ -642,7 +599,6 @@ class Connection(object):
             dpl.update(values)
         return dpl
 
-    @fix_deployment
     @db_api.serialize
     def deployment_list(self, status=None, parent_uuid=None, name=None):
         query = (self.model_query(models.Deployment).

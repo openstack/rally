@@ -59,7 +59,8 @@ class TempestContextTestCase(test.TestCase):
         self.mock_isfile = mock.patch("os.path.isfile",
                                       return_value=True).start()
 
-        cfg = {"verifier": mock.Mock(deployment=CREDS),
+        self.deployment = fakes.FakeDeployment(**CREDS)
+        cfg = {"verifier": mock.Mock(deployment=self.deployment),
                "verification": {"uuid": "uuid"}}
         cfg["verifier"].manager.home_dir = "/p/a/t/h"
         cfg["verifier"].manager.configfile = "/fake/path/to/config"
@@ -336,11 +337,13 @@ class TempestContextTestCase(test.TestCase):
     def test_setup(self, mock_clients, mock_create_dir,
                    mock__create_tempest_roles, mock__configure_option,
                    mock_open):
-        verifier = mock.MagicMock(deployment=CREDS)
+        self.deployment = fakes.FakeDeployment(**CREDS)
+        verifier = mock.Mock(deployment=self.deployment)
         verifier.manager.home_dir = "/p/a/t/h"
 
         # case #1: no neutron and heat
         mock_clients.return_value.services.return_value = {}
+
         ctx = context.TempestContext({"verifier": verifier})
         ctx.conf = mock.Mock()
         ctx.setup()
@@ -376,6 +379,7 @@ class TempestContextTestCase(test.TestCase):
         # case #2: neutron and heat are presented
         mock_clients.return_value.services.return_value = {
             "network": "neutron", "orchestration": "heat"}
+
         ctx = context.TempestContext({"verifier": verifier})
         ctx.conf = mock.Mock()
         ctx.setup()

@@ -149,8 +149,9 @@ class _Deployment(object):
         :param deployment: Deployment object
         :returns: Service list
         """
-        # TODO(kun): put this work into objects.Deployment
-        clients = osclients.Clients(objects.Credential(**deployment["admin"]))
+        # TODO(astudenov): put this work into Credential plugins
+        admin = deployment.get_credentials_for("openstack")["admin"]
+        clients = osclients.Clients(objects.Credential(**admin))
         return clients.services()
 
     @staticmethod
@@ -167,8 +168,9 @@ class _Deployment(object):
 
         :returns: Service list
         """
+        # TODO(astudenov): put this work into Credential plugins
         services = cls.service_list(deployment)
-        users = deployment["users"]
+        users = deployment.get_credentials_for("openstack")["users"]
         for endpoint_dict in users:
             osclients.Clients(objects.Credential(**endpoint_dict)).keystone()
 
@@ -317,8 +319,9 @@ class _Task(object):
         deployment = objects.Deployment.get(deployment)
         task = task_instance or objects.Task(
             deployment_uuid=deployment["uuid"], temporary=True)
+        creds = deployment.get_credentials_for("openstack")
         benchmark_engine = engine.TaskEngine(
-            config, task, admin=deployment["admin"], users=deployment["users"])
+            config, task, admin=creds["admin"], users=creds["users"])
 
         benchmark_engine.validate()
 
@@ -345,8 +348,10 @@ class _Task(object):
 
         LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
                                                          deployment["uuid"]))
+
+        creds = deployment.get_credentials_for("openstack")
         benchmark_engine = engine.TaskEngine(
-            config, task, admin=deployment["admin"], users=deployment["users"],
+            config, task, admin=creds["admin"], users=creds["users"],
             abort_on_sla_failure=abort_on_sla_failure)
 
         try:

@@ -84,16 +84,20 @@ class DevstackEngineTestCase(test.TestCase):
             mock.Mock()
         )
         server = mock.Mock(host="host")
-        mock_credential.return_value = "fake_credential"
+        mock_credential.return_value.to_dict.return_value = "fake_credential"
         mock_get_updated_server.return_value = ds_server = mock.Mock()
         mock_get_script.return_value = "fake_script"
         server.get_credentials.return_value = "fake_credentials"
         fake_provider.create_servers.return_value = [server]
         with mock.patch.object(self.engine, "deployment") as mock_deployment:
             credentials = self.engine.deploy()
-        self.assertEqual({"admin": "fake_credential"}, credentials)
+        self.assertEqual(
+            {"openstack": [{"admin": "fake_credential", "users": []}]},
+            credentials)
         mock_credential.assert_called_once_with(
             "http://host:5000/v2.0/", "admin", "secret", "admin", "admin")
+        mock_credential.return_value.to_dict.assert_called_once_with(
+            include_permission=True)
         mock_deployment.add_resource.assert_called_once_with(
             info="fake_credentials",
             provider_name="DevstackEngine",

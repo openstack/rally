@@ -94,12 +94,14 @@ class TestExistingCloud(test.TestCase):
         deployment = self.deployments[keystone_version]
         engine = existing.ExistingCloud(deployment)
         credentials = engine.deploy()
+        credentials = credentials["openstack"][0]
         admin_credential = deployment["config"].copy()
         admin_credential.pop("type")
         admin_credential["endpoint"] = None
         admin_credential.update(admin_credential.pop("admin"))
+        admin_credential["permission"] = consts.EndpointPermission.ADMIN
 
-        actual_credentials = credentials["admin"].to_dict()
+        actual_credentials = credentials["admin"]
 
         if keystone_version == "v3":
             # NOTE(andreykurilin): credentials obj uses `tenant_name` for both

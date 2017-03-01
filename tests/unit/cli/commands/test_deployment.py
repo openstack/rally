@@ -241,7 +241,8 @@ class DeploymentCommandsTestCase(test.TestCase):
             },
             "users": []
         }
-        self.fake_api.deployment.get.return_value = value
+        deployment = self.fake_api.deployment.get.return_value
+        deployment.get_credentials_for.return_value = value
         self.deployment.show(self.fake_api, deployment_id)
         self.fake_api.deployment.get.assert_called_once_with(deployment_id)
 
@@ -391,8 +392,9 @@ class DeploymentCommandsTestCase(test.TestCase):
                                                "admin",
                                                "adminpass").to_dict()
         sample_credential["not-exist-key"] = "error"
-        self.fake_api.deployment.get.return_value = {
-            "admin": sample_credential}
+        deployment = self.fake_api.deployment.get.return_value
+        deployment.get_credentials_for.return_value = {
+            "admin": sample_credential, "users": []}
         refused = keystone_exceptions.ConnectionRefused()
         self.fake_api.deployment.check.side_effect = refused
         self.assertEqual(self.deployment.check(

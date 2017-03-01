@@ -15,11 +15,12 @@
 
 """Tests for db.deploy layer."""
 
-
+import jsonschema
 import mock
 
 from rally.common import objects
 from rally import consts
+from rally import exceptions
 from tests.unit import test
 
 
@@ -30,7 +31,7 @@ class DeploymentTestCase(test.TestCase):
             "uuid": "baa1bfb6-0c38-4f6c-9bd0-45968890e4f4",
             "name": "",
             "config": {},
-            "endpoint": {},
+            "credentials": {},
             "status": consts.DeployStatus.DEPLOY_INIT,
         }
         self.resource = {
@@ -120,37 +121,44 @@ class DeploymentTestCase(test.TestCase):
     def test_update_credentials(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
-        credentials = {
-            "admin": objects.Credential("url", "user", "pwd", "tenant",
-                                        consts.EndpointPermission.ADMIN),
-            "users": [
-                objects.Credential("url1", "user1", "pwd1", "tenant1",
-                                   consts.EndpointPermission.USER),
-                objects.Credential("url2", "user2", "pwd2", "tenant2",
-                                   consts.EndpointPermission.USER),
-            ]
-        }
+        credentials = {"foo": [{"admin": {"fake_admin": True},
+                                "users": [{"fake_user": True}]}]}
 
-        expected_users = [u.to_dict(include_permission=True)
-                          for u in credentials["users"]]
-        expected_admin = credentials["admin"].to_dict(include_permission=True)
         deploy.update_credentials(credentials)
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"],
             {
-                "credentials": [["openstack", {"admin": expected_admin,
-                                               "users": expected_users}]]
+                "credentials": {"foo": [{"admin": {"fake_admin": True},
+                                         "users": [{"fake_user": True}]}]}
             })
 
-    @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    def test_update_empty_credentials(self, mock_deployment_update):
-        mock_deployment_update.return_value = self.deployment
+    def test_get_credentials_for(self):
+        credentials = {"foo": [{"admin": {"fake_admin": True},
+                                "users": [{"fake_user": True}]}]}
+        self.deployment["credentials"] = credentials
         deploy = objects.Deployment(deployment=self.deployment)
-        deploy.update_credentials({})
-        mock_deployment_update.assert_called_once_with(
-            self.deployment["uuid"], {
-                "credentials": [["openstack", {"admin": {}, "users": []}]]
-            })
+
+        creds = deploy.get_credentials_for("foo")
+        self.assertEqual(credentials["foo"][0], creds)
+
+    def test_get_deprecated(self):
+        credentials = {"openstack": [{"admin": {"fake_admin": True},
+                                      "users": [{"fake_user": True}]}]}
+        self.deployment["credentials"] = credentials
+        deploy = objects.Deployment(deployment=self.deployment)
+
+        self.assertEqual(credentials["openstack"][0]["admin"], deploy["admin"])
+        self.assertEqual(credentials["openstack"][0]["users"], deploy["users"])
+
+    def test_update_empty_credentials(self):
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertRaises(jsonschema.ValidationError,
+                          deploy.update_credentials, {})
+
+    def test_get_credentials_error(self):
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertRaises(exceptions.RallyException,
+                          deploy.get_credentials_for, "bar")
 
     @mock.patch("rally.common.objects.deploy.db.resource_create")
     def test_add_resource(self, mock_resource_create):

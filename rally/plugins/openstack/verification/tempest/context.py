@@ -44,8 +44,8 @@ class TempestContext(context.VerifierContext):
     def __init__(self, ctx):
         super(TempestContext, self).__init__(ctx)
 
-        credential = self.verifier.deployment["admin"]
-        self.clients = osclients.Clients(objects.Credential(**credential))
+        creds = self.verifier.deployment.get_credentials_for("openstack")
+        self.clients = osclients.Clients(objects.Credential(**creds["admin"]))
         self.available_services = self.clients.services().values()
 
         self.conf = configparser.ConfigParser()

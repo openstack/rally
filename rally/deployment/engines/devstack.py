@@ -137,7 +137,13 @@ class DevstackEngine(engine.Engine):
             "http://%s:5000/v2.0/" % self.servers[0].host, "admin",
             self.local_conf["ADMIN_PASSWORD"], "admin",
             consts.EndpointPermission.ADMIN)
-        return {"admin": admin_credential}
+        return {
+            "openstack": [
+                {
+                    "admin": admin_credential.to_dict(include_permission=True),
+                    "users": []
+                }
+            ]}
 
     def cleanup(self):
         for resource in self.deployment.get_resources(type="credentials"):

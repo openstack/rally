@@ -87,7 +87,7 @@ class TempestConfigfileManager(object):
     """Class to create a Tempest config file."""
 
     def __init__(self, deployment):
-        self.credential = deployment["admin"]
+        self.credential = deployment.get_credentials_for("openstack")["admin"]
         self.clients = osclients.Clients(objects.Credential(**self.credential))
         self.available_services = self.clients.services().values()
 

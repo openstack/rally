@@ -60,7 +60,8 @@ class TestTaskSamples(unittest.TestCase):
 
         # let's use pre-created users to make TestTaskSamples quicker
         deployment = api.Deployment.get("MAIN")
-        admin_cred = objects.Credential(**deployment["admin"])
+        creds = deployment.get_credentials_for("openstack")
+        admin_cred = objects.Credential(**creds["admin"])
 
         ctx = {"admin": {"credential": admin_cred},
                "task": {"uuid": self.__class__.__name__}}

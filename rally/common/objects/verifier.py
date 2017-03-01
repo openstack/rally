@@ -68,7 +68,8 @@ class Verifier(object):
         self._db_entry = db.verifier_update(self.uuid, **properties)
 
     def set_deployment(self, deployment_id):
-        self._deployment = db.deployment_get(deployment_id)
+        from rally.common import objects
+        self._deployment = objects.Deployment.get(deployment_id)
 
     @property
     def deployment(self):

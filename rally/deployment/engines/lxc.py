@@ -149,7 +149,10 @@ class LxcEngine(engine.Engine):
                 container.ssh.run("/bin/sh -e", stdin=open(start_script, "rb"))
             if network:
                 network += 1
-        return {"admin": objects.Credential("", "", "", "")}
+
+        admin = objects.Credential("", "", "", "").to_dict(
+            include_permission=True)
+        return {"openstack": [{"admin": admin, "users": []}]}
 
     def cleanup(self):
         resources = self.deployment.get_resources()
