@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import os
 
 from oslo_config import cfg
 from six.moves.urllib import parse
@@ -285,9 +286,8 @@ class Keystone(OSClient):
         if a version override is used.
         """
         url = parse.urlparse(self.credential.auth_url)
-        # NOTE(bigjools): This assumes that non-versioned URLs have no
-        # path component at all.
-        parts = (url.scheme, url.netloc, "/", url.params, url.query,
+        path = os.path.join(*os.path.split(url.path)[:-1])
+        parts = (url.scheme, url.netloc, path, url.params, url.query,
                  url.fragment)
         return parse.urlunparse(parts)
 
