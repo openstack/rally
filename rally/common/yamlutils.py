@@ -11,6 +11,7 @@
 #    under the License.
 
 import collections
+import json
 
 import yaml
 from yaml import constructor
@@ -20,6 +21,19 @@ from yaml import parser
 from yaml import resolver
 
 ParserError = parser.ParserError
+
+
+# NOTE(andreykurilin): Jinja2 uses __repr__ methods of objects while rendering
+#   templates. Such behaviour converts OrderedDict to the string like
+#        "OrderedDict([('foo', 'xxx'), ('bar', 'yyy')])"
+#   which breaks json/yaml load.
+#   In 99% of cases, we are rendering templates based on the dicts obtained
+#   after yaml.safe_load which uses collections.OrderedDict , so writing here
+#   the workaround with overridden __repr__ method looks like the best choice.
+class OrderedDict(collections.OrderedDict):
+    """collections.OrderedDict with __repr__ like in the regular dict."""
+    def __repr__(self):
+        return json.dumps(self, sort_keys=False)
 
 
 def _construct_mapping(loader, node, deep=False):
@@ -34,11 +48,15 @@ def _construct_mapping(loader, node, deep=False):
                     "the key (%s) is redefined" % key,
                     key_node.start_mark)
             keys.append(key)
-    return collections.OrderedDict(loader.construct_pairs(node))
+    return OrderedDict(loader.construct_pairs(node))
 
 
 class _SafeLoader(loader.SafeLoader):
     pass
+
+
+_SafeLoader.add_constructor(resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+                            _construct_mapping)
 
 
 def safe_load(stream):
@@ -47,6 +65,4 @@ def safe_load(stream):
     :param stream: json/yaml stream.
     :returns: dict object
     """
-    _SafeLoader.add_constructor(resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                                _construct_mapping)
     return yaml.load(stream, _SafeLoader)
