@@ -75,21 +75,43 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete="foo_force")
         scenario.add_output.assert_called_once_with(
-            additive={"title": "Command output", "chart_plugin": "Lines",
-                      "data": [["foo", 42.0]]})
+            complete={"chart_plugin": "TextArea",
+                      "data": [
+                          "StdErr: foo_err",
+                          "StdOut:",
+                          "{\"foo\": 42}"],
+                      "title": "Script Output"})
 
     @ddt.data(
-        {"output": (0, "", ""), "raises": exceptions.ScriptError},
-        {"output": (0, "{\"foo\": 42}", ""),
-         "expected": [{"additive": {"chart_plugin": "Lines",
-                                    "data": [["foo", 42.0]],
-                                    "title": "Command output"}}]},
+        {"output": (0, "", ""),
+         "expected": [{"complete": {"chart_plugin": "TextArea",
+                                    "data": [
+                                        "StdErr: (none)",
+                                        "StdOut:",
+                                        ""],
+                                    "title": "Script Output"}}]},
         {"output": (1, "{\"foo\": 42}", ""), "raises": exceptions.ScriptError},
         {"output": ("", 1, ""), "raises": TypeError},
+        {"output": (0, "{\"foo\": 42}", ""),
+         "expected": [{"complete": {"chart_plugin": "TextArea",
+                                    "data": [
+                                        "StdErr: (none)",
+                                        "StdOut:",
+                                        "{\"foo\": 42}"],
+                                    "title": "Script Output"}}]},
         {"output": (0, "{\"additive\": [1, 2]}", ""),
-         "expected": [{"additive": 1}, {"additive": 2}]},
+         "expected": [{"complete": {"chart_plugin": "TextArea",
+                                    "data": [
+                                        "StdErr: (none)",
+                                        "StdOut:", "{\"additive\": [1, 2]}"],
+                                    "title": "Script Output"}}]},
         {"output": (0, "{\"complete\": [3, 4]}", ""),
-         "expected": [{"complete": 3}, {"complete": 4}]},
+         "expected": [{"complete": {"chart_plugin": "TextArea",
+                                    "data": [
+                                        "StdErr: (none)",
+                                        "StdOut:",
+                                        "{\"complete\": [3, 4]}"],
+                                    "title": "Script Output"}}]},
         {"output": (0, "{\"additive\": [1, 2], \"complete\": [3, 4]}", ""),
          "expected": [{"additive": 1}, {"additive": 2},
                       {"complete": 3}, {"complete": 4}]}
@@ -172,13 +194,14 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario = self.create_env(vmtasks.BootRuncommandDelete(self.context))
 
         mock_json.loads.side_effect = ValueError()
-        self.assertRaises(exceptions.ScriptError,
-                          scenario.run,
-                          "foo_image", "foo_flavor", "foo_interpreter",
-                          "foo_script", "foo_username")
+        scenario.run("foo_image", "foo_flavor", "foo_interpreter",
+                     "foo_script", "foo_username")
+        scenario.add_output.assert_called_once_with(complete={
+            "chart_plugin": "TextArea", "data": ["StdErr: foo_err",
+                                                 "StdOut:", "{\"foo\": 42}"],
+            "title": "Script Output"})
         scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
-        self.assertFalse(scenario.add_output.called)
 
     def test_boot_runcommand_delete_custom_image(self):
         context = {
@@ -221,8 +244,11 @@ class VMTasksTestCase(test.ScenarioTestCase):
         scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete="foo_force")
         scenario.add_output.assert_called_once_with(
-            additive={"title": "Command output", "chart_plugin": "Lines",
-                      "data": [["foo", 42.0]]})
+            complete={"chart_plugin": "TextArea",
+                      "data": [
+                          "StdErr: foo_err",
+                          "StdOut:", "{\"foo\": 42}"],
+                      "title": "Script Output"})
 
     @mock.patch("%s.heat" % BASE)
     @mock.patch("%s.sshutils" % BASE)

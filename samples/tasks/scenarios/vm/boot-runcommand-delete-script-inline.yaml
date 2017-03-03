@@ -1,0 +1,24 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+---
+  VMTasks.boot_runcommand_delete:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: "^cirros.*-disk$"
+        floating_network: "public"
+        force_delete: false
+        command:
+            interpreter: "/bin/sh"
+            script_inline: "ls -la"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network: {}
