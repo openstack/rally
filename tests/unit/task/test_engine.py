@@ -41,7 +41,7 @@ class TaskEngineTestCase(test.TestCase):
         config = mock.MagicMock()
         task = mock.MagicMock()
         mock_task_config.return_value = fake_task_instance = mock.MagicMock()
-        eng = engine.TaskEngine(config, task)
+        eng = engine.TaskEngine(config, task, mock.Mock())
         mock_task_config.assert_has_calls([mock.call(config)])
         self.assertEqual(eng.config, fake_task_instance)
         self.assertEqual(eng.task, task)
@@ -50,7 +50,8 @@ class TaskEngineTestCase(test.TestCase):
         config = None
         task = mock.Mock()
         exception = self.assertRaises(exceptions.InvalidTaskException,
-                                      engine.TaskEngine, config, task)
+                                      engine.TaskEngine, config, task,
+                                      mock.Mock())
         self.assertIn("Input task is empty", str(exception))
         self.assertTrue(task.set_failed.called)
 
@@ -58,7 +59,8 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("jsonschema.validate")
     def test_validate(self, mock_validate, mock_task_config):
         mock_task_config.return_value = config = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
         mock_validate = mock.MagicMock()
 
         eng._validate_config_scenarios_name = mock_validate.names
@@ -80,13 +82,13 @@ class TaskEngineTestCase(test.TestCase):
         }
         task = mock.MagicMock()
         self.assertRaises(exceptions.InvalidTaskException,
-                          engine.TaskEngine, config, task)
+                          engine.TaskEngine, config, task, mock.Mock())
         self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_scenarios_name(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng._validate_config_scenarios_name = mock.MagicMock(
             side_effect=exceptions.NotFoundScenarios)
 
@@ -96,7 +98,7 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_syntax(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng._validate_config_scenarios_name = mock.MagicMock()
         eng._validate_config_syntax = mock.MagicMock(
             side_effect=exceptions.InvalidTaskConfig)
@@ -107,7 +109,7 @@ class TaskEngineTestCase(test.TestCase):
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_semantic(self, mock_task_config):
         task = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng._validate_config_scenarios_name = mock.MagicMock()
         eng._validate_config_syntax = mock.MagicMock()
         eng._validate_config_semantic = mock.MagicMock(
@@ -124,8 +126,8 @@ class TaskEngineTestCase(test.TestCase):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
-            engine.Workload({"name": "a"}),
-            engine.Workload({"name": "b"})
+            engine.Workload({"name": "a"}, 0),
+            engine.Workload({"name": "b"}, 1)
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
@@ -134,7 +136,8 @@ class TaskEngineTestCase(test.TestCase):
             mock.MagicMock(get_name=lambda: "b"),
             mock.MagicMock(get_name=lambda: "a")
         ]
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
         eng._validate_config_scenarios_name(mock_task_instance)
 
     @mock.patch("rally.task.engine.TaskConfig")
@@ -145,17 +148,22 @@ class TaskEngineTestCase(test.TestCase):
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
-            engine.Workload({"name": "exist"}),
-            engine.Workload({"name": "nonexist1"}),
-            engine.Workload({"name": "nonexist2"})
+            engine.Workload({"name": "exist"}, 0),
+            engine.Workload({"name": "nonexist1"}, 1),
+            engine.Workload({"name": "nonexist2"}, 2)
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        mock_scenario.list_benchmark_scenarios.return_value = ["exist", "aaa"]
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        mock_scenario.get_all.return_value = [
+            mock.Mock(get_name=lambda: "exist"),
+            mock.Mock(get_name=lambda: "aaa")]
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
 
-        self.assertRaises(exceptions.NotFoundScenarios,
-                          eng._validate_config_scenarios_name,
-                          mock_task_instance)
+        exc = self.assertRaises(exceptions.NotFoundScenarios,
+                                eng._validate_config_scenarios_name,
+                                mock_task_instance)
+        self.assertEqual("There are no benchmark scenarios with names: "
+                         "`nonexist2, nonexist1`.", str(exc))
 
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.hook.Hook.validate")
@@ -170,16 +178,18 @@ class TaskEngineTestCase(test.TestCase):
             mock_scenario_get
     ):
         default_context = {"foo": 1}
-        mock_scenario_get.return_value._meta_get.return_value = default_context
+        scenario_cls = mock_scenario_get.return_value
+        scenario_cls.get_default_context.return_value = default_context
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
-            engine.Workload({"name": "sca", "context": "a"}),
-            engine.Workload({"name": "sca", "runner": "b"}),
-            engine.Workload({"name": "sca", "hooks": ["c"]}),
+            engine.Workload({"name": "sca", "context": "a"}, 0),
+            engine.Workload({"name": "sca", "runner": "b"}, 1),
+            engine.Workload({"name": "sca", "hooks": ["c"]}, 2),
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
         eng._validate_config_syntax(mock_task_instance)
         mock_scenario_runner_validate.assert_has_calls(
             [mock.call({}), mock.call("b")], any_order=True)
@@ -201,15 +211,17 @@ class TaskEngineTestCase(test.TestCase):
     def test__validate_config_syntax__wrong_runner(
             self, mock_context_manager_validate,
             mock_scenario_runner, mock_task_config, mock_scenario_get):
-        mock_scenario_get.return_value._meta_get.return_value = {}
+        scenario_cls = mock_scenario_get.return_value
+        scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
-            engine.Workload({"name": "sca", "context": "a"}),
-            engine.Workload({"name": "sca", "runner": "b"})
+            engine.Workload({"name": "sca", "context": "a"}, 0),
+            engine.Workload({"name": "sca", "runner": "b"}, 1)
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
 
         mock_scenario_runner.validate = mock.MagicMock(
             side_effect=jsonschema.ValidationError("a"))
@@ -223,69 +235,62 @@ class TaskEngineTestCase(test.TestCase):
     def test__validate_config_syntax__wrong_context(
             self, mock_context_manager, mock_scenario_runner_validate,
             mock_task_config, mock_scenario_get):
-        mock_scenario_get.return_value._meta_get.return_value = {}
+        scenario_cls = mock_scenario_get.return_value
+        scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
-            engine.Workload({"name": "sca", "context": "a"}),
-            engine.Workload({"name": "sca", "runner": "b"})
+            engine.Workload({"name": "sca", "context": "a"}, 0),
+            engine.Workload({"name": "sca", "runner": "b"}, 1)
         ]
         mock_task_instance.subtasks = [mock_subtask]
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                mock.Mock())
 
         mock_context_manager.validate = mock.MagicMock(
             side_effect=jsonschema.ValidationError("a"))
         self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_syntax, mock_task_instance)
 
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.scenario.Scenario.validate")
-    def test__validate_config_semantic_helper(self, mock_scenario_validate,
-                                              mock_task_config):
-        deployment = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
-        workload = engine.Workload(
-            {"name": "name", "runner": "runner", "args": "args"})
-        eng._validate_config_semantic_helper("admin", "user", workload,
-                                             "pos", deployment)
-        mock_scenario_validate.assert_called_once_with(
+    def test__validate_config_semantic_helper(self, mock_task_config,
+                                              mock_scenario_get):
+        deployment = mock.Mock()
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                deployment)
+        mock_scenario = mock_scenario_get.return_value
+        workloads = [engine.Workload(
+            {"name": "name", "runner": "runner", "args": "args"}, 0)]
+        user_context = mock.MagicMock()
+        user_context.__enter__.return_value.context = {
+            "users": [{"foo": "user1"}]}
+        eng._validate_config_semantic_helper("admin", user_context, workloads,
+                                             deployment)
+        mock_scenario.validate.assert_called_once_with(
             "name", {"runner": "runner", "args": "args"},
-            admin="admin", users=["user"],
+            admin="admin", users=[{"foo": "user1"}],
             deployment=deployment)
 
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.scenario.Scenario.validate",
-                side_effect=exceptions.InvalidScenarioArgument)
     def test__validate_config_semanitc_helper_invalid_arg(
-            self, mock_scenario_validate, mock_task_config):
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
-
-        workload = engine.Workload({"name": "name"})
-        self.assertRaises(exceptions.InvalidTaskConfig,
-                          eng._validate_config_semantic_helper, "a", "u",
-                          workload, "p", mock.MagicMock())
-
-    @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.existing_users.ExistingUsers")
-    def test_get_user_ctx_for_validation_existing_users(
-            self, mock_existing_users, mock_task_config):
-
-        context = {"a": 10}
-        users = [mock.MagicMock(), mock.MagicMock()]
-
+            self, mock_task_config, mock_scenario_get):
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
-                                users=users)
+                                mock.Mock())
+        mock_scenario = mock_scenario_get.return_value
+        mock_scenario.validate.side_effect = exceptions.InvalidScenarioArgument
+        user_context = mock.MagicMock()
+        workloads = [engine.Workload({"name": "name"}, 0)]
+        self.assertRaises(exceptions.InvalidTaskConfig,
+                          eng._validate_config_semantic_helper, "a",
+                          user_context, workloads, "fake_deployment")
 
-        result = eng._get_user_ctx_for_validation(context)
-
-        self.assertEqual(context["config"]["existing_users"], users)
-        mock_existing_users.assert_called_once_with(context)
-
-        self.assertEqual(mock_existing_users.return_value, result)
-
+    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
+    @mock.patch("rally.task.engine.context.Context")
+    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.osclients.Clients")
-    @mock.patch("rally.task.engine.users_ctx")
     @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic_helper")
     @mock.patch("rally.task.engine.objects.Deployment.get",
@@ -293,45 +298,42 @@ class TaskEngineTestCase(test.TestCase):
     def test__validate_config_semantic(
             self, mock_deployment_get,
             mock__validate_config_semantic_helper,
-            mock_users_ctx, mock_clients, mock_task_config):
-        mock_users_ctx.UserGenerator = fakes.FakeUserContext
-        mock_clients.return_value = mock.MagicMock()
+            mock_task_config, mock_credential, mock_context,
+            mock_scenario_get, mock_clients):
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"},
+            users=[{"bar": "user1"}])
+
+        scenario_cls = mock_scenario_get.return_value
+        scenario_cls.get_namespace.return_value = "default"
 
         mock_task_instance = mock.MagicMock()
         mock_subtask1 = mock.MagicMock()
-        wconf1 = engine.Workload({"name": "a", "runner": "ra"})
-        wconf2 = engine.Workload({"name": "a", "runner": "rb"})
+        wconf1 = engine.Workload({"name": "a", "runner": "ra",
+                                  "context": {"users": {}}}, 0)
+        wconf2 = engine.Workload({"name": "a", "runner": "rb"}, 1)
         mock_subtask1.workloads = [wconf1, wconf2]
 
         mock_subtask2 = mock.MagicMock()
-        wconf3 = engine.Workload({"name": "b", "runner": "ra"})
+        wconf3 = engine.Workload({"name": "b", "runner": "ra"}, 0)
         mock_subtask2.workloads = [wconf3]
 
         mock_task_instance.subtasks = [mock_subtask1, mock_subtask2]
         fake_task = mock.MagicMock()
-        eng = engine.TaskEngine(mock_task_instance, fake_task)
-
-        eng.admin = "admin"
+        eng = engine.TaskEngine(mock_task_instance, fake_task, deployment)
 
         eng._validate_config_semantic(mock_task_instance)
 
-        expected_calls = [
-            mock.call("admin"),
-            mock.call(fakes.FakeUserContext.user["credential"])
-        ]
-        mock_clients.assert_has_calls(expected_calls)
+        admin = mock_credential.return_value
+        user_context = mock_context.get.return_value.return_value
 
-        mock_deployment_get.assert_called_once_with(fake_task["uuid"])
+        mock_clients.assert_called_once_with(admin)
+        mock_clients.return_value.verified_keystone.assert_called_once_with()
 
-        admin = user = mock_clients.return_value
-        fake_deployment = mock_deployment_get.return_value
-        expected_calls = [
-            mock.call(admin, user, wconf1, 0, fake_deployment),
-            mock.call(admin, user, wconf2, 1, fake_deployment),
-            mock.call(admin, user, wconf3, 0, fake_deployment)
-        ]
-        mock__validate_config_semantic_helper.assert_has_calls(
-            expected_calls, any_order=True)
+        mock__validate_config_semantic_helper.assert_has_calls([
+            mock.call(admin, user_context, [wconf1], deployment),
+            mock.call(admin, user_context, [wconf2, wconf3], deployment),
+        ], any_order=True)
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.TaskConfig")
@@ -347,13 +349,14 @@ class TaskEngineTestCase(test.TestCase):
 
         task = mock.MagicMock()
         mock_task_get_status.return_value = consts.TaskStatus.ABORTING
-        eng = engine.TaskEngine(mock.MagicMock(), task)
+        eng = engine.TaskEngine(mock.MagicMock(), task, mock.Mock())
         eng.run()
         task.update_status.assert_has_calls([
             mock.call(consts.TaskStatus.RUNNING),
             mock.call(consts.TaskStatus.FINISHED)
         ])
 
+    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.objects.task.Task.get_status")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.LOG")
@@ -365,7 +368,9 @@ class TaskEngineTestCase(test.TestCase):
     def test_run_exception_is_logged(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_result_consumer,
-            mock_log, mock_task_config, mock_task_get_status):
+            mock_log, mock_task_config, mock_task_get_status, mock_credential):
+        scenario_cls = mock_scenario.get.return_value
+        scenario_cls.get_namespace.return_value = "openstack"
 
         mock_context_manager_setup.side_effect = Exception
         mock_result_consumer.is_task_in_aborting_status.return_value = False
@@ -374,18 +379,22 @@ class TaskEngineTestCase(test.TestCase):
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
             engine.Workload(
-                {"name": "a.task", "context": {"context_a": {"a": 1}}}),
+                {"name": "a.task", "context": {"context_a": {"a": 1}}}, 0),
             engine.Workload(
-                {"name": "b.task", "context": {"context_b": {"b": 2}}})
+                {"name": "b.task", "context": {"context_b": {"b": 2}}}, 1)
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
         mock_task_config.return_value = mock_task_instance
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock())
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"})
+        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+                                deployment)
         eng.run()
 
         self.assertEqual(2, mock_log.exception.call_count)
 
+    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
@@ -394,7 +403,9 @@ class TaskEngineTestCase(test.TestCase):
     def test_run__task_soft_aborted(
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_result_consumer):
+            mock_result_consumer, mock_credential):
+        scenario_cls = mock_scenario.get.return_value
+        scenario_cls.get_namespace.return_value = "openstack"
         task = mock.MagicMock()
         mock_result_consumer.is_task_in_aborting_status.side_effect = [False,
                                                                        False,
@@ -408,7 +419,9 @@ class TaskEngineTestCase(test.TestCase):
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
         mock_scenario_runner.get.return_value = fake_runner_cls
-        eng = engine.TaskEngine(config, task)
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"})
+        eng = engine.TaskEngine(config, task, deployment)
 
         eng.run()
 
@@ -437,67 +450,72 @@ class TaskEngineTestCase(test.TestCase):
         fake_runner_cls.return_value = fake_runner
         mock_task_get_status.return_value = consts.TaskStatus.SOFT_ABORTING
         mock_scenario_runner.get.return_value = fake_runner_cls
-        eng = engine.TaskEngine(config, task)
+        eng = engine.TaskEngine(config, task, mock.Mock())
         eng.run()
         self.assertEqual(mock.call(consts.TaskStatus.ABORTED),
                          task.update_status.mock_calls[-1])
 
+    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    def test__prepare_context(self, mock_scenario_get, mock_task_config):
+    def test__prepare_context(self, mock_scenario_get, mock_task_config,
+                              mock_credential):
         default_context = {"a": 1, "b": 2}
-        mock_scenario_get.return_value._meta_get.return_value = default_context
+        mock_scenario = mock_scenario_get.return_value
+        mock_scenario.get_default_context.return_value = default_context
+        mock_scenario.get_namespace.return_value = "openstack"
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
-        credential = mock.MagicMock()
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
-        eng = engine.TaskEngine(config, task)
-        result = eng._prepare_context(context, name, credential)
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"})
+        eng = engine.TaskEngine(config, task, deployment)
+        result = eng._prepare_context(context, name)
         expected_context = copy.deepcopy(default_context)
         expected_context.setdefault("users", {})
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"credential": credential},
+            "admin": {"credential": mock_credential.return_value},
             "scenario_name": name,
             "config": expected_context
         }
         self.assertEqual(result, expected_result)
         mock_scenario_get.assert_called_once_with(name)
-        mock_scenario_get.return_value._meta_get.assert_called_once_with(
-            "default_context"
-        )
 
+    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     def test__prepare_context_with_existing_users(self, mock_scenario_get,
-                                                  mock_task_config):
-        mock_scenario_get.return_value._meta_get.return_value = {}
+                                                  mock_task_config,
+                                                  mock_credential):
+        mock_scenario = mock_scenario_get.return_value
+        mock_scenario.get_default_context.return_value = {}
+        mock_scenario.get_namespace.return_value = "default"
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
-        credential = mock.MagicMock()
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
-        existing_users = [mock.MagicMock()]
-        eng = engine.TaskEngine(config, task, users=existing_users)
-        result = eng._prepare_context(context, name, credential)
-        expected_context = {"existing_users": existing_users}
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"},
+            users=[{"bar": "user1"}])
+        eng = engine.TaskEngine(config, task, deployment)
+        result = eng._prepare_context(context, name)
+        expected_context = {"existing_users": [{"bar": "user1"}]}
         expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"credential": credential},
+            "admin": {"credential": mock_credential.return_value},
             "scenario_name": name,
             "config": expected_context
         }
         self.assertEqual(result, expected_result)
         mock_scenario_get.assert_called_once_with(name)
-        mock_scenario_get.return_value._meta_get.assert_called_once_with(
-            "default_context")
 
 
 class ResultConsumerTestCase(test.TestCase):
@@ -618,10 +636,6 @@ class ResultConsumerTestCase(test.TestCase):
         workload = mock.Mock(spec=objects.Workload)
 
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
-
-        eng = engine.TaskEngine({}, task)
-        eng.duration = 123
-        eng.full_duration = 456
 
         mock_hook_executor_instance = mock_hook_executor.return_value
 
@@ -943,7 +957,7 @@ class WorkloadTestCase(test.TestCase):
             "sla": "s",
             "hooks": "h",
             "args": "a"
-        })
+        }, 0)
 
     def test_to_dict(self):
         expected_dict = {
@@ -970,7 +984,7 @@ class WorkloadTestCase(test.TestCase):
     def test_make_key(self):
         expected_key = {
             "name": "n",
-            "pos": "p",
+            "pos": 0,
             "kw": {
                 "runner": "r",
                 "context": "c",
@@ -980,12 +994,12 @@ class WorkloadTestCase(test.TestCase):
             }
         }
 
-        self.assertEqual(expected_key, self.wconf.make_key("p"))
+        self.assertEqual(expected_key, self.wconf.make_key())
 
     def test_make_exception_args(self):
         expected_args = {
             "name": "n",
-            "pos": "p",
+            "pos": 0,
             "reason": "r",
             "config": {
                 "runner": "r",
@@ -997,4 +1011,4 @@ class WorkloadTestCase(test.TestCase):
         }
 
         self.assertEqual(expected_args,
-                         self.wconf.make_exception_args("p", "r"))
+                         self.wconf.make_exception_args("r"))

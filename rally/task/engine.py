@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 import json
 import threading
@@ -29,9 +30,6 @@ from rally.common import objects
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally import osclients
-from rally.plugins.openstack.context.keystone import existing_users
-from rally.plugins.openstack.context.keystone import users as users_ctx
 from rally.task import context
 from rally.task import hook
 from rally.task import runner
@@ -225,26 +223,20 @@ class TaskEngine(object):
 
         Typical usage:
             ...
-            admin = ....  # contains dict representations of objects.Credential
-                          # with OpenStack admin credentials
 
-            users = ....  # contains a list of dicts of representations of
-                          # objects.Credential with OpenStack users credentials
-
-            engine = TaskEngine(config, task, admin=admin, users=users)
+            engine = TaskEngine(config, task, deployment)
             engine.validate()   # to test config
             engine.run()        # to run config
     """
 
-    def __init__(self, config, task, admin=None, users=None,
+    def __init__(self, config, task, deployment,
                  abort_on_sla_failure=False):
         """TaskEngine constructor.
 
         :param config: Dict with configuration of specified benchmark scenarios
         :param task: Instance of Task,
                      the current task which is being performed
-        :param admin: Dict with admin credentials
-        :param users: List of dicts with user credentials
+        :param deployment: Instance of Deployment,
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
         """
@@ -254,17 +246,13 @@ class TaskEngine(object):
             task.set_failed(type(e).__name__,
                             str(e),
                             json.dumps(traceback.format_exc()))
+            if logging.is_debug():
+                LOG.exception(e)
             raise exceptions.InvalidTaskException(str(e))
 
         self.task = task
-        self.admin = admin and objects.Credential(**admin) or None
-        self.existing_users = users or []
+        self.deployment = deployment
         self.abort_on_sla_failure = abort_on_sla_failure
-
-    @logging.log_task_wrapper(LOG.info, _("Task validation check cloud."))
-    def _check_cloud(self):
-        clients = osclients.Clients(self.admin)
-        clients.verified_keystone()
 
     @logging.log_task_wrapper(LOG.info,
                               _("Task validation of scenarios names."))
@@ -283,8 +271,10 @@ class TaskEngine(object):
     @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
-            for pos, workload in enumerate(subtask.workloads):
-                scenario_context = self._get_defualt_context(workload.name)
+            for workload in subtask.workloads:
+                scenario_cls = scenario.Scenario.get(workload.name)
+                scenario_context = copy.deepcopy(
+                    scenario_cls.get_default_context())
                 try:
                     runner.ScenarioRunner.validate(workload.runner)
                     context.ContextManager.validate(workload.context)
@@ -296,53 +286,85 @@ class TaskEngine(object):
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
 
-                    kw = workload.make_exception_args(
-                        pos, six.text_type(e))
+                    kw = workload.make_exception_args(six.text_type(e))
                     raise exceptions.InvalidTaskConfig(**kw)
 
-    def _validate_config_semantic_helper(self, admin, user, workload, pos,
-                                         deployment):
-        try:
-            scenario.Scenario.validate(
-                workload.name, workload.to_dict(),
-                admin=admin, users=[user], deployment=deployment)
-        except exceptions.InvalidScenarioArgument as e:
-            kw = workload.make_exception_args(pos, six.text_type(e))
-            raise exceptions.InvalidTaskConfig(**kw)
-
-    def _get_user_ctx_for_validation(self, ctx):
-        if self.existing_users:
-            ctx["config"] = {"existing_users": self.existing_users}
-            user_context = existing_users.ExistingUsers(ctx)
-        else:
-            user_context = users_ctx.UserGenerator(ctx)
-
-        return user_context
+    def _validate_config_semantic_helper(self, admin, user_context,
+                                         workloads, deployment):
+        with user_context as ctx:
+            ctx.setup()
+            for workload in workloads:
+                try:
+                    scenario_cls = scenario.Scenario.get(workload.name)
+                    scenario_cls.validate(
+                        workload.name, workload.to_dict(),
+                        admin=admin, users=ctx.context["users"],
+                        deployment=deployment)
+                except exceptions.InvalidScenarioArgument as e:
+                    kw = workload.make_exception_args(six.text_type(e))
+                    raise exceptions.InvalidTaskConfig(**kw)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
-        self._check_cloud()
+        # map workloads to platforms
+        platforms = collections.defaultdict(list)
+        for subtask in config.subtasks:
+            for workload in subtask.workloads:
+                # TODO(astudenov): We need to use a platform validator
+                # in future to identify what kind of users workload
+                # requires (regular users or admin)
+                scenario_cls = scenario.Scenario.get(workload.name)
+                namespace = scenario_cls.get_namespace()
+                platforms[namespace].append(workload)
 
-        ctx_conf = {"task": self.task, "admin": {"credential": self.admin}}
-        deployment = objects.Deployment.get(self.task["deployment_uuid"])
+        # FIXME(astudenov): currently there is no credentials for
+        # namespace 'default', thus 'opentack' is used as a workaround
+        if "default" in platforms:
+            default_workloads = platforms.pop("default")
+            platforms["openstack"].extend(default_workloads)
 
-        # TODO(boris-42): It's quite hard at the moment to validate case
-        #                 when both user context and existing_users are
-        #                 specified. So after switching to plugin base
-        #                 and refactoring validation mechanism this place
-        #                 will be replaced
-        with self._get_user_ctx_for_validation(ctx_conf) as ctx:
-            ctx.setup()
-            admin = osclients.Clients(self.admin)
-            user = osclients.Clients(ctx_conf["users"][0]["credential"])
+        for platform, workloads in platforms.items():
+            creds = self.deployment.get_credentials_for(platform)
 
-            for u in ctx_conf["users"]:
-                user = osclients.Clients(u["credential"])
-                for subtask in config.subtasks:
-                    for pos, workload in enumerate(subtask.workloads):
-                        self._validate_config_semantic_helper(
-                            admin, user, workload,
-                            pos, deployment)
+            admin = objects.Credential(**creds["admin"])
+
+            # TODO(astudenov): move this check to validator of Credential
+            if platform == "openstack":
+                from rally import osclients
+                clients = osclients.Clients(admin)
+                clients.verified_keystone()
+
+            workloads_with_users = []
+            workloads_with_existing_users = []
+
+            for workload in workloads:
+                if creds["users"] and "users" not in workload.context:
+                    workloads_with_existing_users.append(workload)
+                else:
+                    workloads_with_users.append(workload)
+
+            if workloads_with_users:
+                ctx_conf = {"task": self.task,
+                            "admin": {"credential": admin}}
+                user_context = context.Context.get(
+                    "users", namespace=platform)(ctx_conf)
+
+                self._validate_config_semantic_helper(
+                    admin, user_context,
+                    workloads_with_users, self.deployment)
+
+            if workloads_with_existing_users:
+                ctx_conf = {"task": self.task,
+                            "config": {"existing_users": creds["users"]}}
+                # NOTE(astudenov): allow_hidden=True is required
+                # for openstack existing_users context
+                user_context = context.Context.get(
+                    "existing_users", namespace=platform,
+                    allow_hidden=True)(ctx_conf)
+
+                self._validate_config_semantic_helper(
+                    admin, user_context,
+                    workloads_with_existing_users, self.deployment)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):
@@ -357,29 +379,39 @@ class TaskEngine(object):
                                         separators=(",", ": "))
             self.task.set_failed(type(e).__name__,
                                  str(e), exception_info)
-            LOG.debug(exception_info)
+            if logging.is_debug():
+                LOG.exception(e)
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
         config = config or {"type": "serial"}
         return runner.ScenarioRunner.get(config["type"])(self.task, config)
 
-    @staticmethod
-    def _get_defualt_context(name):
-        return copy.deepcopy(
-            scenario.Scenario.get(name)._meta_get("default_context"))
+    def _prepare_context(self, ctx, name):
+        scenario_cls = scenario.Scenario.get(name)
+        namespace = scenario_cls.get_namespace()
 
-    def _prepare_context(self, ctx, name, credential):
-        scenario_context = self._get_defualt_context(name)
-        if self.existing_users and "users" not in ctx:
-            scenario_context.setdefault("existing_users", self.existing_users)
+        # FIXME(astudenov): currently there is no credentials for
+        # namespace 'default', thus 'opentack' is used as a workaround
+        if namespace == "default":
+            namespace = "openstack"
+
+        creds = self.deployment.get_credentials_for(namespace)
+        existing_users = creds["users"]
+
+        # TODO(astudenov): use credential plugin in future refactoring
+        admin = objects.Credential(**creds["admin"])
+
+        scenario_context = copy.deepcopy(scenario_cls.get_default_context())
+        if existing_users and "users" not in ctx:
+            scenario_context.setdefault("existing_users", existing_users)
         elif "users" not in ctx:
             scenario_context.setdefault("users", {})
 
         scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
-            "admin": {"credential": credential},
+            "admin": {"credential": admin},
             "scenario_name": name,
             "config": scenario_context
         }
@@ -400,7 +432,7 @@ class TaskEngine(object):
         for subtask in self.config.subtasks:
             subtask_obj = self.task.add_subtask(**subtask.to_dict())
 
-            for pos, workload in enumerate(subtask.workloads):
+            for workload in subtask.workloads:
 
                 if ResultConsumer.is_task_in_aborting_status(
                         self.task["uuid"]):
@@ -408,13 +440,13 @@ class TaskEngine(object):
                     self.task.update_status(consts.TaskStatus.ABORTED)
                     return
 
-                key = workload.make_key(pos)
+                key = workload.make_key()
                 workload_obj = subtask_obj.add_workload(key)
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
                 runner_obj = self._get_runner(workload.runner)
                 context_obj = self._prepare_context(
-                    workload.context, workload.name, self.admin)
+                    workload.context, workload.name)
                 try:
                     with ResultConsumer(key, self.task,
                                         subtask_obj, workload_obj, runner_obj,
@@ -621,9 +653,8 @@ class SubTask(object):
         self.tags = config.get("tags", [])
         self.group = config.get("group")
         self.description = config.get("description")
-        self.workloads = [Workload(wconf)
-                          for wconf
-                          in config["workloads"]]
+        self.workloads = [Workload(wconf, pos)
+                          for pos, wconf in enumerate(config["workloads"])]
         self.context = config.get("context", {})
 
     def to_dict(self):
@@ -638,13 +669,14 @@ class Workload(object):
     """Workload -- workload configuration in SubTask.
 
     """
-    def __init__(self, config):
+    def __init__(self, config, pos):
         self.name = config["name"]
         self.runner = config.get("runner", {})
         self.sla = config.get("sla", {})
         self.hooks = config.get("hooks", [])
         self.context = config.get("context", {})
         self.args = config.get("args", {})
+        self.pos = pos
 
     def to_dict(self):
         workload = {"runner": self.runner}
@@ -675,13 +707,13 @@ class Workload(object):
         # return {self.name: [self.to_dict()]}
         return self.to_dict()
 
-    def make_key(self, pos):
+    def make_key(self):
         return {"name": self.name,
-                "pos": pos,
+                "pos": self.pos,
                 "kw": self.to_task()}
 
-    def make_exception_args(self, pos, reason):
+    def make_exception_args(self, reason):
         return {"name": self.name,
-                "pos": pos,
+                "pos": self.pos,
                 "config": self.to_dict(),
                 "reason": reason}

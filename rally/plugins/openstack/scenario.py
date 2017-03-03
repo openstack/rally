@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import random
 
 from rally import osclients
 from rally.task import scenario
 
-# NOTE(boris-42): Shortcut to remove import of both rally.task.scenario and
-#                 rally.plugins.openstack.scenario
-configure = scenario.configure
+configure = functools.partial(scenario.configure, namespace="openstack")
 
 
 class OpenStackScenario(scenario.Scenario):
@@ -105,3 +104,13 @@ class OpenStackScenario(scenario.Scenario):
         client = getattr(self._admin_clients, client_type)
 
         return client(version) if version is not None else client()
+
+    @classmethod
+    def validate(cls, name, config, admin=None, users=None, deployment=None):
+        if admin:
+            admin = osclients.Clients(admin)
+        if users:
+            users = [osclients.Clients(user["credential"]) for user in users]
+        super(OpenStackScenario, cls).validate(
+            name=name, config=config, admin=admin, users=users,
+            deployment=deployment)

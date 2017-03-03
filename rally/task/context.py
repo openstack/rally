@@ -26,7 +26,7 @@ from rally.task import functional
 LOG = logging.getLogger(__name__)
 
 
-def configure(name, order, hidden=False):
+def configure(name, order, namespace="default", hidden=False):
     """Context class wrapper.
 
     Each context class has to be wrapped by configure() wrapper. It
@@ -41,7 +41,8 @@ def configure(name, order, hidden=False):
                    task config
     """
     def wrapper(cls):
-        cls = plugin.configure(name=name, hidden=hidden)(cls)
+        cls = plugin.configure(name=name, namespace=namespace,
+                               hidden=hidden)(cls)
         cls._meta_set("order", order)
         return cls
 

@@ -62,7 +62,8 @@ class RallyJobsTestCase(test.TestCase):
                     task = api._Task.render_template(task_file.read(), **args)
                     task = yaml.safe_load(task)
 
-                    eng = engine.TaskEngine(task, mock.MagicMock())
+                    eng = engine.TaskEngine(task, mock.MagicMock(),
+                                            mock.Mock())
                     eng.validate()
                 except Exception:
                     print(traceback.format_exc())

@@ -48,7 +48,7 @@ class ScenarioConfigureTestCase(test.TestCase):
 
         self.assertIsNone(some_func._meta_get("name"))
         self.assertEqual("testing", some_func.get_namespace())
-        self.assertEqual({"any": 42}, some_func._meta_get("default_context"))
+        self.assertEqual({"any": 42}, some_func.get_default_context())
         self.assertFalse(some_func.is_classbased)
         some_func.unregister()
 
@@ -64,7 +64,7 @@ class ScenarioConfigureTestCase(test.TestCase):
                          ScenarioPluginCls.some.get_name())
         self.assertEqual("any", ScenarioPluginCls.some.get_namespace())
         self.assertEqual({"any": 43},
-                         ScenarioPluginCls.some._meta_get("default_context"))
+                         ScenarioPluginCls.some.get_default_context())
         self.assertFalse(ScenarioPluginCls.some.is_classbased)
         ScenarioPluginCls.some.unregister()
 
@@ -263,7 +263,7 @@ class ScenarioTestCase(test.TestCase):
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
             try:
-                context.ContextManager.validate(s._meta_get("default_context"),
+                context.ContextManager.validate(s.get_default_context(),
                                                 allow_hidden=True)
             except Exception:
                 print(traceback.format_exc())

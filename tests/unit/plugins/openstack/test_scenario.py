@@ -127,3 +127,30 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.assertEqual(self.context["tenants"][tenant_id],
                          self.context["tenant"])
         self.assertEqual(expected_tenant_id, tenant_id)
+
+    @mock.patch("rally.task.scenario.Scenario.validate")
+    def test_validate(self, mock_scenario_validate):
+        cred1 = mock.Mock()
+        cred2 = mock.Mock()
+        cred3 = mock.Mock()
+        self.osclients.mock.side_effect = [cred1, cred2, cred3]
+
+        base_scenario.OpenStackScenario.validate(
+            name="foo_name",
+            config="foo_config",
+            admin="foo_admin",
+            users=[{"credential": "foo_user1"},
+                   {"credential": "foo_user2"}],
+            deployment=None)
+
+        mock_scenario_validate.assert_called_once_with(
+            name="foo_name",
+            config="foo_config",
+            admin=cred1,
+            users=[cred2, cred3],
+            deployment=None)
+        self.osclients.mock.assert_has_calls([
+            mock.call("foo_admin"),
+            mock.call("foo_user1"),
+            mock.call("foo_user2"),
+        ])
