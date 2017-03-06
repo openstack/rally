@@ -27,7 +27,8 @@ LOG = logging.getLogger(__name__)
 #                 benchmark engine.  In future during various refactoring of
 #                 validation system and rally CI testing we will make it public
 
-@context.configure(name="existing_users", order=99, hidden=True)
+@context.configure(name="existing_users", namespace="openstack", order=99,
+                   hidden=True)
 class ExistingUsers(context.Context):
     """This context supports using existing users in Rally.
 

@@ -122,6 +122,10 @@ class Scenario(plugin.Plugin,
         self._idle_duration = 0.0
         self._output = {"additive": [], "complete": []}
 
+    @classmethod
+    def get_default_context(cls):
+        return cls._meta_get("default_context")
+
     @staticmethod
     def _validate_helper(validators, clients, config, deployment):
         for validator in validators:

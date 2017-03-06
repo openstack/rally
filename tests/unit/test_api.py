@@ -70,8 +70,7 @@ class TaskAPITestCase(test.TestCase):
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
-                      admin="fake_admin",
-                      users=["fake_user"]),
+                      mock_deployment_get.return_value),
             mock.call().validate()
         ])
 
@@ -185,7 +184,7 @@ class TaskAPITestCase(test.TestCase):
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
-                      admin="fake_admin", users=["fake_user"],
+                      mock_deployment_get.return_value,
                       abort_on_sla_failure=False),
             mock.call().run(),
         ])
