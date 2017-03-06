@@ -135,7 +135,8 @@ class SenlinMixin(base.ResourceManager):
         return getattr(self._manager(), "delete_%s" % res_name)(self.id())
 
 
-@base.resource("senlin", "clusters", order=next(_senlin_order))
+@base.resource("senlin", "clusters",
+               admin_required=True, order=next(_senlin_order))
 class SenlinCluster(SenlinMixin):
     """Resource class for Senlin Cluster."""
 

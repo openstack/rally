@@ -185,7 +185,7 @@ class CreateAndListRecords(utils.DesignateScenario):
 
 @validation.required_services(consts.Service.DESIGNATE)
 @validation.required_openstack(admin=True)
-@scenario.configure(context={"cleanup": ["designate"]},
+@scenario.configure(context={"admin_cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_servers")
 class CreateAndListServers(utils.DesignateScenario):
 
@@ -206,7 +206,7 @@ class CreateAndListServers(utils.DesignateScenario):
 
 @validation.required_services(consts.Service.DESIGNATE)
 @validation.required_openstack(admin=True)
-@scenario.configure(context={"cleanup": ["designate"]},
+@scenario.configure(context={"admin_cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_server")
 class CreateAndDeleteServer(utils.DesignateScenario):
 
@@ -222,8 +222,7 @@ class CreateAndDeleteServer(utils.DesignateScenario):
 
 @validation.required_services(consts.Service.DESIGNATE)
 @validation.required_openstack(admin=True)
-@scenario.configure(context={"cleanup": ["designate"]},
-                    name="DesignateBasic.list_servers")
+@scenario.configure(name="DesignateBasic.list_servers")
 class ListServers(utils.DesignateScenario):
 
     def run(self):
