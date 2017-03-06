@@ -676,17 +676,15 @@ class BackupTestCase(test.TestCase):
     @mock.patch("rally.common.utils.os.path.exists")
     @mock.patch("rally.common.utils.uuid")
     def test_generate_random_path(self, mock_uuid, mock_exists):
-        tmp_dir = "/some"
-        mock_exists.side_effect = (True, False)
-        uuids = ("exist", "uuuiiiddd")
-        mock_uuid.uuid4.side_effect = uuids
+        mock_exists.side_effect = lambda a: "exist" in a
+        mock_uuid.uuid4.side_effect = ("exist", "foo")
 
-        self.assertEqual("%s/%s" % (tmp_dir, uuids[-1]),
-                         utils.generate_random_path(tmp_dir))
+        self.assertEqual("/some/foo", utils.generate_random_path("/some"))
 
-        self.assertEqual(
-            [mock.call("%s/%s" % (tmp_dir, uuid)) for uuid in uuids],
-            mock_exists.call_args_list)
+        mock_exists.assert_has_calls((
+            mock.call("/some/exist"),
+            mock.call("/some/foo"),
+        ))
 
     @mock.patch("rally.common.utils.generate_random_path")
     def test___init__(self, mock_generate_random_path):
