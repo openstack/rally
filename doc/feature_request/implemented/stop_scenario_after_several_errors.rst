@@ -12,8 +12,8 @@ Starting long tests on the big environments.
 Problem description
 -------------------
 
-When we start a rally scenarios on the env where keystone die we get a lot of
-time from timeout
+When we start a rally scenario on the env where keystone dies we get a lot of
+time before timeout happens.
 
 
 Example
