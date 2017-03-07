@@ -34,7 +34,7 @@ class ResourceManager(object):
 
     REQUIRED_SERVICE = None
     REPR_KEYS = ("id", "name", "tenant_id", "zone", "zoneName", "pool",
-                 "blob")
+                 "blob", "status")
 
     def __init__(self, clients):
         self.clients = clients
@@ -380,9 +380,9 @@ def _print_tabular_resources(resources, table_label):
         field_labels=("service", "resource type", "identifiers"),
         table_label=table_label,
         formatters={"identifiers":
-                    lambda d: " ".join("%s:%s" % (k, v)
-                                       for k, v in d.items()
-                                       if k not in ("class", "resource_name"))}
+                    lambda d: "\n".join(
+                        "%s:%s" % (k, v) for k, v in d.items()
+                        if k not in ("class", "resource_name"))}
     )
     print("")
 
