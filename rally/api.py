@@ -1007,8 +1007,8 @@ class _DeprecatedAPIClass(object):
         self._cls = cls
 
     def __getattr__(self, attr, default=None):
-        LOG.warn(_LW("'%s' is deprecated since Rally 0.8.0 in favor of "
-                     "'rally.api.API' class.") % self._cls.__name__[1:])
+        LOG.warning(_LW("'%s' is deprecated since Rally 0.8.0 in favor of "
+                        "'rally.api.API' class.") % self._cls.__name__[1:])
         return getattr(self._cls, attr, default)
 
 

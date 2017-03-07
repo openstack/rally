@@ -68,6 +68,7 @@ re_db_import = re.compile(r"^from rally.common import db")
 re_objects_import = re.compile(r"^from rally.common import objects")
 re_old_type_class = re.compile(r"^\s*class \w+(\(\))?:")
 re_datetime_alias = re.compile(r"^(from|import) datetime(?!\s+as\s+dt$)")
+re_log_warn = re.compile(r"(.)*LOG\.(warn)\(\s*('|\"|_)")
 
 
 def skip_ignored_lines(func):
@@ -555,6 +556,12 @@ def check_objects_imports_in_cli(logical_line, physical_line, filename):
                   "`rally.common.objects``.")
 
 
+@skip_ignored_lines
+def check_log_warn(logical_line, physical_line, filename):
+    if re_log_warn.search(logical_line):
+        yield(0, "N313 LOG.warn is deprecated, please use LOG.warning")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -577,3 +584,4 @@ def factory(register):
     register(check_objects_imports_in_cli)
     register(check_old_type_class)
     register(check_no_six_iteritems)
+    register(check_log_warn)
