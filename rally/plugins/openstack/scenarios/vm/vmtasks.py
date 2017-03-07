@@ -425,6 +425,7 @@ class DDLoadTest(BootRuncommandDelete):
         """Boot a server from a custom image, run a command that outputs JSON.
 
         Example Script in rally-jobs/extra/install_benchmark.sh
+        :param command: default parameter from scenario
         """
         command["script_inline"] = BASH_DD_LOAD_TEST
         return super(DDLoadTest, self).run(command=command, **kwargs)
