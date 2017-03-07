@@ -26,7 +26,7 @@ from rally.verification import reporter
 
 SKIP_RE = re.compile("Skipped until Bug: ?(?P<bug_number>\d+) is resolved.")
 LP_BUG_LINK = "https://launchpad.net/bugs/%s"
-TIME_FORMAT = consts.TimeFormat.TIME_FORMAT_ISO8601
+TIME_FORMAT = consts.TimeFormat.ISO8601
 
 
 @reporter.configure("json")

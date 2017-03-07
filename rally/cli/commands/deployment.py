@@ -111,7 +111,7 @@ class DeploymentCommands(object):
 
         self.list(api, deployment_list=[deployment])
         if do_use:
-            self.use(api, deployment["uuid"])
+            self.use(api, deployment)
 
     @cliutils.args("--filename", type=str, required=False, metavar="<path>",
                    help="Path to the configuration file of the deployment.")
@@ -206,13 +206,13 @@ class DeploymentCommands(object):
         table_rows = []
 
         deployment = api.deployment.get(deployment)
-        creds = deployment.get_credentials_for("openstack")
+
+        creds = deployment["credentials"]["openstack"][0]
         users = creds["users"]
         admin = creds["admin"]
         credentials = users + [admin] if admin else users
-
         for ep in credentials:
-            data = ["***" if m == "password" else getattr(ep, m, "")
+            data = ["***" if m == "password" else ep.get(m, "")
                     for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         cliutils.print_list(table_rows, headers)
@@ -230,17 +230,12 @@ class DeploymentCommands(object):
         # TODO(astudenov): make this method platform independent
         headers = ["services", "type", "status"]
         table_rows = []
-        try:
-            deployment = api.deployment.get(deployment)
-
-        except exceptions.DeploymentNotFound:
-            print(_("Deployment %s is not found.") % deployment)
-            return(1)
+        deployment = api.deployment.get(deployment)
 
         try:
-            services = api.deployment.check(deployment)
+            services = api.deployment.check(deployment["uuid"])
         except keystone_exceptions.ConnectionRefused:
-            admin = deployment.get_credentials_for("openstack")["admin"]
+            admin = deployment["credentials"]["openstack"][0]["admin"]
             print(_("Unable to connect %s.") % admin.auth_url)
             return(1)
 
@@ -310,16 +305,16 @@ class DeploymentCommands(object):
         """
         # TODO(astudenov): make this method platform independent
         try:
-            deployment = api.deployment.get(deployment)
+            if not isinstance(deployment, dict):
+                deployment = api.deployment.get(deployment)
             print("Using deployment: %s" % deployment["uuid"])
 
             fileutils.update_globals_file("RALLY_DEPLOYMENT",
                                           deployment["uuid"])
 
-            creds = deployment.get_credentials_for("openstack")
-            credential = creds["admin"] or creds["users"][0]
+            creds = deployment["credentials"]["openstack"][0]
             self._update_openrc_deployment_file(
-                deployment["uuid"], credential.to_dict())
+                deployment["uuid"], creds["admin"] or creds["users"][0])
             print("~/.rally/openrc was updated\n\nHINTS:\n"
                   "\n* To use standard OpenStack clients, set up your env by "
                   "running:\n\tsource ~/.rally/openrc\n"

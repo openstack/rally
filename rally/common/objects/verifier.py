@@ -21,7 +21,7 @@ from rally.verification import manager
 
 class Verifier(object):
     """Represents a verifier object."""
-    TIME_FORMAT = consts.TimeFormat.TIME_FORMAT_ISO8601
+    TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, verifier):
         """Init a verifier object.

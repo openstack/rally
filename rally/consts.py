@@ -216,7 +216,7 @@ class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 class _TimeFormat(utils.ImmutableMixin, utils.EnumMixin):
     """International time formats"""
-    TIME_FORMAT_ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
+    ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
 
 
 TaskStatus = _TaskStatus()

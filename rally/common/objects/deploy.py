@@ -52,6 +52,7 @@ CREDENTIALS_SCHEMA = {
 
 class Deployment(object):
     """Represents a deployment object."""
+    TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, deployment=None, **attributes):
         if deployment:
@@ -67,6 +68,15 @@ class Deployment(object):
                             "['%s'] to get credentials.") % (key, key))
             return self.get_credentials_for("openstack")[key]
         return self.deployment[key]
+
+    def to_dict(self):
+        result = {}
+        formatters = ["created_at", "completed_at", "started_at", "updated_at"]
+        for field, value in self.deployment.items():
+            if field in formatters:
+                value = value.strftime(self.TIME_FORMAT)
+            result[field] = value
+        return result
 
     @staticmethod
     def get(deploy):

@@ -46,7 +46,7 @@ LOG = logging.getLogger(__name__)
 class _Deployment(object):
 
     @classmethod
-    def create(cls, config, name):
+    def _create(cls, config, name):
         """Create a deployment.
 
         :param config: a dict with deployment configuration
@@ -75,6 +75,10 @@ class _Deployment(object):
             credentials = deployer.make_deploy()
             deployment.update_credentials(credentials)
             return deployment
+
+    @classmethod
+    def create(cls, config, name):
+        return cls._create(config, name).to_dict()
 
     @classmethod
     def destroy(cls, deployment):
@@ -133,13 +137,17 @@ class _Deployment(object):
             deployment.update_credentials(credentials)
 
     @classmethod
-    def get(cls, deployment):
+    def _get(cls, deployment):
         """Get the deployment.
 
         :param deployment: UUID or name of the deployment
         :returns: Deployment instance
         """
         return objects.Deployment.get(deployment)
+
+    @classmethod
+    def get(cls, deployment):
+        return cls._get(deployment).to_dict()
 
     @classmethod
     def service_list(cls, deployment):
@@ -164,10 +172,11 @@ class _Deployment(object):
     def check(cls, deployment):
         """Check keystone authentication and list all available services.
 
+        :param deployment: UUID of deployment
         :returns: Service list
         """
         # TODO(astudenov): make this method platform independent
-        creds = deployment.get_credentials_for("openstack")
+        creds = cls._get(deployment).get_credentials_for("openstack")
         creds["admin"].verify_connection()
         for user in creds["users"]:
             user.verify_connection()

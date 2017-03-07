@@ -354,7 +354,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
         dep = api._Deployment.create(self.deployment_config, "fake_deployment")
-        self.assertIsInstance(dep, objects.Deployment)
+        self.assertIsInstance(dep, dict)
         mock_deployment_create.assert_called_once_with({
             "name": "fake_deployment",
             "config": self.deployment_config,
@@ -487,14 +487,16 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
-    def test_deployment_check(self):
+    @mock.patch("rally.common.objects.Deployment.get")
+    def test_deployment_check(self, mock_deployment_get):
         fake_credential1 = fakes.fake_credential()
         fake_credential2 = fakes.fake_credential()
 
-        deployment = mock.Mock(spec=objects.Deployment)
-        deployment.get_credentials_for.return_value = {
+        mock_deployment_get.return_value.get_credentials_for.return_value = {
             "admin": fake_credential1, "users": [fake_credential2]}
-        result = api._Deployment.check(deployment)
+
+        result = api._Deployment.check("uuid")
+
         fake_credential1.verify_connection.assert_called_once_with()
         fake_credential2.verify_connection.assert_called_once_with()
         self.assertEqual(fake_credential1.list_services.return_value, result)

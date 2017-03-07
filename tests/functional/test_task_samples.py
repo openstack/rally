@@ -58,7 +58,7 @@ class TestTaskSamples(unittest.TestCase):
             db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir)
 
         # let's use pre-created users to make TestTaskSamples quicker
-        deployment = api.Deployment.get("MAIN")
+        deployment = api._Deployment._get("MAIN")
         admin_cred = deployment.get_credentials_for("openstack")["admin"]
 
         ctx = {"admin": {"credential": admin_cred},
@@ -69,6 +69,7 @@ class TestTaskSamples(unittest.TestCase):
 
         config = deployment["config"]
         os_creds = config["creds"]["openstack"]
+
         user = copy.copy(os_creds["admin"])
         user["username"] = ctx["users"][0]["credential"].username
         user["password"] = ctx["users"][0]["credential"].password

@@ -15,6 +15,7 @@
 
 """Tests for db.deploy layer."""
 
+import datetime as dt
 import jsonschema
 import mock
 
@@ -25,6 +26,8 @@ from tests.unit import test
 
 
 class DeploymentTestCase(test.TestCase):
+    TIME_FORMAT = consts.TimeFormat.ISO8601
+
     def setUp(self):
         super(DeploymentTestCase, self).setUp()
         self.deployment = {
@@ -229,3 +232,53 @@ class DeploymentTestCase(test.TestCase):
             {"completed_at": "fake_time",
              "status": consts.DeployStatus.DEPLOY_FINISHED}
         )
+
+    def test_to_dict(self):
+        self.deployment = {
+            "status": "deploy->finished",
+            "parent_uuid": None,
+            "updated_at": dt.datetime(2017, 3, 10, 9, 5, 9, 117427),
+            "completed_at": dt.datetime(2017, 3, 10, 12, 5, 9, 94981),
+            "credentials":
+                {"openstack":
+                    [{"admin":
+                        {"username": "foo_admin_name",
+                         "endpoint": None,
+                         "region_name": "FooRegionOne",
+                         "https_insecure": False,
+                         "permission": "foo_perm",
+                         "tenant_name": "foo_tenant",
+                         "user_domain_name": "Default",
+                         "https_cacert": "",
+                         "domain_name": None,
+                         "endpoint_type": None,
+                         "auth_url": "foo_auth_url",
+                         "password": "admin",
+                         "project_domain_name": "Default"},
+                      "users": []}]},
+            "started_at": dt.datetime(2017, 3, 10, 12, 5, 9, 78779),
+            "id": 1,
+            "name": "foo_deployment_name",
+            "uuid": "eeecf2c6-8b5d-4ed7-92e5-b7cdc335e885",
+            "created_at": dt.datetime(2017, 3, 10, 9, 5, 9, 68652),
+            "config": {
+                "endpoint": None,
+                "region_name": "FooRegionOne",
+                "https_insecure": False,
+                "admin": {
+                    "username": "foo_admin_name",
+                    "password": "foo_admin_pwd",
+                    "user_domain_name": "Default",
+                    "project_name": "foo_prj_name",
+                    "project_domain_name": "Default"},
+                "https_cacert": "",
+                "endpoint_type": None,
+                "auth_url": "foo_auth_url",
+                "type": "ExistingCloud"}}
+        deploy = objects.Deployment(deployment=self.deployment)
+        expected_result = deploy.to_dict()
+        for field in ["created_at", "completed_at",
+                      "started_at", "updated_at"]:
+            self.deployment[field] = self.deployment[field].strftime(
+                self.TIME_FORMAT)
+        self.assertEqual(expected_result, self.deployment)

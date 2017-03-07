@@ -132,7 +132,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_deployment_commands_list.assert_called_once_with(
             self.fake_api, deployment_list=[{"uuid": "uuid"}])
         mock_deployment_commands_use.assert_called_once_with(
-            self.fake_api, "uuid")
+            self.fake_api, self.fake_api.deployment.create.return_value)
 
     def test_recreate(self):
         deployment_id = "43924f8b-9371-4152-af9f-4cf02b4eced4"
@@ -237,18 +237,17 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.deployment.utils.Struct")
     def test_show(self, mock_struct, mock_print_list):
         deployment_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
-        value = {
-            "admin": fakes.fake_credential(
-                auth_url="url",
-                username="u",
-                password="p",
-                tenant_name="t",
-                region_name="r",
-                endpoint_type=consts.EndpointType.INTERNAL),
-            "users": []
-        }
-        deployment = self.fake_api.deployment.get.return_value
-        deployment.get_credentials_for.return_value = value
+        value = {"admin": {"auth_url": "url",
+                           "username": "u",
+                           "password": "p",
+                           "tenant_name": "t",
+                           "region_name": "r",
+                           "endpoint_type": consts.EndpointType.INTERNAL},
+                 "users": []}
+        deployment = self.fake_api.deployment.get
+        deployment.return_value = {"credentials": {"openstack": [
+            {"admin": value["admin"],
+             "users": []}]}}
         self.deployment.show(self.fake_api, deployment_id)
         self.fake_api.deployment.get.assert_called_once_with(deployment_id)
 
@@ -273,12 +272,12 @@ class DeploymentCommandsTestCase(test.TestCase):
         deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
         self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
             uuid=deployment_id,
-            admin=fakes.fake_credential(**{"auth_url": "fake_auth_url",
-                                           "username": "fake_username",
-                                           "password": "fake_password",
-                                           "tenant_name": "fake_tenant_name",
-                                           "endpoint": "fake_endpoint",
-                                           "region_name": None}))
+            admin={"auth_url": "fake_auth_url",
+                   "username": "fake_username",
+                   "password": "fake_password",
+                   "tenant_name": "fake_tenant_name",
+                   "endpoint": "fake_endpoint",
+                   "region_name": None})
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
@@ -310,7 +309,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
         self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
             uuid=deployment_id,
-            admin=fakes.fake_credential(**{
+            admin={
                 "auth_url": "http://localhost:5000/v3",
                 "username": "fake_username",
                 "password": "fake_password",
@@ -318,7 +317,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "endpoint": "fake_endpoint",
                 "region_name": None,
                 "user_domain_name": "fake_user_domain",
-                "project_domain_name": "fake_project_domain"}))
+                "project_domain_name": "fake_project_domain"})
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
@@ -360,7 +359,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_DEPLOYMENT, "fake_uuid")
         mock__update_openrc_deployment_file.assert_called_once_with(
-            "fake_uuid", {"foo": "fake_credentials"})
+            "fake_uuid", fake_credential)
 
     def test_deployment_not_found(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
@@ -374,33 +373,30 @@ class DeploymentCommandsTestCase(test.TestCase):
         sample_credential = fakes.fake_credential(
             auth_url="http://192.168.1.1:5000/v2.0/",
             username="admin", password="adminpass")
-        deployment = {"admin": sample_credential,
-                      "users": [sample_credential]}
+        deployment = {"uuid": deployment_id,
+                      "credentials": {"openstack": [
+                          {"admin": sample_credential,
+                           "users": [sample_credential]}]}}
         self.fake_api.deployment.get.return_value = deployment
         self.fake_api.deployment.check.return_value = {}
 
         self.deployment.check(self.fake_api, deployment_id)
 
         self.fake_api.deployment.get.assert_called_once_with(deployment_id)
-        self.fake_api.deployment.check.assert_called_once_with(deployment)
+        self.fake_api.deployment.check.assert_called_once_with(deployment_id)
         headers = ["services", "type", "status"]
         mock_print_list.assert_called_once_with([], headers)
-
-    def test_deployment_check_not_exist(self):
-        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        exc = exceptions.DeploymentNotFound(deployment=deployment_id)
-        self.fake_api.deployment.get.side_effect = exc
-        self.assertEqual(self.deployment.check(
-            self.fake_api, deployment_id), 1)
 
     def test_deployment_check_raise(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
         sample_credential = fakes.fake_credential(
             auth_url="http://192.168.1.1:5000/v2.0/",
             username="admin", password="adminpass")
-        deployment = self.fake_api.deployment.get.return_value
-        deployment.get_credentials_for.return_value = {
-            "admin": sample_credential, "users": []}
+        deployment = {"uuid": deployment_id,
+                      "credentials": {"openstack": [
+                          {"admin": sample_credential,
+                           "users": [sample_credential]}]}}
+        self.fake_api.deployment.get.return_value = deployment
         refused = keystone_exceptions.ConnectionRefused()
         self.fake_api.deployment.check.side_effect = refused
         self.assertEqual(self.deployment.check(

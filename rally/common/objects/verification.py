@@ -19,7 +19,7 @@ from rally import consts
 
 class Verification(object):
     """Represents a verification object."""
-    TIME_FORMAT = consts.TimeFormat.TIME_FORMAT_ISO8601
+    TIME_FORMAT = consts.TimeFormat.ISO8601
 
     def __init__(self, verification):
         """Init a verification object.
