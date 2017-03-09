@@ -31,6 +31,14 @@ class CinderQuotas(object):
             "volumes": {
                 "type": "integer",
                 "minimum": -1
+            },
+            "backups": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "backup_gigabytes": {
+                "type": "integer",
+                "minimum": -1
             }
         }
     }

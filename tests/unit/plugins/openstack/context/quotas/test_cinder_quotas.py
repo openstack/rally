@@ -27,6 +27,8 @@ class CinderQuotasTestCase(test.TestCase):
         quotas_values = {
             "volumes": 10,
             "snapshots": 50,
+            "backups": 20,
+            "backup_gigabytes": 1000,
             "gigabytes": 1000
         }
         cinder_quo.update(tenant_id, **quotas_values)
@@ -42,7 +44,11 @@ class CinderQuotasTestCase(test.TestCase):
 
     def test_get(self):
         tenant_id = "tenant_id"
-        quotas = {"gigabytes": "gb", "snapshots": "ss", "volumes": "v"}
+        quotas = {"gigabytes": "gb",
+                  "snapshots": "ss",
+                  "volumes": "v",
+                  "backups": "b",
+                  "backup_gigabytes": "b_g"}
         quota_set = mock.MagicMock(**quotas)
         clients = mock.MagicMock()
         clients.cinder.return_value.quotas.get.return_value = quota_set
