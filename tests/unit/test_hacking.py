@@ -401,3 +401,9 @@ class HackingTestCase(test.TestCase):
 
         line = "import datetime as dt"
         checkres = checks.check_datetime_alias(line, line, "fakefile")
+
+    def test_check_log_warn(self):
+        bad_samples = ["LOG.warn('foo')", "LOG.warn(_('bar'))"]
+        self._assert_bad_samples(checks.check_log_warn, bad_samples)
+        good_samples = ["LOG.warning('foo')", "LOG.warning(_('bar'))"]
+        self._assert_good_samples(checks.check_log_warn, good_samples)

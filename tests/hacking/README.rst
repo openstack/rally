@@ -15,6 +15,7 @@ Rally Specific Commandments
  * [N310] - Ensure that ``rally.common.log`` is used as logging module
  * [N311] - Validate that debug level logs are not translated
  * [N312] - Validate correctness of debug on check.
+ * [N313] - Validate that LOG.warning is used instead of deprecated LOG.warn.
 * [N32x] - Reserved for rules related to assert* methods
  * [N320] - Ensure that ``assertTrue(isinstance(A, B))``  is not used
  * [N321] - Ensure that ``assertEqual(type(A), B)`` is not used
