@@ -102,5 +102,6 @@ class InfoMixin(object):
             "title": doc["short_description"],
             "description": doc["long_description"],
             "parameters": doc["params"],
+            "schema": getattr(cls, "CONFIG_SCHEMA", None),
             "returns": doc["returns"]
         }
