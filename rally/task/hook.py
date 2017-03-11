@@ -179,7 +179,7 @@ class Hook(plugin.Plugin):
             with rutils.Timer() as timer:
                 self.run()
         except Exception as exc:
-            LOG.error(_LE("Hook %s failed during run.") % self.get_name())
+            LOG.error(_LE("Hook %s failed during run."), self.get_name())
             LOG.exception(exc)
             self.set_error(*utils.format_exc(exc))
 
