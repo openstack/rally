@@ -30,6 +30,16 @@ from rally import consts
 from rally import osclients
 
 
+def skip_if_service(service):
+    def wrapper(func):
+        def inner(self):
+            if service in self.clients.services().values():
+                return []
+            return func(self)
+        return inner
+    return wrapper
+
+
 class ResourceManager(object):
 
     REQUIRED_SERVICE = None
@@ -154,14 +164,12 @@ class Nova(ResourceManager):
     def list_floating_ip_pools(self):
         return self.client.floating_ip_pools.list()
 
+    @skip_if_service(consts.Service.NEUTRON)
     def list_floating_ips(self):
         return self.client.floating_ips.list()
 
     def list_floating_ips_bulk(self):
         return self.client.floating_ips_bulk.list()
-
-    def list_images(self):
-        return self.client.images.list()
 
     def list_aggregates(self):
         return self.client.aggregates.list()
@@ -178,9 +186,11 @@ class Nova(ResourceManager):
     def list_keypairs(self):
         return self.client.keypairs.list()
 
+    @skip_if_service(consts.Service.NEUTRON)
     def list_networks(self):
         return self.client.networks.list()
 
+    @skip_if_service(consts.Service.NEUTRON)
     def list_security_groups(self):
         return self.client.security_groups.list(
             search_opts={"all_tenants": True})
@@ -277,8 +287,10 @@ class Cinder(ResourceManager):
         return self.client.transfers.list()
 
     def list_volumes(self):
-        return self.client.volumes.list(
-            search_opts={"all_tenants": True})
+        # ignore cache volumes for images
+        volumes = self.client.volumes.list(search_opts={"all_tenants": True})
+        return [v for v in volumes
+                if not v.name.startswith("image-")]
 
 
 class Senlin(ResourceManager):
