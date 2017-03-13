@@ -381,7 +381,8 @@ class NeutronV2Loadbalancer(NeutronLbaasV2Mixin):
 @base.resource("neutron", "floatingip", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronFloatingIP(NeutronMixin):
-    pass
+    def name(self):
+        return self.raw_resource.get("description")
 
 
 @base.resource("neutron", "port", order=next(_neutron_order),

@@ -497,7 +497,8 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         floating_network_id = self._get_network_id(
             floating_network)
-        args = {"floating_network_id": floating_network_id}
+        args = {"floating_network_id": floating_network_id,
+                "description": self.generate_random_name()}
         args.update(floating_ip_args)
         return self.clients("neutron").create_floatingip({"floatingip": args})
 
