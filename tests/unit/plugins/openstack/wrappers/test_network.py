@@ -17,161 +17,16 @@ import mock
 
 from rally.common import utils
 from rally import consts
-from rally import exceptions
 from rally.plugins.openstack.wrappers import network
 from tests.unit import test
 
 from neutronclient.common import exceptions as neutron_exceptions
-from novaclient import exceptions as nova_exceptions
 
 SVC = "rally.plugins.openstack.wrappers.network."
 
 
 class Owner(utils.RandomNameGeneratorMixin):
     task = {"uuid": "task-uuid"}
-
-
-class NovaNetworkWrapperTestCase(test.TestCase):
-
-    class Net(object):
-        def __init__(self, **kwargs):
-            if "tenant_id" in kwargs:
-                kwargs["project_id"] = kwargs.pop("tenant_id")
-            self.__dict__.update(kwargs)
-
-    def setUp(self):
-        self.owner = Owner()
-        self.owner.generate_random_name = mock.Mock()
-        super(NovaNetworkWrapperTestCase, self).setUp()
-
-    def get_wrapper(self, *skip_cidrs, **kwargs):
-        mock_clients = mock.Mock()
-        mock_clients.nova.return_value.networks.list.return_value = [
-            self.Net(cidr=cidr) for cidr in skip_cidrs]
-        return network.NovaNetworkWrapper(mock_clients, self.owner,
-                                          config=kwargs)
-
-    def test__init__(self):
-        skip_cidrs = ["foo_cidr", "bar_cidr"]
-        service = self.get_wrapper(*skip_cidrs)
-        self.assertEqual(service.skip_cidrs, skip_cidrs)
-        service.client.networks.list.assert_called_once_with()
-
-    @mock.patch("rally.plugins.openstack.wrappers.network.generate_cidr")
-    def test__generate_cidr(self, mock_generate_cidr):
-        skip_cidrs = [5, 7]
-        cidrs = iter(range(7))
-        mock_generate_cidr.side_effect = (
-            lambda start_cidr: start_cidr + next(cidrs)
-        )
-        service = self.get_wrapper(*skip_cidrs, start_cidr=3)
-        self.assertEqual(service._generate_cidr(), 3)
-        self.assertEqual(service._generate_cidr(), 4)
-        self.assertEqual(service._generate_cidr(), 6)  # 5 is skipped
-        self.assertEqual(service._generate_cidr(), 8)  # 7 is skipped
-        self.assertEqual(service._generate_cidr(), 9)
-        self.assertEqual(mock_generate_cidr.mock_calls,
-                         [mock.call(start_cidr=3)] * 7)
-
-    def test_create_network(self):
-        service = self.get_wrapper()
-        service.client.networks.create.side_effect = (
-            lambda **kwargs: self.Net(id="foo_id", **kwargs))
-        service._generate_cidr = mock.Mock(return_value="foo_cidr")
-        net = service.create_network("foo_tenant",
-                                     network_create_args={"fakearg": "fake"},
-                                     bar="spam")
-        self.assertEqual(net,
-                         {"id": "foo_id",
-                          "name": self.owner.generate_random_name.return_value,
-                          "cidr": "foo_cidr",
-                          "status": "ACTIVE",
-                          "external": False,
-                          "tenant_id": "foo_tenant"})
-        service._generate_cidr.assert_called_once_with()
-        service.client.networks.create.assert_called_once_with(
-            project_id="foo_tenant", cidr="foo_cidr",
-            label=self.owner.generate_random_name.return_value,
-            fakearg="fake")
-
-    def test_delete_network(self):
-        service = self.get_wrapper()
-        service.client.networks.delete.return_value = "foo_deleted"
-        self.assertEqual(service.delete_network({"id": "foo_id"}),
-                         "foo_deleted")
-        service.client.networks.disassociate.assert_called_once_with(
-            "foo_id", disassociate_host=False, disassociate_project=True)
-        service.client.networks.delete.assert_called_once_with("foo_id")
-
-    def test_list_networks(self):
-        service = self.get_wrapper()
-        service.client.networks.list.reset_mock()
-        service.client.networks.list.return_value = [
-            self.Net(id="foo_id", project_id="foo_tenant", cidr="foo_cidr",
-                     label="foo_label"),
-            self.Net(id="bar_id", project_id="bar_tenant", cidr="bar_cidr",
-                     label="bar_label")]
-        expected = [
-            {"id": "foo_id", "cidr": "foo_cidr", "name": "foo_label",
-             "status": "ACTIVE", "external": False, "tenant_id": "foo_tenant"},
-            {"id": "bar_id", "cidr": "bar_cidr", "name": "bar_label",
-             "status": "ACTIVE", "external": False, "tenant_id": "bar_tenant"}]
-        self.assertEqual(expected, service.list_networks())
-        service.client.networks.list.assert_called_once_with()
-
-    def test__get_floating_ip(self):
-        wrap = self.get_wrapper()
-        wrap.client.floating_ips.get.return_value = mock.Mock(id="foo_id",
-                                                              ip="foo_ip")
-        fip = wrap._get_floating_ip("fip_id")
-        wrap.client.floating_ips.get.assert_called_once_with("fip_id")
-        self.assertEqual(fip, "foo_id")
-
-        wrap.client.floating_ips.get.side_effect = (
-            nova_exceptions.NotFound(""))
-        self.assertIsNone(wrap._get_floating_ip("fip_id"))
-
-        self.assertRaises(exceptions.GetResourceNotFound,
-                          wrap._get_floating_ip, "fip_id", do_raise=True)
-
-    def test_create_floating_ip(self):
-        wrap = self.get_wrapper()
-        wrap.client.floating_ips.create.return_value = mock.Mock(id="foo_id",
-                                                                 ip="foo_ip")
-        fip = wrap.create_floating_ip(ext_network="bar_net", bar="spam")
-        self.assertEqual(fip, {"ip": "foo_ip", "id": "foo_id"})
-        wrap.client.floating_ips.create.assert_called_once_with("bar_net")
-
-        net = mock.Mock()
-        net.name = "foo_net"
-        wrap.client.floating_ip_pools.list.return_value = [net]
-        fip = wrap.create_floating_ip()
-        self.assertEqual(fip, {"ip": "foo_ip", "id": "foo_id"})
-        wrap.client.floating_ips.create.assert_called_with("foo_net")
-
-    def test_delete_floating_ip(self):
-        wrap = self.get_wrapper()
-        fip_found = iter(range(3))
-
-        def get_fip(*args, **kwargs):
-            for i in fip_found:
-                return "fip_id"
-            raise exceptions.GetResourceNotFound(resource="")
-        wrap._get_floating_ip = mock.Mock(side_effect=get_fip)
-
-        wrap.delete_floating_ip("fip_id")
-        wrap.client.floating_ips.delete.assert_called_once_with("fip_id")
-        self.assertFalse(wrap._get_floating_ip.called)
-
-        wrap.delete_floating_ip("fip_id", wait=True)
-        self.assertEqual(
-            [mock.call("fip_id", do_raise=True)] * 4,
-            wrap._get_floating_ip.mock_calls)
-
-    def test_supports_extension(self):
-        wrap = self.get_wrapper()
-        self.assertFalse(wrap.supports_extension("extension")[0])
-        self.assertTrue(wrap.supports_extension("security-group")[0])
 
 
 class NeutronWrapperTestCase(test.TestCase):
@@ -559,11 +414,5 @@ class FunctionsTestCase(test.TestCase):
         mock_clients.services.return_value = {"foo": consts.Service.NEUTRON}
         wrapper = network.wrap(mock_clients, owner, config)
         self.assertIsInstance(wrapper, network.NeutronWrapper)
-        self.assertEqual(wrapper.owner, owner)
-        self.assertEqual(wrapper.config, config)
-
-        mock_clients.services.return_value = {"foo": "bar"}
-        wrapper = network.wrap(mock_clients, owner, config)
-        self.assertIsInstance(wrapper, network.NovaNetworkWrapper)
         self.assertEqual(wrapper.owner, owner)
         self.assertEqual(wrapper.config, config)
