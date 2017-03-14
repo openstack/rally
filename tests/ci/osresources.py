@@ -43,8 +43,7 @@ def skip_if_service(service):
 class ResourceManager(object):
 
     REQUIRED_SERVICE = None
-    REPR_KEYS = ("id", "name", "tenant_id", "zone", "zoneName", "pool",
-                 "blob", "status")
+    STR_ATTRS = ("id", "name")
 
     def __init__(self, clients):
         self.clients = clients
@@ -68,24 +67,27 @@ class ResourceManager(object):
             resources = f() or []
             resource_name = prop[5:][:-1]
 
-            for res in resources:
-                # NOTE(stpierre): It'd be nice if we could make this a
-                # dict, but then we get ordering issues. So a list of
-                # 2-tuples it must be.
-                res_repr = []
-                for key in self.REPR_KEYS + (resource_name,):
-                    if isinstance(res, dict):
-                        value = res.get(key)
+            for raw_res in resources:
+                res = {"cls": cls, "resource_name": resource_name,
+                       "id": {}, "props": {}}
+                if not isinstance(raw_res, dict):
+                    raw_res = {k: getattr(raw_res, k) for k in dir(raw_res)
+                               if not k.startswith("_")
+                               if not callable(getattr(raw_res, k))}
+                for key, value in raw_res.items():
+                    if key.startswith("_"):
+                        continue
+                    if key in self.STR_ATTRS:
+                        res["id"][key] = value
                     else:
-                        value = getattr(res, key, None)
-                    if value:
-                        res_repr.append((key, value))
-                if not res_repr:
-                    raise ValueError("Failed to represent resource %r" % res)
-
-                res_repr.extend([("class", cls),
-                                 ("resource_name", resource_name)])
-                all_resources.append(res_repr)
+                        try:
+                            res["props"][key] = json.dumps(value, indent=2)
+                        except TypeError:
+                            res["props"][key] = str(value)
+                if not res["id"] and not res["props"]:
+                    raise ValueError("Failed to represent resource %r" %
+                                     raw_res)
+                all_resources.append(res)
         return all_resources
 
 
@@ -342,24 +344,6 @@ class CloudResources(object):
     def __init__(self, **kwargs):
         self.clients = osclients.Clients(objects.Credential(**kwargs))
 
-    def _deduplicate(self, lst):
-        """Change list duplicates to make all items unique.
-
-        >>> resources._deduplicate(["a", "b", "c", "b", "b"])
-        >>> ['a', 'b', 'c', 'b (duplicate 1)', 'b (duplicate 2)'
-        """
-        deduplicated_list = []
-        for value in lst:
-            if value in deduplicated_list:
-                ctr = 0
-                try_value = value
-                while try_value in deduplicated_list:
-                    ctr += 1
-                    try_value = "%s (duplicate %i)" % (value, ctr)
-                value = try_value
-            deduplicated_list.append(value)
-        return deduplicated_list
-
     def list(self):
         managers_classes = discover.itersubclasses(ResourceManager)
         resources = []
@@ -367,34 +351,37 @@ class CloudResources(object):
             manager = cls(self.clients)
             if manager.is_available():
                 resources.extend(manager.get_resources())
-        return sorted(self._deduplicate(resources),
-                      key=(lambda x: str(type(x)) + repr(x)))
+        return resources
 
     def compare(self, with_list):
-        # NOTE(stpierre): Each resource is either a list of 2-tuples,
-        # or a list of lists. (JSON doesn't honor tuples, so when we
-        # load data from JSON our tuples get turned into lists.) It's
-        # easiest to do the comparison with sets, so we need to change
-        # it to a tuple of tuples so that it's hashable.
-        saved_resources = set(tuple(tuple(d) for d in r) for r in with_list)
-        current_resources = set(tuple(tuple(d) for d in r)
-                                for r in self.list())
-        removed = saved_resources - current_resources
-        added = current_resources - saved_resources
+        def make_uuid(res):
+            return"%s.%s:%s" % (
+                res["cls"], res["resource_name"],
+                ";".join(["%s=%s" % (k, v)
+                          for k, v in sorted(res["id"].items())]))
 
-        return (sorted(removed), sorted(added))
+        current_resources = dict((make_uuid(r), r) for r in self.list())
+        saved_resources = dict((make_uuid(r), r) for r in with_list)
+
+        removed = set(saved_resources.keys()) - set(current_resources.keys())
+        removed = [saved_resources[k] for k in sorted(removed)]
+        added = set(current_resources.keys()) - set(saved_resources.keys())
+        added = [current_resources[k] for k in sorted(added)]
+
+        return removed, added
 
 
 def _print_tabular_resources(resources, table_label):
+    def dict_formatter(d):
+        return "\n".join("%s:%s" % (k, v) for k, v in d.items())
+
     cliutils.print_list(
         objs=[dict(r) for r in resources],
-        fields=("class", "resource_name", "identifiers"),
-        field_labels=("service", "resource type", "identifiers"),
+        fields=("cls", "resource_name", "id", "fields"),
+        field_labels=("service", "resource type", "id", "fields"),
         table_label=table_label,
-        formatters={"identifiers":
-                    lambda d: "\n".join(
-                        "%s:%s" % (k, v) for k, v in d.items()
-                        if k not in ("class", "resource_name"))}
+        formatters={"id": lambda d: dict_formatter(d["id"]),
+                    "fields": lambda d: dict_formatter(d["props"])}
     )
     print("")
 
@@ -443,15 +430,14 @@ def main():
 
         # filter out expected additions
         expected = []
-        for resource_tuple in added:
-            resource = dict(resource_tuple)
-            if ((resource["class"] == "keystone" and
+        for resource in added:
+            if ((resource["cls"] == "keystone" and
                  resource["resource_name"] == "role" and
-                 resource["name"] == "_member_") or
-                (resource["class"] == "nova" and
+                 resource["id"].get("name") == "_member_") or
+                (resource["cls"] == "nova" and
                  resource["resource_name"] == "security_group" and
-                 resource["name"] == "default")):
-                expected.append(resource_tuple)
+                 resource["id"].get("name") == "default")):
+                expected.append(resource)
         for resource in expected:
             added.remove(resource)
 
