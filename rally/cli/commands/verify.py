@@ -379,6 +379,16 @@ class VerifyCommands(object):
                     "verifier extension, using command `rally verify "
                     "add-verifier-ext`."))
 
+    def _print_details_after_run(self, results):
+        failures = results.filter_tests("fail").values()
+        if failures:
+            h_text = "Failed %d %s - output below:" % (
+                len(failures), "tests" if len(failures) > 1 else "test")
+            self._print_failures(h_text, failures, "=")
+        else:
+            print(_("\nCongratulations! Verification doesn't have failed "
+                    "tests! :)"))
+
     @cliutils.help_group("verifier-ext")
     @cliutils.args("--id", dest="verifier_id", type=str,
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
@@ -477,14 +487,7 @@ class VerifyCommands(object):
             return 1
 
         if detailed:
-            failures = results.filter_tests("fail").values()
-            if failures:
-                h_text = "Failed %d %s - output below:" % (
-                    len(failures), "tests" if len(failures) > 1 else "test")
-                self._print_failures(h_text, failures, "=")
-            else:
-                print(_("\nCongratulations! Verification doesn't have failed "
-                        "tests! :)"))
+            self._print_details_after_run(results)
 
         self._print_totals(results.totals)
 
@@ -512,16 +515,30 @@ class VerifyCommands(object):
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
     @cliutils.args("--failed", dest="failed", required=False,
                    help="Rerun only failed tests.", action="store_true")
+    @cliutils.args("--detailed", dest="detailed", action="store_true",
+                   required=False,
+                   help="Show verification details such as errors of failed "
+                        "tests.")
+    @cliutils.args("--no-use", dest="do_use", action="store_false",
+                   help="Not to set the finished verification as the default "
+                        "verification for future operations.")
     @envutils.with_default_verification_uuid
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @plugins.ensure_plugins_are_loaded
     def rerun(self, api, verification_uuid=None, deployment=None,
-              failed=False):
+              failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
         verification, results = api.verification.rerun(verification_uuid,
                                                        deployment, failed)
+        if detailed:
+            self._print_details_after_run(results)
+
         self._print_totals(results.totals)
-        print(_("Verification UUID: %s.") % verification.uuid)
+
+        if do_use:
+            self.use(api, verification.uuid)
+        else:
+            print(_("Verification UUID: %s.") % verification.uuid)
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
