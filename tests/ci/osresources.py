@@ -65,7 +65,6 @@ class ResourceManager(object):
             f = getattr(self, prop)
             resources = f() or []
             resource_name = prop[5:][:-1]
-
             for raw_res in resources:
                 res = {"cls": cls, "resource_name": resource_name,
                        "id": {}, "props": {}}
@@ -84,6 +83,9 @@ class ResourceManager(object):
                         except TypeError:
                             res["props"][key] = str(value)
                 if not res["id"] and not res["props"]:
+                    print("1: %s" % raw_res)
+                    print("2: %s" % cls)
+                    print("3: %s" % resource_name)
                     raise ValueError("Failed to represent resource %r" %
                                      raw_res)
                 all_resources.append(res)
@@ -303,6 +305,126 @@ class Senlin(ResourceManager):
 
     def list_profiles(self):
         return self.client.profiles()
+
+
+class Manila(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.MANILA
+
+    def list_shares(self):
+        return self.client.shares.list(detailed=False,
+                                       search_opts={"all_tenants": True})
+
+    def list_share_networks(self):
+        return self.client.share_networks.list(
+            detailed=False, search_opts={"all_tenants": True})
+
+    def list_share_servers(self):
+        return self.client.share_servers.list(
+            search_opts={"all_tenants": True})
+
+
+class Gnocchi(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.GNOCCHI
+
+    def list_resources(self):
+        return self.client.resource.list()
+
+
+class Ironic(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.IRONIC
+
+    def list_nodes(self):
+        return self.client.node.list()
+
+
+class Sahara(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.SAHARA
+
+    def list_node_group_templates(self):
+        return self.client.node_group_templates.list()
+
+
+class Murano(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.MURANO
+
+    def list_enviroments(self):
+        return self.client.enviroment.list()
+
+    def list_packages(self):
+        return self.client.packages.list(include_disabled=True)
+
+
+class Designate(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.DESIGNATE
+
+    def list_domains(self):
+        return self.client.domains.list()
+
+    def list_records(self):
+        result = []
+        result.extend(self.client.records.list(domain_id)
+                      for domain_id in self.client.domains.list())
+        return result
+
+    def list_servers(self):
+        return self.client.servers.list()
+
+    def list_zones(self):
+        return self.client.zones.list()
+
+    def list_recordset(self):
+        result = []
+        result.extend(self.client.recordsets.list(zone_id)
+                      for zone_id in self.client.zones.list())
+        return result
+
+
+class Trove(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.TROVE
+
+    def list_backups(self):
+        return self.client.backup.list()
+
+    def list_clusters(self):
+        return self.client.cluster.list()
+
+    def list_configurations(self):
+        return self.client.configuration.list()
+
+    def list_databases(self):
+        return self.client.database.list()
+
+    def list_datastore(self):
+        return self.client.datastore.list()
+
+    def list_instances(self):
+        return self.client.list(include_clustered=True)
+
+    def list_modules(self):
+        return self.client.module.list(datastore="all")
+
+
+class ES2(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.EC2
+
+    def list_servers(self):
+        return self.client.get_only_instance()
+
+
+class Monasca(ResourceManager):
+
+    REQUIRED_SERVICE = consts.Service.MONASCA
+
+    def list_metrics(self):
+        return self.client.metrics.list()
 
 
 class Watcher(ResourceManager):
