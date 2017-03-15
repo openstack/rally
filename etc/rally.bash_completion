@@ -55,7 +55,7 @@ _rally()
     OPTS["verify_list-verifier-tests"]="--id --pattern"
     OPTS["verify_list-verifiers"]="--status"
     OPTS["verify_report"]="--uuid --type --to --open"
-    OPTS["verify_rerun"]="--uuid --deployment-id --failed"
+    OPTS["verify_rerun"]="--uuid --deployment-id --failed --detailed --no-use"
     OPTS["verify_show"]="--uuid --sort-by --detailed"
     OPTS["verify_show-verifier"]="--id"
     OPTS["verify_start"]="--id --deployment-id --tag --pattern --concurrency --load-list --skip-list --xfail-list --detailed --no-use"
