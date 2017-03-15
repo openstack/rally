@@ -1394,7 +1394,7 @@ class VerificationAPITestCase(test.TestCase):
 
         api._Verification.rerun("uuid")
         mock___verification_start.assert_called_once_with(
-            "v_uuid", "d_uuid", load_list=tests.keys())
+            "v_uuid", "d_uuid", load_list=tests.keys(), tags=None)
 
     @mock.patch("rally.api._Verification.start")
     @mock.patch("rally.api._Deployment.get")
@@ -1414,7 +1414,7 @@ class VerificationAPITestCase(test.TestCase):
         api._Verification.rerun("uuid", failed=True)
         expected_tests = [t for t, r in tests.items() if r["status"] == "fail"]
         mock___verification_start.assert_called_once_with(
-            "v_uuid", "d_uuid", load_list=expected_tests)
+            "v_uuid", "d_uuid", load_list=expected_tests, tags=None)
 
     @mock.patch("rally.api._Verification.get")
     def test_rerun_failed_tests_raise_exc(
