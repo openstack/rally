@@ -359,9 +359,9 @@ class VerifyCommandsTestCase(test.TestCase):
                                     "failures": 0})
         self.fake_api.verification.rerun.return_value = (verification, results)
 
-        self.verify.rerun(self.fake_api, "v_uuid", "d_id", failed=True)
-        self.fake_api.verification.rerun.assert_called_once_with("v_uuid",
-                                                                 "d_id", True)
+        self.verify.rerun(self.fake_api, "v_uuid", "d_id", failed=True,)
+        self.fake_api.verification.rerun.assert_called_once_with(
+            "v_uuid", deployment="d_id", failed=True, tags=None, concur=None)
 
     def test_show(self):
         deployment_name = "Some Deploy"

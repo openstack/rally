@@ -879,15 +879,22 @@ class _Verification(object):
         return verification, results
 
     @classmethod
-    def rerun(cls, verification_uuid, deployment_id=None, failed=False):
+    def rerun(cls, verification_uuid, deployment_id=None, failed=False,
+              tags=None, concurrency=0):
         """Rerun tests from a verification.
 
         :param verification_uuid: Verification UUID
         :param deployment_id: Deployment name or UUID
         :param failed: Rerun only failed tests
+        :param tags: List of tags to assign them to verification
+        :param concurrency: The number of processes to use to run verifier
+            tests
         """
         # TODO(ylobankov): Improve this method in the future: put some
         #                  information about re-run in run_args.
+        run_args = {}
+        if concurrency:
+            run_args["concurrency"] = concurrency
 
         verification = cls.get(verification_uuid)
         tests = verification.tests
@@ -906,8 +913,9 @@ class _Verification(object):
         LOG.info("Re-running %stests from verification (UUID=%s) for "
                  "deployment '%s' (UUID=%s).", "failed " if failed else "",
                  verification.uuid, deployment["name"], deployment["uuid"])
-        return cls.start(verification.verifier_uuid, deployment["uuid"],
-                         load_list=tests)
+        return cls.start(
+            verification.verifier_uuid, deployment["uuid"], load_list=tests,
+            tags=tags, **run_args)
 
     @staticmethod
     def get(verification_uuid):

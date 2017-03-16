@@ -414,8 +414,9 @@ class VerifyCommands(object):
                         "in case of Tempest you can specify 'set=smoke').")
     @cliutils.args("--concurrency", dest="concur", type=int, metavar="<N>",
                    required=False,
-                   help="How many processes to use to run verifier tests. "
-                        "The default value (0) auto-detects your CPU count.")
+                   help="How many processes to be used for running verifier "
+                        "tests. The default value (0) auto-detects your CPU "
+                        "count.")
     @cliutils.args("--load-list", dest="load_list", type=str, metavar="<path>",
                    required=False,
                    help="Path to a file with a list of tests to run.")
@@ -515,6 +516,13 @@ class VerifyCommands(object):
                    help="Deployment name or UUID. " + LIST_DEPLOYMENTS_HINT)
     @cliutils.args("--failed", dest="failed", required=False,
                    help="Rerun only failed tests.", action="store_true")
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Mark verification with a tag or a few tags.")
+    @cliutils.args("--concurrency", dest="concur", type=int, metavar="<N>",
+                   required=False,
+                   help="How many processes to be used for running verifier "
+                        "tests. The default value (0) auto-detects your CPU "
+                        "count.")
     @cliutils.args("--detailed", dest="detailed", action="store_true",
                    required=False,
                    help="Show verification details such as errors of failed "
@@ -525,11 +533,14 @@ class VerifyCommands(object):
     @envutils.with_default_verification_uuid
     @envutils.with_default_deployment(cli_arg_name="deployment-id")
     @plugins.ensure_plugins_are_loaded
-    def rerun(self, api, verification_uuid=None, deployment=None,
-              failed=False, detailed=False, do_use=True):
+    def rerun(self, api, verification_uuid=None, deployment=None, tags=None,
+              concur=None, failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
         verification, results = api.verification.rerun(verification_uuid,
-                                                       deployment, failed)
+                                                       deployment=deployment,
+                                                       failed=failed,
+                                                       tags=tags,
+                                                       concur=concur)
         if detailed:
             self._print_details_after_run(results)
 
