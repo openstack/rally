@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
@@ -21,9 +20,6 @@ from rally.task import validation
 
 
 """Scenarios for Nova Group servers."""
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.required_services(consts.Service.NOVA)

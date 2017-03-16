@@ -18,7 +18,6 @@ import shutil
 import subprocess
 
 from rally.common.i18n import _LE
-from rally.common import logging
 from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally.plugins.common.verification import testr
@@ -26,9 +25,6 @@ from rally.plugins.openstack.verification.tempest import config
 from rally.plugins.openstack.verification.tempest import consts
 from rally.verification import manager
 from rally.verification import utils
-
-
-LOG = logging.getLogger(__name__)
 
 
 AVAILABLE_SETS = (list(consts.TempestTestSets) +
