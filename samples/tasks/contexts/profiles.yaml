@@ -1,0 +1,22 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        profiles:
+          type: "os.nova.server"
+          version: "1.0"
+          properties:
+            name: "cirros_server"
+            flavor: 1
+            image: "cirros-0.3.5-x86_64-disk"
+            networks:
+              - network: "private"

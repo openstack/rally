@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import inspect
 import json
 import mock
 import os
@@ -21,17 +22,18 @@ import traceback
 
 import yaml
 
+import rally
 from rally import api
+from rally.task import context
 from rally.task import engine
 from rally.task import scenario
 from tests.unit import test
 
+RALLY_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir)
+
 
 class TaskSampleTestCase(test.TestCase):
-    samples_path = os.path.join(
-        os.path.dirname(__file__),
-        os.pardir, os.pardir, os.pardir,
-        "samples", "tasks")
+    samples_path = os.path.join(RALLY_PATH, "samples", "tasks")
 
     def setUp(self):
         super(TaskSampleTestCase, self).setUp()
@@ -145,3 +147,18 @@ class TaskSampleTestCase(test.TestCase):
                          "Following sample task filenames contain "
                          "underscores (_) but must use dashes (-) instead: "
                          "{}".format(bad_filenames))
+
+    def test_context_samples_found(self):
+        all_plugins = context.Context.get_all()
+        context_samples_path = os.path.join(self.samples_path, "contexts")
+        for p in all_plugins:
+            # except contexts which belongs to tests module
+            if not inspect.getfile(p).startswith(
+               os.path.dirname(rally.__file__)):
+                continue
+            file_name = p.get_name().replace("_", "-")
+            file_path = os.path.join(context_samples_path, file_name)
+            if not os.path.exists("%s.json" % file_path):
+                self.fail(("There is no json sample file of %s,"
+                           "plugin location: %s" %
+                           (p.get_name(), p.__module__)))

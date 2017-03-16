@@ -1,0 +1,54 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "sahara_job_binaries": {
+                    "libs": [{
+                        "name": "tests.jar",
+                        "download_url": "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-hdfs/2.6.0/hadoop-hdfs-2.6.0-tests.jar"
+                    }]
+                },
+                "network": {}
+            }
+        },
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "sahara_job_binaries": {
+                    "mains": [{
+                        "name": "example.pig",
+                        "download_url": "https://raw.githubusercontent.com/openstack/sahara/master/etc/edp-examples/pig-job/example.pig"
+                    }],
+                    "libs": [{
+                        "name": "udf.jar",
+                        "download_url": "https://github.com/openstack/sahara/blob/master/etc/edp-examples/pig-job/udf.jar?raw=true"
+                    }]
+                },
+                "network": {}
+            }
+        }
+    ]
+}

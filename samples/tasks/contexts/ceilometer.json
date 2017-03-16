@@ -1,0 +1,38 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2
+                },
+                "ceilometer": {
+                    "counter_name": "cpu_util",
+                    "counter_type": "gauge",
+                    "counter_unit": "instance",
+                    "counter_volume": 1.0,
+                    "resources_per_tenant": 100,
+                    "samples_per_resource": 100,
+                    "timestamp_interval": 60,
+                    "metadata_list": [
+                        {"status": "active", "name": "fake_resource",
+                         "deleted": "False",
+                         "created_at": "2015-09-04T12:34:19.000000"},
+                        {"status": "not_active", "name": "fake_resource_1",
+                         "deleted": "False",
+                         "created_at": "2015-09-10T06:55:12.000000"}
+                    ],
+                    "batch_size": 5
+                }
+            }
+        }
+    ]
+}

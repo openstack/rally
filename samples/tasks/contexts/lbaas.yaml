@@ -1,0 +1,30 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        lbaas:
+          pool: {}
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        lbaas:
+          pool:
+            lb_method: "ROUND_ROBIN"
+            protocol: "HTTP"

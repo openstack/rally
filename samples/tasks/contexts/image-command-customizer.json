@@ -1,0 +1,32 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+           },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1,
+                "timeout": 3000
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "image_command_customizer": {
+                    "image": {"name": "Fedora-x86_64-20-20140618-sda"},
+                    "flavor": {"name": "m1.small"},
+                    "command": {
+                        "local_path": "rally-jobs/extra/install_benchmark.sh",
+                        "remote_path": "./install_benchmark.sh"
+                    },
+                    "username": "root",
+                    "userdata": "#cloud-config\ndisable_root: 0\nssh_pwauth: 1"
+                },
+                "network": {}
+            }
+        }
+    ]
+}

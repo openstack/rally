@@ -1,0 +1,41 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "quotas": {
+                    "manila": {
+                        "shares": -1,
+                        "gigabytes": -1,
+                        "share_networks": -1
+                    }
+                },
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "manila_share_networks": {
+                    "use_share_networks": true
+                },
+                "manila_shares": {
+                    "shares_per_tenant": 1,
+                    "share_proto": "NFS",
+                    "size": 1,
+                    "share_type": "dhss_true"
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

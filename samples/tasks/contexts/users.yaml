@@ -1,0 +1,28 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+          resource_management_workers: 1
+          project_domain: "project"
+          user_domain: "demo"
+          user_choice_method: "random"
