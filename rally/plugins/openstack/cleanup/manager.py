@@ -183,9 +183,10 @@ class SeekAndDestroy(object):
             user=self._get_cached_client(user),
             tenant_uuid=user and user["tenant_id"])
 
-        if manager.name() == "" or rutils.name_matches_object(
-                manager.name(), *self.resource_classes,
-                task_id=self.task_id, exact=False):
+        if (isinstance(manager.name(), base.NoName) or
+                rutils.name_matches_object(
+                    manager.name(), *self.resource_classes,
+                    task_id=self.task_id, exact=False)):
             self._delete_single_resource(manager)
 
     def exterminate(self):

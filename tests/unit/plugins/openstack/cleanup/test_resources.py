@@ -20,6 +20,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exc
 from watcherclient.common.apiclient import exceptions as watcher_exceptions
 
+from rally import consts
 from rally.plugins.openstack.cleanup import resources
 from tests.unit import test
 
@@ -439,6 +440,32 @@ class NeutronV2LoadbalancerTestCase(test.TestCase):
             neutron_lb.id())
 
 
+class NeutronFloatingIPTestCase(test.TestCase):
+
+    def test_name(self):
+        fips = resources.NeutronFloatingIP({"name": "foo"})
+        self.assertIsInstance(fips.name(), resources.base.NoName)
+
+    def test_list(self):
+        fips = {"floatingips": [{"tenant_id": "foo", "id": "foo"}]}
+
+        user = mock.MagicMock()
+        user.services.return_value = {}
+        user.neutron.return_value.list_floatingips.return_value = fips
+
+        self.assertEqual(
+            [], resources.NeutronFloatingIP(user=user,
+                                            tenant_uuid="foo").list())
+        self.assertFalse(user.neutron.return_value.list_floatingips.called)
+
+        user.services.return_value = {
+            consts.ServiceType.NETWORK: consts.Service.NEUTRON}
+        self.assertEqual(fips["floatingips"], list(
+            resources.NeutronFloatingIP(user=user, tenant_uuid="foo").list()))
+        user.neutron.return_value.list_floatingips.assert_called_once_with(
+            tenant_id="foo")
+
+
 class NeutronPortTestCase(test.TestCase):
 
     def test_delete(self):
@@ -471,6 +498,19 @@ class NeutronPortTestCase(test.TestCase):
 
         user.neutron().remove_interface_router.assert_called_once_with(
             raw_res["device_id"], {"port_id": raw_res["id"]})
+
+    def test_name(self):
+        raw_res = {
+            "device_owner": "network:router_interface",
+            "id": "some_id",
+            "device_id": "dev_id",
+            "name": "foo"
+        }
+        user = mock.MagicMock()
+
+        self.assertIsInstance(
+            resources.NeutronPort(resource=raw_res, user=user).name(),
+            resources.base.NoName)
 
 
 @ddt.ddt

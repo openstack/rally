@@ -20,6 +20,7 @@ from oslo_config import cfg
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import logging
+from rally import consts
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
@@ -317,7 +318,7 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
         return self.raw_resource["id"]
 
     def name(self):
-        return self.raw_resource.get("name", "")
+        return self.raw_resource["name"]
 
     def delete(self):
         delete_method = getattr(self._manager(), "delete_%s" % self._resource)
@@ -378,15 +379,32 @@ class NeutronV2Loadbalancer(NeutronLbaasV2Mixin):
         return False
 
 
+# NOTE(andreykurilin): There are scenarios which uses unified way for creating
+#   and associating floating ips. They do not care about nova-net and neutron.
+#   We should clean floating IPs for them, but hardcoding "neutron.floatingip"
+#   cleanup resource should not work in case of Nova-Net.
+#   Since we are planning to abandon support of Nova-Network in next rally
+#   release, let's apply dirty workaround to handle all resources.
 @base.resource("neutron", "floatingip", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronFloatingIP(NeutronMixin):
-    pass
+    def name(self):
+        return base.NoName(self._resource)
+
+    def list(self):
+        if consts.ServiceType.NETWORK not in self.user.services():
+            return []
+        return super(NeutronFloatingIP, self).list()
 
 
 @base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronPort(NeutronMixin):
+
+    def name(self):
+        # TODO(andreykurilin): return NoName instance only in case of "name"
+        #   field is missed
+        return base.NoName(self._resource)
 
     def delete(self):
         if (self.raw_resource["device_owner"] in

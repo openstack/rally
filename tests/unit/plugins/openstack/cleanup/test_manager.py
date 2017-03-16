@@ -328,6 +328,28 @@ class SeekAndDestroyTestCase(test.TestCase):
         mock__delete_single_resource.assert_called_once_with(
             mock_mgr.return_value)
 
+    @mock.patch("rally.common.utils.name_matches_object")
+    @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)
+    @mock.patch("%s.SeekAndDestroy._delete_single_resource" % BASE)
+    def test__consumer_with_noname_resource(self, mock__delete_single_resource,
+                                            mock__get_cached_client,
+                                            mock_name_matches_object):
+        mock_mgr = mock.MagicMock(__name__="Test")
+        mock_mgr.return_value.name.return_value = True
+        task_id = "task_id"
+        mock_name_matches_object.return_value = False
+
+        consumer = manager.SeekAndDestroy(mock_mgr, None, None,
+                                          task_id=task_id)._consumer
+
+        consumer(None, (None, None, "res"))
+        self.assertFalse(mock__delete_single_resource.called)
+
+        mock_mgr.return_value.name.return_value = base.NoName("foo")
+        consumer(None, (None, None, "res"))
+        mock__delete_single_resource.assert_called_once_with(
+            mock_mgr.return_value)
+
     @mock.patch("%s.broker.run" % BASE)
     def test_exterminate(self, mock_broker_run):
         manager_cls = mock.MagicMock(_threads=5)

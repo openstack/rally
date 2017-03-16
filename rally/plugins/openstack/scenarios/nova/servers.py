@@ -813,7 +813,7 @@ class BootAndRebuildServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.required_services(consts.Service.NOVA)
 @validation.required_openstack(users=True)
 @validation.required_contexts("network")
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
                     name="NovaServers.boot_and_associate_floating_ip")
 class BootAndAssociateFloatingIp(utils.NovaScenario,
                                  cinder_utils.CinderScenario):
@@ -947,7 +947,7 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
 @validation.required_services(consts.Service.NOVA)
 @validation.required_openstack(users=True)
 @validation.required_contexts("network")
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
                     name="NovaServers.boot_server_associate_and"
                          "_dissociate_floating_ip")
 class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):

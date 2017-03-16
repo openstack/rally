@@ -32,6 +32,22 @@ CONF.register_group(cleanup_group)
 CONF.register_opts(CLEANUP_OPTS, cleanup_group)
 
 
+# NOTE(andreykurilin): There are cases when there is no way to use any kind
+#   of "name" for resource as an identifier of alignment resource to the
+#   particular task run and even to Rally itself. Previously, we used empty
+#   strings as a workaround for name matching specific templates, but
+#   theoretically such behaviour can hide other cases when resource should have
+#   a name property, but it is missed.
+#   Let's use instances of specific class to return as a name of resources
+#   which do not have names at all.
+class NoName(object):
+    def __init__(self, resource_type):
+        self.resource_type = resource_type
+
+    def __repr__(self):
+        return "<NoName %s resource>" % self.resource_type
+
+
 def resource(service, resource, order=0, admin_required=False,
              perform_for_admin_only=False, tenant_resource=False,
              max_attempts=3, timeout=CONF.cleanup.resource_deletion_timeout,
