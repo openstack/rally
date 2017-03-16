@@ -575,7 +575,20 @@ class OutputStatsTable(OutputTable):
 
 @plugin.configure(name="TextArea")
 class OutputTextArea(OutputChart):
-    """Arbitrary text."""
+    """Arbitrary text
+
+    This plugin processes complete data and displays of output in HTML report.
+
+    Examples of using this plugin in Scenario, for saving output data:
+
+    .. code-block:: python
+
+        self.add_output(
+            complete={"title": "Script Inline",
+                      "chart_plugin": "TextArea",
+                      "data": ["first output", "second output",
+                               "third output"]]})
+    """
 
     widget = "TextArea"
 

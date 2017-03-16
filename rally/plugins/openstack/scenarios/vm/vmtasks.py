@@ -161,19 +161,23 @@ class BootRuncommandDelete(vm_utils.VMScenario):
 
             code, out, err = self._run_command(
                 fip["ip"], port, username, password, command=command)
+            text_area_output = ["StdErr: %s" % (err or "(none)"),
+                                "StdOut:"]
             if code:
                 raise exceptions.ScriptError(
                     "Error running command %(command)s. "
                     "Error %(code)s: %(error)s" % {
                         "command": command, "code": code, "error": err})
-
+            # Let's try to load output data
             try:
                 data = json.loads(out)
-            except ValueError as e:
-                raise exceptions.ScriptError(
-                    "Command %(command)s has not output valid JSON: %(error)s."
-                    " Output: %(output)s" % {
-                        "command": command, "error": str(e), "output": out})
+                # 'echo 42' produces very json-compatible result
+                #  - check it here
+                if not isinstance(data, dict):
+                    raise ValueError
+            except ValueError:
+                # It's not a JSON, probably it's 'script_inline' result
+                data = []
         except (exceptions.TimeoutException,
                 exceptions.SSHTimeout):
             console_logs = self._get_server_console_output(server,
@@ -185,38 +189,16 @@ class BootRuncommandDelete(vm_utils.VMScenario):
             self._delete_server_with_fip(server, fip,
                                          force_delete=force_delete)
 
-        if type(data) != dict:
-            raise exceptions.ScriptError(
-                "Command has returned data in unexpected format.\n"
-                "Expected format: {"
-                "\"additive\": [{chart data}, {chart data}, ...], "
-                "\"complete\": [{chart data}, {chart data}, ...]}\n"
-                "Actual data: %s" % data)
-
-        if set(data) - {"additive", "complete"}:
-            LOG.warning(
-                "Deprecated since Rally release 0.4.1: command has "
-                "returned data in format {\"key\": <value>, ...}\n"
-                "Expected format: {"
-                "\"additive\": [{chart data}, {chart data}, ...], "
-                "\"complete\": [{chart data}, {chart data}, ...]}")
-            output = None
-            try:
-                output = [[str(k), float(v)] for k, v in data.items()]
-            except (TypeError, ValueError):
-                raise exceptions.ScriptError(
-                    "Command has returned data in unexpected format.\n"
-                    "Expected format: {key1: <number>, "
-                    "key2: <number>, ...}.\n"
-                    "Actual data: %s" % data)
-            if output:
-                self.add_output(additive={"title": "Command output",
-                                          "chart_plugin": "Lines",
-                                          "data": output})
-        else:
+        if isinstance(data, dict) and set(data) == {"additive", "complete"}:
             for chart_type, charts in data.items():
                 for chart in charts:
                     self.add_output(**{chart_type: chart})
+        else:
+            # it's a dict with several unknown lines
+            text_area_output.extend(out.split("\n"))
+            self.add_output(complete={"title": "Script Output",
+                                      "chart_plugin": "TextArea",
+                                      "data": text_area_output})
 
 
 @scenario.configure(context={"cleanup": ["nova", "heat"],
