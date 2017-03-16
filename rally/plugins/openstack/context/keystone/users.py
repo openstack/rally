@@ -33,20 +33,25 @@ from rally.task import utils
 
 LOG = logging.getLogger(__name__)
 
+RESOURCE_MANAGEMENT_WORKERS_DESCR = ("The number of concurrent threads to use "
+                                     "for serving users context.")
+PROJECT_DOMAIN_DESCR = "ID of domain in which projects will be created."
+USER_DOMAIN_DESCR = "ID of domain in which users will be created."
+
 USER_CONTEXT_OPTS = [
     cfg.IntOpt("resource_management_workers",
                default=20,
-               help="How many concurrent threads use for serving users "
-                    "context"),
+               help=RESOURCE_MANAGEMENT_WORKERS_DESCR),
     cfg.StrOpt("project_domain",
                default="default",
-               help="ID of domain in which projects will be created."),
+               help=PROJECT_DOMAIN_DESCR),
     cfg.StrOpt("user_domain",
                default="default",
-               help="ID of domain in which users will be created."),
+               help=USER_DOMAIN_DESCR),
     cfg.StrOpt("keystone_default_role",
                default="member",
-               help="The default role name of the keystone."),
+               help="The default role name of the keystone to assign to "
+                    "users."),
 ]
 
 CONF = cfg.CONF
@@ -65,24 +70,32 @@ class UserGenerator(context.Context):
         "properties": {
             "tenants": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "The number of tenants to create."
             },
             "users_per_tenant": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "The number of users to create per one tenant."
             },
             "resource_management_workers": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": RESOURCE_MANAGEMENT_WORKERS_DESCR,
+
             },
             "project_domain": {
                 "type": "string",
+                "description": PROJECT_DOMAIN_DESCR
             },
             "user_domain": {
                 "type": "string",
+                "description": USER_DOMAIN_DESCR
             },
             "user_choice_method": {
                 "enum": ["random", "round_robin"],
+                "description": "The mode of balancing usage of users between "
+                               "scenario iterations."
             },
         },
         "additionalProperties": False

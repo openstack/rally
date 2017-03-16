@@ -125,8 +125,8 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
     up to the number of times specified in the scenario config.
 
     The concurrency parameter of the scenario config controls the
-    number of concurrent scenarios which execute during a single
-    iteration in order to simulate the activities of multiple users
+    number of concurrent iterations which execute during a single
+    scenario in order to simulate the activities of multiple users
     placing load on the cloud under test.
     """
 
@@ -135,22 +135,28 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
-                "type": "string"
+                "type": "string",
+                "description": "Type of Runner."
             },
             "concurrency": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "The number of parallel iteration executions."
             },
             "times": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "Total number of iteration executions."
             },
             "timeout": {
                 "type": "number",
+                "description": "Operation's timeout."
             },
             "max_cpu_count": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "The maximum number of processes to create load"
+                               " from."
             }
         },
         "required": ["type"],
@@ -244,8 +250,8 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     until a specified interval of time has elapsed.
 
     The concurrency parameter of the scenario config controls the
-    number of concurrent scenarios which execute during a single
-    iteration in order to simulate the activities of multiple users
+    number of concurrent iterations which execute during a single
+    sceanario in order to simulate the activities of multiple users
     placing load on the cloud under test.
     """
 
@@ -254,19 +260,24 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
-                "type": "string"
+                "type": "string",
+                "description": "Type of Runner."
             },
             "concurrency": {
                 "type": "integer",
-                "minimum": 1
+                "minimum": 1,
+                "description": "The number of parallel iteration executions."
             },
             "duration": {
                 "type": "number",
-                "minimum": 0.0
+                "minimum": 0.0,
+                "description": "The number of seconds during which to generate"
+                               " a load."
             },
             "timeout": {
                 "type": "number",
-                "minimum": 1
+                "minimum": 1,
+                "description": "Operation's timeout."
             }
         },
         "required": ["type", "duration"],

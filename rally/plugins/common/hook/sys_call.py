@@ -33,6 +33,7 @@ class SysCallHook(hook.Hook):
     CONFIG_SCHEMA = {
         "$schema": consts.JSON_SCHEMA,
         "type": "string",
+        "description": "Command to execute."
     }
 
     def run(self):

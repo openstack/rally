@@ -42,13 +42,14 @@ CONF.register_opts(ROLES_CONTEXT_OPTS,
 
 @context.configure(name="roles", order=330)
 class RoleGenerator(context.Context):
-    """Context class for adding temporary roles for benchmarks."""
+    """Context class for assigning roles for users."""
 
     CONFIG_SCHEMA = {
         "type": "array",
         "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "string",
+            "description": "The name of role to assign to user"
         }
     }
 

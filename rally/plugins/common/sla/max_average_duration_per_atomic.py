@@ -31,7 +31,9 @@ from rally.task import sla
 class MaxAverageDurationPerAtomic(sla.SLA):
     """Maximum average duration of one iterations atomic actions in seconds."""
     CONFIG_SCHEMA = {"type": "object", "$schema": consts.JSON_SCHEMA,
-                     "patternProperties": {".*": {"type": "number"}},
+                     "patternProperties": {".*": {
+                         "type": "number",
+                         "description": "The name of atomic action."}},
                      "additionalProperties": False}
 
     def __init__(self, criterion_value):
