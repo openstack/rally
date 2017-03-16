@@ -804,10 +804,9 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         network_id = "net-id"
         floating_ip_args = floating_ip_args or {}
         self.clients("neutron").create_floatingip.return_value = fip
-        self.scenario.generate_random_name = mock.Mock(return_value="s_rally")
         mock_get_network_id = self.scenario._get_network_id = mock.Mock()
         mock_get_network_id.return_value = network_id
-        args = {"floating_network_id": network_id, "description": "s_rally"}
+        args = {"floating_network_id": network_id}
         args.update(floating_ip_args)
         expected_fip_data = {"floatingip": args}
         resultant_fip = self.scenario._create_floatingip(
