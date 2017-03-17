@@ -151,28 +151,7 @@ _nova_order = get_order(200)
 class NovaServer(base.ResourceManager):
     def list(self):
         """List all servers."""
-
-        if hasattr(self._manager().api, "api_version"):
-            # NOTE(andreykurilin): novaclient v2.27.0 includes ability to
-            #   return all servers(see https://review.openstack.org/#/c/217101
-            #   for more details). This release can be identified by presence
-            #   of "api_version" property of ``novaclient.client.Client`` cls.
-            return self._manager().list(limit=-1)
-        else:
-            # FIXME(andreykurilin): Remove code below, when minimum version of
-            #   novaclient in requirements will allow it.
-            # NOTE(andreykurilin): Nova API returns only limited number(
-            #   'osapi_max_limit' option in nova.conf) of servers, so we need
-            #   to use 'marker' option to list all pages of servers.
-            result = []
-            marker = None
-            while True:
-                servers = self._manager().list(marker=marker)
-                if not servers:
-                    break
-                result.extend(servers)
-                marker = servers[-1].id
-            return result
+        return self._manager().list(limit=-1)
 
     def delete(self):
         if getattr(self.raw_resource, "OS-EXT-STS:locked", False):
