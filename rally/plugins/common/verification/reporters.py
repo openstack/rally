@@ -30,7 +30,152 @@ TIME_FORMAT_ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
 
 @reporter.configure("json")
 class JSONReporter(reporter.VerificationReporter):
-    """Generates verification report in JSON format."""
+    """Generates verification report in JSON format.
+
+    An example of the report (All dates, numbers, names appearing in this
+    example are fictitious. Any resemblance to real things is purely
+    coincidental):
+
+      .. code-block:: json
+
+        {"verifications": {
+            "verification-uuid-1": {
+                "status": "finished",
+                "skipped": 1,
+                "started_at": "2001-01-01T00:00:00",
+                "finished_at": "2001-01-01T00:05:00",
+                "tests_duration": 5,
+                "run_args": {
+                    "pattern": "set=smoke",
+                    "xfail_list": {"some.test.TestCase.test_xfail":
+                                       "Some reason why it is expected."},
+                    "skip_list": {"some.test.TestCase.test_skipped":
+                                      "This test was skipped intentionally"},
+                },
+                "success": 1,
+                "expected_failures": 1,
+                "tests_count": 3,
+                "failures": 0,
+                "unexpected_success": 0
+            },
+            "verification-uuid-2": {
+                "status": "finished",
+                "skipped": 1,
+                "started_at": "2002-01-01T00:00:00",
+                "finished_at": "2002-01-01T00:05:00",
+                "tests_duration": 5,
+                "run_args": {
+                    "pattern": "set=smoke",
+                    "xfail_list": {"some.test.TestCase.test_xfail":
+                                       "Some reason why it is expected."},
+                    "skip_list": {"some.test.TestCase.test_skipped":
+                                      "This test was skipped intentionally"},
+                },
+                "success": 1,
+                "expected_failures": 1,
+                "tests_count": 3,
+                "failures": 1,
+                "unexpected_success": 0
+            }
+         },
+         "tests": {
+            "some.test.TestCase.test_foo[tag1,tag2]": {
+                "name": "some.test.TestCase.test_foo",
+                "tags": ["tag1","tag2"],
+                "by_verification": {
+                    "verification-uuid-1": {
+                        "status": "success",
+                        "duration": "1.111"
+                    },
+                    "verification-uuid-2": {
+                        "status": "success",
+                        "duration": "22.222"
+                    }
+                }
+            },
+            "some.test.TestCase.test_skipped[tag1]": {
+                "name": "some.test.TestCase.test_skipped",
+                "tags": ["tag1"],
+                "by_verification": {
+                    "verification-uuid-1": {
+                        "status": "skipped",
+                        "duration": "0",
+                        "details": "Skipped until Bug: 666 is resolved."
+                    },
+                    "verification-uuid-2": {
+                        "status": "skipped",
+                        "duration": "0",
+                        "details": "Skipped until Bug: 666 is resolved."
+                    }
+                }
+            },
+            "some.test.TestCase.test_xfail": {
+                "name": "some.test.TestCase.test_xfail",
+                "tags": [],
+                "by_verification": {
+                    "verification-uuid-1": {
+                        "status": "xfail",
+                        "duration": "3",
+                        "details": "Some reason why it is expected.\\n\\n"
+                            "Traceback (most recent call last): \\n"
+                            "  File "fake.py", line 13, in <module>\\n"
+                            "    yyy()\\n"
+                            "  File "fake.py", line 11, in yyy\\n"
+                            "    xxx()\\n"
+                            "  File "fake.py", line 8, in xxx\\n"
+                            "    bar()\\n"
+                            "  File "fake.py", line 5, in bar\\n"
+                            "    foo()\\n"
+                            "  File "fake.py", line 2, in foo\\n"
+                            "    raise Exception()\\n"
+                            "Exception"
+                    },
+                    "verification-uuid-2": {
+                        "status": "xfail",
+                        "duration": "3",
+                        "details": "Some reason why it is expected.\\n\\n"
+                            "Traceback (most recent call last): \\n"
+                            "  File "fake.py", line 13, in <module>\\n"
+                            "    yyy()\\n"
+                            "  File "fake.py", line 11, in yyy\\n"
+                            "    xxx()\\n"
+                            "  File "fake.py", line 8, in xxx\\n"
+                            "    bar()\\n"
+                            "  File "fake.py", line 5, in bar\\n"
+                            "    foo()\\n"
+                            "  File "fake.py", line 2, in foo\\n"
+                            "    raise Exception()\\n"
+                            "Exception"
+                    }
+                }
+            },
+            "some.test.TestCase.test_failed": {
+                "name": "some.test.TestCase.test_failed",
+                "tags": [],
+                "by_verification": {
+                    "verification-uuid-2": {
+                        "status": "fail",
+                        "duration": "4",
+                        "details": "Some reason why it is expected.\\n\\n"
+                            "Traceback (most recent call last): \\n"
+                            "  File "fake.py", line 13, in <module>\\n"
+                            "    yyy()\\n"
+                            "  File "fake.py", line 11, in yyy\\n"
+                            "    xxx()\\n"
+                            "  File "fake.py", line 8, in xxx\\n"
+                            "    bar()\\n"
+                            "  File "fake.py", line 5, in bar\\n"
+                            "    foo()\\n"
+                            "  File "fake.py", line 2, in foo\\n"
+                            "    raise Exception()\\n"
+                            "Exception"
+                        }
+                    }
+                }
+            }
+        }
+
+    """
     TIME_FORMAT = TIME_FORMAT_ISO8601
 
     @classmethod
@@ -178,7 +323,86 @@ class HTMLStaticReporter(HTMLReporter):
 
 @reporter.configure("junit-xml")
 class JUnitXMLReporter(reporter.VerificationReporter):
-    """Generates verification report in JUnit-XML format."""
+    """Generates verification report in JUnit-XML format.
+
+    An example of the report (All dates, numbers, names appearing in this
+    example are fictitious. Any resemblance to real things is purely
+    coincidental):
+
+      .. code-block:: xml
+
+        <testsuites>
+          <!--Report is generated by Rally 0.8.0 at 2002-01-01T00:00:00-->
+          <testsuite id="verification-uuid-1"
+                     tests="9"
+                     time="1.111"
+                     errors="0"
+                     failures="3"
+                     skipped="0"
+                     timestamp="2001-01-01T00:00:00">
+            <testcase classname="some.test.TestCase"
+                      name="test_foo"
+                      time="8"
+                      timestamp="2001-01-01T00:01:00" />
+            <testcase classname="some.test.TestCase"
+                      name="test_skipped"
+                      time="0"
+                      timestamp="2001-01-01T00:02:00">
+              <skipped>Skipped until Bug: 666 is resolved.</skipped>
+            </testcase>
+            <testcase classname="some.test.TestCase"
+                      name="test_xfail"
+                      time="3"
+                      timestamp="2001-01-01T00:03:00">
+              <!--It is an expected failure due to: something-->
+              <!--Traceback:
+        HEEELP-->
+            </testcase>
+            <testcase classname="some.test.TestCase"
+                      name="test_uxsuccess"
+                      time="3"
+                      timestamp="2001-01-01T00:04:00">
+              <failure>
+                  It is an unexpected success. The test should fail due to:
+                  It should fail, I said!
+              </failure>
+            </testcase>
+          </testsuite>
+          <testsuite id="verification-uuid-2"
+                     tests="99"
+                     time="22.222"
+                     errors="0"
+                     failures="33"
+                     skipped="0"
+                     timestamp="2002-01-01T00:00:00">
+            <testcase classname="some.test.TestCase"
+                      name="test_foo"
+                      time="8"
+                      timestamp="2001-02-01T00:01:00" />
+            <testcase classname="some.test.TestCase"
+                      name="test_failed"
+                      time="8"
+                      timestamp="2001-02-01T00:02:00">
+              <failure>HEEEEEEELP</failure>
+            </testcase>
+            <testcase classname="some.test.TestCase"
+                      name="test_skipped"
+                      time="0"
+                      timestamp="2001-02-01T00:03:00">
+              <skipped>Skipped until Bug: 666 is resolved.</skipped>
+            </testcase>
+            <testcase classname="some.test.TestCase"
+                      name="test_xfail"
+                      time="4"
+                      timestamp="2001-02-01T00:04:00">
+              <!--It is an expected failure due to: something-->
+              <!--Traceback:
+        HEEELP-->
+            </testcase>
+          </testsuite>
+        </testsuites>
+
+    """
 
     @classmethod
     def validate(cls, output_destination):
@@ -248,7 +472,8 @@ class JUnitXMLReporter(reporter.VerificationReporter):
                     #   status, so let's display it like "fail" with proper
                     # comment.
                     failure = ET.SubElement(test_case_element, "failure")
-                    failure.text = ("It is an unexpected success due to: %s" %
+                    failure.text = ("It is an unexpected success. The test "
+                                    "should fail due to: %s" %
                                     result.get("reason", "Unknown reason"))
                 elif result["status"] == "fail":
                     failure = ET.SubElement(test_case_element, "failure")

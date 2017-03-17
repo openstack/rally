@@ -11,7 +11,7 @@
 HEEELP-->
     </testcase>
     <testcase classname="some.test.TestCase" name="test_uxsuccess" time="3" timestamp="2001-01-01T00:04:00">
-      <failure>It is an unexpected success due to: It should fail since I expect it</failure>
+      <failure>It is an unexpected success. The test should fail due to: It should fail since I expect it</failure>
     </testcase>
   </testsuite>
   <testsuite errors="0" failures="33" id="foo-bar-2" skipped="0" tests="99" time="22.222" timestamp="2002-01-01T00:00:00">
