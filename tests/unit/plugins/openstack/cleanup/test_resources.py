@@ -96,21 +96,6 @@ class NovaServerTestCase(test.TestCase):
 
         server._manager.return_value.list.assert_called_once_with(limit=-1)
 
-    def test_list_old_novaclient(self):
-        servers = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock(),
-                   mock.MagicMock()]
-        server = resources.NovaServer()
-        server._manager = mock.MagicMock()
-        server._manager.return_value.api = None
-        server._manager.return_value.list.side_effect = (
-            servers[:2], servers[2:4], [])
-
-        self.assertEqual(servers, server.list())
-        self.assertEqual(
-            [mock.call(marker=None), mock.call(marker=servers[1].id),
-             mock.call(marker=servers[3].id)],
-            server._manager.return_value.list.call_args_list)
-
     def test_delete(self):
         server = resources.NovaServer()
         server.raw_resource = mock.Mock()
