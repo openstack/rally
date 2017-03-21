@@ -16,7 +16,6 @@
 """Tests for the Test engine."""
 
 import collections
-import copy
 import threading
 
 import jsonschema
@@ -286,10 +285,8 @@ class TaskEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a",
                           user_context, workloads, "fake_deployment")
 
-    @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.context.Context")
-    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.TaskEngine"
                 "._validate_config_semantic_helper")
@@ -298,11 +295,12 @@ class TaskEngineTestCase(test.TestCase):
     def test__validate_config_semantic(
             self, mock_deployment_get,
             mock__validate_config_semantic_helper,
-            mock_task_config, mock_credential, mock_context,
-            mock_scenario_get, mock_clients):
+            mock_task_config, mock_context,
+            mock_scenario_get):
+        admin = fakes.fake_credential(foo="admin")
+        users = [fakes.fake_credential(bar="user1")]
         deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin={"foo": "admin"},
-            users=[{"bar": "user1"}])
+            uuid="deployment_uuid", admin=admin, users=users)
 
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_namespace.return_value = "default"
@@ -324,11 +322,7 @@ class TaskEngineTestCase(test.TestCase):
 
         eng._validate_config_semantic(mock_task_instance)
 
-        admin = mock_credential.return_value
         user_context = mock_context.get.return_value.return_value
-
-        mock_clients.assert_called_once_with(admin)
-        mock_clients.return_value.verified_keystone.assert_called_once_with()
 
         mock__validate_config_semantic_helper.assert_has_calls([
             mock.call(admin, user_context, [wconf1], deployment),
@@ -356,7 +350,6 @@ class TaskEngineTestCase(test.TestCase):
             mock.call(consts.TaskStatus.FINISHED)
         ])
 
-    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.objects.task.Task.get_status")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.LOG")
@@ -368,7 +361,7 @@ class TaskEngineTestCase(test.TestCase):
     def test_run_exception_is_logged(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_result_consumer,
-            mock_log, mock_task_config, mock_task_get_status, mock_credential):
+            mock_log, mock_task_config, mock_task_get_status):
         scenario_cls = mock_scenario.get.return_value
         scenario_cls.get_namespace.return_value = "openstack"
 
@@ -394,7 +387,6 @@ class TaskEngineTestCase(test.TestCase):
 
         self.assertEqual(2, mock_log.exception.call_count)
 
-    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
@@ -403,7 +395,7 @@ class TaskEngineTestCase(test.TestCase):
     def test_run__task_soft_aborted(
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_result_consumer, mock_credential):
+            mock_result_consumer):
         scenario_cls = mock_scenario.get.return_value
         scenario_cls.get_namespace.return_value = "openstack"
         task = mock.MagicMock()
@@ -455,11 +447,9 @@ class TaskEngineTestCase(test.TestCase):
         self.assertEqual(mock.call(consts.TaskStatus.ABORTED),
                          task.update_status.mock_calls[-1])
 
-    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    def test__prepare_context(self, mock_scenario_get, mock_task_config,
-                              mock_credential):
+    def test__prepare_context(self, mock_scenario_get, mock_task_config):
         default_context = {"a": 1, "b": 2}
         mock_scenario = mock_scenario_get.return_value
         mock_scenario.get_default_context.return_value = default_context
@@ -470,28 +460,24 @@ class TaskEngineTestCase(test.TestCase):
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
+        admin = fakes.fake_credential(foo="admin")
         deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin={"foo": "admin"})
+            uuid="deployment_uuid", admin=admin)
         eng = engine.TaskEngine(config, task, deployment)
         result = eng._prepare_context(context, name)
-        expected_context = copy.deepcopy(default_context)
-        expected_context.setdefault("users", {})
-        expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"credential": mock_credential.return_value},
+            "admin": {"credential": admin},
             "scenario_name": name,
-            "config": expected_context
+            "config": {"a": 1, "b": 3, "c": 4, "users": {}}
         }
         self.assertEqual(result, expected_result)
         mock_scenario_get.assert_called_once_with(name)
 
-    @mock.patch("rally.task.engine.objects.Credential")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     def test__prepare_context_with_existing_users(self, mock_scenario_get,
-                                                  mock_task_config,
-                                                  mock_credential):
+                                                  mock_task_config):
         mock_scenario = mock_scenario_get.return_value
         mock_scenario.get_default_context.return_value = {}
         mock_scenario.get_namespace.return_value = "default"
@@ -501,18 +487,17 @@ class TaskEngineTestCase(test.TestCase):
         config = {
             "a.task": [{"context": {"context_a": {"a": 1}}}],
         }
-        deployment = fakes.FakeDeployment(
-            uuid="deployment_uuid", admin={"foo": "admin"},
-            users=[{"bar": "user1"}])
+        admin = fakes.fake_credential(foo="admin")
+        users = [fakes.fake_credential(bar="user1")]
+        deployment = fakes.FakeDeployment(uuid="deployment_uuid",
+                                          admin=admin, users=users)
         eng = engine.TaskEngine(config, task, deployment)
         result = eng._prepare_context(context, name)
-        expected_context = {"existing_users": [{"bar": "user1"}]}
-        expected_context.update(context)
         expected_result = {
             "task": task,
-            "admin": {"credential": mock_credential.return_value},
+            "admin": {"credential": admin},
             "scenario_name": name,
-            "config": expected_context
+            "config": {"b": 3, "c": 4, "existing_users": users}
         }
         self.assertEqual(result, expected_result)
         mock_scenario_get.assert_called_once_with(name)

@@ -115,11 +115,12 @@ class ConfigSchemasTestCase(test.TestCase):
             self.fail(p, schema, ("Found unexpected key(s) for integer/number "
                                   "type: %s." % ", ".join(unexpected_keys)))
 
-    def _check_simpliest_types(self, p, schema):
+    def _check_simpliest_types(self, p, schema, type_name):
         unexpected_keys = set(schema.keys()) - {"type", "description"}
         if unexpected_keys:
-            self.fail(p, schema, ("Found unexpected key(s) for boolean type: "
-                                  "%s." % ", ".join(unexpected_keys)))
+            self.fail(p, schema, ("Found unexpected key(s) for %s type: "
+                                  "%s." % (type_name,
+                                           ", ".join(unexpected_keys))))
 
     def _check_item(self, p, schema, definitions):
         if "type" in schema or "anyOf" in schema or "oneOf" in schema:
@@ -135,7 +136,9 @@ class ConfigSchemasTestCase(test.TestCase):
                 elif schema["type"] in ("number", "integer"):
                     self._check_number_type(p, schema)
                 elif schema["type"] in ("boolean", "null"):
-                    self._check_simpliest_types(p, schema)
+                    self._check_simpliest_types(p, schema, schema["type"])
+                elif isinstance(schema["type"], list):
+                    self._check_simpliest_types(p, schema, "mixed")
                 else:
                     self.fail(p, schema,
                               "Wrong type is used: %s" % schema["type"])

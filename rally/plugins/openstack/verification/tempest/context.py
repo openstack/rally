@@ -21,9 +21,7 @@ from six.moves import configparser
 
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common import objects
 from rally import exceptions
-from rally import osclients
 from rally.plugins.openstack.verification.tempest import config as conf
 from rally.plugins.openstack.wrappers import glance
 from rally.plugins.openstack.wrappers import network
@@ -45,7 +43,7 @@ class TempestContext(context.VerifierContext):
         super(TempestContext, self).__init__(ctx)
 
         creds = self.verifier.deployment.get_credentials_for("openstack")
-        self.clients = osclients.Clients(objects.Credential(**creds["admin"]))
+        self.clients = creds["admin"].clients()
         self.available_services = self.clients.services().values()
 
         self.conf = configparser.ConfigParser()

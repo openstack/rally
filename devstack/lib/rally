@@ -50,12 +50,16 @@ then
     cat >$1 <<EOF
 {
     "type": "ExistingCloud",
-    "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
-    "region_name": "$REGION_NAME",
-    "admin": {
-        "username": "admin",
-        "password": "$ADMIN_PASSWORD",
-        "tenant_name": "admin",
+    "creds": {
+        "openstack": {
+            "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+            "region_name": "$REGION_NAME",
+            "admin": {
+                "username": "admin",
+                "password": "$ADMIN_PASSWORD",
+                "tenant_name": "admin",
+            }
+        }
     }
 }
 EOF
@@ -65,14 +69,18 @@ then
     cat >$1 <<EOF
 {
     "type": "ExistingCloud",
-    "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
-    "region_name": "$REGION_NAME",
-    "admin": {
-        "username": "admin",
-        "password": "$ADMIN_PASSWORD",
-        "project_name": "admin",
-        "user_domain_name": "Default",
-        "project_domain_name": "Default"
+    "creds": {
+        "openstack": {
+            "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+            "region_name": "$REGION_NAME",
+            "admin": {
+                "username": "admin",
+                "password": "$ADMIN_PASSWORD",
+                "project_name": "admin",
+                "user_domain_name": "Default",
+                "project_domain_name": "Default"
+            }
+        }
     }
 }
 EOF

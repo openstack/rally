@@ -21,7 +21,6 @@ from rally.common import logging
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
-from rally import osclients
 from rally.plugins.openstack.cleanup import base
 
 
@@ -29,7 +28,6 @@ LOG = logging.getLogger(__name__)
 
 
 class SeekAndDestroy(object):
-    cache = {}
 
     def __init__(self, manager_cls, admin, users, api_versions=None,
                  resource_classes=None, task_id=None):
@@ -58,15 +56,8 @@ class SeekAndDestroy(object):
         """Simplifies initialization and caching OpenStack clients."""
         if not user:
             return None
-
-        if self.api_versions:
-            key = str((user["credential"], sorted(self.api_versions.items())))
-        else:
-            key = user["credential"]
-        if key not in self.cache:
-            self.cache[key] = osclients.Clients(
-                user["credential"], api_info=self.api_versions)
-        return self.cache[key]
+        # NOTE(astudenov): Credential now supports caching by default
+        return user["credential"].clients(api_info=self.api_versions)
 
     def _delete_single_resource(self, resource):
         """Safe resource deletion with retries and timeouts.
@@ -170,7 +161,6 @@ class SeekAndDestroy(object):
                     admin=admin_client,
                     user=self._get_cached_client(user),
                     tenant_uuid=user["tenant_id"])
-
                 _publish(self.admin, user, manager)
 
     def _consumer(self, cache, args):
@@ -269,14 +259,14 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
     :param admin_required: If None -> return all plugins
                            If True -> return only admin plugins
                            If False -> return only non admin plugins
-    :param admin: rally.common.objects.Credential that corresponds to OpenStack
-                  admin.
+    :param admin: rally.deployment.credential.Credential that corresponds to
+                  OpenStack admin.
     :param users: List of OpenStack users that was used during benchmarking.
                   Every user has next structure:
                   {
                     "id": <uuid1>,
                     "tenant_id": <uuid2>,
-                    "credential": <rally.common.objects.Credential>
+                    "credential": <rally.deployment.credential.Credential>
                   }
     :param superclass: The plugin superclass to perform cleanup
                        for. E.g., this could be

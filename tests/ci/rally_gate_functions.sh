@@ -64,7 +64,7 @@ function setUp () {
         DEPLOYMENT_CONFIG_FILE=~/.rally/with-existing-users-config
 
         rally deployment config > $DEPLOYMENT_CONFIG_FILE
-        sed -i '1a    "users": [\
+        sed -i '3a    "users": [\
           {\
               "username": "rally-test-user-1",\
               "password": "rally-test-password-1",\

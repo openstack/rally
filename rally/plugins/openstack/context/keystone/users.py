@@ -21,11 +21,11 @@ from oslo_config import cfg
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common import objects
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import osclients
+from rally.plugins.openstack import credential
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
@@ -220,10 +220,12 @@ class UserGenerator(context.Context):
                                       project_id=tenant_id,
                                       domain_name=user_dom,
                                       default_role=default_role)
-            user_credential = objects.Credential(
-                self.credential.auth_url, user.name, password,
-                self.context["tenants"][tenant_id]["name"],
-                consts.EndpointPermission.USER,
+            user_credential = credential.OpenStackCredential(
+                auth_url=self.credential.auth_url,
+                username=user.name,
+                password=password,
+                tenant_name=self.context["tenants"][tenant_id]["name"],
+                permission=consts.EndpointPermission.USER,
                 project_domain_name=project_dom,
                 user_domain_name=user_dom,
                 endpoint_type=self.credential.endpoint_type,

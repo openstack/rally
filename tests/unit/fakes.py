@@ -28,7 +28,6 @@ import six
 from swiftclient import exceptions as swift_exceptions
 
 from rally import api
-from rally.common import objects
 from rally.common import utils as rally_utils
 from rally import consts
 from rally.task import context
@@ -81,6 +80,14 @@ def setup_dict(data, required=None, defaults=None):
 
     defaults.update(data)
     return defaults
+
+
+def fake_credential(**config):
+    m = mock.Mock()
+    m.to_dict.return_value = config
+    for key, value in config.items():
+        setattr(m, key, value)
+    return m
 
 
 class FakeResource(object):
@@ -1594,11 +1601,11 @@ class FakeClients(object):
         self._ec2 = None
         self._senlin = None
         self._watcher = None
-        self._credential = credential_ or objects.Credential(
-            "http://fake.example.org:5000/v2.0/",
-            "fake_username",
-            "fake_password",
-            "fake_tenant_name")
+        self._credential = credential_ or fake_credential(
+            auth_url="http://fake.example.org:5000/v2.0/",
+            username="fake_username",
+            password="fake_password",
+            tenant_name="fake_tenant_name")
 
     def keystone(self, version=None):
         if not self._keystone:
@@ -1806,11 +1813,19 @@ class FakeUserContext(FakeContext):
 
     admin = {
         "id": "adminuuid",
-        "credential": objects.Credential("aurl", "aname", "apwd", "atenant")
+        "credential": fake_credential(
+            auth_url="aurl",
+            username="aname",
+            password="apwd",
+            tenant_name="atenant")
     }
     user = {
         "id": "uuid",
-        "credential": objects.Credential("url", "name", "pwd", "tenant"),
+        "credential": fake_credential(
+            auth_url="url",
+            username="name",
+            password="pwd",
+            tenant_name="tenant"),
         "tenant_id": "uuid"
     }
     tenants = {"uuid": {"name": "tenant"}}

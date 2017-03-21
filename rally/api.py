@@ -33,7 +33,6 @@ from rally.common import version as rally_version
 from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
-from rally import osclients
 from rally.task import engine
 from rally.verification import context as vcontext
 from rally.verification import manager as vmanager
@@ -149,10 +148,9 @@ class _Deployment(object):
         :param deployment: Deployment object
         :returns: Service list
         """
-        # TODO(astudenov): put this work into Credential plugins
+        # TODO(astudenov): make this method platform independent
         admin = deployment.get_credentials_for("openstack")["admin"]
-        clients = osclients.Clients(objects.Credential(**admin))
-        return clients.services()
+        return admin.list_services()
 
     @staticmethod
     def list(status=None, parent_uuid=None, name=None):
@@ -168,13 +166,12 @@ class _Deployment(object):
 
         :returns: Service list
         """
-        # TODO(astudenov): put this work into Credential plugins
-        services = cls.service_list(deployment)
-        users = deployment.get_credentials_for("openstack")["users"]
-        for endpoint_dict in users:
-            osclients.Clients(objects.Credential(**endpoint_dict)).keystone()
-
-        return services
+        # TODO(astudenov): make this method platform independent
+        creds = deployment.get_credentials_for("openstack")
+        creds["admin"].verify_connection()
+        for user in creds["users"]:
+            user.verify_connection()
+        return creds["admin"].list_services()
 
 
 class _Task(object):

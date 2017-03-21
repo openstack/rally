@@ -15,8 +15,6 @@
 
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common import objects
-from rally import osclients
 from rally.task import context
 
 
@@ -46,10 +44,8 @@ class ExistingUsers(context.Context):
         self.context["tenants"] = {}
         self.context["user_choice_method"] = "random"
 
-        for user in self.config:
-            user_credential = objects.Credential(**user)
-            user_clients = osclients.Clients(user_credential)
-
+        for user_credential in self.config:
+            user_clients = user_credential.clients()
             user_id = user_clients.keystone.auth_ref.user_id
             tenant_id = user_clients.keystone.auth_ref.project_id
 

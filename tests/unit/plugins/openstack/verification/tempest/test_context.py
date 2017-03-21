@@ -30,20 +30,17 @@ from tests.unit import test
 CONF = cfg.CONF
 
 
-CREDS = {
-    "admin": {
-        "username": "admin",
-        "tenant_name": "admin",
-        "password": "admin-12345",
-        "auth_url": "http://test:5000/v2.0/",
-        "permission": "admin",
-        "region_name": "test",
-        "https_insecure": False,
-        "https_cacert": "/path/to/cacert/file",
-        "user_domain_name": "admin",
-        "project_domain_name": "admin"
-    },
-    "uuid": "fake_deployment"
+CRED = {
+    "username": "admin",
+    "tenant_name": "admin",
+    "password": "admin-12345",
+    "auth_url": "http://test:5000/v2.0/",
+    "permission": "admin",
+    "region_name": "test",
+    "https_insecure": False,
+    "https_cacert": "/path/to/cacert/file",
+    "user_domain_name": "admin",
+    "project_domain_name": "admin"
 }
 
 PATH = "rally.plugins.openstack.verification.tempest.context"
@@ -55,11 +52,12 @@ class TempestContextTestCase(test.TestCase):
     def setUp(self):
         super(TempestContextTestCase, self).setUp()
 
-        mock.patch("rally.osclients.Clients").start()
         self.mock_isfile = mock.patch("os.path.isfile",
                                       return_value=True).start()
 
-        self.deployment = fakes.FakeDeployment(**CREDS)
+        self.cred = fakes.fake_credential(**CRED)
+        self.deployment = fakes.FakeDeployment(
+            uuid="fake_deployment", admin=self.cred)
         cfg = {"verifier": mock.Mock(deployment=self.deployment),
                "verification": {"uuid": "uuid"}}
         cfg["verifier"].manager.home_dir = "/p/a/t/h"
@@ -244,6 +242,7 @@ class TempestContextTestCase(test.TestCase):
 
     def test__discover_or_create_flavor(self):
         client = self.context.clients.nova()
+        client.flavors.list.return_value = []
         client.flavors.create.side_effect = [fakes.FakeFlavor(id="id1")]
 
         flavor = self.context._discover_or_create_flavor(64)
@@ -260,6 +259,7 @@ class TempestContextTestCase(test.TestCase):
         client.create_network.side_effect = [{"network": fake_network}]
         client.create_router.side_effect = [{"router": {"id": "rid1"}}]
         client.create_subnet.side_effect = [{"subnet": {"id": "subid1"}}]
+        client.list_networks.return_value = {"networks": []}
 
         network = self.context._create_network_resources()
         self.assertEqual("nid1", network["id"])
@@ -333,16 +333,14 @@ class TempestContextTestCase(test.TestCase):
     @mock.patch("%s.TempestContext._configure_option" % PATH)
     @mock.patch("%s.TempestContext._create_tempest_roles" % PATH)
     @mock.patch("rally.verification.utils.create_dir")
-    @mock.patch("%s.osclients.Clients" % PATH)
-    def test_setup(self, mock_clients, mock_create_dir,
+    def test_setup(self, mock_create_dir,
                    mock__create_tempest_roles, mock__configure_option,
                    mock_open):
-        self.deployment = fakes.FakeDeployment(**CREDS)
         verifier = mock.Mock(deployment=self.deployment)
         verifier.manager.home_dir = "/p/a/t/h"
 
         # case #1: no neutron and heat
-        mock_clients.return_value.services.return_value = {}
+        self.cred.clients.return_value.services.return_value = {}
 
         ctx = context.TempestContext({"verifier": verifier})
         ctx.conf = mock.Mock()
@@ -377,10 +375,12 @@ class TempestContextTestCase(test.TestCase):
         mock__configure_option.reset_mock()
 
         # case #2: neutron and heat are presented
-        mock_clients.return_value.services.return_value = {
+        self.cred.clients.return_value.services.return_value = {
             "network": "neutron", "orchestration": "heat"}
 
         ctx = context.TempestContext({"verifier": verifier})
+        neutron = ctx.clients.neutron()
+        neutron.list_networks.return_value = {"networks": ["fake_net"]}
         ctx.conf = mock.Mock()
         ctx.setup()
 

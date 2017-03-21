@@ -18,6 +18,8 @@ from rally import consts
 from tests.unit import test
 
 
+# TODO(astudenov): remove this class in future releases
+
 class CredentialTestCase(test.TestCase):
 
     def test_to_dict(self):

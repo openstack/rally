@@ -22,7 +22,6 @@ from six.moves.urllib import parse
 from rally.cli import envutils
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common import objects
 from rally.common.plugin import plugin
 from rally import consts
 from rally import exceptions
@@ -687,10 +686,10 @@ class Watcher(OSClient):
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 
-    def __init__(self, credential, api_info=None):
+    def __init__(self, credential, api_info=None, cache=None):
         self.credential = credential
         self.api_info = api_info or {}
-        self.cache = {}
+        self.cache = cache or {}
 
     def __getattr__(self, client_name):
         """Lazy load of clients."""
@@ -700,20 +699,20 @@ class Clients(object):
     @classmethod
     def create_from_env(cls):
         creds = envutils.get_creds_from_env_vars()
-        return cls(
-            objects.Credential(
-                creds["auth_url"],
-                creds["admin"]["username"],
-                creds["admin"]["password"],
-                creds["admin"]["tenant_name"],
-                endpoint_type=creds["endpoint_type"],
-                user_domain_name=creds["admin"].get("user_domain_name"),
-                project_domain_name=creds["admin"].get("project_domain_name"),
-                endpoint=creds["endpoint"],
-                region_name=creds["region_name"],
-                https_cacert=creds["https_cacert"],
-                https_insecure=creds["https_insecure"]
-            ))
+        from rally.plugins.openstack import credential
+        oscred = credential.OpenStackCredential(
+            auth_url=creds["auth_url"],
+            username=creds["admin"]["username"],
+            password=creds["admin"]["password"],
+            tenant_name=creds["admin"]["tenant_name"],
+            endpoint_type=creds["endpoint_type"],
+            user_domain_name=creds["admin"].get("user_domain_name"),
+            project_domain_name=creds["admin"].get("project_domain_name"),
+            endpoint=creds["endpoint"],
+            region_name=creds["region_name"],
+            https_cacert=creds["https_cacert"],
+            https_insecure=creds["https_insecure"])
+        return cls(oscred)
 
     def clear(self):
         """Remove all cached client handles."""
