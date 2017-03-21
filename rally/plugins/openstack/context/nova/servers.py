@@ -39,18 +39,14 @@ class ServerGenerator(context.Context):
                 "description": "Name of image to boot server(s) from.",
                 "type": "object",
                 "properties": {
-                    "name": {
-                        "type": "string"
-                    }
+                    "name": {"type": "string"}
                 }
             },
             "flavor": {
                 "description": "Name of flavor to boot server(s) with.",
                 "type": "object",
                 "properties": {
-                    "name": {
-                        "type": "string"
-                    }
+                    "name": {"type": "string"}
                 }
             },
             "servers_per_tenant": {
@@ -70,7 +66,8 @@ class ServerGenerator(context.Context):
                      "properties": {"net-id": {"type": "string"}},
                      "description": "Network ID in a format like OpenStack API"
                                     " expects to see."},
-                    {"type": "string", "description": "Network ID."}]}
+                    {"type": "string", "description": "Network ID."}]},
+                "minItems": 1
             }
         },
         "required": ["image", "flavor"],
@@ -88,7 +85,14 @@ class ServerGenerator(context.Context):
         flavor = self.config["flavor"]
         auto_nic = self.config["auto_assign_nic"]
         servers_per_tenant = self.config["servers_per_tenant"]
-        kwargs = {"nics": self.config.get("nics", [])}
+        kwargs = {}
+        if self.config.get("nics"):
+            if isinstance(self.config["nics"][0], dict):
+                # it is format that Nova expects
+                kwargs["nics"] = self.config["nics"]
+            else:
+                kwargs["nics"] = [{"net-id": nic}
+                                  for nic in self.config["nics"]]
 
         clients = osclients.Clients(self.context["users"][0]["credential"])
         image_id = types.GlanceImage.transform(clients=clients,
