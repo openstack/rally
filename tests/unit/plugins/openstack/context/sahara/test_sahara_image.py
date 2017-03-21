@@ -16,7 +16,6 @@ import mock
 
 from rally import exceptions
 from rally.plugins.openstack.context.sahara import sahara_image
-from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from tests.unit import test
 
 
@@ -85,15 +84,23 @@ class SaharaImageTestCase(test.ScenarioTestCase):
         })
         return self.context
 
-    @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
-                return_value=mock.MagicMock(id=42))
+    @mock.patch("rally.plugins.openstack.services."
+                "image.image.Image")
     @mock.patch("%s.resource_manager.cleanup" % CTX)
-    def test_setup_and_cleanup_url_image(self, mock_cleanup,
-                                         mock_glance_scenario__create_image):
+    @mock.patch("rally.osclients.Clients")
+    def test_setup_and_cleanup_url_image(self, mock_clients,
+                                         mock_cleanup, mock_image):
 
         ctx = self.url_image_context
         sahara_ctx = sahara_image.SaharaImage(ctx)
         sahara_ctx.generate_random_name = mock.Mock()
+        image_service = mock.Mock()
+        mock_image.return_value = image_service
+        image_service.create_image.return_value = mock.Mock(id=42)
+        clients = mock.Mock()
+        mock_clients.return_value = clients
+        sahara_client = mock.Mock()
+        clients.sahara.return_value = sahara_client
 
         glance_calls = []
 
@@ -101,8 +108,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
             glance_calls.append(
                 mock.call(container_format="bare",
                           image_location="http://somewhere",
-                          disk_format="qcow2",
-                          name=sahara_ctx.generate_random_name.return_value))
+                          disk_format="qcow2"))
 
         sahara_update_image_calls = []
         sahara_update_tags_calls = []
@@ -116,17 +122,17 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                 new_tags=["test_plugin", "test_version"]))
 
         sahara_ctx.setup()
-        mock_glance_scenario__create_image.assert_has_calls(glance_calls)
-        self.clients("sahara").images.update_image.assert_has_calls(
+        image_service.create_image.assert_has_calls(glance_calls)
+        sahara_client.images.update_image.assert_has_calls(
             sahara_update_image_calls)
-        self.clients("sahara").images.update_tags.assert_has_calls(
+        sahara_client.images.update_tags.assert_has_calls(
             sahara_update_tags_calls)
 
         sahara_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
             names=["glance.images"],
             users=ctx["users"],
-            superclass=glance_utils.GlanceScenario,
+            superclass=sahara_ctx.__class__,
             task_id=ctx["task"]["uuid"])
 
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,

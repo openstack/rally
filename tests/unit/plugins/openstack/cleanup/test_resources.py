@@ -530,42 +530,42 @@ class NeutronQuotaTestCase(test.TestCase):
 @ddt.ddt
 class GlanceImageTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test__wrapper_admin(self, mock_glance_wrap):
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test__client_admin(self, mock_image):
         admin = mock.Mock()
         glance = resources.GlanceImage(admin=admin)
-        wrapper = glance._wrapper()
+        client = glance._client()
 
-        mock_glance_wrap.assert_called_once_with(admin.glance, glance)
-        self.assertEqual(wrapper, mock_glance_wrap.return_value)
+        mock_image.assert_called_once_with(admin)
+        self.assertEqual(client, mock_image.return_value)
 
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test__wrapper_user(self, mock_glance_wrap):
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test__client_user(self, mock_image):
         user = mock.Mock()
         glance = resources.GlanceImage(user=user)
-        wrapper = glance._wrapper()
+        wrapper = glance._client()
 
-        mock_glance_wrap.assert_called_once_with(user.glance, glance)
-        self.assertEqual(wrapper, mock_glance_wrap.return_value)
+        mock_image.assert_called_once_with(user)
+        self.assertEqual(wrapper, mock_image.return_value)
 
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test__wrapper_admin_preferred(self, mock_glance_wrap):
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test__client_admin_preferred(self, mock_image):
         admin = mock.Mock()
         user = mock.Mock()
         glance = resources.GlanceImage(admin=admin, user=user)
-        wrapper = glance._wrapper()
+        client = glance._client()
 
-        mock_glance_wrap.assert_called_once_with(admin.glance, glance)
-        self.assertEqual(wrapper, mock_glance_wrap.return_value)
+        mock_image.assert_called_once_with(admin)
+        self.assertEqual(client, mock_image.return_value)
 
     def test_list(self):
         glance = resources.GlanceImage()
-        glance._wrapper = mock.Mock()
+        glance._client = mock.Mock()
         glance.tenant_uuid = mock.Mock()
 
         self.assertEqual(glance.list(),
-                         glance._wrapper.return_value.list_images.return_value)
-        glance._wrapper.return_value.list_images.assert_called_once_with(
+                         glance._client.return_value.list_images.return_value)
+        glance._client.return_value.list_images.assert_called_once_with(
             owner=glance.tenant_uuid)
 
     def test_delete(self):
@@ -575,13 +575,12 @@ class GlanceImageTestCase(test.TestCase):
         glance.raw_resource = mock.Mock()
 
         client = glance._client.return_value
-        wrapper = glance._wrapper.return_value
 
         deleted_image = mock.Mock(status="DELETED")
-        wrapper.get_image.side_effect = [glance.raw_resource, deleted_image]
+        client.get_image.side_effect = [glance.raw_resource, deleted_image]
 
         glance.delete()
-        client().images.delete.assert_called_once_with(glance.raw_resource.id)
+        client.delete_image.assert_called_once_with(glance.raw_resource.id)
 
 
 class CeilometerTestCase(test.TestCase):

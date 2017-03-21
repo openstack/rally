@@ -62,13 +62,13 @@ class ImageTestCase(test.TestCase):
         service.get_image(image=image_id)
         service._impl.get_image.assert_called_once_with(image_id)
 
-    @ddt.data(("status", "visibility"))
+    @ddt.data(("status", "visibility", "owner"))
     def test_list_images(self, params):
-        status, visibility = params
+        status, visibility, owner = params
         service = self.get_service_with_fake_impl()
-        service.list_images(status=status, visibility=visibility)
+        service.list_images(status=status, visibility=visibility, owner=owner)
         service._impl.list_images.assert_called_once_with(
-            status=status, visibility=visibility)
+            status=status, visibility=visibility, owner=owner)
 
     @ddt.data(("image_id", "visibility"))
     def test_set_visibility(self, params):

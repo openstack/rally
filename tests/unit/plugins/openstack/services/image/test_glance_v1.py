@@ -89,13 +89,15 @@ class GlanceV1ServiceTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceNotFound,
                           self.service.get_image, image_id)
 
-    @ddt.data({"status": "activate", "is_public": True},
-              {"status": "activate", "is_public": False},
-              {"status": "activate", "is_public": None})
+    @ddt.data({"status": "activate", "is_public": True, "owner": "owner"},
+              {"status": "activate", "is_public": False, "owner": "owner"},
+              {"status": "activate", "is_public": None, "owner": "owner"})
     @ddt.unpack
-    def test_list_images(self, status, is_public):
-        self.service.list_images(is_public=is_public, status=status)
-        self.gc.images.list.assert_called_once_with(status=status)
+    def test_list_images(self, status, is_public, owner):
+        self.service.list_images(is_public=is_public, status=status,
+                                 owner=owner)
+        self.gc.images.list.assert_called_once_with(status=status,
+                                                    owner=owner)
 
     def test_set_visibility(self):
         image_id = "image_id"

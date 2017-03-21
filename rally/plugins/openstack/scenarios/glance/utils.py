@@ -15,6 +15,8 @@
 
 from oslo_config import cfg
 
+from rally.common.i18n import _
+from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import atomic
@@ -33,10 +35,19 @@ GLANCE_BENCHMARK_OPTS = [
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
+LOG = logging.getLogger(__name__)
 
 
 class GlanceScenario(scenario.OpenStackScenario):
     """Base class for Glance scenarios with basic atomic actions."""
+
+    def __init__(self, context=None, admin_clients=None, clients=None):
+        super(GlanceScenario, self).__init__(context, admin_clients, clients)
+        LOG.warning(_(
+            "Class %s is deprecated since Rally 0.10.0 and will be removed "
+            "soon. Use "
+            "rally.plugins.openstack.services.image.image.Image "
+            "instead.") % self.__class__)
 
     @atomic.action_timer("glance.list_images")
     def _list_images(self):

@@ -92,13 +92,15 @@ class GlanceV1Service(service.Service):
             raise exceptions.GetResourceNotFound(resource=image)
 
     @atomic.action_timer("glance_v1.list_images")
-    def list_images(self, status="active", is_public=None):
+    def list_images(self, status="active", is_public=None, owner=None):
         """List images.
 
         :param status: Filter in images for the specified status
         :param is_public: Filter in images for the specified public status
+        :param owner: Filter in images for tenant ID
         """
-        images = self._clients.glance("1").images.list(status=status)
+        images = self._clients.glance("1").images.list(status=status,
+                                                       owner=owner)
         if is_public in [True, False]:
             return [i for i in images if i.is_public is is_public]
         return images
@@ -156,11 +158,12 @@ class UnifiedGlanceV1Service(image.Image):
             min_ram=min_ram)
         return self._unify_image(image_obj)
 
-    def list_images(self, status="active", visibility=None):
+    def list_images(self, status="active", visibility=None, owner=None):
         """List images.
 
         :param status: Filter in images for the specified status
         :param visibility: Filter in images for the specified visibility
+        :param owner: Filter in images for tenant ID
         """
         self._check_v1_visibility(visibility)
 

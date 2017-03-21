@@ -19,9 +19,9 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.services.image import image
 from rally.task import context
-from rally.task import utils
 
 CONF = cfg.CONF
 CONF.import_opt("glance_image_delete_timeout",
@@ -170,20 +170,9 @@ class ImageGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
-        for user, tenant_id in rutils.iterate_per_tenants(
-                self.context["users"]):
-            clients = osclients.Clients(
-                user["credential"],
-                api_info=self.context["config"].get("api_versions"))
-            image_service = image.Image(clients)
-            for image_id in self.context["tenants"][tenant_id].get(
-                    "images", []):
-                image_service.delete_image(image_id=image_id)
-                utils.wait_for_status(
-                    image_service.get_image(image_id=image_id),
-                    ["deleted", "pending_delete"],
-                    check_deletion=True,
-                    update_resource=image_service.get_image,
-                    timeout=CONF.benchmark.glance_image_delete_timeout,
-                    check_interval=CONF.benchmark.
-                    glance_image_delete_poll_interval)
+        resource_manager.cleanup(names=["glance.images"],
+                                 users=self.context.get("users", []),
+                                 api_versions=self.context["config"].get(
+                                     "api_versions"),
+                                 superclass=self.__class__,
+                                 task_id=self.context["task"]["uuid"])

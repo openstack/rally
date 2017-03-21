@@ -59,7 +59,6 @@ class GlanceWrapper(object):
 
         This serves to fetch the latest data on the image for the
         various wait_for_*() functions.
-
         Must raise rally.exceptions.GetResourceNotFound if the
         resource is not found or deleted.
         """
@@ -210,6 +209,11 @@ class GlanceV2Wrapper(GlanceWrapper):
 
 def wrap(client, owner):
     """Returns glanceclient wrapper based on glance client version."""
+    LOG.warning("Method wrap from %s and whole Glance wrappers are "
+                "deprecated since Rally 0.10.0 and will be removed soon. Use "
+                "rally.plugins.openstack.services.image.image.Image "
+                "instead." % __file__)
+
     version = client.choose_version()
     if version == "1":
         return GlanceV1Wrapper(client(), owner)
