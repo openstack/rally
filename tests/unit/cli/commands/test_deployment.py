@@ -20,7 +20,6 @@ import mock
 
 from rally.cli.commands import deployment
 from rally.cli import envutils
-from rally.common import objects
 from rally import consts
 from rally import exceptions
 from tests.unit import fakes
@@ -231,14 +230,13 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_show(self, mock_struct, mock_print_list):
         deployment_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
         value = {
-            "admin": {
-                "auth_url": "url",
-                "username": "u",
-                "password": "p",
-                "tenant_name": "t",
-                "region_name": "r",
-                "endpoint_type": consts.EndpointType.INTERNAL
-            },
+            "admin": fakes.fake_credential(
+                auth_url="url",
+                username="u",
+                password="p",
+                tenant_name="t",
+                region_name="r",
+                endpoint_type=consts.EndpointType.INTERNAL),
             "users": []
         }
         deployment = self.fake_api.deployment.get.return_value
@@ -267,12 +265,12 @@ class DeploymentCommandsTestCase(test.TestCase):
         deployment_id = "593b683c-4b16-4b2b-a56b-e162bd60f10b"
         self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
             uuid=deployment_id,
-            admin={"auth_url": "fake_auth_url",
-                   "username": "fake_username",
-                   "password": "fake_password",
-                   "tenant_name": "fake_tenant_name",
-                   "endpoint": "fake_endpoint",
-                   "region_name": None})
+            admin=fakes.fake_credential(**{"auth_url": "fake_auth_url",
+                                           "username": "fake_username",
+                                           "password": "fake_password",
+                                           "tenant_name": "fake_tenant_name",
+                                           "endpoint": "fake_endpoint",
+                                           "region_name": None}))
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
@@ -304,7 +302,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
         self.fake_api.deployment.get.return_value = fakes.FakeDeployment(
             uuid=deployment_id,
-            admin={
+            admin=fakes.fake_credential(**{
                 "auth_url": "http://localhost:5000/v3",
                 "username": "fake_username",
                 "password": "fake_password",
@@ -312,7 +310,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "endpoint": "fake_endpoint",
                 "region_name": None,
                 "user_domain_name": "fake_user_domain",
-                "project_domain_name": "fake_project_domain"})
+                "project_domain_name": "fake_project_domain"}))
 
         with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:
@@ -342,9 +340,10 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("rally.common.fileutils.update_globals_file")
     def test_use_by_name(self, mock_update_globals_file,
                          mock__update_openrc_deployment_file):
+        fake_credential = fakes.fake_credential(foo="fake_credentials")
         fake_deployment = fakes.FakeDeployment(
             uuid="fake_uuid",
-            admin="fake_credentials")
+            admin=fake_credential)
         self.fake_api.deployment.list.return_value = [fake_deployment]
         self.fake_api.deployment.get.return_value = fake_deployment
         status = self.deployment.use(self.fake_api, deployment="fake_name")
@@ -353,7 +352,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_DEPLOYMENT, "fake_uuid")
         mock__update_openrc_deployment_file.assert_called_once_with(
-            "fake_uuid", "fake_credentials")
+            "fake_uuid", {"foo": "fake_credentials"})
 
     def test_deployment_not_found(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
@@ -364,9 +363,9 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
     def test_deployment_check(self, mock_print_list):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                               "admin",
-                                               "adminpass").to_dict()
+        sample_credential = fakes.fake_credential(
+            auth_url="http://192.168.1.1:5000/v2.0/",
+            username="admin", password="adminpass")
         deployment = {"admin": sample_credential,
                       "users": [sample_credential]}
         self.fake_api.deployment.get.return_value = deployment
@@ -388,10 +387,9 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     def test_deployment_check_raise(self):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                               "admin",
-                                               "adminpass").to_dict()
-        sample_credential["not-exist-key"] = "error"
+        sample_credential = fakes.fake_credential(
+            auth_url="http://192.168.1.1:5000/v2.0/",
+            username="admin", password="adminpass")
         deployment = self.fake_api.deployment.get.return_value
         deployment.get_credentials_for.return_value = {
             "admin": sample_credential, "users": []}

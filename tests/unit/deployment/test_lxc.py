@@ -151,7 +151,7 @@ class LxcEngineTestCase(test.TestCase):
         self.assertEqual(1, len(credentials["openstack"]))
         credential = credentials["openstack"][0]
 
-        self.assertIsInstance(credential["admin"], dict)
+        self.assertIsNone(credential["admin"])
         self.assertEqual([], credential["users"])
         lxc_host_calls = [
             mock.call(fake_servers[0], {"network": "10.128.128.0/28",

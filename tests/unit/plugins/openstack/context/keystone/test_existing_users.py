@@ -22,9 +22,7 @@ CTX = "rally.plugins.openstack.context"
 
 class ExistingUserTestCase(test.TestCase):
 
-    @mock.patch("%s.keystone.existing_users.osclients.Clients" % CTX)
-    @mock.patch("%s.keystone.existing_users.objects.Credential" % CTX)
-    def test_setup(self, mock_credential, mock_clients):
+    def test_setup(self):
         user1 = mock.MagicMock(tenant_id="1", user_id="1",
                                tenant_name="proj", username="usr")
         user2 = mock.MagicMock(tenant_id="1", user_id="2",
@@ -48,8 +46,10 @@ class ExistingUserTestCase(test.TestCase):
                 self.PROJECT_ID_COUNT += 1
                 return user_list[self.PROJECT_ID_COUNT - 1].tenant_id
 
-        mock_clients.return_value.keystone.auth_ref = AuthRef()
-        mock_credential.side_effect = user_list
+        auth_ref = AuthRef()
+        user1.clients.return_value.keystone.auth_ref = auth_ref
+        user2.clients.return_value.keystone.auth_ref = auth_ref
+        user3.clients.return_value.keystone.auth_ref = auth_ref
 
         context = {
             "task": mock.MagicMock(),

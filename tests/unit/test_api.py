@@ -20,7 +20,6 @@ import os
 
 import ddt
 import jsonschema
-from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
 
@@ -349,8 +348,8 @@ class BaseDeploymentTestCase(test.TestCase):
 class DeploymentAPITestCase(BaseDeploymentTestCase):
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     @mock.patch("rally.common.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engine.Engine.validate")
-    def test_create(self, mock_engine_validate,
+    @mock.patch("rally.deployment.engines.existing.ExistingCloud.validate")
+    def test_create(self, mock_existing_cloud_validate,
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
@@ -360,7 +359,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             "name": "fake_deployment",
             "config": self.deployment_config,
         })
-        mock_engine_validate.assert_called_once_with()
+        mock_existing_cloud_validate.assert_called_once_with()
         mock_deployment_update.assert_has_calls([
             mock.call(self.deployment_uuid,
                       {"credentials": {"openstack": [self.credentials]}})
@@ -368,10 +367,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     @mock.patch("rally.common.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engine.Engine.validate",
+    @mock.patch("rally.deployment.engines.existing.ExistingCloud.validate",
                 side_effect=jsonschema.ValidationError("ValidationError"))
     def test_create_validation_error(
-            self, mock_engine_validate, mock_deployment_create,
+            self, mock_existing_cloud_validate, mock_deployment_create,
             mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         self.assertRaises(jsonschema.ValidationError,
@@ -488,41 +487,25 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
-    @mock.patch("rally.osclients.Clients.services")
-    @mock.patch("rally.osclients.Keystone.create_client")
-    def test_deployment_check(self, mock_keystone_create_client,
-                              mock_clients_services):
-        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                               "admin",
-                                               "adminpass").to_dict()
+    def test_deployment_check(self):
+        fake_credential1 = fakes.fake_credential()
+        fake_credential2 = fakes.fake_credential()
+
         deployment = mock.Mock(spec=objects.Deployment)
         deployment.get_credentials_for.return_value = {
-            "admin": sample_credential, "users": [sample_credential]}
-        api._Deployment.check(deployment)
-        mock_keystone_create_client.assert_called_with()
-        mock_clients_services.assert_called_once_with()
+            "admin": fake_credential1, "users": [fake_credential2]}
+        result = api._Deployment.check(deployment)
+        fake_credential1.verify_connection.assert_called_once_with()
+        fake_credential2.verify_connection.assert_called_once_with()
+        self.assertEqual(fake_credential1.list_services.return_value, result)
 
-    def test_deployment_check_raise(self):
-        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                               "admin",
-                                               "adminpass").to_dict()
-        sample_credential["not-exist-key"] = "error"
-        deployment = mock.Mock(spec=objects.Deployment)
-        self.assertRaises(TypeError, api._Deployment.check, deployment)
-
-    @mock.patch("rally.osclients.Clients.services")
-    def test_deployment_check_connect_failed(self, mock_clients_services):
-        sample_credential = objects.Credential("http://192.168.1.1:5000/v2.0/",
-                                               "admin",
-                                               "adminpass").to_dict()
+    def test_service_list(self):
+        fake_credential = fakes.fake_credential()
         deployment = mock.Mock(spec=objects.Deployment)
         deployment.get_credentials_for.return_value = {
-            "admin": sample_credential, "users": []}
-        refused = keystone_exceptions.ConnectionRefused()
-        mock_clients_services.side_effect = refused
-        self.assertRaises(
-            keystone_exceptions.ConnectionRefused,
-            api._Deployment.check, deployment)
+            "admin": fake_credential, "users": []}
+        result = api._Deployment.service_list(deployment)
+        self.assertEqual(fake_credential.list_services.return_value, result)
 
 
 class APITestCase(test.TestCase):

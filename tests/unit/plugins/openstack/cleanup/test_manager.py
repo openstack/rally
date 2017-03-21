@@ -31,86 +31,19 @@ class SeekAndDestroyTestCase(test.TestCase):
         # clear out the client cache
         manager.SeekAndDestroy.cache = {}
 
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client(self, mock_clients):
-        destroyer = manager.SeekAndDestroy(None, None, None)
-
-        self.assertIsNone(destroyer._get_cached_client(None))
-
-        users = [{"credential": "a"}, {"credential": "b"}]
-
-        self.assertEqual(destroyer._get_cached_client(users[0]),
-                         destroyer._get_cached_client(users[0]))
-        # ensure that cache is used
-        self.assertItemsEqual(mock_clients.call_args_list,
-                              [mock.call("a", api_info=None)])
-
-        mock_clients.reset_mock()
-        self.assertEqual(destroyer._get_cached_client(users[1]),
-                         destroyer._get_cached_client(users[1]))
-        self.assertItemsEqual(mock_clients.call_args_list,
-                              [mock.call("b", api_info=None)])
-
-        mock_clients.reset_mock()
-        self.assertNotEqual(destroyer._get_cached_client(users[0]),
-                            destroyer._get_cached_client(users[1]))
-        self.assertFalse(mock_clients.called)
-
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client_shared_cache(self, mock_clients):
-        # ensure that cache is shared between SeekAndDestroy objects
-        destroyer1 = manager.SeekAndDestroy(None, None, None)
-        destroyer2 = manager.SeekAndDestroy(None, None, None)
-
-        user = {"credential": "a"}
-
-        self.assertEqual(destroyer1._get_cached_client(user),
-                         destroyer2._get_cached_client(user))
-        self.assertItemsEqual(mock_clients.call_args_list,
-                              [mock.call("a", api_info=None)])
-
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client_shared_cache_api_versions(self, mock_clients):
-        # ensure that cache is shared between SeekAndDestroy objects
-        # with matching api_versions dicts
+    def test__get_cached_client(self):
         api_versions = {"cinder": {"version": "1", "service_type": "volume"}}
 
-        destroyer1 = manager.SeekAndDestroy(None, None, None,
-                                            api_versions=api_versions)
-        destroyer2 = manager.SeekAndDestroy(None, None, None,
-                                            api_versions=api_versions)
+        destroyer = manager.SeekAndDestroy(None, None, None,
+                                           api_versions=api_versions)
+        cred = mock.Mock()
+        user = {"credential": cred}
 
-        user = {"credential": "a"}
+        clients = destroyer._get_cached_client(user)
+        self.assertIs(cred.clients.return_value, clients)
+        cred.clients.assert_called_once_with(api_info=api_versions)
 
-        self.assertEqual(destroyer1._get_cached_client(user),
-                         destroyer2._get_cached_client(user))
-        self.assertItemsEqual(mock_clients.call_args_list,
-                              [mock.call("a", api_info=api_versions)])
-
-    @mock.patch("%s.osclients.Clients" % BASE,
-                side_effect=[mock.MagicMock(), mock.MagicMock()])
-    def test__get_cached_client_no_cache_api_versions(self, mock_clients):
-        # ensure that cache is not shared between SeekAndDestroy
-        # objects with different api_versions dicts
-        api_versions = [
-            {"cinder": {"version": "1", "service_type": "volume"}},
-            {"cinder": {"version": "2", "service_type": "volumev2"}}
-        ]
-
-        destroyer1 = manager.SeekAndDestroy(None, None, None,
-                                            api_versions=api_versions[0])
-        destroyer2 = manager.SeekAndDestroy(None, None, None,
-                                            api_versions=api_versions[1])
-        user = {"credential": "a"}
-
-        self.assertNotEqual(destroyer1._get_cached_client(user),
-                            destroyer2._get_cached_client(user))
-        self.assertItemsEqual(mock_clients.call_args_list,
-                              [mock.call("a", api_info=api_versions[0]),
-                               mock.call("a", api_info=api_versions[1])])
+        self.assertIsNone(destroyer._get_cached_client(None))
 
     @mock.patch("%s.LOG" % BASE)
     def test__delete_single_resource(self, mock_log):

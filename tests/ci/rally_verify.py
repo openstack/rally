@@ -23,8 +23,7 @@ import sys
 import uuid
 
 from rally.cli import envutils
-from rally.common import objects
-from rally import osclients
+from rally.plugins.openstack import credential
 from rally.ui import utils
 
 LOG = logging.getLogger(__name__)
@@ -172,9 +171,9 @@ def main():
 
     config = json.loads(
         subprocess.check_output(["rally", "deployment", "config"]))
+    config = config["creds"]["openstack"]
     config.update(config.pop("admin"))
-    del config["type"]
-    clients = osclients.Clients(objects.Credential(**config))
+    clients = credential.OpenStackCredential(**config).clients()
 
     if args.ctx_create_resources:
         # If the 'ctx-create-resources' arg is provided, delete images and

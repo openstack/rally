@@ -191,11 +191,13 @@ class DeploymentCommands(object):
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
+    @plugins.ensure_plugins_are_loaded
     def show(self, api, deployment=None):
         """Show the credentials of the deployment.
 
         :param deployment: UUID or name of the deployment
         """
+        # TODO(astudenov): make this method platform independent
 
         headers = ["auth_url", "username", "password", "tenant_name",
                    "region_name", "endpoint_type"]
@@ -208,7 +210,7 @@ class DeploymentCommands(object):
         credentials = users + [admin] if admin else users
 
         for ep in credentials:
-            data = ["***" if m == "password" else ep.get(m, "")
+            data = ["***" if m == "password" else getattr(ep, m, "")
                     for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         cliutils.print_list(table_rows, headers)
@@ -217,11 +219,13 @@ class DeploymentCommands(object):
                    metavar="<uuid>", required=False,
                    help="UUID or name of the deployment.")
     @envutils.with_default_deployment()
+    @plugins.ensure_plugins_are_loaded
     def check(self, api, deployment=None):
         """Check keystone authentication and list all available services.
 
         :param deployment: UUID or name of the deployment
         """
+        # TODO(astudenov): make this method platform independent
         headers = ["services", "type", "status"]
         table_rows = []
         try:
@@ -235,7 +239,7 @@ class DeploymentCommands(object):
             services = api.deployment.check(deployment)
         except keystone_exceptions.ConnectionRefused:
             admin = deployment.get_credentials_for("openstack")["admin"]
-            print(_("Unable to connect %s.") % admin["auth_url"])
+            print(_("Unable to connect %s.") % admin.auth_url)
             return(1)
 
         except exceptions.InvalidArgumentsException:
@@ -296,11 +300,13 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
+    @plugins.ensure_plugins_are_loaded
     def use(self, api, deployment):
         """Set active deployment.
 
         :param deployment: UUID or name of the deployment
         """
+        # TODO(astudenov): make this method platform independent
         try:
             deployment = api.deployment.get(deployment)
             print("Using deployment: %s" % deployment["uuid"])
@@ -309,8 +315,9 @@ class DeploymentCommands(object):
                                           deployment["uuid"])
 
             creds = deployment.get_credentials_for("openstack")
+            credential = creds["admin"] or creds["users"][0]
             self._update_openrc_deployment_file(
-                deployment["uuid"], creds["admin"] or creds["users"][0])
+                deployment["uuid"], credential.to_dict())
             print("~/.rally/openrc was updated\n\nHINTS:\n"
                   "\n* To use standard OpenStack clients, set up your env by "
                   "running:\n\tsource ~/.rally/openrc\n"

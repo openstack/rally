@@ -25,20 +25,17 @@ from tests.unit import test
 CONF = cfg.CONF
 
 
-CREDS = {
-    "admin": {
-        "username": "admin",
-        "tenant_name": "admin",
-        "password": "admin-12345",
-        "auth_url": "http://test:5000/v2.0/",
-        "permission": "admin",
-        "region_name": "test",
-        "https_insecure": False,
-        "https_cacert": "/path/to/cacert/file",
-        "user_domain_name": "admin",
-        "project_domain_name": "admin"
-    },
-    "uuid": "fake_deployment"
+CRED = {
+    "username": "admin",
+    "tenant_name": "admin",
+    "password": "admin-12345",
+    "auth_url": "http://test:5000/v2.0/",
+    "permission": "admin",
+    "region_name": "test",
+    "https_insecure": False,
+    "https_cacert": "/path/to/cacert/file",
+    "user_domain_name": "admin",
+    "project_domain_name": "admin"
 }
 
 PATH = "rally.plugins.openstack.verification.tempest.config"
@@ -49,10 +46,8 @@ class TempestConfigfileManagerTestCase(test.TestCase):
 
     def setUp(self):
         super(TempestConfigfileManagerTestCase, self).setUp()
-
-        mock.patch("rally.osclients.Clients").start()
-
-        deployment = fakes.FakeDeployment(**CREDS)
+        deployment = fakes.FakeDeployment(uuid="fake_deployment",
+                                          admin=fakes.fake_credential(**CRED))
         self.tempest = config.TempestConfigfileManager(deployment)
 
     def test__configure_auth(self):
@@ -60,10 +55,10 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         self.tempest._configure_auth()
 
         expected = (
-            ("admin_username", CREDS["admin"]["username"]),
-            ("admin_password", CREDS["admin"]["password"]),
-            ("admin_project_name", CREDS["admin"]["tenant_name"]),
-            ("admin_domain_name", CREDS["admin"]["user_domain_name"]))
+            ("admin_username", CRED["username"]),
+            ("admin_password", CRED["password"]),
+            ("admin_project_name", CRED["tenant_name"]),
+            ("admin_domain_name", CRED["user_domain_name"]))
         result = self.tempest.conf.items("auth")
         for item in expected:
             self.assertIn(item, result)
@@ -85,13 +80,13 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         self.tempest._configure_identity()
 
         expected = (
-            ("region", CREDS["admin"]["region_name"]),
+            ("region", CRED["region_name"]),
             ("auth_version", "v2"),
-            ("uri", CREDS["admin"]["auth_url"][:-1]),
-            ("uri_v3", CREDS["admin"]["auth_url"].replace("/v2.0/", "/v3")),
+            ("uri", CRED["auth_url"][:-1]),
+            ("uri_v3", CRED["auth_url"].replace("/v2.0/", "/v3")),
             ("disable_ssl_certificate_validation",
-             str(CREDS["admin"]["https_insecure"])),
-            ("ca_certificates_file", CREDS["admin"]["https_cacert"]))
+             str(CRED["https_insecure"])),
+            ("ca_certificates_file", CRED["https_cacert"]))
         result = self.tempest.conf.items("identity")
         for item in expected:
             self.assertIn(item, result)

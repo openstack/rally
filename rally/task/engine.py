@@ -326,13 +326,9 @@ class TaskEngine(object):
         for platform, workloads in platforms.items():
             creds = self.deployment.get_credentials_for(platform)
 
-            admin = objects.Credential(**creds["admin"])
-
-            # TODO(astudenov): move this check to validator of Credential
-            if platform == "openstack":
-                from rally import osclients
-                clients = osclients.Clients(admin)
-                clients.verified_keystone()
+            admin = creds["admin"]
+            if admin:
+                admin.verify_connection()
 
             workloads_with_users = []
             workloads_with_existing_users = []
@@ -399,9 +395,6 @@ class TaskEngine(object):
         creds = self.deployment.get_credentials_for(namespace)
         existing_users = creds["users"]
 
-        # TODO(astudenov): use credential plugin in future refactoring
-        admin = objects.Credential(**creds["admin"])
-
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
         if existing_users and "users" not in ctx:
             scenario_context.setdefault("existing_users", existing_users)
@@ -411,7 +404,7 @@ class TaskEngine(object):
         scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
-            "admin": {"credential": admin},
+            "admin": {"credential": creds["admin"]},
             "scenario_name": name,
             "config": scenario_context
         }

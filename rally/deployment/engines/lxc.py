@@ -150,9 +150,7 @@ class LxcEngine(engine.Engine):
             if network:
                 network += 1
 
-        admin = objects.Credential("", "", "", "").to_dict(
-            include_permission=True)
-        return {"openstack": [{"admin": admin, "users": []}]}
+        return {"openstack": [{"admin": None, "users": []}]}
 
     def cleanup(self):
         resources = self.deployment.get_resources()

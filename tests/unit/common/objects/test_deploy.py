@@ -117,8 +117,10 @@ class DeploymentTestCase(test.TestCase):
             {"config": {"opt": "val"}},
         )
 
+    @mock.patch("rally.deployment.credential.get")
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
-    def test_update_credentials(self, mock_deployment_update):
+    def test_update_credentials(self, mock_deployment_update,
+                                mock_credential_get):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         credentials = {"foo": [{"admin": {"fake_admin": True},
@@ -132,23 +134,38 @@ class DeploymentTestCase(test.TestCase):
                                          "users": [{"fake_user": True}]}]}
             })
 
-    def test_get_credentials_for(self):
+    @mock.patch("rally.deployment.credential.get")
+    def test_get_credentials_for(self, mock_credential_get):
+        credential_cls = mock_credential_get.return_value
+        credential_inst = credential_cls.return_value
         credentials = {"foo": [{"admin": {"fake_admin": True},
                                 "users": [{"fake_user": True}]}]}
         self.deployment["credentials"] = credentials
         deploy = objects.Deployment(deployment=self.deployment)
-
         creds = deploy.get_credentials_for("foo")
-        self.assertEqual(credentials["foo"][0], creds)
 
-    def test_get_deprecated(self):
+        mock_credential_get.assert_called_once_with("foo")
+        credential_cls.assert_has_calls((
+            mock.call(fake_admin=True),
+            mock.call(fake_user=True),
+        ))
+
+        self.assertEqual({"admin": credential_inst,
+                          "users": [credential_inst]}, creds)
+
+    @mock.patch("rally.deployment.credential.get")
+    def test_get_deprecated(self, mock_credential_get):
+        credential_cls = mock_credential_get.return_value
+        credential_inst = credential_cls.return_value
+
         credentials = {"openstack": [{"admin": {"fake_admin": True},
                                       "users": [{"fake_user": True}]}]}
         self.deployment["credentials"] = credentials
+
         deploy = objects.Deployment(deployment=self.deployment)
 
-        self.assertEqual(credentials["openstack"][0]["admin"], deploy["admin"])
-        self.assertEqual(credentials["openstack"][0]["users"], deploy["users"])
+        self.assertEqual(credential_inst, deploy["admin"])
+        self.assertEqual([credential_inst], deploy["users"])
 
     def test_update_empty_credentials(self):
         deploy = objects.Deployment(deployment=self.deployment)

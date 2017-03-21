@@ -108,9 +108,9 @@ class OpenStackScenario(scenario.Scenario):
     @classmethod
     def validate(cls, name, config, admin=None, users=None, deployment=None):
         if admin:
-            admin = osclients.Clients(admin)
+            admin = admin.clients()
         if users:
-            users = [osclients.Clients(user["credential"]) for user in users]
+            users = [user["credential"].clients() for user in users]
         super(OpenStackScenario, cls).validate(
             name=name, config=config, admin=admin, users=users,
             deployment=deployment)

@@ -13,43 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import consts
+from rally.plugins.openstack import credential
+
+# TODO(astudenov): remove this class in future releases
 
 
-class Credential(object):
-
-    def __init__(self, auth_url, username, password, tenant_name=None,
-                 project_name=None,
-                 permission=consts.EndpointPermission.USER,
-                 region_name=None, endpoint_type=None,
-                 domain_name=None, endpoint=None, user_domain_name=None,
-                 project_domain_name=None,
-                 https_insecure=False, https_cacert=None):
-        self.auth_url = auth_url
-        self.username = username
-        self.password = password
-        self.tenant_name = tenant_name or project_name
-        self.permission = permission
-        self.region_name = region_name
-        self.endpoint_type = endpoint_type
-        self.domain_name = domain_name
-        self.user_domain_name = user_domain_name
-        self.project_domain_name = project_domain_name
-        self.endpoint = endpoint
-        self.insecure = https_insecure
-        self.cacert = https_cacert
+class Credential(credential.OpenStackCredential):
+    """Deprecated version of OpenStackCredential class"""
 
     def to_dict(self, include_permission=False):
-        dct = {"auth_url": self.auth_url, "username": self.username,
-               "password": self.password, "tenant_name": self.tenant_name,
-               "region_name": self.region_name,
-               "endpoint_type": self.endpoint_type,
-               "domain_name": self.domain_name,
-               "endpoint": self.endpoint,
-               "https_insecure": self.insecure,
-               "https_cacert": self.cacert,
-               "user_domain_name": self.user_domain_name,
-               "project_domain_name": self.project_domain_name}
-        if include_permission:
-            dct["permission"] = self.permission
+        dct = super(Credential, self).to_dict()
+        if not include_permission:
+            dct.pop("permission")
         return dct

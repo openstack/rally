@@ -16,6 +16,7 @@
 import jsonschema
 import mock
 
+from rally import consts
 from rally.deployment.engines import devstack
 from tests.unit import test
 
@@ -77,14 +78,12 @@ class DevstackEngineTestCase(test.TestCase):
     @mock.patch("rally.deployment.engines.devstack.get_updated_server")
     @mock.patch("rally.deployment.engines.devstack.get_script")
     @mock.patch("rally.deployment.serverprovider.provider.Server")
-    @mock.patch("rally.deployment.engines.devstack.objects.Credential")
-    def test_deploy(self, mock_credential, mock_server, mock_get_script,
+    def test_deploy(self, mock_server, mock_get_script,
                     mock_get_updated_server, mock_engine_get_provider):
         mock_engine_get_provider.return_value = fake_provider = (
             mock.Mock()
         )
         server = mock.Mock(host="host")
-        mock_credential.return_value.to_dict.return_value = "fake_credential"
         mock_get_updated_server.return_value = ds_server = mock.Mock()
         mock_get_script.return_value = "fake_script"
         server.get_credentials.return_value = "fake_credentials"
@@ -92,12 +91,16 @@ class DevstackEngineTestCase(test.TestCase):
         with mock.patch.object(self.engine, "deployment") as mock_deployment:
             credentials = self.engine.deploy()
         self.assertEqual(
-            {"openstack": [{"admin": "fake_credential", "users": []}]},
+            {"openstack": [{
+                "admin": {
+                    "auth_url": "http://host:5000/v2.0/",
+                    "username": "admin",
+                    "password": "secret",
+                    "permission": consts.EndpointPermission.ADMIN,
+                    "tenant_name": "admin",
+                },
+                "users": []}]},
             credentials)
-        mock_credential.assert_called_once_with(
-            "http://host:5000/v2.0/", "admin", "secret", "admin", "admin")
-        mock_credential.return_value.to_dict.assert_called_once_with(
-            include_permission=True)
         mock_deployment.add_resource.assert_called_once_with(
             info="fake_credentials",
             provider_name="DevstackEngine",

@@ -21,8 +21,6 @@ import six
 from six.moves import configparser
 from six.moves.urllib import parse
 
-from rally.common import objects
-from rally import osclients
 from rally.verification import utils
 
 
@@ -88,7 +86,7 @@ class TempestConfigfileManager(object):
 
     def __init__(self, deployment):
         self.credential = deployment.get_credentials_for("openstack")["admin"]
-        self.clients = osclients.Clients(objects.Credential(**self.credential))
+        self.clients = self.credential.clients()
         self.available_services = self.clients.services().values()
 
         self.conf = configparser.ConfigParser()
@@ -100,14 +98,14 @@ class TempestConfigfileManager(object):
 
     def _configure_auth(self, section_name="auth"):
         self.conf.set(section_name, "admin_username",
-                      self.credential["username"])
+                      self.credential.username)
         self.conf.set(section_name, "admin_password",
-                      self.credential["password"])
+                      self.credential.password)
         self.conf.set(section_name, "admin_project_name",
-                      self.credential["tenant_name"])
+                      self.credential.tenant_name)
         # Keystone v3 related parameter
         self.conf.set(section_name, "admin_domain_name",
-                      self.credential["user_domain_name"] or "Default")
+                      self.credential.user_domain_name or "Default")
 
     # Sahara has two service types: 'data_processing' and 'data-processing'.
     # 'data_processing' is deprecated, but it can be used in previous OpenStack
@@ -120,9 +118,9 @@ class TempestConfigfileManager(object):
 
     def _configure_identity(self, section_name="identity"):
         self.conf.set(section_name, "region",
-                      self.credential["region_name"])
+                      self.credential.region_name)
 
-        auth_url = self.credential["auth_url"]
+        auth_url = self.credential.auth_url
         if "/v2" not in auth_url and "/v3" not in auth_url:
             auth_version = "v2"
             auth_url_v2 = parse.urljoin(auth_url, "/v2.0")
@@ -136,9 +134,9 @@ class TempestConfigfileManager(object):
                       auth_url_v2.replace("/v2.0", "/v3"))
 
         self.conf.set(section_name, "disable_ssl_certificate_validation",
-                      str(self.credential["https_insecure"]))
+                      str(self.credential.https_insecure))
         self.conf.set(section_name, "ca_certificates_file",
-                      self.credential["https_cacert"])
+                      self.credential.https_cacert)
 
     # The compute section is configured in context class for Tempest resources.
     # Options which are configured there: 'image_ref', 'image_ref_alt',

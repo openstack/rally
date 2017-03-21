@@ -24,10 +24,9 @@ import sys
 import six
 
 from rally.cli import cliutils
-from rally.common import objects
 from rally.common.plugin import discover
 from rally import consts
-from rally import osclients
+from rally.plugins.openstack import credential
 
 
 def skip_if_service(service):
@@ -340,7 +339,7 @@ class CloudResources(object):
     """
 
     def __init__(self, **kwargs):
-        self.clients = osclients.Clients(objects.Credential(**kwargs))
+        self.clients = credential.OpenStackCredential(**kwargs).clients()
 
     def _deduplicate(self, lst):
         """Change list duplicates to make all items unique.
@@ -426,8 +425,8 @@ def main():
         out = subprocess.check_output(["rally", "deployment",
                                        "config"])
         config = json.loads(out if six.PY2 else out.decode("utf-8"))
+        config = config["creds"]["openstack"]
         config.update(config.pop("admin"))
-        del config["type"]
         if "users" in config:
             del config["users"]
 

@@ -21,6 +21,7 @@ from rally.common.i18n import _, _LW
 from rally.common import db
 from rally.common import logging
 from rally import consts
+from rally.deployment import credential
 from rally import exceptions
 
 
@@ -34,7 +35,7 @@ CREDENTIALS_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "admin": {"type": "object"},
+                    "admin": {"type": ["object", "null"]},
                     "users": {
                         "type": "array",
                         "items": {"type": "object"}
@@ -97,11 +98,16 @@ class Deployment(object):
 
     def get_credentials_for(self, namespace):
         try:
-            return self.deployment["credentials"][namespace][0]
+            creds = self.deployment["credentials"][namespace][0]
         except (KeyError, IndexError) as e:
             LOG.exception(e)
             raise exceptions.RallyException(_(
                 "No credentials found for %s") % namespace)
+
+        admin = creds["admin"]
+        credential_cls = credential.get(namespace)
+        return {"admin": credential_cls(**admin) if admin else None,
+                "users": [credential_cls(**user) for user in creds["users"]]}
 
     def set_started(self):
         self._update({"started_at": dt.datetime.now(),

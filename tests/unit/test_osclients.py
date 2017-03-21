@@ -18,10 +18,10 @@ from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
 
-from rally.common import objects
 from rally import consts
 from rally import exceptions
 from rally import osclients
+from rally.plugins.openstack import credential as oscredential
 from tests.unit import fakes
 from tests.unit import test
 
@@ -91,9 +91,10 @@ class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
     @ddt.unpack
     def test__get_endpoint(self, mock_keystone_service_catalog, endpoint_type,
                            service_type, region_name):
-        credential = objects.Credential("http://auth_url/v2.0", "user", "pass",
-                                        endpoint_type=endpoint_type,
-                                        region_name=region_name)
+        credential = oscredential.OpenStackCredential(
+            "http://auth_url/v2.0", "user", "pass",
+            endpoint_type=endpoint_type,
+            region_name=region_name)
         mock_choose_service_type = mock.MagicMock()
         osclient = osclients.OSClient(credential, {}, mock.MagicMock())
         osclient.choose_service_type = mock_choose_service_type
@@ -153,8 +154,8 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
 
     def setUp(self):
         super(TestCreateKeystoneClient, self).setUp()
-        self.credential = objects.Credential("http://auth_url/v2.0", "user",
-                                             "pass", "tenant")
+        self.credential = oscredential.OpenStackCredential(
+            "http://auth_url/v2.0", "user", "pass", "tenant")
 
     def test_create_client(self):
         # NOTE(bigjools): This is a very poor testing strategy as it
@@ -201,8 +202,8 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
     @ddt.data("http://auth_url/v2.0", "http://auth_url/v3",
               "http://auth_url/", "auth_url")
     def test_keystone_get_session(self, auth_url):
-        credential = objects.Credential(auth_url, "user",
-                                        "pass", "tenant")
+        credential = oscredential.OpenStackCredential(
+            auth_url, "user", "pass", "tenant")
         self.set_up_keystone_mocks()
         keystone = osclients.Keystone(credential, {}, {})
 
@@ -255,8 +256,8 @@ class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.credential = objects.Credential("http://auth_url/v2.0", "user",
-                                             "pass", "tenant")
+        self.credential = oscredential.OpenStackCredential(
+            "http://auth_url/v2.0", "user", "pass", "tenant")
         self.clients = osclients.Clients(self.credential, {})
 
         self.fake_keystone = fakes.FakeKeystoneClient()

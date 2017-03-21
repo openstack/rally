@@ -25,7 +25,6 @@ import six
 
 from rally import api
 from rally.common import db
-from rally.common import objects
 from rally import plugins
 from rally.plugins.openstack.context.keystone import users
 from tests.functional import utils
@@ -51,7 +50,7 @@ class TestTaskSamples(unittest.TestCase):
         return False
 
     @plugins.ensure_plugins_are_loaded
-    def test_task_samples_is_valid(self):
+    def test_task_samples_are_valid(self):
         rally = utils.Rally(force_new_db=True)
         # In TestTaskSamples, Rally API will be called directly (not via
         # subprocess), so we need to change database options to temp database.
@@ -60,8 +59,7 @@ class TestTaskSamples(unittest.TestCase):
 
         # let's use pre-created users to make TestTaskSamples quicker
         deployment = api.Deployment.get("MAIN")
-        creds = deployment.get_credentials_for("openstack")
-        admin_cred = objects.Credential(**creds["admin"])
+        admin_cred = deployment.get_credentials_for("openstack")["admin"]
 
         ctx = {"admin": {"credential": admin_cred},
                "task": {"uuid": self.__class__.__name__}}
@@ -70,15 +68,16 @@ class TestTaskSamples(unittest.TestCase):
         self.addCleanup(user_ctx.cleanup)
 
         config = deployment["config"]
-        user = copy.copy(config["admin"])
+        os_creds = config["creds"]["openstack"]
+        user = copy.copy(os_creds["admin"])
         user["username"] = ctx["users"][0]["credential"].username
         user["password"] = ctx["users"][0]["credential"].password
-        if "project_name" in config["admin"]:
+        if "project_name" in os_creds["admin"]:
             # it is Keystone
             user["project_name"] = ctx["users"][0]["credential"].tenant_name
         else:
             user["tenant_name"] = ctx["users"][0]["credential"].tenant_name
-        config["users"] = [user]
+        config["creds"]["openstack"]["users"] = [user]
 
         rally("deployment destroy MAIN", write_report=False)
         deployment_cfg = os.path.join(rally.tmp_dir, "new_deployment.json")

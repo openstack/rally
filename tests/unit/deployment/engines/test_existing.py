@@ -61,15 +61,35 @@ class TestExistingCloud(test.TestCase):
                         "user_domain_name": "Default",
                     }
                 }
+            },
+            "abstract": {
+                "config": {
+                    "type": "ExistingCloud",
+                    "creds": {
+                        "openstack": {
+                            "auth_url": "http://example.net:5000/v2.0/",
+                            "region_name": "RegionOne",
+                            "endpoint_type": consts.EndpointType.INTERNAL,
+                            "https_insecure": False,
+                            "https_cacert": "cacert",
+                            "admin": {
+                                "username": "admin",
+                                "password": "myadminpass",
+                                "tenant_name": "demo"
+                            }
+                        }
+                    }
+                }
+
             }
         }
 
-    @ddt.data("v2.0", "v3")
+    @ddt.data("v2.0", "v3", "abstract")
     def test_init_and_valid_config(self, keystone_version):
         engine = existing.ExistingCloud(self.deployments[keystone_version])
         engine.validate()
 
-    @ddt.data("v2.0", "v3")
+    @ddt.data("v2.0", "v3", "abstract")
     def test_invalid_config(self, keystone_version):
         deployment = self.deployments[keystone_version]
         deployment["config"]["admin"] = 42
@@ -77,7 +97,7 @@ class TestExistingCloud(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           engine.validate)
 
-    @ddt.data("v2.0", "v3")
+    @ddt.data("v2.0", "v3", "abstract")
     def test_additional_vars(self, keystone_version):
         deployment = self.deployments[keystone_version]
         deployment["extra"] = {}
@@ -122,11 +142,36 @@ class TestExistingCloud(test.TestCase):
         self.assertEqual(admin_credential, actual_credentials)
         self.assertEqual([], credentials["users"])
 
-    @ddt.data("v2.0", "v3")
+    def test_deploy_abstract(self):
+        deployment = self.deployments["abstract"]
+        engine = existing.ExistingCloud(deployment)
+        credentials = engine.deploy()
+        self.assertEqual(1, len(credentials))
+        self.assertIn("openstack", credentials)
+        self.assertEqual(1, len(credentials["openstack"]))
+        credentials = credentials["openstack"][0]
+        self.assertEqual([], credentials["users"])
+        admin_credential = credentials["admin"]
+        self.assertEqual({
+            "auth_url": "http://example.net:5000/v2.0/",
+            "domain_name": None,
+            "endpoint": None,
+            "endpoint_type": "internal",
+            "https_cacert": "cacert",
+            "https_insecure": False,
+            "password": "myadminpass",
+            "permission": "admin",
+            "project_domain_name": None,
+            "region_name": "RegionOne",
+            "tenant_name": "demo",
+            "user_domain_name": None,
+            "username": "admin"}, admin_credential)
+
+    @ddt.data("v2.0", "v3", "abstract")
     def test_cleanup(self, keystone_version):
         existing.ExistingCloud(self.deployments[keystone_version]).cleanup()
 
-    @ddt.data("v2.0", "v3")
+    @ddt.data("v2.0", "v3", "abstract")
     def test_is_in_factory(self, keystone_version):
         name = self.deployments[keystone_version]["config"]["type"]
         engine = deploy_engine.Engine.get_engine(

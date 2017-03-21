@@ -24,7 +24,6 @@ import six
 from rally.common.plugin import plugin
 from rally import consts
 from rally import exceptions
-import rally.osclients
 from rally.task import validation
 from tests.unit import fakes
 from tests.unit import test
@@ -557,35 +556,32 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"a": 1, "c": 3}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.common.objects.Credential")
-    def test_required_service(self, mock_credential):
+    def test_required_service(self):
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,
                                            consts.Service.NOVA,
                                            consts.Service.NOVA_NET)
-        clients = mock.MagicMock()
+        admin = fakes.fake_credential(foo="bar")
+        clients = mock.Mock()
         clients.services().values.return_value = [consts.Service.KEYSTONE,
                                                   consts.Service.NOVA,
                                                   consts.Service.NOVA_NET]
 
         fake_service = mock.Mock(binary="nova-network", status="enabled")
+        admin_clients = admin.clients.return_value
+        nova_client = admin_clients.nova.return_value
+        nova_client.services.list.return_value = [fake_service]
+        deployment = fakes.FakeDeployment(admin=admin)
+        result = validator({}, clients, deployment)
 
-        with mock.patch("rally.osclients.Clients") as clients_cls:
-            nova_client = clients_cls.return_value.nova.return_value
-            nova_client.services.list.return_value = [fake_service]
-            deployment = fakes.FakeDeployment(admin={"info": "admin"})
-            result = validator({}, clients, deployment)
-            clients_cls.assert_called_once_with(mock_credential.return_value)
-            mock_credential.assert_called_once_with(info="admin")
         self.assertTrue(result.is_valid, result.msg)
 
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,
                                            consts.Service.NOVA)
         clients.services().values.return_value = [consts.Service.KEYSTONE]
-        with mock.patch("rally.osclients.Clients") as clients_cls:
-            result = validator({}, clients, None)
-            self.assertFalse(clients_cls.called)
+
+        result = validator({}, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 
     def test_required_service_wrong_service(self):
@@ -752,37 +748,33 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(context, clients, mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch(MODULE + "osclients")
-    def test_required_clients(self, mock_osclients):
+    def test_required_clients(self):
         validator = self._unwrap_validator(validation.required_clients,
                                            "keystone", "nova")
-        clients = mock.MagicMock()
+        clients = mock.Mock()
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
         deployment = fakes.FakeDeployment()
         result = validator({}, clients, deployment)
         self.assertTrue(result.is_valid, result.msg)
-        self.assertFalse(mock_osclients.Clients.called)
 
         clients.nova.side_effect = ImportError
         result = validator({}, clients, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch(MODULE + "objects")
-    @mock.patch(MODULE + "osclients")
-    def test_required_clients_with_admin(self, mock_osclients, mock_objects):
+    def test_required_clients_with_admin(self):
         validator = self._unwrap_validator(validation.required_clients,
                                            "keystone", "nova", admin=True)
-        clients = mock.Mock()
+        admin = fakes.fake_credential(foo="bar")
+
+        clients = admin.clients.return_value
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
-        mock_osclients.Clients.return_value = clients
-        mock_objects.Credential.return_value = "foo_credential"
-        deployment = fakes.FakeDeployment(admin={"foo": "bar"})
+
+        deployment = fakes.FakeDeployment(admin=admin)
         result = validator({}, clients, deployment)
         self.assertTrue(result.is_valid, result.msg)
-        mock_objects.Credential.assert_called_once_with(foo="bar")
-        mock_osclients.Clients.assert_called_once_with("foo_credential")
+
         clients.nova.side_effect = ImportError
         result = validator({}, clients, deployment)
         self.assertFalse(result.is_valid, result.msg)
@@ -810,24 +802,17 @@ class ValidatorsTestCase(test.TestCase):
             validation.required_cinder_services,
             service_name=six.text_type("cinder-service"))
 
-        with mock.patch.object(rally.osclients.Cinder, "create_client") as c:
-            fake_service = mock.Mock(binary="cinder-service", state="up")
-            cinder_client = mock.Mock()
-            services = mock.Mock()
-            services.list.return_value = [fake_service]
-            cinder_client.services = services
-            c.return_value = cinder_client
+        fake_service = mock.Mock(binary="cinder-service", state="up")
+        admin = fakes.fake_credential(foo="bar")
+        cinder = admin.clients.return_value.cinder.return_value
+        cinder.services.list.return_value = [fake_service]
+        deployment = fakes.FakeDeployment(admin=admin)
+        result = validator({}, None, deployment)
+        self.assertTrue(result.is_valid, result.msg)
 
-            deployment = fakes.FakeDeployment(
-                admin={"auth_url": "fake_credential",
-                       "username": "username",
-                       "password": "password"})
-            result = validator({}, None, deployment)
-            self.assertTrue(result.is_valid, result.msg)
-
-            fake_service.state = "down"
-            result = validator({}, None, deployment)
-            self.assertFalse(result.is_valid, result.msg)
+        fake_service.state = "down"
+        result = validator({}, None, deployment)
+        self.assertFalse(result.is_valid, result.msg)
 
     def test_restricted_parameters(self):
         validator = self._unwrap_validator(

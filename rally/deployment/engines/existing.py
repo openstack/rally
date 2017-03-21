@@ -13,16 +13,61 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import objects
+import copy
+
+from rally.common import logging
 from rally import consts
+from rally.deployment import credential
 from rally.deployment import engine
+
+LOG = logging.getLogger(__name__)
 
 
 @engine.configure(name="ExistingCloud")
 class ExistingCloud(engine.Engine):
-    """Just use an existing OpenStack deployment without deploying anything.
+    """Platform independent deployment engine.
 
-    To use ExistingCloud, you should put credential information to the config:
+    This deployment engine allows specifing list of credentials for one
+    or more platforms.
+
+    Example configuration:
+
+    .. code-block:: json
+
+        {
+            "type": "ExistingCloud",
+            "creds": {
+                "openstack": {
+                    "auth_url": "http://localhost:5000/v3/",
+                    "region_name": "RegionOne",
+                    "endpoint_type": "public",
+                    "admin": {
+                        "username": "admin",
+                        "password": "admin",
+                        "user_domain_name": "admin",
+                        "project_name": "admin",
+                        "project_domain_name": "admin",
+                    },
+                    "https_insecure": False,
+                    "https_cacert": "",
+                }
+            }
+        }
+
+    To specify extra options use can use special "extra" parameter:
+
+    .. code-block:: json
+
+        {
+            "type": "ExistingCloud",
+            ...
+            "extra": {"some_var": "some_value"}
+        }
+
+    It also support deprecated version of configuration that supports
+    only OpenStack.
+
+    keystone v2:
 
     .. code-block:: json
 
@@ -40,7 +85,7 @@ class ExistingCloud(engine.Engine):
             "https_cacert": "",
         }
 
-    Or, using keystone v3 API endpoint:
+    keystone v3 API endpoint:
 
     .. code-block:: json
 
@@ -60,114 +105,132 @@ class ExistingCloud(engine.Engine):
             "https_cacert": "",
         }
 
-    To specify extra options use can use special "extra" parameter:
-
-    .. code-block:: json
-
-        {
-            "type": "ExistingCloud",
-            "auth_url": "http://localhost:5000/v2.0/",
-            "region_name": "RegionOne",
-            "endpoint_type": "public",
-            "admin": {
-                "username": "admin",
-                "password": "password",
-                "tenant_name": "demo"
-            },
-            "https_insecure": False,
-            "https_cacert": "",
-            "extra": {"some_var": "some_value"}
-        }
     """
 
-    CONFIG_SCHEMA = {
+    USER_SCHEMA = {
         "type": "object",
-
-        "definitions": {
-            "user": {
-                "type": "object",
-                "oneOf": [
-                    {
-                        "description": "Keystone V2.0",
-                        "properties": {
-                            "username": {"type": "string"},
-                            "password": {"type": "string"},
-                            "tenant_name": {"type": "string"},
-                        },
-                        "required": ["username", "password", "tenant_name"],
-                        "additionalProperties": False
-                    },
-                    {
-                        "description": "Keystone V3.0",
-                        "properties": {
-                            "username": {"type": "string"},
-                            "password": {"type": "string"},
-                            "domain_name": {"type": "string"},
-                            "user_domain_name": {"type": "string"},
-                            "project_name": {"type": "string"},
-                            "project_domain_name": {"type": "string"},
-                        },
-                        "required": ["username", "password", "project_name"],
-                        "additionalProperties": False
-                    }
-                ],
+        "oneOf": [
+            {
+                "description": "Keystone V2.0",
+                "properties": {
+                    "username": {"type": "string"},
+                    "password": {"type": "string"},
+                    "tenant_name": {"type": "string"},
+                },
+                "required": ["username", "password", "tenant_name"],
+                "additionalProperties": False
+            },
+            {
+                "description": "Keystone V3.0",
+                "properties": {
+                    "username": {"type": "string"},
+                    "password": {"type": "string"},
+                    "domain_name": {"type": "string"},
+                    "user_domain_name": {"type": "string"},
+                    "project_name": {"type": "string"},
+                    "project_domain_name": {"type": "string"},
+                },
+                "required": ["username", "password", "project_name"],
+                "additionalProperties": False
             }
-        },
+        ],
+    }
 
+    OLD_CONFIG_SCHEMA = {
+        "type": "object",
+        "description": "Deprecated schema (openstack only)",
         "properties": {
             "type": {"type": "string"},
             "auth_url": {"type": "string"},
             "region_name": {"type": "string"},
-            "endpoint": {"oneOf": [
-                # NOTE(andreykurilin): it looks like we do not use endpoint
-                #   var at all
-                {"type": "string", "description": ""},
-                {"type": "null", "description": ""}]},
+            # NOTE(andreykurilin): it looks like we do not use endpoint
+            # var at all
+            "endpoint": {"type": ["string", "null"]},
             "endpoint_type": {"enum": [consts.EndpointType.ADMIN,
                                        consts.EndpointType.INTERNAL,
                                        consts.EndpointType.PUBLIC,
                                        None]},
             "https_insecure": {"type": "boolean"},
             "https_cacert": {"type": "string"},
-            "admin": {"$ref": "#/definitions/user"},
-            "users": {
-                "type": "array",
-                "items": {"$ref": "#/definitions/user"}
-            },
+            "admin": USER_SCHEMA,
+            "users": {"type": "array", "items": USER_SCHEMA},
             "extra": {"type": "object", "additionalProperties": True}
         },
         "required": ["type", "auth_url", "admin"],
         "additionalProperties": False
     }
 
-    def _create_credential(self, common, user, permission):
-        return objects.Credential(
-            common["auth_url"], user["username"], user["password"],
-            tenant_name=user.get("project_name", user.get("tenant_name")),
-            permission=permission,
-            region_name=common.get("region_name"),
-            endpoint_type=common.get("endpoint_type"),
-            endpoint=common.get("endpoint"),
-            domain_name=user.get("domain_name"),
-            user_domain_name=user.get("user_domain_name", None),
-            project_domain_name=user.get("project_domain_name", None),
-            https_insecure=common.get("https_insecure", False),
-            https_cacert=common.get("https_cacert")
-        )
+    NEW_CONFIG_SCHEMA = {
+        "type": "object",
+        "description": "New schema for multiplatform deployment",
+        "properties": {
+            "type": {"enum": ["ExistingCloud"]},
+            "creds": {
+                "type": "object",
+                "patternProperties": {
+                    "^[a-z0-9_-]+$": {
+                        "oneOf": [
+                            {
+                                "description": "Single credential",
+                                "type": "object"
+                            },
+                            {
+                                "description": "List of credentials",
+                                "type": "array",
+                                "items": {"type": "object"}
+                            },
+                        ]
+                    }
+                }
+            },
+            "extra": {"type": "object", "additionalProperties": True}
+        },
+        "required": ["type", "creds"],
+        "additionalProperties": False
+    }
+
+    CONFIG_SCHEMA = {"type": "object",
+                     "oneOf": [OLD_CONFIG_SCHEMA, NEW_CONFIG_SCHEMA]}
+
+    def validate(self, config=None):
+        config = config or self.config
+        super(ExistingCloud, self).validate(config)
+
+        creds_config = self._get_creds(config)
+        for platform, config in creds_config.items():
+            builder_cls = credential.get_builder(platform)
+            for creds in config:
+                builder_cls.validate(creds)
+
+    def _get_creds(self, config):
+        if "creds" not in config:
+            # backward compatibility with old schema
+            config = copy.deepcopy(config)
+            del config["type"]
+            creds_config = {"openstack": [config]}
+        else:
+            creds_config = config["creds"]
+
+        # convert all credentials to list
+        for platform, config in creds_config.items():
+            if isinstance(config, dict):
+                creds_config[platform] = [config]
+        return creds_config
 
     def deploy(self):
-        permissions = consts.EndpointPermission
-
-        users = [self._create_credential(self.config, user, permissions.USER)
-                 for user in self.config.get("users", [])]
-        users = [user.to_dict(include_permission=True) for user in users]
-
-        admin = self._create_credential(self.config,
-                                        self.config.get("admin"),
-                                        permissions.ADMIN)
-        admin = admin.to_dict(include_permission=True)
-
-        return {"openstack": [{"admin": admin, "users": users}]}
+        if "creds" not in self.config:
+            LOG.warning("Old config schema is deprecated since Rally 0.10.0. "
+                        "Please use new config schema for ExistingCloud")
+        creds_config = self._get_creds(self.config)
+        parsed_credentials = {}
+        for platform, config in creds_config.items():
+            builder_cls = credential.get_builder(platform)
+            credentials = []
+            for creds in config:
+                builder = builder_cls(creds)
+                credentials.append(builder.build_credentials())
+            parsed_credentials[platform] = credentials
+        return parsed_credentials
 
     def cleanup(self):
         pass

@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.common import objects
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.context.keystone import users
+from rally.plugins.openstack import credential as oscredential
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.keystone.users"
@@ -274,16 +274,17 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
     def test_users_and_tenants_in_context(self, mock_identity):
         identity_service = mock_identity.Identity.return_value
 
-        credential = objects.Credential("foo_url", "foo", "foo_pass",
-                                        https_insecure=True,
-                                        https_cacert="cacert")
+        credential = oscredential.OpenStackCredential(
+            "foo_url", "foo", "foo_pass",
+            https_insecure=True,
+            https_cacert="cacert")
         tmp_context = dict(self.context)
         tmp_context["config"]["users"] = {"tenants": 1,
                                           "users_per_tenant": 2,
                                           "resource_management_workers": 1}
         tmp_context["admin"]["credential"] = credential
 
-        credential_dict = credential.to_dict(False)
+        credential_dict = credential.to_dict()
         user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
         identity_service.create_user.side_effect = user_list
@@ -302,7 +303,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 self.assertEqual(set(["id", "credential", "tenant_id"]),
                                  set(user.keys()))
 
-                user_credential_dict = user["credential"].to_dict(False)
+                user_credential_dict = user["credential"].to_dict()
 
                 excluded_keys = ["auth_url", "username", "password",
                                  "tenant_name", "region_name",
@@ -323,7 +324,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.identity" % CTX)
     def test_users_contains_correct_endpoint_type(self, mock_identity):
-        credential = objects.Credential(
+        credential = oscredential.OpenStackCredential(
             "foo_url", "foo", "foo_pass",
             endpoint_type=consts.EndpointType.INTERNAL)
         config = {
@@ -346,7 +347,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.identity" % CTX)
     def test_users_contains_default_endpoint_type(self, mock_identity):
-        credential = objects.Credential("foo_url", "foo", "foo_pass")
+        credential = oscredential.OpenStackCredential(
+            "foo_url", "foo", "foo_pass")
         config = {
             "config": {
                 "users": {
