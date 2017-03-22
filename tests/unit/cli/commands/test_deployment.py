@@ -59,17 +59,21 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.fake_api.deployment.create.assert_called_once_with(
             {
                 "type": "ExistingCloud",
-                "auth_url": "fake_auth_url",
-                "region_name": "fake_region_name",
-                "endpoint_type": "fake_endpoint_type",
-                "endpoint": "fake_endpoint",
-                "admin": {
-                    "username": "fake_username",
-                    "password": "fake_password",
-                    "tenant_name": "fake_tenant_name"
-                },
-                "https_insecure": True,
-                "https_cacert": "fake_cacert"
+                "creds": {
+                    "openstack": {
+                        "auth_url": "fake_auth_url",
+                        "region_name": "fake_region_name",
+                        "endpoint_type": "fake_endpoint_type",
+                        "endpoint": "fake_endpoint",
+                        "admin": {
+                            "username": "fake_username",
+                            "password": "fake_password",
+                            "tenant_name": "fake_tenant_name"
+                        },
+                        "https_insecure": True,
+                        "https_cacert": "fake_cacert"
+                    }
+                }
             },
             "from_env"
         )
@@ -92,19 +96,23 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.fake_api.deployment.create.assert_called_once_with(
             {
                 "type": "ExistingCloud",
-                "auth_url": "fake_auth_url",
-                "region_name": "fake_region_name",
-                "endpoint_type": "fake_endpoint_type",
-                "endpoint": "fake_endpoint",
-                "admin": {
-                    "username": "fake_username",
-                    "password": "fake_password",
-                    "user_domain_name": "fake_udn",
-                    "project_domain_name": "fake_pdn",
-                    "project_name": "fake_tenant_name"
-                },
-                "https_insecure": True,
-                "https_cacert": "fake_cacert"
+                "creds": {
+                    "openstack": {
+                        "auth_url": "fake_auth_url",
+                        "region_name": "fake_region_name",
+                        "endpoint_type": "fake_endpoint_type",
+                        "endpoint": "fake_endpoint",
+                        "admin": {
+                            "username": "fake_username",
+                            "password": "fake_password",
+                            "user_domain_name": "fake_udn",
+                            "project_domain_name": "fake_pdn",
+                            "project_name": "fake_tenant_name"
+                        },
+                        "https_insecure": True,
+                        "https_cacert": "fake_cacert"
+                    }
+                }
             },
             "from_env"
         )
