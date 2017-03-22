@@ -395,7 +395,7 @@ class ActionBuilder(object):
         built action. These will be appended to any args set for the
         action via its binding.
         :param kwargs: (optional) Keyword args to pass into each built
-        action. These will be appended to any kwards set for the action
+        action. These will be appended to any kwargs set for the action
         via its binding.
         """
         self.validate(actions)
