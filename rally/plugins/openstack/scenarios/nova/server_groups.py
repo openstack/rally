@@ -49,3 +49,26 @@ class CreateAndListServerGroups(utils.NovaScenario):
                "list of server groups: {}").format(server_group,
                                                    server_groups_list)
         self.assertIn(server_group, server_groups_list, err_msg=msg)
+
+
+@validation.required_services(consts.Service.NOVA)
+@validation.required_openstack(users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaServerGroups.create_and_get_server_group")
+class CreateAndGetServerGroup(utils.NovaScenario):
+
+    def run(self, kwargs=None):
+        """Create a server group, then get its detailed information.
+
+        Measure the "nova server-group-create" and "nova server-group-get"
+        command performance.
+
+        :param kwargs: Server group name and policy
+        """
+        kwargs["name"] = self.generate_random_name()
+        server_group = self._create_server_group(**kwargs)
+        msg = ("Server Groups isn't created")
+        self.assertTrue(server_group, err_msg=msg)
+
+        server_group_info = self._get_server_group(server_group.id)
+        self.assertEqual(server_group.id, server_group_info.id)

@@ -806,6 +806,18 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_keypair")
 
+    def test__get_server_group(self):
+        nova_scenario = utils.NovaScenario()
+        fakeid = 12345
+        result = nova_scenario._get_server_group(fakeid)
+        self.assertEqual(
+            self.clients("nova").server_groups.get.return_value,
+            result)
+        self.clients("nova").server_groups.get.assert_called_once_with(
+            fakeid)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.get_server_group")
+
     def test__create_server_group(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._create_server_group(fakeargs="fakeargs")
