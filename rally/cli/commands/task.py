@@ -482,8 +482,7 @@ class TaskCommands(object):
                     "load_duration": x["data"]["load_duration"],
                     "full_duration": x["data"]["full_duration"],
                     "created_at": x.get("created_at").strftime(
-                        "%Y-%d-%mT%H:%M:%S")}
-                   for x in task.get_results()]
+                        "%Y-%d-%mT%H:%M:%S")} for x in task.get_results()]
 
         print(json.dumps(results, sort_keys=False, indent=4))
 

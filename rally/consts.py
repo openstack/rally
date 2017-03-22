@@ -214,6 +214,11 @@ class _VerificationStatus(utils.ImmutableMixin, utils.EnumMixin):
     CRASHED = "crashed"
 
 
+class _TimeFormat(utils.ImmutableMixin, utils.EnumMixin):
+    """International time formats"""
+    TIME_FORMAT_ISO8601 = "%Y-%m-%dT%H:%M:%S%z"
+
+
 TaskStatus = _TaskStatus()
 SubtaskStatus = _SubtaskStatus()
 DeployStatus = _DeployStatus()
@@ -225,3 +230,4 @@ HookStatus = _HookStatus()
 TagType = _TagType()
 VerifierStatus = _VerifierStatus()
 VerificationStatus = _VerificationStatus()
+TimeFormat = _TimeFormat()

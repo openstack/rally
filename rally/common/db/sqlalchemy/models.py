@@ -37,6 +37,7 @@ def UUID():
 
 
 class RallyBase(models.ModelBase):
+
     metadata = None
     created_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow())
     updated_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),

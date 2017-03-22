@@ -665,7 +665,7 @@ class VerifierAPITestCase(test.TestCase):
     def test_get(self, mock_verifier_get):
         uuid = "some"
 
-        self.assertEqual(mock_verifier_get.return_value,
+        self.assertEqual(mock_verifier_get.return_value.to_dict(),
                          api._Verifier.get(uuid))
 
         mock_verifier_get.assert_called_once_with(uuid)
@@ -673,18 +673,20 @@ class VerifierAPITestCase(test.TestCase):
     @mock.patch("rally.api.objects.Verifier.list")
     def test_list(self, mock_verifier_list):
         status = "some_special_status"
+        mock_verifier_list.return_value = [mock.Mock()]
 
-        self.assertEqual(mock_verifier_list.return_value,
-                         api._Verifier.list(status))
+        self.assertEqual(
+            [i.to_dict() for i in mock_verifier_list.return_value],
+            api._Verifier.list(status))
 
         mock_verifier_list.assert_called_once_with(status)
 
     @mock.patch("rally.api.objects.Verifier.create")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.vmanager.VerifierManager.get")
-    def test_create(self, mock_verifier_manager_get, mock___verifier_get,
+    def test_create(self, mock_verifier_manager_get, mock___verifier__get,
                     mock_verifier_create):
-        mock___verifier_get.side_effect = exceptions.ResourceNotFound(id="1")
+        mock___verifier__get.side_effect = exceptions.ResourceNotFound(id="1")
 
         name = "SomeVerifier"
         vtype = "fake_verifier"
@@ -703,7 +705,7 @@ class VerifierAPITestCase(test.TestCase):
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=None)
-        mock___verifier_get.assert_called_once_with(name)
+        mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=None, system_wide=system_wide, version=version,
             vtype=vtype, namespace=None, extra_settings=extra_settings)
@@ -717,10 +719,10 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.manager.install.assert_called_once_with()
 
     @mock.patch("rally.api.objects.Verifier.create")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.vmanager.VerifierManager.get")
     def test_create_fails_on_existing_verifier(
-            self, mock_verifier_manager_get, mock___verifier_get,
+            self, mock_verifier_manager_get, mock___verifier__get,
             mock_verifier_create):
         name = "SomeVerifier"
         vtype = "fake_verifier"
@@ -738,16 +740,16 @@ class VerifierAPITestCase(test.TestCase):
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=namespace)
-        mock___verifier_get.assert_called_once_with(name)
+        mock___verifier__get.assert_called_once_with(name)
         self.assertFalse(mock_verifier_create.called)
 
     @mock.patch("rally.api.objects.Verifier.create")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.vmanager.VerifierManager.get")
     def test_create_fails_on_install_step(
-            self, mock_verifier_manager_get, mock___verifier_get,
+            self, mock_verifier_manager_get, mock___verifier__get,
             mock_verifier_create):
-        mock___verifier_get.side_effect = exceptions.ResourceNotFound(id="1")
+        mock___verifier__get.side_effect = exceptions.ResourceNotFound(id="1")
         verifier_obj = mock_verifier_create.return_value
         verifier_obj.manager.install.side_effect = RuntimeError
 
@@ -767,7 +769,7 @@ class VerifierAPITestCase(test.TestCase):
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=namespace)
-        mock___verifier_get.assert_called_once_with(name)
+        mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=source, system_wide=system_wide, version=version,
             vtype=vtype, namespace=namespace, extra_settings=extra_settings)
@@ -779,12 +781,12 @@ class VerifierAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Verifier.delete")
     @mock.patch("rally.api._Verification.list")
-    @mock.patch("rally.api._Verifier.get")
-    def test_delete_no_verifications(self, mock___verifier_get,
+    @mock.patch("rally.api._Verifier._get")
+    def test_delete_no_verifications(self, mock___verifier__get,
                                      mock___verification_list,
                                      mock_verifier_delete):
         mock___verification_list.return_value = []
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
 
         verifier_id = "uuuiiiddd"
         deployment_id = "deployment"
@@ -813,13 +815,12 @@ class VerifierAPITestCase(test.TestCase):
     @mock.patch("rally.api.objects.Verifier.delete")
     @mock.patch("rally.api._Verification.delete")
     @mock.patch("rally.api._Verification.list")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     def test_delete_with_verifications(
-            self, mock___verifier_get, mock___verification_list,
+            self, mock___verifier__get, mock___verification_list,
             mock___verification_delete, mock_verifier_delete):
-        verifications = [mock.Mock(), mock.Mock()]
+        verifications = [{"uuid": "uuid_1"}, {"uuid": "uuid_2"}]
         mock___verification_list.return_value = verifications
-
         verifier_id = "uuuiiiddd"
 
         self.assertRaises(exceptions.RallyException, api._Verifier.delete,
@@ -831,13 +832,13 @@ class VerifierAPITestCase(test.TestCase):
 
         api._Verifier.delete(verifier_id, force=True)
         mock___verification_list.assert_called_once_with(verifier_id, None)
-        self.assertEqual([mock.call(v.uuid) for v in verifications],
+        self.assertEqual([mock.call(v["uuid"]) for v in verifications],
                          mock___verification_delete.call_args_list)
 
     @mock.patch("rally.api.utils.BackupHelper")
-    @mock.patch("rally.api._Verifier.get")
-    def test_update_failed(self, mock___verifier_get, mock_backup_helper):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_update_failed(self, mock___verifier__get, mock_backup_helper):
+        verifier_obj = mock___verifier__get.return_value
         verifier_obj.system_wide = False
         uuid = "uuuuiiiidddd"
 
@@ -865,9 +866,9 @@ class VerifierAPITestCase(test.TestCase):
         self.assertIn(msg, "%s" % e)
 
     @mock.patch("rally.api.utils.BackupHelper")
-    @mock.patch("rally.api._Verifier.get")
-    def test_update(self, mock___verifier_get, mock_backup_helper):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_update(self, mock___verifier__get, mock_backup_helper):
+        verifier_obj = mock___verifier__get.return_value
         verifier_obj.system_wide = False
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         uuid = "uuuuiiiidddd"
@@ -947,9 +948,18 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.update_properties.assert_called_once_with(
             status=verifier_obj.status, system_wide=True)
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_configure_with_wrong_state_of_verifier(self, mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+        # check switching from system-wide to system-wide
+        verifier_obj.system_wide = True
+        expected_calls = len(verifier_obj.update_status.call_args())
+        api._Verifier.update(uuid, system_wide=True)
+        self.assertTrue(expected_calls,
+                        len(verifier_obj.update_status.call_args()))
+        self.assertFalse(verifier_obj.manager.install_venv.called)
+
+    @mock.patch("rally.api._Verifier._get")
+    def test_configure_with_wrong_state_of_verifier(self,
+                                                    mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         for status in consts.VerifierStatus:
@@ -961,12 +971,16 @@ class VerifierAPITestCase(test.TestCase):
                 self.assertIn("because verifier is in '%s' status" % status,
                               "%s" % e)
 
+    @mock.patch("rally.cli.commands.verify.logging.is_debug",
+                return_value=False)
     @mock.patch("rally.plugins.openstack.verification.tempest.manager."
                 "os.path.exists")
-    @mock.patch("rally.api._Verifier.get")
-    def test_configure_when_it_is_already_configured(self, mock___verifier_get,
-                                                     mock_exists):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_configure_when_it_is_already_configured(self,
+                                                     mock___verifier__get,
+                                                     mock_exists,
+                                                     mock_is_debug):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         extra = {"key": "value"}
@@ -1001,10 +1015,58 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.manager.configure.asset_called_once_with(
             extra_options=extra)
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_override_config_with_wrong_state_of_verifier(self,
-                                                          mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj.update_status.reset_mock()
+        verifier_obj.manager.extend_configuration.reset_mock()
+
+    @mock.patch("rally.cli.commands.verify.logging.is_debug",
+                return_value=True)
+    @mock.patch("rally.plugins.openstack.verification.tempest.manager."
+                "os.path.exists")
+    @mock.patch("rally.api._Verifier._get")
+    def test_configure_when_it_is_already_configured_with_logging(
+            self, mock___verifier__get, mock_exists, mock_is_debug):
+        verifier_obj = mock___verifier__get.return_value
+        verifier_id = "uuiiiidd"
+        deployment_id = "deployment"
+        extra = {"key": "value"}
+        verifier_obj.status = consts.VerifierStatus.INSTALLED
+
+        # no recreate and no extra options
+        self.assertEqual(verifier_obj.manager.get_configuration.return_value,
+                         api._Verifier.configure(verifier_id, deployment_id,
+                                                 reconfigure=False))
+        self.assertFalse(verifier_obj.manager.extend_configuration.called)
+        self.assertFalse(verifier_obj.manager.configure.called)
+        self.assertFalse(verifier_obj.update_status.called)
+
+        # no recreate, just extend existing configuration
+        self.assertEqual(verifier_obj.manager.get_configuration.return_value,
+                         api._Verifier.configure(verifier_id, deployment_id,
+                                                 reconfigure=False,
+                                                 extra_options=extra))
+        verifier_obj.manager.extend_configuration.assert_called_once_with(
+            extra)
+        self.assertFalse(verifier_obj.manager.configure.called)
+
+        verifier_obj.update_status.reset_mock()
+        verifier_obj.manager.extend_configuration.reset_mock()
+
+        # recreate with extra options
+        self.assertEqual(verifier_obj.manager.configure.return_value,
+                         api._Verifier.configure(verifier_id, deployment_id,
+                                                 reconfigure=True,
+                                                 extra_options=extra))
+        self.assertFalse(verifier_obj.manager.extend_configuration.called)
+        verifier_obj.manager.configure.asset_called_once_with(
+            extra_options=extra)
+
+        verifier_obj.update_status.reset_mock()
+        verifier_obj.manager.extend_configuration.reset_mock()
+
+    @mock.patch("rally.api._Verifier._get")
+    def test_override_config_with_wrong_state_of_verifier(
+            self, mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         new_content = {}
@@ -1019,10 +1081,10 @@ class VerifierAPITestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.verification.tempest.manager."
                 "os.path.exists")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     def test_override_config_when_it_is_already_configured(
-            self, mock___verifier_get, mock_exists):
-        verifier_obj = mock___verifier_get.return_value
+            self, mock___verifier__get, mock_exists):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         deployment_id = "deployment"
         new_config = {"key": "value"}
@@ -1033,9 +1095,9 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.manager.override_configuration.assert_called_once_with(
             new_config)
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_list_tests(self, mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_list_tests(self, mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         pattern = "some"
         verifier_obj.status = consts.VerifierStatus.INIT
@@ -1052,9 +1114,9 @@ class VerifierAPITestCase(test.TestCase):
                          api._Verifier.list_tests(verifier_id, pattern))
         verifier_obj.manager.list_tests.assert_called_once_with(pattern)
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_add_extension(self, mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_add_extension(self, mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         source = "example.com"
         version = 3.14159
@@ -1090,9 +1152,9 @@ class VerifierAPITestCase(test.TestCase):
                           mock.call(verifier_obj.status)],
                          verifier_obj.update_status.call_args_list)
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_list_extensions(self, mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_list_extensions(self, mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
 
         for status in consts.VerifierStatus:
@@ -1110,9 +1172,9 @@ class VerifierAPITestCase(test.TestCase):
                          api._Verifier.list_extensions(verifier_id))
         verifier_obj.manager.list_extensions.assert_called_once_with()
 
-    @mock.patch("rally.api._Verifier.get")
-    def test_delete_extension(self, mock___verifier_get):
-        verifier_obj = mock___verifier_get.return_value
+    @mock.patch("rally.api._Verifier._get")
+    def test_delete_extension(self, mock___verifier__get):
+        verifier_obj = mock___verifier__get.return_value
         verifier_id = "uuiiiidd"
         name = "some"
 
@@ -1133,10 +1195,27 @@ class VerifierAPITestCase(test.TestCase):
 
 class VerificationAPITestCase(test.TestCase):
 
+    results_data = {
+        "totals": {"tests_count": 2,
+                   "tests_duration": 4,
+                   "success": 2,
+                   "skipped": 0,
+                   "expected_failures": 0,
+                   "unexpected_success": 0,
+                   "failures": 0},
+        "tests": {
+            "test_1": {
+                "name": "test_1",
+                "status": "success",
+                "duration": 2,
+                "tags": []}
+        }
+    }
+
     @mock.patch("rally.api.objects.Verification.get")
     def test_get(self, mock_verification_get):
         verification_uuid = "uuiiiidd"
-        self.assertEqual(mock_verification_get.return_value,
+        self.assertEqual(mock_verification_get.return_value.to_dict(),
                          api._Verification.get(verification_uuid))
         mock_verification_get.assert_called_once_with(verification_uuid)
 
@@ -1154,10 +1233,11 @@ class VerificationAPITestCase(test.TestCase):
         tags = ["foo", "bar"]
         status = "some_status"
 
-        self.assertEqual(mock_verification_list.return_value,
-                         api._Verification.list(verifier_id,
-                                                deployment_id=deployment_id,
-                                                tags=tags, status=status))
+        mock_verification_list.return_value = [mock.Mock()]
+        self.assertEqual(
+            [i.to_dict() for i in mock_verification_list.return_value],
+            api._Verification.list(verifier_id, deployment_id=deployment_id,
+                                   tags=tags, status=status))
         mock_verification_list.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, tags=tags, status=status)
 
@@ -1186,54 +1266,56 @@ class VerificationAPITestCase(test.TestCase):
                          mock_verification_get.call_args_list)
 
     @mock.patch("rally.api.objects.Verification.create")
-    @mock.patch("rally.api._Verifier.get")
-    def test_import_results(self, mock___verifier_get,
+    @mock.patch("rally.api._Verifier._get")
+    def test_import_results(self, mock___verifier__get,
                             mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
         data = "contest of file with results"
         run_args = {"set_name": "compute"}
 
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
 
-        averification, aresults = api._Verification.import_results(
+        results = api._Verification.import_results(
             verifier_id, deployment_id=deployment_id, data=data, **run_args)
 
-        self.assertEqual(mock_verification_create.return_value, averification)
-        self.assertEqual(verifier_obj.manager.parse_results.return_value,
-                         aresults)
-        mock___verifier_get.assert_called_once_with(verifier_id)
+        verification = mock_verification_create.return_value
+
+        self.assertEqual(verification.to_dict(), results["verification"])
+        self.assertEqual(
+            verifier_obj.manager.parse_results.return_value.totals,
+            results["totals"])
+        mock___verifier__get.assert_called_once_with(verifier_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate_args.assert_called_once_with(run_args)
         mock_verification_create.assert_called_once_with(
             verifier_id, deployment_id=deployment_id, run_args=run_args)
-        averification.update_status.assert_called_once_with(
+        verification.update_status.assert_called_once_with(
             consts.VerificationStatus.RUNNING)
         verifier_obj.manager.parse_results.assert_called_once_with(data)
-        averification.finish.assert_called_once_with(aresults.totals,
-                                                     aresults.tests)
+        verification.finish.assert_called_once_with(results["totals"],
+                                                    results["tests"])
 
         # check setting failed
-        self.assertFalse(averification.set_failed.called)
-        averification.finish.reset_mock()
+        verification.finish.reset_mock()
 
         verifier_obj.manager.parse_results.side_effect = RuntimeError
         self.assertRaises(RuntimeError, api._Verification.import_results,
                           verifier_id, deployment_id=deployment_id, data=data,
                           **run_args)
-        self.assertFalse(averification.finish.called)
-        self.assertTrue(averification.set_failed.called)
+        self.assertFalse(verification.finish.called)
+        self.assertTrue(verification.set_failed.called)
 
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(
                     uuid="deployment_uuid",
                     status=consts.DeployStatus.DEPLOY_FINISHED))
     def test_start_failed_due_to_wrong_status_of_verifier(
-            self, mock_deployment_get, mock___verifier_get):
+            self, mock_deployment_get, mock___verifier__get):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
 
         for status in consts.VerifierStatus:
             if status != consts.VerifierStatus.INSTALLED:
@@ -1248,17 +1330,17 @@ class VerificationAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(
                     uuid="deployment_uuid",
                     status=consts.DeployStatus.DEPLOY_FINISHED))
     def test_start_with_configuring(self, mock_deployment_get,
-                                    mock___verifier_get, mock_configure,
+                                    mock___verifier__get, mock_configure,
                                     mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         verifier_obj.manager.is_configured.return_value = False
 
@@ -1269,18 +1351,18 @@ class VerificationAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(
                     uuid="deployment_uuid",
                     status=consts.DeployStatus.DEPLOY_FINISHED))
-    def test_start(self, mock_deployment_get, mock___verifier_get,
+    def test_start(self, mock_deployment_get, mock___verifier__get,
                    mock_configure, mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
         tags = ["foo", "bar"]
         run_args = {"arg": "value"}
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         verification_obj = mock_verification_create.return_value
 
@@ -1324,19 +1406,19 @@ class VerificationAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api._Verifier.configure")
-    @mock.patch("rally.api._Verifier.get")
+    @mock.patch("rally.api._Verifier._get")
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(
                     uuid="deployment_uuid",
                     status=consts.DeployStatus.DEPLOY_FINISHED))
     def test_start_failed_to_run(self, mock_deployment_get,
-                                 mock___verifier_get, mock_configure,
+                                 mock___verifier__get, mock_configure,
                                  mock_verification_create):
         verifier_id = "vuuuiiddd"
         deployment_id = "duuuiidd"
         tags = ["foo", "bar"]
         run_args = {"arg": "value"}
-        verifier_obj = mock___verifier_get.return_value
+        verifier_obj = mock___verifier__get.return_value
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         verification_obj = mock_verification_create.return_value
         verifier_obj.manager.run.side_effect = RuntimeError
@@ -1364,48 +1446,57 @@ class VerificationAPITestCase(test.TestCase):
 
     @mock.patch("rally.api._Verification.start")
     @mock.patch("rally.api._Deployment.get")
-    @mock.patch("rally.api._Verification.get")
-    def test_rerun(self, mock___verification_get, mock___deployment_get,
-                   mock___verification_start):
+    @mock.patch("rally.api._Verification._get")
+    def test_rerun(self, mock___verification__get, mock___deployment_get,
+                   mock_start):
+
         tests = {"test_1": {"status": "success"},
                  "test_2": {"status": "fail"}}
-        mock___verification_get.return_value = mock.Mock(
+        mock___verification__get.return_value = mock.Mock(
             uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
             tests=tests)
         mock___deployment_get.return_value = {"name": "d_name",
                                               "uuid": "d_uuid"}
+        mock_start.return_value = (
+            mock___verification__get.return_value,
+            mock.Mock(totals=self.results_data["totals"],
+                      tests=self.results_data["tests"]))
 
         api._Verification.rerun("uuid")
-        mock___verification_start.assert_called_once_with(
+        mock_start.assert_called_once_with(
             "v_uuid", "d_uuid", load_list=tests.keys(), tags=None)
 
     @mock.patch("rally.api._Verification.start")
     @mock.patch("rally.api._Deployment.get")
-    @mock.patch("rally.api._Verification.get")
+    @mock.patch("rally.api._Verification._get")
     def test_rerun_failed_tests(
-            self, mock___verification_get, mock___deployment_get,
-            mock___verification_start):
+            self, mock___verification__get, mock___deployment_get,
+            mock_start):
         tests = {"test_1": {"status": "success"},
                  "test_2": {"status": "fail"},
                  "test_3": {"status": "fail"}}
-        mock___verification_get.return_value = mock.Mock(
+        mock___verification__get.return_value = mock.Mock(
             uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
             tests=tests)
         mock___deployment_get.return_value = {"name": "d_name",
                                               "uuid": "d_uuid"}
+        mock_start.return_value = (
+            mock___verification__get.return_value,
+            mock.Mock(totals=self.results_data["totals"],
+                      tests=self.results_data["tests"]))
 
         api._Verification.rerun("uuid", failed=True)
         expected_tests = [t for t, r in tests.items() if r["status"] == "fail"]
-        mock___verification_start.assert_called_once_with(
+        mock_start.assert_called_once_with(
             "v_uuid", "d_uuid", load_list=expected_tests, tags=None)
 
-    @mock.patch("rally.api._Verification.get")
+    @mock.patch("rally.api._Verification._get")
     def test_rerun_failed_tests_raise_exc(
-            self, mock___verification_get):
+            self, mock___verification__get):
         tests = {"test_1": {"status": "success"},
                  "test_2": {"status": "success"},
                  "test_3": {"status": "skip"}}
-        mock___verification_get.return_value = mock.Mock(
+        mock___verification__get.return_value = mock.Mock(
             uuid="uuid", verifier_uuid="v_uuid", deployment_uuid="d_uuid",
             tests=tests)
 
