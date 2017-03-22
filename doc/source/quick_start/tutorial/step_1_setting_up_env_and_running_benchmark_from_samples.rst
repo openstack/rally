@@ -202,30 +202,32 @@ image and flavor name to be used for server creation, since concrete names
 might differ from installation to installation. If this benchmark task fails,
 then the reason for that might a non-existing image/flavor specified in the
 task. To check what images/flavors are available in the deployment you are
-currently benchmarking, you might use the *rally show* command:
+currently benchmarking, you might use the the following commands:
 
 .. code-block:: console
 
-   $ rally show images
-   +--------------------------------------+-----------------------+-----------+
-   |                 UUID                 |          Name         |  Size (B) |
-   +--------------------------------------+-----------------------+-----------+
-   | 8dfd6098-0c26-4cb5-8e77-1ecb2db0b8ae |  CentOS 6.5 (x86_64)  | 344457216 |
-   | 2b8d119e-9461-48fc-885b-1477abe2edc5 | CirrOS 0.3.4 (x86_64) |  13287936 |
-   +--------------------------------------+-----------------------+-----------+
+   $ source ~/.rally/openrc
+   $ openstack image list
+   +--------------------------------------+---------------------------------+--------+
+   | ID                                   | Name                            | Status |
+   +--------------------------------------+---------------------------------+--------+
+   | 30dc3b46-4a4b-4fcc-932c-91fa87753902 | cirros-0.3.4-x86_64-uec         | active |
+   | d687fc2a-75bd-4194-90c7-1619af255b04 | cirros-0.3.4-x86_64-uec-kernel  | active |
+   | c764d543-027d-47a3-b46e-0c1c8a68635d | cirros-0.3.4-x86_64-uec-ramdisk | active |
+   +--------------------------------------+---------------------------------+--------+
 
-   $ rally show flavors
-
-   Flavors for user `admin` in tenant `admin`:
-   +----+-----------+-------+----------+-----------+-----------+
-   | ID | Name      | vCPUs | RAM (MB) | Swap (MB) | Disk (GB) |
-   +----+-----------+-------+----------+-----------+-----------+
-   | 1  | m1.tiny   | 1     | 512      |           | 1         |
-   | 2  | m1.small  | 1     | 2048     |           | 20        |
-   | 3  | m1.medium | 2     | 4096     |           | 40        |
-   | 4  | m1.large  | 4     | 8192     |           | 80        |
-   | 5  | m1.xlarge | 8     | 16384    |           | 160       |
-   +----+-----------+-------+----------+-----------+-----------+
+   $ openstack flavor list
+   +----+-----------+-------+------+-----------+-------+-----------+
+   | ID | Name      |   RAM | Disk | Ephemeral | VCPUs | Is Public |
+   +----+-----------+-------+------+-----------+-------+-----------+
+   | 1  | m1.tiny   |   512 |    1 |         0 |     1 | True      |
+   | 2  | m1.small  |  2048 |   20 |         0 |     1 | True      |
+   | 3  | m1.medium |  4096 |   40 |         0 |     2 | True      |
+   | 4  | m1.large  |  8192 |   80 |         0 |     4 | True      |
+   | 42 | m1.nano   |    64 |    0 |         0 |     1 | True      |
+   | 5  | m1.xlarge | 16384 |  160 |         0 |     8 | True      |
+   | 84 | m1.micro  |   128 |    0 |         0 |     1 | True      |
+   +----+-----------+-------+------+-----------+-------+-----------+
 
 
 Report generation

@@ -91,47 +91,9 @@ it as usual:
     Using deployment: 1849a9bf-4b18-4fd5-89f0-ddcc56eae4c9
     ~/.rally/openrc was updated
 
-
-After that, the **rally show** command lists the resources for each user
-separately:
-
-.. code-block:: console
-
-    $ rally show images
-
-    Images for user `admin` in tenant `admin`:
-    +--------------------------------------+---------------------------------+-----------+
-    | UUID                                 | Name                            | Size (B)  |
-    +--------------------------------------+---------------------------------+-----------+
-    | 041cfd70-0e90-4ed6-8c0c-ad9c12a94191 | cirros-0.3.4-x86_64-uec         | 25165824  |
-    | 87710f09-3625-4496-9d18-e20e34906b72 | Fedora-x86_64-20-20140618-sda   | 209649664 |
-    | b0f269be-4859-48e0-a0ca-03fb80d14602 | cirros-0.3.4-x86_64-uec-ramdisk | 3740163   |
-    | d82eaf7a-ff63-4826-9aa7-5fa105610e01 | cirros-0.3.4-x86_64-uec-kernel  | 4979632   |
-    +--------------------------------------+---------------------------------+-----------+
-
-    Images for user `b1` in tenant `testing`:
-    +--------------------------------------+---------------------------------+-----------+
-    | UUID                                 | Name                            | Size (B)  |
-    +--------------------------------------+---------------------------------+-----------+
-    | 041cfd70-0e90-4ed6-8c0c-ad9c12a94191 | cirros-0.3.4-x86_64-uec         | 25165824  |
-    | 87710f09-3625-4496-9d18-e20e34906b72 | Fedora-x86_64-20-20140618-sda   | 209649664 |
-    | b0f269be-4859-48e0-a0ca-03fb80d14602 | cirros-0.3.4-x86_64-uec-ramdisk | 3740163   |
-    | d82eaf7a-ff63-4826-9aa7-5fa105610e01 | cirros-0.3.4-x86_64-uec-kernel  | 4979632   |
-    +--------------------------------------+---------------------------------+-----------+
-
-    Images for user `b2` in tenant `testing`:
-    +--------------------------------------+---------------------------------+-----------+
-    | UUID                                 | Name                            | Size (B)  |
-    +--------------------------------------+---------------------------------+-----------+
-    | 041cfd70-0e90-4ed6-8c0c-ad9c12a94191 | cirros-0.3.4-x86_64-uec         | 25165824  |
-    | 87710f09-3625-4496-9d18-e20e34906b72 | Fedora-x86_64-20-20140618-sda   | 209649664 |
-    | b0f269be-4859-48e0-a0ca-03fb80d14602 | cirros-0.3.4-x86_64-uec-ramdisk | 3740163   |
-    | d82eaf7a-ff63-4826-9aa7-5fa105610e01 | cirros-0.3.4-x86_64-uec-kernel  | 4979632   |
-    +--------------------------------------+---------------------------------+-----------+
-
 With this new deployment being active, Rally will use the already existing
-users *"b1"* and *"b2"* instead of creating the temporary ones when launching
-benchmark task that do not specify the *"users"* context.
+users instead of creating the temporary ones when launching benchmark task
+that do not specify the *"users"* context.
 
 
 Running benchmark scenarios with existing users
