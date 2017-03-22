@@ -1,14 +1,18 @@
 {
     "type": "ExistingCloud",
-    "auth_url": "http://example.net:5000/v2.0/",
-    "region_name": "RegionOne",
-    "endpoint_type": "public",
-    "endpoint": "http://<public-identity-url-ip>:<mgmt-port>/<version>/ example: http://172.16.0.2:35357/v2.0/",
-    "admin": {
-        "username": "admin",
-        "password": "pa55word",
-        "tenant_name": "demo"
-    },
-    "https_insecure": false,
-    "https_cacert": ""
+    "creds": {
+        "openstack": {
+            "auth_url": "http://example.net:5000/v2.0/",
+            "region_name": "RegionOne",
+            "endpoint_type": "public",
+            "endpoint": "http://<public-identity-url-ip>:<mgmt-port>/<version>/ example: http://172.16.0.2:35357/v2.0/",
+            "admin": {
+                "username": "admin",
+                "password": "pa55word",
+                "tenant_name": "demo"
+            },
+            "https_insecure": false,
+            "https_cacert": ""
+        }
+    }
 }

@@ -1,13 +1,17 @@
 {
     "type": "ExistingCloud",
-    "auth_url": "http://example.net:5000/v2.0/",
-    "region_name": "RegionOne",
-    "endpoint_type": "public",
-    "admin": {
-        "username": "admin",
-        "password": "myadminpass",
-        "tenant_name": "demo"
-    },
-    "https_insecure": false,
-    "https_cacert": ""
+    "creds": {
+        "openstack": {
+            "auth_url": "http://example.net:5000/v2.0/",
+            "region_name": "RegionOne",
+            "endpoint_type": "public",
+            "admin": {
+                "username": "admin",
+                "password": "myadminpass",
+                "tenant_name": "demo"
+            },
+            "https_insecure": false,
+            "https_cacert": ""
+        }
+    }
 }
