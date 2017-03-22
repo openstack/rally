@@ -203,9 +203,11 @@ class ExistingCloud(engine.Engine):
                 builder_cls.validate(creds)
 
     def _get_creds(self, config):
+        # NOTE(astudenov): copy config to prevent compatibility changes
+        # from saving to database
+        config = copy.deepcopy(config)
         if "creds" not in config:
             # backward compatibility with old schema
-            config = copy.deepcopy(config)
             del config["type"]
             creds_config = {"openstack": [config]}
         else:

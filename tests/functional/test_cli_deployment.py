@@ -46,20 +46,23 @@ class DeploymentTestCase(unittest.TestCase):
         self.rally.env.update(utils.TEST_ENV)
         self.rally("deployment create --name t_create_env --fromenv")
         config = json.loads(self.rally("deployment config"))
+        self.assertIn("creds", config)
+        self.assertIn("openstack", config["creds"])
+        oscreds = config["creds"]["openstack"]
         self.assertEqual(utils.TEST_ENV["OS_USERNAME"],
-                         config["admin"]["username"])
+                         oscreds["admin"]["username"])
         self.assertEqual(utils.TEST_ENV["OS_PASSWORD"],
-                         config["admin"]["password"])
-        if "project_name" in config["admin"]:
+                         oscreds["admin"]["password"])
+        if "project_name" in oscreds["admin"]:
             # keystone v3
             self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
-                             config["admin"]["project_name"])
+                             oscreds["admin"]["project_name"])
         else:
             # keystone v2
             self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
-                             config["admin"]["tenant_name"])
+                             oscreds["admin"]["tenant_name"])
         self.assertEqual(utils.TEST_ENV["OS_AUTH_URL"],
-                         config["auth_url"])
+                         oscreds["auth_url"])
 
     def test_destroy(self):
         self.rally.env.update(utils.TEST_ENV)
@@ -87,7 +90,7 @@ class DeploymentTestCase(unittest.TestCase):
         self.rally.env.update(utils.TEST_ENV)
         self.rally("deployment create --name t_create_env --fromenv")
         config = json.loads(self.rally("deployment config"))
-        config["auth_url"] = "http://foo/"
+        config["creds"]["openstack"]["auth_url"] = "http://foo/"
         file = utils.JsonTempFile(config)
         self.rally("deployment recreate --deployment t_create_env "
                    "--filename %s" % file.filename)
