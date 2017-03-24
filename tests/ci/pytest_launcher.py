@@ -21,6 +21,7 @@ PYTEST_REPORT = os.environ.get("PYTEST_REPORT",
                                ".test_results/pytest_results.html")
 TESTR_REPORT = "testr_results.html"
 PYTEST_ARGUMENTS = ("py.test"  # base command
+                    " -vv"  # show test names in logs
                     " --html=%(html_report)s"  # html report
                     " --self-contained-html"  # embedded css
                     " --durations=10"  # get a list of the slowest 10 tests
