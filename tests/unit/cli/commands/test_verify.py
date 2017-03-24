@@ -79,8 +79,8 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.list_verifiers(self.fake_api, "foo")
         self.verify.list_verifiers(self.fake_api)
 
-        self.fake_api.verifier.list.assert_has_calls([mock.call(None),
-                                                      mock.call("foo")])
+        self.assertEqual([mock.call(None), mock.call("foo"), mock.call(None)],
+                         self.fake_api.verifier.list.call_args_list)
 
     @mock.patch("rally.cli.commands.verify.envutils.get_global")
     def test_show_verifier(self, mock_get_global):
@@ -225,8 +225,9 @@ class VerifyCommandsTestCase(test.TestCase):
         self.fake_api.verifier.list_extensions.return_value = []
         self.verify.list_verifier_exts(self.fake_api, "v_id")
 
-        self.fake_api.verifier.list_extensions.assert_has_calls(
-            [mock.call("v_id"), mock.call("v_id")])
+        self.assertEqual(
+            [mock.call("v_id"), mock.call("v_id")],
+            self.fake_api.verifier.list_extensions.call_args_list)
 
     def test_delete_verifier_ext(self):
         self.verify.delete_verifier_ext(self.fake_api, "v_id", "ext_name")
@@ -361,7 +362,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.verify.rerun(self.fake_api, "v_uuid", "d_id", failed=True,)
         self.fake_api.verification.rerun.assert_called_once_with(
-            "v_uuid", deployment="d_id", failed=True, tags=None, concur=None)
+            "v_uuid", concurrency=None,
+            deployment_id="d_id", failed=True, tags=None)
 
     def test_show(self):
         deployment_name = "Some Deploy"
@@ -485,10 +487,10 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.list(self.fake_api, "v_id", "d_id", "foo", "bar")
         self.verify.list(self.fake_api)
 
-        self.fake_api.verification.list.assert_has_calls(
-            [mock.call("v_id", "d_id", None, None),
-             mock.call("v_id", "d_id", "foo", "bar"),
-             mock.call(None, None, None, None)])
+        self.assertEqual([mock.call("v_id", "d_id", None, None),
+                          mock.call("v_id", "d_id", "foo", "bar"),
+                          mock.call(None, None, None, None)],
+                         self.fake_api.verification.list.call_args_list)
 
     def test_delete(self):
         self.verify.delete(self.fake_api, "v_uuid")
