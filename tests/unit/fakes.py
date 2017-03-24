@@ -1873,10 +1873,10 @@ class FakeTask(dict):
 class FakeAPI(object):
 
     def __init__(self):
-        self._deployment = mock.Mock(spec=api._Deployment)
-        self._task = mock.Mock(spec=api._Task)
-        self._verifier = mock.Mock(spec=api._Verifier)
-        self._verification = mock.Mock(spec=api._Verification)
+        self._deployment = mock.create_autospec(api._Deployment)
+        self._task = mock.create_autospec(api._Task)
+        self._verifier = mock.create_autospec(api._Verifier)
+        self._verification = mock.create_autospec(api._Verification)
 
     @property
     def deployment(self):

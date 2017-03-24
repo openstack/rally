@@ -553,10 +553,10 @@ class VerifyCommands(object):
               concur=None, failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
         results = api.verification.rerun(verification_uuid,
-                                         deployment=deployment,
+                                         deployment_id=deployment,
                                          failed=failed,
                                          tags=tags,
-                                         concur=concur)
+                                         concurrency=concur)
         if detailed:
             self._print_details_after_run(results)
 

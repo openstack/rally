@@ -485,7 +485,8 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.rerun(self.fake_api, self.verification_uuid,
                           self.deployment_uuid, failed=True)
         self.fake_api.verification.rerun.assert_called_once_with(
-            self.verification_uuid, concur=None, deployment="some-deploy-uuid",
+            self.verification_uuid, concurrency=None,
+            deployment_id="some-deploy-uuid",
             failed=True, tags=None)
         mock_update_globals_file.assert_called_once_with(
             envutils.ENV_VERIFICATION, self.verification_uuid)
