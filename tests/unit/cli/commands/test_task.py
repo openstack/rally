@@ -109,6 +109,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.side_effect = [
             mock.mock_open(read_data="{'test': {}").return_value
         ]
+        self.fake_api.task.render_template.return_value = "||"
+
         self.assertRaises(task.FailedToLoadTask,
                           self.task._load_task, self.fake_api, "in_task")
 
