@@ -298,6 +298,7 @@
           max_degradation: 50
 
     -
+      description: "Check 'constant' runner."
       args:
         sleep: 0.25
       runner:
@@ -310,6 +311,7 @@
           max: 0
 
     -
+      description: "Check 'constant_for_duration' runner."
       args:
         sleep: 0.1
       runner:
@@ -321,6 +323,7 @@
           max: 0
 
     -
+      description: "Check 'rps' runner."
       args:
         sleep: 0.001
       runner:
@@ -332,6 +335,7 @@
           max: 0
 
     -
+      description: "Check 'rps' runner with float value of requests per second."
       args:
         sleep: 0.1
       runner:
@@ -354,6 +358,7 @@
           max: 0
 
     -
+      description: "Check 'max_concurrency' and 'max_cpu_count' properties of 'rps' runner."
       args:
         sleep: 0.001
       runner:
@@ -367,6 +372,7 @@
           max: 0
 
     -
+      description: "Check 'serial' runner."
       args:
         sleep: 0.1
       runner:
@@ -390,6 +396,7 @@
         failure_rate:
           max: 0
     -
+      description: "Check 'quotas' context."
       args:
         sleep: 0.01
       runner:

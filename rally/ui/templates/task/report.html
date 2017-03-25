@@ -473,6 +473,9 @@
 
       <div ng-show="view.is_scenario">
         <h1>{{scenario.cls}}.<wbr>{{scenario.name}} ({{scenario.full_duration | number:3}}s)</h1>
+        <div ng-show="scenario.description" style="margin-bottom: 20px;">
+            <i>{{scenario.description}}</i>
+        </div>
         <ul class="tabs">
           <li ng-repeat="t in tabs"
               ng-show="t.isVisible()"

@@ -140,6 +140,7 @@ def _process_scenario(data, pos):
         "runner": kw["runner"]["type"],
         "config": json.dumps({data["key"]["name"]: [kw]}, indent=2),
         "hooks": _process_hooks(data["hooks"]),
+        "description": data["key"].get("description", ""),
         "iterations": {
             "iter": main_area.render(),
             "pie": [("success", (data["info"]["iterations_count"]

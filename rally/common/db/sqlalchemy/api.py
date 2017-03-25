@@ -229,6 +229,7 @@ class Connection(object):
             "updated_at": workload.updated_at,
             "key": {
                 "name": workload.name,
+                "description": workload.description,
                 "pos": workload.position,
                 "kw": {
                     "args": workload.args,
@@ -420,6 +421,7 @@ class Connection(object):
                                    subtask_uuid=subtask_uuid)
         workload.update({
             "name": key["name"],
+            "description": key["description"],
             "position": key["pos"],
             "runner": key["kw"]["runner"],
             "runner_type": key["kw"]["runner"]["type"],

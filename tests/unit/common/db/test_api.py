@@ -215,6 +215,7 @@ class TasksTestCase(test.DBTestCase):
         task_id = self._create_task()["uuid"]
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -270,6 +271,7 @@ class TasksTestCase(test.DBTestCase):
         task2 = self._create_task()["uuid"]
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"task_id": "task_id"},
@@ -313,6 +315,7 @@ class TasksTestCase(test.DBTestCase):
                                    "tag": "bar"})
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -362,6 +365,7 @@ class TasksTestCase(test.DBTestCase):
         task1 = self._create_task()
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -408,6 +412,7 @@ class TasksTestCase(test.DBTestCase):
         task_id = self._create_task()["uuid"]
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -457,6 +462,7 @@ class TasksTestCase(test.DBTestCase):
         task_id = self._create_task()["uuid"]
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -552,6 +558,7 @@ class WorkloadTestCase(test.DBTestCase):
     def test_workload_create(self):
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -562,6 +569,7 @@ class WorkloadTestCase(test.DBTestCase):
         }
         workload = db.workload_create(self.task_uuid, self.subtask_uuid, key)
         self.assertEqual("atata", workload["name"])
+        self.assertEqual("tatata", workload["description"])
         self.assertEqual(0, workload["position"])
         self.assertEqual({"a": "A"}, workload["args"])
         self.assertEqual({"c": "C"}, workload["context"])
@@ -574,6 +582,7 @@ class WorkloadTestCase(test.DBTestCase):
     def test_workload_set_results_with_raw_data(self):
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -603,6 +612,7 @@ class WorkloadTestCase(test.DBTestCase):
         db.workload_data_create(self.task_uuid, workload["uuid"], 0, raw_data)
         workload = db.workload_set_results(workload["uuid"], data)
         self.assertEqual("atata", workload["name"])
+        self.assertEqual("tatata", workload["description"])
         self.assertEqual(0, workload["position"])
         self.assertEqual({"a": "A"}, workload["args"])
         self.assertEqual({"c": "C"}, workload["context"])
@@ -624,6 +634,7 @@ class WorkloadTestCase(test.DBTestCase):
     def test_workload_set_results_empty_raw_data(self):
         key = {
             "name": "atata",
+            "description": "tatata",
             "pos": 0,
             "kw": {
                 "args": {"a": "A"},
@@ -645,6 +656,7 @@ class WorkloadTestCase(test.DBTestCase):
         workload = db.workload_create(self.task_uuid, self.subtask_uuid, key)
         workload = db.workload_set_results(workload["uuid"], data)
         self.assertEqual("atata", workload["name"])
+        self.assertEqual("tatata", workload["description"])
         self.assertEqual(0, workload["position"])
         self.assertEqual({"a": "A"}, workload["args"])
         self.assertEqual({"c": "C"}, workload["context"])
@@ -672,8 +684,8 @@ class WorkloadDataTestCase(test.DBTestCase):
         self.task_uuid = self.task["uuid"]
         self.subtask = db.subtask_create(self.task_uuid, title="foo")
         self.subtask_uuid = self.subtask["uuid"]
-        self.key = {"name": "atata", "pos": 0, "kw": {"runner": {"r": "R",
-                                                                 "type": "T"}}}
+        self.key = {"name": "atata", "description": "tatata",
+                    "pos": 0, "kw": {"runner": {"r": "R", "type": "T"}}}
         self.workload = db.workload_create(self.task_uuid, self.subtask_uuid,
                                            self.key)
         self.workload_uuid = self.workload["uuid"]

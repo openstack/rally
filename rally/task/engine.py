@@ -491,6 +491,9 @@ class TaskConfig(object):
                     "type": "object",
                     "properties": {
                         "args": {"type": "object"},
+                        "description": {
+                            "type": "string"
+                        },
                         "runner": {
                             "type": "object",
                             "properties": {"type": {"type": "string"}},
@@ -544,6 +547,7 @@ class TaskConfig(object):
                                 "type": "object",
                                 "properties": {
                                     "name": {"type": "string"},
+                                    "description": {"type": "string"},
                                     "args": {"type": "object"},
 
                                     "runner": {
@@ -664,6 +668,15 @@ class Workload(object):
     """
     def __init__(self, config, pos):
         self.name = config["name"]
+        self.description = config.get("description", "")
+        if not self.description:
+            try:
+                self.description = scenario.Scenario.get(
+                    self.name).get_info()["title"]
+            except (exceptions.PluginNotFound,
+                    exceptions.MultipleMatchesFound):
+                # let's fail an issue with loading plugin at a validation step
+                pass
         self.runner = config.get("runner", {})
         self.sla = config.get("sla", {})
         self.hooks = config.get("hooks", [])
@@ -702,6 +715,7 @@ class Workload(object):
 
     def make_key(self):
         return {"name": self.name,
+                "description": self.description,
                 "pos": self.pos,
                 "kw": self.to_task()}
 
