@@ -39,13 +39,14 @@ class GlanceBasic(scenario.OpenStackScenario):
                 atomic_inst=self.atomic_actions())
 
 
+@validation.restricted_parameters(["image_name", "name"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.required_services(consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_list_image")
-class CreateAndListImage(GlanceBasic, nova_utils.NovaScenario):
+class CreateAndListImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format, **kwargs):
         """Create an image and then list all images.
@@ -79,7 +80,7 @@ class CreateAndListImage(GlanceBasic, nova_utils.NovaScenario):
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.list_images")
-class ListImages(GlanceBasic, nova_utils.NovaScenario):
+class ListImages(GlanceBasic):
 
     def run(self):
         """List all images.
@@ -94,13 +95,14 @@ class ListImages(GlanceBasic, nova_utils.NovaScenario):
         self.glance.list_images()
 
 
+@validation.restricted_parameters(["image_name", "name"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.required_services(consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_delete_image")
-class CreateAndDeleteImage(GlanceBasic, nova_utils.NovaScenario):
+class CreateAndDeleteImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format, **kwargs):
         """Create and then delete an image.
@@ -120,6 +122,7 @@ class CreateAndDeleteImage(GlanceBasic, nova_utils.NovaScenario):
         self.glance.delete_image(image.id)
 
 
+@validation.restricted_parameters(["image_name", "name"])
 @types.convert(flavor={"type": "nova_flavor"},
                image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
