@@ -1,0 +1,188 @@
+config:
+  default:
+    master: [default, ceilometer, glance, horizon, nova, placement, swift, cinder, keystone]
+    "0.9": [default, ceilometer, glance, horizon, nova, placement, swift, cinder, keystone]
+    # This can be used by functional jobs that only want their dependencies installed
+    # and don't need to incur the overhead of installing all services in the process.
+    no_services: [default]
+  neutron:
+    features: [neutron, neutron-adv]
+  # different backends
+  postgres:
+    features: [postgresql]
+  # feature changes for different test matrixes
+  grenade:
+    rm-features: [trove, sahara, neutron-adv, horizon]
+  tempest:
+    features: [tempest]
+  # feature changes for different configs of existing services
+  nova_api_metadata_split:
+    features: [nova-md]
+  cells:
+    features: [nova-cells]
+  # feature declarations for incubated or recently integrated projects (so they
+  # can be tested outside the releases they were supported in)
+  trove:
+    features: [trove]
+  marconi:
+    features: [marconi]
+  zaqar:
+    features: [zaqar]
+  sahara:
+    features: [sahara]
+  ironic:
+    features: [ironic]
+  qpid:
+    features: [qpid]
+  zeromq:
+    features: [zeromq]
+  ceph:
+    features: [ceph]
+  heat:
+    features: [heat]
+  tlsproxy:
+    features: [tlsproxy]
+  cinder_mn_grenade:
+    features: [cinder-mn-grenade]
+  cinder_mn_grenade_sub_volschbak:
+    features: [cinder-mn-grenade-sub-volschbak]
+  cinder_mn_grenade_sub_bak:
+    features: [cinder-mn-grenade-sub-bak]
+  neutron_dvr:
+    features: [neutron-dvr]
+
+branches:
+  # The value of ""default" is the name of the "trunk" branch
+  default: master
+  # Normalized branch names only here, e.g. stable/ocata => ocata
+  allowed: [master, 0.9]
+
+primary:
+  default:
+    base:
+      services: [mysql, rabbit, dstat, peakmem_tracker]
+
+  ceilometer:
+    base:
+      services: [ceilometer-acompute, ceilometer-acentral, ceilometer-collector, ceilometer-api, ceilometer-alarm-notifier, ceilometer-alarm-evaluator, ceilometer-anotification]
+
+  glance:
+    base:
+      services: [g-api, g-reg]
+
+  keystone:
+    base:
+      services: [key]
+
+  horizon:
+    base:
+      services: [horizon]
+
+  nova:
+    base:
+      services: [n-api, n-cauth, n-cond, n-cpu, n-net, n-novnc, n-obj, n-sch]
+
+  nova-md:
+    base:
+      services: [n-api-meta]
+
+  nova-cells:
+    base:
+      services: [n-cell]
+      rm-compute-ext: [agregates, hosts]
+
+  placement:
+    base:
+      services: [placement-api]
+
+  neutron:
+    base:
+      services: [q-svc, q-agt, q-dhcp, q-l3, q-meta, q-metering]
+      rm-services: [n-net]
+
+  neutron-adv:
+    base:
+      rm-services: [n-net]
+
+  neutron-dvr:
+    base:
+      services: []
+
+  swift:
+    base:
+      services: [s-proxy, s-account, s-container, s-object]
+
+  cinder:
+    base:
+      services: [cinder, c-api, c-vol, c-sch, c-bak]
+
+  # This will be used to disable c-vol, c-bak on primary node when running multinode grenade
+  # job that will test compatibility of new c-api, c-sch (primary) and old c-vol and c-bak (sub).
+  cinder-mn-grenade:
+    base:
+      rm-services: [c-vol, c-bak]
+
+  # This will be used to disable c-vol, c-sch, c-bak on primary node when running multinode grenade
+  # job that will test compatibility of new c-api (primary) and old c-vol, c-sch and c-bak (sub).
+  cinder-mn-grenade-sub-volschbak:
+    base:
+      rm-services: [c-vol, c-sch, c-bak]
+
+  # This will be used to disable c-bak on primary node when running multinode grenade
+  # job that will test compatibility of new c-api, c-sch, c-vol (primary) and old c-bak (sub).
+  cinder-mn-grenade-sub-bak:
+    base:
+      rm-services: [c-bak]
+
+  heat:
+    base:
+      services: [heat, h-api, h-api-cfn, h-api-cw, h-eng]
+
+  trove:
+    base:
+      services: [trove, tr-api, tr-tmgr, tr-cond]
+
+  ironic:
+    base:
+      services: [ir-api, ir-cond]
+      rm-services: [cinder, c-api, c-vol, c-sch, c-bak]
+
+  sahara:
+    base:
+      services: [sahara]
+
+  marconi:
+    base:
+      services: [marconi-server]
+
+  zaqar:
+    base:
+      services: [zaqar-server]
+
+  tempest:
+    base:
+      services: [tempest]
+
+  # service overrides
+  postgresql:
+    base:
+      services: [postgresql]
+      rm-services: [mysql]
+
+  zeromq:
+    base:
+      services: [zeromq]
+      rm-services: [rabbit]
+
+  qpid:
+    base:
+      services: [qpid]
+      rm-services: [rabbit]
+
+  ceph:
+    base:
+      services: [ceph]
+
+  tlsproxy:
+    base:
+      services: [tls-proxy]
