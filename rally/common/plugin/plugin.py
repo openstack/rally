@@ -179,14 +179,16 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
     def _set_name_and_namespace(cls, name, namespace):
         try:
             existing_plugin = cls._get_base().get(name=name,
-                                                  namespace=namespace)
+                                                  namespace=namespace,
+                                                  allow_hidden=True,
+                                                  fallback_to_default=False)
 
         except exceptions.PluginNotFound:
             cls._meta_set("name", name)
             cls._meta_set("namespace", namespace)
         else:
             raise exceptions.PluginWithSuchNameExists(
-                name=name, namespace=namespace,
+                name=name, namespace=existing_plugin.get_namespace(),
                 existing_path=(
                     sys.modules[existing_plugin.__module__].__file__),
                 new_path=sys.modules[cls.__module__].__file__
@@ -207,7 +209,8 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         return cls
 
     @classmethod
-    def get(cls, name, namespace=None, allow_hidden=False):
+    def get(cls, name, namespace=None, allow_hidden=False,
+            fallback_to_default=True):
         """Return plugin by its name from specified namespace.
 
         This method iterates over all subclasses of cls and returns plugin
@@ -220,12 +223,16 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         :param namespace: Namespace where to search for plugins
         :param allow_hidden: if False and found plugin is hidden then
             PluginNotFound will be raised
+        :param fallback_to_default: if True, then it tries to find
+            plugin within "default" namespace
         """
-        potential_result = []
+        potential_result = cls.get_all(name=name, namespace=namespace,
+                                       allow_hidden=True)
 
-        for p in cls.get_all(namespace=namespace, allow_hidden=True):
-            if p.get_name() == name:
-                potential_result.append(p)
+        if fallback_to_default and len(potential_result) == 0:
+            # try to find in default namespace
+            potential_result = cls.get_all(name=name, namespace="default",
+                                           allow_hidden=True)
 
         if len(potential_result) == 1:
             plugin = potential_result[0]
@@ -248,12 +255,13 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
             name=name, namespace=namespace or "any of")
 
     @classmethod
-    def get_all(cls, namespace=None, allow_hidden=False):
+    def get_all(cls, namespace=None, allow_hidden=False, name=None):
         """Return all subclass plugins of plugin.
 
         All plugins that are not configured will be ignored.
 
         :param namespace: return only plugins from specified namespace.
+        :param name: return only plugins with specified name.
         :param allow_hidden: if False return only non hidden plugins
         """
         plugins = []
@@ -262,6 +270,8 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
             if not issubclass(p, Plugin):
                 continue
             if not p._meta_is_inited(raise_exc=False):
+                continue
+            if name and name != p.get_name():
                 continue
             if namespace and namespace != p.get_namespace():
                 continue

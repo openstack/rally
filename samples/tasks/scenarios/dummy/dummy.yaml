@@ -7,7 +7,3 @@
         type: "constant"
         times: 20
         concurrency: 5
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1

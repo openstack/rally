@@ -1846,8 +1846,12 @@ class FakeDeployment(dict):
         namespace = kwargs.pop("namespace", "openstack")
         kwargs["credentials"] = {
             namespace: [{"admin": kwargs.pop("admin", None),
-                         "users": kwargs.pop("users", [])}]}
+                         "users": kwargs.pop("users", [])}],
+            "default": [{"admin": None, "users": []}]}
         dict.__init__(self, **kwargs)
+
+    def get_platforms(self):
+        return [platform for platform in self["credentials"]]
 
     def get_credentials_for(self, namespace):
         return self["credentials"][namespace][0]

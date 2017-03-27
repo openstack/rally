@@ -1,5 +1,5 @@
 ---
-  Dummy.dummy:
+  Dummy.openstack:
     -
       args:
         sleep: 0.01

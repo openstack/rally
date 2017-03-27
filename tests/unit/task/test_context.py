@@ -145,10 +145,10 @@ class ContextManagerTestCase(test.TestCase):
             "ctx2": mock.MagicMock()
         }
 
-        context.ContextManager.validate(config)
+        context.ContextManager.validate(config, namespace="foo")
         for ctx in ("ctx1", "ctx2"):
             mock_context_get.assert_has_calls([
-                mock.call(ctx, allow_hidden=False),
+                mock.call(ctx, namespace="foo", allow_hidden=False),
                 mock.call().validate(config[ctx]),
             ])
 
@@ -159,10 +159,11 @@ class ContextManagerTestCase(test.TestCase):
             "ctx2": mock.MagicMock()
         }
 
-        context.ContextManager.validate(config, allow_hidden=True)
+        context.ContextManager.validate(config, namespace="foo",
+                                        allow_hidden=True)
         for ctx in ("ctx1", "ctx2"):
             mock_context_get.assert_has_calls([
-                mock.call(ctx, allow_hidden=True),
+                mock.call(ctx, namespace="foo", allow_hidden=True),
                 mock.call().validate(config[ctx]),
             ])
 
@@ -171,22 +172,24 @@ class ContextManagerTestCase(test.TestCase):
             "nonexisting": {"nonexisting": 2}
         }
         self.assertRaises(exceptions.PluginNotFound,
-                          context.ContextManager.validate, config)
+                          context.ContextManager.validate, config, "foo")
 
     @mock.patch("rally.task.context.Context.get")
     def test_setup(self, mock_context_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a": [], "b": []}}
+        ctx_object = {"config": {"a": [], "b": []},
+                      "scenario_namespace": "foo"}
 
         manager = context.ContextManager(ctx_object)
         result = manager.setup()
 
         self.assertEqual(result, ctx_object)
         mock_context_get.assert_has_calls(
-            [mock.call("a", allow_hidden=True),
-             mock.call("b", allow_hidden=True)], any_order=True)
+            [mock.call("a", namespace="foo", allow_hidden=True),
+             mock.call("b", namespace="foo", allow_hidden=True)],
+            any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         self.assertEqual([mock_context(), mock_context()], manager._visited)
@@ -198,13 +201,15 @@ class ContextManagerTestCase(test.TestCase):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a": [], "b": []}}
+        ctx_object = {"config": {"a": [], "b": []},
+                      "scenario_namespace": "foo"}
 
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
         mock_context_get.assert_has_calls(
-            [mock.call("a", allow_hidden=True),
-             mock.call("b", allow_hidden=True)], any_order=True)
+            [mock.call("a", namespace="foo", allow_hidden=True),
+             mock.call("b", namespace="foo", allow_hidden=True)],
+            any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls(
@@ -216,13 +221,15 @@ class ContextManagerTestCase(test.TestCase):
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context.cleanup.side_effect = Exception()
         mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a": [], "b": []}}
+        ctx_object = {"config": {"a": [], "b": []},
+                      "scenario_namespace": "foo"}
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
 
         mock_context_get.assert_has_calls(
-            [mock.call("a", allow_hidden=True),
-             mock.call("b", allow_hidden=True)], any_order=True)
+            [mock.call("a", namespace="foo", allow_hidden=True),
+             mock.call("b", namespace="foo", allow_hidden=True)],
+            any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls(

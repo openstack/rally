@@ -149,6 +149,16 @@ class SomePlugin(BasePlugin):
     pass
 
 
+@plugin.configure(name="test_my_plugin")
+class MyPluginInDefault(BasePlugin):
+    pass
+
+
+@plugin.configure(name="test_my_plugin", namespace="foo")
+class MyPluginInFoo(BasePlugin):
+    pass
+
+
 @plugin.configure(name="test_hidden_plugin", hidden=True)
 class HiddenPlugin(BasePlugin):
     pass
@@ -180,6 +190,10 @@ class PluginTestCase(test.TestCase):
         self.assertEqual(SomePlugin,
                          BasePlugin.get("test_some_plugin"))
 
+    def test_get_fallback_to_default(self):
+        self.assertEqual(SomePlugin,
+                         BasePlugin.get("test_some_plugin", namespace="bar"))
+
     def test_get_hidden(self):
         self.assertEqual(HiddenPlugin,
                          BasePlugin.get("test_hidden_plugin",
@@ -205,16 +219,38 @@ class PluginTestCase(test.TestCase):
         self.assertRaises(exceptions.PluginWithSuchNameExists,
                           plugin.configure("test_2_plugins_with_same_name"), B)
 
+        A.unregister()
+
+    def test_get_multiple_found_hidden(self):
+
+        @plugin.configure("test_2_plugins_with_same_name", hidden=True)
+        class A(plugin.Plugin):
+            pass
+
+        class B(plugin.Plugin):
+            pass
+
+        self.assertRaises(exceptions.PluginWithSuchNameExists,
+                          plugin.configure("test_2_plugins_with_same_name"), B)
+
+        A.unregister()
+
     def test_get_name(self):
         self.assertEqual("test_some_plugin", SomePlugin.get_name())
 
     def test_get_all(self):
-        self.assertEqual(set([SomePlugin, DeprecatedPlugin]),
+        self.assertEqual(set([SomePlugin, DeprecatedPlugin,
+                              MyPluginInDefault, MyPluginInFoo]),
                          set(BasePlugin.get_all()))
         self.assertEqual([], SomePlugin.get_all())
 
+    def test_get_all_by_name(self):
+        self.assertEqual(set([MyPluginInDefault, MyPluginInFoo]),
+                         set(BasePlugin.get_all(name="test_my_plugin")))
+
     def test_get_all_hidden(self):
-        self.assertEqual(set([SomePlugin, DeprecatedPlugin, HiddenPlugin]),
+        self.assertEqual(set([SomePlugin, DeprecatedPlugin, HiddenPlugin,
+                              MyPluginInDefault, MyPluginInFoo]),
                          set(BasePlugin.get_all(allow_hidden=True)))
 
     def test_is_deprecated(self):

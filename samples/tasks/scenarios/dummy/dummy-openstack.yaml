@@ -1,0 +1,7 @@
+---
+  Dummy.openstack:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1

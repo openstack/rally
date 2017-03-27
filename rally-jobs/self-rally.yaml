@@ -1,0 +1,64 @@
+---
+  RallyProfile.generate_names_in_atomic:
+    -
+      args:
+        number_of_names: 100
+      runner:
+        type: "constant"
+        times: 1000
+        concurrency: 10
+      sla:
+        max_avg_duration_per_atomic:
+          generate_100_names: 0.015
+        failure_rate:
+          max: 0
+    -
+      args:
+        number_of_names: 1000
+      runner:
+        type: "constant"
+        times: 500
+        concurrency: 10
+      sla:
+        max_avg_duration_per_atomic:
+          generate_1000_names: 0.1
+        failure_rate:
+          max: 0
+    -
+      args:
+        number_of_names: 10000
+      runner:
+        type: "constant"
+        times: 200
+        concurrency: 10
+      sla:
+        max_avg_duration_per_atomic:
+          generate_10000_names: 1
+        failure_rate:
+          max: 0
+
+  RallyProfile.calculate_atomic:
+    -
+      args:
+        number_of_atomics: 100
+      runner:
+        type: "constant"
+        times: 300
+        concurrency: 10
+      sla:
+        max_avg_duration_per_atomic:
+          calculate_100_atomics: 0.04
+        failure_rate:
+          max: 0
+    -
+      args:
+        number_of_atomics: 500
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      sla:
+        max_avg_duration_per_atomic:
+          calculate_500_atomics: 0.5
+        failure_rate:
+          max: 0
