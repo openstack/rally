@@ -16,7 +16,6 @@
 """Tests for db.deploy layer."""
 
 import datetime as dt
-import jsonschema
 import mock
 
 from rally.common import objects
@@ -137,6 +136,18 @@ class DeploymentTestCase(test.TestCase):
                                          "users": [{"fake_user": True}]}]}
             })
 
+        self.assertEqual([], deploy.get_platforms())
+
+    def test_get_platforms(self):
+        self.deployment["credentials"] = {"foo": {"admin": None, "users": []},
+                                          "bar": {"admin": None, "users": []}}
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertEqual({"foo", "bar"}, set(deploy.get_platforms()))
+
+    def test_get_platforms_empty(self):
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertEqual([], deploy.get_platforms())
+
     @mock.patch("rally.deployment.credential.get")
     def test_get_credentials_for(self, mock_credential_get):
         credential_cls = mock_credential_get.return_value
@@ -156,6 +167,11 @@ class DeploymentTestCase(test.TestCase):
         self.assertEqual({"admin": credential_inst,
                           "users": [credential_inst]}, creds)
 
+    def test_get_credentials_for_default(self):
+        deploy = objects.Deployment(deployment=self.deployment)
+        creds = deploy.get_credentials_for("default")
+        self.assertEqual({"admin": None, "users": []}, creds)
+
     @mock.patch("rally.deployment.credential.get")
     def test_get_deprecated(self, mock_credential_get):
         credential_cls = mock_credential_get.return_value
@@ -170,10 +186,12 @@ class DeploymentTestCase(test.TestCase):
         self.assertEqual(credential_inst, deploy["admin"])
         self.assertEqual([credential_inst], deploy["users"])
 
-    def test_update_empty_credentials(self):
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    def test_update_empty_credentials(self, mock_deployment_update):
         deploy = objects.Deployment(deployment=self.deployment)
-        self.assertRaises(jsonschema.ValidationError,
-                          deploy.update_credentials, {})
+        deploy.update_credentials({})
+        mock_deployment_update.assert_called_once_with(
+            self.deployment["uuid"], {"credentials": {}})
 
     def test_get_credentials_error(self):
         deploy = objects.Deployment(deployment=self.deployment)

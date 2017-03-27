@@ -209,8 +209,8 @@ class OSClient(plugin.Plugin):
         return self.cache[key]
 
     @classmethod
-    def get(cls, name, namespace=_NAMESPACE):
-        return super(OSClient, cls).get(name, namespace)
+    def get(cls, name, namespace=_NAMESPACE, **kwargs):
+        return super(OSClient, cls).get(name, namespace, **kwargs)
 
 
 @configure("keystone", supported_versions=("2", "3"))

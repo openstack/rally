@@ -236,7 +236,7 @@ class DeploymentCommands(object):
             services = api.deployment.check(deployment["uuid"])
         except keystone_exceptions.ConnectionRefused:
             admin = deployment["credentials"]["openstack"][0]["admin"]
-            print(_("Unable to connect %s.") % admin.auth_url)
+            print(_("Unable to connect %s.") % admin["auth_url"])
             return(1)
 
         except exceptions.InvalidArgumentsException:
@@ -307,11 +307,15 @@ class DeploymentCommands(object):
         try:
             if not isinstance(deployment, dict):
                 deployment = api.deployment.get(deployment)
-            print("Using deployment: %s" % deployment["uuid"])
+        except exceptions.DeploymentNotFound:
+            print("Deployment %s is not found." % deployment)
+            return 1
+        print("Using deployment: %s" % deployment["uuid"])
 
-            fileutils.update_globals_file("RALLY_DEPLOYMENT",
-                                          deployment["uuid"])
+        fileutils.update_globals_file("RALLY_DEPLOYMENT",
+                                      deployment["uuid"])
 
+        if "openstack" in deployment["credentials"]:
             creds = deployment["credentials"]["openstack"][0]
             self._update_openrc_deployment_file(
                 deployment["uuid"], creds["admin"] or creds["users"][0])
@@ -320,6 +324,3 @@ class DeploymentCommands(object):
                   "running:\n\tsource ~/.rally/openrc\n"
                   "  OpenStack clients are now configured, e.g run:\n\t"
                   "openstack image list")
-        except exceptions.DeploymentNotFound:
-            print("Deployment %s is not found." % deployment)
-            return 1

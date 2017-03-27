@@ -1,5 +1,5 @@
 ---
-  Dummy.dummy:
+  Dummy.openstack:
     -
       runner:
         type: "constant"

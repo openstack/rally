@@ -155,13 +155,16 @@ class ContextManager(object):
         self.context_obj = context_obj
 
     @staticmethod
-    def validate(ctx, allow_hidden=False):
+    def validate(ctx, namespace, allow_hidden=False):
         for name, config in ctx.items():
-            Context.get(name, allow_hidden=allow_hidden).validate(config)
+            Context.get(name, namespace=namespace,
+                        allow_hidden=allow_hidden).validate(config)
 
     def _get_sorted_context_lst(self):
         return sorted([
-            Context.get(ctx_name, allow_hidden=True)(self.context_obj)
+            Context.get(ctx_name,
+                        namespace=self.context_obj["scenario_namespace"],
+                        allow_hidden=True)(self.context_obj)
             for ctx_name in self.context_obj["config"].keys()])
 
     def setup(self):

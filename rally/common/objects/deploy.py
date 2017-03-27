@@ -45,8 +45,7 @@ CREDENTIALS_SCHEMA = {
                 "additionalProperties": False,
             },
         }
-    },
-    "minProperties": 1,
+    }
 }
 
 
@@ -106,7 +105,12 @@ class Deployment(object):
         jsonschema.validate(credentials, CREDENTIALS_SCHEMA)
         self._update({"credentials": credentials})
 
+    def get_platforms(self):
+        return [platform for platform in self.deployment["credentials"]]
+
     def get_credentials_for(self, namespace):
+        if namespace == "default":
+            return {"admin": None, "users": []}
         try:
             creds = self.deployment["credentials"][namespace][0]
         except (KeyError, IndexError) as e:

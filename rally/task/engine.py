@@ -273,12 +273,15 @@ class TaskEngine(object):
         for subtask in config.subtasks:
             for workload in subtask.workloads:
                 scenario_cls = scenario.Scenario.get(workload.name)
+                namespace = scenario_cls.get_namespace()
                 scenario_context = copy.deepcopy(
                     scenario_cls.get_default_context())
                 try:
                     runner.ScenarioRunner.validate(workload.runner)
-                    context.ContextManager.validate(workload.context)
+                    context.ContextManager.validate(workload.context,
+                                                    namespace=namespace)
                     context.ContextManager.validate(scenario_context,
+                                                    namespace=namespace,
                                                     allow_hidden=True)
                     sla.SLA.validate(workload.sla)
                     for hook_conf in workload.hooks:
@@ -317,12 +320,6 @@ class TaskEngine(object):
                 namespace = scenario_cls.get_namespace()
                 platforms[namespace].append(workload)
 
-        # FIXME(astudenov): currently there is no credentials for
-        # namespace 'default', thus 'opentack' is used as a workaround
-        if "default" in platforms:
-            default_workloads = platforms.pop("default")
-            platforms["openstack"].extend(default_workloads)
-
         for platform, workloads in platforms.items():
             creds = self.deployment.get_credentials_for(platform)
 
@@ -343,7 +340,8 @@ class TaskEngine(object):
                 ctx_conf = {"task": self.task,
                             "admin": {"credential": admin}}
                 user_context = context.Context.get(
-                    "users", namespace=platform)(ctx_conf)
+                    "users", namespace=platform,
+                    allow_hidden=True)(ctx_conf)
 
                 self._validate_config_semantic_helper(
                     admin, user_context,
@@ -387,11 +385,6 @@ class TaskEngine(object):
         scenario_cls = scenario.Scenario.get(name)
         namespace = scenario_cls.get_namespace()
 
-        # FIXME(astudenov): currently there is no credentials for
-        # namespace 'default', thus 'opentack' is used as a workaround
-        if namespace == "default":
-            namespace = "openstack"
-
         creds = self.deployment.get_credentials_for(namespace)
         existing_users = creds["users"]
 
@@ -406,6 +399,7 @@ class TaskEngine(object):
             "task": self.task,
             "admin": {"credential": creds["admin"]},
             "scenario_name": name,
+            "scenario_namespace": namespace,
             "config": scenario_context
         }
 

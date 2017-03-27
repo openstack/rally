@@ -21,7 +21,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="create_flavor", order=1000)
+@context.configure(name="create_flavor", namespace="openstack", order=1000)
 class CreateFlavorContext(context.Context):
     """Create sample flavor
 

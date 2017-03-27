@@ -65,12 +65,6 @@ class TaskTestCase(unittest.TestCase):
                             "times": 10,
                             "concurrency": 2
                         },
-                        "context": {
-                            "users": {
-                                "tenants": 3,
-                                "users_per_tenant": 2
-                            }
-                        }
                     }]
                 },
                 {
@@ -89,12 +83,6 @@ class TaskTestCase(unittest.TestCase):
                             "times": 10,
                             "concurrency": 2
                         },
-                        "context": {
-                            "users": {
-                                "tenants": 3,
-                                "users_per_tenant": 2
-                            }
-                        }
                     }]
                 }
             ]

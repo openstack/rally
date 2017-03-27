@@ -17,8 +17,8 @@
 import os
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.murano import utils
-from rally.task import scenario
 from rally.task import validation
 
 

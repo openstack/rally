@@ -262,8 +262,10 @@ class ScenarioTestCase(test.TestCase):
 
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
+            namespace = s.get_namespace()
             try:
                 context.ContextManager.validate(s.get_default_context(),
+                                                namespace=namespace,
                                                 allow_hidden=True)
             except Exception:
                 print(traceback.format_exc())

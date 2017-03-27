@@ -9,12 +9,6 @@
                 "times": 20,
                 "rps": 3,
                 "timeout": 6
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                }
             }
         }
     ]

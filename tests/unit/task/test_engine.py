@@ -178,6 +178,7 @@ class TaskEngineTestCase(test.TestCase):
     ):
         default_context = {"foo": 1}
         scenario_cls = mock_scenario_get.return_value
+        scenario_cls.get_namespace.return_value = "default"
         scenario_cls.get_default_context.return_value = default_context
         mock_task_instance = mock.MagicMock()
         mock_subtask = mock.MagicMock()
@@ -193,12 +194,15 @@ class TaskEngineTestCase(test.TestCase):
         mock_scenario_runner_validate.assert_has_calls(
             [mock.call({}), mock.call("b")], any_order=True)
         mock_context_manager_validate.assert_has_calls(
-            [mock.call("a"),
-             mock.call(default_context, allow_hidden=True),
-             mock.call({}),
-             mock.call(default_context, allow_hidden=True),
-             mock.call({}),
-             mock.call(default_context, allow_hidden=True)],
+            [mock.call("a", namespace="default"),
+             mock.call(default_context,
+                       namespace="default", allow_hidden=True),
+             mock.call({}, namespace="default"),
+             mock.call(default_context,
+                       namespace="default", allow_hidden=True),
+             mock.call({}, namespace="default"),
+             mock.call(default_context,
+                       namespace="default", allow_hidden=True)],
             any_order=True
         )
         mock_hook_validate.assert_called_once_with("c")
@@ -303,7 +307,7 @@ class TaskEngineTestCase(test.TestCase):
             uuid="deployment_uuid", admin=admin, users=users)
 
         scenario_cls = mock_scenario_get.return_value
-        scenario_cls.get_namespace.return_value = "default"
+        scenario_cls.get_namespace.return_value = "openstack"
 
         mock_task_instance = mock.MagicMock()
         mock_subtask1 = mock.MagicMock()
@@ -474,6 +478,7 @@ class TaskEngineTestCase(test.TestCase):
             "task": task,
             "admin": {"credential": admin},
             "scenario_name": name,
+            "scenario_namespace": "openstack",
             "config": {"a": 1, "b": 3, "c": 4, "users": {}}
         }
         self.assertEqual(result, expected_result)
@@ -485,7 +490,7 @@ class TaskEngineTestCase(test.TestCase):
                                                   mock_task_config):
         mock_scenario = mock_scenario_get.return_value
         mock_scenario.get_default_context.return_value = {}
-        mock_scenario.get_namespace.return_value = "default"
+        mock_scenario.get_namespace.return_value = "openstack"
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
@@ -502,6 +507,7 @@ class TaskEngineTestCase(test.TestCase):
             "task": task,
             "admin": {"credential": admin},
             "scenario_name": name,
+            "scenario_namespace": "openstack",
             "config": {"b": 3, "c": 4, "existing_users": users}
         }
         self.assertEqual(result, expected_result)

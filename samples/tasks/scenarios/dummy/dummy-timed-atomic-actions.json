@@ -14,12 +14,6 @@
                 "max_avg_duration_per_atomic": {
                     "action_0": 1.0
                 }
-            },
-            "context": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 1
-                }
             }
         }
     ]
