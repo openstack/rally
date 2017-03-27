@@ -41,12 +41,10 @@ class CalculateAtomic(scenario.Scenario, utils.RandomNameGeneratorMixin):
         :param number_of_atomics: int number of atomics to run
         """
         tmp_name = "tmp_actions"
+        atomic_inst = atomic.ActionTimerMixin()
 
         calc_atomic_name = "calculate_%s_atomics" % number_of_atomics
         with atomic.ActionTimer(self, calc_atomic_name):
             for _ in range(number_of_atomics):
-                with atomic.ActionTimer(self, tmp_name):
+                with atomic.ActionTimer(atomic_inst, tmp_name):
                     pass
-
-        self._atomic_actions = {
-            calc_atomic_name: self._atomic_actions[calc_atomic_name]}

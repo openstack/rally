@@ -28,7 +28,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         times = 5
         result = {"duration": 10., "idle_duration": 0., "error": [],
                   "output": {"additive": [], "complete": []},
-                  "atomic_actions": {},
+                  "atomic_actions": [],
                   "timestamp": 1.}
         mock__run_scenario_once.return_value = result
         deque_as_queue_inst = mock_deque_as_queue.return_value

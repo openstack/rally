@@ -26,6 +26,7 @@ import six
 
 from rally.common.i18n import _
 from rally.common.plugin import plugin
+from rally.task import utils
 
 
 configure = plugin.configure
@@ -58,6 +59,11 @@ class SLAChecker(object):
 
         :param iteration: iteration result object
         """
+        if isinstance(iteration, dict):
+            atomic_actions = iteration.get("atomic_actions", None)
+            if isinstance(atomic_actions, list):
+                iteration["atomic_actions"] = utils.WrapperForAtomicActions(
+                    atomic_actions)
         return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
 
     def merge(self, other):

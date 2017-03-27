@@ -14,7 +14,6 @@
 import mock
 
 from rally import exceptions
-from rally.task import atomic
 from rally.task import service
 from tests.unit import test
 
@@ -246,42 +245,3 @@ class MethodWrapperTestCase(test.TestCase):
         Some().foo(some=2, another=3)
         Some().foo(1, some=2, another=3)
         self.assertRaises(TypeError, Some().foo, 1, 2)
-
-    def test_disabling_atomics(self):
-        class Some(service.UnifiedService):
-
-            def discover_impl(self):
-                return mock.MagicMock, None
-
-            @atomic.action_timer("some")
-            def foo(slf):
-                pass
-
-            def bar(slf):
-                pass
-
-        some = Some(mock.MagicMock(version="777"))
-        some.foo(no_atomic=True)
-        self.assertNotIn("some", some._atomic_actions)
-        # check that we are working with correct variable
-        some.foo()
-        self.assertIn("some", some._atomic_actions)
-
-
-class ServiceWithoutAtomicTestCase(test.TestCase):
-    def test_access(self):
-        class Some(atomic.ActionTimerMixin):
-            def __getattr__(self, attr):
-                return self
-
-        some_cls = Some()
-        # add something to atomic actions dict to simplify comparison
-        # (empty fake dict != not empty _atomic_actions dict)
-        with atomic.ActionTimer(some_cls, "some"):
-            pass
-        wrapped_service = service._ServiceWithoutAtomic(some_cls)
-        self.assertNotEqual(some_cls.atomic_actions(),
-                            wrapped_service.atomic_actions())
-        self.assertNotEqual(some_cls._atomic_actions,
-                            wrapped_service._atomic_actions)
-        self.assertEqual(some_cls, wrapped_service.some_var)

@@ -13,10 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import datetime as dt
 
 from jsonschema import exceptions as schema_exceptions
 import mock
+import six
 
 from rally import exceptions
 from rally.task import utils
@@ -524,3 +526,38 @@ class WaitForStatusTestCase(test.TestCase):
                           utils.wait_for_status,
                           resource=res, ready_statuses=["ready"],
                           update_resource=upd, timeout=2, id_attr="uuid")
+
+
+class WrapperForAtomicActionsTestCase(test.TestCase):
+
+    def test_dict_atomic(self):
+        atomic_actions = collections.OrderedDict(
+            [("action_1", 1), ("action_2", 2)])
+        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
+        self.assertEqual(1, atomic_wrapper["action_1"])
+        self.assertEqual(2, atomic_wrapper["action_2"])
+        self.assertEqual(atomic_actions.items(),
+                         atomic_wrapper.items())
+        self.assertEqual(1, atomic_wrapper.get("action_1"))
+        self.assertIsNone(atomic_wrapper.get("action_3"))
+        self.assertEqual(2, len(atomic_wrapper))
+
+    def test_list_atomic(self):
+        atomic_actions = [{"name": "action_1", "started_at": 1,
+                           "finished_at": 2, "children": []},
+                          {"name": "action_2", "started_at": 2,
+                           "finished_at": 4, "children": []}]
+
+        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
+        self.assertEqual(1, atomic_wrapper["action_1"])
+        self.assertEqual(2, atomic_wrapper["action_2"])
+        self.assertEqual(
+            collections.OrderedDict(
+                [("action_1", 1), ("action_2", 2)]).items(),
+            atomic_wrapper.items())
+        self.assertEqual(atomic_actions[0], atomic_wrapper[0])
+        self.assertEqual(atomic_actions[1], atomic_wrapper[1])
+        self.assertEqual(1, atomic_wrapper.get("action_1"))
+        self.assertIsNone(None, atomic_wrapper.get("action_3"))
+        self.assertEqual(2, len(atomic_wrapper))
+        self.assertEqual(atomic_actions[0], six.next(iter(atomic_wrapper)))

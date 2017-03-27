@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 import mock
 
 from rally.task import atomic
@@ -39,8 +37,17 @@ class AtomicActionTestCase(test.TestCase):
                 with atomic.ActionTimer(inst, "some"):
                     pass
 
-        expected = [("test", 20), ("test (2)", 12), ("some", 4)]
-        self.assertEqual(collections.OrderedDict(expected),
+        expected = [{"name": "test",
+                     "started_at": 1,
+                     "finished_at": 21,
+                     "children": [{"name": "test",
+                                   "started_at": 3,
+                                   "finished_at": 15,
+                                   "children": [{"name": "some",
+                                                 "started_at": 6,
+                                                 "finished_at": 10,
+                                                 "children": []}]}]}]
+        self.assertEqual(expected,
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -56,8 +63,8 @@ class AtomicActionTestCase(test.TestCase):
         except TestException:
             pass
 
-        expected = [("test", 2)]
-        self.assertEqual(collections.OrderedDict(expected),
+        self.assertEqual([{"name": "test", "children": [],
+                           "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -71,7 +78,8 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = Some()
         self.assertEqual(5, inst.some_func(2, 3))
-        self.assertEqual(collections.OrderedDict({"some": 2}),
+        self.assertEqual([{"name": "some", "children": [],
+                           "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3])
@@ -88,7 +96,8 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestTimer()
         self.assertRaises(TestException, inst.some_func)
-        self.assertEqual(collections.OrderedDict({"test": 2}),
+        self.assertEqual([{"name": "test", "children": [],
+                           "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
     @mock.patch("time.time", side_effect=[1, 3, 1, 3])
@@ -107,20 +116,22 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.some_func(2, 3))
-        self.assertEqual(collections.OrderedDict({"some": 2}),
+        self.assertEqual([{"name": "some", "children": [],
+                           "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.some_func(2, 3, atomic_action=False))
-        self.assertEqual(collections.OrderedDict(),
+        self.assertEqual([],
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3))
-        self.assertEqual(collections.OrderedDict(),
+        self.assertEqual([],
                          inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3, foo=True))
-        self.assertEqual(collections.OrderedDict({"some": 2}),
+        self.assertEqual([{"name": "some", "children": [],
+                           "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())

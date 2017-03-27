@@ -40,7 +40,7 @@ def format_result_on_timeout(exc, timeout):
         "duration": timeout,
         "idle_duration": 0,
         "output": {"additive": [], "complete": []},
-        "atomic_actions": {},
+        "atomic_actions": [],
         "error": utils.format_exc(exc)
     }
 
@@ -234,7 +234,7 @@ class ScenarioRunner(plugin.Plugin):
     _RESULT_SCHEMA = {
         "fields": [("duration", float), ("timestamp", float),
                    ("idle_duration", float), ("output", dict),
-                   ("atomic_actions", dict), ("error", list)]
+                   ("atomic_actions", list), ("error", list)]
     }
 
     def _result_has_valid_schema(self, result):
@@ -257,15 +257,28 @@ class ScenarioRunner(plugin.Plugin):
                        "proper_type": proper_type.__name__})
                 return False
 
-        for action, value in result["atomic_actions"].items():
-            if not isinstance(value, float):
-                LOG.warning(
-                    "Task %(uuid)s | Atomic action %(action)s has wrong type "
-                    "'%(type)s', should be 'float'"
-                    % {"uuid": self.task["uuid"],
-                       "action": action,
-                       "type": type(value)})
-                return False
+        actions_list = copy.deepcopy(result["atomic_actions"])
+        for action in actions_list:
+            for key in ("name", "started_at", "finished_at", "children"):
+                if key not in action:
+                    LOG.warning(
+                        "Task %(uuid)s | Atomic action %(action)s "
+                        "missing key '%(key)s'"
+                        % {"uuid": self.task["uuid"],
+                           "action": action,
+                           "key": key})
+                    return False
+            for key in ("started_at", "finished_at"):
+                if not isinstance(action[key], float):
+                    LOG.warning(
+                        "Task %(uuid)s | Atomic action %(action)s has "
+                        "wrong type '%(type)s', should be 'float'"
+                        % {"uuid": self.task["uuid"],
+                           "action": action,
+                           "type": type(action[key])})
+                    return False
+            if action["children"]:
+                actions_list.extend(action["children"])
 
         for e in result["error"]:
             if not isinstance(e, str):

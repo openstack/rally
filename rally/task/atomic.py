@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import functools
 
 from rally.common import utils
@@ -22,7 +21,7 @@ from rally.common import utils
 class ActionTimerMixin(object):
 
     def __init__(self):
-        self._atomic_actions = collections.OrderedDict()
+        self._atomic_actions = []
 
     def atomic_actions(self):
         """Returns the content of each atomic action."""
@@ -48,27 +47,26 @@ class ActionTimer(utils.Timer):
         """
         super(ActionTimer, self).__init__()
         self.instance = instance
-        self.name = self._get_atomic_action_name(instance, name)
-        self.instance._atomic_actions[self.name] = None
+        self.name = name
+        self._root = self._find_parent(self.instance._atomic_actions)
+        self.atomic_action = {"name": self.name,
+                              "children": [],
+                              "started_at": None}
+        self._root.append(self.atomic_action)
 
-    @classmethod
-    def _get_atomic_action_name(cls, instance, name):
-        # TODO(boris-42): It was quite bad idea to store atomic actions
-        #                 inside {}. We should refactor this in 0.2.0 release
-        #                 and store them inside array, that will allow us to
-        #                 store atomic actions with the same name
-        if name not in instance._atomic_actions:
-            return name
+    def _find_parent(self, atomic_actions):
+        if atomic_actions and "finished_at" not in atomic_actions[-1]:
+            return self._find_parent(atomic_actions[-1]["children"])
+        else:
+            return atomic_actions
 
-        name_template = name + " (%i)"
-        i = 2
-        while name_template % i in instance._atomic_actions:
-            i += 1
-        return name_template % i
+    def __enter__(self):
+        super(ActionTimer, self).__enter__()
+        self.atomic_action["started_at"] = self.start
 
     def __exit__(self, type_, value, tb):
         super(ActionTimer, self).__exit__(type_, value, tb)
-        self.instance._atomic_actions[self.name] = self.duration()
+        self.atomic_action["finished_at"] = self.finish
 
 
 def action_timer(name):
