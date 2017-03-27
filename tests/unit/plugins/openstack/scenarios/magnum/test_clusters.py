@@ -49,11 +49,13 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
         scenario = clusters.CreateAndListClusters()
         kwargs = {"cluster_template_uuid": "existing_cluster_template_uuid",
                   "fakearg": "f"}
-        fake_cluster = mock.Mock()
-        scenario._create_cluster = mock.Mock(return_value=fake_cluster)
-        scenario._list_clusters = mock.Mock(return_value=[fake_cluster,
-                                                          mock.Mock(),
-                                                          mock.Mock()])
+        fake_cluster1 = mock.Mock(uuid="a")
+        fake_cluster2 = mock.Mock(uuid="b")
+        fake_cluster3 = mock.Mock(uuid="c")
+        scenario._create_cluster = mock.Mock(return_value=fake_cluster1)
+        scenario._list_clusters = mock.Mock(return_value=[fake_cluster1,
+                                                          fake_cluster2,
+                                                          fake_cluster3])
 
         # Positive case
         scenario.run(2, **kwargs)
@@ -70,7 +72,7 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
             "existing_cluster_template_uuid", 2, **kwargs)
 
         # Negative case2: created cluster not in the list of available clusters
-        scenario._create_cluster.return_value = mock.MagicMock()
+        scenario._create_cluster.return_value = mock.Mock(uuid="foo")
         self.assertRaises(exceptions.RallyAssertionError,
                           scenario.run, 2, **kwargs)
         scenario._create_cluster.assert_called_with(
@@ -80,12 +82,14 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
     def test_create_and_list_clusters(self):
         context = self._get_context()
         scenario = clusters.CreateAndListClusters(context)
-        fake_cluster = mock.Mock()
+        fake_cluster1 = mock.Mock(uuid="a")
+        fake_cluster2 = mock.Mock(uuid="b")
+        fake_cluster3 = mock.Mock(uuid="c")
         kwargs = {"fakearg": "f"}
-        scenario._create_cluster = mock.Mock(return_value=fake_cluster)
-        scenario._list_clusters = mock.Mock(return_value=[fake_cluster,
-                                                          mock.Mock(),
-                                                          mock.Mock()])
+        scenario._create_cluster = mock.Mock(return_value=fake_cluster1)
+        scenario._list_clusters = mock.Mock(return_value=[fake_cluster1,
+                                                          fake_cluster2,
+                                                          fake_cluster3])
 
         # Positive case
         scenario.run(2, **kwargs)
@@ -102,7 +106,7 @@ class MagnumClustersTestCase(test.ScenarioTestCase):
             "rally_cluster_template_uuid", 2, **kwargs)
 
         # Negative case2: created cluster not in the list of available clusters
-        scenario._create_cluster.return_value = mock.MagicMock()
+        scenario._create_cluster.return_value = mock.Mock(uuid="foo")
         self.assertRaises(exceptions.RallyAssertionError,
                           scenario.run, 2, **kwargs)
         scenario._create_cluster.assert_called_with(

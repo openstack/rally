@@ -61,8 +61,9 @@ class CreateAndListClusters(utils.MagnumScenario):
         cluster_template_uuid = kwargs.get("cluster_template_uuid", None)
         if cluster_template_uuid is None:
             cluster_template_uuid = self.context["tenant"]["cluster_template"]
-        cluster = self._create_cluster(cluster_template_uuid,
-                                       node_count, **kwargs)
-        self.assertTrue(cluster)
-        list_clusters = self._list_clusters(**kwargs)
-        self.assertIn(cluster, list_clusters)
+        new_cluster = self._create_cluster(cluster_template_uuid,
+                                           node_count, **kwargs)
+        self.assertTrue(new_cluster, "Failed to create new cluster")
+        clusters = self._list_clusters(**kwargs)
+        self.assertIn(new_cluster.uuid, [cluster.uuid for cluster in clusters],
+                      "New cluster not found in a list of clusters")
