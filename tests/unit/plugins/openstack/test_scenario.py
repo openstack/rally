@@ -18,7 +18,6 @@ import mock
 from oslotest import mockpatch
 
 from rally.plugins.openstack import scenario as base_scenario
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -128,24 +127,3 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.assertEqual(self.context["tenants"][tenant_id],
                          self.context["tenant"])
         self.assertEqual(expected_tenant_id, tenant_id)
-
-    @mock.patch("rally.task.scenario.Scenario.validate")
-    def test_validate(self, mock_scenario_validate):
-        cred1 = fakes.fake_credential(foo="bar1")
-        cred2 = fakes.fake_credential(foo="bar2")
-        cred3 = fakes.fake_credential(foo="bar3")
-
-        base_scenario.OpenStackScenario.validate(
-            name="foo_name",
-            config="foo_config",
-            admin=cred1,
-            users=[{"credential": cred2},
-                   {"credential": cred3}],
-            deployment=None)
-
-        mock_scenario_validate.assert_called_once_with(
-            name="foo_name",
-            config="foo_config",
-            admin=cred1.clients.return_value,
-            users=[cred2.clients.return_value, cred3.clients.return_value],
-            deployment=None)

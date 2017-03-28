@@ -293,18 +293,19 @@ class TaskEngine(object):
                     raise exceptions.InvalidTaskConfig(**kw)
 
     def _validate_config_semantic_helper(self, admin, user_context,
-                                         workloads, deployment):
+                                         workloads, platform):
         with user_context as ctx:
             ctx.setup()
+            users = ctx.context["users"]
             for workload in workloads:
-                try:
-                    scenario_cls = scenario.Scenario.get(workload.name)
-                    scenario_cls.validate(
-                        workload.name, workload.to_dict(),
-                        admin=admin, users=ctx.context["users"],
-                        deployment=deployment)
-                except exceptions.InvalidScenarioArgument as e:
-                    kw = workload.make_exception_args(six.text_type(e))
+                results = scenario.Scenario.validate(
+                    name=workload.name,
+                    credentials={platform: {"admin": admin, "users": users}},
+                    config=workload.to_dict(),
+                    plugin_cfg=None)
+                if results:
+                    msg = "\n ".join([str(r) for r in results])
+                    kw = workload.make_exception_args(msg)
                     raise exceptions.InvalidTaskConfig(**kw)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
@@ -344,8 +345,7 @@ class TaskEngine(object):
                     allow_hidden=True)(ctx_conf)
 
                 self._validate_config_semantic_helper(
-                    admin, user_context,
-                    workloads_with_users, self.deployment)
+                    admin, user_context, workloads_with_users, platform)
 
             if workloads_with_existing_users:
                 ctx_conf = {"task": self.task,
@@ -357,8 +357,8 @@ class TaskEngine(object):
                     allow_hidden=True)(ctx_conf)
 
                 self._validate_config_semantic_helper(
-                    admin, user_context,
-                    workloads_with_existing_users, self.deployment)
+                    admin, user_context, workloads_with_existing_users,
+                    platform)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):

@@ -22,6 +22,7 @@ import jsonschema
 import mock
 
 from rally.common import objects
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.task import engine
@@ -255,39 +256,39 @@ class TaskEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_syntax, mock_task_instance)
 
-    @mock.patch("rally.task.engine.scenario.Scenario.get")
+    @mock.patch("rally.task.engine.scenario.Scenario.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_semantic_helper(self, mock_task_config,
-                                              mock_scenario_get):
-        deployment = mock.Mock()
+                                              mock_scenario_validate):
+        mock_scenario_validate.return_value = []
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
-                                deployment)
-        mock_scenario = mock_scenario_get.return_value
+                                mock.Mock())
         workloads = [engine.Workload(
             {"name": "name", "runner": "runner", "args": "args"}, 0)]
         user_context = mock.MagicMock()
         user_context.__enter__.return_value.context = {
             "users": [{"foo": "user1"}]}
-        eng._validate_config_semantic_helper("admin", user_context, workloads,
-                                             deployment)
-        mock_scenario.validate.assert_called_once_with(
-            "name", {"runner": "runner", "args": "args"},
-            admin="admin", users=[{"foo": "user1"}],
-            deployment=deployment)
+        eng._validate_config_semantic_helper(
+            "admin", user_context, workloads, "foo")
+        mock_scenario_validate.assert_called_once_with(
+            name="name", config={"runner": "runner", "args": "args"},
+            credentials={"foo": {"admin": "admin",
+                                 "users": [{"foo": "user1"}]}},
+            plugin_cfg=None)
 
-    @mock.patch("rally.task.engine.scenario.Scenario.get")
+    @mock.patch("rally.task.engine.scenario.Scenario.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_semanitc_helper_invalid_arg(
-            self, mock_task_config, mock_scenario_get):
+            self, mock_task_config, mock_scenario_validate):
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
-        mock_scenario = mock_scenario_get.return_value
-        mock_scenario.validate.side_effect = exceptions.InvalidScenarioArgument
+        mock_scenario_validate.return_value = [
+            validation.ValidationResult(False, msg="foo")]
         user_context = mock.MagicMock()
         workloads = [engine.Workload({"name": "name"}, 0)]
         self.assertRaises(exceptions.InvalidTaskConfig,
                           eng._validate_config_semantic_helper, "a",
-                          user_context, workloads, "fake_deployment")
+                          user_context, workloads, "foo")
 
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.engine.context.Context")
@@ -329,8 +330,8 @@ class TaskEngineTestCase(test.TestCase):
         user_context = mock_context.get.return_value.return_value
 
         mock__validate_config_semantic_helper.assert_has_calls([
-            mock.call(admin, user_context, [wconf1], deployment),
-            mock.call(admin, user_context, [wconf2, wconf3], deployment),
+            mock.call(admin, user_context, [wconf1], "openstack"),
+            mock.call(admin, user_context, [wconf2, wconf3], "openstack"),
         ], any_order=True)
 
     @mock.patch("rally.common.objects.Task.get_status")

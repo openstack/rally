@@ -104,13 +104,3 @@ class OpenStackScenario(scenario.Scenario):
         client = getattr(self._admin_clients, client_type)
 
         return client(version) if version is not None else client()
-
-    @classmethod
-    def validate(cls, name, config, admin=None, users=None, deployment=None):
-        if admin:
-            admin = admin.clients()
-        if users:
-            users = [user["credential"].clients() for user in users]
-        super(OpenStackScenario, cls).validate(
-            name=name, config=config, admin=admin, users=users,
-            deployment=deployment)

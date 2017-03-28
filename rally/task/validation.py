@@ -23,6 +23,8 @@ from novaclient import exceptions as nova_exc
 import six
 
 from rally.common.i18n import _
+from rally.common import logging
+from rally.common import validation
 from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
@@ -30,15 +32,43 @@ from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 from rally.task import types
 
-# TODO(boris-42): make the validators usable as a functions as well.
-# At the moment validators can only be used as decorators.
+
+# TODO(astudenov): remove after deprecating all old validators
+ValidationResult = validation.ValidationResult
 
 
-class ValidationResult(object):
+@validation.configure(name="old_validator", namespace="openstack")
+class OldValidator(validation.Validator):
+    """Legacy validator for OpenStack scenarios"""
 
-    def __init__(self, is_valid, msg=None):
-        self.is_valid = is_valid
-        self.msg = msg
+    class Deployment(object):
+        pass
+
+    def __init__(self, fn, *args, **kwargs):
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        creds = credentials.get("openstack", {})
+        users = creds.get("users", [])
+
+        deployment = self.Deployment()
+        deployment.get_credentials_for = credentials.get
+
+        if users:
+            users = [user["credential"].clients() for user in users]
+            for clients in users:
+                result = self._run_fn(config, deployment, clients)
+                if not result.is_valid:
+                    return result
+            return ValidationResult(True)
+        else:
+            return self._run_fn(config, deployment)
+
+    def _run_fn(self, config, deployment, clients=None):
+        return (self.fn(config, clients, deployment,
+                        *self.args, **self.kwargs) or ValidationResult(True))
 
 
 def validator(fn):
@@ -57,19 +87,10 @@ def validator(fn):
         :param kwargs: the keyword arguments of the decorator of the scenario
         ex. @my_decorator(kwarg1="kwarg1"), then kwargs = {"kwarg1": "kwarg1"}
         """
-        @functools.wraps(fn)
-        def wrap_validator(config, clients, deployment):
-            # NOTE(amaretskiy): validator is successful by default
-            return (fn(config, clients, deployment, *args, **kwargs) or
-                    ValidationResult(True))
-
         def wrap_scenario(scenario):
-            # TODO(boris-42): remove this in future.
-            wrap_validator.permission = getattr(fn, "permission",
-                                                consts.EndpointPermission.USER)
-
             scenario._meta_setdefault("validators", [])
-            scenario._meta_get("validators").append(wrap_validator)
+            scenario._meta_get("validators").append(
+                ("old_validator", (fn, ) + args, kwargs))
             return scenario
 
         return wrap_scenario
@@ -583,38 +604,6 @@ def required_param_or_context(config, clients, deployment,
 
 
 @validator
-def required_openstack(config, clients, deployment, admin=False, users=False):
-    """Validator that requires OpenStack admin or (and) users.
-
-    This allows us to create 4 kind of benchmarks:
-    1) not OpenStack related (validator is not specified)
-    2) requires OpenStack admin
-    3) requires OpenStack admin + users
-    4) requires OpenStack users
-
-    :param admin: requires OpenStack admin
-    :param users: requires OpenStack users
-    """
-
-    if not (admin or users):
-        return ValidationResult(
-            False, _("You should specify admin=True or users=True or both."))
-
-    creds = deployment.get_credentials_for("openstack")
-    if creds["admin"] and creds["users"]:
-        return ValidationResult(True)
-
-    if creds["admin"]:
-        if users and not config.get("context", {}).get("users"):
-            return ValidationResult(False,
-                                    _("You should specify 'users' context"))
-        return ValidationResult(True)
-
-    if creds["users"] and admin:
-        return ValidationResult(False, _("Admin credentials required"))
-
-
-@validator
 def required_api_versions(config, clients, deployment, component, versions):
     """Validator checks component API versions."""
     versions = [str(v) for v in versions]
@@ -745,3 +734,23 @@ def workbook_contains_workflow(config, clients, deployment, workbook,
                     False,
                     "workflow '{}' not found in the definition '{}'".format(
                         wf_name, wb_def))
+
+
+# TODO(astudenov): remove deprecated validators in 1.0.0
+
+def deprecated_validator(name):
+    msg = ("{name}(...) decorator is deprecated in favor of "
+           "validation.add(name='{name}', ...)".format(name=name))
+
+    @logging.log_deprecated(msg, rally_version="0.10.0", once=True)
+    def decorator(*args, **kwargs):
+        def wrapper(plugin):
+            plugin._meta_setdefault("validators", [])
+            plugin._meta_get("validators").append((name, args, kwargs,))
+            return plugin
+        return wrapper
+    return decorator
+
+
+required_openstack = functools.partial(
+    deprecated_validator("required_plaform"), platform="openstack")

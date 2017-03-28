@@ -22,6 +22,7 @@ from novaclient import exceptions as nova_exc
 import six
 
 from rally.common.plugin import plugin
+from rally.common import validation as common_validation
 from rally import consts
 from rally import exceptions
 from rally.task import validation
@@ -34,25 +35,111 @@ MODULE = "rally.task.validation."
 
 class ValidationUtilsTestCase(test.TestCase):
 
-    def test_validator(self):
-
+    def test_old_validator_admin(self):
         @plugin.from_func()
         def scenario():
             pass
 
         scenario._meta_init()
 
-        def validator_func(config, clients, deployment, a, b, c, d):
-            return (config, clients, deployment, a, b, c, d)
+        validator_func = mock.Mock()
+        validator_func.return_value = None
 
         validator = validation.validator(validator_func)
 
         self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
         self.assertEqual(1, len(scenario._meta_get("validators")))
 
-        self.assertEqual(
-            ("conf", "client", "deploy", "a", "b", "c", 1),
-            scenario._meta_get("validators")[0]("conf", "client", "deploy"))
+        vname, args, kwargs = scenario._meta_get("validators")[0]
+        validator_cls = common_validation.Validator.get(vname)
+        validator_inst = validator_cls(*args, **kwargs)
+        fake_admin = fakes.fake_credential()
+        credentials = {"openstack": {"admin": fake_admin, "users": []}}
+        result = validator_inst.validate(credentials, {}, None, None)
+        self.assertIsInstance(result, common_validation.ValidationResult)
+        self.assertTrue(result.is_valid)
+
+        validator_func.assert_called_once_with(
+            {}, None, mock.ANY, "a", "b", "c", d=1)
+        deployment = validator_func.call_args[0][2]
+        self.assertEqual({"admin": fake_admin, "users": []},
+                         deployment.get_credentials_for("openstack"))
+
+    def test_old_validator_users(self):
+        @plugin.from_func()
+        def scenario():
+            pass
+
+        scenario._meta_init()
+
+        validator_func = mock.Mock()
+        validator_func.return_value = None
+
+        validator = validation.validator(validator_func)
+
+        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
+        self.assertEqual(1, len(scenario._meta_get("validators")))
+
+        vname, args, kwargs = scenario._meta_get("validators")[0]
+        validator_cls = common_validation.Validator.get(vname)
+        validator_inst = validator_cls(*args, **kwargs)
+        fake_admin = fakes.fake_credential()
+        fake_users1 = fakes.fake_credential()
+        fake_users2 = fakes.fake_credential()
+        users = [{"credential": fake_users1}, {"credential": fake_users2}]
+        credentials = {"openstack": {"admin": fake_admin, "users": users}}
+        result = validator_inst.validate(credentials, {}, None, None)
+        self.assertIsInstance(result, common_validation.ValidationResult)
+        self.assertTrue(result.is_valid)
+
+        fake_users1.clients.assert_called_once_with()
+        fake_users2.clients.assert_called_once_with()
+        validator_func.assert_has_calls((
+            mock.call({}, fake_users1.clients.return_value, mock.ANY,
+                      "a", "b", "c", d=1),
+            mock.call({}, fake_users2.clients.return_value, mock.ANY,
+                      "a", "b", "c", d=1)
+        ))
+        for args in validator_func.call_args:
+            deployment = validator_func.call_args[0][2]
+            self.assertEqual({"admin": fake_admin, "users": users},
+                             deployment.get_credentials_for("openstack"))
+
+    def test_old_validator_users_error(self):
+        @plugin.from_func()
+        def scenario():
+            pass
+
+        scenario._meta_init()
+
+        validator_func = mock.Mock()
+        validator_func.return_value = common_validation.ValidationResult(False)
+
+        validator = validation.validator(validator_func)
+
+        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
+        self.assertEqual(1, len(scenario._meta_get("validators")))
+
+        vname, args, kwargs = scenario._meta_get("validators")[0]
+        validator_cls = common_validation.Validator.get(vname)
+        validator_inst = validator_cls(*args, **kwargs)
+        fake_admin = fakes.fake_credential()
+        fake_users1 = fakes.fake_credential()
+        fake_users2 = fakes.fake_credential()
+        users = [{"credential": fake_users1}, {"credential": fake_users2}]
+        credentials = {"openstack": {"admin": fake_admin, "users": users}}
+        result = validator_inst.validate(credentials, {}, None, None)
+        self.assertIsInstance(result, common_validation.ValidationResult)
+        self.assertFalse(result.is_valid)
+
+        fake_users1.clients.assert_called_once_with()
+        fake_users2.clients.assert_called_once_with()
+        validator_func.assert_called_once_with(
+            {}, fake_users1.clients.return_value, mock.ANY,
+            "a", "b", "c", d=1)
+        deployment = validator_func.call_args[0][2]
+        self.assertEqual({"admin": fake_admin, "users": users},
+                         deployment.get_credentials_for("openstack"))
 
 
 @ddt.ddt
@@ -67,7 +154,12 @@ class ValidatorsTestCase(test.TestCase):
         func._meta_init()
         validator(*args, **kwargs)(func)
 
-        return func._meta_get("validators")[0]
+        fn = func._meta_get("validators")[0][1][0]
+
+        def wrap_validator(config, admin_clients, clients):
+            return (fn(config, admin_clients, clients, *args, **kwargs) or
+                    common_validation.ValidationResult(True))
+        return wrap_validator
 
     def test_number_not_nullable(self):
         validator = self._unwrap_validator(validation.number, param_name="n")
@@ -658,59 +750,6 @@ class ValidatorsTestCase(test.TestCase):
             validation.required_param_or_context, "image", "custom_image")
         result = validator({}, None, None)
         self.assertFalse(result.is_valid)
-
-    def test_required_openstack_with_admin(self):
-        validator = self._unwrap_validator(validation.required_openstack,
-                                           admin=True)
-
-        # admin presented in deployment
-        fake_deployment = fakes.FakeDeployment(admin="admin_credential")
-        self.assertTrue(validator(None, None, fake_deployment).is_valid)
-
-        # admin not presented in deployment
-        fake_deployment = fakes.FakeDeployment(users=["u1", "h2"])
-        self.assertFalse(validator(None, None, fake_deployment).is_valid)
-
-    def test_required_openstack_with_users(self):
-        validator = self._unwrap_validator(validation.required_openstack,
-                                           users=True)
-
-        # users presented in deployment
-        fake_deployment = fakes.FakeDeployment(
-            admin=None, users=["u_credential"])
-        self.assertTrue(validator({}, None, fake_deployment).is_valid)
-
-        # admin and users presented in deployment
-        fake_deployment = fakes.FakeDeployment(admin="a", users=["u1", "h2"])
-        self.assertTrue(validator({}, None, fake_deployment).is_valid)
-
-        # admin and user context
-        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
-        context = {"context": {"users": True}}
-        self.assertTrue(validator(context, None, fake_deployment).is_valid)
-
-        # just admin presented
-        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
-        self.assertFalse(validator({}, None, fake_deployment).is_valid)
-
-    def test_required_openstack_with_admin_and_users(self):
-        validator = self._unwrap_validator(validation.required_openstack,
-                                           admin=True, users=True)
-
-        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
-        self.assertFalse(validator({}, None, fake_deployment).is_valid)
-
-        fake_deployment = fakes.FakeDeployment(admin="a", users=["u"])
-        self.assertTrue(validator({}, None, fake_deployment).is_valid)
-
-        # admin and user context
-        fake_deployment = fakes.FakeDeployment(admin="a", users=[])
-        context = {"context": {"users": True}}
-        self.assertTrue(validator(context, None, fake_deployment).is_valid)
-
-    def test_required_openstack_invalid(self):
-        validator = self._unwrap_validator(validation.required_openstack)
-        self.assertFalse(validator(None, None, None).is_valid)
 
     def test_volume_type_exists(self):
         validator = self._unwrap_validator(validation.volume_type_exists,
