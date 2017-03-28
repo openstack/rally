@@ -282,7 +282,7 @@ get_pkg_manager () {
     if have_command apt-get; then
         # Debian/Ubuntu
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
-            pkg_manager="apt-get install --yes"
+            pkg_manager="apt-get install --yes --force-yes"
         else
             pkg_manager="apt-get install"
         fi
