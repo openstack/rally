@@ -46,8 +46,9 @@ def generate_urls_list(instances):
 def run():
     instances = list(get_instances())
     urls = generate_urls_list(instances)
-    out = subprocess.check_output("siege -q -t 60S -b -f %s" % urls,
-                                  shell=True, stderr=subprocess.STDOUT)
+    out = subprocess.check_output(
+        ["siege", "-q", "-t", "60S", "-b", "-f", urls],
+        stderr=subprocess.STDOUT)
     for line in out.splitlines():
         m = SIEGE_RE.match(line)
         if m:
