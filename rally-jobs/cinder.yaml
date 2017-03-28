@@ -166,12 +166,11 @@
           - admin
         images:
           image_url: "~/.rally/extra/fake-image.img"
-          image_type: "qcow2"
-          image_container: "bare"
+          disk_format: "qcow2"
+          container_format: "bare"
           images_per_tenant: 1
           image_name: "image-context-test"
-          image_args:
-            visibility: "public"
+          visibility: "public"
       sla:
         failure_rate:
           max: 0
