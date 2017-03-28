@@ -1,64 +1,562 @@
 ---
-  RallyProfile.generate_names_in_atomic:
+  version: 2
+  title: Task for rally-tox-self job
+  description: >
+    This task contains various scenarios for testing rally features
+  subtasks:
     -
-      args:
-        number_of_names: 100
-      runner:
-        type: "constant"
-        times: 1000
-        concurrency: 10
-      sla:
-        max_avg_duration_per_atomic:
-          generate_100_names: 0.015
-        failure_rate:
-          max: 0
-    -
-      args:
-        number_of_names: 1000
-      runner:
-        type: "constant"
-        times: 500
-        concurrency: 10
-      sla:
-        max_avg_duration_per_atomic:
-          generate_1000_names: 0.1
-        failure_rate:
-          max: 0
-    -
-      args:
-        number_of_names: 10000
-      runner:
-        type: "constant"
-        times: 200
-        concurrency: 10
-      sla:
-        max_avg_duration_per_atomic:
-          generate_10000_names: 1
-        failure_rate:
-          max: 0
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check SLA"
+          args:
+            sleep: 0.25
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 5
+          sla:
+            failure_rate:
+              max: 0
+            max_seconds_per_iteration: 1.0
+            max_avg_duration: 0.5
+            outliers:
+              max: 1
+              min_iterations: 10
+              sigmas: 10
+            performance_degradation:
+              max_degradation: 50
 
-  RallyProfile.calculate_atomic:
     -
-      args:
-        number_of_atomics: 100
-      runner:
-        type: "constant"
-        times: 300
-        concurrency: 10
-      sla:
-        max_avg_duration_per_atomic:
-          calculate_100_atomics: 0.04
-        failure_rate:
-          max: 0
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'constant' runner."
+          args:
+            sleep: 0.25
+          runner:
+            type: "constant"
+            times: 8
+            concurrency: 4
+            max_cpu_count: 2
+          sla:
+            failure_rate:
+              max: 0
+
     -
-      args:
-        number_of_atomics: 500
-      runner:
-        type: "constant"
-        times: 100
-        concurrency: 10
-      sla:
-        max_avg_duration_per_atomic:
-          calculate_500_atomics: 0.5
-        failure_rate:
-          max: 0
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          args:
+            sleep: 0
+          runner:
+            type: "constant"
+            times: 4500
+            concurrency: 20
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'constant_for_duration' runner."
+          args:
+            sleep: 0.1
+          runner:
+            type: "constant_for_duration"
+            duration: 5
+            concurrency: 5
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'rps' runner."
+          args:
+            sleep: 0.001
+          runner:
+            type: "rps"
+            times: 2000
+            rps: 200
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'serial' runner."
+          args:
+            sleep: 0.1
+          runner:
+            type: "serial"
+            times: 20
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: >
+            Check 'rps' runner with float value of requests per second.
+          args:
+            sleep: 0.1
+          runner:
+            type: "rps"
+            times: 5
+            rps: 0.5
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: >
+            Check 'rps' runner with float value of requests per second.
+          args:
+            sleep: 0.1
+          runner:
+            type: "rps"
+            times: 5
+            rps: 0.2
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: >
+            Check 'max_concurrency' and 'max_cpu_count' properties of 'rps' runner.
+          args:
+            sleep: 0.001
+          runner:
+            type: "rps"
+            times: 200
+            rps: 20
+            max_concurrency: 10
+            max_cpu_count: 3
+          sla:
+            failure_rate:
+              max: 0
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'rps' with start, end, step arguments"
+          args:
+            sleep: 0.25
+          runner:
+            type: "rps"
+            times: 55
+            rps:
+              start: 1
+              end: 10
+              step: 1
+            max_concurrency: 10
+            max_cpu_count: 3
+          sla:
+            failure_rate:
+              max: 0
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'rps' with start, end, step arguments"
+          args:
+            sleep: 0.5
+          runner:
+            type: "rps"
+            times: 55
+            rps:
+              start: 1
+              end: 10
+              step: 1
+              duration: 2
+            max_concurrency: 10
+            max_cpu_count: 3
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: >
+            Check the ability of constant runner to terminate scenario by timeout.
+          args:
+            sleep: 30
+          runner:
+            type: "constant"
+            times: 2
+            concurrency: 2
+            timeout: 1
+          sla:
+            failure_rate:
+              min: 100
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: >
+            Check the ability of rps runner to terminate scenario by timeout.
+          args:
+            sleep: 30
+          runner:
+            type: "rps"
+            times: 1
+            rps: 1
+            timeout: 1
+          sla:
+            failure_rate:
+              min: 100
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check sys_call hook."
+          args:
+            sleep: 0.75
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 2
+          hooks:
+            - name: sys_call
+              description: Run script
+              args: sh /home/jenkins/.rally/extra/hook_example_script.sh
+              trigger:
+                name: event
+                args:
+                  unit: iteration
+                  at: [2, 5, 8, 13, 17]
+            - name: sys_call
+              description: Show time
+              args: date +%Y-%m-%dT%H:%M:%S
+              trigger:
+                name: event
+                args:
+                  unit: time
+                  at: [0, 2, 5, 6, 9]
+            - name: sys_call
+              description: Show system name
+              args: uname -a
+              trigger:
+                name: event
+                args:
+                  unit: iteration
+                  at: [2, 3, 4, 5, 6, 8, 10, 12, 13, 15, 17, 18]
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check periodic trigger with iteration unit."
+          args:
+            sleep: 0.25
+          runner:
+            type: "constant"
+            times: 10
+            concurrency: 2
+          hooks:
+            - name: sys_call
+              description: test hook
+              args: /bin/true
+              trigger:
+                name: periodic
+                args:
+                  unit: iteration
+                  step: 2
+                  start: 4
+                  end: 8
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check event trigger args."
+          args:
+            sleep: 1
+          runner:
+            type: "constant"
+            times: 10
+            concurrency: 1
+          hooks:
+            - name: sys_call
+              description: Get system name
+              args: uname -a
+              trigger:
+                name: event
+                args:
+                  unit: time
+                  at: [0, 2, 4, 6, 8, 10]
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check periodic trigger with time unit."
+          args:
+            sleep: 1
+          runner:
+            type: "constant"
+            times: 10
+            concurrency: 1
+          hooks:
+            - name: sys_call
+              description: test hook
+              args: /bin/true
+              trigger:
+                name: periodic
+                args:
+                  unit: time
+                  step: 2
+                  start: 0
+                  end: 6
+
+    -
+      title: Dummy.dummy_exception
+      workloads:
+        -
+          name: Dummy.dummy_exception
+          args:
+            size_of_message: 5
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 5
+
+    -
+      title: Dummy.dummy_exception_probability
+      workloads:
+        -
+          name: Dummy.dummy_exception_probability
+          args:
+            exception_probability: 0.05
+          runner:
+            type: "constant"
+            times: 2042
+            concurrency: 1
+    -
+      title: Dummy.dummy_exception_probability
+      workloads:
+        -
+          name: Dummy.dummy_exception_probability
+          args:
+            exception_probability: 0.5
+          runner:
+            type: "constant"
+            times: 100
+            concurrency: 1
+          sla:
+            failure_rate:
+              min: 20
+              max: 80
+
+    -
+      title: Dummy.dummy_output
+      workloads:
+        -
+          name: Dummy.dummy_output
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 10
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Dummy.dummy_random_fail_in_atomic
+      workloads:
+        -
+          name: Dummy.dummy_random_fail_in_atomic
+          args:
+            exception_probability: 0.5
+          runner:
+            type: "constant"
+            times: 50
+            concurrency: 10
+
+    -
+      title: Dummy.dummy_random_action
+      workloads:
+        -
+          name: Dummy.dummy_random_action
+          runner:
+            type: "constant"
+            times: 10
+            concurrency: 5
+
+    -
+      title: Dummy.dummy_timed_atomic_actions
+      workloads:
+        -
+          name: Dummy.dummy_timed_atomic_actions
+          args:
+            number_of_actions: 5
+            sleep_factor: 1
+          runner:
+            type: "constant"
+            times: 3
+            concurrency: 3
+          sla:
+            max_avg_duration_per_atomic:
+              action_0: 1.0
+              action_1: 2.0
+              action_2: 3.0
+              action_3: 4.0
+              action_4: 5.0
+
+    -
+      title: Dummy.failure
+      workloads:
+        -
+          name: Dummy.failure
+          args:
+            sleep: 0.2
+            from_iteration: 5
+            to_iteration: 15
+            each: 2
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 5
+          sla:
+            failure_rate:
+              min: 25
+              max: 25
+
+    -
+      title: FakePlugin.testplugin
+      workloads:
+        -
+          name: FakePlugin.testplugin
+          runner:
+            type: "constant"
+            times: 4
+            concurrency: 4
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: RallyProfile.generate_names_in_atomic
+      workloads:
+        -
+          name: RallyProfile.generate_names_in_atomic
+          args:
+            number_of_names: 100
+          runner:
+            type: "constant"
+            times: 1000
+            concurrency: 10
+          sla:
+            max_avg_duration_per_atomic:
+              generate_100_names: 0.015
+            failure_rate:
+              max: 0
+    -
+      title: RallyProfile.generate_names_in_atomic
+      workloads:
+        -
+          name: RallyProfile.generate_names_in_atomic
+          args:
+            number_of_names: 1000
+          runner:
+            type: "constant"
+            times: 500
+            concurrency: 10
+          sla:
+            max_avg_duration_per_atomic:
+              generate_1000_names: 0.1
+            failure_rate:
+              max: 0
+    -
+      title: RallyProfile.generate_names_in_atomic
+      workloads:
+        -
+          name: RallyProfile.generate_names_in_atomic
+          args:
+            number_of_names: 10000
+          runner:
+            type: "constant"
+            times: 200
+            concurrency: 10
+          sla:
+            max_avg_duration_per_atomic:
+              generate_10000_names: 1
+            failure_rate:
+              max: 0
+
+    -
+      title: RallyProfile.calculate_atomic
+      workloads:
+        -
+          name: RallyProfile.calculate_atomic
+          args:
+            number_of_atomics: 100
+          runner:
+            type: "constant"
+            times: 300
+            concurrency: 10
+          sla:
+            max_avg_duration_per_atomic:
+              calculate_100_atomics: 0.04
+            failure_rate:
+              max: 0
+    -
+      title: RallyProfile.calculate_atomic
+      workloads:
+        -
+          name: RallyProfile.calculate_atomic
+          args:
+            number_of_atomics: 500
+          runner:
+            type: "constant"
+            times: 100
+            concurrency: 10
+          sla:
+            max_avg_duration_per_atomic:
+              calculate_500_atomics: 0.5
+            failure_rate:
+              max: 0
