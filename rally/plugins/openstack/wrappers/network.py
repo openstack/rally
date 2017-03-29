@@ -364,21 +364,30 @@ class NeutronWrapper(NetworkWrapper):
             for net_dhcp in net_dhcps:
                 self.client.remove_network_from_dhcp_agent(net_dhcp["id"],
                                                            network["id"])
-        router_id = network["router_id"]
-        if router_id:
-            self.client.remove_gateway_router(router_id)
-            for subnet_id in network["subnets"]:
-                self.client.remove_interface_router(router_id,
-                                                    {"subnet_id": subnet_id})
-            self.client.delete_router(router_id)
+
+        if network["router_id"]:
+            self.client.remove_gateway_router(network["router_id"])
 
         for port in self.client.list_ports(network_id=network["id"])["ports"]:
-            self.client.delete_port(port["id"])
+            if port["device_owner"] in (
+                    "network:router_interface",
+                    "network:router_interface_distributed",
+                    "network:ha_router_replicated_interface",
+                    "network:router_gateway"):
+                self.client.remove_interface_router(
+                    port["device_id"], {"port_id": port["id"]})
+            else:
+                self.client.delete_port(port["id"])
 
         for subnet_id in network["subnets"]:
             self._delete_subnet(subnet_id)
 
-        return self.client.delete_network(network["id"])
+        responce = self.client.delete_network(network["id"])
+
+        if network["router_id"]:
+            self.client.delete_router(network["router_id"])
+
+        return responce
 
     def _delete_subnet(self, subnet_id):
         self.client.delete_subnet(subnet_id)

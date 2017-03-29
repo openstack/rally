@@ -408,29 +408,27 @@ class NeutronWrapperTestCase(test.TestCase):
         service = self.get_wrapper()
         agents = ["foo_agent", "bar_agent"]
         subnets = ["foo_subnet", "bar_subnet"]
-        ports = ["foo_port", "bar_port"]
+        ports = [{"id": "foo_port", "device_owner": "network:router_interface",
+                  "device_id": "rounttter"},
+                 {"id": "bar_port", "device_owner": "network:dhcp"}]
         service.client.list_dhcp_agent_hosting_networks.return_value = (
             {"agents": [{"id": agent_id} for agent_id in agents]})
-        service.client.list_ports.return_value = (
-            {"ports": [{"id": port_id} for port_id in ports]})
+        service.client.list_ports.return_value = ({"ports": ports})
         service.client.delete_network.return_value = "foo_deleted"
+
         result = service.delete_network(
             {"id": "foo_id", "router_id": "foo_router", "subnets": subnets,
              "lb_pools": []})
+
         self.assertEqual(result, "foo_deleted")
         self.assertEqual(
             service.client.remove_network_from_dhcp_agent.mock_calls,
             [mock.call(agent_id, "foo_id") for agent_id in agents])
         self.assertEqual(service.client.remove_gateway_router.mock_calls,
                          [mock.call("foo_router")])
-        self.assertEqual(
-            service.client.remove_interface_router.mock_calls,
-            [mock.call("foo_router", {"subnet_id": subnet_id})
-             for subnet_id in subnets])
-        self.assertEqual(service.client.delete_router.mock_calls,
-                         [mock.call("foo_router")])
-        self.assertEqual(service.client.delete_port.mock_calls,
-                         [mock.call(port_id) for port_id in ports])
+        service.client.delete_port.assert_called_once_with(ports[1]["id"])
+        service.client.remove_interface_router.assert_called_once_with(
+            ports[0]["device_id"], {"port_id": ports[0]["id"]})
         self.assertEqual(service.client.delete_subnet.mock_calls,
                          [mock.call(subnet_id) for subnet_id in subnets])
         service.client.delete_network.assert_called_once_with("foo_id")
