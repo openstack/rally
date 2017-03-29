@@ -68,8 +68,8 @@ class NotFoundScenarios(InvalidTaskException):
 class InvalidTaskConfig(InvalidTaskException):
     msg_fmt = _("Input task is invalid!\n\n"
                 "Subtask %(name)s[%(pos)s] has wrong configuration"
-                "\Subtask configuration:\n%(config)s\n"
-                "\nReason:\n %(reason)s")
+                "\nSubtask configuration:\n%(config)s\n"
+                "\nReason(s):\n %(reason)s")
 
 
 class NotFoundException(RallyException):

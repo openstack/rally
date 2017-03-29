@@ -14,16 +14,12 @@
 #    under the License.
 
 import traceback
-import uuid
 
 import mock
 
-from rally import consts
 from rally import exceptions
 from rally.task import context
 from rally.task import scenario
-from rally.task import validation
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -81,148 +77,6 @@ class ScenarioConfigureTestCase(test.TestCase):
 
 
 class ScenarioTestCase(test.TestCase):
-
-    def test__validate_helper(self):
-        validators = [
-            mock.MagicMock(return_value=validation.ValidationResult(True)),
-            mock.MagicMock(return_value=validation.ValidationResult(True))
-        ]
-        clients = mock.MagicMock()
-        config = {"a": 1, "b": 2}
-        deployment = mock.MagicMock()
-        scenario.Scenario._validate_helper(validators, clients, config,
-                                           deployment)
-        for validator in validators:
-            validator.assert_called_with(config, clients=clients,
-                                         deployment=deployment)
-
-    @mock.patch("rally.task.scenario.LOG")
-    def test__validate_helper_somethingwent_wrong(self, mock_log):
-        validator = mock.MagicMock()
-        validator.side_effect = Exception()
-
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          scenario.Scenario._validate_helper,
-                          [validator], "cl", "config", "deployment")
-        validator.assert_called_once_with("config", clients="cl",
-                                          deployment="deployment")
-        self.assertTrue(mock_log.exception.called)
-
-    def test__validate_helper__no_valid(self):
-        validators = [
-            mock.MagicMock(return_value=validation.ValidationResult(True)),
-            mock.MagicMock(
-                return_value=validation.ValidationResult(is_valid=False)
-            )
-        ]
-        clients = mock.MagicMock()
-        args = {"a": 1, "b": 2}
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          scenario.Scenario._validate_helper,
-                          validators, clients, args, "fake_uuid")
-
-    def test_validate__no_validators(self):
-
-        class Testing(fakes.FakeScenario):
-
-            @scenario.configure()
-            def validate__no_validators(self):
-                pass
-
-        scenario.Scenario.validate("Testing.validate__no_validators",
-                                   {"a": 1, "b": 2})
-        Testing.validate__no_validators.unregister()
-
-    @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    def test_validate__admin_validators(self, mock_scenario__validate_helper):
-
-        class Testing(fakes.FakeScenario):
-
-            @scenario.configure(namespace="testing")
-            def validate_admin_validators(self):
-                pass
-
-        validators = [mock.MagicMock(), mock.MagicMock()]
-        for validator in validators:
-            validator.permission = consts.EndpointPermission.ADMIN
-
-        Testing.validate_admin_validators._meta_set(
-            "validators", validators)
-        deployment = mock.MagicMock()
-        args = {"a": 1, "b": 2}
-        scenario.Scenario.validate("Testing.validate_admin_validators",
-                                   args, admin="admin", deployment=deployment)
-        mock_scenario__validate_helper.assert_called_once_with(
-            validators, "admin", args, deployment)
-
-        Testing.validate_admin_validators.unregister()
-
-    @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    def test_validate_user_validators(self, mock_scenario__validate_helper):
-
-        class Testing(fakes.FakeScenario):
-
-            @scenario.configure()
-            def validate_user_validators(self):
-                pass
-
-        validators = [mock.MagicMock(), mock.MagicMock()]
-        for validator in validators:
-            validator.permission = consts.EndpointPermission.USER
-
-        Testing.validate_user_validators._meta_set("validators", validators)
-        args = {"a": 1, "b": 2}
-        scenario.Scenario.validate(
-            "Testing.validate_user_validators", args, users=["u1", "u2"])
-
-        mock_scenario__validate_helper.assert_has_calls([
-            mock.call(validators, "u1", args, None),
-            mock.call(validators, "u2", args, None)
-        ])
-
-        Testing.validate_user_validators.unregister()
-
-    def test__validate_scenario_args(self):
-
-        class Testing(fakes.FakeScenario):
-            @scenario.configure()
-            def fake_scenario_to_validate_scenario_args(self, arg1, arg2,
-                                                        arg3=None):
-                pass
-
-        name = "Testing.fake_scenario_to_validate_scenario_args"
-        scen = scenario.Scenario.get(name)
-
-        # check case when argument is missed
-        e = self.assertRaises(exceptions.InvalidArgumentsException,
-                              scenario.Scenario._validate_scenario_args,
-                              scen, name, {"args": {"arg1": 3}})
-        self.assertIn("Argument(s) 'arg2' should be specified in task config.",
-                      e.format_message())
-
-        # check case when one argument is redundant
-        e = self.assertRaises(exceptions.InvalidArgumentsException,
-                              scenario.Scenario._validate_scenario_args,
-                              scen, name,
-                              {"args": {"arg1": 1, "arg2": 2, "arg4": 4}})
-
-        self.assertIn("Unexpected argument(s) found ['arg4']",
-                      e.format_message())
-
-    def test__validate_scenario_args_with_class_based_scenario(self):
-        name = "%s.need_dot" % uuid.uuid4()
-
-        @scenario.configure(name=name)
-        class Testing(scenario.Scenario):
-            def run(self, arg):
-                pass
-
-        e = self.assertRaises(exceptions.InvalidArgumentsException,
-                              scenario.Scenario._validate_scenario_args,
-                              Testing, name, {})
-
-        self.assertIn("Argument(s) 'arg' should be specified in task config.",
-                      e.format_message())
 
     def test_sleep_between_invalid_args(self):
         self.assertRaises(exceptions.InvalidArgumentsException,

@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import inspect
 import random
 
 import six
@@ -23,7 +22,7 @@ from rally.common import logging
 from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
 from rally.common import utils
-from rally import consts
+from rally.common import validation
 from rally import exceptions
 from rally.task import atomic
 from rally.task import functional
@@ -102,12 +101,14 @@ class ConfigurePluginMeta(type):
                     cls, field._plugin.func_ref.__name__)
 
 
+@validation.add_default("args-spec")
 @plugin.base()
 @six.add_metaclass(ConfigurePluginMeta)
 class Scenario(plugin.Plugin,
                atomic.ActionTimerMixin,
                functional.FunctionalMixin,
-               utils.RandomNameGeneratorMixin):
+               utils.RandomNameGeneratorMixin,
+               validation.ValidatablePluginMixin):
     """This is base class for any benchmark scenario.
 
        You should create subclass of this class. And your test scenarios will
@@ -125,75 +126,6 @@ class Scenario(plugin.Plugin,
     @classmethod
     def get_default_context(cls):
         return cls._meta_get("default_context")
-
-    @staticmethod
-    def _validate_helper(validators, clients, config, deployment):
-        for validator in validators:
-            try:
-                result = validator(config, clients=clients,
-                                   deployment=deployment)
-            except Exception as e:
-                LOG.exception(e)
-                raise exceptions.InvalidScenarioArgument(e)
-            else:
-                if not result.is_valid:
-                    raise exceptions.InvalidScenarioArgument(result.msg)
-
-    @staticmethod
-    def _validate_scenario_args(scenario, name, config):
-        if scenario.is_classbased:
-            # We need initialize scenario class to access instancemethods
-            scenario = scenario().run
-        args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
-
-        hint_msg = (" Use `rally plugin show --name %s` to display "
-                    "scenario description." % name)
-
-        # scenario always accepts an instance of scenario cls as a first arg
-        missed_args = args[1:]
-        if defaults:
-            # do not require args with default values
-            missed_args = missed_args[:-len(defaults)]
-        if "args" in config:
-            missed_args = set(missed_args) - set(config["args"])
-        if missed_args:
-            msg = ("Argument(s) '%(args)s' should be specified in task config."
-                   "%(hint)s" % {"args": "', '".join(missed_args),
-                                 "hint": hint_msg})
-            raise exceptions.InvalidArgumentsException(msg)
-
-        if varkwargs is None and "args" in config:
-            redundant_args = set(config["args"]) - set(args[1:])
-            if redundant_args:
-                msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
-                       {"args": "', '".join(redundant_args),
-                        "hint": hint_msg})
-                raise exceptions.InvalidArgumentsException(msg)
-
-    @classmethod
-    def validate(cls, name, config, admin=None, users=None, deployment=None):
-        """Semantic check of benchmark arguments."""
-        scenario = Scenario.get(name)
-
-        cls._validate_scenario_args(scenario, name, config)
-
-        validators = scenario._meta_get("validators", default=[])
-
-        if not validators:
-            return
-
-        admin_validators = [v for v in validators
-                            if v.permission == consts.EndpointPermission.ADMIN]
-        user_validators = [v for v in validators
-                           if v.permission == consts.EndpointPermission.USER]
-
-        # NOTE(boris-42): Potential bug, what if we don't have "admin" client
-        #                 and scenario have "admin" validators.
-        if admin:
-            cls._validate_helper(admin_validators, admin, config, deployment)
-        if users:
-            for user in users:
-                cls._validate_helper(user_validators, user, config, deployment)
 
     def sleep_between(self, min_sleep, max_sleep=None, atomic_delay=0.1):
         """Call an interruptable_sleep() for a random amount of seconds.
