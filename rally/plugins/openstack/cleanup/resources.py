@@ -48,18 +48,18 @@ class SynchronizedDeletion(object):
 
 
 class QuotaMixin(SynchronizedDeletion):
-
-    def id(self):
-        return self.raw_resource
-
-    def name(self):
-        return None
-
-    def delete(self):
-        self._manager().delete(self.raw_resource)
+    # NOTE(andreykurilin): Quotas resources are quite complex in terms of
+    #   cleanup. First of all, they do not have name, id fields at all. There
+    #   is only one identifier - reference to Keystone Project/Tenant. Also,
+    #   we should remove them in case of existing users case... To cover both
+    #   cases we should use project name as name field (it will allow to pass
+    #   existing users case) and project id as id of resource
 
     def list(self):
-        return [self.tenant_uuid] if self.tenant_uuid else []
+        if not self.tenant_uuid:
+            return []
+        project = identity.Identity(self.user).get_project(self.tenant_uuid)
+        return [project]
 
 
 # MAGNUM
