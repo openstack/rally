@@ -19,6 +19,7 @@ import mock
 from rally.common import utils
 from rally.plugins.openstack.context.cleanup import admin
 from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack import scenario
 from tests.unit import test
 
 
@@ -68,6 +69,7 @@ class AdminCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
+        mock_itersubclasses.assert_called_once_with(scenario.OpenStackScenario)
         mock_find_resource_managers.assert_called_once_with(("a", "b"), True)
         mock_seek_and_destroy.assert_has_calls([
             mock.call(mock_find_resource_managers.return_value[0],
@@ -118,6 +120,7 @@ class AdminCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
+        mock_itersubclasses.assert_called_once_with(scenario.OpenStackScenario)
         mock_find_resource_managers.assert_called_once_with(("a", "b"), True)
         mock_seek_and_destroy.assert_has_calls([
             mock.call(mock_find_resource_managers.return_value[0],
