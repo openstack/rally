@@ -352,8 +352,8 @@ class Murano(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.MURANO
 
-    def list_enviroments(self):
-        return self.client.enviroment.list()
+    def list_environments(self):
+        return self.client.environments.list()
 
     def list_packages(self):
         return self.client.packages.list(include_disabled=True)
