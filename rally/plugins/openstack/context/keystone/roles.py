@@ -24,20 +24,10 @@ from rally import osclients
 from rally.plugins.openstack.services.identity import identity
 from rally.task import context
 
+
 LOG = logging.getLogger(__name__)
 
-
-ROLES_CONTEXT_OPTS = [
-    cfg.IntOpt("resource_management_workers",
-               default=30,
-               help="How many concurrent threads to use for serving roles "
-                    "context"),
-]
-
 CONF = cfg.CONF
-CONF.register_opts(ROLES_CONTEXT_OPTS,
-                   group=cfg.OptGroup(name="roles_context",
-                                      title="benchmark context options"))
 
 
 @context.configure(name="roles", order=330)

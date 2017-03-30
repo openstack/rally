@@ -9,12 +9,6 @@
 # Note: This option can be changed without restarting.
 #debug = false
 
-# DEPRECATED: If set to false, the logging level will be set to
-# WARNING instead of the default INFO level. (boolean value)
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
-#verbose = true
-
 # The name of a logging configuration file. This file is appended to
 # any existing logging configuration files. For details about logging
 # configuration files, see the Python logging module documentation.
@@ -60,7 +54,7 @@
 
 # Log output to standard error. This option is ignored if
 # log_config_append is set. (boolean value)
-#use_stderr = true
+#use_stderr = false
 
 # Format string to use for log messages with context. (string value)
 #logging_context_format_string = %(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user_identity)s] %(instance)s%(message)s
@@ -95,6 +89,19 @@
 # The format for an instance UUID that is passed with the log message.
 # (string value)
 #instance_uuid_format = "[instance: %(uuid)s] "
+
+# Interval, number of seconds, of log rate limiting. (integer value)
+#rate_limit_interval = 0
+
+# Maximum number of logged messages per rate_limit_interval. (integer
+# value)
+#rate_limit_burst = 0
+
+# Log level name used by rate limiting: CRITICAL, ERROR, INFO,
+# WARNING, DEBUG or empty string. Logs with level greater or equal to
+# rate_limit_except_level are not filtered. An empty string means that
+# all levels are filtered. (string value)
+#rate_limit_except_level = CRITICAL
 
 # Enables or disables fatal status of deprecations. (boolean value)
 #fatal_deprecations = false
@@ -157,17 +164,6 @@
 
 # Server boot poll interval (floating point value)
 #ec2_server_boot_poll_interval = 1.0
-
-# Time to sleep after creating a resource before polling for it status
-# (floating point value)
-#glance_image_create_prepoll_delay = 2.0
-
-# Time to wait for glance image to be created. (floating point value)
-#glance_image_create_timeout = 120.0
-
-# Interval between checks when waiting for image creation. (floating
-# point value)
-#glance_image_create_poll_interval = 1.0
 
 # Time(in sec) to sleep after creating a resource before polling for
 # it status. (floating point value)
@@ -250,6 +246,15 @@
 # (floating point value)
 #ironic_node_create_poll_interval = 1.0
 
+# Ironic node create timeout (floating point value)
+#ironic_node_create_timeout = 300
+
+# Ironic node poll interval (floating point value)
+#ironic_node_poll_interval = 1.0
+
+# Ironic node create timeout (floating point value)
+#ironic_node_delete_timeout = 300
+
 # Time(in sec) to sleep after creating a resource before polling for
 # the status. (floating point value)
 #magnum_cluster_create_prepoll_delay = 5.0
@@ -323,7 +328,7 @@
 #nova_server_boot_timeout = 300.0
 
 # Server boot poll interval (floating point value)
-#nova_server_boot_poll_interval = 1.0
+#nova_server_boot_poll_interval = 2.0
 
 # Time to sleep after delete before polling for status (floating point
 # value)
@@ -541,11 +546,39 @@
 # Time to wait for a VM to become pingable (floating point value)
 #vm_ping_timeout = 120.0
 
+# Time to wait for glance image to be deleted. (floating point value)
+#glance_image_delete_timeout = 120.0
+
+# Interval between checks when waiting for image deletion. (floating
+# point value)
+#glance_image_delete_poll_interval = 1.0
+
+# Time to sleep after creating a resource before polling for it status
+# (floating point value)
+#glance_image_create_prepoll_delay = 2.0
+
+# Time to wait for glance image to be created. (floating point value)
+#glance_image_create_timeout = 120.0
+
+# Interval between checks when waiting for image creation. (floating
+# point value)
+#glance_image_create_poll_interval = 1.0
+
 # Watcher audit launch interval (floating point value)
 #watcher_audit_launch_poll_interval = 2.0
 
 # Watcher audit launch timeout (integer value)
 #watcher_audit_launch_timeout = 300
+
+# Time in seconds to wait for senlin action to finish. (floating point
+# value)
+#senlin_action_timeout = 3600
+
+# Neutron create loadbalancer timeout (floating point value)
+#neutron_create_loadbalancer_timeout = 500.0
+
+# Neutron create loadbalancer poll interval (floating point value)
+#neutron_create_loadbalancer_poll_interval = 2.0
 
 
 [cleanup]
@@ -567,16 +600,7 @@
 # From oslo.db
 #
 
-# DEPRECATED: The file name to use with SQLite. (string value)
-# Deprecated group/name - [DEFAULT]/sqlite_db
-# This option is deprecated for removal.
-# Its value may be silently ignored in the future.
-# Reason: Should use config option connection or slave_connection to
-# connect the database.
-#sqlite_db = oslo.sqlite
-
 # If True, SQLite uses synchronous mode. (boolean value)
-# Deprecated group/name - [DEFAULT]/sqlite_synchronous
 #sqlite_synchronous = true
 
 # The back end to use for the database. (string value)
@@ -740,8 +764,8 @@
 # From rally
 #
 
-# How many concurrent threads use for serving users context (integer
-# value)
+# The number of concurrent threads to use for serving users context.
+# (integer value)
 #resource_management_workers = 20
 
 # ID of domain in which projects will be created. (string value)
@@ -750,5 +774,6 @@
 # ID of domain in which users will be created. (string value)
 #user_domain = default
 
-# The default role name of the keystone. (string value)
+# The default role name of the keystone to assign to users. (string
+# value)
 #keystone_default_role = member

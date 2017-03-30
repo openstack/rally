@@ -32,16 +32,8 @@ from rally.task import utils
 
 LOG = logging.getLogger(__name__)
 
-VM_BENCHMARK_OPTS = [
-    cfg.FloatOpt("vm_ping_poll_interval", default=1.0,
-                 help="Interval between checks when waiting for a VM to "
-                 "become pingable"),
-    cfg.FloatOpt("vm_ping_timeout", default=120.0,
-                 help="Time to wait for a VM to become pingable")]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(VM_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class Host(object):

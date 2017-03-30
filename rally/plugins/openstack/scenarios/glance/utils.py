@@ -22,19 +22,8 @@ from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import atomic
 from rally.task import utils
 
-GLANCE_BENCHMARK_OPTS = [
-    cfg.FloatOpt("glance_image_delete_timeout",
-                 default=120.0,
-                 help="Time to wait for glance image to be deleted."),
-    cfg.FloatOpt("glance_image_delete_poll_interval",
-                 default=1.0,
-                 help="Interval between checks when waiting for image "
-                      "deletion.")
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 LOG = logging.getLogger(__name__)
 
 

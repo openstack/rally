@@ -22,25 +22,7 @@ from rally.task import atomic
 from rally.task import utils
 
 
-IRONIC_BENCHMARK_OPTS = [
-    cfg.FloatOpt("ironic_node_create_poll_interval",
-                 default=1.0,
-                 help="Interval(in sec) between checks when waiting for node "
-                      "creation."),
-    cfg.FloatOpt("ironic_node_create_timeout",
-                 default=300,
-                 help="Ironic node create timeout"),
-    cfg.FloatOpt("ironic_node_poll_interval",
-                 default=1.0,
-                 help="Ironic node poll interval"),
-    cfg.FloatOpt("ironic_node_delete_timeout",
-                 default=300,
-                 help="Ironic node create timeout")
-]
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(IRONIC_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class IronicScenario(scenario.OpenStackScenario):

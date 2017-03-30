@@ -24,35 +24,7 @@ from rally.task import atomic
 from rally.task import utils
 
 
-MANILA_BENCHMARK_OPTS = [
-    cfg.FloatOpt(
-        "manila_share_create_prepoll_delay",
-        default=2.0,
-        help="Delay between creating Manila share and polling for its "
-             "status."),
-    cfg.FloatOpt(
-        "manila_share_create_timeout",
-        default=300.0,
-        help="Timeout for Manila share creation."),
-    cfg.FloatOpt(
-        "manila_share_create_poll_interval",
-        default=3.0,
-        help="Interval between checks when waiting for Manila share "
-             "creation."),
-    cfg.FloatOpt(
-        "manila_share_delete_timeout",
-        default=180.0,
-        help="Timeout for Manila share deletion."),
-    cfg.FloatOpt(
-        "manila_share_delete_poll_interval",
-        default=2.0,
-        help="Interval between checks when waiting for Manila share "
-             "deletion."),
-]
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MANILA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class ManilaScenario(scenario.OpenStackScenario):

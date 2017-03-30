@@ -14,53 +14,31 @@
 
 import itertools
 
+from oslo_config import cfg
+
 from rally.common import logging
 from rally import osclients
-from rally.plugins.openstack.cleanup import base as cleanup_base
-from rally.plugins.openstack.context.keystone import roles
-from rally.plugins.openstack.context.keystone import users
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
-from rally.plugins.openstack.scenarios.heat import utils as heat_utils
-from rally.plugins.openstack.scenarios.ironic import utils as ironic_utils
-from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
-from rally.plugins.openstack.scenarios.manila import utils as manila_utils
-from rally.plugins.openstack.scenarios.mistral import utils as mistral_utils
-from rally.plugins.openstack.scenarios.monasca import utils as monasca_utils
-from rally.plugins.openstack.scenarios.murano import utils as murano_utils
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
-from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
-from rally.plugins.openstack.scenarios.vm import utils as vm_utils
-from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
-from rally.plugins.openstack.verification.tempest import config as tempest_conf
-from rally.plugins.openstack.wrappers import glance as glance_utils
+from rally.plugins.openstack.cfg import opts as openstack_opts
 from rally.task import engine
+
+CONF = cfg.CONF
 
 
 def list_opts():
-    return [
-        ("DEFAULT",
-         itertools.chain(logging.DEBUG_OPTS,
-                         osclients.OSCLIENTS_OPTS,
-                         engine.TASK_ENGINE_OPTS)),
-        ("benchmark",
-         itertools.chain(cinder_utils.CINDER_BENCHMARK_OPTS,
-                         ec2_utils.EC2_BENCHMARK_OPTS,
-                         glance_utils.GLANCE_BENCHMARK_OPTS,
-                         heat_utils.HEAT_BENCHMARK_OPTS,
-                         ironic_utils.IRONIC_BENCHMARK_OPTS,
-                         magnum_utils.MAGNUM_BENCHMARK_OPTS,
-                         manila_utils.MANILA_BENCHMARK_OPTS,
-                         mistral_utils.MISTRAL_BENCHMARK_OPTS,
-                         monasca_utils.MONASCA_BENCHMARK_OPTS,
-                         murano_utils.MURANO_BENCHMARK_OPTS,
-                         nova_utils.NOVA_BENCHMARK_OPTS,
-                         sahara_utils.SAHARA_BENCHMARK_OPTS,
-                         vm_utils.VM_BENCHMARK_OPTS,
-                         watcher_utils.WATCHER_BENCHMARK_OPTS)),
-        ("tempest",
-         itertools.chain(tempest_conf.TEMPEST_OPTS)),
-        ("roles_context", itertools.chain(roles.ROLES_CONTEXT_OPTS)),
-        ("users_context", itertools.chain(users.USER_CONTEXT_OPTS)),
-        ("cleanup", itertools.chain(cleanup_base.CLEANUP_OPTS))
-    ]
+
+    merged_opts = {}
+    for category, options in openstack_opts.list_opts().items():
+        merged_opts.setdefault(category, [])
+        merged_opts[category].extend(options)
+    merged_opts["DEFAULT"] = itertools.chain(logging.DEBUG_OPTS,
+                                             osclients.OSCLIENTS_OPTS,
+                                             engine.TASK_ENGINE_OPTS)
+    return merged_opts.items()
+
+
+def register():
+    for category, options in list_opts():
+        group = cfg.OptGroup(name=category, title="%s options" % category)
+        if category != "DEFAULT":
+            CONF.register_group(group)
+        CONF.register_opts(options, group=group)

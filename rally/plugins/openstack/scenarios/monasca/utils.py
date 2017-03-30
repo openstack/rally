@@ -22,17 +22,7 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 
 
-MONASCA_BENCHMARK_OPTS = [
-    cfg.FloatOpt(
-        "monasca_metric_create_prepoll_delay",
-        default=15.0,
-        help="Delay between creating Monasca metrics and polling for "
-             "its elements.")
-]
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MONASCA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MonascaScenario(scenario.OpenStackScenario):

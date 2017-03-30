@@ -562,6 +562,25 @@ def check_log_warn(logical_line, physical_line, filename):
         yield(0, "N313 LOG.warn is deprecated, please use LOG.warning")
 
 
+@skip_ignored_lines
+def check_opts_import_path(logical_line, physical_line, filename):
+    """Ensure that we load opts from correct paths only
+
+     N342
+     """
+    excluded_files = ["./rally/osclients.py",
+                      "./rally/task/engine.py",
+                      "./rally/common/opts.py"]
+    forbidden_methods = [".register_opts("]
+
+    if filename not in excluded_files:
+        for forbidden_method in forbidden_methods:
+            if logical_line.find(forbidden_method) != -1:
+                yield (0, "N342 All options should be loaded from correct "
+                          "paths only. For 'openstack' "
+                          "its './rally/plugin/openstack/cfg'")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -585,3 +604,4 @@ def factory(register):
     register(check_old_type_class)
     register(check_no_six_iteritems)
     register(check_log_warn)
+    register(check_opts_import_path)

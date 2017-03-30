@@ -18,30 +18,9 @@ from oslo_config import cfg
 
 from rally.plugins.openstack import service
 
-CINDER_BENCHMARK_OPTS = [
-    cfg.FloatOpt("cinder_volume_create_prepoll_delay",
-                 default=2.0,
-                 help="Time to sleep after creating a resource before"
-                      " polling for it status"),
-    cfg.FloatOpt("cinder_volume_create_timeout",
-                 default=600.0,
-                 help="Time to wait for cinder volume to be created."),
-    cfg.FloatOpt("cinder_volume_create_poll_interval",
-                 default=2.0,
-                 help="Interval between checks when waiting for volume"
-                      " creation."),
-    cfg.FloatOpt("cinder_volume_delete_timeout",
-                 default=600.0,
-                 help="Time to wait for cinder volume to be deleted."),
-    cfg.FloatOpt("cinder_volume_delete_poll_interval",
-                 default=2.0,
-                 help="Interval between checks when waiting for volume"
-                      " deletion.")
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(CINDER_BENCHMARK_OPTS, group=benchmark_group)
+
 
 Volume = collections.namedtuple("Volume", ["id", "name", "size", "status"])
 VolumeSnapshot = collections.namedtuple("VolumeSnapshot", ["id", "name",

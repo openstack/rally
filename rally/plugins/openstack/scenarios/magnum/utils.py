@@ -19,24 +19,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
 
-MAGNUM_BENCHMARK_OPTS = [
-    cfg.FloatOpt("magnum_cluster_create_prepoll_delay",
-                 default=5.0,
-                 help="Time(in sec) to sleep after creating a resource before "
-                      "polling for the status."),
-    cfg.FloatOpt("magnum_cluster_create_timeout",
-                 default=1200.0,
-                 help="Time(in sec) to wait for magnum cluster to be "
-                      "created."),
-    cfg.FloatOpt("magnum_cluster_create_poll_interval",
-                 default=1.0,
-                 help="Time interval(in sec) between checks when waiting for "
-                      "cluster creation."),
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MAGNUM_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MagnumScenario(scenario.OpenStackScenario):

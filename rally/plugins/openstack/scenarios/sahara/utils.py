@@ -29,31 +29,9 @@ from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
 from rally.task import atomic
 from rally.task import utils
 
+
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
-
-SAHARA_BENCHMARK_OPTS = [
-    cfg.IntOpt("sahara_cluster_create_timeout", default=1800,
-               deprecated_name="cluster_create_timeout",
-               help="A timeout in seconds for a cluster create operation"),
-    cfg.IntOpt("sahara_cluster_delete_timeout", default=900,
-               deprecated_name="cluster_delete_timeout",
-               help="A timeout in seconds for a cluster delete operation"),
-    cfg.IntOpt("sahara_cluster_check_interval", default=5,
-               deprecated_name="cluster_check_interval",
-               help="Cluster status polling interval in seconds"),
-    cfg.IntOpt("sahara_job_execution_timeout", default=600,
-               deprecated_name="job_execution_timeout",
-               help="A timeout in seconds for a Job Execution to complete"),
-    cfg.IntOpt("sahara_job_check_interval", default=5,
-               deprecated_name="job_check_interval",
-               help="Job Execution status polling interval in seconds"),
-    cfg.IntOpt("sahara_workers_per_proxy", default=20,
-               help="Amount of workers one proxy should serve to.")
-]
-
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(SAHARA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class SaharaScenario(scenario.OpenStackScenario):

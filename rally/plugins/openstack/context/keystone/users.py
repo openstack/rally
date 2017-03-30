@@ -31,33 +31,18 @@ from rally.plugins.openstack.wrappers import network
 from rally.task import context
 from rally.task import utils
 
+from rally.common import opts
+opts.register()
+
+
 LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
 
 RESOURCE_MANAGEMENT_WORKERS_DESCR = ("The number of concurrent threads to use "
                                      "for serving users context.")
 PROJECT_DOMAIN_DESCR = "ID of domain in which projects will be created."
 USER_DOMAIN_DESCR = "ID of domain in which users will be created."
-
-USER_CONTEXT_OPTS = [
-    cfg.IntOpt("resource_management_workers",
-               default=20,
-               help=RESOURCE_MANAGEMENT_WORKERS_DESCR),
-    cfg.StrOpt("project_domain",
-               default="default",
-               help=PROJECT_DOMAIN_DESCR),
-    cfg.StrOpt("user_domain",
-               default="default",
-               help=USER_DOMAIN_DESCR),
-    cfg.StrOpt("keystone_default_role",
-               default="member",
-               help="The default role name of the keystone to assign to "
-                    "users."),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(USER_CONTEXT_OPTS,
-                   group=cfg.OptGroup(name="users_context",
-                                      title="benchmark context options"))
 
 
 @context.configure(name="users", namespace="openstack", order=100)

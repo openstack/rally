@@ -25,6 +25,7 @@ Rally Specific Commandments
  * [N325] - Ensure that ``assertNotEqual(A, None)`` and ``assertNotEqual(None, A)`` are not used
 * [N340] - Ensure that we are importing always ``from rally import objects``
 * [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones
+* [N342] - Ensure that we load opts from correct paths only
 * [N350] - Ensure that single quotes are not used
 * [N351] - Ensure that data structs (i.e Lists and Dicts) are declared literally rather than using constructors
 * [N352] - Ensure that string formatting only uses a mapping if multiple mapping keys are used.
