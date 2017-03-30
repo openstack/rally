@@ -26,6 +26,35 @@ CINDER_UTILS = "rally.plugins.openstack.scenarios.cinder.utils"
 CONF = cfg.CONF
 
 
+class CinderBasicTestCase(test.ScenarioTestCase):
+
+    def _get_context(self):
+        context = test.get_test_context()
+        context.update({
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake",
+                       "volumes": [{"id": "uuid", "size": 1}],
+                       "servers": [1]}})
+        return context
+
+    def setUp(self):
+        super(CinderBasicTestCase, self).setUp()
+
+    @mock.patch("random.choice")
+    def test_get_random_server(self, mock_choice):
+        basic = utils.CinderBasic(self._get_context())
+        server_id = mock_choice(basic.context["tenant"]["servers"])
+        return_server = basic.get_random_server()
+        basic.clients("nova").servers.get.assert_called_once_with(server_id)
+        self.assertEqual(basic.clients("nova").servers.get.return_value,
+                         return_server)
+
+
 class CinderScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):

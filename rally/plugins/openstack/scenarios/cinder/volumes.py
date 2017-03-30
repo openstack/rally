@@ -32,14 +32,13 @@ LOG = logging.getLogger(__name__)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_volume")
-class CreateAndListVolume(cinder_utils.CinderScenario,
-                          nova_utils.NovaScenario,
-                          glance_utils.GlanceScenario):
+class CreateAndListVolume(cinder_utils.CinderBasic):
 
     def run(self, size, detailed=True, image=None, **kwargs):
         """Create a volume and list all volumes.
@@ -64,19 +63,18 @@ class CreateAndListVolume(cinder_utils.CinderScenario,
         if image:
             kwargs["imageRef"] = image
 
-        self._create_volume(size, **kwargs)
-        self._list_volumes(detailed)
+        self.cinder.create_volume(size, **kwargs)
+        self.cinder.list_volumes(detailed)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_get_volume")
-class CreateAndGetVolume(cinder_utils.CinderScenario,
-                         nova_utils.NovaScenario,
-                         glance_utils.GlanceScenario):
+class CreateAndGetVolume(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, **kwargs):
         """Create a volume and get the volume.
@@ -93,17 +91,15 @@ class CreateAndGetVolume(cinder_utils.CinderScenario,
         if image:
             kwargs["imageRef"] = image
 
-        volume = self._create_volume(size, **kwargs)
-        self._get_volume(volume.id)
+        volume = self.cinder.create_volume(size, **kwargs)
+        self.cinder.get_volume(volume.id)
 
 
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.list_volumes")
-class ListVolumes(cinder_utils.CinderScenario,
-                  nova_utils.NovaScenario,
-                  glance_utils.GlanceScenario):
+class ListVolumes(cinder_utils.CinderBasic):
 
     def run(self, detailed=True):
         """List all volumes.
@@ -115,13 +111,13 @@ class ListVolumes(cinder_utils.CinderScenario,
                          should be listed
         """
 
-        self._list_volumes(detailed)
+        self.cinder.list_volumes(detailed)
 
 
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(name="CinderVolumes.list_types")
-class ListTypes(cinder_utils.CinderScenario):
+class ListTypes(cinder_utils.CinderBasic):
 
     def run(self, search_opts=None, is_public=None):
         """List all volume types.
@@ -133,13 +129,13 @@ class ListTypes(cinder_utils.CinderScenario):
         :param is_public: If query public volume type
         """
 
-        self._list_types(search_opts, is_public)
+        self.cinder.list_types(search_opts, is_public=is_public)
 
 
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(name="CinderVolumes.list_transfers")
-class ListTransfers(cinder_utils.CinderScenario):
+class ListTransfers(cinder_utils.CinderBasic):
 
     def run(self, detailed=True, search_opts=None):
         """List all transfers.
@@ -152,18 +148,20 @@ class ListTransfers(cinder_utils.CinderScenario):
         :param search_opts: Search options to filter out volume transfers.
         """
 
-        self._list_transfers(detailed, search_opts)
+        self.cinder.list_transfers(detailed, search_opts=search_opts)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="update_volume_kwargs")
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_update_volume")
-class CreateAndUpdateVolume(cinder_utils.CinderScenario,
-                            nova_utils.NovaScenario,
-                            glance_utils.GlanceScenario):
+class CreateAndUpdateVolume(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, create_volume_kwargs=None,
             update_volume_kwargs=None):
@@ -173,24 +171,31 @@ class CreateAndUpdateVolume(cinder_utils.CinderScenario,
         :param image: image to be used to create volume
         :param create_volume_kwargs: dict, to be used to create volume
         :param update_volume_kwargs: dict, to be used to update volume
+               update_volume_kwargs["update_name"]=True, if updating the
+               name of volume.
+               update_volume_kwargs["description"]="desp", if updating the
+               description of volume.
         """
         create_volume_kwargs = create_volume_kwargs or {}
         update_volume_kwargs = update_volume_kwargs or {}
         if image:
             create_volume_kwargs["imageRef"] = image
-        volume = self._create_volume(size, **create_volume_kwargs)
-        self._update_volume(volume, **update_volume_kwargs)
+
+        if update_volume_kwargs.pop("update_name", False):
+            update_volume_kwargs["name"] = self.generate_random_name()
+
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
+        self.cinder.update_volume(volume, **update_volume_kwargs)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_delete_volume")
-class CreateAndDeleteVolume(cinder_utils.CinderScenario,
-                            nova_utils.NovaScenario,
-                            glance_utils.GlanceScenario):
+class CreateAndDeleteVolume(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, min_sleep=0, max_sleep=0, **kwargs):
         """Create and then delete a volume.
@@ -214,20 +219,19 @@ class CreateAndDeleteVolume(cinder_utils.CinderScenario,
         if image:
             kwargs["imageRef"] = image
 
-        volume = self._create_volume(size, **kwargs)
+        volume = self.cinder.create_volume(size, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_volume(volume)
+        self.cinder.delete_volume(volume)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume")
-class CreateVolume(cinder_utils.CinderScenario,
-                   nova_utils.NovaScenario,
-                   glance_utils.GlanceScenario):
+class CreateVolume(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, **kwargs):
         """Create a volume.
@@ -245,7 +249,7 @@ class CreateVolume(cinder_utils.CinderScenario,
         if image:
             kwargs["imageRef"] = image
 
-        self._create_volume(size, **kwargs)
+        self.cinder.create_volume(size, **kwargs)
 
 
 @validation.required_services(consts.Service.CINDER)
@@ -253,9 +257,7 @@ class CreateVolume(cinder_utils.CinderScenario,
 @validation.required_contexts("volumes")
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.modify_volume_metadata")
-class ModifyVolumeMetadata(cinder_utils.CinderScenario,
-                           nova_utils.NovaScenario,
-                           glance_utils.GlanceScenario):
+class ModifyVolumeMetadata(cinder_utils.CinderBasic):
 
     def run(self, sets=10, set_size=3, deletes=5, delete_size=3):
         """Modify a volume's metadata.
@@ -279,17 +281,19 @@ class ModifyVolumeMetadata(cinder_utils.CinderScenario,
                  "num_deletes": deletes * delete_size})
 
         volume = random.choice(self.context["tenant"]["volumes"])
-        keys = self._set_metadata(volume["id"], sets, set_size)
-        self._delete_metadata(volume["id"], keys, deletes, delete_size)
+        keys = self.cinder.set_metadata(volume["id"], sets=sets,
+                                        set_size=set_size)
+        self.cinder.delete_metadata(volume["id"], keys=keys,
+                                    deletes=deletes,
+                                    delete_size=delete_size)
 
 
+@validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_extend_volume")
-class CreateAndExtendVolume(cinder_utils.CinderScenario,
-                            nova_utils.NovaScenario,
-                            glance_utils.GlanceScenario):
+class CreateAndExtendVolume(cinder_utils.CinderBasic):
 
     def run(self, size, new_size, min_sleep=0, max_sleep=0, **kwargs):
         """Create and extend a volume and then delete it.
@@ -311,20 +315,19 @@ class CreateAndExtendVolume(cinder_utils.CinderScenario,
                           deletion (in seconds)
         :param kwargs: optional args to extend the volume
         """
-        volume = self._create_volume(size, **kwargs)
-        self._extend_volume(volume, new_size)
+        volume = self.cinder.create_volume(size, **kwargs)
+        self.cinder.extend_volume(volume, new_size=new_size)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_volume(volume)
+        self.cinder.delete_volume(volume)
 
 
+@validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_from_volume_and_delete_volume")
-class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderScenario,
-                                      nova_utils.NovaScenario,
-                                      glance_utils.GlanceScenario):
+class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderBasic):
 
     def run(self, size, min_sleep=0, max_sleep=0, **kwargs):
         """Create volume from volume and then delete it.
@@ -346,20 +349,19 @@ class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderScenario,
         :param kwargs: optional args to create a volume
         """
         source_vol = random.choice(self.context["tenant"]["volumes"])
-        volume = self._create_volume(size, source_volid=source_vol["id"],
-                                     **kwargs)
+        volume = self.cinder.create_volume(size, source_volid=source_vol["id"],
+                                           **kwargs)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_volume(volume)
+        self.cinder.delete_volume(volume)
 
 
+@validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_delete_snapshot")
-class CreateAndDeleteSnapshot(cinder_utils.CinderScenario,
-                              nova_utils.NovaScenario,
-                              glance_utils.GlanceScenario):
+class CreateAndDeleteSnapshot(cinder_utils.CinderBasic):
 
     def run(self, force=False, min_sleep=0, max_sleep=0, **kwargs):
         """Create and then delete a volume-snapshot.
@@ -377,21 +379,23 @@ class CreateAndDeleteSnapshot(cinder_utils.CinderScenario,
         :param kwargs: optional args to create a snapshot
         """
         volume = random.choice(self.context["tenant"]["volumes"])
-        snapshot = self._create_snapshot(volume["id"], force=force, **kwargs)
+        snapshot = self.cinder.create_snapshot(volume["id"], force=force,
+                                               **kwargs)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_snapshot(snapshot)
+        self.cinder.delete_snapshot(snapshot)
 
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_params")
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_and_attach_volume")
-class CreateAndAttachVolume(cinder_utils.CinderScenario,
-                            nova_utils.NovaScenario,
-                            glance_utils.GlanceScenario):
+class CreateAndAttachVolume(cinder_utils.CinderBasic,
+                            nova_utils.NovaScenario):
 
     @logging.log_deprecated_args(
         "Use 'create_vm_params' for additional instance parameters.",
@@ -424,25 +428,25 @@ class CreateAndAttachVolume(cinder_utils.CinderScenario,
         create_vm_params = create_vm_params or kwargs or {}
 
         server = self._boot_server(image, flavor, **create_vm_params)
-        volume = self._create_volume(size, **create_volume_params)
+        volume = self.cinder.create_volume(size, **create_volume_params)
 
         attachment = self._attach_volume(server, volume)
         self._detach_volume(server, volume, attachment)
 
-        self._delete_volume(volume)
+        self.cinder.delete_volume(volume)
         self._delete_server(server)
 
 
+@validation.restricted_parameters(["name", "display_name"])
 @validation.volume_type_exists("volume_type")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_snapshot_and_attach_volume")
-class CreateSnapshotAndAttachVolume(cinder_utils.CinderScenario,
-                                    nova_utils.NovaScenario,
-                                    glance_utils.GlanceScenario):
+class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
+                                    nova_utils.NovaScenario):
 
-    def run(self, volume_type=False, size=None, **kwargs):
+    def run(self, volume_type=None, size=None, **kwargs):
         """Create volume, snapshot and attach/detach volume.
 
         :param volume_type: Name of volume type to use
@@ -456,35 +460,30 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderScenario,
         if size is None:
             size = {"min": 1, "max": 5}
 
-        if isinstance(volume_type, bool):
-            LOG.warning("Selecting a random volume type is deprecated"
-                        "as of Rally 0.7.0")
-            volume_types = [None]
-            volume_types_list = self.clients("cinder").volume_types.list()
-            for s in volume_types_list:
-                volume_types.append(s.name)
-            volume_type = random.choice(volume_types)
-
-        volume = self._create_volume(size, volume_type=volume_type)
-        snapshot = self._create_snapshot(volume.id, False, **kwargs)
+        volume = self.cinder.create_volume(size, volume_type=volume_type)
+        snapshot = self.cinder.create_snapshot(volume.id, force=False,
+                                               **kwargs)
 
         server = self.get_random_server()
 
         attachment = self._attach_volume(server, volume)
         self._detach_volume(server, volume, attachment)
 
-        self._delete_snapshot(snapshot)
-        self._delete_volume(volume)
+        self.cinder.delete_snapshot(snapshot)
+        self.cinder.delete_volume(volume)
 
 
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_snapshot_kwargs")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_nested_snapshots"
                          "_and_attach_volume")
-class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderScenario,
-                                           nova_utils.NovaScenario,
-                                           glance_utils.GlanceScenario):
+class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
+                                           nova_utils.NovaScenario):
 
     @logging.log_deprecated_args(
         "Use 'create_snapshot_kwargs' for additional snapshot kwargs.",
@@ -521,16 +520,16 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderScenario,
         create_snapshot_kwargs = create_snapshot_kwargs or kwargs or {}
         server = self.get_random_server()
 
-        source_vol = self._create_volume(size, **create_volume_kwargs)
-        snapshot = self._create_snapshot(source_vol.id, False,
-                                         **create_snapshot_kwargs)
+        source_vol = self.cinder.create_volume(size, **create_volume_kwargs)
+        snapshot = self.cinder.create_snapshot(source_vol.id, force=False,
+                                               **create_snapshot_kwargs)
         attachment = self._attach_volume(server, source_vol)
 
         nes_objs = [(server, source_vol, snapshot, attachment)]
         for i in range(nested_level - 1):
-            volume = self._create_volume(size, snapshot_id=snapshot.id)
-            snapshot = self._create_snapshot(volume.id, False,
-                                             **create_snapshot_kwargs)
+            volume = self.cinder.create_volume(size, snapshot_id=snapshot.id)
+            snapshot = self.cinder.create_snapshot(volume.id, force=False,
+                                                   **create_snapshot_kwargs)
             server = self.get_random_server()
             attachment = self._attach_volume(server, volume)
 
@@ -539,16 +538,17 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderScenario,
         nes_objs.reverse()
         for server, volume, snapshot, attachment in nes_objs:
             self._detach_volume(server, volume, attachment)
-            self._delete_snapshot(snapshot)
-            self._delete_volume(volume)
+            self.cinder.delete_snapshot(snapshot)
+            self.cinder.delete_volume(volume)
 
 
+@validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_snapshots")
-class CreateAndListSnapshots(cinder_utils.CinderScenario,
+class CreateAndListSnapshots(cinder_utils.CinderBasic,
                              nova_utils.NovaScenario,
                              glance_utils.GlanceScenario):
 
@@ -562,18 +562,18 @@ class CreateAndListSnapshots(cinder_utils.CinderScenario,
         :param kwargs: optional args to create a snapshot
         """
         volume = random.choice(self.context["tenant"]["volumes"])
-        self._create_snapshot(volume["id"], force=force, **kwargs)
-        self._list_snapshots(detailed)
+        self.cinder.create_snapshot(volume["id"], force=force, **kwargs)
+        self.cinder.list_snapshots(detailed)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
 @validation.required_openstack(users=True)
 @validation.required_parameters("size")
 @scenario.configure(context={"cleanup": ["cinder", "glance"]},
                     name="CinderVolumes.create_and_upload_volume_to_image")
-class CreateAndUploadVolumeToImage(cinder_utils.CinderScenario,
-                                   nova_utils.NovaScenario,
+class CreateAndUploadVolumeToImage(cinder_utils.CinderBasic,
                                    glance_utils.GlanceScenario):
 
     def run(self, size, image=None, force=False, container_format="bare",
@@ -594,23 +594,25 @@ class CreateAndUploadVolumeToImage(cinder_utils.CinderScenario,
         """
         if image:
             kwargs["imageRef"] = image
-        volume = self._create_volume(size, **kwargs)
-        image = self._upload_volume_to_image(volume, force, container_format,
-                                             disk_format)
+        volume = self.cinder.create_volume(size, **kwargs)
+        image = self.cinder.upload_volume_to_image(
+            volume, force=force, container_format=container_format,
+            disk_format=disk_format)
 
         if do_delete:
-            self._delete_volume(volume)
+            self.cinder.delete_volume(volume)
             self._delete_image(image)
 
 
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_backup")
-class CreateVolumeBackup(cinder_utils.CinderScenario,
-                         nova_utils.NovaScenario,
-                         glance_utils.GlanceScenario):
+class CreateVolumeBackup(cinder_utils.CinderBasic):
 
     def run(self, size, do_delete=True, create_volume_kwargs=None,
             create_backup_kwargs=None):
@@ -625,22 +627,23 @@ class CreateVolumeBackup(cinder_utils.CinderScenario,
         create_volume_kwargs = create_volume_kwargs or {}
         create_backup_kwargs = create_backup_kwargs or {}
 
-        volume = self._create_volume(size, **create_volume_kwargs)
-        backup = self._create_backup(volume.id, **create_backup_kwargs)
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
+        backup = self.cinder.create_backup(volume.id, **create_backup_kwargs)
 
         if do_delete:
-            self._delete_volume(volume)
-            self._delete_backup(backup)
+            self.cinder.delete_volume(volume)
+            self.cinder.delete_backup(backup)
 
 
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_restore_volume_backup")
-class CreateAndRestoreVolumeBackup(cinder_utils.CinderScenario,
-                                   nova_utils.NovaScenario,
-                                   glance_utils.GlanceScenario):
+class CreateAndRestoreVolumeBackup(cinder_utils.CinderBasic):
 
     def run(self, size, do_delete=True, create_volume_kwargs=None,
             create_backup_kwargs=None):
@@ -655,23 +658,24 @@ class CreateAndRestoreVolumeBackup(cinder_utils.CinderScenario,
         create_volume_kwargs = create_volume_kwargs or {}
         create_backup_kwargs = create_backup_kwargs or {}
 
-        volume = self._create_volume(size, **create_volume_kwargs)
-        backup = self._create_backup(volume.id, **create_backup_kwargs)
-        self._restore_backup(backup.id)
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
+        backup = self.cinder.create_backup(volume.id, **create_backup_kwargs)
+        self.cinder.restore_backup(backup.id)
 
         if do_delete:
-            self._delete_volume(volume)
-            self._delete_backup(backup)
+            self.cinder.delete_volume(volume)
+            self.cinder.delete_backup(backup)
 
 
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_volume_kwargs")
+@validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_volume_backups")
-class CreateAndListVolumeBackups(cinder_utils.CinderScenario,
-                                 nova_utils.NovaScenario,
-                                 glance_utils.GlanceScenario):
+class CreateAndListVolumeBackups(cinder_utils.CinderBasic):
 
     def run(self, size, detailed=True, do_delete=True,
             create_volume_kwargs=None, create_backup_kwargs=None):
@@ -687,24 +691,23 @@ class CreateAndListVolumeBackups(cinder_utils.CinderScenario,
         create_volume_kwargs = create_volume_kwargs or {}
         create_backup_kwargs = create_backup_kwargs or {}
 
-        volume = self._create_volume(size, **create_volume_kwargs)
-        backup = self._create_backup(volume.id, **create_backup_kwargs)
-        self._list_backups(detailed)
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
+        backup = self.cinder.create_backup(volume.id, **create_backup_kwargs)
+        self.cinder.list_backups(detailed)
 
         if do_delete:
-            self._delete_volume(volume)
-            self._delete_backup(backup)
+            self.cinder.delete_volume(volume)
+            self.cinder.delete_backup(backup)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_and_clone")
-class CreateVolumeAndClone(cinder_utils.CinderScenario,
-                           nova_utils.NovaScenario,
-                           glance_utils.GlanceScenario):
+class CreateVolumeAndClone(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, nested_level=1, **kwargs):
         """Create a volume, then clone it to another volume.
@@ -728,24 +731,25 @@ class CreateVolumeAndClone(cinder_utils.CinderScenario,
         if image:
             kwargs["imageRef"] = image
 
-        source_vol = self._create_volume(size, **kwargs)
+        source_vol = self.cinder.create_volume(size, **kwargs)
 
         kwargs.pop("imageRef", None)
         for i in range(nested_level):
             with atomic.ActionTimer(self, "cinder.clone_volume"):
-                source_vol = self._create_volume(source_vol.size,
-                                                 source_volid=source_vol.id,
-                                                 atomic_action=False, **kwargs)
+                source_vol = self.cinder.create_volume(
+                    source_vol.size, source_volid=source_vol.id,
+                    **kwargs)
 
 
+@validation.restricted_parameters(["name", "display_name"])
+@validation.restricted_parameters(["name", "display_name"],
+                                  subdict="create_snapshot_kwargs")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_from_snapshot")
-class CreateVolumeFromSnapshot(cinder_utils.CinderScenario,
-                               nova_utils.NovaScenario,
-                               glance_utils.GlanceScenario):
+class CreateVolumeFromSnapshot(cinder_utils.CinderBasic):
 
     def run(self, do_delete=True, create_snapshot_kwargs=None, **kwargs):
         """Create a volume-snapshot, then create a volume from this snapshot.
@@ -758,26 +762,26 @@ class CreateVolumeFromSnapshot(cinder_utils.CinderScenario,
         create_snapshot_kwargs = create_snapshot_kwargs or {}
         src_volume = random.choice(self.context["tenant"]["volumes"])
 
-        snapshot = self._create_snapshot(src_volume["id"],
-                                         **create_snapshot_kwargs)
-        volume = self._create_volume(src_volume["size"],
-                                     snapshot_id=snapshot.id,
-                                     **kwargs)
+        snapshot = self.cinder.create_snapshot(src_volume["id"],
+                                               **create_snapshot_kwargs)
+        volume = self.cinder.create_volume(src_volume["size"],
+                                           snapshot_id=snapshot.id,
+                                           **kwargs)
 
         if do_delete:
-            self._delete_snapshot(snapshot)
-            self._delete_volume(volume)
+            self.cinder.delete_snapshot(snapshot)
+            self.cinder.delete_volume(volume)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_"
                     "and_update_readonly_flag")
-class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderScenario,
-                                        glance_utils.GlanceScenario):
+class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, read_only=True, **kwargs):
         """Create a volume and then update its readonly flag.
@@ -790,18 +794,18 @@ class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderScenario,
         """
         if image:
             kwargs["imageRef"] = image
-        volume = self._create_volume(size, **kwargs)
-        self._update_readonly_flag(volume.id, read_only)
+        volume = self.cinder.create_volume(size, **kwargs)
+        self.cinder.update_readonly_flag(volume.id, read_only=read_only)
 
 
 @types.convert(image={"type": "glance_image"})
+@validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.required_openstack(users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_accept_transfer")
-class CreateAndAcceptTransfer(cinder_utils.CinderScenario,
-                              glance_utils.GlanceScenario):
+class CreateAndAcceptTransfer(cinder_utils.CinderBasic):
 
     def run(self, size, image=None, **kwargs):
         """Create a volume transfer, then accept it
@@ -814,6 +818,6 @@ class CreateAndAcceptTransfer(cinder_utils.CinderScenario,
         """
         if image:
             kwargs["imageRef"] = image
-        volume = self._create_volume(size, **kwargs)
-        transfer = self._transfer_create(volume.id)
-        self._transfer_accept(transfer.id, transfer.auth_key)
+        volume = self.cinder.create_volume(size, **kwargs)
+        transfer = self.cinder.transfer_create(volume.id)
+        self.cinder.transfer_accept(transfer.id, auth_key=transfer.auth_key)

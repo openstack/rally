@@ -43,13 +43,16 @@ CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(CINDER_BENCHMARK_OPTS, group=benchmark_group)
 
-Volume = collections.namedtuple("Volume", ["id", "name", "size"])
+Volume = collections.namedtuple("Volume", ["id", "name", "size", "status"])
 VolumeSnapshot = collections.namedtuple("VolumeSnapshot", ["id", "name",
-                                                           "volume_id"])
+                                                           "volume_id",
+                                                           "status"])
 VolumeBackup = collections.namedtuple("VolumeBackup", ["id", "name",
-                                                       "volume_id"])
+                                                       "volume_id",
+                                                       "status"])
 VolumeTransfer = collections.namedtuple("VolumeTransfer", ["id", "name",
-                                                           "volume_id"])
+                                                           "volume_id",
+                                                           "auth_key"])
 VolumeEncryptionType = collections.namedtuple("VolumeEncryptionType",
                                               ["id", "volume_type_id"])
 
@@ -304,6 +307,15 @@ class BlockStorage(service.UnifiedOpenStackService):
         return self._impl.create_volume_type(name=name,
                                              description=description,
                                              is_public=is_public)
+
+    @service.should_be_overridden
+    def get_volume_type(self, volume_type):
+        """get details of volume_type.
+
+        :param volume_type: The ID of the :class:`VolumeType` to get
+        :returns: :class:`VolumeType`
+        """
+        return self._impl.get_volume_type(volume_type)
 
     @service.should_be_overridden
     def delete_volume_type(self, volume_type):

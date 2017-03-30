@@ -14,11 +14,13 @@
 
 import uuid
 
+import ddt
 import mock
 from oslo_config import cfg
 
 from rally import exceptions
 from rally.plugins.openstack import service
+from rally.plugins.openstack.services.storage import block
 from rally.plugins.openstack.services.storage import cinder_common
 from tests.unit import fakes
 from tests.unit import test
@@ -32,6 +34,7 @@ class FullCinder(service.Service, cinder_common.CinderMixin):
     pass
 
 
+@ddt.ddt
 class CinderMixinTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(CinderMixinTestCase, self).setUp()
@@ -50,20 +53,63 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.assertEqual(self.cinder,
                          self.service._get_client())
 
+    def test__update_resource_with_manage(self):
+        resource = mock.MagicMock(id=1, manager=mock.MagicMock())
+        self.assertEqual(resource.manager.get.return_value,
+                         self.service._update_resource(resource))
+        resource.manager.get.assert_called_once_with(
+            resource.id)
+
+    @ddt.data({"resource": block.Volume(id=1, name="vol",
+                                        size=1, status="st"),
+               "attr": "volumes"},
+              {"resource": block.VolumeSnapshot(id=2, name="snapshot",
+                                                volume_id=1, status="st"),
+               "attr": "volume_snapshots"},
+              {"resource": block.VolumeBackup(id=3, name="backup",
+                                              volume_id=1, status="st"),
+               "attr": "backups"})
+    @ddt.unpack
+    def test__update_resource_with_no_manage(self, resource, attr):
+        self.assertEqual(getattr(self.cinder, attr).get.return_value,
+                         self.service._update_resource(resource))
+        getattr(self.cinder, attr).get.assert_called_once_with(
+            resource.id)
+
+    def test__update_resource_with_not_found(self):
+        manager = mock.MagicMock()
+        resource = fakes.FakeResource(manager=manager, status="ERROR")
+
+        class NotFoundException(Exception):
+            http_status = 404
+
+        manager.get = mock.MagicMock(side_effect=NotFoundException)
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          self.service._update_resource, resource)
+
+    def test__update_resource_with_http_exception(self):
+        manager = mock.MagicMock()
+        resource = fakes.FakeResource(manager=manager, status="ERROR")
+
+        class HTTPException(Exception):
+            pass
+
+        manager.get = mock.MagicMock(side_effect=HTTPException)
+        self.assertRaises(exceptions.GetResourceFailure,
+                          self.service._update_resource, resource)
+
     def test__wait_available_volume(self):
         volume = fakes.FakeVolume()
-        return_volume = self.service._wait_available_volume(volume)
+        self.assertEqual(self.mock_wait_for_status.mock.return_value,
+                         self.service._wait_available_volume(volume))
 
-        self.mock_get_from_manager.mock.assert_called_once_with()
         self.mock_wait_for_status.mock.assert_called_once_with(
             volume,
             ready_statuses=["available"],
-            update_resource=self.mock_get_from_manager.mock.return_value,
+            update_resource=self.service._update_resource,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.assertEqual(self.mock_wait_for_status.mock.return_value,
-                         return_volume)
 
     def test_list_volumes(self):
         self.assertEqual(self.cinder.volumes.list.return_value,
@@ -81,12 +127,11 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.service.delete_volume(volume)
 
         self.cinder.volumes.delete.assert_called_once_with(volume)
-        self.mock_get_from_manager.mock.assert_called_once_with()
         self.mock_wait_for_status.mock.assert_called_once_with(
             volume,
             ready_statuses=["deleted"],
             check_deletion=True,
-            update_resource=self.mock_get_from_manager.mock.return_value,
+            update_resource=self.service._update_resource,
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
@@ -97,7 +142,8 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.service._wait_available_volume = mock.MagicMock()
         self.service._wait_available_volume.return_value = fakes.FakeVolume()
 
-        self.service.extend_volume(volume, 1)
+        self.assertEqual(self.service._wait_available_volume.return_value,
+                         self.service.extend_volume(volume, 1))
 
         self.cinder.volumes.extend.assert_called_once_with(volume, 1)
         self.service._wait_available_volume.assert_called_once_with(volume)
@@ -168,7 +214,7 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             mock.call(
                 volume,
                 ready_statuses=["available"],
-                update_resource=self.mock_get_from_manager.mock.return_value,
+                update_resource=self.service._update_resource,
                 timeout=CONF.benchmark.cinder_volume_create_timeout,
                 check_interval=CONF.benchmark.
                 cinder_volume_create_poll_interval),
@@ -180,7 +226,6 @@ class CinderMixinTestCase(test.ScenarioTestCase):
                 check_interval=CONF.benchmark.
                 glance_image_create_poll_interval)
         ])
-        self.mock_get_from_manager.mock.assert_called_once_with()
         glance_client.images.get.assert_called_once_with(1)
 
     def test_delete_snapshot(self):
@@ -191,11 +236,10 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             snapshot,
             ready_statuses=["deleted"],
             check_deletion=True,
-            update_resource=self.mock_get_from_manager.mock.return_value,
+            update_resource=self.service._update_resource,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.mock_get_from_manager.mock.assert_called_once_with()
 
     def test_delete_backup(self):
         backup = mock.Mock()
@@ -205,11 +249,10 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             backup,
             ready_statuses=["deleted"],
             check_deletion=True,
-            update_resource=self.mock_get_from_manager.mock.return_value,
+            update_resource=self.service._update_resource,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.mock_get_from_manager.mock.assert_called_once_with()
 
     def test_restore_backup(self):
         backup = mock.Mock()
@@ -237,6 +280,12 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.assertEqual(
             self.cinder.transfers.list.return_value,
             return_transfers_list)
+
+    def test_get_volume_type(self):
+        self.assertEqual(self.cinder.volume_types.get.return_value,
+                         self.service.get_volume_type("volume_type"))
+        self.cinder.volume_types.get.assert_called_once_with(
+            "volume_type")
 
     def test_delete_volume_type(self):
         volume_type = mock.Mock()
@@ -341,20 +390,24 @@ class UnifiedCinderMixinTestCase(test.TestCase):
             id = 1
             name = "backup"
             volume_id = "volume"
+            status = "st"
         backup = self.service._unify_backup(SomeBackup())
         self.assertEqual(1, backup.id)
         self.assertEqual("backup", backup.name)
         self.assertEqual("volume", backup.volume_id)
+        self.assertEqual("st", backup.status)
 
     def test__unify_transfer(self):
         class SomeTransfer(object):
             id = 1
             name = "transfer"
             volume_id = "volume"
+            status = "st"
         transfer = self.service._unify_backup(SomeTransfer())
         self.assertEqual(1, transfer.id)
         self.assertEqual("transfer", transfer.name)
         self.assertEqual("volume", transfer.volume_id)
+        self.assertEqual("st", transfer.status)
 
     def test__unify_encryption_type(self):
         class SomeEncryptionType(object):
@@ -408,15 +461,6 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         self.service.delete_backup("backup")
         self.service._impl.delete_backup.assert_called_once_with("backup")
 
-    def test_restore_backup(self):
-        self.service._unify_backup = mock.MagicMock()
-        self.assertEqual(self.service._unify_backup.return_value,
-                         self.service.restore_backup(1, volume_id=1))
-        self.service._impl.restore_backup.assert_called_once_with(1,
-                                                                  volume_id=1)
-        self.service._unify_backup.assert_called_once_with(
-            self.service._impl.restore_backup.return_value)
-
     def test_list_backups(self):
         self.service._unify_backup = mock.MagicMock()
         self.service._impl.list_backups.return_value = ["backup"]
@@ -436,6 +480,12 @@ class UnifiedCinderMixinTestCase(test.TestCase):
             detailed=True, search_opts=None)
         self.service._unify_transfer.assert_called_once_with(
             "transfer")
+
+    def test_get_volume_type(self):
+        self.assertEqual(self.service._impl.get_volume_type.return_value,
+                         self.service.get_volume_type("volume_type"))
+        self.service._impl.get_volume_type.assert_called_once_with(
+            "volume_type")
 
     def test_delete_volume_type(self):
         self.assertEqual(self.service._impl.delete_volume_type.return_value,

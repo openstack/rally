@@ -19,6 +19,7 @@ from oslo_config import cfg
 
 from rally import exceptions
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
@@ -713,6 +714,10 @@ class NovaScenario(scenario.OpenStackScenario):
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
+    def _update_volume_resource(self, resource):
+        cinder_service = cinder_utils.CinderBasic(self.context)
+        return cinder_service.cinder.get_volume(resource.id)
+
     @atomic.action_timer("nova.attach_volume")
     def _attach_volume(self, server, volume, device=None):
         server_id = server.id
@@ -722,7 +727,7 @@ class NovaScenario(scenario.OpenStackScenario):
         utils.wait_for_status(
             volume,
             ready_statuses=["in-use"],
-            update_resource=utils.get_from_manager(),
+            update_resource=self._update_volume_resource,
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
@@ -741,7 +746,7 @@ class NovaScenario(scenario.OpenStackScenario):
         utils.wait_for_status(
             volume,
             ready_statuses=["available"],
-            update_resource=utils.get_from_manager(),
+            update_resource=self._update_volume_resource,
             timeout=CONF.benchmark.nova_detach_volume_timeout,
             check_interval=CONF.benchmark.nova_detach_volume_poll_interval
         )

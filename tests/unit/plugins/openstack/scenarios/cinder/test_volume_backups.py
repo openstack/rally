@@ -20,14 +20,29 @@ from tests.unit import test
 
 class CinderBackupTestCase(test.ScenarioTestCase):
 
+    def setUp(self):
+        super(CinderBackupTestCase, self).setUp()
+        patch = mock.patch(
+            "rally.plugins.openstack.services.storage.block.BlockStorage")
+        self.addCleanup(patch.stop)
+        self.mock_cinder = patch.start()
+
+    def _get_context(self):
+        context = test.get_test_context()
+        context.update({
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake"}})
+        return context
+
     def test_create_incremental_volume_backup(self):
-        fake_volume = mock.MagicMock()
-        fake_backup = mock.MagicMock()
-        scenario = volume_backups.CreateIncrementalVolumeBackup(self.context)
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
-        scenario._create_backup = mock.MagicMock(return_value=fake_backup)
-        scenario._delete_volume = mock.MagicMock()
-        scenario._delete_backup = mock.MagicMock()
+        mock_service = self.mock_cinder.return_value
+        scenario = volume_backups.CreateIncrementalVolumeBackup(
+            self._get_context())
 
         volume_kwargs = {"some_var": "zaq"}
         backup_kwargs = {"incremental": True}
@@ -35,7 +50,9 @@ class CinderBackupTestCase(test.ScenarioTestCase):
         scenario.run(1, do_delete=True, create_volume_kwargs=volume_kwargs,
                      create_backup_kwargs=backup_kwargs)
 
-        self.assertEqual(2, scenario._create_backup.call_count)
-        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
-        scenario._delete_backup.assert_has_calls(fake_backup)
-        scenario._delete_volume.assert_called_once_with(fake_volume)
+        self.assertEqual(2, mock_service.create_backup.call_count)
+        mock_service.create_volume.assert_called_once_with(1, **volume_kwargs)
+        mock_service.delete_backup.assert_has_calls(
+            mock_service.create_backup.return_value)
+        mock_service.delete_volume.assert_called_once_with(
+            mock_service.create_volume.return_value)

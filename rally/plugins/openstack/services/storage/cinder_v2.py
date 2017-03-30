@@ -92,9 +92,14 @@ class CinderV2Service(service.Service, cinder_common.CinderMixin):
 
         :returns: The updated volume.
         """
-        return self._get_client().volumes.update(
-            volume_id, name=name or self.generate_random_name(),
-            description=description)
+        kwargs = {}
+        if name is not None:
+            kwargs["name"] = name
+        if description is not None:
+            kwargs["description"] = description
+        updated_volume = self._get_client().volumes.update(
+            volume_id, **kwargs)
+        return updated_volume["volume"]
 
     @atomic.action_timer("cinder_v2.list_types")
     def list_types(self, search_opts=None, is_public=None):
@@ -177,13 +182,18 @@ class UnifiedCinderV2Service(cinder_common.UnifiedCinderMixin,
 
     @staticmethod
     def _unify_volume(volume):
-        return block.Volume(id=volume.id, name=volume.name,
-                            size=volume.size)
+        if isinstance(volume, dict):
+            return block.Volume(id=volume["id"], name=volume["name"],
+                                size=volume["size"], status=volume["status"])
+        else:
+            return block.Volume(id=volume.id, name=volume.name,
+                                size=volume.size, status=volume.status)
 
     @staticmethod
     def _unify_snapshot(snapshot):
         return block.VolumeSnapshot(id=snapshot.id, name=snapshot.name,
-                                    volume_id=snapshot.volume_id)
+                                    volume_id=snapshot.volume_id,
+                                    status=snapshot.status)
 
     def create_volume(self, size, consistencygroup_id=None,
                       group_id=None, snapshot_id=None, source_volid=None,
@@ -321,3 +331,14 @@ class UnifiedCinderV2Service(cinder_common.UnifiedCinderMixin,
         return self._impl.create_volume_type(name=name,
                                              description=description,
                                              is_public=is_public)
+
+    def restore_backup(self, backup_id, volume_id=None):
+        """Restore the given backup.
+
+        :param backup_id: The ID of the backup to restore.
+        :param volume_id: The ID of the volume to restore the backup to.
+
+        :returns: Return the restored backup.
+        """
+        return self._unify_volume(self._impl.restore_backup(
+            backup_id, volume_id=volume_id))

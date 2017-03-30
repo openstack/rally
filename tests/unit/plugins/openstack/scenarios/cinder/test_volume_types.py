@@ -18,85 +18,91 @@ from rally.plugins.openstack.scenarios.cinder import volume_types
 from tests.unit import test
 
 
-class fake_type(object):
-    name = "fake"
-
-
 class CinderVolumeTypesTestCase(test.ScenarioTestCase):
+
+    def setUp(self):
+        super(CinderVolumeTypesTestCase, self).setUp()
+        patch = mock.patch(
+            "rally.plugins.openstack.services.storage.block.BlockStorage")
+        self.addCleanup(patch.stop)
+        self.mock_cinder = patch.start()
 
     def _get_context(self):
         context = test.get_test_context()
         context.update({
-            "volume_types": [{"id": "fake_id",
-                              "name": "fake_name"}]})
+            "admin": {
+                "id": "fake_user_id",
+                "credential": mock.MagicMock()
+            },
+            "user": {"id": "fake_user_id",
+                     "credential": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake"}})
         return context
 
     def test_create_and_get_volume_type(self):
-        scenario = volume_types.CreateAndGetVolumeType(self.context)
-        scenario._create_volume_type = mock.Mock()
-        scenario._get_volume_type = mock.Mock()
+        mock_service = self.mock_cinder.return_value
+        scenario = volume_types.CreateAndGetVolumeType(self._get_context())
         scenario.run(fakeargs="f")
-        scenario._create_volume_type.assert_called_once_with(fakeargs="f")
-        scenario._get_volume_type.assert_called_once_with(
-            scenario._create_volume_type.return_value)
+        mock_service.create_volume_type.assert_called_once_with(fakeargs="f")
+        mock_service.get_volume_type.assert_called_once_with(
+            mock_service.create_volume_type.return_value)
 
     def test_create_and_delete_volume_type(self):
-        scenario = volume_types.CreateAndDeleteVolumeType(self.context)
-        scenario._create_volume_type = mock.Mock()
-        scenario._delete_volume_type = mock.Mock()
+        mock_service = self.mock_cinder.return_value
+        scenario = volume_types.CreateAndDeleteVolumeType(self._get_context())
         scenario.run(fakeargs="fakeargs")
-        scenario._create_volume_type.assert_called_once_with(
+        mock_service.create_volume_type.assert_called_once_with(
             fakeargs="fakeargs")
-        scenario._delete_volume_type.assert_called_once_with(
-            scenario._create_volume_type.return_value)
+        mock_service.delete_volume_type.assert_called_once_with(
+            mock_service.create_volume_type.return_value)
 
     def test_create_and_delete_encryption_type(self):
-        scenario = volume_types.CreateAndDeleteEncryptionType(
-            self._get_context())
-        scenario._create_encryption_type = mock.Mock()
-        scenario._delete_encryption_type = mock.Mock()
+        mock_service = self.mock_cinder.return_value
+        context = self._get_context()
+        context.update({
+            "volume_types": [{"id": "fake_id",
+                              "name": "fake_name"}]})
+        scenario = volume_types.CreateAndDeleteEncryptionType(context)
         scenario.run(create_specs="fakecreatespecs")
-        scenario._create_encryption_type.assert_called_once_with(
-            "fake_id", "fakecreatespecs")
-        scenario._delete_encryption_type.assert_called_once_with(
+        mock_service.create_encryption_type.assert_called_once_with(
+            "fake_id", specs="fakecreatespecs")
+        mock_service.delete_encryption_type.assert_called_once_with(
             "fake_id")
 
     def test_create_volume_type_and_encryption_type(self):
-        scenario = volume_types.CreateVolumeTypeAndEncryptionType(self.context)
-        scenario._create_volume_type = mock.Mock()
-        scenario._create_encryption_type = mock.Mock()
+        mock_service = self.mock_cinder.return_value
+        scenario = volume_types.CreateVolumeTypeAndEncryptionType(
+            self._get_context())
         scenario.run(specs="fakespecs", fakeargs="fakeargs")
-        scenario._create_volume_type.assert_called_once_with(
+        mock_service.create_volume_type.assert_called_once_with(
             fakeargs="fakeargs")
-        scenario._create_encryption_type.assert_called_once_with(
-            scenario._create_volume_type.return_value, "fakespecs")
+        mock_service.create_encryption_type.assert_called_once_with(
+            mock_service.create_volume_type.return_value,
+            specs="fakespecs")
 
     def test_create_and_list_encryption_type(self):
-        scenario = volume_types.CreateAndListEncryptionType(self.context)
-        scenario._create_volume_type = mock.Mock()
-        scenario._create_encryption_type = mock.Mock()
-        scenario._list_encryption_type = mock.Mock()
+        mock_service = self.mock_cinder.return_value
+        scenario = volume_types.CreateAndListEncryptionType(
+            self._get_context())
         scenario.run(specs="fakespecs", search_opts="fakeopts",
                      fakeargs="fakeargs")
-        scenario._create_volume_type.assert_called_once_with(
+        mock_service.create_volume_type.assert_called_once_with(
             fakeargs="fakeargs")
-        scenario._create_encryption_type.assert_called_once_with(
-            scenario._create_volume_type.return_value, "fakespecs")
-        scenario._list_encryption_type.assert_called_once_with(
+        mock_service.create_encryption_type.assert_called_once_with(
+            mock_service.create_volume_type.return_value,
+            specs="fakespecs")
+        mock_service.list_encryption_type.assert_called_once_with(
             "fakeopts")
 
     def test_create_and_set_volume_type_keys(self):
-        scenario = volume_types.CreateAndSetVolumeTypeKeys(self.context)
-
-        volume_type = mock.MagicMock()
+        mock_service = self.mock_cinder.return_value
         volume_type_key = {"volume_backend_name": "LVM_iSCSI"}
-        scenario._create_volume_type = mock.MagicMock()
-        scenario._set_volume_type_keys = mock.MagicMock()
-
-        scenario._create_volume_type.return_value = volume_type
+        scenario = volume_types.CreateAndSetVolumeTypeKeys(
+            self._get_context())
         scenario.run(volume_type_key, fakeargs="fakeargs")
 
-        scenario._create_volume_type.assert_called_once_with(
+        mock_service.create_volume_type.assert_called_once_with(
             fakeargs="fakeargs")
-        scenario._set_volume_type_keys.assert_called_once_with(volume_type,
-                                                               volume_type_key)
+        mock_service.set_volume_type_keys.assert_called_once_with(
+            mock_service.create_volume_type.return_value,
+            metadata=volume_type_key)

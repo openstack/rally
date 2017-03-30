@@ -179,8 +179,7 @@
     -
       args:
         update_volume_kwargs:
-           display_name: "name_updated"
-           display_description: "desc_updated"
+           description: "desc_updated"
         size: 1
       runner:
         type: "constant"
@@ -196,8 +195,7 @@
     -
       args:
         update_volume_kwargs:
-           display_name: "name_updated"
-           display_description: "desc_updated"
+           description: "desc_updated"
         size: 1
         image:
           name: {{image_name}}
@@ -510,7 +508,6 @@
   CinderVolumes.create_snapshot_and_attach_volume:
     -
       args:
-        volume_type: false
         size:
           min: 1
           max: 1
@@ -534,7 +531,7 @@
 
     -
       args:
-        volume_type: true
+        volume_type: "test"
         size:
           min: 1
           max: 1
@@ -552,6 +549,8 @@
           flavor:
             name: {{flavor_name}}
           servers_per_tenant: 1
+        volume_types:
+          - "test"
       sla:
         failure_rate:
           max: 0
