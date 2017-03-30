@@ -246,6 +246,16 @@ def subtask_create(task_uuid, title, description=None, context=None):
     return get_impl().subtask_create(task_uuid, title, description, context)
 
 
+def subtask_update(subtask_uuid, values):
+    """Update a subtask.
+
+    :param subtask_uuid: string with UUID of Subtask instance.
+    :param values: dict with record values.
+    :returns: a dict with data on the subtask.
+    """
+    return get_impl().subtask_update(subtask_uuid, values)
+
+
 def workload_create(task_uuid, subtask_uuid, key):
     """Create a workload.
 

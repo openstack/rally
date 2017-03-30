@@ -587,7 +587,7 @@ class Task(object):
                                 consts.TaskStatus.ABORTED]:
             raise exceptions.RallyException(
                 _LE("Failed to abort task '%s', since it already "
-                    "finished.") % self.task.uuid)
+                    "finished.") % self.task["uuid"])
 
         new_status = (consts.TaskStatus.SOFT_ABORTING
                       if soft else consts.TaskStatus.ABORTING)
@@ -603,6 +603,12 @@ class Subtask(object):
 
     def __getitem__(self, key):
         return self.subtask[key]
+
+    def _update(self, values):
+        self.subtask = db.subtask_update(self.subtask["uuid"], values)
+
+    def update_status(self, status):
+        self._update({"status": status})
 
     def add_workload(self, key):
         return Workload(self.subtask["task_uuid"],

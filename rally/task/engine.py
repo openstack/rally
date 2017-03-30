@@ -212,6 +212,13 @@ class ResultConsumer(object):
             time.sleep(2.0)
 
 
+class TaskAborted(Exception):
+    """Task aborted exception
+
+    Used by TaskEngine to interupt task run.
+    """
+
+
 class TaskEngine(object):
     """The Task engine class is used to execute benchmark scenarios.
 
@@ -416,38 +423,59 @@ class TaskEngine(object):
         """
         self.task.update_status(consts.TaskStatus.RUNNING)
 
-        for subtask in self.config.subtasks:
-            subtask_obj = self.task.add_subtask(**subtask.to_dict())
+        try:
+            for subtask in self.config.subtasks:
+                self._run_subtask(subtask)
+        except TaskAborted:
+            LOG.info("Received aborting signal.")
+            self.task.update_status(consts.TaskStatus.ABORTED)
+        else:
+            if objects.Task.get_status(
+                    self.task["uuid"]) != consts.TaskStatus.ABORTED:
+                self.task.update_status(consts.TaskStatus.FINISHED)
 
+    def _run_subtask(self, subtask):
+        subtask_obj = self.task.add_subtask(**subtask.to_dict())
+
+        try:
+            # TODO(astudenov): add subtask context here
             for workload in subtask.workloads:
+                self._run_workload(subtask_obj, workload)
+        except TaskAborted:
+            subtask_obj.update_status(consts.SubtaskStatus.ABORTED)
+            raise
+        except Exception as e:
+            subtask_obj.update_status(consts.SubtaskStatus.CRASHED)
+            # TODO(astudenov): save error to DB
+            LOG.debug(traceback.format_exc())
+            LOG.exception(e)
 
-                if ResultConsumer.is_task_in_aborting_status(
-                        self.task["uuid"]):
-                    LOG.info("Received aborting signal.")
-                    self.task.update_status(consts.TaskStatus.ABORTED)
-                    return
+            # NOTE(astudenov): crash task after exception in subtask
+            self.task.update_status(consts.TaskStatus.CRASHED)
+            raise
+        else:
+            subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
 
-                key = workload.make_key()
-                workload_obj = subtask_obj.add_workload(key)
-                LOG.info("Running benchmark with key: \n%s"
-                         % json.dumps(key, indent=2))
-                runner_obj = self._get_runner(workload.runner)
-                context_obj = self._prepare_context(
-                    workload.context, workload.name)
-                try:
-                    with ResultConsumer(key, self.task,
-                                        subtask_obj, workload_obj, runner_obj,
-                                        self.abort_on_sla_failure):
-                        with context.ContextManager(context_obj):
-                            runner_obj.run(workload.name, context_obj,
-                                           workload.args)
-                except Exception as e:
-                    LOG.debug(traceback.format_exc())
-                    LOG.exception(e)
+    def _run_workload(self, subtask_obj, workload):
+        if ResultConsumer.is_task_in_aborting_status(self.task["uuid"]):
+            raise TaskAborted()
 
-        if objects.Task.get_status(
-                self.task["uuid"]) != consts.TaskStatus.ABORTED:
-            self.task.update_status(consts.TaskStatus.FINISHED)
+        key = workload.make_key()
+        workload_obj = subtask_obj.add_workload(key)
+        LOG.info("Running benchmark with key: \n%s"
+                 % json.dumps(key, indent=2))
+        runner_obj = self._get_runner(workload.runner)
+        context_obj = self._prepare_context(workload.context, workload.name)
+        try:
+            with ResultConsumer(key, self.task, subtask_obj, workload_obj,
+                                runner_obj, self.abort_on_sla_failure):
+                with context.ContextManager(context_obj):
+                    runner_obj.run(workload.name, context_obj,
+                                   workload.args)
+        except Exception as e:
+            LOG.debug(traceback.format_exc())
+            LOG.exception(e)
+            # TODO(astudenov): save error to DB
 
 
 class TaskConfig(object):
@@ -536,7 +564,6 @@ class TaskConfig(object):
                         "workloads": {
                             "type": "array",
                             "minItems": 1,
-                            "maxItems": 1,
                             "items": {
                                 "type": "object",
                                 "properties": {

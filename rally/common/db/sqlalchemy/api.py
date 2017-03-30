@@ -416,6 +416,14 @@ class Connection(object):
         return subtask
 
     @db_api.serialize
+    def subtask_update(self, subtask_uuid, values):
+        subtask = self.model_query(models.Subtask).filter_by(
+            uuid=subtask_uuid).first()
+        subtask.update(values)
+        subtask.save()
+        return subtask
+
+    @db_api.serialize
     def workload_create(self, task_uuid, subtask_uuid, key):
         workload = models.Workload(task_uuid=task_uuid,
                                    subtask_uuid=subtask_uuid)

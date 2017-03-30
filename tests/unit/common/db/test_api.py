@@ -545,6 +545,14 @@ class SubtaskTestCase(test.DBTestCase):
         self.assertEqual("foo", subtask["title"])
         self.assertEqual(self.task["uuid"], subtask["task_uuid"])
 
+    def test_subtask_update(self):
+        subtask = db.subtask_create(self.task["uuid"], title="foo")
+        subtask = db.subtask_update(subtask["uuid"], {
+            "title": "bar",
+            "status": consts.SubtaskStatus.FINISHED})
+        self.assertEqual("bar", subtask["title"])
+        self.assertEqual(consts.SubtaskStatus.FINISHED, subtask["status"])
+
 
 class WorkloadTestCase(test.DBTestCase):
     def setUp(self):

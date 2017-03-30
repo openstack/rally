@@ -360,6 +360,15 @@ class SubtaskTestCase(test.TestCase):
             "bar", title="foo")
         self.assertEqual(subtask["uuid"], self.subtask["uuid"])
 
+    @mock.patch("rally.common.objects.task.db.subtask_update")
+    @mock.patch("rally.common.objects.task.db.subtask_create")
+    def test_update_status(self, mock_subtask_create, mock_subtask_update):
+        mock_subtask_create.return_value = self.subtask
+        subtask = objects.Subtask("bar", title="foo")
+        subtask.update_status(consts.SubtaskStatus.FINISHED)
+        mock_subtask_update.assert_called_once_with(
+            self.subtask["uuid"], {"status": consts.SubtaskStatus.FINISHED})
+
     @mock.patch("rally.common.objects.task.Workload")
     @mock.patch("rally.common.objects.task.db.subtask_create")
     def test_add_workload(self, mock_subtask_create, mock_workload):
