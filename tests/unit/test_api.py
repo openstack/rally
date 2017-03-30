@@ -492,14 +492,87 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         fake_credential1 = fakes.fake_credential()
         fake_credential2 = fakes.fake_credential()
 
-        mock_deployment_get.return_value.get_credentials_for.return_value = {
-            "admin": fake_credential1, "users": [fake_credential2]}
+        mock_deployment_get.return_value.get_all_credentials.return_value = {
+            "openstack": [{"admin": fake_credential1,
+                           "users": [fake_credential2]}]}
 
-        result = api._Deployment.check("uuid")
+        self.assertEqual(
+            {"openstack": [
+                {"services": fake_credential1.list_services.return_value}]},
+            api._Deployment.check("uuid"))
 
         fake_credential1.verify_connection.assert_called_once_with()
         fake_credential2.verify_connection.assert_called_once_with()
-        self.assertEqual(fake_credential1.list_services.return_value, result)
+
+    @mock.patch("rally.common.objects.Deployment.get")
+    def test_deployment_check_list_services_via_admin(self,
+                                                      mock_deployment_get):
+        fake_credential1 = fakes.fake_credential()
+        fake_credential2 = fakes.fake_credential()
+
+        mock_deployment_get.return_value.get_all_credentials.return_value = {
+            "openstack": [{"admin": fake_credential1,
+                           "users": [fake_credential2]}]}
+
+        self.assertEqual(
+            {"openstack": [
+                {"services": fake_credential1.list_services.return_value}]},
+            api._Deployment.check("uuid"))
+
+        fake_credential1.verify_connection.assert_called_once_with()
+        fake_credential1.list_services.assert_called_once_with()
+        fake_credential2.verify_connection.assert_called_once_with()
+        self.assertFalse(fake_credential2.list_services.called)
+
+    @mock.patch("rally.common.objects.Deployment.get")
+    def test_deployment_check_list_services_via_user(self,
+                                                     mock_deployment_get):
+        fake_credential1 = fakes.fake_credential()
+        fake_credential2 = fakes.fake_credential()
+
+        mock_deployment_get.return_value.get_all_credentials.return_value = {
+            "openstack": [{"admin": None,
+                           "users": [fake_credential2, fake_credential1]}]}
+
+        self.assertEqual(
+            {"openstack": [
+                {"services": fake_credential2.list_services.return_value}]},
+            api._Deployment.check("uuid"))
+
+        fake_credential2.verify_connection.assert_called_once_with()
+        fake_credential2.list_services.assert_called_once_with()
+        fake_credential1.verify_connection.assert_called_once_with()
+        self.assertFalse(fake_credential1.list_services.called)
+
+    @mock.patch("rally.api.traceback")
+    @mock.patch("rally.common.objects.Deployment.get")
+    def test_deployment_check_fails(self, mock_deployment_get, mock_traceback):
+        mock_traceback.format_exc.side_effect = ("Trace1", "Trace2")
+        fake_credential1 = fakes.fake_credential()
+        fake_credential2 = fakes.fake_credential()
+
+        fake_credential1.verify_connection.side_effect = KeyError("oops")
+        fake_credential2.verify_connection.side_effect = TypeError("ooooops")
+
+        mock_deployment_get.return_value.get_all_credentials.return_value = {
+            "openstack": [{"admin": fake_credential1,
+                           "users": [fake_credential2]}]}
+
+        self.assertEqual(
+            {"openstack": [
+                {"services": [],
+                 "admin_error": {
+                     "etype": "KeyError", "msg": "'oops'",
+                     "trace": "Trace1"},
+                 "user_error": {
+                     "etype": "TypeError", "msg": "ooooops",
+                     "trace": "Trace2"}}]},
+            api._Deployment.check("uuid"))
+
+        fake_credential1.verify_connection.assert_called_once_with()
+        fake_credential2.verify_connection.assert_called_once_with()
+        self.assertFalse(fake_credential1.list_services.called)
+        self.assertFalse(fake_credential2.list_services.called)
 
     def test_service_list(self):
         fake_credential = fakes.fake_credential()

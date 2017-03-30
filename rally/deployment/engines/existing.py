@@ -219,6 +219,20 @@ class ExistingCloud(engine.Engine):
                 creds_config[platform] = [config]
         return creds_config
 
+    def make_deploy(self):
+        platforms = (["openstack"] if "creds" not in self.config
+                     else self.config["creds"].keys())
+        LOG.info("Save deployment '%(name)s' (uuid=%(uuid)s) with "
+                 "'%(platforms)s' platform%(plural)s." %
+                 {"name": self.deployment["name"],
+                  "uuid": self.deployment["uuid"],
+                  "platforms": "', '".join(platforms),
+                  "plural": "s" if len(platforms) > 1 else ""})
+        self.deployment.set_started()
+        credentials = self.deploy()
+        self.deployment.set_completed()
+        return credentials
+
     def deploy(self):
         if "creds" not in self.config:
             LOG.warning("Old config schema is deprecated since Rally 0.10.0. "

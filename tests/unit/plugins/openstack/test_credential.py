@@ -63,11 +63,14 @@ class OpenStackCredentialTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_list_services(self, mock_clients):
+        mock_clients.return_value.services.return_value = {"compute": "nova",
+                                                           "volume": "cinder"}
         result = self.credential.list_services()
         mock_clients.assert_called_once_with(
             self.credential, api_info=None, cache={})
         mock_clients.return_value.services.assert_called_once_with()
-        self.assertIs(mock_clients.return_value.services.return_value, result)
+        self.assertEqual([{"name": "cinder", "type": "volume"},
+                          {"name": "nova", "type": "compute"}], result)
 
     @mock.patch("rally.osclients.Clients")
     def test_clients(self, mock_clients):

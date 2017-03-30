@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import time
+import traceback
 
 import jinja2
 import jinja2.meta
@@ -175,12 +176,41 @@ class _Deployment(object):
         :param deployment: UUID of deployment
         :returns: Service list
         """
-        # TODO(astudenov): make this method platform independent
-        creds = cls._get(deployment).get_credentials_for("openstack")
-        creds["admin"].verify_connection()
-        for user in creds["users"]:
-            user.verify_connection()
-        return creds["admin"].list_services()
+        result = {}
+        all_credentials = cls._get(deployment).get_all_credentials()
+        for platform in all_credentials:
+            result[platform] = []
+            for credential in all_credentials[platform]:
+                no_error = True
+                result[platform].append({"services": []})
+                active_user = None
+                if credential["admin"]:
+                    active_user = credential["admin"]
+                    try:
+                        credential["admin"].verify_connection()
+                    except Exception as e:
+                        no_error = False
+                        result[platform][-1]["admin_error"] = {
+                            "etype": e.__class__.__name__,
+                            "msg": str(e),
+                            "trace": traceback.format_exc()}
+                for user in credential["users"]:
+                    try:
+                        user.verify_connection()
+                    except Exception as e:
+                        no_error = False
+                        result[platform][-1]["user_error"] = {
+                            "etype": e.__class__.__name__,
+                            "msg": str(e),
+                            "trace": traceback.format_exc()}
+                        break
+
+                if no_error:
+                    active_user = active_user or credential["users"][0]
+                    services = active_user.list_services()
+                    result[platform][-1]["services"] = services
+
+        return result
 
 
 class _Task(object):

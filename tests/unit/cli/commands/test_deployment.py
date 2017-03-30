@@ -13,11 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import os
 
-from keystoneclient import exceptions as keystone_exceptions
 import mock
+import six
 
+from rally.cli import cliutils
 from rally.cli.commands import deployment
 from rally.cli import envutils
 from rally import consts
@@ -369,37 +371,101 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.fake_api.deployment.get.side_effect = exc
         self.assertEqual(1, self.deployment.use(self.fake_api, deployment_id))
 
-    @mock.patch("rally.cli.commands.deployment.cliutils.print_list")
-    def test_deployment_check(self, mock_print_list):
-        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_credential = {
-            "auth_url": "http://192.168.1.1:5000/v2.0/",
-            "username": "admin", "password": "adminpass"}
-        deployment = {"uuid": deployment_id,
-                      "credentials": {"openstack": [
-                          {"admin": sample_credential,
-                           "users": [sample_credential]}]}}
-        self.fake_api.deployment.get.return_value = deployment
-        self.fake_api.deployment.check.return_value = {}
+    @mock.patch("rally.cli.commands.deployment.logging.is_debug",
+                return_value=False)
+    @mock.patch("sys.stdout", new_callable=six.StringIO)
+    def test_deployment_check(self, mock_stdout, mock_is_debug):
+        deployment_uuid = "some"
+        # OrderedDict is used to predict the order of platfrom in output
+        self.fake_api.deployment.check.return_value = collections.OrderedDict([
+            ("openstack", [{"services": [
+                {"name": "nova", "type": "compute"},
+                {"name": "keystone", "type": "identity"},
+                {"name": "cinder", "type": "volume"}]}]),
+            ("docker", [{"admin_error": {"etype": "ProviderError",
+                                         "msg": "No money - no funny!",
+                                         "trace": "file1\nline1"},
+                        "services": []}]),
+            ("something", [{"services": [
+                {"name": "foo", "type": "bar", "version": "777"},
+                {"name": "xxx", "type": "yyy", "version": "777",
+                 "status": "Failed", "description": "Fake service"}]},
+                {"services": [], "user_error":
+                    {"etype": "ProviderError",
+                     "msg": "No money - no funny!",
+                     "trace": "file1\nline1"}}
+            ])])
 
-        self.deployment.check(self.fake_api, deployment_id)
+        origin_print_list = cliutils.print_list
 
-        self.fake_api.deployment.get.assert_called_once_with(deployment_id)
-        self.fake_api.deployment.check.assert_called_once_with(deployment_id)
-        headers = ["services", "type", "status"]
-        mock_print_list.assert_called_once_with([], headers)
+        def print_list(*args, **kwargs):
+            kwargs["out"] = mock_stdout
+            return origin_print_list(*args, **kwargs)
 
-    def test_deployment_check_raise(self):
-        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        sample_credential = {
-            "auth_url": "http://192.168.1.1:5000/v2.0/",
-            "username": "admin", "password": "adminpass"}
-        deployment = {"uuid": deployment_id,
-                      "credentials": {"openstack": [
-                          {"admin": sample_credential,
-                           "users": [sample_credential]}]}}
-        self.fake_api.deployment.get.return_value = deployment
-        refused = keystone_exceptions.ConnectionRefused()
-        self.fake_api.deployment.check.side_effect = refused
-        self.assertEqual(self.deployment.check(
-            self.fake_api, deployment_id), 1)
+        with mock.patch.object(deployment.cliutils, "print_list",
+                               new=print_list):
+            self.assertEqual(
+                1, self.deployment.check(self.fake_api, deployment_uuid))
+
+        self.assertEqual(
+            "-----------------------------------------------------------------"
+            "---------------\nPlatform openstack:\n"
+            "-----------------------------------------------------------------"
+            "---------------\n\nAvailable services:\n"
+            "+----------+--------------+-----------+\n"
+            "| Service  | Service Type | Status    |\n"
+            "+----------+--------------+-----------+\n"
+            "| cinder   | volume       | Available |\n"
+            "| keystone | identity     | Available |\n"
+            "| nova     | compute      | Available |\n"
+            "+----------+--------------+-----------+\n\n\n"
+            "-----------------------------------------------------------------"
+            "---------------\nPlatform docker:\n"
+            "-----------------------------------------------------------------"
+            "---------------\n\n"
+            "Error while checking admin credentials:\n"
+            "\tProviderError: No money - no funny!\n\n\n"
+            "-----------------------------------------------------------------"
+            "---------------\nPlatform something #1:\n"
+            "-----------------------------------------------------------------"
+            "---------------\n\nAvailable services:\n"
+            "+---------+--------------+-----------+---------+--------------+\n"
+            "| Service | Service Type | Status    | Version | Description  |\n"
+            "+---------+--------------+-----------+---------+--------------+\n"
+            "| foo     | bar          | Available | 777     |              |\n"
+            "| xxx     | yyy          | Failed    | 777     | Fake service |\n"
+            "+---------+--------------+-----------+---------+--------------+\n"
+            "\n\n-------------------------------------------------------------"
+            "-------------------\nPlatform something #2:\n"
+            "-----------------------------------------------------------------"
+            "---------------\n\n"
+            "Error while checking users credentials:\n"
+            "\tProviderError: No money - no funny!",
+            mock_stdout.getvalue().strip())
+
+    @mock.patch("rally.cli.commands.deployment.logging.is_debug",
+                return_value=True)
+    @mock.patch("sys.stdout", new_callable=six.StringIO)
+    def test_deployment_check_is_debug_turned_on(self, mock_stdout,
+                                                 mock_is_debug):
+        deployment_uuid = "some"
+        self.fake_api.deployment.check.return_value = {
+            "openstack": [{"services": [], "admin_error": {
+                "etype": "KeystoneError",
+                "msg": "connection refused",
+                "trace": "file1\n\tline1\n\n"
+                         "KeystoneError: connection refused"}}]
+        }
+
+        self.assertEqual(
+            1, self.deployment.check(self.fake_api, deployment_uuid))
+
+        self.assertEqual(
+            "-----------------------------------------------------------------"
+            "---------------\nPlatform openstack:\n"
+            "-----------------------------------------------------------------"
+            "---------------\n\n"
+            "Error while checking admin credentials:\n"
+            "file1\n\tline1\n\n"
+            "KeystoneError: connection refused",
+            mock_stdout.getvalue().strip())

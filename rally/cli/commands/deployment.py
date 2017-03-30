@@ -23,13 +23,13 @@ import re
 import sys
 
 import jsonschema
-from keystoneclient import exceptions as keystone_exceptions
 from six.moves.urllib import parse
 
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
 from rally.common.i18n import _
+from rally.common import logging
 from rally.common import utils
 from rally.common import yamlutils as yaml
 from rally import exceptions
@@ -57,7 +57,8 @@ class DeploymentCommands(object):
         will use the cloud represented in the configuration. If the
         cloud doesn't exist, Rally can deploy a new one for you with
         Devstack or Fuel. Different deployment engines exist for these
-        cases.
+        cases (see `rally plugin list --plugin-base Engine` for
+        more details).
 
         If you use the ExistingCloud deployment engine, you can pass
         the deployment config by environment variables with ``--fromenv``:
@@ -95,7 +96,7 @@ class DeploymentCommands(object):
         else:
             if not filename:
                 print("Either --filename or --fromenv is required.")
-                return(1)
+                return 1
             filename = os.path.expanduser(filename)
             with open(filename, "rb") as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
@@ -104,10 +105,10 @@ class DeploymentCommands(object):
             deployment = api.deployment.create(config, name)
         except jsonschema.ValidationError:
             print(_("Config schema validation error: %s.") % sys.exc_info()[1])
-            return(1)
+            return 1
         except exceptions.DeploymentNameExists:
             print(_("Error: %s") % sys.exc_info()[1])
-            return(1)
+            return 1
 
         self.list(api, deployment_list=[deployment])
         if do_use:
@@ -223,43 +224,64 @@ class DeploymentCommands(object):
     @envutils.with_default_deployment()
     @plugins.ensure_plugins_are_loaded
     def check(self, api, deployment=None):
-        """Check keystone authentication and list all available services.
+        """Check all credentials and list all available services.
 
         :param deployment: UUID or name of the deployment
         """
-        # TODO(astudenov): make this method platform independent
-        headers = ["services", "type", "status"]
-        table_rows = []
-        deployment = api.deployment.get(deployment)
 
-        try:
-            services = api.deployment.check(deployment["uuid"])
-        except keystone_exceptions.ConnectionRefused:
-            admin = deployment["credentials"]["openstack"][0]["admin"]
-            print(_("Unable to connect %s.") % admin["auth_url"])
-            return(1)
+        def is_field_there(lst, field):
+            return bool([item for item in lst if field in item])
 
-        except exceptions.InvalidArgumentsException:
-            data = ["keystone", "identity", "Error"]
-            table_rows.append(utils.Struct(**dict(zip(headers, data))))
-            print(_("Authentication Issues: %s.")
-                  % sys.exc_info()[1])
-            return(1)
+        def print_error(user_type, error):
+            print(_("Error while checking %s credentials:") % user_type)
+            if logging.is_debug():
+                print(error["trace"])
+            else:
+                print("\t%s: %s" % (error["etype"], error["msg"]))
 
-        for serv_type, serv in services.items():
-            data = [serv, serv_type, "Available"]
-            table_rows.append(utils.Struct(**dict(zip(headers, data))))
-        print(_("keystone endpoints are valid and following"
-              " services are available:"))
-        cliutils.print_list(table_rows, headers)
-        if "__unknown__" in services.values():
-            print(_(
-                "NOTE: '__unknown__' service name means that Keystone service "
-                "catalog doesn't return name for this service and Rally can "
-                "not identify service by its type. BUT you still can use "
-                "such services with api_versions context, specifying type of "
-                "service (execute `rally plugin show api_versions` for more "
-                "details)."))
+        exit_code = 0
+
+        info = api.deployment.check(deployment)
+        for platform in info:
+            for i, credentials in enumerate(info[platform]):
+                failed = False
+
+                n = "" if len(info[platform]) == 1 else " #%s" % (i + 1)
+                header = "Platform %s%s:" % (platform, n)
+                print(cliutils.make_header(header))
+                if "admin_error" in credentials:
+                    print_error("admin", credentials["admin_error"])
+                    failed = True
+                if "user_error" in credentials:
+                    print_error("users", credentials["user_error"])
+                    failed = True
+
+                if not failed:
+                    print("Available services:")
+                    formatters = {
+                        "Service": lambda x: x.get("name"),
+                        "Service Type": lambda x: x.get("type"),
+                        "Status": lambda x: x.get("status", "Available")}
+                    if (is_field_there(credentials["services"], "type") and
+                            is_field_there(credentials["services"], "name")):
+                        headers = ["Service", "Service Type", "Status"]
+                    else:
+                        headers = ["Service", "Status"]
+
+                    if is_field_there(credentials["services"], "version"):
+                        headers.append("Version")
+
+                    if is_field_there(credentials["services"], "description"):
+                        headers.append("Description")
+
+                    cliutils.print_list(credentials["services"], headers,
+                                        normalize_field_names=True,
+                                        formatters=formatters)
+                else:
+                    exit_code = 1
+                print("\n")
+
+        return exit_code
 
     def _update_openrc_deployment_file(self, deployment, credential):
         openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
