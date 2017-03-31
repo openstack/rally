@@ -5,7 +5,7 @@
     This task contains various scenarios for testing rally features
   subtasks:
     -
-      title: Dummy.dummy
+      title: Test SLA plugins
       workloads:
         -
           name: Dummy.dummy
@@ -27,9 +27,42 @@
               sigmas: 10
             performance_degradation:
               max_degradation: 50
+        -
+          name: Dummy.failure
+          description: Check failure_rate SLA plugin
+          args:
+            sleep: 0.2
+            from_iteration: 5
+            to_iteration: 15
+            each: 2
+          runner:
+            type: "constant"
+            times: 20
+            concurrency: 5
+          sla:
+            failure_rate:
+              min: 25
+              max: 25
+        -
+          name: Dummy.dummy_timed_atomic_actions
+          description: Check max_avg_duration_per_atomic SLA plugin
+          args:
+            number_of_actions: 5
+            sleep_factor: 1
+          runner:
+            type: "constant"
+            times: 3
+            concurrency: 3
+          sla:
+            max_avg_duration_per_atomic:
+              action_0: 1.0
+              action_1: 2.0
+              action_2: 3.0
+              action_3: 4.0
+              action_4: 5.0
 
     -
-      title: Dummy.dummy
+      title: Test constant runner
       workloads:
         -
           name: Dummy.dummy
@@ -44,10 +77,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           args:
@@ -59,9 +88,23 @@
           sla:
             failure_rate:
               max: 0
+        -
+          name: Dummy.dummy
+          description: >
+            Check the ability of constant runner to terminate scenario by timeout.
+          args:
+            sleep: 30
+          runner:
+            type: "constant"
+            times: 2
+            concurrency: 2
+            timeout: 1
+          sla:
+            failure_rate:
+              min: 100
 
     -
-      title: Dummy.dummy
+      title: Test constant_for_duration runner
       workloads:
         -
           name: Dummy.dummy
@@ -77,7 +120,7 @@
               max: 0
 
     -
-      title: Dummy.dummy
+      title: Test rps runner
       workloads:
         -
           name: Dummy.dummy
@@ -91,25 +134,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
-        -
-          name: Dummy.dummy
-          description: "Check 'serial' runner."
-          args:
-            sleep: 0.1
-          runner:
-            type: "serial"
-            times: 20
-          sla:
-            failure_rate:
-              max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: >
@@ -123,10 +147,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: >
@@ -140,10 +160,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: >
@@ -159,9 +175,6 @@
           sla:
             failure_rate:
               max: 0
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: "Check 'rps' with start, end, step arguments"
@@ -179,9 +192,6 @@
           sla:
             failure_rate:
               max: 0
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: "Check 'rps' with start, end, step arguments"
@@ -200,27 +210,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
-        -
-          name: Dummy.dummy
-          description: >
-            Check the ability of constant runner to terminate scenario by timeout.
-          args:
-            sleep: 30
-          runner:
-            type: "constant"
-            times: 2
-            concurrency: 2
-            timeout: 1
-          sla:
-            failure_rate:
-              min: 100
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: >
@@ -237,7 +226,22 @@
               min: 100
 
     -
-      title: Dummy.dummy
+      title: Test serial runner
+      workloads:
+        -
+          name: Dummy.dummy
+          description: "Check 'serial' runner."
+          args:
+            sleep: 0.1
+          runner:
+            type: "serial"
+            times: 20
+          sla:
+            failure_rate:
+              max: 0
+
+    -
+      title: Test Hook and Trigger plugins
       workloads:
         -
           name: Dummy.dummy
@@ -276,10 +280,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: "Check periodic trigger with iteration unit."
@@ -303,10 +303,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: "Check event trigger args."
@@ -328,10 +324,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy
-      workloads:
         -
           name: Dummy.dummy
           description: "Check periodic trigger with time unit."
@@ -354,7 +346,7 @@
                   end: 6
 
     -
-      title: Dummy.dummy_exception
+      title: Test Dummy scenarios
       workloads:
         -
           name: Dummy.dummy_exception
@@ -364,10 +356,6 @@
             type: "constant"
             times: 20
             concurrency: 5
-
-    -
-      title: Dummy.dummy_exception_probability
-      workloads:
         -
           name: Dummy.dummy_exception_probability
           args:
@@ -376,9 +364,6 @@
             type: "constant"
             times: 2042
             concurrency: 1
-    -
-      title: Dummy.dummy_exception_probability
-      workloads:
         -
           name: Dummy.dummy_exception_probability
           args:
@@ -391,10 +376,6 @@
             failure_rate:
               min: 20
               max: 80
-
-    -
-      title: Dummy.dummy_output
-      workloads:
         -
           name: Dummy.dummy_output
           runner:
@@ -404,10 +385,6 @@
           sla:
             failure_rate:
               max: 0
-
-    -
-      title: Dummy.dummy_random_fail_in_atomic
-      workloads:
         -
           name: Dummy.dummy_random_fail_in_atomic
           args:
@@ -416,10 +393,6 @@
             type: "constant"
             times: 50
             concurrency: 10
-
-    -
-      title: Dummy.dummy_random_action
-      workloads:
         -
           name: Dummy.dummy_random_action
           runner:
@@ -428,46 +401,7 @@
             concurrency: 5
 
     -
-      title: Dummy.dummy_timed_atomic_actions
-      workloads:
-        -
-          name: Dummy.dummy_timed_atomic_actions
-          args:
-            number_of_actions: 5
-            sleep_factor: 1
-          runner:
-            type: "constant"
-            times: 3
-            concurrency: 3
-          sla:
-            max_avg_duration_per_atomic:
-              action_0: 1.0
-              action_1: 2.0
-              action_2: 3.0
-              action_3: 4.0
-              action_4: 5.0
-
-    -
-      title: Dummy.failure
-      workloads:
-        -
-          name: Dummy.failure
-          args:
-            sleep: 0.2
-            from_iteration: 5
-            to_iteration: 15
-            each: 2
-          runner:
-            type: "constant"
-            times: 20
-            concurrency: 5
-          sla:
-            failure_rate:
-              min: 25
-              max: 25
-
-    -
-      title: FakePlugin.testplugin
+      title: Test function based scenario
       workloads:
         -
           name: FakePlugin.testplugin
@@ -480,7 +414,7 @@
               max: 0
 
     -
-      title: RallyProfile.generate_names_in_atomic
+      title: Profile generate_random_name method
       workloads:
         -
           name: RallyProfile.generate_names_in_atomic
@@ -495,9 +429,6 @@
               generate_100_names: 0.015
             failure_rate:
               max: 0
-    -
-      title: RallyProfile.generate_names_in_atomic
-      workloads:
         -
           name: RallyProfile.generate_names_in_atomic
           args:
@@ -511,9 +442,6 @@
               generate_1000_names: 0.1
             failure_rate:
               max: 0
-    -
-      title: RallyProfile.generate_names_in_atomic
-      workloads:
         -
           name: RallyProfile.generate_names_in_atomic
           args:
@@ -529,7 +457,7 @@
               max: 0
 
     -
-      title: RallyProfile.calculate_atomic
+      title: Profile atomic actions
       workloads:
         -
           name: RallyProfile.calculate_atomic
@@ -544,9 +472,6 @@
               calculate_100_atomics: 0.04
             failure_rate:
               max: 0
-    -
-      title: RallyProfile.calculate_atomic
-      workloads:
         -
           name: RallyProfile.calculate_atomic
           args:
