@@ -23,6 +23,7 @@ requests>=2.10.0,!=2.12.2,!=2.13.0,<=2.13.0            # Apache License, Version
 SQLAlchemy>=1.0.10,<=1.1.6                             # MIT
 sphinx>=1.5.1,<=1.5.3                                  # BSD
 six>=1.9.0,<=1.10.0                                    # MIT
+virtualenv                                             # MIT
 
 # OpenStack related
 boto>=2.32.1,<=2.46.1                                  # MIT
