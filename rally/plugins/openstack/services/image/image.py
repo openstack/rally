@@ -83,13 +83,16 @@ class Image(service.UnifiedOpenStackService):
         return image
 
     @service.should_be_overridden
-    def list_images(self, status="active", visibility=None):
+    def list_images(self, status="active", visibility=None, owner=None):
         """List images.
 
         :param status: Filter in images for the specified status
         :param visibility: Filter in images for the specified visibility
+        :param owner: Filter in images for tenant ID
         """
-        return self._impl.list_images(status=status, visibility=visibility)
+        return self._impl.list_images(status=status,
+                                      visibility=visibility,
+                                      owner=owner)
 
     @service.should_be_overridden
     def set_visibility(self, image_id, visibility="public"):

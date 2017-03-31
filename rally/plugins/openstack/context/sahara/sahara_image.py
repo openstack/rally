@@ -19,8 +19,8 @@ from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.sahara import utils
+from rally.plugins.openstack.services.image import image as image_services
 from rally.task import context
 
 
@@ -63,16 +63,17 @@ class SaharaImage(context.Context):
 
     def _create_image(self, hadoop_version, image_url, plugin_name, user,
                       user_name):
-        scenario = glance_utils.GlanceScenario(
-            {"user": user, "task": self.context["task"]})
-        image_name = self.generate_random_name()
-        image = scenario._create_image(name=image_name,
-                                       container_format="bare",
-                                       image_location=image_url,
-                                       disk_format="qcow2")
-        scenario.clients("sahara").images.update_image(
+        clients = osclients.Clients(
+            user["credential"],
+            api_info=self.context["config"].get("api_versions"))
+        image_service = image_services.Image(
+            clients, name_generator=self.generate_random_name)
+        image = image_service.create_image(container_format="bare",
+                                           image_location=image_url,
+                                           disk_format="qcow2")
+        clients.sahara().images.update_image(
             image_id=image.id, user_name=user_name, desc="")
-        scenario.clients("sahara").images.update_tags(
+        clients.sahara().images.update_tags(
             image_id=image.id, new_tags=[plugin_name, hadoop_version])
         return image.id
 
@@ -128,5 +129,5 @@ class SaharaImage(context.Context):
         if self.context["sahara"]["need_image_cleanup"]:
             resource_manager.cleanup(names=["glance.images"],
                                      users=self.context.get("users", []),
-                                     superclass=glance_utils.GlanceScenario,
+                                     superclass=self.__class__,
                                      task_id=self.context["task"]["uuid"])

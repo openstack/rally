@@ -22,8 +22,8 @@ from six.moves import configparser
 from rally.common.i18n import _
 from rally.common import logging
 from rally import exceptions
+from rally.plugins.openstack.services.image import image
 from rally.plugins.openstack.verification.tempest import config as conf
-from rally.plugins.openstack.wrappers import glance
 from rally.plugins.openstack.wrappers import network
 from rally.task import utils as task_utils
 from rally.verification import context
@@ -156,15 +156,15 @@ class TempestContext(context.VerifierContext):
         LOG.debug("Trying to discover a public image with name matching "
                   "regular expression '%s'. Note that case insensitive "
                   "matching is performed." % conf.CONF.tempest.img_name_regex)
-        glance_wrapper = glance.wrap(self.clients.glance, self)
-        images = glance_wrapper.list_images(status="active",
-                                            visibility="public")
-        for image in images:
-            if image.name and re.match(conf.CONF.tempest.img_name_regex,
-                                       image.name, re.IGNORECASE):
+        image_service = image.Image(self.clients)
+        images = image_service.list_images(status="active",
+                                           visibility="public")
+        for image_obj in images:
+            if image_obj.name and re.match(conf.CONF.tempest.img_name_regex,
+                                           image_obj.name, re.IGNORECASE):
                 LOG.debug("The following public "
-                          "image discovered: '%s'." % image.name)
-                return image
+                          "image discovered: '%s'." % image_obj.name)
+                return image_obj
 
         LOG.debug("There is no public image with name matching regular "
                   "expression '%s'." % conf.CONF.tempest.img_name_regex)
@@ -218,27 +218,27 @@ class TempestContext(context.VerifierContext):
 
     def _discover_or_create_image(self):
         if conf.CONF.tempest.img_name_regex:
-            image = self._discover_image()
-            if image:
+            image_obj = self._discover_image()
+            if image_obj:
                 LOG.debug("Using image '%s' (ID = %s) "
-                          "for the tests." % (image.name, image.id))
-                return image
+                          "for the tests." % (image_obj.name, image_obj.id))
+                return image_obj
 
         params = {
-            "name": self.generate_random_name(),
+            "image_name": self.generate_random_name(),
             "disk_format": conf.CONF.tempest.img_disk_format,
             "container_format": conf.CONF.tempest.img_container_format,
             "image_location": os.path.join(self.data_dir, self.image_name),
             "visibility": "public"
         }
-        LOG.debug("Creating image '%s'." % params["name"])
-        glance_wrapper = glance.wrap(self.clients.glance, self)
-        image = glance_wrapper.create_image(**params)
+        LOG.debug("Creating image '%s'." % params["image_name"])
+        image_service = image.Image(self.clients)
+        image_obj = image_service.create_image(params)
         LOG.debug("Image '%s' (ID = %s) has been "
-                  "successfully created!" % (image.name, image.id))
-        self._created_images.append(image)
+                  "successfully created!" % (image_obj.name, image_obj.id))
+        self._created_images.append(image_obj)
 
-        return image
+        return image_obj
 
     def _discover_or_create_flavor(self, flv_ram):
         novaclient = self.clients.nova()
@@ -290,19 +290,19 @@ class TempestContext(context.VerifierContext):
             LOG.debug("Role '%s' has been deleted." % role.name)
 
     def _cleanup_images(self):
-        glance_wrapper = glance.wrap(self.clients.glance, self)
-        for image in self._created_images:
-            LOG.debug("Deleting image '%s'." % image.name)
-            self.clients.glance().images.delete(image.id)
+        image_service = image.Image(self.clients)
+        for image_obj in self._created_images:
+            LOG.debug("Deleting image '%s'." % image_obj.name)
+            self.clients.glance().images.delete(image_obj.id)
             task_utils.wait_for_status(
-                image, ["deleted", "pending_delete"],
+                image_obj, ["deleted", "pending_delete"],
                 check_deletion=True,
-                update_resource=glance_wrapper.get_image,
+                update_resource=image_service.get_image,
                 timeout=conf.CONF.benchmark.glance_image_delete_timeout,
                 check_interval=conf.CONF.benchmark.
                 glance_image_delete_poll_interval)
-            LOG.debug("Image '%s' has been deleted." % image.name)
-            self._remove_opt_value_from_config("compute", image.id)
+            LOG.debug("Image '%s' has been deleted." % image_obj.name)
+            self._remove_opt_value_from_config("compute", image_obj.id)
 
     def _cleanup_flavors(self):
         novaclient = self.clients.nova()

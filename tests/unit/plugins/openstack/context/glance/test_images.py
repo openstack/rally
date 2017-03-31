@@ -22,7 +22,7 @@ import mock
 from rally.plugins.openstack.context.glance import images
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context.glance"
+CTX = "rally.plugins.openstack.context.glance.images"
 SCN = "rally.plugins.openstack.scenarios.glance"
 
 
@@ -160,9 +160,8 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         {},
         {"api_versions": {"glance": {"version": 2, "service_type": "image"}}})
     @ddt.unpack
-    def test_cleanup(self, api_versions=None):
-        image_service = self.mock_image.return_value
-
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    def test_cleanup(self, mock_cleanup, api_versions=None):
         images_per_tenant = 5
 
         tenants = self._gen_tenants(self.tenants_num)
@@ -201,9 +200,12 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             "users": users,
             "tenants": tenants
         })
-        if api_versions:
-            self.context["config"]["api_versions"] = api_versions
 
         images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
-        image_service.delete_image.assert_has_calls([])
+        mock_cleanup.assert_called_once_with(
+            names=["glance.images"],
+            users=self.context["users"],
+            api_versions=self.context["config"].get("api_versions"),
+            superclass=images_ctx.__class__,
+            task_id=self.context["task"]["uuid"])

@@ -20,7 +20,7 @@ from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from rally.plugins.openstack.scenarios.glance import utils as glance_utils
+from rally.plugins.openstack.scenarios.glance import images
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import atomic
 from rally.task import types
@@ -549,8 +549,7 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_snapshots")
 class CreateAndListSnapshots(cinder_utils.CinderBasic,
-                             nova_utils.NovaScenario,
-                             glance_utils.GlanceScenario):
+                             nova_utils.NovaScenario):
 
     def run(self, force=False, detailed=True, **kwargs):
         """Create and then list a volume-snapshot.
@@ -574,7 +573,7 @@ class CreateAndListSnapshots(cinder_utils.CinderBasic,
 @scenario.configure(context={"cleanup": ["cinder", "glance"]},
                     name="CinderVolumes.create_and_upload_volume_to_image")
 class CreateAndUploadVolumeToImage(cinder_utils.CinderBasic,
-                                   glance_utils.GlanceScenario):
+                                   images.GlanceBasic):
 
     def run(self, size, image=None, force=False, container_format="bare",
             disk_format="raw", do_delete=True, **kwargs):
@@ -601,7 +600,7 @@ class CreateAndUploadVolumeToImage(cinder_utils.CinderBasic,
 
         if do_delete:
             self.cinder.delete_volume(volume)
-            self._delete_image(image)
+            self.glance.delete_image(image.id)
 
 
 @validation.restricted_parameters(["name", "display_name"],

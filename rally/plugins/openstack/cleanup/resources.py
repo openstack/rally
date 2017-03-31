@@ -23,7 +23,7 @@ from rally.common import logging
 from rally import consts
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.services.identity import identity
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
+from rally.plugins.openstack.services.image import image
 from rally.task import utils as task_utils
 
 CONF = cfg.CONF
@@ -510,21 +510,18 @@ class ManilaSecurityService(base.ResourceManager):
 class GlanceImage(base.ResourceManager):
 
     def _client(self):
-        return getattr(self.admin or self.user, self._service)
-
-    def _wrapper(self):
-        return glance_wrapper.wrap(self._client(), self)
+        return image.Image(self.admin or self.user)
 
     def list(self):
-        return self._wrapper().list_images(owner=self.tenant_uuid)
+        return self._client().list_images(owner=self.tenant_uuid)
 
     def delete(self):
         client = self._client()
-        client().images.delete(self.raw_resource.id)
+        client.delete_image(self.raw_resource.id)
         task_utils.wait_for_status(
             self.raw_resource, ["deleted"],
             check_deletion=True,
-            update_resource=self._wrapper().get_image,
+            update_resource=self._client().get_image,
             timeout=CONF.benchmark.glance_image_delete_timeout,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)
 

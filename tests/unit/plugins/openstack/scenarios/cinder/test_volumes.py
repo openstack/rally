@@ -236,35 +236,35 @@ class CinderServersTestCase(test.ScenarioTestCase):
             mock_service.create_volume.return_value)
         scenario._delete_server.assert_called_once_with(fake_server)
 
-    def test_create_and_upload_volume_to_image(self):
-        mock_service = self.mock_cinder.return_value
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test_create_and_upload_volume_to_image(self, mock_image):
+        mock_volume_service = self.mock_cinder.return_value
+        mock_image_service = mock_image.return_value
         scenario = volumes.CreateAndUploadVolumeToImage(self._get_context())
-
-        scenario._delete_image = mock.MagicMock()
 
         scenario.run(2, image="img", container_format="fake",
                      disk_format="disk", do_delete=False, fakeargs="fakeargs")
 
-        mock_service.create_volume.assert_called_once_with(
+        mock_volume_service.create_volume.assert_called_once_with(
             2, imageRef="img", fakeargs="fakeargs")
-        mock_service.upload_volume_to_image.assert_called_once_with(
-            mock_service.create_volume.return_value,
+        mock_volume_service.upload_volume_to_image.assert_called_once_with(
+            mock_volume_service.create_volume.return_value,
             container_format="fake", disk_format="disk", force=False)
 
-        mock_service.create_volume.reset_mock()
-        mock_service.upload_volume_to_image.reset_mock()
+        mock_volume_service.create_volume.reset_mock()
+        mock_volume_service.upload_volume_to_image.reset_mock()
 
         scenario.run(1, image=None, do_delete=True, fakeargs="fakeargs")
 
-        mock_service.create_volume.assert_called_once_with(
+        mock_volume_service.create_volume.assert_called_once_with(
             1, fakeargs="fakeargs")
-        mock_service.upload_volume_to_image.assert_called_once_with(
-            mock_service.create_volume.return_value,
+        mock_volume_service.upload_volume_to_image.assert_called_once_with(
+            mock_volume_service.create_volume.return_value,
             container_format="bare", disk_format="raw", force=False)
-        mock_service.delete_volume.assert_called_once_with(
-            mock_service.create_volume.return_value)
-        scenario._delete_image.assert_called_once_with(
-            mock_service.upload_volume_to_image.return_value)
+        mock_volume_service.delete_volume.assert_called_once_with(
+            mock_volume_service.create_volume.return_value)
+        mock_image_service.delete_image.assert_called_once_with(
+            mock_volume_service.upload_volume_to_image.return_value.id)
 
     def test_create_snapshot_and_attach_volume(self):
         mock_service = self.mock_cinder.return_value
