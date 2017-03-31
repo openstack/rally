@@ -30,8 +30,8 @@ from tests.unit import fakes
 from tests.unit import test
 
 
-class TestException(exceptions.RallyException):
-    msg_fmt = "TestException"
+class MyException(exceptions.RallyException):
+    msg_fmt = "MyException"
 
 
 class TaskEngineTestCase(test.TestCase):
@@ -430,6 +430,12 @@ class TaskEngineTestCase(test.TestCase):
         self.assertEqual(2, fake_runner.run.call_count)
         self.assertEqual(mock.call(consts.TaskStatus.ABORTED),
                          task.update_status.mock_calls[-1])
+        subtask_obj = task.add_subtask.return_value
+        subtask_obj.update_status.assert_has_calls((
+            mock.call(consts.SubtaskStatus.FINISHED),
+            mock.call(consts.SubtaskStatus.FINISHED),
+            mock.call(consts.SubtaskStatus.ABORTED),
+        ))
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer")
@@ -456,6 +462,42 @@ class TaskEngineTestCase(test.TestCase):
         eng.run()
         self.assertEqual(mock.call(consts.TaskStatus.ABORTED),
                          task.update_status.mock_calls[-1])
+        subtask_obj = task.add_subtask.return_value
+        subtask_obj.update_status.assert_called_once_with(
+            consts.SubtaskStatus.ABORTED)
+
+    @mock.patch("rally.common.objects.Task.get_status")
+    @mock.patch("rally.task.engine.ResultConsumer")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    def test_run__subtask_crashed(
+            self, mock_scenario_runner, mock_scenario,
+            mock_context_manager_setup, mock_context_manager_cleanup,
+            mock_result_consumer, mock_task_get_status):
+        task = mock.MagicMock(spec=objects.Task)
+        subtask_obj = task.add_subtask.return_value
+        subtask_obj.add_workload.side_effect = MyException()
+        mock_result_consumer.is_task_in_aborting_status.return_value = False
+        config = {
+            "a.task": [{"runner": {"type": "a", "b": 1}}],
+            "b.task": [{"runner": {"type": "a", "b": 1}}],
+            "c.task": [{"runner": {"type": "a", "b": 1}}]
+        }
+        fake_runner_cls = mock.MagicMock()
+        fake_runner = mock.MagicMock()
+        fake_runner_cls.return_value = fake_runner
+        mock_scenario_runner.get.return_value = fake_runner_cls
+        eng = engine.TaskEngine(config, task, mock.Mock())
+        self.assertRaises(MyException, eng.run)
+
+        task.update_status.assert_has_calls((
+            mock.call(consts.TaskStatus.RUNNING),
+            mock.call(consts.TaskStatus.CRASHED),
+        ))
+        subtask_obj.update_status.assert_called_once_with(
+            consts.SubtaskStatus.CRASHED)
 
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
@@ -685,12 +727,12 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1])
         runner.event_queue = collections.deque()
-        exc = TestException()
+        exc = MyException()
         try:
             with engine.ResultConsumer(key, task, subtask, workload,
                                        runner, False):
                 raise exc
-        except TestException:
+        except MyException:
             pass
 
         mock_sla_instance.set_unexpected_failure.assert_has_calls(
