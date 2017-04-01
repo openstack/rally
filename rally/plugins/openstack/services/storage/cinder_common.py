@@ -15,8 +15,8 @@
 import random
 
 from rally import exceptions
+from rally.plugins.openstack.services.image import image
 from rally.plugins.openstack.services.storage import block
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import atomic
 from rally.task import utils as bench_utils
 
@@ -189,20 +189,19 @@ class CinderMixin(object):
             volume = self._wait_available_volume(volume)
 
             image_id = img["os-volume_upload_image"]["image_id"]
-            # NOTE(chenhb): If we imported glance service, we should switch
-            # glance wrapper to service.
-            wrapper = glance_wrapper.wrap(self._clients.glance, self)
-            image = wrapper.client.images.get(image_id)
-            image = bench_utils.wait_for_status(
-                image,
+            glance = image.Image(self._clients)
+
+            image_inst = glance.get_image(image_id)
+            image_inst = bench_utils.wait_for_status(
+                image_inst,
                 ready_statuses=["active"],
-                update_resource=wrapper.get_image,
+                update_resource=glance.get_image,
                 timeout=CONF.benchmark.glance_image_create_timeout,
                 check_interval=(CONF.benchmark
                                 .glance_image_create_poll_interval)
             )
 
-            return image
+            return image_inst
 
     def delete_snapshot(self, snapshot):
         """Delete the given snapshot.
