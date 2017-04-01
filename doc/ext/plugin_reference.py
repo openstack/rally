@@ -21,8 +21,7 @@ import re
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
 from rally import plugins
-from utils import category, subcategory, section, paragraph, parse_text, \
-    make_definitions, note
+import utils
 
 
 JSON_SCHEMA_TYPES_MAP = {"boolean": "bool",
@@ -210,26 +209,26 @@ class PluginsReferenceDirective(rst.Directive):
             if "type" in item:
                 iname += " (%s)" % item["type"]
             terms.append((iname, [item["doc"]]))
-        return make_definitions(title=title,
-                                ref_prefix=ref_prefix,
-                                terms=terms,
-                                descriptions=description)
+        return utils.make_definitions(title=title,
+                                      ref_prefix=ref_prefix,
+                                      terms=terms,
+                                      descriptions=description)
 
     def _make_plugin_section(self, plugin_cls, base_name=None):
         section_name = plugin_cls.get_name()
         if base_name:
             section_name += " [%s]" % base_name
-        section_obj = section(section_name)
+        section_obj = utils.section(section_name)
 
         info = plugin_cls.get_info()
         if info["title"]:
-            section_obj.append(paragraph(info["title"]))
+            section_obj.append(utils.paragraph(info["title"]))
 
         if info["description"]:
-            section_obj.extend(parse_text(info["description"]))
+            section_obj.extend(utils.parse_text(info["description"]))
 
         if info["namespace"]:
-            section_obj.append(paragraph(
+            section_obj.append(utils.paragraph(
                 "**Namespace**: %s" % info["namespace"]))
 
         if base_name:
@@ -242,7 +241,7 @@ class PluginsReferenceDirective(rst.Directive):
                                                     ref_prefix))
 
         if info["returns"]:
-            section_obj.extend(parse_text(
+            section_obj.extend(utils.parse_text(
                 "**Returns**:\n%s" % info["returns"]))
 
         if info["schema"]:
@@ -259,8 +258,9 @@ class PluginsReferenceDirective(rst.Directive):
                         description=["*Dictionary is expected. Keys should "
                                      "follow pattern(s) described bellow.*"]))
                 elif "oneOf" in schema:
-                    section_obj.append(note("One of the following groups of "
-                                            "parameters should be provided."))
+                    section_obj.append(utils.note(
+                        "One of the following groups of "
+                        "parameters should be provided."))
                     for i, oneOf in enumerate(schema["oneOf"], 1):
                         description = None
                         if oneOf.get("doc", None):
@@ -279,15 +279,15 @@ class PluginsReferenceDirective(rst.Directive):
 
         filename = info["module"].replace(".", "/")
         ref = "https://github.com/openstack/rally/blob/master/%s.py" % filename
-        section_obj.extend(parse_text("**Module**:\n`%s`__\n\n__ %s"
-                                          % (info["module"], ref)))
+        section_obj.extend(utils.parse_text("**Module**:\n`%s`__\n\n__ %s"
+                           % (info["module"], ref)))
         return section_obj
 
     def _make_plugin_base_section(self, base_cls, base_name=None):
         if base_name:
             title = ("%ss" % base_name if base_name[-1] != "y"
                      else "%sies" % base_name[:-1])
-            subcategory_obj = subcategory(title)
+            subcategory_obj = utils.subcategory(title)
         else:
             subcategory_obj = []
         for p in sorted(base_cls.get_all(), key=lambda o: o.get_name()):
@@ -301,7 +301,7 @@ class PluginsReferenceDirective(rst.Directive):
     @staticmethod
     def _parse_class_name(cls):
         name = ""
-        for word in re.split(r'([A-Z][a-z]*)', cls.__name__):
+        for word in re.split(r"([A-Z][a-z]*)", cls.__name__):
             if word:
                 if len(word) > 1 and name:
                     name += " "
@@ -345,7 +345,7 @@ class PluginsReferenceDirective(rst.Directive):
             if base_name in IGNORED_BASES:
                 continue
             if category_name not in categories:
-                categories[category_name] = category(category_name)
+                categories[category_name] = utils.category(category_name)
             category_of_base = categories[category_name]
             category_of_base.append(self._make_plugin_base_section(base_cls,
                                                                    base_name))

@@ -21,7 +21,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import datetime
+import datetime as dt
 import os
 import subprocess
 import sys
@@ -31,20 +31,20 @@ import rally.common.version
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.extend([
-#    os.path.abspath("../.."),
-#    os.path.abspath("../"),
-#    os.path.abspath("./")
-#])
+# sys.path.extend([
+#     os.path.abspath("../.."),
+#     os.path.abspath("../"),
+#     os.path.abspath("./")
+# ])
 
-sys.path.insert(0, os.path.abspath('../../'))
-sys.path.insert(0, os.path.abspath('../'))
-sys.path.insert(0, os.path.abspath('./'))
+sys.path.insert(0, os.path.abspath("../../"))
+sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath("./"))
 
 
 # -- General configuration ----------------------------------------------------
 
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = "1.0"
@@ -79,7 +79,7 @@ master_doc = "index"
 
 # General information about the project.
 project = u"Rally"
-copyright = u"%d, OpenStack Foundation" % datetime.datetime.now().year
+copyright = u"%d, OpenStack Foundation" % dt.datetime.now().year
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -147,7 +147,7 @@ else:
 # Add any paths that contain custom themes here, relative to this directory.
 if not on_rtd:
     import oslosphinx
-    theme_dir = os.path.join(os.path.dirname(oslosphinx.__file__), 'theme')
+    theme_dir = os.path.join(os.path.dirname(oslosphinx.__file__), "theme")
     html_theme_path = [theme_dir, "_templates"]
 else:
     html_theme_path = []
@@ -181,14 +181,14 @@ else:
 git_cmd = [
     "git", "log", "--pretty=format:'%ad, commit %h'", "--date=local", "-n1"]
 html_last_updated_fmt = subprocess.Popen(
-        git_cmd, stdout=subprocess.PIPE).communicate()[0]
+    git_cmd, stdout=subprocess.PIPE).communicate()[0]
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 html_use_smartypants = False
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {'**': ['searchbox.html', 'globaltoc.html']}
+html_sidebars = {"**": ["searchbox.html", "globaltoc.html"]}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -227,14 +227,12 @@ htmlhelp_basename = "%sdoc" % project
 # -- Options for LaTeX output -------------------------------------------------
 
 latex_elements = {
-# The paper size ("letterpaper" or "a4paper").
-#"papersize": "letterpaper",
-
-# The font size ("10pt", "11pt" or "12pt").
-#"pointsize": "10pt",
-
-# Additional stuff for the LaTeX preamble.
-#"preamble": "",
+    # The paper size ("letterpaper" or "a4paper").
+    # "papersize": "letterpaper",
+    # The font size ("10pt", "11pt" or "12pt").
+    # "pointsize": "10pt",
+    # Additional stuff for the LaTeX preamble.
+    # "preamble": "",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -286,9 +284,10 @@ latex_documents = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ("index", "Rally", u"Rally Documentation",
-   u"Rally Team", "Rally", "Testing framework and tool for all kinds of tests",
-   "Development"),
+    ("index", "Rally", u"Rally Documentation",
+     u"Rally Team", "Rally",
+     "Testing framework and tool for all kinds of tests",
+     "Development"),
 ]
 
 # Documents to append as an appendix to all manuals.

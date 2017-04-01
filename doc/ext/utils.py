@@ -18,8 +18,8 @@ Docutils is awful library. Let's apply some hacks and aliases to simplify usage
 
 from docutils import frontend
 from docutils import nodes
-from docutils import utils
 from docutils.parsers import rst
+from docutils import utils
 import string
 
 import six
@@ -27,7 +27,8 @@ import six
 
 def parse_text(text):
     parser = rst.Parser()
-    settings = frontend.OptionParser(components=(rst.Parser,)).get_default_values()
+    settings = frontend.OptionParser(
+        components=(rst.Parser,)).get_default_values()
     document = utils.new_document(text, settings)
     parser.parse(text, document)
     return document.children
@@ -45,8 +46,8 @@ def make_definition(term, ref, descriptions):
     """Constructs definition with reference to it."""
     ref = ref.replace("_", "-").replace(" ", "-")
     definition = parse_text(
-            ".. _%(ref)s:\n\n* *%(term)s* [ref__]\n\n__ #%(ref)s" %
-            {"ref": ref, "term": term})
+        ".. _%(ref)s:\n\n* *%(term)s* [ref__]\n\n__ #%(ref)s" %
+        {"ref": ref, "term": term})
     for descr in descriptions:
         if descr:
             if isinstance(descr, (six.text_type, six.binary_type)):

@@ -22,8 +22,8 @@ import traceback
 import yaml
 
 from rally import api
-from rally.task import scenario
 from rally.task import engine
+from rally.task import scenario
 from tests.unit import test
 
 

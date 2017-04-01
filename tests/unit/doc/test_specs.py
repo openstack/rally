@@ -74,7 +74,7 @@ class TitlesTestCase(test.TestCase):
             self.assertTrue(
                 len(line) < 80,
                 msg="%s:%d: Line limited to a maximum of 79 characters." %
-                (tpl, i+1))
+                (tpl, i + 1))
 
     def _check_no_cr(self, tpl, raw):
         matches = re.findall("\r", raw)
@@ -88,7 +88,7 @@ class TitlesTestCase(test.TestCase):
             trailing_spaces = re.findall(" +$", line)
             self.assertEqual(
                 len(trailing_spaces), 0,
-                "Found trailing spaces on line %s of %s" % (i+1, tpl))
+                "Found trailing spaces on line %s of %s" % (i + 1, tpl))
 
     def test_template(self):
         with open(os.path.join(self.specs_path, "template.rst")) as f:

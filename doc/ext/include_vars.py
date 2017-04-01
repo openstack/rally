@@ -21,27 +21,26 @@ from oslo_utils import importutils
 
 def include_var(name, rawtext, text, lineno, inliner, options=None,
                 content=None):
-    """
-
+    """include variable
 
     :param name: The local name of the interpreted role, the role name
-        actually used in the document.
+                 actually used in the document.
     :param rawtext: A string containing the enitre interpreted text input,
-        including the role and markup. Return it as a problematic node
-        linked to a system message if a problem is encountered.
+                    including the role and markup. Return it as a problematic
+                    node linked to a system message if a problem is
+                    encountered.
     :param text: The interpreted text content.
     :param lineno: The line number where the interpreted text begins.
     :param inliner: The docutils.parsers.rst.states.Inliner object that
-        called include_var. It contains the several attributes useful for
-        error reporting and document tree access.
+                    called include_var. It contains the several attributes
+                    useful for error reporting and document tree access.
     :param options: A dictionary of directive options for customization
-        (from the "role" directive), to be interpreted by the role function.
-        Used for additional attributes for the generated elements and other
-        functionality.
+                    (from the 'role' directive), to be interpreted by the
+                    role function. Used for additional attributes for the
+                    generated elements and other functionality.
     :param content: A list of strings, the directive content for
-        customization (from the "role" directive). To be interpreted by the
-        role function.
-
+                    customization (from the 'role' directive). To be
+                    interpreted by the role function.
     :return:
     """
     obj = importutils.import_class(text)
