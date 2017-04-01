@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from boto import exception as boto_exception
 import ddt
 import mock
@@ -472,16 +474,96 @@ class NeutronPortTestCase(test.TestCase):
 
     def test_name(self):
         raw_res = {
-            "device_owner": "network:router_interface",
             "id": "some_id",
             "device_id": "dev_id",
-            "name": "foo"
         }
-        user = mock.MagicMock()
 
         self.assertIsInstance(
-            resources.NeutronPort(resource=raw_res, user=user).name(),
+            resources.NeutronPort(resource=raw_res,
+                                  user=mock.MagicMock()).name(),
             resources.base.NoName)
+
+        raw_res["name"] = "foo"
+        self.assertEqual("foo", resources.NeutronPort(
+            resource=raw_res, user=mock.MagicMock()).name())
+
+        raw_res["parent_name"] = "bar"
+        self.assertEqual("bar", resources.NeutronPort(
+            resource=raw_res, user=mock.MagicMock()).name())
+
+        del raw_res["name"]
+        self.assertEqual("bar", resources.NeutronPort(
+            resource=raw_res, user=mock.MagicMock()).name())
+
+    def test_list(self):
+
+        tenant_uuid = "uuuu-uuuu-iiii-dddd"
+
+        ports = [
+            # the case when 'name' is present, so 'device_owner' field is not
+            #   required
+            {"tenant_id": tenant_uuid, "id": "id1", "name": "foo"},
+            # 3 different cases when router_interface is an owner
+            {"tenant_id": tenant_uuid, "id": "id2",
+             "device_owner": "network:router_interface",
+             "device_id": "router-1"},
+            {"tenant_id": tenant_uuid, "id": "id3",
+             "device_owner": "network:router_interface_distributed",
+             "device_id": "router-1"},
+            {"tenant_id": tenant_uuid, "id": "id4",
+             "device_owner": "network:ha_router_replicated_interface",
+             "device_id": "router-2"},
+            # the case when gateway router is an owner
+            {"tenant_id": tenant_uuid, "id": "id5",
+             "device_owner": "network:router_gateway",
+             "device_id": "router-3"},
+            # the case when gateway router is an owner, but device_id is
+            #   invalid
+            {"tenant_id": tenant_uuid, "id": "id6",
+             "device_owner": "network:router_gateway",
+             "device_id": "aaaa"},
+            # the case when port was auto-created with floating-ip
+            {"tenant_id": tenant_uuid, "id": "id7",
+             "device_owner": "network:dhcp",
+             "device_id": "asdasdasd"},
+            # the case when port is from another tenant
+            {"tenant_id": "wrong tenant", "id": "id8", "name": "foo"},
+            # WTF port without any parent and name
+            {"tenant_id": tenant_uuid, "id": "id9", "device_owner": ""},
+        ]
+
+        routers = [
+            {"id": "router-1", "name": "Router-1", "tenant_id": tenant_uuid},
+            {"id": "router-2", "name": "Router-2", "tenant_id": tenant_uuid},
+            {"id": "router-3", "name": "Router-3", "tenant_id": tenant_uuid},
+            {"id": "router-4", "name": "Router-4", "tenant_id": tenant_uuid},
+            {"id": "router-5", "name": "Router-5", "tenant_id": tenant_uuid},
+        ]
+
+        expected_ports = []
+        for port in ports:
+            if port["tenant_id"] == tenant_uuid:
+                expected_ports.append(copy.deepcopy(port))
+                if ("device_id" in port and
+                        port["device_id"].startswith("router")):
+                    expected_ports[-1]["parent_name"] = [
+                        r for r in routers
+                        if r["id"] == port["device_id"]][0]["name"]
+
+        class FakeNeutronClient(object):
+
+            list_ports = mock.Mock()
+            list_routers = mock.Mock()
+
+        neutron = FakeNeutronClient
+        neutron.list_ports.return_value = {"ports": ports}
+        neutron.list_routers.return_value = {"routers": routers}
+
+        user = mock.Mock(neutron=neutron)
+        self.assertEqual(expected_ports, resources.NeutronPort(
+            user=user, tenant_uuid=tenant_uuid).list())
+        neutron.list_ports.assert_called_once_with()
+        neutron.list_routers.assert_called_once_with()
 
 
 @ddt.ddt

@@ -379,20 +379,85 @@ class NeutronFloatingIP(NeutronMixin):
 @base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronPort(NeutronMixin):
+    # NOTE(andreykurilin): port is the kind of resource that can be created
+    #   automatically. In this case it doesn't have name field which matches
+    #   our resource name templates. But we still need to identify such
+    #   resources, so let's do it by using parent resources.
+
+    ROUTER_INTERFACE_OWNERS = ("network:router_interface",
+                               "network:router_interface_distributed",
+                               "network:ha_router_replicated_interface")
+
+    ROUTER_GATEWAY_OWNER = "network:router_gateway"
+
+    def __init__(self, *args, **kwargs):
+        super(NeutronPort, self).__init__(*args, **kwargs)
+        self._cache = {}
+
+    def _get_resources(self, resource):
+        if resource not in self._cache:
+            resources = getattr(self._manager(), "list_%s" % resource)()
+            self._cache[resource] = [r for r in resources[resource]
+                                     if r["tenant_id"] == self.tenant_uuid]
+        return self._cache[resource]
+
+    def list(self):
+        ports = self._get_resources("ports")
+        for port in ports:
+            if not port.get("name"):
+                parent_name = None
+                if (port["device_owner"] in self.ROUTER_INTERFACE_OWNERS or
+                        port["device_owner"] == self.ROUTER_GATEWAY_OWNER):
+                    # first case is a port created while adding an interface to
+                    #   the subnet
+                    # second case is a port created while adding gateway for
+                    #   the network
+                    port_router = [r for r in self._get_resources("routers")
+                                   if r["id"] == port["device_id"]]
+                    if port_router:
+                        parent_name = port_router[0]["name"]
+                # NOTE(andreykurilin): in case of existing network usage,
+                #   there is no way to identify ports that was created
+                #   automatically.
+                # FIXME(andreykurilin): find the way to filter ports created
+                #   by rally
+                # elif port["device_owner"] == "network:dhcp":
+                #     # port created while attaching a floating-ip to the VM
+                #     if port.get("fixed_ips"):
+                #         port_subnets = []
+                #         for fixedip in port["fixed_ips"]:
+                #             port_subnets.extend(
+                #                 [sn for sn in self._get_resources("subnets")
+                #                  if sn["id"] == fixedip["subnet_id"]])
+                #         if port_subnets:
+                #             parent_name = port_subnets[0]["name"]
+
+                # NOTE(andreykurilin): the same case as for floating ips
+                # if not parent_name:
+                #    port_net = [net for net in self._get_resources("networks")
+                #                if net["id"] == port["network_id"]]
+                #     if port_net:
+                #         parent_name = port_net[0]["name"]
+
+                if parent_name:
+                    port["parent_name"] = parent_name
+        return ports
 
     def name(self):
-        # TODO(andreykurilin): return NoName instance only in case of "name"
-        #   field is missed
-        return base.NoName(self._resource)
+        name = self.raw_resource.get("parent_name",
+                                     self.raw_resource.get("name", ""))
+        return name or base.NoName(self._resource)
 
     def delete(self):
-        if (self.raw_resource["device_owner"] in
-            ("network:router_interface",
-             "network:router_interface_distributed",
-             "network:ha_router_replicated_interface")):
+        device_owner = self.raw_resource["device_owner"]
+        if (device_owner in self.ROUTER_INTERFACE_OWNERS or
+                device_owner == self.ROUTER_GATEWAY_OWNER):
+            if device_owner == self.ROUTER_GATEWAY_OWNER:
+                self._manager().remove_gateway_router(
+                    self.raw_resource["device_id"])
+
             self._manager().remove_interface_router(
-                self.raw_resource["device_id"],
-                {"port_id": self.raw_resource["id"]})
+                self.raw_resource["device_id"], {"port_id": self.id()})
         else:
             try:
                 self._manager().delete_port(self.id())
