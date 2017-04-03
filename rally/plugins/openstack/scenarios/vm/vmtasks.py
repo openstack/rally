@@ -44,7 +44,7 @@ LOG = logging.getLogger(__name__)
 @validation.required_param_or_context(arg_name="image",
                                       ctx_name="image_command_customizer")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
                              "keypair": {}, "allow_ssh": None},
                     name="VMTasks.boot_runcommand_delete")
@@ -397,7 +397,7 @@ EOF
                    integer_only=True)
 @validation.external_network_exists("floating_network")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
                              "keypair": {}, "allow_ssh": None},
                     name="VMTasks.dd_load_test")

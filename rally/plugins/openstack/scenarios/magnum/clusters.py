@@ -21,7 +21,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.MAGNUM)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["magnum.clusters"]},
                     name="MagnumClusters.list_clusters")
 class ListClusters(utils.MagnumScenario):
@@ -44,7 +44,7 @@ class ListClusters(utils.MagnumScenario):
 
 
 @validation.required_services(consts.Service.MAGNUM)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("cluster_templates")
 @scenario.configure(context={"cleanup": ["magnum.clusters"]},
                     name="MagnumClusters.create_and_list_clusters")

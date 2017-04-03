@@ -24,7 +24,7 @@ from rally.task import validation
 @types.convert(strategy={"type": "watcher_strategy"},
                goal={"type": "watcher_goal"})
 @validation.required_services(consts.Service.WATCHER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
                     name="Watcher.create_audit_template_and_delete")
 class CreateAuditTemplateAndDelete(utils.WatcherScenario):

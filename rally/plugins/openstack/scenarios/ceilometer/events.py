@@ -29,7 +29,7 @@ from rally.task import validation
 
 @validation.required_services(consts.Service.CEILOMETER,
                               consts.Service.KEYSTONE)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_events")
@@ -51,7 +51,7 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
 
 @validation.required_services(consts.Service.CEILOMETER,
                               consts.Service.KEYSTONE)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_event_types")
@@ -73,7 +73,7 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
 
 @validation.required_services(consts.Service.CEILOMETER,
                               consts.Service.KEYSTONE)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_get_event")

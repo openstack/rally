@@ -23,7 +23,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAvailabilityZones.list_availability_zones")
 class ListAvailabilityZones(utils.NovaScenario):
 

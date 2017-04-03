@@ -25,7 +25,7 @@ from rally.task import validation
 
 @validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_volume_type")
 class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
@@ -42,7 +42,7 @@ class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
 
 @validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_get_volume_type")
 class CreateAndGetVolumeType(cinder_utils.CinderBasic):
@@ -59,7 +59,7 @@ class CreateAndGetVolumeType(cinder_utils.CinderBasic):
 
 @validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_volume_type"
                          "_and_encryption_type")
@@ -82,7 +82,7 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 
 @validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_list_"
                          "encryption_type")
@@ -108,7 +108,7 @@ class CreateAndListEncryptionType(cinder_utils.CinderBasic):
 
 @validation.restricted_parameters("name")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_set_volume_type_keys")
 class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
@@ -127,7 +127,7 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
 
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volume_types")
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_"
                          "encryption_type")

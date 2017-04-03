@@ -24,7 +24,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHosts.list_hosts")
 class ListHosts(utils.NovaScenario):
 
@@ -41,7 +41,7 @@ class ListHosts(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHosts.list_and_get_hosts")
 class ListAndGetHosts(utils.NovaScenario):
 

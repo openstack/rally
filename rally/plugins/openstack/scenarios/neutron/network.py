@@ -24,7 +24,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_networks")
 class CreateAndListNetworks(utils.NeutronScenario):
@@ -47,7 +47,7 @@ class CreateAndListNetworks(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_show_network")
 class CreateAndShowNetwork(utils.NeutronScenario):
@@ -64,7 +64,7 @@ class CreateAndShowNetwork(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_networks")
 class CreateAndUpdateNetworks(utils.NeutronScenario):
@@ -99,7 +99,7 @@ class CreateAndDeleteNetworks(utils.NeutronScenario):
 
 @validation.number("subnets_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_subnets")
 class CreateAndListSubnets(utils.NeutronScenario):
@@ -125,7 +125,7 @@ class CreateAndListSubnets(utils.NeutronScenario):
 
 @validation.number("subnets_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_subnets")
 class CreateAndUpdateSubnets(utils.NeutronScenario):
@@ -183,7 +183,7 @@ class CreateAndDeleteSubnets(utils.NeutronScenario):
 
 @validation.number("subnets_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_routers")
 class CreateAndListRouters(utils.NeutronScenario):
@@ -274,7 +274,7 @@ class CreateAndDeleteRouters(utils.NeutronScenario):
 
 @validation.number("ports_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_ports")
 class CreateAndListPorts(utils.NeutronScenario):
@@ -297,7 +297,7 @@ class CreateAndListPorts(utils.NeutronScenario):
 
 @validation.number("ports_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_ports")
 class CreateAndUpdatePorts(utils.NeutronScenario):
@@ -323,7 +323,7 @@ class CreateAndUpdatePorts(utils.NeutronScenario):
 
 @validation.number("ports_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_show_ports")
 class CreateAndShowPorts(utils.NeutronScenario):
@@ -382,7 +382,7 @@ class CreateAndDeletePorts(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.external_network_exists("floating_network")
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_floating_ips")
@@ -403,7 +403,7 @@ class CreateAndListFloatingIps(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.external_network_exists("floating_network")
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_delete_floating_ips")
@@ -425,7 +425,7 @@ class CreateAndDeleteFloatingIps(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="NeutronNetworks.list_agents")
 class ListAgents(utils.NeutronScenario):
 

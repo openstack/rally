@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_volume")
 class CreateAndListVolume(cinder_utils.CinderBasic):
@@ -71,7 +71,7 @@ class CreateAndListVolume(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_get_volume")
 class CreateAndGetVolume(cinder_utils.CinderBasic):
@@ -96,7 +96,7 @@ class CreateAndGetVolume(cinder_utils.CinderBasic):
 
 
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.list_volumes")
 class ListVolumes(cinder_utils.CinderBasic):
@@ -115,7 +115,7 @@ class ListVolumes(cinder_utils.CinderBasic):
 
 
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CinderVolumes.list_types")
 class ListTypes(cinder_utils.CinderBasic):
 
@@ -133,7 +133,7 @@ class ListTypes(cinder_utils.CinderBasic):
 
 
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CinderVolumes.list_transfers")
 class ListTransfers(cinder_utils.CinderBasic):
 
@@ -158,7 +158,7 @@ class ListTransfers(cinder_utils.CinderBasic):
                                   subdict="update_volume_kwargs")
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_update_volume")
 class CreateAndUpdateVolume(cinder_utils.CinderBasic):
@@ -192,7 +192,7 @@ class CreateAndUpdateVolume(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_delete_volume")
 class CreateAndDeleteVolume(cinder_utils.CinderBasic):
@@ -228,7 +228,7 @@ class CreateAndDeleteVolume(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume")
 class CreateVolume(cinder_utils.CinderBasic):
@@ -253,7 +253,7 @@ class CreateVolume(cinder_utils.CinderBasic):
 
 
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("volumes")
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.modify_volume_metadata")
@@ -290,7 +290,7 @@ class ModifyVolumeMetadata(cinder_utils.CinderBasic):
 
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_extend_volume")
 class CreateAndExtendVolume(cinder_utils.CinderBasic):
@@ -324,7 +324,7 @@ class CreateAndExtendVolume(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_from_volume_and_delete_volume")
 class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderBasic):
@@ -358,7 +358,7 @@ class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_delete_snapshot")
 class CreateAndDeleteSnapshot(cinder_utils.CinderBasic):
@@ -391,7 +391,7 @@ class CreateAndDeleteSnapshot(cinder_utils.CinderBasic):
                                   subdict="create_volume_params")
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_and_attach_volume")
 class CreateAndAttachVolume(cinder_utils.CinderBasic,
@@ -440,7 +440,7 @@ class CreateAndAttachVolume(cinder_utils.CinderBasic,
 @validation.restricted_parameters(["name", "display_name"])
 @validation.volume_type_exists("volume_type")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_snapshot_and_attach_volume")
 class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
@@ -478,7 +478,7 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
 @validation.restricted_parameters(["name", "display_name"],
                                   subdict="create_snapshot_kwargs")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_nested_snapshots"
                          "_and_attach_volume")
@@ -545,7 +545,7 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_snapshots")
 class CreateAndListSnapshots(cinder_utils.CinderBasic,
@@ -568,7 +568,7 @@ class CreateAndListSnapshots(cinder_utils.CinderBasic,
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.required_parameters("size")
 @scenario.configure(context={"cleanup": ["cinder", "glance"]},
                     name="CinderVolumes.create_and_upload_volume_to_image")
@@ -608,7 +608,7 @@ class CreateAndUploadVolumeToImage(cinder_utils.CinderBasic,
 @validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_backup")
 class CreateVolumeBackup(cinder_utils.CinderBasic):
@@ -639,7 +639,7 @@ class CreateVolumeBackup(cinder_utils.CinderBasic):
 @validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_restore_volume_backup")
 class CreateAndRestoreVolumeBackup(cinder_utils.CinderBasic):
@@ -671,7 +671,7 @@ class CreateAndRestoreVolumeBackup(cinder_utils.CinderBasic):
 @validation.restricted_parameters("name", subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_volume_backups")
 class CreateAndListVolumeBackups(cinder_utils.CinderBasic):
@@ -703,7 +703,7 @@ class CreateAndListVolumeBackups(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_and_clone")
 class CreateVolumeAndClone(cinder_utils.CinderBasic):
@@ -745,7 +745,7 @@ class CreateVolumeAndClone(cinder_utils.CinderBasic):
                                   subdict="create_snapshot_kwargs")
 @validation.required_services(consts.Service.CINDER)
 @validation.required_contexts("volumes")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_from_snapshot")
 class CreateVolumeFromSnapshot(cinder_utils.CinderBasic):
@@ -776,7 +776,7 @@ class CreateVolumeFromSnapshot(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_"
                     "and_update_readonly_flag")
@@ -801,7 +801,7 @@ class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderBasic):
 @validation.restricted_parameters(["name", "display_name"])
 @validation.image_exists("image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_accept_transfer")
 class CreateAndAcceptTransfer(cinder_utils.CinderBasic):

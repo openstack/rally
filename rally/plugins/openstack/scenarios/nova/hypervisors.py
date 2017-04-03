@@ -24,7 +24,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_hypervisors")
 class ListHypervisors(utils.NovaScenario):
 
@@ -40,7 +40,7 @@ class ListHypervisors(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_get_hypervisors")
 class ListAndGetHypervisors(utils.NovaScenario):
     """Benchmark scenario for Nova hypervisors."""
@@ -63,7 +63,7 @@ class ListAndGetHypervisors(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.statistics_hypervisors")
 class StatisticsHypervisors(utils.NovaScenario):
 
@@ -76,7 +76,7 @@ class StatisticsHypervisors(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors")
 class ListAndGetUptimeHypervisors(utils.NovaScenario):
     def run(self, detailed=True):
@@ -98,7 +98,7 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_search_hypervisors")
 class ListAndSearchHypervisors(utils.NovaScenario):
     def run(self, detailed=True):

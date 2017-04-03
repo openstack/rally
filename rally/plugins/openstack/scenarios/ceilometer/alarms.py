@@ -21,7 +21,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_alarm")
 class CreateAlarm(ceiloutils.CeilometerScenario):
@@ -43,7 +43,7 @@ class CreateAlarm(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerAlarms.list_alarms")
 class ListAlarms(ceiloutils.CeilometerScenario):
 
@@ -56,7 +56,7 @@ class ListAlarms(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_and_list_alarm")
 class CreateAndListAlarm(ceiloutils.CeilometerScenario):
@@ -80,7 +80,7 @@ class CreateAndListAlarm(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_and_get_alarm")
 class CreateAndGetAlarm(ceiloutils.CeilometerScenario):
@@ -104,7 +104,7 @@ class CreateAndGetAlarm(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_and_update_alarm")
 class CreateAndUpdateAlarm(ceiloutils.CeilometerScenario):
@@ -128,7 +128,7 @@ class CreateAndUpdateAlarm(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_and_delete_alarm")
 class CreateAndDeleteAlarm(ceiloutils.CeilometerScenario):
@@ -151,7 +151,7 @@ class CreateAndDeleteAlarm(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerAlarms.create_alarm_and_get_history")
 class CreateAlarmAndGetHistory(ceiloutils.CeilometerScenario):

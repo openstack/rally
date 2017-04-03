@@ -23,7 +23,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.EC2)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ec2"]},
                     name="EC2Servers.list_servers")
 class ListServers(utils.EC2Scenario):
@@ -41,7 +41,7 @@ class ListServers(utils.EC2Scenario):
                flavor={"type": "ec2_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.EC2)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ec2"]},
                     name="EC2Servers.boot_server")
 class BootServer(utils.EC2Scenario):

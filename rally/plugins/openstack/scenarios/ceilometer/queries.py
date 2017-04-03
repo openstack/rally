@@ -24,7 +24,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerQueries.create_and_query_alarms")
 class CeilometerQueriesCreateAndQueryAlarms(ceiloutils.CeilometerScenario):
@@ -51,7 +51,7 @@ class CeilometerQueriesCreateAndQueryAlarms(ceiloutils.CeilometerScenario):
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerQueries.create_and_query_alarm_history")
 class CeilometerQueriesCreateAndQueryAlarmHistory(ceiloutils
@@ -76,7 +76,7 @@ class CeilometerQueriesCreateAndQueryAlarmHistory(ceiloutils
 
 
 @validation.required_services(consts.Service.CEILOMETER)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ceilometer"]},
                     name="CeilometerQueries.create_and_query_samples")
 class CeilometerQueriesCreateAndQuerySamples(ceiloutils.CeilometerScenario):

@@ -23,7 +23,7 @@ from rally.task import validation
 
 @validation.required_services(consts.Service.CEILOMETER)
 @validation.required_contexts("ceilometer")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerSamples.list_matched_samples")
 class ListMatchedSamples(ceiloutils.CeilometerScenario):
 
@@ -46,7 +46,7 @@ class ListMatchedSamples(ceiloutils.CeilometerScenario):
 
 @validation.required_services(consts.Service.CEILOMETER)
 @validation.required_contexts("ceilometer")
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerSamples.list_samples")
 class ListSamples(ceiloutils.CeilometerScenario):
 

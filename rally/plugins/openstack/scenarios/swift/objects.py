@@ -26,7 +26,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.SWIFT)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
                          "_and_object_then_list_objects")
@@ -57,7 +57,7 @@ class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
 
 
 @validation.required_services(consts.Service.SWIFT)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
                          "_and_object_then_delete_all")
@@ -96,7 +96,7 @@ class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
 
 
 @validation.required_services(consts.Service.SWIFT)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
                          "_and_object_then_download_object")
@@ -134,7 +134,7 @@ class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
 
 
 @validation.required_services(consts.Service.SWIFT)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"swift_objects": {}},
                     name="SwiftObjects.list_objects_in_containers")
 class ListObjectsInContainers(utils.SwiftScenario):
@@ -154,7 +154,7 @@ class ListObjectsInContainers(utils.SwiftScenario):
 
 
 @validation.required_services(consts.Service.SWIFT)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"swift_objects": {}},
                     name="SwiftObjects.list_and_"
                          "download_objects_in_containers")

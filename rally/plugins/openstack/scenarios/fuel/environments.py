@@ -21,7 +21,7 @@ from rally.task import validation
 
 
 @validation.required_clients("fuel", admin=True)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["fuel"]},
                     name="FuelEnvironments.create_and_delete_environment")
 class CreateAndDeleteEnvironment(utils.FuelScenario):
@@ -46,7 +46,7 @@ class CreateAndDeleteEnvironment(utils.FuelScenario):
 
 
 @validation.required_clients("fuel", admin=True)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["fuel"]},
                     name="FuelEnvironments.create_and_list_environments")
 class CreateAndListEnvironments(utils.FuelScenario):

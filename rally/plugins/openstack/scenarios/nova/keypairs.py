@@ -25,7 +25,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaKeypair.create_and_list_keypairs")
 class CreateAndListKeypairs(utils.NovaScenario):
@@ -46,7 +46,7 @@ class CreateAndListKeypairs(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaKeypair.create_and_delete_keypair")
 class CreateAndDeleteKeypair(utils.NovaScenario):
@@ -67,7 +67,7 @@ class CreateAndDeleteKeypair(utils.NovaScenario):
                flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaKeypair.boot_and_delete_server_with_keypair")
 class BootAndDeleteServerWithKeypair(utils.NovaScenario):
@@ -104,7 +104,7 @@ class BootAndDeleteServerWithKeypair(utils.NovaScenario):
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaKeypair.create_and_get_keypair")
 class CreateAndGetKeypair(utils.NovaScenario):

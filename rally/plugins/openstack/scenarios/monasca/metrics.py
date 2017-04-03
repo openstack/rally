@@ -23,7 +23,7 @@ from rally.task import validation
 
 @validation.required_clients("monasca")
 @validation.required_services(consts.Service.MONASCA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="MonascaMetrics.list_metrics")
 class ListMetrics(monascautils.MonascaScenario):
 

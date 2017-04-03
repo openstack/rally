@@ -23,7 +23,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAgents.list_agents")
 class ListAgents(utils.NovaScenario):
 

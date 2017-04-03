@@ -33,7 +33,7 @@ class ValidationHelpersTestCase(test.TestCase):
     def test_validation_add_validator_to_platform_validator(self):
         exc = self.assertRaises(
             exceptions.RallyException,
-            validation.add("required_plaform"),
+            validation.add("required_platform"),
             validation.RequiredPlatformValidator)
         self.assertEqual("Cannot add a validator to RequiredPlatformValidator",
                          str(exc))
@@ -49,7 +49,7 @@ class ValidationHelpersTestCase(test.TestCase):
                                                          etraceback="tb\n")))
 
 
-@validation.add(name="required_plaform", platform="foo", admin=True)
+@validation.add(name="required_platform", platform="foo", admin=True)
 @plugin.configure(name="dummy_validator")
 class DummyValidator(validation.Validator):
 
@@ -71,7 +71,7 @@ class ValidatorTestCase(test.TestCase):
             pass
 
         @validation.add(name="dummy_validator", foo="bar")
-        @validation.add(name="required_plaform", platform="foo", users=True)
+        @validation.add(name="required_platform", platform="foo", users=True)
         @plugin.configure(name="dummy_plugin")
         class DummyPlugin(DummyPluginBase):
             pass

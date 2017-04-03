@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 @validation.required_contexts("users", "sahara_image")
 @validation.number("workers_count", minval=1, integer_only=True)
 @validation.required_services(consts.Service.SAHARA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaClusters.create_and_delete_cluster")
 class CreateAndDeleteCluster(utils.SaharaScenario):

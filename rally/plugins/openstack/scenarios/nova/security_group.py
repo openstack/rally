@@ -35,7 +35,7 @@ class NovaSecurityGroupException(exceptions.RallyException):
 @validation.required_parameters("security_group_count",
                                 "rules_per_security_group")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaSecGroup.create_and_delete_secgroups")
 class CreateAndDeleteSecgroups(utils.NovaScenario):
@@ -62,7 +62,7 @@ class CreateAndDeleteSecgroups(utils.NovaScenario):
 @validation.required_parameters("security_group_count",
                                 "rules_per_security_group")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaSecGroup.create_and_list_secgroups")
 class CreateAndListSecgroups(utils.NovaScenario):
@@ -93,7 +93,7 @@ class CreateAndListSecgroups(utils.NovaScenario):
 
 @validation.required_parameters("security_group_count")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaSecGroup.create_and_update_secgroups")
 class CreateAndUpdateSecgroups(utils.NovaScenario):
@@ -118,7 +118,7 @@ class CreateAndUpdateSecgroups(utils.NovaScenario):
                                 "rules_per_security_group")
 @validation.required_contexts("network")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaSecGroup.boot_and_delete_server_with_secgroups")
 class BootAndDeleteServerWithSecgroups(utils.NovaScenario):
@@ -181,7 +181,7 @@ class BootAndDeleteServerWithSecgroups(utils.NovaScenario):
                flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.required_services(consts.Service.NOVA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaSecGroup.boot_server_and_add_secgroups")

@@ -24,7 +24,7 @@ from rally.task import validation
 
 @validation.required_parameters("driver")
 @validation.required_services(consts.Service.IRONIC)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["ironic"]},
                     name="IronicNodes.create_and_list_node")
 class CreateAndListNode(utils.IronicScenario):
@@ -71,7 +71,7 @@ class CreateAndListNode(utils.IronicScenario):
 
 @validation.required_parameters("driver")
 @validation.required_services(consts.Service.IRONIC)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["ironic"]},
                     name="IronicNodes.create_and_delete_node")
 class CreateAndDeleteNode(utils.IronicScenario):

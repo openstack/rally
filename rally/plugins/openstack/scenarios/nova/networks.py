@@ -25,7 +25,7 @@ from rally.task import validation
 @validation.restricted_parameters("label")
 @validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova.networks"]},
                     name="NovaNetworks.create_and_list_networks")
 class CreateAndListNetworks(utils.NovaScenario):
@@ -51,7 +51,7 @@ class CreateAndListNetworks(utils.NovaScenario):
 @validation.restricted_parameters("label")
 @validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova.networks"]},
                     name="NovaNetworks.create_and_delete_network")
 class CreateAndDeleteNetwork(utils.NovaScenario):

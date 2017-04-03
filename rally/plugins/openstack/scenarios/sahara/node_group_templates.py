@@ -25,7 +25,7 @@ from rally.task import validation
 @types.convert(flavor={"type": "nova_flavor"})
 @validation.flavor_exists("flavor")
 @validation.required_services(consts.Service.SAHARA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaNodeGroupTemplates"
                          ".create_and_list_node_group_templates")
@@ -70,7 +70,7 @@ class CreateAndListNodeGroupTemplates(utils.SaharaScenario):
 @types.convert(flavor={"type": "nova_flavor"})
 @validation.flavor_exists("flavor")
 @validation.required_services(consts.Service.SAHARA)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaNodeGroupTemplates"
                          ".create_delete_node_group_templates")

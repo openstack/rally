@@ -23,7 +23,7 @@ from rally.task import validation
 
 
 @validation.required_clients("fuel", admin=True)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @validation.required_contexts("fuel_environments")
 @scenario.configure(name="FuelNodes.add_and_remove_node")
 class AddAndRemoveNode(utils.FuelScenario):

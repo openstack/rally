@@ -29,7 +29,7 @@ from rally.task import validation
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
                     name="MuranoPackages.import_and_list_packages")
 class ImportAndListPackages(utils.MuranoScenario):
@@ -61,7 +61,7 @@ class ImportAndListPackages(utils.MuranoScenario):
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
                     name="MuranoPackages.import_and_delete_package")
 class ImportAndDeletePackage(utils.MuranoScenario):
@@ -90,7 +90,7 @@ class ImportAndDeletePackage(utils.MuranoScenario):
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
                     name="MuranoPackages.package_lifecycle")
 class PackageLifecycle(utils.MuranoScenario):
@@ -128,7 +128,7 @@ class PackageLifecycle(utils.MuranoScenario):
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
                     name="MuranoPackages.import_and_filter_applications")
 class ImportAndFilterApplications(utils.MuranoScenario):

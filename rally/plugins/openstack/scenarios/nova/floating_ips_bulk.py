@@ -25,7 +25,7 @@ from rally.task import validation
 @validation.restricted_parameters("pool")
 @validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name=("NovaFloatingIpsBulk"
                           ".create_and_list_floating_ips_bulk"))
@@ -52,7 +52,7 @@ class CreateAndListFloatingIpsBulk(utils.NovaScenario):
 @validation.restricted_parameters("pool")
 @validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name=("NovaFloatingIpsBulk"
                           ".create_and_delete_floating_ips_bulk"))

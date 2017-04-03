@@ -19,7 +19,7 @@ from rally.task import validation
 """Scenarios for Senlin clusters."""
 
 
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @validation.required_services(consts.Service.SENLIN)
 @validation.required_contexts("profiles")
 @scenario.configure(context={"admin_cleanup": ["senlin"]},

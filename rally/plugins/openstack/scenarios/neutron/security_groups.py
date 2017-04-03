@@ -20,7 +20,7 @@ from rally.task import validation
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name=("NeutronSecurityGroup"
                           ".create_and_list_security_groups"))
@@ -41,7 +41,7 @@ class CreateAndListSecurityGroups(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name=("NeutronSecurityGroup"
                           ".create_and_delete_security_groups"))
@@ -63,7 +63,7 @@ class CreateAndDeleteSecurityGroups(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name=("NeutronSecurityGroup"
                           ".create_and_update_security_groups"))

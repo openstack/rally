@@ -43,7 +43,7 @@ class Validator(plugin.Plugin):
         return ValidationResult(False, msg=msg)
 
 
-@configure(name="required_plaform")
+@configure(name="required_platform")
 class RequiredPlatformValidator(Validator):
     """Validates credentials for specified platform.
 
@@ -95,7 +95,7 @@ def add(name, **kwargs):
         if issubclass(plugin, RequiredPlatformValidator):
             raise exceptions.RallyException(
                 "Cannot add a validator to RequiredPlatformValidator")
-        elif issubclass(plugin, Validator) and name != "required_plaform":
+        elif issubclass(plugin, Validator) and name != "required_platform":
             raise exceptions.RallyException(
                 "Only RequiredPlatformValidator can be added "
                 "to other validators as a validator")

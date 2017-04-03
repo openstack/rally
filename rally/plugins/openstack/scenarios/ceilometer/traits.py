@@ -28,7 +28,7 @@ from rally.task import validation
 
 @validation.required_services(consts.Service.CEILOMETER,
                               consts.Service.KEYSTONE)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerTraits.create_user_and_list_traits")
@@ -51,7 +51,7 @@ class CreateUserAndListTraits(cutils.CeilometerScenario,
 
 @validation.required_services(consts.Service.CEILOMETER,
                               consts.Service.KEYSTONE)
-@validation.required_openstack(admin=True)
+@validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerTraits.create_user_and"

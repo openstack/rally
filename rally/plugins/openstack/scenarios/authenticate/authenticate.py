@@ -21,7 +21,7 @@ from rally.task import validation
 """Scenarios for Authentication mechanism."""
 
 
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.keystone")
 class Keystone(scenario.OpenStackScenario):
 
@@ -32,7 +32,7 @@ class Keystone(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_glance")
 class ValidateGlance(scenario.OpenStackScenario):
 
@@ -55,7 +55,7 @@ class ValidateGlance(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_nova")
 class ValidateNova(scenario.OpenStackScenario):
 
@@ -76,7 +76,7 @@ class ValidateNova(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_ceilometer")
 class ValidateCeilometer(scenario.OpenStackScenario):
 
@@ -97,7 +97,7 @@ class ValidateCeilometer(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_cinder")
 class ValidateCinder(scenario.OpenStackScenario):
 
@@ -118,7 +118,7 @@ class ValidateCinder(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_neutron")
 class ValidateNeutron(scenario.OpenStackScenario):
 
@@ -139,7 +139,7 @@ class ValidateNeutron(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="Authenticate.validate_heat")
 class ValidateHeat(scenario.OpenStackScenario):
 
@@ -160,7 +160,7 @@ class ValidateHeat(scenario.OpenStackScenario):
 
 
 @validation.number("repetitions", minval=1)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.required_services(consts.Service.MONASCA)
 @scenario.configure(name="Authenticate.validate_monasca")
 class ValidateMonasca(scenario.OpenStackScenario):

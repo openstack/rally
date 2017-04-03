@@ -141,6 +141,24 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual({"admin": fake_admin, "users": users},
                          deployment.get_credentials_for("openstack"))
 
+    @mock.patch("rally.task.validation.LOG.warning")
+    def test_deprecated_validator(self, mock_log_warning):
+        @plugin.from_func()
+        def my_plugin():
+            pass
+        my_plugin._meta_init()
+        my_plugin._meta_set("name", "my_plugin")
+
+        my_deprecated_validator = validation.deprecated_validator(
+            "new_validator", "deprecated_validator", "0.10.0")
+        my_plugin = my_deprecated_validator("foo", bar="baz")(my_plugin)
+        self.assertEqual([("new_validator", ("foo",), {"bar": "baz"})],
+                         my_plugin._meta_get("validators"))
+        mock_log_warning.assert_called_once_with(
+            "Plugin '%s' uses validator '%s'. "
+            "That validator is deprecated in favor of '%s' in Rally v%s.",
+            "my_plugin", "deprecated_validator", "new_validator", "0.10.0")
+
 
 @ddt.ddt
 class ValidatorsTestCase(test.TestCase):

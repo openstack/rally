@@ -32,9 +32,11 @@ from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 from rally.task import types
 
+LOG = logging.getLogger(__name__)
 
 # TODO(astudenov): remove after deprecating all old validators
 ValidationResult = validation.ValidationResult
+add = validation.add
 
 
 @validation.configure(name="old_validator", namespace="openstack")
@@ -738,13 +740,14 @@ def workbook_contains_workflow(config, clients, deployment, workbook,
 
 # TODO(astudenov): remove deprecated validators in 1.0.0
 
-def deprecated_validator(name):
-    msg = ("{name}(...) decorator is deprecated in favor of "
-           "validation.add(name='{name}', ...)".format(name=name))
-
-    @logging.log_deprecated(msg, rally_version="0.10.0", once=True)
+def deprecated_validator(name, old_validator_name, rally_version):
     def decorator(*args, **kwargs):
         def wrapper(plugin):
+            plugin_name = plugin.get_name()
+            LOG.warning("Plugin '%s' uses validator '%s'. "
+                        "That validator is deprecated in favor of '%s' "
+                        "in Rally v%s.",
+                        plugin_name, old_validator_name, name, rally_version)
             plugin._meta_setdefault("validators", [])
             plugin._meta_get("validators").append((name, args, kwargs,))
             return plugin
@@ -752,5 +755,8 @@ def deprecated_validator(name):
     return decorator
 
 
+_deprecated_platform_validator = deprecated_validator(
+    "required_platform", "required_openstack", "0.10.0")
+
 required_openstack = functools.partial(
-    deprecated_validator("required_plaform"), platform="openstack")
+    _deprecated_platform_validator, platform="openstack")
