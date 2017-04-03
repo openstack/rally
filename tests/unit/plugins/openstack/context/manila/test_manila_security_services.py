@@ -19,6 +19,7 @@ import six
 
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.context.manila import manila_security_services
+from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from tests.unit import test
 
 CONTEXT_NAME = consts.SECURITY_SERVICES_CONTEXT_NAME
@@ -71,6 +72,7 @@ class SecurityServicesTestCase(test.ScenarioTestCase):
                 "endpoint": mock.MagicMock(),
             },
             "task": mock.MagicMock(),
+            "owner_id": "foo_uuid",
             "users": users,
             "tenants": tenants,
         }
@@ -108,6 +110,7 @@ class SecurityServicesTestCase(test.ScenarioTestCase):
             mock_manila_scenario.call_args_list,
             [mock.call({
                 "task": inst.task,
+                "owner_id": "foo_uuid",
                 "config": {"api_versions": []},
                 "user": user})
              for user in inst.context["users"] if user["id"] == 0]
@@ -162,4 +165,7 @@ class SecurityServicesTestCase(test.ScenarioTestCase):
         inst.cleanup()
 
         mock_resource_manager.cleanup.assert_called_once_with(
-            names=["manila.security_services"], users=ctxt["users"])
+            names=["manila.security_services"],
+            users=ctxt["users"],
+            superclass=manila_utils.ManilaScenario,
+            task_id="foo_uuid")

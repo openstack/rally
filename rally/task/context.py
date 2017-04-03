@@ -146,6 +146,11 @@ class Context(BaseContext):
         super(Context, self).__init__(ctx)
         self.task = self.context.get("task", {})
 
+    def get_owner_id(self):
+        if "owner_id" in self.context:
+            return self.context["owner_id"]
+        return super(Context, self).get_owner_id()
+
 
 class ContextManager(object):
     """Create context environment and run method inside it."""

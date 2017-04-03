@@ -107,6 +107,7 @@ class ServerGenerator(context.Context):
             tmp_context = {"user": user,
                            "tenant": self.context["tenants"][tenant_id],
                            "task": self.context["task"],
+                           "owner_id": self.context["owner_id"],
                            "iteration": iter_}
             nova_scenario = nova_utils.NovaScenario(tmp_context)
 
@@ -135,4 +136,4 @@ class ServerGenerator(context.Context):
         resource_manager.cleanup(names=["nova.servers"],
                                  users=self.context.get("users", []),
                                  superclass=nova_utils.NovaScenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

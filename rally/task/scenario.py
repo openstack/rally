@@ -123,6 +123,11 @@ class Scenario(plugin.Plugin,
         self._idle_duration = 0.0
         self._output = {"additive": [], "complete": []}
 
+    def get_owner_id(self):
+        if "owner_id" in self.context:
+            return self.context["owner_id"]
+        return super(Scenario, self).get_owner_id()
+
     @classmethod
     def get_default_context(cls):
         return cls._meta_get("default_context")

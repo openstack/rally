@@ -79,6 +79,7 @@ class AuditTemplateGenerator(context.Context):
     def setup(self):
         watcher_scenario = watcher_utils.WatcherScenario(
             {"admin": self.context["admin"], "task": self.context["task"],
+             "owner_id": self.context["owner_id"],
              "config": {
                  "api_versions": self.context["config"].get(
                      "api_versions", [])}
@@ -109,4 +110,6 @@ class AuditTemplateGenerator(context.Context):
     def cleanup(self):
         resource_manager.cleanup(names=["watcher.action_plan",
                                         "watcher.audit_template"],
-                                 admin=self.context.get("admin", []))
+                                 admin=self.context.get("admin", []),
+                                 superclass=watcher_utils.WatcherScenario,
+                                 task_id=self.get_owner_id())

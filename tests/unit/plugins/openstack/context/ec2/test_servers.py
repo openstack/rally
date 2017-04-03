@@ -55,6 +55,7 @@ class EC2ServerGeneratorTestCase(test.TestCase):
             },
             "admin": {"credential": mock.MagicMock()},
             "task": mock.MagicMock(),
+            "owner_id": "foo_uuid",
             "users": users,
             "tenants": tenants
         }
@@ -110,4 +111,4 @@ class EC2ServerGeneratorTestCase(test.TestCase):
             names=["ec2.servers"],
             users=context["users"],
             superclass=ec2_utils.EC2Scenario,
-            task_id=context["task"]["uuid"])
+            task_id="foo_uuid")

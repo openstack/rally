@@ -208,4 +208,5 @@ class FakeClientsScenarioTestCase(ScenarioTestCase):
 
 def get_test_context(**kwargs):
     kwargs["task"] = {"uuid": str(uuid.uuid4())}
+    kwargs["owner_id"] = str(uuid.uuid4())
     return kwargs

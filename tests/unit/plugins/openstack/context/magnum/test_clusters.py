@@ -18,6 +18,7 @@ import copy
 import mock
 
 from rally.plugins.openstack.context.magnum import clusters
+from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.magnum"
@@ -147,4 +148,6 @@ class ClustersGeneratorTestCase(test.ScenarioTestCase):
         clusters_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
             names=["magnum.clusters"],
-            users=self.context["users"])
+            users=self.context["users"],
+            superclass=magnum_utils.MagnumScenario,
+            task_id=self.context["owner_id"])

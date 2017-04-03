@@ -86,6 +86,7 @@ class Shares(context.Context):
                 utils.iterate_per_tenants(self.context.get("users", []))):
             manila_scenario = manila_utils.ManilaScenario({
                 "task": self.task,
+                "owner_id": self.context["owner_id"],
                 "user": user,
                 "config": {
                     "api_versions": self.context["config"].get(
@@ -104,4 +105,5 @@ class Shares(context.Context):
         resource_manager.cleanup(
             names=["manila.shares"],
             users=self.context.get("users", []),
-        )
+            superclass=manila_utils.ManilaScenario,
+            task_id=self.get_owner_id())

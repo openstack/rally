@@ -388,7 +388,7 @@ class TaskEngine(object):
         config = config or {"type": "serial"}
         return runner.ScenarioRunner.get(config["type"])(self.task, config)
 
-    def _prepare_context(self, ctx, name):
+    def _prepare_context(self, ctx, name, owner_id):
         scenario_cls = scenario.Scenario.get(name)
         namespace = scenario_cls.get_namespace()
 
@@ -404,6 +404,7 @@ class TaskEngine(object):
         scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
+            "owner_id": owner_id,
             "admin": {"credential": creds["admin"]},
             "scenario_name": name,
             "scenario_namespace": namespace,
@@ -465,7 +466,8 @@ class TaskEngine(object):
         LOG.info("Running benchmark with key: \n%s"
                  % json.dumps(key, indent=2))
         runner_obj = self._get_runner(workload.runner)
-        context_obj = self._prepare_context(workload.context, workload.name)
+        context_obj = self._prepare_context(
+            workload.context, workload.name, workload_obj["uuid"])
         try:
             with ResultConsumer(key, self.task, subtask_obj, workload_obj,
                                 runner_obj, self.abort_on_sla_failure):

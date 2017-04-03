@@ -115,7 +115,8 @@ class SaharaCluster(context.Context):
             temporary_context = {
                 "user": user,
                 "tenant": self.context["tenants"][tenant_id],
-                "task": self.context["task"]
+                "task": self.context["task"],
+                "owner_id": self.context["owner_id"]
             }
             scenario = utils.SaharaScenario(context=temporary_context)
 
@@ -179,4 +180,4 @@ class SaharaCluster(context.Context):
         resource_manager.cleanup(names=["sahara.clusters"],
                                  users=self.context.get("users", []),
                                  superclass=utils.SaharaScenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

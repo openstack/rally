@@ -516,9 +516,10 @@ class TaskEngineTestCase(test.TestCase):
         deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin=admin)
         eng = engine.TaskEngine(config, task, deployment)
-        result = eng._prepare_context(context, name)
+        result = eng._prepare_context(context, name, "foo_uuid")
         expected_result = {
             "task": task,
+            "owner_id": "foo_uuid",
             "admin": {"credential": admin},
             "scenario_name": name,
             "scenario_namespace": "openstack",
@@ -545,9 +546,10 @@ class TaskEngineTestCase(test.TestCase):
         deployment = fakes.FakeDeployment(uuid="deployment_uuid",
                                           admin=admin, users=users)
         eng = engine.TaskEngine(config, task, deployment)
-        result = eng._prepare_context(context, name)
+        result = eng._prepare_context(context, name, "foo_uuid")
         expected_result = {
             "task": task,
+            "owner_id": "foo_uuid",
             "admin": {"credential": admin},
             "scenario_name": name,
             "scenario_namespace": "openstack",

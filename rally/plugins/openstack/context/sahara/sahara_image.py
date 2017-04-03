@@ -130,4 +130,4 @@ class SaharaImage(context.Context):
             resource_manager.cleanup(names=["glance.images"],
                                      users=self.context.get("users", []),
                                      superclass=self.__class__,
-                                     task_id=self.context["task"]["uuid"])
+                                     task_id=self.get_owner_id())

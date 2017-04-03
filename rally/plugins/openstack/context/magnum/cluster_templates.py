@@ -109,6 +109,7 @@ class ClusterTemplateGenerator(context.Context):
             nova_scenario = nova_utils.NovaScenario({
                 "user": user,
                 "task": self.context["task"],
+                "owner_id": self.context["owner_id"],
                 "config": {"api_versions": self.context["config"].get(
                     "api_versions", [])}
             })
@@ -117,6 +118,7 @@ class ClusterTemplateGenerator(context.Context):
             magnum_scenario = magnum_utils.MagnumScenario({
                 "user": user,
                 "task": self.context["task"],
+                "owner_id": self.context["owner_id"],
                 "config": {"api_versions": self.context["config"].get(
                     "api_versions", [])}
             })
@@ -130,5 +132,12 @@ class ClusterTemplateGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `ClusterTemplate`"))
     def cleanup(self):
         resource_manager.cleanup(
-            names=["magnum.cluster_templates", "nova.keypairs"],
-            users=self.context.get("users", []))
+            names=["nova.keypairs"],
+            users=self.context.get("users", []),
+            superclass=nova_utils.NovaScenario,
+            task_id=self.get_owner_id())
+        resource_manager.cleanup(
+            names=["magnum.cluster_templates"],
+            users=self.context.get("users", []),
+            superclass=magnum_utils.MagnumScenario,
+            task_id=self.get_owner_id())

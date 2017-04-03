@@ -13,6 +13,8 @@
 import mock
 
 from rally.plugins.openstack.context.magnum import cluster_templates
+from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -103,6 +105,14 @@ class ClusterTemplatesGeneratorTestCase(test.ScenarioTestCase):
         })
         ct_ctx = cluster_templates.ClusterTemplateGenerator(self.context)
         ct_ctx.cleanup()
-        mock_cleanup.assert_called_once_with(names=["magnum.cluster_templates",
-                                                    "nova.keypairs"],
-                                             users=self.context["users"])
+        mock_cleanup.assert_has_calls((
+            mock.call(
+                names=["nova.keypairs"],
+                users=self.context["users"],
+                superclass=nova_utils.NovaScenario,
+                task_id=self.context["owner_id"]),
+            mock.call(
+                names=["magnum.cluster_templates"],
+                users=self.context["users"],
+                superclass=magnum_utils.MagnumScenario,
+                task_id=self.context["owner_id"])))

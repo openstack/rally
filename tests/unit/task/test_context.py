@@ -135,6 +135,17 @@ class BaseContextTestCase(test.TestCase):
         self.assertFalse(FakeOtherContext(ctx) == fakes.FakeContext(ctx))
         self.assertTrue(FakeOtherContext(ctx) == FakeOtherContext(ctx))
 
+    def test_get_owner_id_from_task(self):
+        ctx = {"config": {"fake": {"test": 10}}, "task": {"uuid": "task_uuid"}}
+        ins = fakes.FakeContext(ctx)
+        self.assertEqual("task_uuid", ins.get_owner_id())
+
+    def test_get_owner_id(self):
+        ctx = {"config": {"fake": {"test": 10}}, "task": {"uuid": "task_uuid"},
+               "owner_id": "foo_uuid"}
+        ins = fakes.FakeContext(ctx)
+        self.assertEqual("foo_uuid", ins.get_owner_id())
+
 
 class ContextManagerTestCase(test.TestCase):
 

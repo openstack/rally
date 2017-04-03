@@ -53,6 +53,7 @@ class ClusterGenerator(context.Context):
             magnum_scenario = magnum_utils.MagnumScenario({
                 "user": user,
                 "task": self.context["task"],
+                "owner_id": self.context["owner_id"],
                 "config": {"api_versions": self.context["config"].get(
                     "api_versions", [])}
             })
@@ -71,4 +72,6 @@ class ClusterGenerator(context.Context):
     def cleanup(self):
         resource_manager.cleanup(
             names=["magnum.clusters"],
-            users=self.context.get("users", []))
+            users=self.context.get("users", []),
+            superclass=magnum_utils.MagnumScenario,
+            task_id=self.get_owner_id())

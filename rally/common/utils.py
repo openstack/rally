@@ -309,6 +309,12 @@ class RandomNameGeneratorMixin(object):
         finally:
             random.seed()
 
+    def get_owner_id(self):
+        if hasattr(self, "task"):
+            return self.task["uuid"]
+        elif hasattr(self, "verification"):
+            return self.verification["uuid"]
+
     def generate_random_name(self):
         """Generate pseudo-random resource name for scenarios.
 
@@ -323,10 +329,7 @@ class RandomNameGeneratorMixin(object):
 
         :returns: str, pseudo-random name
         """
-        if hasattr(self, "task"):
-            task_id = self.task["uuid"]
-        elif hasattr(self, "verification"):
-            task_id = self.verification["uuid"]
+        task_id = self.get_owner_id()
 
         match = self._resource_name_placeholder_re.match(
             self.RESOURCE_NAME_FORMAT)

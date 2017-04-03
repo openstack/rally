@@ -111,7 +111,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
             names=["sahara.clusters"],
             users=self.context["users"],
             superclass=sahara_utils.SaharaScenario,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])
 
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))

@@ -22,6 +22,7 @@ import six
 from rally import consts as rally_consts
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.context.manila import manila_shares
+from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from tests.unit import test
 
 MANILA_UTILS_PATH = (
@@ -80,6 +81,7 @@ class SharesTestCase(test.TestCase):
                 "credential": mock.MagicMock(),
             },
             "task": mock.MagicMock(),
+            "owner_id": "foo_uuid",
             "users": users,
             "tenants": tenants,
         }
@@ -199,4 +201,5 @@ class SharesTestCase(test.TestCase):
         mock_cleanup_manager_cleanup.assert_called_once_with(
             names=["manila.shares"],
             users=inst.context.get("users", []),
-        )
+            superclass=manila_utils.ManilaScenario,
+            task_id="foo_uuid")

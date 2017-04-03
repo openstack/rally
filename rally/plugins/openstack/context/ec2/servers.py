@@ -75,8 +75,10 @@ class EC2ServerGenerator(context.Context):
                 self.context["users"]):
             LOG.debug("Booting servers for tenant %s "
                       % (user["tenant_id"]))
-            user_clients = osclients.Clients(user["credential"])
-            ec2_scenario = ec2_utils.EC2Scenario(clients=user_clients)
+            ec2_scenario = ec2_utils.EC2Scenario({
+                "user": user,
+                "task": self.context["task"],
+                "owner_id": self.context["owner_id"]})
 
             LOG.debug(
                 "Calling _boot_servers with "
@@ -97,4 +99,4 @@ class EC2ServerGenerator(context.Context):
         resource_manager.cleanup(names=["ec2.servers"],
                                  users=self.context.get("users", []),
                                  superclass=ec2_utils.EC2Scenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

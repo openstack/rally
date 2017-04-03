@@ -175,4 +175,4 @@ class ImageGenerator(context.Context):
                                  api_versions=self.context["config"].get(
                                      "api_versions"),
                                  superclass=self.__class__,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

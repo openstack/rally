@@ -25,7 +25,6 @@ from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from rally.task import context
 
 
@@ -69,6 +68,7 @@ class PackageGenerator(context.Context):
             self.context["tenants"][tenant_id]["packages"] = []
             if is_config_app_dir:
                 self.context["tenants"][tenant_id]["murano_ctx"] = zip_name
+            # TODO(astudenov): use self.generate_random_name()
             package = clients.murano().packages.create(
                 {"categories": ["Web"], "tags": ["tag"]},
                 {"file": open(zip_name)})
@@ -79,5 +79,5 @@ class PackageGenerator(context.Context):
     def cleanup(self):
         resource_manager.cleanup(names=["murano.packages"],
                                  users=self.context.get("users", []),
-                                 superclass=murano_utils.MuranoScenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 superclass=self.__class__,
+                                 task_id=self.get_owner_id())

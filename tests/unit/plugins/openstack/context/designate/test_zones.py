@@ -129,4 +129,4 @@ class ZoneGeneratorTestCase(test.ScenarioTestCase):
             names=["designate.zones"],
             users=self.context["users"],
             superclass=utils.DesignateScenario,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])

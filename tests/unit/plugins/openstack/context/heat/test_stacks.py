@@ -95,4 +95,4 @@ class TestStackGenerator(test.ScenarioTestCase):
             names=["heat.stacks"],
             users=self.context["users"],
             superclass=heat_utils.HeatScenario,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])

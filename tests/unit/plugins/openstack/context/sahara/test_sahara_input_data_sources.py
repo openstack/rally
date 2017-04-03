@@ -15,7 +15,7 @@
 import mock
 
 from rally.plugins.openstack.context.sahara import sahara_input_data_sources
-from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
+from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.sahara"
@@ -88,11 +88,16 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
         sahara_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(
-            names=["sahara.data_sources"],
-            users=self.context["users"],
-            superclass=sahara_utils.SaharaScenario,
-            task_id=self.context["task"]["uuid"])
+        mock_cleanup.assert_has_calls((
+            mock.call(names=["swift.object", "swift.container"],
+                      users=self.context["users"],
+                      superclass=swift_utils.SwiftScenario,
+                      task_id=self.context["owner_id"]),
+            mock.call(
+                names=["sahara.data_sources"],
+                users=self.context["users"],
+                superclass=sahara_input_data_sources.SaharaInputDataSources,
+                task_id=self.context["owner_id"])))
 
     @mock.patch("requests.get")
     @mock.patch("%s.sahara_input_data_sources.osclients" % CTX)
@@ -156,8 +161,13 @@ class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
         sahara_ctx.cleanup()
 
-        mock_resource_manager.cleanup.assert_called_once_with(
-            names=["sahara.data_sources"],
-            users=self.context["users"],
-            superclass=sahara_utils.SaharaScenario,
-            task_id=self.context["task"]["uuid"])
+        mock_resource_manager.cleanup.assert_has_calls((
+            mock.call(names=["swift.object", "swift.container"],
+                      users=self.context["users"],
+                      superclass=mock_swift_utils.SwiftScenario,
+                      task_id=self.context["owner_id"]),
+            mock.call(
+                names=["sahara.data_sources"],
+                users=self.context["users"],
+                superclass=sahara_input_data_sources.SaharaInputDataSources,
+                task_id=self.context["owner_id"])))
