@@ -34,12 +34,26 @@ function setUp () {
 
     source ~/.rally/openrc admin admin
 
+    if [[ $(rally deployment config) == *"project_name"* ]]; then
+        export OS_IDENTITY_API_VERSION=3
+    else
+        export OS_IDENTITY_API_VERSION="2.0"
+    fi
+
+    OPENSTACK_SERVICES=$(openstack service list)
+    if [[ $OPENSTACK_SERVICES == *"glance"* ]]; then
+        openstack image list
+    fi
+    if [[ $OPENSTACK_SERVICES == *"cinder"* ]]; then
+        openstack volume list --all-projects
+    fi
+    if [[ $OPENSTACK_SERVICES == *"neutron"* ]]; then
+        openstack network list
+    fi
+
     # NOTE(ikhudoshyn): Create additional users and register a new env
     # so that we could run scenarios using 'existing_users' context
     if [ "$DEVSTACK_GATE_PREPOPULATE_USERS" = "1" ]; then
-        # NOTE(andreykurilin): let's hardcode version, since we already
-        #    hardcoded arguments for users...
-        export OS_IDENTITY_API_VERSION=3
         openstack --version
 
         openstack project create rally-test-project-1
