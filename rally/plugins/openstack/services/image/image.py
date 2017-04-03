@@ -32,7 +32,8 @@ CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 
-UnifiedImage = collections.namedtuple("Image", ["id", "name", "visibility"])
+UnifiedImage = collections.namedtuple("Image", ["id", "name", "visibility",
+                                                "status"])
 
 
 class VisibilityException(Exception):
@@ -51,10 +52,12 @@ class Image(service.UnifiedOpenStackService):
     def _unify_image(image):
         if hasattr(image, "visibility"):
             return UnifiedImage(id=image.id, name=image.name,
+                                status=image.status,
                                 visibility=image.visibility)
         else:
             return UnifiedImage(
                 id=image.id, name=image.name,
+                status=image.status,
                 visibility=("public" if image.is_public else "private"))
 
     @service.should_be_overridden
