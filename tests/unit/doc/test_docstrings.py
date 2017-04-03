@@ -13,13 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import plugins
-from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import plugin
-from rally.deployment import engine
-from rally.deployment.serverprovider import provider
-from rally.task import sla
+from rally import plugins
 from tests.unit import test
 
 EXCEPTIONS_DOCSTR = "missed_docstrings.txt"
@@ -27,7 +23,6 @@ EXCEPTIONS_FORMAT = "wrong_format.txt"
 
 
 class DocstringsTestCase(test.TestCase):
-
 
     def setUp(self):
         super(DocstringsTestCase, self).setUp()

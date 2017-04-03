@@ -21,8 +21,7 @@ from docutils.parsers import rst
 from rally.cli import cliutils
 from rally.cli import main
 from rally.cli import manage
-from utils import (category, subcategory, hint, make_definition, note,
-                   paragraph, parse_text, warning)
+import utils
 
 
 class Parser(object):
@@ -73,22 +72,24 @@ DEFAULT_UUIDS_CMD = {
 
 def compose_note_about_default_uuids(argument, dest):
     # TODO(andreykurilin): add references to commands
-    return note("The default value for the ``%(arg)s`` argument is taken from "
-                "the Rally environment. Usually, the default value is equal to"
-                " the UUID of the last successful run of ``%(cmd)s``, if the "
-                "``--no-use`` argument was not used." % {
-                    "arg": argument,
-                    "cmd": "``, ``".join(DEFAULT_UUIDS_CMD[dest])})
+    return utils.note(
+        "The default value for the ``%(arg)s`` argument is taken from "
+        "the Rally environment. Usually, the default value is equal to"
+        " the UUID of the last successful run of ``%(cmd)s``, if the "
+        "``--no-use`` argument was not used." % {
+            "arg": argument,
+            "cmd": "``, ``".join(DEFAULT_UUIDS_CMD[dest])})
 
 
 def compose_use_cmd_hint_msg(cmd):
-    return hint("You can set the default value by executing ``%(cmd)s <uuid>``"
-                " (ref__).\n\n __ #%(ref)s" % {"cmd": cmd,
-                                               "ref": cmd.replace(" ", "-")})
+    return utils.hint(
+        "You can set the default value by executing ``%(cmd)s <uuid>``"
+        " (ref__).\n\n __ #%(ref)s" % {"cmd": cmd,
+                                       "ref": cmd.replace(" ", "-")})
 
 
 def make_arguments_section(category_name, cmd_name, arguments, defaults):
-    elements = [paragraph("**Command arguments**:")]
+    elements = [utils.paragraph("**Command arguments**:")]
     for args, kwargs in arguments:
         # for future changes...
         # :param args: a single command argument which can represented by
@@ -109,14 +110,14 @@ def make_arguments_section(category_name, cmd_name, arguments, defaults):
             # "use" command with reference
             if dest in ("deployment", "task"):
                 description.append(compose_note_about_default_uuids(
-                        args[0], dest))
+                    args[0], dest))
                 description.append(
-                        compose_use_cmd_hint_msg("rally %s use" % dest))
+                    compose_use_cmd_hint_msg("rally %s use" % dest))
             elif dest == "verification":
                 description.append(compose_note_about_default_uuids(
-                        args[0], dest))
+                    args[0], dest))
                 description.append(
-                        compose_use_cmd_hint_msg("rally verify use"))
+                    compose_use_cmd_hint_msg("rally verify use"))
 
         description.append(kwargs.get("help"))
 
@@ -138,7 +139,8 @@ def make_arguments_section(category_name, cmd_name, arguments, defaults):
         if metavar:
             args = ["%s %s" % (arg, metavar) for arg in args]
 
-        elements.extend(make_definition(", ".join(args), ref, description))
+        elements.extend(utils.make_definition(", ".join(args),
+                                              ref, description))
     return elements
 
 
@@ -154,8 +156,8 @@ def make_command_section(category_name, name, parser):
     # NOTE(andreykurilin): there is only one category in rally-manage, so
     # let's just hardcode it.
     cmd = "rally-manage" if category_name == "db" else "rally"
-    section = subcategory("%s %s %s" % (cmd, category_name, name))
-    section.extend(parse_text(parser["description"]))
+    section = utils.subcategory("%s %s %s" % (cmd, category_name, name))
+    section.extend(utils.parse_text(parser["description"]))
     if parser["parser"].arguments:
         defaults = get_defaults(parser["parser"].defaults["action_fn"])
         section.extend(make_arguments_section(
@@ -164,7 +166,7 @@ def make_command_section(category_name, name, parser):
 
 
 def make_category_section(name, parser):
-    category_obj = category("Category: %s" % name)
+    category_obj = utils.category("Category: %s" % name)
     # NOTE(andreykurilin): we are re-using `_add_command_parsers` method from
     # `rally.cli.cliutils`, but, since it was designed to print help message,
     # generated description for categories contains specification for all
@@ -177,9 +179,9 @@ def make_category_section(name, parser):
     if description.startswith("[Deprecated"):
         i = description.find("]")
         msg = description[1:i]
-        description = description[i+1:].strip()
-        category_obj.append(warning(msg))
-    category_obj.extend(parse_text(description))
+        description = description[i + 1:].strip()
+        category_obj.append(utils.warning(msg))
+    category_obj.extend(utils.parse_text(description))
 
     for command in sorted(parser.subparser.parsers.keys()):
         subparser = parser.subparser.parsers[command]
@@ -196,14 +198,14 @@ class CLIReferenceDirective(rst.Directive):
         categories = copy.copy(main.categories)
         categories["db"] = manage.DBCommands
         if "group" in self.options:
-            categories = {k: v for k,v in categories.items()
+            categories = {k: v for k, v in categories.items()
                           if k == self.options["group"]}
         cliutils._add_command_parsers(categories, parser)
 
         content = []
-        for category in sorted(categories.keys()):
+        for cg in sorted(categories.keys()):
             content.append(make_category_section(
-                category, parser.parsers[category]["parser"]))
+                cg, parser.parsers[cg]["parser"]))
         return content
 
 
