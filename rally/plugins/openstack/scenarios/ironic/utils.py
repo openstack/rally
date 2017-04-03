@@ -19,6 +19,7 @@ from oslo_config import cfg
 
 from rally.plugins.openstack import scenario
 from rally.task import atomic
+from rally.task import utils
 
 
 IRONIC_BENCHMARK_OPTS = [
@@ -26,6 +27,15 @@ IRONIC_BENCHMARK_OPTS = [
                  default=1.0,
                  help="Interval(in sec) between checks when waiting for node "
                       "creation."),
+    cfg.FloatOpt("ironic_node_create_timeout",
+                 default=300,
+                 help="Ironic node create timeout"),
+    cfg.FloatOpt("ironic_node_poll_interval",
+                 default=1.0,
+                 help="Ironic node poll interval"),
+    cfg.FloatOpt("ironic_node_delete_timeout",
+                 default=300,
+                 help="Ironic node create timeout")
 ]
 
 CONF = cfg.CONF
@@ -51,18 +61,32 @@ class IronicScenario(scenario.OpenStackScenario):
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits
 
     @atomic.action_timer("ironic.create_node")
-    def _create_node(self, **kwargs):
+    def _create_node(self, driver, **kwargs):
         """Create node immediately.
 
+        :param driver: The name of the driver used to manage this Node.
         :param kwargs: optional parameters to create image
         :returns: node object
         """
         kwargs["name"] = self.generate_random_name()
-        return self.admin_clients("ironic").node.create(**kwargs)
+        node = self.admin_clients("ironic").node.create(driver=driver,
+                                                        **kwargs)
+
+        self.sleep_between(CONF.benchmark.ironic_node_create_poll_interval)
+        node = utils.wait_for_status(
+            node,
+            ready_statuses=["AVAILABLE"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.ironic_node_create_timeout,
+            check_interval=CONF.benchmark.ironic_node_poll_interval,
+            id_attr="uuid", status_attr="provision_state"
+        )
+
+        return node
 
     @atomic.action_timer("ironic.list_nodes")
-    def _list_nodes(self, associated=None, maintenance=None, marker=None,
-                    limit=None, detail=False, sort_key=None, sort_dir=None):
+    def _list_nodes(self, associated=None, maintenance=None, detail=False,
+                    sort_dir=None):
         """Return list of nodes.
 
         :param associated: Optional. Either a Boolean or a string
@@ -74,31 +98,30 @@ class IronicScenario(scenario.OpenStackScenario):
                             to return nodes in maintenance mode (True or
                             "True"), or not in maintenance mode (False or
                             "False").
-        :param marker: Optional, the UUID of a node, eg the last
-                       node from a previous result set. Return
-                       the next result set.
-        :param limit: The maximum number of results to return per
-                      request, if:
-            1) limit > 0, the maximum number of nodes to return.
-            2) limit == 0, return the entire list of nodes.
-            3) limit param is NOT specified (None), the number of items
-               returned respect the maximum imposed by the Ironic API
-               (see Ironic's api.max_limit option).
         :param detail: Optional, boolean whether to return detailed information
                        about nodes.
-        :param sort_key: Optional, field used for sorting.
         :param sort_dir: Optional, direction of sorting, either 'asc' (the
                          default) or 'desc'.
         :returns: A list of nodes.
         """
         return self.admin_clients("ironic").node.list(
-            associated=associated, maintenance=maintenance, marker=marker,
-            limit=limit, detail=detail, sort_key=sort_key, sort_dir=sort_dir)
+            associated=associated, maintenance=maintenance, detail=detail,
+            sort_dir=sort_dir)
 
     @atomic.action_timer("ironic.delete_node")
-    def _delete_node(self, node_id):
+    def _delete_node(self, node):
         """Delete the node with specific id.
 
-        :param node_id: id of the node to be deleted
+        :param node: Ironic node object
         """
-        self.admin_clients("ironic").node.delete(node_id)
+        self.admin_clients("ironic").node.delete(node.uuid)
+
+        utils.wait_for_status(
+            node,
+            ready_statuses=["deleted"],
+            check_deletion=True,
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.ironic_node_delete_timeout,
+            check_interval=CONF.benchmark.ironic_node_poll_interval,
+            id_attr="uuid", status_attr="provision_state"
+        )
