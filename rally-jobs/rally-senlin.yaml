@@ -19,7 +19,7 @@
           properties:
             name: cirros_server
             flavor: 1
-            image: "cirros-0.3.5-x86_64-disk.img"
+            image: "cirros-0.3.5-x86_64-disk"
             networks:
               - network: private
       sla:
