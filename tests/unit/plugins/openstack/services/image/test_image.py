@@ -80,11 +80,12 @@ class ImageTestCase(test.TestCase):
 
     def test_unify_image(self):
         class Image(object):
-            def __init__(self, visibility=None, is_public=None):
+            def __init__(self, visibility=None, is_public=None, status=None):
                 self.id = uuid.uuid4()
                 self.name = str(uuid.uuid4())
                 self.visibility = visibility
                 self.is_public = is_public
+                self.status = status
 
         service = self.get_service_with_fake_impl()
         visibility = "private"

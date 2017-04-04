@@ -193,12 +193,12 @@ class UnifiedGlanceV2Service(image.Image):
 
         self._impl.set_visibility(image_id=image_id, visibility=visibility)
 
-    def get_image(self, image_id):
+    def get_image(self, image):
         """Get specified image.
 
-        :param image_id: ID of image which need to be got.
+        :param image: ID or object with ID of image to obtain.
           """
-        image_obj = self._impl.get_image(image_id=image_id)
+        image_obj = self._impl.get_image(image=image)
         return self._unify_image(image_obj)
 
     def delete_image(self, image_id):

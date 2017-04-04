@@ -118,7 +118,7 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
         super(UnifiedGlanceV1ServiceTestCase, self).setUp()
         self.clients = mock.MagicMock()
         self.service = glance_v1.UnifiedGlanceV1Service(self.clients)
-        self.service._impl = mock.MagicMock()
+        self.service._impl = mock.create_autospec(self.service._impl)
 
     @ddt.data({"visibility": "public"},
               {"visibility": "private"})
@@ -149,11 +149,10 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
     @mock.patch(PATH)
     def test_get_image(self, mock_image__unify_image):
         image_id = "image_id"
-        image = self.service.get_image(image_id=image_id)
+        image = self.service.get_image(image=image_id)
 
         self.assertEqual(mock_image__unify_image.return_value, image)
-        self.service._impl.get_image.assert_called_once_with(
-            image_id=image_id)
+        self.service._impl.get_image.assert_called_once_with(image=image_id)
 
     @mock.patch(PATH)
     def test_list_images(self, mock_image__unify_image):
