@@ -21,11 +21,11 @@ with contracted values such as maximum error rate or minimum response time.
 
 import abc
 
-import jsonschema
 import six
 
 from rally.common.i18n import _
 from rally.common.plugin import plugin
+from rally.common import validation
 from rally.task import utils
 
 
@@ -119,25 +119,17 @@ class SLAChecker(object):
         self.unexpected_failure = exc
 
 
+@validation.add_default("jsonschema")
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class SLA(plugin.Plugin):
+class SLA(plugin.Plugin, validation.ValidatablePluginMixin):
     """Factory for criteria classes."""
+
+    CONFIG_SCHEMA = {"type": "null"}
 
     def __init__(self, criterion_value):
         self.criterion_value = criterion_value
         self.success = True
-
-    @staticmethod
-    def validate(config):
-        properties = dict([(s.get_name(), s.CONFIG_SCHEMA)
-                           for s in SLA.get_all()])
-        schema = {
-            "type": "object",
-            "properties": properties,
-            "additionalProperties": False,
-        }
-        jsonschema.validate(config, schema)
 
     @abc.abstractmethod
     def add_iteration(self, iteration):

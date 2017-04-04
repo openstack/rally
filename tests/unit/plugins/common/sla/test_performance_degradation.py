@@ -14,9 +14,9 @@
 #    under the License.
 
 import ddt
-import jsonschema
 
 from rally.plugins.common.sla import performance_degradation as perfdegr
+from rally.task import sla
 from tests.unit import test
 
 
@@ -27,21 +27,17 @@ class PerformanceDegradationTestCase(test.TestCase):
         super(PerformanceDegradationTestCase, self).setUp()
         self.sla = perfdegr.PerformanceDegradation({"max_degradation": 50})
 
-    def test_config_schema(self):
-        properties = {
-            "performance_degradation": {}
-        }
-        self.assertRaises(
-            jsonschema.ValidationError,
-            perfdegr.PerformanceDegradation.validate,
-            properties)
-        properties["performance_degradation"]["max_degradation"] = -1
-        self.assertRaises(
-            jsonschema.ValidationError,
-            perfdegr.PerformanceDegradation.validate,
-            properties)
-        properties["performance_degradation"]["max_degradation"] = 1000.0
-        perfdegr.PerformanceDegradation.validate(properties)
+    @ddt.data(({"max_degradation": 1000.0}, True),
+              ({"max_degradation": -1}, False),
+              ({}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = sla.SLA.validate(
+            "performance_degradation", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
     @ddt.data(([39.0, 30.0, 32.0, 49.0, 47.0, 43.0], False, "Failed"),
               ([31.0, 30.0, 32.0, 39.0, 45.0, 43.0], True, "Passed"),

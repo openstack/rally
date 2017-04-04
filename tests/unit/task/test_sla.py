@@ -153,6 +153,7 @@ class SLACheckerTestCase(test.TestCase):
         mock_sla2.merge.assert_called_once_with(mock_sla4)
 
 
+@ddt.ddt
 class SLATestCase(test.TestCase):
     def test_validate_type_positive(self):
         sla1 = TestCriterion(0)
@@ -167,3 +168,14 @@ class SLATestCase(test.TestCase):
 
         sla2 = AnotherTestCriterion(0)
         self.assertRaises(TypeError, sla1.validate_type, sla2)
+
+    @ddt.data((10, True),
+              ({}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = sla.SLA.validate(
+            "test_criterion", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))

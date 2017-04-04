@@ -293,14 +293,19 @@ class TaskEngine(object):
                     context.ContextManager.validate(scenario_context,
                                                     namespace=namespace,
                                                     allow_hidden=True)
-                    sla.SLA.validate(workload.sla)
-
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
                     kw = workload.make_exception_args(six.text_type(e))
                     raise exceptions.InvalidTaskConfig(**kw)
 
                 results = []
+                for sla_name, sla_conf in workload.sla.items():
+                    results.extend(sla.SLA.validate(
+                        name=sla_name,
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=sla_conf))
+
                 for hook_conf in workload.hooks:
                     results.extend(hook.Hook.validate(
                         name=hook_conf["name"],
