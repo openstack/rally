@@ -740,6 +740,46 @@ class KeystoneMixinTestCase(test.TestCase):
         identity.return_value.list_some_resource2s.assert_called_once_with()
 
 
+class KeystoneEc2TestCase(test.TestCase):
+    def test_user_id_property(self):
+        user_client = mock.Mock()
+        admin_client = mock.Mock()
+
+        manager = resources.KeystoneEc2(user=user_client, admin=admin_client)
+
+        self.assertEqual(user_client.keystone.auth_ref.user_id,
+                         manager.user_id)
+
+    def test_list(self):
+        user_client = mock.Mock()
+        admin_client = mock.Mock()
+
+        with mock.patch("%s.identity.Identity" % BASE, autospec=True) as p:
+            identity = p.return_value
+            manager = resources.KeystoneEc2(user=user_client,
+                                            admin=admin_client)
+            self.assertEqual(identity.list_ec2credentials.return_value,
+                             manager.list())
+            p.assert_called_once_with(user_client)
+            identity.list_ec2credentials.assert_called_once_with(
+                manager.user_id)
+
+    def test_delete(self):
+        user_client = mock.Mock()
+        admin_client = mock.Mock()
+        raw_resource = mock.Mock()
+
+        with mock.patch("%s.identity.Identity" % BASE, autospec=True) as p:
+            manager = resources.KeystoneEc2(user=user_client,
+                                            admin=admin_client,
+                                            resource=raw_resource)
+            manager.delete()
+
+            p.assert_called_once_with(user_client)
+            p.return_value.delete_ec2credential.assert_called_once_with(
+                manager.user_id, access=raw_resource.access)
+
+
 class SwiftMixinTestCase(test.TestCase):
 
     def get_swift_mixin(self):
