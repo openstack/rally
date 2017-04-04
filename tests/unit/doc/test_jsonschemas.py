@@ -23,6 +23,7 @@ class ConfigSchemasTestCase(test.TestCase):
 
     OBJECT_TYPE_KEYS = {"$schema", "type", "description", "required",
                         "properties", "patternProperties",
+                        "minProperties", "maxProperties",
                         "additionalProperties", "oneOf", "anyOf"}
     ARRAY_TYPE_KEYS = {"$schema", "type", "description", "items",
                        "uniqueItems", "minItems", "maxItems",

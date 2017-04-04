@@ -34,6 +34,7 @@ class MaxAverageDurationPerAtomic(sla.SLA):
                      "patternProperties": {".*": {
                          "type": "number",
                          "description": "The name of atomic action."}},
+                     "minProperties": 1,
                      "additionalProperties": False}
 
     def __init__(self, criterion_value):

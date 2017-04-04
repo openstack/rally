@@ -33,7 +33,9 @@ class FailureRate(sla.SLA):
         "properties": {
             "min": {"type": "number", "minimum": 0.0, "maximum": 100.0},
             "max": {"type": "number", "minimum": 0.0, "maximum": 100.0}
-        }
+        },
+        "minProperties": 1,
+        "additionalProperties": False,
     }
 
     def __init__(self, criterion_value):

@@ -40,7 +40,8 @@ class Outliers(sla.SLA):
             "min_iterations": {"type": "integer", "minimum": 3},
             "sigmas": {"type": "number", "minimum": 0.0,
                        "exclusiveMinimum": True}
-        }
+        },
+        "additionalProperties": False,
     }
 
     def __init__(self, criterion_value):

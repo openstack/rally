@@ -15,43 +15,47 @@
 
 
 import ddt
-import jsonschema
 
 from rally.plugins.common.sla import iteration_time
+from rally.task import sla
 from tests.unit import test
 
 
 @ddt.ddt
 class IterationTimeTestCase(test.TestCase):
-    def test_config_schema(self):
-        properties = {
-            "max_seconds_per_iteration": 0
-        }
-        self.assertRaises(jsonschema.ValidationError,
-                          iteration_time.IterationTime.validate, properties)
+
+    @ddt.data((1, True), (1000, True), (0, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = sla.SLA.validate(
+            "max_seconds_per_iteration", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
     def test_result(self):
         sla1 = iteration_time.IterationTime(42)
         sla2 = iteration_time.IterationTime(3.62)
-        for sla in [sla1, sla2]:
-            sla.add_iteration({"duration": 3.14})
-            sla.add_iteration({"duration": 6.28})
+        for sla_inst in [sla1, sla2]:
+            sla_inst.add_iteration({"duration": 3.14})
+            sla_inst.add_iteration({"duration": 6.28})
         self.assertTrue(sla1.result()["success"])   # 42 > 6.28
         self.assertFalse(sla2.result()["success"])  # 3.62 < 6.28
         self.assertEqual("Passed", sla1.status())
         self.assertEqual("Failed", sla2.status())
 
     def test_result_no_iterations(self):
-        sla = iteration_time.IterationTime(42)
-        self.assertTrue(sla.result()["success"])
+        sla_inst = iteration_time.IterationTime(42)
+        self.assertTrue(sla_inst.result()["success"])
 
     def test_add_iteration(self):
-        sla = iteration_time.IterationTime(4.0)
-        self.assertTrue(sla.add_iteration({"duration": 3.14}))
-        self.assertTrue(sla.add_iteration({"duration": 2.0}))
-        self.assertTrue(sla.add_iteration({"duration": 3.99}))
-        self.assertFalse(sla.add_iteration({"duration": 4.5}))
-        self.assertFalse(sla.add_iteration({"duration": 3.8}))
+        sla_inst = iteration_time.IterationTime(4.0)
+        self.assertTrue(sla_inst.add_iteration({"duration": 3.14}))
+        self.assertTrue(sla_inst.add_iteration({"duration": 2.0}))
+        self.assertTrue(sla_inst.add_iteration({"duration": 3.99}))
+        self.assertFalse(sla_inst.add_iteration({"duration": 4.5}))
+        self.assertFalse(sla_inst.add_iteration({"duration": 3.8}))
 
     @ddt.data([[1.0, 2.0, 1.5, 4.3],
                [2.1, 3.4, 1.2, 6.3, 7.2, 7.0, 1.],
@@ -66,13 +70,13 @@ class IterationTimeTestCase(test.TestCase):
 
         slas = [iteration_time.IterationTime(4.0) for _ in durations]
 
-        for idx, sla in enumerate(slas):
+        for idx, sla_inst in enumerate(slas):
             for duration in durations[idx]:
-                sla.add_iteration({"duration": duration})
+                sla_inst.add_iteration({"duration": duration})
 
         merged_sla = slas[0]
-        for sla in slas[1:]:
-            merged_sla.merge(sla)
+        for sla_inst in slas[1:]:
+            merged_sla.merge(sla_inst)
 
         self.assertEqual(single_sla.success, merged_sla.success)
         self.assertEqual(single_sla.max_iteration_time,
