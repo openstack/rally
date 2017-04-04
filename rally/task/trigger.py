@@ -15,22 +15,25 @@
 
 import abc
 
-import jsonschema
 import six
 
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common.plugin import plugin
+from rally.common import validation
 
 configure = plugin.configure
 
 LOG = logging.getLogger(__name__)
 
 
+@validation.add_default("jsonschema")
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class Trigger(plugin.Plugin):
+class Trigger(plugin.Plugin, validation.ValidatablePluginMixin):
     """Factory for trigger classes."""
+
+    CONFIG_SCHEMA = {"type": "null"}
 
     def __init__(self, context, task, hook_cls):
         self.context = context
@@ -38,11 +41,6 @@ class Trigger(plugin.Plugin):
         self.task = task
         self.hook_cls = hook_cls
         self._runs = []
-
-    @staticmethod
-    def validate(config):
-        config_schema = Trigger.get(config["name"]).CONFIG_SCHEMA
-        jsonschema.validate(config["args"], config_schema)
 
     @abc.abstractmethod
     def get_listening_event(self):

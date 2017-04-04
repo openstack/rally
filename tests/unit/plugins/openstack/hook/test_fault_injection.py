@@ -15,28 +15,14 @@
 
 
 import ddt
-import jsonschema
 import mock
 from os_faults.api import error
 
 from rally import consts
 from rally.plugins.openstack.hook import fault_injection
+from rally.task import hook
 from tests.unit import fakes
 from tests.unit import test
-
-
-def create_config(**kwargs):
-    return {
-        "name": "fault_injection",
-        "args": kwargs,
-        "trigger": {
-            "name": "event",
-            "args": {
-                "unit": "iteration",
-                "at": [10]
-            }
-        }
-    }
 
 
 @ddt.ddt
@@ -46,19 +32,18 @@ class FaultInjectionHookTestCase(test.TestCase):
         super(FaultInjectionHookTestCase, self).setUp()
         self.task = {"deployment_uuid": "foo_uuid"}
 
-    @ddt.data((create_config(action="foo"), True),
-              (create_config(action="foo", verify=True), True),
-              (create_config(action=10), False),
-              (create_config(action="foo", verify=10), False),
-              (create_config(), False))
+    @ddt.data((dict(action="foo"), True),
+              (dict(action="foo", verify=True), True),
+              (dict(action=10), False),
+              (dict(action="foo", verify=10), False),
+              (dict(), False))
     @ddt.unpack
     def test_config_schema(self, config, valid):
+        results = hook.Hook.validate("fault_injection", None, None, config)
         if valid:
-            fault_injection.FaultInjectionHook.validate(config)
+            self.assertEqual([], results)
         else:
-            self.assertRaises(jsonschema.ValidationError,
-                              fault_injection.FaultInjectionHook.validate,
-                              config)
+            self.assertEqual(1, len(results))
 
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("os_faults.human_api")

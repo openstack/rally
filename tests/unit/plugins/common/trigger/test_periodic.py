@@ -14,15 +14,11 @@
 #    under the License.
 
 import ddt
-import jsonschema
 import mock
 
 from rally.plugins.common.trigger import periodic
+from rally.task import trigger
 from tests.unit import test
-
-
-def create_config(**kwargs):
-    return {"name": "periodic", "args": kwargs}
 
 
 @ddt.ddt
@@ -36,31 +32,31 @@ class PeriodicTriggerTestCase(test.TestCase):
                          "args": {"unit": "iteration", "step": 2}}},
             mock.MagicMock(), self.hook_cls)
 
-    @ddt.data((create_config(unit="time", step=1), True),
-              (create_config(unit="time", step=0), False),
-              (create_config(unit="time", step=1, start=0), True),
-              (create_config(unit="time", step=1, start=-1), False),
-              (create_config(unit="time", step=1, start=0, end=1), True),
-              (create_config(unit="time", step=1, start=0, end=0), False),
-              (create_config(unit="time", wrong_prop=None), False),
-              (create_config(unit="time"), False),
-              (create_config(unit="iteration", step=1), True),
-              (create_config(unit="iteration", step=0), False),
-              (create_config(unit="iteration", step=1, start=1), True),
-              (create_config(unit="iteration", step=1, start=0), False),
-              (create_config(unit="iteration", step=1, start=1, end=1), True),
-              (create_config(unit="iteration", step=1, start=1, end=0), False),
-              (create_config(unit="iteration", wrong_prop=None), False),
-              (create_config(unit="iteration"), False),
-              (create_config(unit="wrong-unit", step=1), False),
-              (create_config(step=1), False))
+    @ddt.data((dict(unit="time", step=1), True),
+              (dict(unit="time", step=0), False),
+              (dict(unit="time", step=1, start=0), True),
+              (dict(unit="time", step=1, start=-1), False),
+              (dict(unit="time", step=1, start=0, end=1), True),
+              (dict(unit="time", step=1, start=0, end=0), False),
+              (dict(unit="time", wrong_prop=None), False),
+              (dict(unit="time"), False),
+              (dict(unit="iteration", step=1), True),
+              (dict(unit="iteration", step=0), False),
+              (dict(unit="iteration", step=1, start=1), True),
+              (dict(unit="iteration", step=1, start=0), False),
+              (dict(unit="iteration", step=1, start=1, end=1), True),
+              (dict(unit="iteration", step=1, start=1, end=0), False),
+              (dict(unit="iteration", wrong_prop=None), False),
+              (dict(unit="iteration"), False),
+              (dict(unit="wrong-unit", step=1), False),
+              (dict(step=1), False))
     @ddt.unpack
-    def test_config_schema(self, config, valid):
+    def test_validate(self, config, valid):
+        results = trigger.Trigger.validate("periodic", None, None, config)
         if valid:
-            periodic.PeriodicTrigger.validate(config)
+            self.assertEqual([], results)
         else:
-            self.assertRaises(jsonschema.ValidationError,
-                              periodic.PeriodicTrigger.validate, config)
+            self.assertEqual(1, len(results))
 
     def test_get_listening_event(self):
         event_type = self.trigger.get_listening_event()

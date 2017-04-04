@@ -35,6 +35,7 @@ from rally.task import hook
 from rally.task import runner
 from rally.task import scenario
 from rally.task import sla
+from rally.task import trigger
 
 
 LOG = logging.getLogger(__name__)
@@ -283,6 +284,8 @@ class TaskEngine(object):
                 namespace = scenario_cls.get_namespace()
                 scenario_context = copy.deepcopy(
                     scenario_cls.get_default_context())
+
+                # TODO(astudenov): replace old validation
                 try:
                     runner.ScenarioRunner.validate(workload.runner)
                     context.ContextManager.validate(workload.context,
@@ -291,12 +294,30 @@ class TaskEngine(object):
                                                     namespace=namespace,
                                                     allow_hidden=True)
                     sla.SLA.validate(workload.sla)
-                    for hook_conf in workload.hooks:
-                        hook.Hook.validate(hook_conf)
+
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
-
                     kw = workload.make_exception_args(six.text_type(e))
+                    raise exceptions.InvalidTaskConfig(**kw)
+
+                results = []
+                for hook_conf in workload.hooks:
+                    results.extend(hook.Hook.validate(
+                        name=hook_conf["name"],
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=hook_conf["args"]))
+
+                    trigger_conf = hook_conf["trigger"]
+                    results.extend(trigger.Trigger.validate(
+                        name=trigger_conf["name"],
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=trigger_conf["args"]))
+
+                if results:
+                    msg = "\n ".join([str(r) for r in results])
+                    kw = workload.make_exception_args(msg)
                     raise exceptions.InvalidTaskConfig(**kw)
 
     def _validate_config_semantic_helper(self, admin, user_context,

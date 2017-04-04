@@ -15,7 +15,7 @@
 
 """Tests for HookExecutor and Hook classes."""
 
-import jsonschema
+import ddt
 import mock
 
 from rally import consts
@@ -228,40 +228,18 @@ class HookExecutorTestCase(test.TestCase):
         ])
 
 
+@ddt.ddt
 class HookTestCase(test.TestCase):
 
-    def test_validate(self):
-        hook.Hook.validate(
-            {
-                "name": "dummy_hook",
-                "description": "dummy_action",
-                "args": {
-                    "status": consts.HookStatus.SUCCESS,
-                },
-                "trigger": {
-                    "name": "event",
-                    "args": {
-                        "unit": "iteration",
-                        "at": [1],
-                    }
-                }
-            }
-        )
-
-    def test_validate_error(self):
-        conf = {
-            "name": "dummy_hook",
-            "description": "dummy_action",
-            "args": 3,
-            "trigger": {
-                "name": "event",
-                "args": {
-                    "unit": "iteration",
-                    "at": [1],
-                }
-            }
-        }
-        self.assertRaises(jsonschema.ValidationError, hook.Hook.validate, conf)
+    @ddt.data(({"status": "foo"}, True), (3, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = hook.Hook.validate(
+            "dummy_hook", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result(self, mock_timer):

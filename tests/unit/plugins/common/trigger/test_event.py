@@ -14,15 +14,11 @@
 #    under the License.
 
 import ddt
-import jsonschema
 import mock
 
 from rally.plugins.common.trigger import event
+from rally.task import trigger
 from tests.unit import test
-
-
-def create_config(**kwargs):
-    return {"name": "event", "args": kwargs}
 
 
 @ddt.ddt
@@ -36,30 +32,30 @@ class EventTriggerTestCase(test.TestCase):
                          "args": {"unit": "iteration", "at": [1, 4, 5]}}},
             mock.MagicMock(), self.hook_cls)
 
-    @ddt.data((create_config(unit="time", at=[0, 3, 5]), True),
-              (create_config(unit="time", at=[2, 2]), False),
-              (create_config(unit="time", at=[-1]), False),
-              (create_config(unit="time", at=[1.5]), False),
-              (create_config(unit="time", at=[]), False),
-              (create_config(unit="time", wrong_prop=None), False),
-              (create_config(unit="time"), False),
-              (create_config(unit="iteration", at=[1, 5, 13]), True),
-              (create_config(unit="iteration", at=[1, 1]), False),
-              (create_config(unit="iteration", at=[0]), False),
-              (create_config(unit="iteration", at=[-1]), False),
-              (create_config(unit="iteration", at=[1.5]), False),
-              (create_config(unit="iteration", at=[]), False),
-              (create_config(unit="iteration", wrong_prop=None), False),
-              (create_config(unit="iteration"), False),
-              (create_config(unit="wrong-unit", at=[1, 2, 3]), False),
-              (create_config(at=[1, 2, 3]), False))
+    @ddt.data((dict(unit="time", at=[0, 3, 5]), True),
+              (dict(unit="time", at=[2, 2]), False),
+              (dict(unit="time", at=[-1]), False),
+              (dict(unit="time", at=[1.5]), False),
+              (dict(unit="time", at=[]), False),
+              (dict(unit="time", wrong_prop=None), False),
+              (dict(unit="time"), False),
+              (dict(unit="iteration", at=[1, 5, 13]), True),
+              (dict(unit="iteration", at=[1, 1]), False),
+              (dict(unit="iteration", at=[0]), False),
+              (dict(unit="iteration", at=[-1]), False),
+              (dict(unit="iteration", at=[1.5]), False),
+              (dict(unit="iteration", at=[]), False),
+              (dict(unit="iteration", wrong_prop=None), False),
+              (dict(unit="iteration"), False),
+              (dict(unit="wrong-unit", at=[1, 2, 3]), False),
+              (dict(at=[1, 2, 3]), False))
     @ddt.unpack
-    def test_config_schema(self, config, valid):
+    def test_validate(self, config, valid):
+        results = trigger.Trigger.validate("event", None, None, config)
         if valid:
-            event.EventTrigger.validate(config)
+            self.assertEqual([], results)
         else:
-            self.assertRaises(jsonschema.ValidationError,
-                              event.EventTrigger.validate, config)
+            self.assertEqual(1, len(results))
 
     def test_get_listening_event(self):
         event_type = self.trigger.get_listening_event()

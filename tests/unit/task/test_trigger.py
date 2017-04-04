@@ -16,7 +16,6 @@
 """Tests for Trigger base class."""
 
 import ddt
-import jsonschema
 import mock
 
 from rally.task import trigger
@@ -45,15 +44,15 @@ class DummyTrigger(trigger.Trigger):
 @ddt.ddt
 class TriggerTestCase(test.TestCase):
 
-    @ddt.data(({"name": "dummy_trigger", "args": [5]}, True),
-              ({"name": "dummy_trigger", "args": ["str"]}, False))
+    @ddt.data(([5], True), ("str", False))
     @ddt.unpack
     def test_validate(self, config, valid):
+        results = trigger.Trigger.validate(
+            "dummy_trigger", None, None, config)
         if valid:
-            trigger.Trigger.validate(config)
+            self.assertEqual([], results)
         else:
-            self.assertRaises(jsonschema.ValidationError,
-                              trigger.Trigger.validate, config)
+            self.assertEqual(1, len(results))
 
     def test_on_event_and_get_results(self):
         # get_results requires launched hooks, so if we want to test it, we

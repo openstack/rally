@@ -16,11 +16,11 @@
 import subprocess
 
 import ddt
-import jsonschema
 import mock
 
 from rally import consts
 from rally.plugins.common.hook import sys_call
+from rally.task import hook
 from tests.unit import fakes
 from tests.unit import test
 
@@ -28,39 +28,15 @@ from tests.unit import test
 @ddt.ddt
 class SysCallHookTestCase(test.TestCase):
 
-    def test_validate(self):
-        sys_call.SysCallHook.validate(
-            {
-                "name": "sys_call",
-                "description": "list folder",
-                "args": "ls",
-                "trigger": {
-                    "name": "event",
-                    "args": {
-                        "unit": "iteration",
-                        "at": [10]
-                    }
-                }
-            }
-        )
-
-    def test_validate_error(self):
-        conf = {
-            "name": "sys_call",
-            "description": "list folder",
-            "args": {
-                "cmd": 50,
-            },
-            "trigger": {
-                "name": "event",
-                "args": {
-                    "unit": "iteration",
-                    "at": [10]
-                }
-            }
-        }
-        self.assertRaises(
-            jsonschema.ValidationError, sys_call.SysCallHook.validate, conf)
+    @ddt.data(("ls", True), (50, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = hook.Hook.validate(
+            "sys_call", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
     @ddt.data(
         {"stdout": "foo output",

@@ -17,13 +17,13 @@ import abc
 import collections
 import threading
 
-import jsonschema
 import six
 
 from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.task.processing import charts
@@ -108,10 +108,13 @@ class HookExecutor(object):
         return results
 
 
+@validation.add_default("jsonschema")
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class Hook(plugin.Plugin):
+class Hook(plugin.Plugin, validation.ValidatablePluginMixin):
     """Factory for hook classes."""
+
+    CONFIG_SCHEMA = {"type": "null"}
 
     def __init__(self, task, config, triggered_by):
         self.task = task
@@ -126,13 +129,6 @@ class Hook(plugin.Plugin):
             "finished_at": self._finished_at,
             "triggered_by": self._triggered_by,
         }
-
-    @staticmethod
-    def validate(config):
-        config_schema = Hook.get(config["name"]).CONFIG_SCHEMA
-        jsonschema.validate(config["args"], config_schema)
-
-        trigger.Trigger.validate(config["trigger"])
 
     def _thread_method(self):
         # Run hook synchronously
