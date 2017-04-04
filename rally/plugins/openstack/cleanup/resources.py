@@ -47,7 +47,7 @@ class SynchronizedDeletion(object):
         return True
 
 
-class QuotaMixin(SynchronizedDeletion):
+class QuotaMixin(SynchronizedDeletion, base.ResourceManager):
     # NOTE(andreykurilin): Quotas resources are quite complex in terms of
     #   cleanup. First of all, they do not have name, id fields at all. There
     #   is only one identifier - reference to Keystone Project/Tenant. Also,
@@ -58,7 +58,8 @@ class QuotaMixin(SynchronizedDeletion):
     def list(self):
         if not self.tenant_uuid:
             return []
-        project = identity.Identity(self.user).get_project(self.tenant_uuid)
+        client = self._admin_required and self.admin or self.user
+        project = identity.Identity(client).get_project(self.tenant_uuid)
         return [project]
 
 
@@ -189,7 +190,7 @@ class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
 
 @base.resource("nova", "quotas", order=next(_nova_order),
                admin_required=True, tenant_resource=True)
-class NovaQuotas(QuotaMixin, base.ResourceManager):
+class NovaQuotas(QuotaMixin):
     pass
 
 
@@ -434,10 +435,10 @@ class NeutronSecurityGroup(NeutronMixin):
 
 @base.resource("neutron", "quota", order=next(_neutron_order),
                admin_required=True, tenant_resource=True)
-class NeutronQuota(QuotaMixin, NeutronMixin):
+class NeutronQuota(QuotaMixin):
 
     def delete(self):
-        self._manager().delete_quota(self.tenant_uuid)
+        self.admin.neutron().delete_quota(self.tenant_uuid)
 
 
 # CINDER
