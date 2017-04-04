@@ -23,48 +23,43 @@ from tests.unit import test
 class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_node(self):
+        class Node(object):
+            def __init__(self, name):
+                self.name = name
+
         scenario = nodes.CreateAndListNode(self.context)
-        scenario._create_node = mock.Mock(return_value="node_obj1")
-        scenario._list_nodes = mock.Mock(return_value=["node_obj1",
-                                                       "node_obj2",
-                                                       "node_obj3"])
+        scenario._create_node = mock.Mock(return_value=Node("node_obj1"))
+        scenario._list_nodes = mock.Mock(
+            return_value=[Node(name)
+                          for name in ("node_obj1", "node_obj2", "node_obj3")])
+        driver = "foo"
         fake_params = {
             "sort_dir": "foo1",
             "associated": "foo2",
-            "sort_key": "foo3",
             "detail": True,
-            "limit": "foo4",
             "maintenance": "foo5",
-            "marker": "foo6",
             "fake_parameter1": "foo7"
         }
 
         # Positive case:
-        scenario.run(**fake_params)
+        scenario.run(driver, **fake_params)
 
-        scenario._create_node.assert_called_once_with(fake_parameter1="foo7")
+        scenario._create_node.assert_called_once_with(driver,
+                                                      fake_parameter1="foo7")
         scenario._list_nodes.assert_called_once_with(
-            sort_dir="foo1", associated="foo2", sort_key="foo3", detail=True,
-            limit="foo4", maintenance="foo5", marker="foo6")
+            sort_dir="foo1", associated="foo2", detail=True,
+            maintenance="foo5")
 
-        # Negative case1: node isn't created
-        scenario._create_node = mock.Mock(return_value=None)
+        # Negative case: created node not in the list of available nodes
+        scenario._create_node = mock.Mock(uuid="foooo")
         self.assertRaises(exceptions.RallyAssertionError,
-                          scenario.run,
-                          **fake_params)
+                          scenario.run, driver, **fake_params)
 
-        scenario._create_node.assert_called_with(fake_parameter1="foo7")
-
-        # Negative case2: cretaed node not in the list of available nodes
-        scenario._create_node = mock.Mock()
-        self.assertRaises(exceptions.RallyAssertionError,
-                          scenario.run,
-                          **fake_params)
-
-        scenario._create_node.assert_called_with(fake_parameter1="foo7")
+        scenario._create_node.assert_called_with(driver,
+                                                 fake_parameter1="foo7")
         scenario._list_nodes.assert_called_with(
-            sort_dir="foo1", associated="foo2", sort_key="foo3", detail=True,
-            limit="foo4", maintenance="foo5", marker="foo6")
+            sort_dir="foo1", associated="foo2", detail=True,
+            maintenance="foo5")
 
     def test_create_and_delete_node(self):
         fake_node = mock.Mock(uuid="fake_uuid")
@@ -72,8 +67,11 @@ class IronicNodesTestCase(test.ScenarioTestCase):
         scenario._create_node = mock.Mock(return_value=fake_node)
         scenario._delete_node = mock.Mock()
 
-        scenario.run(fake_parameter1="fake1", fake_parameter2="fake2")
-        scenario._create_node.assert_called_once_with(fake_parameter1="fake1",
-                                                      fake_parameter2="fake2")
+        driver = "fake"
 
-        scenario._delete_node.assert_called_once_with("fake_uuid")
+        scenario.run(driver, fake_parameter1="fake1", fake_parameter2="fake2")
+        scenario._create_node.assert_called_once_with(
+            driver, fake_parameter1="fake1", fake_parameter2="fake2")
+
+        scenario._delete_node.assert_called_once_with(
+            scenario._create_node.return_value)
