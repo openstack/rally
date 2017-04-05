@@ -96,6 +96,11 @@ class EngineTestCase(test.TestCase):
         self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
                          deployment["status"])
 
+    def test_config(self):
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
+        self.assertEqual(deployment["config"], engine.config)
+
     @mock.patch.object(FakeDeployment, "set_completed")
     @mock.patch.object(FakeDeployment, "set_started")
     def test_make_deploy(self, mock_fake_deployment_set_started,

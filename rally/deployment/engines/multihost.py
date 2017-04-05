@@ -64,7 +64,6 @@ class MultihostEngine(engine.Engine):
 
     def __init__(self, *args, **kwargs):
         super(MultihostEngine, self).__init__(*args, **kwargs)
-        self.config = self.deployment["config"]
         self.nodes = []
 
     def _deploy_node(self, config):

@@ -105,8 +105,9 @@ class DevstackEngineTestCase(test.TestCase):
             info="fake_credentials",
             provider_name="DevstackEngine",
             type="credentials")
-        repo = "https://git.openstack.org/openstack-dev/devstack"
-        cmd = "/bin/sh -e -s %s master" % repo
+        cmd = "/bin/sh -e -s %s %s" % (
+            mock_deployment["config"].get("devstack_repo"),
+            mock_deployment["config"].get("devstack_branch"))
         server.ssh.run.assert_called_once_with(cmd, stdin="fake_script")
         ds_calls = [
             mock.call.ssh.run("cat > ~/devstack/local.conf", stdin=mock.ANY),
