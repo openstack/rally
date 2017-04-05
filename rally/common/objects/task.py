@@ -389,6 +389,8 @@ class Task(object):
     def _update(self, values):
         if not self.is_temporary:
             self.task = db.task_update(self.task["uuid"], values)
+        else:
+            self.task.update(values)
 
     def update_status(self, status, allowed_statuses=None):
         if allowed_statuses:

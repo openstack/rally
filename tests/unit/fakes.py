@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import multiprocessing
 import random
 import re
@@ -1840,7 +1841,6 @@ class FakeUserContext(FakeContext):
 
 
 class FakeDeployment(dict):
-    update_status = mock.Mock()
 
     def __init__(self, **kwargs):
         namespace = kwargs.pop("namespace", "openstack")
@@ -1849,6 +1849,7 @@ class FakeDeployment(dict):
                          "users": kwargs.pop("users", [])}],
             "default": [{"admin": None, "users": []}]}
         dict.__init__(self, **kwargs)
+        self.update_status = mock.Mock()
 
     def get_platforms(self):
         return [platform for platform in self["credentials"]]
@@ -1857,18 +1858,16 @@ class FakeDeployment(dict):
         return self["credentials"][namespace][0]
 
 
-class FakeTask(dict):
+class FakeTask(dict, object):
 
     def __init__(self, task=None, temporary=False, **kwargs):
         self.is_temporary = temporary
-        self.task = task or kwargs
         self.set_failed = mock.Mock()
         self.set_validation_failed = mock.Mock()
-
-    def __getitem__(self, key):
-        if key in self:
-            return self[key]
-        return self.task[key]
+        task = task or {}
+        for k, v in itertools.chain(task.items(), kwargs.items()):
+            self[k] = v
+        self.task = self
 
     def to_dict(self):
         return self
