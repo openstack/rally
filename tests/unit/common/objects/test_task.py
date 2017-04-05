@@ -220,7 +220,7 @@ class TaskTestCase(test.TestCase):
         # serializable is True
         results = objects.Task.extend_results(obsolete, serializable=True)
         self.assertEqual(list(results[0]["iterations"]), iterations)
-        expected[0]["created_at"] = now.strftime("%Y-%d-%mT%H:%M:%S")
+        expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
         expected[0]["updated_at"] = None
         jsonschema.validate(results[0],
                             objects.task.TASK_EXTENDED_RESULT_SCHEMA)

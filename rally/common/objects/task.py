@@ -534,7 +534,7 @@ class Task(object):
                     # NOTE(amaretskiy): convert datetime to str,
                     #     because json.dumps() does not like datetime
                     if scenario[k] and isinstance(scenario[k], dt.datetime):
-                        scenario[k] = scenario[k].strftime("%Y-%d-%mT%H:%M:%S")
+                        scenario[k] = scenario[k].strftime("%Y-%d-%m %H:%M:%S")
                 else:
                     del scenario[k]
 
