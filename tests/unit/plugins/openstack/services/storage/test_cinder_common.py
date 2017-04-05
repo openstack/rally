@@ -195,13 +195,12 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.cinder.volumes.update_readonly_flag.assert_called_once_with(
             fake_volume, "fake_flag")
 
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test_upload_volume_to_image(self, mock_wrap):
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test_upload_volume_to_image(self, mock_image):
         volume = mock.Mock()
         image = {"os-volume_upload_image": {"image_id": 1}}
         self.cinder.volumes.upload_to_image.return_value = (None, image)
-        glance_client = mock_wrap.return_value.client
-        glance_client.images.get.return_value = image
+        glance = mock_image.return_value
 
         self.service.generate_random_name = mock.Mock(
             return_value="test_vol")
@@ -219,14 +218,14 @@ class CinderMixinTestCase(test.ScenarioTestCase):
                 check_interval=CONF.benchmark.
                 cinder_volume_create_poll_interval),
             mock.call(
-                glance_client.images.get.return_value,
+                glance.get_image.return_value,
                 ready_statuses=["active"],
-                update_resource=mock_wrap.return_value.get_image,
+                update_resource=glance.get_image,
                 timeout=CONF.benchmark.glance_image_create_timeout,
                 check_interval=CONF.benchmark.
                 glance_image_create_poll_interval)
         ])
-        glance_client.images.get.assert_called_once_with(1)
+        glance.get_image.assert_called_once_with(1)
 
     def test_delete_snapshot(self):
         snapshot = mock.Mock()
