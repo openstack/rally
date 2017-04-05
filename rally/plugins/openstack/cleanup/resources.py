@@ -976,8 +976,28 @@ class KeystoneRole(KeystoneMixin, base.ResourceManager):
     pass
 
 
+# NOTE(andreykurilin): unfortunately, ec2 credentials doesn't have name
+#   and id fields. It makes impossible to identify resources belonging to
+#   particular task.
 @base.resource("keystone", "ec2", tenant_resource=True,
                order=next(_keystone_order))
 class KeystoneEc2(SynchronizedDeletion, base.ResourceManager):
+    def _manager(self):
+        return identity.Identity(self.user)
+
+    def id(self):
+        return "n/a"
+
+    def name(self):
+        return base.NoName(self._resource)
+
+    @property
+    def user_id(self):
+        return self.user.keystone.auth_ref.user_id
+
     def list(self):
-        return self._manager().list(self.raw_resource)
+        return self._manager().list_ec2credentials(self.user_id)
+
+    def delete(self):
+        self._manager().delete_ec2credential(
+            self.user_id, access=self.raw_resource.access)
