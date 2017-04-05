@@ -595,18 +595,10 @@ class NeutronSecurityGroupTestCase(test.TestCase):
 
 class NeutronQuotaTestCase(test.TestCase):
 
-    @mock.patch("%s.NeutronQuota._manager" % BASE)
-    def test_delete(self, mock_neutron_quota__manager):
-        user = mock.MagicMock()
-        resources.NeutronQuota(user=user, tenant_uuid="fake").delete()
-        mock_neutron_quota__manager().delete_quota.assert_called_once_with(
-            "fake")
-
-    def test__manager(self):
-        admin = mock.MagicMock(neutron=mock.Mock(return_value="foo"))
-        res = resources.NeutronQuota(admin=admin, tenant_uuid="fake")
-        res._manager()
-        self.assertEqual("foo", getattr(admin, res._service)())
+    def test_delete(self):
+        admin = mock.MagicMock()
+        resources.NeutronQuota(admin=admin, tenant_uuid="fake").delete()
+        admin.neutron.return_value.delete_quota.assert_called_once_with("fake")
 
 
 @ddt.ddt
