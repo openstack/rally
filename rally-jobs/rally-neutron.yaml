@@ -85,6 +85,30 @@
         failure_rate:
           max: 20
 
+  NeutronNetworks.create_and_show_subnets:
+    -
+      args:
+        network_create_args:
+        subnet_create_args:
+        subnet_cidr_start: "1.1.0.0/30"
+        subnets_per_network: 2
+      runner:
+        type: "constant"
+        times: {{smoke or 20 }}
+        concurrency: {{smoke or 10}}
+      context:
+        network: {}
+        users:
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+             network: -1
+             subnet: -1
+      sla:
+        failure_rate:
+          max: 20
+
   NeutronSecurityGroup.create_and_list_security_groups:
     -
       args:

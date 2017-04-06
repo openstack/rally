@@ -158,6 +158,31 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
 
         scenario._list_subnets.assert_called_once_with()
 
+    def test_create_and_show_subnets(self):
+        network_create_args = {"router:external": True}
+        subnet_create_args = {"allocation_pools": []}
+        subnet_cidr_start = "1.1.0.0/30"
+        subnets_per_network = 5
+        net = mock.MagicMock()
+
+        scenario = network.CreateAndShowSubnets(self.context)
+        scenario._get_or_create_network = mock.Mock(return_value=net)
+        scenario._create_subnets = mock.MagicMock()
+        scenario._show_subnet = mock.Mock()
+
+        scenario.run(network_create_args=network_create_args,
+                     subnet_create_args=subnet_create_args,
+                     subnet_cidr_start=subnet_cidr_start,
+                     subnets_per_network=subnets_per_network)
+
+        scenario._get_or_create_network.assert_called_once_with(
+            network_create_args)
+        scenario._create_subnets.assert_called_once_with(
+            net, subnet_create_args, subnet_cidr_start, subnets_per_network)
+        for subnet in scenario._create_subnets.return_value:
+            scenario._show_subnet.assert_called_with(subnet,
+                                                     atomic_action=False)
+
     def test_create_and_update_subnets(self):
         network_create_args = {"router:external": True}
         subnet_create_args = {"allocation_pools": []}

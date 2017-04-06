@@ -183,6 +183,15 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_subnets")
 
+    def test_show_subnet(self):
+        subnet = {"subnet": {"name": "fake-name", "id": "fake-id"}}
+
+        result_subnet = self.scenario._show_subnet(subnet)
+        self.assertEqual(self.clients("neutron").show_subnet.return_value,
+                         result_subnet)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.show_subnet")
+
     def test_update_subnet(self):
         expected_subnet = {
             "subnet": {
