@@ -14,10 +14,8 @@
 #    under the License.
 
 import ddt
-import jsonschema
 import mock
 
-from rally import exceptions
 from rally.plugins.common.runners import rps
 from rally.task import runner
 from tests.unit import fakes
@@ -78,7 +76,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                     "step": 1,
                 },
                 "times": 2
-            }
+            },
+            "valid": False
         },
         {
             "config": {
@@ -89,7 +88,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                     "step": 3,
                 },
                 "times": 2
-            }
+            },
+            "valid": False
         },
         {
             "config": {
@@ -105,7 +105,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             "config": {
                 "type": "rps",
                 "rps": 0.000001
-            }
+            },
+            "valid": False
         },
         {
             "config": {
@@ -118,32 +119,32 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                 "times": 55
             }
         },
+        {
+            "config": {
+                "type": "rps",
+                "rps": 0,
+                "times": 55
+            },
+            "valid": False
+        },
+        {
+            "config": {
+                "type": "rps",
+                "rps": 2,
+                "times": 55,
+                "foo": "bar"
+            },
+            "valid": False
+        },
+
     )
     @ddt.unpack
-    def test_validate(self, config):
-        if "times" not in config:
-            self.assertRaises(
-                jsonschema.exceptions.ValidationError,
-                rps.RPSScenarioRunner.validate, config)
-        elif config["times"] == 2:
-            self.assertRaises(
-                exceptions.InvalidTaskException,
-                rps.RPSScenarioRunner.validate, config)
+    def test_validate(self, config, valid=True):
+        results = runner.ScenarioRunner.validate("rps", None, None, config)
+        if valid:
+            self.assertEqual([], results)
         else:
-            rps.RPSScenarioRunner.validate(config)
-
-    def test_rps_parameter_validate_failed(self):
-        config = {
-            "type": "rps",
-            "rps": 0
-        }
-        self.assertRaises(jsonschema.ValidationError,
-                          rps.RPSScenarioRunner.validate, config)
-
-    def test_validate_failed(self):
-        config = {"type": "rps", "a": 10}
-        self.assertRaises(jsonschema.ValidationError,
-                          rps.RPSScenarioRunner.validate, config)
+            self.assertGreater(len(results), 0)
 
     @mock.patch(RUNNERS + "rps.LOG")
     @mock.patch(RUNNERS + "rps.time")

@@ -13,10 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
+import ddt
 import mock
 
-from rally import exceptions
 from rally.plugins.common.runners import constant
 from rally.task import runner
 from tests.unit import fakes
@@ -27,6 +26,7 @@ RUNNERS_BASE = "rally.task.runner."
 RUNNERS = "rally.plugins.common.runners."
 
 
+@ddt.ddt
 class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
@@ -38,20 +38,21 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.args = {"a": 1}
         self.task = mock.MagicMock()
 
-    def test_validate(self):
-        constant.ConstantScenarioRunner.validate(self.config)
-
-    def test_validate_failed_by_additional_key(self):
-        self.config["new_key"] = "should fail"
-        self.assertRaises(jsonschema.ValidationError,
-                          constant.ConstantScenarioRunner.validate,
-                          self.config)
-
-    def test_validate_failed_by_wrong_concurrency(self):
-        self.config["concurrency"] = self.config["times"] + 1
-        self.assertRaises(exceptions.ValidationError,
-                          constant.ConstantScenarioRunner.validate,
-                          self.config)
+    @ddt.data(({"times": 4, "concurrency": 2,
+                "timeout": 2, "type": "constant",
+                "max_cpu_count": 2}, True),
+              ({"times": 4, "concurrency": 5,
+                "timeout": 2, "type": "constant",
+                "max_cpu_count": 2}, False),
+              ({"foo": "bar"}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = runner.ScenarioRunner.validate(
+            "constant", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertGreater(len(results), 0)
 
     @mock.patch(RUNNERS + "constant.runner")
     def test__run_scenario_once_with_unpack_args(self, mock_runner):
@@ -255,6 +256,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertTrue(runner_obj.aborted.is_set())
 
 
+@ddt.ddt
 class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
@@ -265,14 +267,17 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.context["iteration"] = 14
         self.args = {"a": 1}
 
-    def test_validate(self):
-        constant.ConstantForDurationScenarioRunner.validate(self.config)
-
-    def test_validate_failed(self):
-        self.config["times"] = "gagaga"
-        self.assertRaises(jsonschema.ValidationError,
-                          runner.ScenarioRunner.validate,
-                          self.config)
+    @ddt.data(({"duration": 0, "concurrency": 2,
+                "timeout": 2, "type": "constant_for_duration"}, True),
+              ({"foo": "bar"}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = runner.ScenarioRunner.validate(
+            "constant_for_duration", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertGreater(len(results), 0)
 
     def test_run_scenario_constantly_for_duration(self):
         runner_obj = constant.ConstantForDurationScenarioRunner(

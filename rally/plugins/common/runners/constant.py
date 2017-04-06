@@ -21,8 +21,8 @@ import time
 from six.moves import queue as Queue
 
 from rally.common import utils
+from rally.common import validation
 from rally import consts
-from rally import exceptions
 from rally.task import runner
 from rally.task import utils as butils
 
@@ -116,6 +116,21 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
         collector_thr_by_timeout.join()
 
 
+@validation.configure("check_constant")
+class CheckConstantValidator(validation.Validator):
+    """Additional schema validation for constant runner"""
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        if plugin_cfg.get("concurrency", 1) > plugin_cfg.get("times", 1):
+            return self.fail(
+                "Parameter 'concurrency' means a number of parallel executions"
+                "of iterations. Parameter 'times' means total number of "
+                "iteration executions. It is redundant (and restricted) to "
+                "have number of parallel iterations bigger then total number "
+                "of iterations.")
+
+
+@validation.add("check_constant")
 @runner.configure(name="constant")
 class ConstantScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario a specified number of times.
@@ -162,18 +177,6 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         "required": ["type"],
         "additionalProperties": False
     }
-
-    @classmethod
-    def validate(cls, config):
-        """Validates runner's part of task config."""
-        super(ConstantScenarioRunner, cls).validate(config)
-        if config.get("concurrency", 1) > config.get("times", 1):
-            raise exceptions.ValidationError(
-                "Parameter 'concurrency' means a number of parallel executions"
-                "of iterations. Parameter 'times' means total number of "
-                "iteration executions. It is redundant (and restricted) to "
-                "have number of parallel iterations bigger then total number "
-                "of iterations.")
 
     def _run_scenario(self, cls, method_name, context, args):
         """Runs the specified benchmark scenario with given arguments.

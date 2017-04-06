@@ -22,8 +22,8 @@ from six.moves import queue as Queue
 
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts
-from rally import exceptions
 from rally.task import runner
 
 LOG = logging.getLogger(__name__)
@@ -121,6 +121,18 @@ def _worker_process(queue, iteration_gen, timeout, times, max_concurrent,
         collector_thr_by_timeout.join()
 
 
+@validation.configure("check_rps")
+class CheckPRSValidator(validation.Validator):
+    """Additional schema validation for rps runner"""
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        if isinstance(plugin_cfg["rps"], dict):
+            if plugin_cfg["rps"]["end"] < plugin_cfg["rps"]["start"]:
+                msg = "rps end value must not be less than rps start value."
+                return self.fail(msg)
+
+
+@validation.add("check_rps")
 @runner.configure(name="rps")
 class RPSScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that does the job with specified frequency.
@@ -196,16 +208,6 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         "required": ["type", "times", "rps"],
         "additionalProperties": False
     }
-
-    @staticmethod
-    def validate(config):
-        """Validates runner's part of task config."""
-        super(RPSScenarioRunner, RPSScenarioRunner).validate(config)
-
-        if isinstance(config["rps"], dict):
-            if config["rps"]["end"] < config["rps"]["start"]:
-                msg = "rps end value must not be less than rps start value."
-                raise exceptions.InvalidTaskException(msg)
 
     def _run_scenario(self, cls, method_name, context, args):
         """Runs the specified benchmark scenario with given arguments.
