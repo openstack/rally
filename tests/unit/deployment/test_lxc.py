@@ -51,6 +51,9 @@ class LxcEngineTestCase(test.TestCase):
         self.engine = engine.Engine.get_engine("LxcEngine",
                                                self.deployment)
 
+    def test_config(self):
+        self.assertEqual(self.deployment["config"], self.engine.config)
+
     @mock.patch(MOD + "objects")
     @mock.patch(MOD + "engine")
     def test__deploy_first(self, mock_engine, mock_objects):
@@ -142,6 +145,7 @@ class LxcEngineTestCase(test.TestCase):
 
         fake_deployment = mock.MagicMock()
         fake_deployment.add_resource = add_resource
+        fake_deployment.__getitem__.side_effect = self.deployment.__getitem__
 
         with mock.patch.object(self.engine, "deployment", fake_deployment):
             credentials = self.engine.deploy()

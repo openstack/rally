@@ -71,7 +71,10 @@ class Engine(plugin.Plugin):
     """
     def __init__(self, deployment):
         self.deployment = deployment
-        self.config = deployment["config"]
+
+    @property
+    def config(self):
+        return self.deployment["config"]
 
     def validate(self, config=None):
         # TODO(sskripnick): remove this checking when config schema

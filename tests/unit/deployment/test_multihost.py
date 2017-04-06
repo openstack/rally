@@ -52,6 +52,9 @@ class MultihostEngineTestCase(test.TestCase):
         self.engine = engine.Engine.get_engine("MultihostEngine",
                                                self.deployment)
 
+    def test_config(self):
+        self.assertEqual(self.deployment["config"], self.engine.config)
+
     @mock.patch(MOD + "objects.Deployment")
     @mock.patch(MOD + "engine.Engine")
     def test__deploy_node(self, mock_engine, mock_deployment):
