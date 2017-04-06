@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import traceback
-
 import mock
 
 from rally import exceptions
@@ -117,13 +115,20 @@ class ScenarioTestCase(test.TestCase):
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
             namespace = s.get_namespace()
-            try:
-                context.ContextManager.validate(s.get_default_context(),
-                                                namespace=namespace,
-                                                allow_hidden=True)
-            except Exception:
-                print(traceback.format_exc())
-                self.fail("Scenario `%s` has wrong context" % scenario)
+            results = []
+            for context_name, context_conf in s.get_default_context().items():
+                results.extend(context.Context.validate(
+                    name=context_name,
+                    credentials=None,
+                    config=None,
+                    plugin_cfg=context_conf,
+                    namespace=namespace,
+                    allow_hidden=True))
+
+            if results:
+                msg = "\n ".join([str(r) for r in results])
+                print(msg)
+                self.fail("Scenario `%s` has wrong context" % s)
 
     def test_add_output(self):
         scenario_inst = scenario.Scenario()

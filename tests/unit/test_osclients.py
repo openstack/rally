@@ -26,7 +26,8 @@ from tests.unit import fakes
 from tests.unit import test
 
 
-@osclients.configure("dummy")
+@osclients.configure("dummy", supported_versions=("0.1", "1"),
+                     default_service_type="bar")
 class DummyClient(osclients.OSClient):
     def create_client(self, *args, **kwargs):
         pass
@@ -68,6 +69,16 @@ class OSClientTestCaseUtils(object):
 
 @ddt.ddt
 class OSClientTestCase(test.TestCase, OSClientTestCaseUtils):
+
+    @ddt.data((0.1, True), (1, True), ("0.1", True), ("1", True),
+              (0.2, False), ("foo", False))
+    @ddt.unpack
+    def test_validate_version(self, version, valid):
+        if valid:
+            DummyClient.validate_version(version)
+        else:
+            self.assertRaises(exceptions.ValidationError,
+                              DummyClient.validate_version, version)
 
     def test_choose_service_type(self):
         default_service_type = "default_service_type"
@@ -299,6 +310,14 @@ class OSClientsTestCase(test.TestCase):
         self.mock_create_keystone_client.assert_called_once_with()
         self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
+    def test_keystone_versions(self):
+        self.clients.keystone.validate_version(2)
+        self.clients.keystone.validate_version(3)
+
+    def test_keysonte_service_type(self):
+        self.assertRaises(exceptions.RallyException,
+                          self.clients.keystone.is_service_type_configurable)
+
     def test_verified_keystone(self):
         self.auth_ref.role_names = ["admin"]
         self.assertEqual(self.mock_create_keystone_client.return_value,
@@ -350,6 +369,14 @@ class OSClientsTestCase(test.TestCase):
                 "endpoint_override": mock_nova__get_endpoint.return_value}
             mock_nova.client.Client.assert_called_once_with(**kw)
             self.assertEqual(fake_nova, self.clients.cache["nova"])
+
+    def test_nova_validate_version(self):
+        osclients.Nova.validate_version("2")
+        self.assertRaises(exceptions.RallyException,
+                          osclients.Nova.validate_version, "foo")
+
+    def test_nova_service_type(self):
+        self.clients.nova.is_service_type_configurable()
 
     @mock.patch("rally.osclients.Neutron._get_endpoint")
     def test_neutron(self, mock_neutron__get_endpoint):

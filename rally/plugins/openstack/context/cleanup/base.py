@@ -13,13 +13,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
+from rally.common import validation
 from rally import consts
-from rally import exceptions
+from rally.plugins.openstack.cleanup import manager
 
 
-class NoSuchCleanupResources(exceptions.RallyException):
-    msg_fmt = _("Missing cleanup resource managers: %(message)s")
+@validation.configure("check_cleanup_resources")
+class CheckCleanupResourcesValidator(validation.Validator):
+    """Validates that openstack resource managers exist"""
+
+    def __init__(self, admin_required):
+        super(CheckCleanupResourcesValidator, self).__init__()
+        self.admin_required = admin_required
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        missing = set(plugin_cfg)
+        missing -= manager.list_resource_names(
+            admin_required=self.admin_required)
+        missing = ", ".join(missing)
+        if missing:
+            return self.fail(
+                "Couldn't find cleanup resource managers: %s" % missing)
 
 
 class CleanupMixin(object):

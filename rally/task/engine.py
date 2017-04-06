@@ -288,17 +288,29 @@ class TaskEngine(object):
                 # TODO(astudenov): replace old validation
                 try:
                     runner.ScenarioRunner.validate(workload.runner)
-                    context.ContextManager.validate(workload.context,
-                                                    namespace=namespace)
-                    context.ContextManager.validate(scenario_context,
-                                                    namespace=namespace,
-                                                    allow_hidden=True)
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
                     kw = workload.make_exception_args(six.text_type(e))
                     raise exceptions.InvalidTaskConfig(**kw)
 
                 results = []
+                for context_name, context_conf in workload.context.items():
+                    results.extend(context.Context.validate(
+                        name=context_name,
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=context_conf,
+                        namespace=namespace))
+
+                for context_name, context_conf in scenario_context.items():
+                    results.extend(context.Context.validate(
+                        name=context_name,
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=context_conf,
+                        namespace=namespace,
+                        allow_hidden=True))
+
                 for sla_name, sla_conf in workload.sla.items():
                     results.extend(sla.SLA.validate(
                         name=sla_name,

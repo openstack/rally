@@ -17,6 +17,7 @@ import sys
 
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import validation
 from rally.plugins.openstack.cleanup import manager
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack import scenario
@@ -26,22 +27,11 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add(name="check_cleanup_resources", admin_required=True)
 # NOTE(amaretskiy): Set order to run this just before UserCleanup
 @context.configure(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
 class AdminCleanup(base.CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
-
-    @classmethod
-    def validate(cls, config):
-        super(AdminCleanup, cls).validate(config)
-
-        missing = set(config)
-        missing -= manager.list_resource_names(admin_required=True)
-        missing = ", ".join(missing)
-        if missing:
-            LOG.info(_("Couldn't find cleanup resource managers: %s")
-                     % missing)
-            raise base.NoSuchCleanupResources(missing)
 
     @logging.log_task_wrapper(LOG.info, _("admin resources cleanup"))
     def cleanup(self):

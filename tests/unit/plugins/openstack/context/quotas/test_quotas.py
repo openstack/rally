@@ -14,14 +14,13 @@
 #    under the License.
 
 import copy
-import random
 
 import ddt
-import jsonschema
 import mock
 
 from rally.common import logging
 from rally.plugins.openstack.context.quotas import quotas
+from rally.task import context
 from tests.unit import test
 
 QUOTAS_PATH = "rally.plugins.openstack.context.quotas"
@@ -43,98 +42,56 @@ class QuotasTestCase(test.TestCase):
             "task": mock.MagicMock()
         }
 
-    def test_quotas_schemas(self):
-        ctx = copy.deepcopy(self.context)
-        ctx["config"]["quotas"] = {
-            "cinder": {
-                "volumes": self.unlimited,
-                "snapshots": self.unlimited,
-                "gigabytes": self.unlimited
-            },
-            "nova": {
-                "instances": self.unlimited,
-                "cores": self.unlimited,
-                "ram": self.unlimited,
-                "floating_ips": self.unlimited,
-                "fixed_ips": self.unlimited,
-                "metadata_items": self.unlimited,
-                "injected_files": self.unlimited,
-                "injected_file_content_bytes": self.unlimited,
-                "injected_file_path_bytes": self.unlimited,
-                "key_pairs": self.unlimited,
-                "security_groups": self.unlimited,
-                "security_group_rules": self.unlimited
-            },
-            "neutron": {
-                "network": self.unlimited,
-                "subnet": self.unlimited,
-                "port": self.unlimited,
-                "router": self.unlimited,
-                "floatingip": self.unlimited,
-                "security_group": self.unlimited,
-                "security_group_rule": self.unlimited
-            }
-        }
-        for service in ctx["config"]["quotas"]:
-            for key in ctx["config"]["quotas"][service]:
-                # Test invalid values
-                ctx["config"]["quotas"][service][key] = self.unlimited - 1
-                try:
-                    quotas.Quotas.validate(ctx["config"]["quotas"])
-                except jsonschema.ValidationError:
-                    pass
-                else:
-                    self.fail("Invalid value %s must raise a validation error"
-                              % ctx["config"]["quotas"][service][key])
-
-                ctx["config"]["quotas"][service][key] = 2.5
-                try:
-                    quotas.Quotas.validate(ctx["config"]["quotas"])
-                except jsonschema.ValidationError:
-                    pass
-                else:
-                    self.fail("Invalid value %s must raise a validation error"
-                              % ctx["config"]["quotas"][service][key])
-
-                ctx["config"]["quotas"][service][key] = "-1"
-                try:
-                    quotas.Quotas.validate(ctx["config"]["quotas"])
-                except jsonschema.ValidationError:
-                    pass
-                else:
-                    self.fail("Invalid value %s must raise a validation error"
-                              % ctx["config"]["quotas"][service][key])
-
-                # Test valid values
-                ctx["config"]["quotas"][service][key] = random.randint(0,
-                                                                       1000000)
-                try:
-                    quotas.Quotas.validate(ctx["config"]["quotas"])
-                except jsonschema.ValidationError:
-                    self.fail("Positive integers are valid quota values")
-
-                ctx["config"]["quotas"][service][key] = self.unlimited
-                try:
-                    quotas.Quotas.validate(ctx["config"]["quotas"])
-                except jsonschema.ValidationError:
-                    self.fail("%d is a valid quota value" % self.unlimited)
-
-            # Test additional keys are refused
-            ctx["config"]["quotas"][service]["additional"] = self.unlimited
-            try:
-                quotas.Quotas.validate(ctx["config"]["quotas"])
-            except jsonschema.ValidationError:
-                pass
+    @ddt.data(("cinder", "backup_gigabytes"),
+              ("cinder", "backups"),
+              ("cinder", "gigabytes"),
+              ("cinder", "snapshots"),
+              ("cinder", "volumes"),
+              ("manila", "gigabytes"),
+              ("manila", "share_networks"),
+              ("manila", "shares"),
+              ("manila", "snapshot_gigabytes"),
+              ("manila", "snapshots"),
+              ("neutron", "floatingip"),
+              ("neutron", "health_monitor"),
+              ("neutron", "network"),
+              ("neutron", "pool"),
+              ("neutron", "port"),
+              ("neutron", "router"),
+              ("neutron", "security_group"),
+              ("neutron", "security_group_rule"),
+              ("neutron", "subnet"),
+              ("neutron", "vip"),
+              ("nova", "cores"),
+              ("nova", "fixed_ips"),
+              ("nova", "floating_ips"),
+              ("nova", "injected_file_content_bytes"),
+              ("nova", "injected_file_path_bytes"),
+              ("nova", "injected_files"),
+              ("nova", "instances"),
+              ("nova", "key_pairs"),
+              ("nova", "metadata_items"),
+              ("nova", "ram"),
+              ("nova", "security_group_rules"),
+              ("nova", "security_groups"),
+              ("nova", "server_group_members"),
+              ("nova", "server_groups"))
+    @ddt.unpack
+    def test_validate(self, group, parameter):
+        configs = [
+            ({group: {parameter: self.unlimited}}, True),
+            ({group: {parameter: 0}}, True),
+            ({group: {parameter: 10000}}, True),
+            ({group: {parameter: 2.5}}, False),
+            ({group: {parameter: "-1"}}, False),
+            ({group: {parameter: -2}}, False),
+        ]
+        for config, valid in configs:
+            results = context.Context.validate("quotas", None, None, config)
+            if valid:
+                self.assertEqual([], results)
             else:
-                self.fail("Additional keys must raise a validation error")
-            del ctx["config"]["quotas"][service]["additional"]
-
-            # Test valid keys are optional
-            ctx["config"]["quotas"][service] = {}
-            try:
-                quotas.Quotas.validate(ctx["config"]["quotas"])
-            except jsonschema.ValidationError:
-                self.fail("Valid quota keys are optional")
+                self.assertGreater(len(results), 0)
 
     @mock.patch("%s.quotas.osclients.Clients" % QUOTAS_PATH)
     @mock.patch("%s.cinder_quotas.CinderQuotas" % QUOTAS_PATH)

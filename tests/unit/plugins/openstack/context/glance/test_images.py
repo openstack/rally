@@ -16,7 +16,6 @@
 import copy
 
 import ddt
-import jsonschema
 import mock
 
 from rally.plugins.openstack.context.glance import images
@@ -58,16 +57,6 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         for id_ in range(count):
             tenants[str(id_)] = {"name": str(id_)}
         return tenants
-
-    def test_init_validation(self):
-        self.context["config"] = {
-            "images": {
-                "image_url": "mock_url"
-            }
-        }
-
-        self.assertRaises(jsonschema.ValidationError,
-                          images.ImageGenerator.validate, self.context)
 
     @ddt.data(
         {},

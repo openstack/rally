@@ -10,15 +10,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
+import ddt
 import mock
 
 from rally.common import utils
 from rally import exceptions
 from rally.plugins.openstack.context import api_versions
+from rally.task import context
 from tests.unit import test
 
 
+@ddt.ddt
 class OpenStackServicesTestCase(test.TestCase):
 
     def setUp(self):
@@ -30,82 +32,51 @@ class OpenStackServicesTestCase(test.TestCase):
         self.service_catalog.get_endpoints.return_value = []
         self.mock_kc.services.list.return_value = []
 
-    def test_validate_correct_config(self):
-        api_versions.OpenStackAPIVersions.validate({
-            "nova": {"service_type": "compute", "version": 2},
-            "cinder": {"service_name": "cinderv2", "version": 2},
-            "neutron": {"service_type": "network"},
-            "glance": {"service_name": "glance"},
-            "heat": {"version": 1}
-        })
-
-    def test_validate_wrong_configs(self):
-        # Non-existing clients should be caught
-        self.assertRaises(
-            exceptions.PluginNotFound,
-            api_versions.OpenStackAPIVersions.validate,
-            {"invalid": {"service_type": "some_type"}})
-
-        # Additional properties should be restricted
-        self.assertRaises(
-            jsonschema.ValidationError,
-            api_versions.OpenStackAPIVersions.validate,
-            {"nova": {"some_key": "some_value"}})
-
-        # Setting service_type is allowed only
-        # for those clients, which support it
-        self.assertRaises(
-            exceptions.ValidationError,
-            api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"service_type": "identity"}})
-
-        # Setting service_name is allowed only
-        # for those clients, which support it
-        self.assertRaises(
-            exceptions.ValidationError,
-            api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"service_name": "keystone"}})
-
-        # Setting version is allowed only
-        # for those clients, which support it
-        self.assertRaises(
-            exceptions.ValidationError,
-            api_versions.OpenStackAPIVersions.validate,
-            {"keystone": {"version": 1}})
-
-        # Unsupported version should be caught
-        self.assertRaises(
-            exceptions.ValidationError,
-            api_versions.OpenStackAPIVersions.validate,
-            {"nova": {"version": 666}})
+    @ddt.data(({"nova": {"service_type": "compute", "version": 2},
+                "cinder": {"service_name": "cinderv2", "version": 2},
+                "neutron": {"service_type": "network"},
+                "glance": {"service_name": "glance"},
+                "heat": {"version": 1}}, True),
+              ({"nova": {"service_type": "compute",
+                         "service_name": "nova"}}, False),
+              ({"keystone": {"service_type": "foo"}}, False),
+              ({"nova": {"version": "foo"}}, False),
+              ({}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = context.Context.validate("api_versions", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertGreater(len(results), 0)
 
     def test_setup_with_wrong_service_name(self):
-        context = {
+        context_obj = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "service_name"}}},
             "admin": {"credential": mock.MagicMock()},
             "users": [{"credential": mock.MagicMock()}]}
-        ctx = api_versions.OpenStackAPIVersions(context)
+        ctx = api_versions.OpenStackAPIVersions(context_obj)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
         self.service_catalog.get_endpoints.assert_called_once_with()
         self.mock_kc.services.list.assert_called_once_with()
 
     def test_setup_with_wrong_service_name_and_without_admin(self):
-        context = {
+        context_obj = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_name": "service_name"}}},
             "users": [{"credential": mock.MagicMock()}]}
-        ctx = api_versions.OpenStackAPIVersions(context)
+        ctx = api_versions.OpenStackAPIVersions(context_obj)
         self.assertRaises(exceptions.BenchmarkSetupFailure, ctx.setup)
         self.service_catalog.get_endpoints.assert_called_once_with()
         self.assertFalse(self.mock_kc.services.list.called)
 
     def test_setup_with_wrong_service_type(self):
-        context = {
+        context_obj = {
             "config": {api_versions.OpenStackAPIVersions.get_name(): {
                 "nova": {"service_type": "service_type"}}},
             "users": [{"credential": mock.MagicMock()}]}
-        ctx = api_versions.OpenStackAPIVersions(context)
+        ctx = api_versions.OpenStackAPIVersions(context_obj)
         self.assertRaises(exceptions.ValidationError, ctx.setup)
         self.service_catalog.get_endpoints.assert_called_once_with()
 
