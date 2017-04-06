@@ -12,13 +12,37 @@
 
 import random
 
-from rally.common.i18n import _, _LE
+from rally.common.i18n import _
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally import osclients
 from rally.task import context
 
 
+@validation.configure("check_api_versions")
+class CheckOpenStackAPIVersionsValidator(validation.Validator):
+    """Additional validation for api_versions context"""
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        for client in plugin_cfg:
+            client_cls = osclients.OSClient.get(client)
+            try:
+                if ("service_type" in plugin_cfg[client] or
+                        "service_name" in plugin_cfg[client]):
+                    client_cls.is_service_type_configurable()
+
+                if "version" in plugin_cfg[client]:
+                    client_cls.validate_version(plugin_cfg[client]["version"])
+
+            except exceptions.RallyException as e:
+                return self.fail(
+                    "Invalid settings for '%(client)s': %(error)s" % {
+                        "client": client,
+                        "error": e.format_message()})
+
+
+@validation.add("check_api_versions")
 @context.configure(name="api_versions", order=150)
 class OpenStackAPIVersions(context.Context):
     """Context for specifying OpenStack clients versions and service types.
@@ -157,30 +181,49 @@ class OpenStackAPIVersions(context.Context):
         }
 
     """
-
+    VERSION_SCHEMA = {
+        "anyOf": [
+            {"type": "string", "description": "a string-like version."},
+            {"type": "number", "description": "a number-like version."}
+        ]
+    }
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "patternProperties": {
             "^[a-z]+$": {
                 "type": "object",
-                "properties": {
-                    "version": {
-                        "anyOf": [{"type": "string",
-                                   "description": "a string-like version."},
-                                  {"type": "number",
-                                   "description": "a number-like version."}]
+                "oneOf": [
+                    {
+                        "description": "version only",
+                        "properties": {
+                            "version": VERSION_SCHEMA,
+                        },
+                        "required": ["version"],
+                        "additionalProperties": False
                     },
-                    "service_name": {
-                        "type": "string"
+                    {
+                        "description": "version and service_name",
+                        "properties": {
+                            "version": VERSION_SCHEMA,
+                            "service_name": {"type": "string"}
+                        },
+                        "required": ["service_name"],
+                        "additionalProperties": False
                     },
-                    "service_type": {
-                        "type": "string"
+                    {
+                        "description": "version and service_type",
+                        "properties": {
+                            "version": VERSION_SCHEMA,
+                            "service_type": {"type": "string"}
+                        },
+                        "required": ["service_type"],
+                        "additionalProperties": False
                     }
-                },
-                "additionalProperties": False
+                ],
             }
         },
+        "minProperties": 1,
         "additionalProperties": False
     }
 
@@ -219,27 +262,3 @@ class OpenStackAPIVersions(context.Context):
     def cleanup(self):
         # nothing to do here
         pass
-
-    @classmethod
-    def validate(cls, config):
-        super(OpenStackAPIVersions, cls).validate(config)
-        for client in config:
-            client_cls = osclients.OSClient.get(client)
-            if ("service_type" in config[client] and
-                    "service_name" in config[client]):
-                raise exceptions.ValidationError(_LE(
-                    "Setting both 'service_type' and 'service_name' properties"
-                    " is restricted."))
-            try:
-                if ("service_type" in config[client] or
-                        "service_name" in config[client]):
-                    client_cls.is_service_type_configurable()
-
-                if "version" in config[client]:
-                    client_cls.validate_version(config[client]["version"])
-
-            except exceptions.RallyException as e:
-                raise exceptions.ValidationError(
-                    _LE("Invalid settings for '%(client)s': %(error)s") % {
-                        "client": client,
-                        "error": e.format_message()})

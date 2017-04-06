@@ -15,12 +15,12 @@
 
 import abc
 
-import jsonschema
 import six
 
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils
+from rally.common import validation
 from rally.task import functional
 
 LOG = logging.getLogger(__name__)
@@ -101,10 +101,6 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
         return not self.__eq__(other)
 
     @classmethod
-    def validate(cls, config):
-        jsonschema.validate(config, cls.CONFIG_SCHEMA)
-
-    @classmethod
     def get_order(cls):
         return cls._meta_get("order")
 
@@ -140,8 +136,9 @@ class BaseContext(plugin.Plugin, functional.FunctionalMixin,
         self.cleanup()
 
 
+@validation.add_default("jsonschema")
 @plugin.base()
-class Context(BaseContext):
+class Context(BaseContext, validation.ValidatablePluginMixin):
     def __init__(self, ctx):
         super(Context, self).__init__(ctx)
         self.task = self.context.get("task", {})
@@ -153,12 +150,6 @@ class ContextManager(object):
     def __init__(self, context_obj):
         self._visited = []
         self.context_obj = context_obj
-
-    @staticmethod
-    def validate(ctx, namespace, allow_hidden=False):
-        for name, config in ctx.items():
-            Context.get(name, namespace=namespace,
-                        allow_hidden=allow_hidden).validate(config)
 
     def _get_sorted_context_lst(self):
         return sorted([

@@ -153,7 +153,7 @@ class ValidatablePluginMixin(object):
 
     @classmethod
     def validate(cls, name, credentials, config, plugin_cfg,
-                 namespace=None):
+                 namespace=None, allow_hidden=False):
         """Execute all validators stored in meta of plugin.
 
         Iterate during all validators stored in the meta of Validator
@@ -168,7 +168,8 @@ class ValidatablePluginMixin(object):
         :returns: list of ValidationResult(is_valid=False) instances
         """
         try:
-            plugin = cls.get(name, namespace=namespace)
+            plugin = cls.get(name, allow_hidden=allow_hidden,
+                             namespace=namespace)
         except exceptions.PluginNotFound:
             msg = "There is no %s plugin with name: '%s'" % (
                 cls.__name__, name)

@@ -13,44 +13,41 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
+import ddt
 import mock
 
 from rally.common import utils
 from rally.plugins.openstack.context.cleanup import admin
-from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack import scenario
+from rally.task import context
 from tests.unit import test
 
 
-BASE = "rally.plugins.openstack.context.cleanup.admin"
+ADMIN = "rally.plugins.openstack.context.cleanup.admin"
+BASE = "rally.plugins.openstack.context.cleanup.base"
 
 
+@ddt.ddt
 class AdminCleanupTestCase(test.TestCase):
 
     @mock.patch("%s.manager" % BASE)
-    def test_validate(self, mock_manager):
-        mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        admin.AdminCleanup.validate(["a"])
-        mock_manager.list_resource_names.assert_called_once_with(
-            admin_required=True)
-
-    @mock.patch("%s.manager" % BASE)
-    def test_validate_no_such_cleanup(self, mock_manager):
-        mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
-        self.assertRaises(base.NoSuchCleanupResources,
-                          admin.AdminCleanup.validate, ["a", "d"])
-        mock_manager.list_resource_names.assert_called_once_with(
-            admin_required=True)
-
-    def test_validate_invalid_config(self):
-        self.assertRaises(jsonschema.ValidationError,
-                          admin.AdminCleanup.validate, {})
+    @ddt.data((["a", "b"], True),
+              (["a", "e"], False),
+              (3, False))
+    @ddt.unpack
+    def test_validate(self, config, valid, mock_manager):
+        mock_manager.list_resource_names.return_value = {"a", "b", "c"}
+        results = context.Context.validate(
+            "admin_cleanup", None, None, config, allow_hidden=True)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertGreater(len(results), 0)
 
     @mock.patch("rally.common.plugin.discover.itersubclasses")
-    @mock.patch("%s.manager.find_resource_managers" % BASE,
+    @mock.patch("%s.manager.find_resource_managers" % ADMIN,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
-    @mock.patch("%s.manager.SeekAndDestroy" % BASE)
+    @mock.patch("%s.manager.SeekAndDestroy" % ADMIN)
     def test_cleanup(self, mock_seek_and_destroy, mock_find_resource_managers,
                      mock_itersubclasses):
         class ResourceClass(utils.RandomNameGeneratorMixin):
@@ -89,9 +86,9 @@ class AdminCleanupTestCase(test.TestCase):
         ])
 
     @mock.patch("rally.common.plugin.discover.itersubclasses")
-    @mock.patch("%s.manager.find_resource_managers" % BASE,
+    @mock.patch("%s.manager.find_resource_managers" % ADMIN,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
-    @mock.patch("%s.manager.SeekAndDestroy" % BASE)
+    @mock.patch("%s.manager.SeekAndDestroy" % ADMIN)
     def test_cleanup_admin_with_api_versions(self,
                                              mock_seek_and_destroy,
                                              mock_find_resource_managers,

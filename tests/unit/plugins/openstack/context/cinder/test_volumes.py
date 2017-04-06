@@ -15,10 +15,10 @@
 import copy
 
 import ddt
-import jsonschema
 import mock
 
 from rally.plugins.openstack.context.cinder import volumes
+from rally.task import context
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
@@ -50,16 +50,15 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
     @ddt.data({"config": {"size": 1, "volumes_per_tenant": 5}},
               {"config": {"size": 1, "type": None, "volumes_per_tenant": 5}},
               {"config": {"size": 1, "type": -1, "volumes_per_tenant": 5},
-               "validation_raises": jsonschema.exceptions.ValidationError})
+               "valid": False})
     @ddt.unpack
     @mock.patch("%s.block.BlockStorage" % SERVICE)
-    def test_setup(self, mock_block_storage, config,
-                   validation_raises=None):
-        try:
-            volumes.VolumeGenerator.validate(config)
-        except Exception as e:
-            if not isinstance(e, validation_raises):
-                raise
+    def test_setup(self, mock_block_storage, config, valid=True):
+        results = context.Context.validate("volumes", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
         from rally.plugins.openstack.services.storage import block
         created_volume = block.Volume(id="uuid", size=config["size"],

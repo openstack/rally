@@ -14,10 +14,8 @@
 #    under the License.
 
 import ddt
-import jsonschema
 import mock
 
-from rally import exceptions
 from rally.task import context
 from tests.unit import fakes
 from tests.unit import test
@@ -62,12 +60,14 @@ class BaseContextTestCase(test.TestCase):
         self.assertEqual(ctx.task, ctx0["task"])
         self.assertEqual(ctx.context, ctx0)
 
-    def test_validate__context(self):
-        fakes.FakeContext.validate({"test": 2})
-
-    def test_validate__wrong_context(self):
-        self.assertRaises(jsonschema.ValidationError,
-                          fakes.FakeContext.validate, {"nonexisting": 2})
+    @ddt.data(({"test": 2}, True), ({"nonexisting": 2}, False))
+    @ddt.unpack
+    def test_validate(self, config, valid):
+        results = context.Context.validate("fake", None, None, config)
+        if valid:
+            self.assertEqual([], results)
+        else:
+            self.assertEqual(1, len(results))
 
     def test_setup_is_abstract(self):
 
@@ -137,42 +137,6 @@ class BaseContextTestCase(test.TestCase):
 
 
 class ContextManagerTestCase(test.TestCase):
-
-    @mock.patch("rally.task.context.Context.get")
-    def test_validate(self, mock_context_get):
-        config = {
-            "ctx1": mock.MagicMock(),
-            "ctx2": mock.MagicMock()
-        }
-
-        context.ContextManager.validate(config, namespace="foo")
-        for ctx in ("ctx1", "ctx2"):
-            mock_context_get.assert_has_calls([
-                mock.call(ctx, namespace="foo", allow_hidden=False),
-                mock.call().validate(config[ctx]),
-            ])
-
-    @mock.patch("rally.task.context.Context.get")
-    def test_validate_hidden(self, mock_context_get):
-        config = {
-            "ctx1": mock.MagicMock(),
-            "ctx2": mock.MagicMock()
-        }
-
-        context.ContextManager.validate(config, namespace="foo",
-                                        allow_hidden=True)
-        for ctx in ("ctx1", "ctx2"):
-            mock_context_get.assert_has_calls([
-                mock.call(ctx, namespace="foo", allow_hidden=True),
-                mock.call().validate(config[ctx]),
-            ])
-
-    def test_validate__non_existing_context(self):
-        config = {
-            "nonexisting": {"nonexisting": 2}
-        }
-        self.assertRaises(exceptions.PluginNotFound,
-                          context.ContextManager.validate, config, "foo")
 
     @mock.patch("rally.task.context.Context.get")
     def test_setup(self, mock_context_get):
