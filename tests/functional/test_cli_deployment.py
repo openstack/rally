@@ -94,6 +94,7 @@ class DeploymentTestCase(unittest.TestCase):
         self.assertIn("t_create_env", self.rally("deployment list"))
         self.assertEqual(config,
                          json.loads(self.rally("deployment config")))
+        self.assertIn("http://foo/", self.rally("deployment show"))
 
     def test_use(self):
         self.rally.env.update(utils.TEST_ENV)
