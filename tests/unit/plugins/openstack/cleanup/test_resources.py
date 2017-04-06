@@ -37,32 +37,18 @@ class SynchronizedDeletionTestCase(test.TestCase):
 
 class QuotaMixinTestCase(test.TestCase):
 
-    def test_id(self):
-        quota = resources.QuotaMixin()
-        quota.raw_resource = mock.MagicMock()
-        self.assertEqual(quota.raw_resource, quota.id())
-
-    def test_name(self):
-        quota = resources.QuotaMixin()
-        quota.raw_resource = mock.MagicMock()
-        self.assertIsNone(quota.name())
-
-    def test_delete(self):
-        quota = resources.QuotaMixin()
-        mock_manager = mock.MagicMock()
-        quota._manager = lambda: mock_manager
-        quota.raw_resource = mock.MagicMock()
-
-        quota.delete()
-        mock_manager.delete.assert_called_once_with(quota.raw_resource)
-
-    def test_list(self):
+    @mock.patch("%s.identity.Identity" % BASE)
+    def test_list(self, mock_identity):
         quota = resources.QuotaMixin()
         quota.tenant_uuid = None
+        quota.user = mock.MagicMock()
         self.assertEqual([], quota.list())
+        self.assertFalse(mock_identity.called)
 
         quota.tenant_uuid = mock.MagicMock()
-        self.assertEqual([quota.tenant_uuid], quota.list())
+        self.assertEqual([mock_identity.return_value.get_project.return_value],
+                         quota.list())
+        mock_identity.assert_called_once_with(quota.user)
 
 
 class MagnumMixinTestCase(test.TestCase):
