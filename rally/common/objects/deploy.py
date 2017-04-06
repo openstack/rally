@@ -106,7 +106,23 @@ class Deployment(object):
         self._update({"credentials": credentials})
 
     def get_platforms(self):
-        return [platform for platform in self.deployment["credentials"]]
+        return self.deployment["credentials"].keys()
+
+    def get_all_credentials(self):
+        all_credentials = {}
+        for platform in self.get_platforms():
+            all_credentials[platform] = []
+            credential_cls = credential.get(platform)
+            for credentials in self.deployment["credentials"][platform]:
+                try:
+                    admin = credentials["admin"]
+                except Exception:
+                    raise KeyError(credentials)
+                all_credentials[platform].append({
+                    "admin": credential_cls(**admin) if admin else None,
+                    "users": [credential_cls(**user) for user in
+                              credentials["users"]]})
+        return all_credentials
 
     def get_credentials_for(self, namespace):
         if namespace == "default":

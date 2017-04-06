@@ -13,10 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+from rally.common import logging
 from rally import consts
 from rally.deployment import credential
+from rally import exceptions
 from rally import osclients
+
+LOG = logging.getLogger(__file__)
 
 
 @credential.configure("openstack")
@@ -49,11 +52,15 @@ class OpenStackCredential(credential.Credential):
     # backward compatibility
     @property
     def insecure(self):
+        LOG.warning("Property 'insecure' is deprecated since Rally 0.10.0. "
+                    "Use 'https_insecure' instead.")
         return self.https_insecure
 
     # backward compatibility
     @property
     def cacert(self):
+        LOG.warning("Property 'cacert' is deprecated since Rally 0.10.0. "
+                    "Use 'https_cacert' instead.")
         return self.https_cacert
 
     def to_dict(self):
@@ -72,13 +79,23 @@ class OpenStackCredential(credential.Credential):
                 "permission": self.permission}
 
     def verify_connection(self):
-        if self.permission == consts.EndpointPermission.ADMIN:
-            self.clients().verified_keystone()
-        else:
-            self.clients().keystone()
+        from keystoneclient import exceptions as keystone_exceptions
+
+        try:
+            if self.permission == consts.EndpointPermission.ADMIN:
+                self.clients().verified_keystone()
+            else:
+                self.clients().keystone()
+        except keystone_exceptions.ConnectionRefused as e:
+            if logging.is_debug():
+                LOG.exception(e)
+            raise exceptions.RallyException("Unable to connect %s." %
+                                            self.auth_url)
 
     def list_services(self):
-        return self.clients().services()
+        return sorted([{"type": stype, "name": sname}
+                       for stype, sname in self.clients().services().items()],
+                      key=lambda s: s["name"])
 
     def clients(self, api_info=None):
         return osclients.Clients(self, api_info=api_info,

@@ -15,6 +15,7 @@
 
 """Tests for db.deploy layer."""
 
+import collections
 import datetime as dt
 import mock
 
@@ -136,8 +137,6 @@ class DeploymentTestCase(test.TestCase):
                                          "users": [{"fake_user": True}]}]}
             })
 
-        self.assertEqual([], deploy.get_platforms())
-
     def test_get_platforms(self):
         self.deployment["credentials"] = {"foo": {"admin": None, "users": []},
                                           "bar": {"admin": None, "users": []}}
@@ -146,7 +145,7 @@ class DeploymentTestCase(test.TestCase):
 
     def test_get_platforms_empty(self):
         deploy = objects.Deployment(deployment=self.deployment)
-        self.assertEqual([], deploy.get_platforms())
+        self.assertEqual([], list(deploy.get_platforms()))
 
     @mock.patch("rally.deployment.credential.get")
     def test_get_credentials_for(self, mock_credential_get):
@@ -171,6 +170,53 @@ class DeploymentTestCase(test.TestCase):
         deploy = objects.Deployment(deployment=self.deployment)
         creds = deploy.get_credentials_for("default")
         self.assertEqual({"admin": None, "users": []}, creds)
+
+    @mock.patch("rally.common.objects.deploy.credential")
+    def test_get_all_credentials(self, mock_credential):
+
+        openstack_admin = {"openstack": "admin"}
+        openstack_user_1 = {"openstack": "user1"}
+        openstack_user_2 = {"openstack": "user2"}
+        foo_admin = {"foo": "admin"}
+        bar_user_1 = {"bar": "user1"}
+
+        openstack_cred = mock.Mock()
+        foo_cred = mock.Mock()
+        bar_cred = mock.Mock()
+
+        def credential_get(platform):
+            return {"openstack": openstack_cred, "foo": foo_cred,
+                    "bar": bar_cred}[platform]
+
+        mock_credential.get.side_effect = credential_get
+
+        self.deployment["credentials"] = collections.OrderedDict([
+            # the case when both admin and users are specified
+            ("openstack", [{"admin": openstack_admin,
+                            "users": [openstack_user_1, openstack_user_2]}]),
+            # the case when only admin is specified
+            ("foo", [{"admin": foo_admin, "users": []}]),
+            # the case when only users are specified
+            ("bar", [{"admin": None, "users": [bar_user_1]}])])
+
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertEqual({"openstack": [
+            {"admin": openstack_cred.return_value,
+             "users": [openstack_cred.return_value,
+                       openstack_cred.return_value]}],
+            "foo": [{"admin": foo_cred.return_value, "users": []}],
+            "bar": [{"admin": None, "users": [bar_cred.return_value]}]
+        }, deploy.get_all_credentials())
+
+        self.assertEqual([mock.call(**openstack_admin),
+                          mock.call(**openstack_user_1),
+                          mock.call(**openstack_user_2)],
+                         openstack_cred.call_args_list)
+        foo_cred.assert_called_once_with(**foo_admin)
+        bar_cred.assert_called_once_with(**bar_user_1)
+        self.assertEqual([mock.call(p)
+                          for p in self.deployment["credentials"].keys()],
+                         mock_credential.get.call_args_list)
 
     @mock.patch("rally.deployment.credential.get")
     def test_get_deprecated(self, mock_credential_get):

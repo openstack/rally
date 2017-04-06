@@ -39,7 +39,7 @@ class Credential(plugin.Plugin):
 
     @abc.abstractmethod
     def to_dict(self):
-        """Converts creedential object to dict.
+        """Converts credential object to dict.
 
         :returns: dict that can be used to recreate credential using
             constructor: Credential(**credential.to_dict())
@@ -49,12 +49,12 @@ class Credential(plugin.Plugin):
     def verify_connection(self):
         """Verifies that credential can be used for connection."""
 
-    @abc.abstractmethod
     def list_services(self):
         """Returns available services.
 
         :returns: dict
         """
+        return {}
 
 
 def configure_builder(namespace):
