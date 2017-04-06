@@ -19,6 +19,7 @@ from rally.common.i18n import _
 from rally.common import logging
 from rally.plugins.openstack.cleanup import manager
 from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack import scenario
 from rally.task import context
 
 
@@ -50,4 +51,5 @@ class AdminCleanup(base.CleanupMixin, context.Context):
             admin=self.context["admin"],
             users=self.context.get("users", []),
             api_versions=self.context["config"].get("api_versions"),
+            superclass=scenario.OpenStackScenario,
             task_id=self.context["task"]["uuid"])
