@@ -421,7 +421,7 @@
       runner:
         type: "constant"
         times: 5
-        concurrency: 10
+        concurrency: 5
       context:
         users:
           tenants: 1
@@ -439,7 +439,7 @@
       runner:
         type: "constant"
         times: 5
-        concurrency: 10
+        concurrency: 5
       context:
         users:
           tenants: 1

@@ -22,7 +22,6 @@ import traceback
 
 import jsonschema
 from oslo_config import cfg
-import six
 
 from rally.common.i18n import _
 from rally.common import logging
@@ -285,15 +284,15 @@ class TaskEngine(object):
                 scenario_context = copy.deepcopy(
                     scenario_cls.get_default_context())
 
-                # TODO(astudenov): replace old validation
-                try:
-                    runner.ScenarioRunner.validate(workload.runner)
-                except (exceptions.RallyException,
-                        jsonschema.ValidationError) as e:
-                    kw = workload.make_exception_args(six.text_type(e))
-                    raise exceptions.InvalidTaskConfig(**kw)
-
                 results = []
+                if workload.runner:
+                    results.extend(runner.ScenarioRunner.validate(
+                        name=workload.runner["type"],
+                        credentials=None,
+                        config=None,
+                        plugin_cfg=workload.runner,
+                        namespace=namespace))
+
                 for context_name, context_conf in workload.context.items():
                     results.extend(context.Context.validate(
                         name=context_name,

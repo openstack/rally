@@ -19,12 +19,12 @@ import copy
 import multiprocessing
 import time
 
-import jsonschema
 import six
 
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
+from rally.common import validation
 from rally.task.processing import charts
 from rally.task import scenario
 from rally.task import types
@@ -104,9 +104,10 @@ def _log_worker_info(**info):
     LOG.debug("Starting a worker.\n\t%s" % info_message)
 
 
+@validation.add_default("jsonschema")
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class ScenarioRunner(plugin.Plugin):
+class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
     """Base class for all scenario runners.
 
     Scenario runner is an entity that implements a certain strategy of
@@ -116,7 +117,14 @@ class ScenarioRunner(plugin.Plugin):
     in the_run_scenario() method.
     """
 
-    CONFIG_SCHEMA = {}
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "properties": {
+            "type": {"type": "string"},
+        },
+        "required": ["type"],
+        "additionalProperties": True
+    }
 
     def __init__(self, task, config, batch_size=0):
         """Runner constructor.
@@ -135,12 +143,6 @@ class ScenarioRunner(plugin.Plugin):
         self.run_duration = 0
         self.batch_size = batch_size
         self.result_batch = []
-
-    @staticmethod
-    def validate(config):
-        """Validates runner's part of task config."""
-        runner = ScenarioRunner.get(config.get("type", "serial"))
-        jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod
     def _run_scenario(self, cls, method_name, context, args):
