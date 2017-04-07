@@ -16,7 +16,6 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -46,7 +45,7 @@ class ListHosts(utils.NovaScenario):
 class ListAndGetHosts(utils.NovaScenario):
 
     def run(self, zone=None):
-        """List all nova hosts,and get detailed information fot this hosts.
+        """List all nova hosts, and get detailed information for compute hosts.
 
         Measure the "nova host-describe" command performance.
 
@@ -54,7 +53,7 @@ class ListAndGetHosts(utils.NovaScenario):
                      None (default value) means list hosts in all
                      availability-zones
         """
-        hosts = self._list_hosts(zone)
-        with atomic.ActionTimer(self, "nova.get_%s_hosts" % len(hosts)):
-            for host in hosts:
-                self._get_host(host.host_name, atomic_action=False)
+        hosts = self._list_hosts(zone, service="compute")
+
+        for host in hosts:
+            self._get_host(host.host_name)
