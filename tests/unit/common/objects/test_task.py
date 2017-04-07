@@ -182,8 +182,12 @@ class TaskTestCase(test.TestCase):
             {"timestamp": i + 2, "duration": i + 5,
              "scenario_output": {"errors": "", "data": {}},
              "error": [], "idle_duration": i,
-             "atomic_actions": {
-                 "keystone.create_user": i + 10}} for i in range(10)]
+             "atomic_actions": [{"name": "keystone.create_user",
+                                 "started_at": 0, "finished_at": i + 10},
+                                {"name": "keystone.create_user",
+                                 "started_at": 0, "finished_at": i + 11}
+                                ]
+             } for i in range(10)]
         obsolete = [
             {"task_uuid": "foo_uuid", "created_at": now, "updated_at": now,
              "id": 11, "key": {"kw": {"foo": 42},
@@ -196,8 +200,9 @@ class TaskTestCase(test.TestCase):
              "hooks": [],
              "key": {"kw": {"foo": 42}, "name": "Foo.bar", "pos": 0},
              "info": {
-                 "atomic": {"keystone.create_user": {"max_duration": 19,
-                                                     "min_duration": 10}},
+                 "atomic": {"keystone.create_user": {"max_duration": 39,
+                                                     "min_duration": 21,
+                                                     "count": 2}},
                  "iterations_count": 10, "iterations_failed": 0,
                  "max_duration": 14, "min_duration": 5, "tstamp_start": 2,
                  "full_duration": 40, "load_duration": 32,
@@ -210,7 +215,7 @@ class TaskTestCase(test.TestCase):
         results[0]["iterations"] = "foo_iterations"
         expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
         expected[0]["updated_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
-        self.assertEqual(results, expected)
+        self.assertEqual(expected, results)
 
         # serializable is False
         results = objects.Task.extend_results(obsolete, serializable=False)
@@ -342,23 +347,6 @@ class TaskTestCase(test.TestCase):
             allowed_statuses=(consts.TaskStatus.RUNNING,
                               consts.TaskStatus.SOFT_ABORTING)
         )
-
-    @ddt.data(
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []}],
-         "expected": {"some": 1.0}},
-        {"atomic_actions": [{"name": "some", "started_at": 1.0,
-                             "finished_at": 2.0, "children": []},
-                            {"name": "some", "started_at": 2.0,
-                             "finished_at": 3.0, "children": []}],
-         "expected": {"some": 1.0, "some (2)": 1.0}},
-        {"atomic_actions": {"some": 1.0},
-         "expected": {"some": 1.0}}
-    )
-    @ddt.unpack
-    def test_convert_atomic_actions(self, atomic_actions, expected):
-        self.assertEqual(expected,
-                         objects.Task.convert_atomic_actions(atomic_actions))
 
 
 class SubtaskTestCase(test.TestCase):

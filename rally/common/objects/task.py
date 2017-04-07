@@ -177,7 +177,9 @@ TASK_RESULT_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "atomic_actions": {
-                        "type": "object"
+                        # NOTE(chenhb): back compatible, old format is dict
+                        "oneOf": [{"type": "array"},
+                                  {"type": "object"}]
                     },
                     "duration": {
                         "type": "number"
@@ -270,7 +272,7 @@ TASK_EXTENDED_RESULT_SCHEMA = {
                         "type": "number"
                     },
                     "atomic_actions": {
-                        "type": "object"
+                        "type": "array"
                     },
                     "duration": {
                         "type": "number"
@@ -438,28 +440,6 @@ class Task(object):
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
 
-    """TODO(chenhb): Remove this method after replacing old format.
-    Now we do not convert children actions, because our output
-    string and report only show one layer actions.
-    """
-    @staticmethod
-    def convert_atomic_actions(atomic_actions):
-        """Convert atomic actions to old format. """
-        if isinstance(atomic_actions, dict):
-            return atomic_actions
-        old_style = collections.OrderedDict()
-        for action in atomic_actions:
-            duration = action["finished_at"] - action["started_at"]
-            if action["name"] in old_style:
-                name_template = action["name"] + " (%i)"
-                i = 2
-                while name_template % i in old_style:
-                    i += 1
-                old_style[name_template % i] = duration
-            else:
-                old_style[action["name"]] = duration
-        return old_style
-
     @classmethod
     def extend_results(cls, results, serializable=False):
         """Modify and extend results with aggregated data.
@@ -496,6 +476,19 @@ class Task(object):
                       full_duration - float full scenario duration
                       load_duration - float load scenario duration
         """
+
+        def _merge_atomic(atomic_actions):
+            merged_atomic = collections.OrderedDict()
+            for action in atomic_actions:
+                name = action["name"]
+                duration = action["finished_at"] - action["started_at"]
+                if name not in merged_atomic:
+                    merged_atomic[name] = {"duration": duration, "count": 1}
+                else:
+                    merged_atomic[name]["duration"] += duration
+                    merged_atomic[name]["count"] += 1
+            return merged_atomic
+
         extended = []
         for scenario_result in results:
             scenario = dict(scenario_result)
@@ -506,17 +499,19 @@ class Task(object):
             atomic = collections.OrderedDict()
 
             for itr in scenario["data"]["raw"]:
-                itr["atomic_actions"] = cls.convert_atomic_actions(
-                    itr["atomic_actions"])
-                for atomic_name, duration in itr["atomic_actions"].items():
-                    duration = duration or 0
-                    if atomic_name not in atomic:
-                        atomic[atomic_name] = {"min_duration": duration,
-                                               "max_duration": duration}
-                    elif duration < atomic[atomic_name]["min_duration"]:
-                        atomic[atomic_name]["min_duration"] = duration
-                    elif duration > atomic[atomic_name]["max_duration"]:
-                        atomic[atomic_name]["max_duration"] = duration
+                merged_atomic = _merge_atomic(itr["atomic_actions"])
+                for name, value in merged_atomic.items():
+                    duration = value["duration"]
+                    count = value["count"]
+                    if name not in atomic or count > atomic[name]["count"]:
+                        atomic[name] = {"min_duration": duration,
+                                        "max_duration": duration,
+                                        "count": count}
+                    elif count == atomic[name]["count"]:
+                        if duration < atomic[name]["min_duration"]:
+                            atomic[name]["min_duration"] = duration
+                        if duration > atomic[name]["max_duration"]:
+                            atomic[name]["max_duration"] = duration
 
                 if not tstamp_start or itr["timestamp"] < tstamp_start:
                     tstamp_start = itr["timestamp"]

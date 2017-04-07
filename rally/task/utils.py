@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import itertools
 import time
 import traceback
@@ -23,7 +24,6 @@ import six
 
 from rally.common.i18n import _
 from rally.common import logging
-from rally.common import objects
 from rally import consts
 from rally import exceptions
 
@@ -420,7 +420,7 @@ class WrapperForAtomicActions(list):
     def __init__(self, atomic_actions):
         if isinstance(atomic_actions, list):
             self.__atomic_actions = atomic_actions
-            self.__old_atomic_actions = objects.Task.convert_atomic_actions(
+            self.__old_atomic_actions = self._convert_new_atomic_actions(
                 self.__atomic_actions)
         else:
             self.__atomic_actions = self._convert_old_atomic_actions(
@@ -430,6 +430,7 @@ class WrapperForAtomicActions(list):
         super(WrapperForAtomicActions, self).__init__(self.__atomic_actions)
 
     def _convert_old_atomic_actions(self, old_atomic_actions):
+        """Convert atomic actions to new format. """
         atomic_actions = []
         for name, duration in old_atomic_actions.items():
             atomic_actions.append({"name": name,
@@ -437,6 +438,21 @@ class WrapperForAtomicActions(list):
                                    "finished_at": duration,
                                    "children": []})
         return atomic_actions
+
+    def _convert_new_atomic_actions(self, atomic_actions):
+        """Convert atomic actions to old format. """
+        old_style = collections.OrderedDict()
+        for action in atomic_actions:
+            duration = action["finished_at"] - action["started_at"]
+            if action["name"] in old_style:
+                name_template = action["name"] + " (%i)"
+                i = 2
+                while name_template % i in old_style:
+                    i += 1
+                old_style[name_template % i] = duration
+            else:
+                old_style[action["name"]] = duration
+        return old_style
 
     def items(self):
         return self.__old_atomic_actions.items()

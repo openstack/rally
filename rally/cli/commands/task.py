@@ -41,6 +41,7 @@ from rally import exceptions
 from rally import plugins
 from rally.task import exporter
 from rally.task.processing import plot
+from rally.task.processing import utils as putils
 from rally.task import utils as tutils
 
 
@@ -49,6 +50,10 @@ LOG = logging.getLogger(__name__)
 
 class FailedToLoadTask(exceptions.RallyException):
     msg_fmt = _("Invalid %(source)s passed:\n\n\t %(msg)s")
+
+
+class FailedToLoadResults(exceptions.RallyException):
+    msg_fmt = _("ERROR: Invalid task result format in %(source)s\n\n\t%(msg)s")
 
 
 class TaskCommands(object):
@@ -329,6 +334,7 @@ class TaskCommands(object):
                     "available when it is '%s'.") % (
                 task_id, task["status"], consts.TaskStatus.FINISHED))
             return 0
+
         for result in task["results"]:
             key = result["key"]
             print("-" * 80)
@@ -345,7 +351,9 @@ class TaskCommands(object):
             output = []
             task_errors = []
             if iterations_data:
-                for i, atomic_name in enumerate(result["info"]["atomic"], 1):
+                atomic_merger = putils.AtomicMerger(result["info"]["atomic"])
+                atomic_names = atomic_merger.get_merged_names()
+                for i, atomic_name in enumerate(atomic_names, 1):
                     action = "%i. %s" % (i, atomic_name)
                     iterations_headers.append(action)
                     iterations_actions.append((atomic_name, action))
@@ -355,7 +363,10 @@ class TaskCommands(object):
                 if iterations_data:
                     row = {"iteration": idx, "duration": itr["duration"]}
                     for name, action in iterations_actions:
-                        row[action] = itr["atomic_actions"].get(name, 0)
+                        atomic_actions = (
+                            atomic_merger.merge_atomic_actions(
+                                itr["atomic_actions"]))
+                        row[action] = atomic_actions.get(name, 0)
                     iterations.append(row)
 
                 if "output" in itr:
@@ -461,11 +472,10 @@ class TaskCommands(object):
         # TODO(chenhb): Ensure `rally task results` puts out old format.
         for result in task["results"]:
             for itr in result["data"]["raw"]:
-                if "atomic_actions" in itr:
-                    itr["atomic_actions"] = collections.OrderedDict(
-                        tutils.WrapperForAtomicActions(
-                            itr["atomic_actions"]).items()
-                    )
+                itr["atomic_actions"] = collections.OrderedDict(
+                    tutils.WrapperForAtomicActions(
+                        itr["atomic_actions"]).items()
+                )
 
         results = [{"key": x["key"], "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
@@ -540,6 +550,26 @@ class TaskCommands(object):
                 print(_("There are no tasks. To run a new task, use:\n"
                         "\trally task start"))
 
+    def _load_task_results_file(self, api, task_id):
+        """Load the json file which is created by `rally task results` """
+        with open(os.path.expanduser(task_id), "r") as inp_js:
+            tasks_results = json.load(inp_js)
+            for result in tasks_results:
+                try:
+                    jsonschema.validate(
+                        result,
+                        api.task.TASK_RESULT_SCHEMA)
+                    # TODO(chenhb): back compatible for atomic_actions
+                    for r in result["result"]:
+                        r["atomic_actions"] = list(
+                            tutils.WrapperForAtomicActions(
+                                r["atomic_actions"]))
+                except jsonschema.ValidationError as e:
+                    raise FailedToLoadResults(source=task_id,
+                                              msg=six.text_type(e))
+
+        return tasks_results
+
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,
                    help="Path to output file.")
@@ -560,19 +590,7 @@ class TaskCommands(object):
         results = []
         for task_id in tasks:
             if os.path.exists(os.path.expanduser(task_id)):
-                with open(os.path.expanduser(task_id), "r") as inp_js:
-                    task_results = json.load(inp_js)
-                    for result in task_results:
-                        try:
-                            jsonschema.validate(
-                                result,
-                                api.task.TASK_RESULT_SCHEMA)
-                        except jsonschema.ValidationError as e:
-                            print(_("ERROR: Invalid task result format in %s")
-                                  % task_id, file=sys.stderr)
-                            print(six.text_type(e), file=sys.stderr)
-                            return 1
-
+                task_results = self._load_task_results_file(api, task_id)
             elif uuidutils.is_uuid_like(task_id):
                 task_results = map(
                     lambda x: {"key": x["key"],
@@ -640,20 +658,8 @@ class TaskCommands(object):
         processed_names = {}
         for task_file_or_uuid in tasks:
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
-                with open(os.path.expanduser(task_file_or_uuid),
-                          "r") as inp_js:
-                    tasks_results = json.load(inp_js)
-                    for result in tasks_results:
-                        try:
-                            jsonschema.validate(
-                                result,
-                                api.task.TASK_RESULT_SCHEMA)
-                        except jsonschema.ValidationError as e:
-                            print(_("ERROR: Invalid task result format in %s")
-                                  % task_file_or_uuid, file=sys.stderr)
-                            print(six.text_type(e), file=sys.stderr)
-                            return 1
-
+                tasks_results = self._load_task_results_file(
+                    api, task_file_or_uuid)
             elif uuidutils.is_uuid_like(task_file_or_uuid):
                 tasks_results = map(
                     lambda x: {"key": x["key"],
