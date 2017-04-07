@@ -231,7 +231,8 @@ class UnifiedKeystoneV3Service(keystone_common.UnifiedKeystoneMixin,
         :param project_name: Name of project to be created.
         :param domain_name: Name or id of domain where to create project,
         """
-        project = self._impl.create_project(project_name)
+        project = self._impl.create_project(project_name,
+                                            domain_name=domain_name)
         return self._unify_project(project)
 
     def update_project(self, project_id, name=None, enabled=None,
