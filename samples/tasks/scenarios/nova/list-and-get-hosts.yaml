@@ -1,7 +1,6 @@
 ---
   NovaHosts.list_and_get_hosts:
     -
-      args: {}
       runner:
         type: "constant"
         concurrency: 2
