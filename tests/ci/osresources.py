@@ -202,6 +202,9 @@ class Nova(ResourceManager):
         return self.client.servers.list(
             search_opts={"all_tenants": True})
 
+    def list_server_groups(self):
+        return self.client.server_groups.list(all_projects=True)
+
     def list_services(self):
         return self.client.services.list()
 
@@ -294,6 +297,9 @@ class Cinder(ResourceManager):
         volumes = self.client.volumes.list(search_opts={"all_tenants": True})
         return [v for v in volumes
                 if not v.name.startswith("image-")]
+
+    def list_qos(self):
+        return self.client.qos_specs.list()
 
 
 class Senlin(ResourceManager):
