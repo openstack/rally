@@ -177,7 +177,7 @@ class OSClient(plugin.Plugin):
             user_key: self.credential.username,
             password_key: self.credential.password,
             auth_url_key: self.credential.auth_url,
-            cacert_key: self.credential.cacert,
+            cacert_key: self.credential.https_cacert,
         }
         if project_name_key:
             kw.update({project_name_key: self.credential.tenant_name})
@@ -256,8 +256,8 @@ class Keystone(OSClient):
                 # available version with the smallest number. To be able to
                 # discover versions we need session
                 temp_session = session.Session(
-                    verify=(self.credential.cacert or
-                            not self.credential.insecure),
+                    verify=(self.credential.https_cacert or
+                            not self.credential.https_insecure),
                     timeout=CONF.openstack_client_http_timeout)
                 version = str(discover.Discover(
                     temp_session,
@@ -272,8 +272,9 @@ class Keystone(OSClient):
                 })
             identity_plugin = identity.Password(**password_args)
             sess = session.Session(
-                auth=identity_plugin, verify=(
-                    self.credential.cacert or not self.credential.insecure),
+                auth=identity_plugin,
+                verify=(self.credential.https_cacert or
+                        not self.credential.https_insecure),
                 timeout=CONF.openstack_client_http_timeout)
             self.cache[key] = (sess, identity_plugin)
         return self.cache[key]
@@ -590,8 +591,8 @@ class Swift(OSClient):
         client = swift.Connection(retries=1,
                                   preauthurl=self._get_endpoint(service_type),
                                   preauthtoken=auth_token,
-                                  insecure=self.credential.insecure,
-                                  cacert=self.credential.cacert,
+                                  insecure=self.credential.https_insecure,
+                                  cacert=self.credential.https_cacert,
                                   user=self.credential.username,
                                   tenant_name=self.credential.tenant_name,
                                   )
@@ -616,7 +617,7 @@ class EC2(OSClient):
             url=self._get_endpoint(),
             aws_access_key_id=ec2_credential.access,
             aws_secret_access_key=ec2_credential.secret,
-            is_secure=self.credential.insecure)
+            is_secure=self.credential.https_insecure)
         return client
 
 
@@ -633,7 +634,7 @@ class Monasca(OSClient):
             self._get_endpoint(service_type),
             token=self.keystone.auth_ref.auth_token,
             timeout=CONF.openstack_client_http_timeout,
-            insecure=self.credential.insecure,
+            insecure=self.credential.https_insecure,
             **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
