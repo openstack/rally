@@ -402,12 +402,14 @@ class UnifiedKeystoneV3ServiceTestCase(test.TestCase):
                             mock_unified_keystone_v3_service__unify_project):
         mock_unify_project = mock_unified_keystone_v3_service__unify_project
         name = "name"
+        domain = "domain"
 
         self.assertEqual(mock_unify_project.return_value,
-                         self.service.create_project(name))
+                         self.service.create_project(name, domain_name=domain))
         mock_unify_project.assert_called_once_with(
             self.service._impl.create_project.return_value)
-        self.service._impl.create_project.assert_called_once_with(name)
+        self.service._impl.create_project.assert_called_once_with(
+            name, domain_name=domain)
 
     def test_update_project(self):
         project_id = "fake_id"
