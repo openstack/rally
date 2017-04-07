@@ -4,6 +4,8 @@
     -
       args:
         driver: "fake"
+        properties:
+          capabilities: "boot_option:local"
       runner:
         type: "constant"
         times: 100

@@ -33,6 +33,7 @@ class IronicNodesTestCase(test.ScenarioTestCase):
             return_value=[Node(name)
                           for name in ("node_obj1", "node_obj2", "node_obj3")])
         driver = "foo"
+        properties = "fake_prop"
         fake_params = {
             "sort_dir": "foo1",
             "associated": "foo2",
@@ -42,9 +43,9 @@ class IronicNodesTestCase(test.ScenarioTestCase):
         }
 
         # Positive case:
-        scenario.run(driver, **fake_params)
+        scenario.run(driver, properties, **fake_params)
 
-        scenario._create_node.assert_called_once_with(driver,
+        scenario._create_node.assert_called_once_with(driver, properties,
                                                       fake_parameter1="foo7")
         scenario._list_nodes.assert_called_once_with(
             sort_dir="foo1", associated="foo2", detail=True,
@@ -53,9 +54,9 @@ class IronicNodesTestCase(test.ScenarioTestCase):
         # Negative case: created node not in the list of available nodes
         scenario._create_node = mock.Mock(uuid="foooo")
         self.assertRaises(exceptions.RallyAssertionError,
-                          scenario.run, driver, **fake_params)
+                          scenario.run, driver, properties, **fake_params)
 
-        scenario._create_node.assert_called_with(driver,
+        scenario._create_node.assert_called_with(driver, properties,
                                                  fake_parameter1="foo7")
         scenario._list_nodes.assert_called_with(
             sort_dir="foo1", associated="foo2", detail=True,
@@ -68,10 +69,13 @@ class IronicNodesTestCase(test.ScenarioTestCase):
         scenario._delete_node = mock.Mock()
 
         driver = "fake"
+        properties = "fake_prop"
 
-        scenario.run(driver, fake_parameter1="fake1", fake_parameter2="fake2")
+        scenario.run(driver, properties, fake_parameter1="fake1",
+                     fake_parameter2="fake2")
         scenario._create_node.assert_called_once_with(
-            driver, fake_parameter1="fake1", fake_parameter2="fake2")
+            driver, properties, fake_parameter1="fake1",
+            fake_parameter2="fake2")
 
         scenario._delete_node.assert_called_once_with(
             scenario._create_node.return_value)

@@ -29,10 +29,11 @@ class IronicScenarioTestCase(test.ScenarioTestCase):
         scenario = utils.IronicScenario(self.context)
         scenario.generate_random_name = mock.Mock()
 
-        scenario._create_node(driver="fake", fake_param="foo")
+        scenario._create_node(driver="fake", properties="fake_prop",
+                              fake_param="foo")
 
         self.admin_clients("ironic").node.create.assert_called_once_with(
-            driver="fake", fake_param="foo",
+            driver="fake", properties="fake_prop", fake_param="foo",
             name=scenario.generate_random_name.return_value)
         self.assertTrue(mock_wait_for_status.called)
         self._test_atomic_action_timer(scenario.atomic_actions(),
