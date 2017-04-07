@@ -203,7 +203,7 @@ def _extend_results(results):
                             "full_duration": result["full_duration"],
                             "load_duration": result["load_duration"]},
                    "created_at": result.get("created_at"),
-                   "updated_at": None}
+                   "updated_at": result.get("updated_at")}
         extended_results.extend(
             objects.Task.extend_results([generic], True))
     return extended_results
