@@ -229,8 +229,8 @@ class UserGenerator(context.Context):
                 project_domain_name=project_dom,
                 user_domain_name=user_dom,
                 endpoint_type=self.credential.endpoint_type,
-                https_insecure=self.credential.insecure,
-                https_cacert=self.credential.cacert,
+                https_insecure=self.credential.https_insecure,
+                https_cacert=self.credential.https_cacert,
                 region_name=self.credential.region_name)
             users.append({"id": user.id,
                           "credential": user_credential,
