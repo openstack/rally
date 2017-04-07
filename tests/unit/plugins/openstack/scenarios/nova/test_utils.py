@@ -1069,16 +1069,24 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         avail_zones_client = self.admin_clients("nova").availability_zones
         avail_zones_client.list.assert_called_once_with(True)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_availbility_zones")
+                                       "nova.list_availability_zones")
 
     @ddt.data({},
-              {"zone": "foo_zone"})
+              {"zone": "foo_zone"},
+              {"zone": "foo_zone", "service": "some"})
     @ddt.unpack
-    def test__list_hosts(self, zone=None):
+    def test__list_hosts(self, zone=None, service=None):
+
+        hosts = [mock.Mock(service="foo"), mock.Mock(service="some")]
+
+        self.admin_clients("nova").hosts.list.return_value = hosts
         nova_scenario = utils.NovaScenario()
-        result = nova_scenario._list_hosts(zone)
-        self.assertEqual(self.admin_clients("nova").hosts.list.return_value,
-                         result)
+
+        result = nova_scenario._list_hosts(zone, service=service)
+
+        if service:
+            hosts = [h for h in hosts if h.service == service]
+        self.assertEqual(hosts, result)
         self.admin_clients("nova").hosts.list.assert_called_once_with(zone)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hosts")
