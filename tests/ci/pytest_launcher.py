@@ -23,8 +23,6 @@ TESTR_REPORT = "testr_results.html"
 PYTEST_ARGUMENTS = ("py.test"  # base command
                     " --html=%(html_report)s"  # html report
                     " --durations=10"  # get a list of the slowest 10 tests
-                    " -n auto"  # launch tests in parallel
-                    " --timeout=%(timeout)s"  # timeout for individual test
                     " %(path)s"
                     )
 

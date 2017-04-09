@@ -33,7 +33,7 @@ fi
 git checkout HEAD^
 
 baseline_report=$(mktemp -t rally_coverageXXXXXXX)
-py.test --cov=rally tests/unit/ --cov-report=html --timeout=60 -n auto
+py.test --cov=rally tests/unit/ --cov-report=html
 coverage report > $baseline_report
 mv cover cover-master
 cat $baseline_report
@@ -43,7 +43,7 @@ baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 git checkout -
 
 current_report=$(mktemp -t rally_coverageXXXXXXX)
-py.test --cov=rally tests/unit/ --cov-report=html --timeout=60 -n auto
+py.test --cov=rally tests/unit/ --cov-report=html
 coverage report > $current_report
 current_missing=$(awk 'END { print $3 }' $current_report)
 

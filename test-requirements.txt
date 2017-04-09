@@ -9,10 +9,6 @@ pytest>=2.7,<=3.0.7                                    # MIT
 pytest-cov>=2.2.1,<=2.4.0                              # MIT
 # py.test plugin for generating HTML reports
 pytest-html>=1.10.0,<=1.14.2                           # Mozilla Public License 2.0 (MPL 2.0)
-# py.test xdist plugin for distributed testing and loop-on-failing modes
-pytest-xdist<=1.15.0                                   # MIT
-# py.test plugin to abort hanging tests
-pytest-timeout<=1.2.0                                  # MIT
 
 coverage>=4.0,<=4.3.4                                  # Apache License, Version 2.0
 ddt>=1.0.1,<=1.1.1
