@@ -183,6 +183,27 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
             scenario._show_subnet.assert_called_with(subnet,
                                                      atomic_action=False)
 
+    def test_set_and_clear_router_gateway(self):
+        network_create_args = {"router:external": True}
+        router_create_args = {"admin_state_up": True}
+        enable_snat = True
+        ext_net = mock.MagicMock()
+        router = mock.MagicMock()
+        scenario = network.SetAndClearRouterGateway(self.context)
+        scenario._create_network = mock.Mock(return_value=ext_net)
+        scenario._create_router = mock.Mock(return_value=router)
+        scenario._add_gateway_router = mock.Mock()
+        scenario._remove_gateway_router = mock.Mock()
+
+        scenario.run(enable_snat, network_create_args, router_create_args)
+
+        scenario._create_network.assert_called_once_with(
+            network_create_args)
+        scenario._create_router.assert_called_once_with(router_create_args)
+        scenario._add_gateway_router.assert_called_once_with(router, ext_net,
+                                                             enable_snat)
+        scenario._remove_gateway_router.assert_called_once_with(router)
+
     def test_create_and_update_subnets(self):
         network_create_args = {"router:external": True}
         subnet_create_args = {"allocation_pools": []}

@@ -350,6 +350,41 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.remove_interface_router")
 
+    def test_add_gateway_router(self):
+        ext_net = {
+            "network": {
+                "name": "extnet-name",
+                "id": "extnet-id"
+            }
+        }
+        router = {
+            "router": {
+                "name": "router-name",
+                "id": "router-id"
+            }
+        }
+        enable_snat = "fake_snat"
+        gw_info = {"network_id": ext_net["network"]["id"],
+                   "enable_snat": enable_snat}
+        self.scenario._add_gateway_router(router, ext_net, enable_snat)
+        self.clients("neutron").add_gateway_router.assert_called_once_with(
+            router["router"]["id"], gw_info)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.add_gateway_router")
+
+    def test_remove_gateway_router(self):
+        router = {
+            "router": {
+                "name": "router-name",
+                "id": "router-id"
+            }
+        }
+        self.scenario._remove_gateway_router(router)
+        self.clients("neutron").remove_gateway_router.assert_called_once_with(
+            router["router"]["id"])
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.remove_gateway_router")
+
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
