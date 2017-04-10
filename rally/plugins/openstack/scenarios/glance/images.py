@@ -76,6 +76,39 @@ class CreateAndListImage(GlanceBasic):
         self.assertIn(image.id, [i.id for i in image_list])
 
 
+@types.convert(image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
+@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_get_image")
+class CreateAndGetImage(GlanceBasic):
+
+    def run(self, container_format, image_location, disk_format,
+            visibility="private", min_disk=0, min_ram=0):
+        """Create and get detailed information of an image.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
+        """
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram)
+        self.assertTrue(image)
+        image_info = self.glance.get_image(image)
+        self.assertEqual(image.id, image_info.id)
+
+
 @validation.required_services(consts.Service.GLANCE)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},

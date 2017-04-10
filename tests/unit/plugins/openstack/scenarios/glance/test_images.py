@@ -104,6 +104,47 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         image_service.create_image.assert_called_once_with(**call_args)
         image_service.delete_image.assert_called_once_with(fake_image.id)
 
+    def test_create_and_get_image(self):
+        image_service = self.mock_image.return_value
+
+        fake_image = fakes.FakeImage(id=1, name="img_name1")
+        image_service.create_image.return_value = fake_image
+        fake_image_info = fakes.FakeImage(id=1, name="img_name1",
+                                          status="active")
+        image_service.get_image.return_value = fake_image_info
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0}
+
+        # Positive case
+        images.CreateAndGetImage(self.context).run(
+            "cf", "url", "df", "vs", 0, 0)
+        image_service.create_image.assert_called_once_with(**call_args)
+        image_service.get_image.assert_called_once_with(fake_image)
+
+        # Negative case: image isn't created
+        image_service.create_image.reset_mock()
+        image_service.create_image.return_value = None
+        self.assertRaises(exceptions.RallyAssertionError,
+                          images.CreateAndGetImage(self.context).run,
+                          "cf", "url", "df", "vs", 0, 0)
+        image_service.create_image.assert_called_with(**call_args)
+
+        # Negative case: image obtained in _get_image not the created image
+        image_service.create_image.reset_mock()
+        image_service.get_image.reset_mock()
+        image_service.create_image.return_value = fakes.FakeImage(
+            id=12, name="img_nameN")
+        self.assertRaises(exceptions.RallyAssertionError,
+                          images.CreateAndGetImage(self.context).run,
+                          "cf", "url", "df", "vs", 0, 0)
+        image_service.create_image.assert_called_with(**call_args)
+        image_service.get_image.assert_called_with(
+            image_service.create_image.return_value)
+
     @mock.patch("%s.CreateImageAndBootInstances._boot_servers" % BASE)
     def test_create_image_and_boot_instances(self, mock_boot_servers):
         image_service = self.mock_image.return_value
