@@ -16,6 +16,7 @@
 import mock
 
 from rally.plugins.openstack.context.murano import murano_environments
+from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.murano.murano_environments"
@@ -44,6 +45,7 @@ class MuranoEnvironmentGeneratorTestCase(test.TestCase):
                 "credential": mock.MagicMock()
             },
             "task": mock.MagicMock(),
+            "owner_id": "foo_uuid",
             "users": [
                 {
                     "id": "user_0",
@@ -82,5 +84,8 @@ class MuranoEnvironmentGeneratorTestCase(test.TestCase):
         murano_ctx.setup()
         murano_ctx.cleanup()
 
-        mock_cleanup.assert_called_once_with(names=["murano.environments"],
-                                             users=murano_ctx.context["users"])
+        mock_cleanup.assert_called_once_with(
+            names=["murano.environments"],
+            users=murano_ctx.context["users"],
+            superclass=murano_utils.MuranoScenario,
+            task_id="foo_uuid")

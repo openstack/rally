@@ -51,7 +51,8 @@ class ZoneGenerator(context.Context):
             self.context["tenants"][tenant_id].setdefault("zones", [])
             designate_util = utils.DesignateScenario(
                 {"user": user,
-                 "task": self.context["task"]})
+                 "task": self.context["task"],
+                 "owner_id": self.context["owner_id"]})
             for i in range(self.config["zones_per_tenant"]):
                 zone = designate_util._create_zone()
                 self.context["tenants"][tenant_id]["zones"].append(zone)
@@ -61,4 +62,4 @@ class ZoneGenerator(context.Context):
         resource_manager.cleanup(names=["designate.zones"],
                                  users=self.context.get("users", []),
                                  superclass=utils.DesignateScenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

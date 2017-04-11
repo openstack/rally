@@ -15,6 +15,7 @@
 import mock
 
 from rally.plugins.openstack.context.watcher import audit_templates
+from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -91,4 +92,6 @@ class AuditTemplateTestCase(test.ScenarioTestCase):
         audit_templates_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
             names=["watcher.action_plan", "watcher.audit_template"],
-            admin=self.context["admin"])
+            admin=self.context["admin"],
+            superclass=watcher_utils.WatcherScenario,
+            task_id=self.context["owner_id"])

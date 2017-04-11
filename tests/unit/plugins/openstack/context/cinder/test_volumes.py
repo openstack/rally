@@ -143,7 +143,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         mock_cleanup.assert_called_once_with(
             names=["cinder.volumes"], users=self.context["users"],
             api_versions=None, superclass=volumes_ctx.__class__,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])
 
     @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup_api_versions(self, mock_cleanup):
@@ -197,4 +197,4 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             users=self.context["users"],
             api_versions=api_version,
             superclass=volumes_ctx.__class__,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])

@@ -99,9 +99,13 @@ class SaharaOutputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info,
                               _("Exit context: `Sahara Output Data Sources`"))
     def cleanup(self):
-        resources = ["data_sources"]
         resource_manager.cleanup(
-            names=["sahara.%s" % res for res in resources],
+            names=["swift.object", "swift.container"],
             users=self.context.get("users", []),
-            superclass=utils.SaharaScenario,
-            task_id=self.context["task"]["uuid"])
+            superclass=self.__class__,
+            task_id=self.get_owner_id())
+        resource_manager.cleanup(
+            names=["sahara.data_sources"],
+            users=self.context.get("users", []),
+            superclass=self.__class__,
+            task_id=self.get_owner_id())

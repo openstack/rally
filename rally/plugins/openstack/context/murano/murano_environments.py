@@ -52,6 +52,7 @@ class EnvironmentGenerator(context.Context):
                 murano_util = murano_utils.MuranoScenario(
                     {"user": user,
                      "task": self.context["task"],
+                     "owner_id": self.context["owner_id"],
                      "config": self.context["config"]})
                 env = murano_util._create_environment()
                 self.context["tenants"][tenant_id]["environments"].append(env)
@@ -60,4 +61,6 @@ class EnvironmentGenerator(context.Context):
                               _("Exit context: `Murano environments`"))
     def cleanup(self):
         resource_manager.cleanup(names=["murano.environments"],
-                                 users=self.context.get("users", []))
+                                 users=self.context.get("users", []),
+                                 superclass=murano_utils.MuranoScenario,
+                                 task_id=self.get_owner_id())

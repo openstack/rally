@@ -76,6 +76,7 @@ class SecurityServices(context.Context):
             if self.config["security_services"]:
                 manila_scenario = manila_utils.ManilaScenario({
                     "task": self.task,
+                    "owner_id": self.context["owner_id"],
                     "user": user,
                     "config": {
                         "api_versions": self.context["config"].get(
@@ -92,4 +93,5 @@ class SecurityServices(context.Context):
         resource_manager.cleanup(
             names=["manila.security_services"],
             users=self.context.get("users", []),
-        )
+            superclass=manila_utils.ManilaScenario,
+            task_id=self.get_owner_id())

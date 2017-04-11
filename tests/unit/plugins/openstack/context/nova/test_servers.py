@@ -174,4 +174,4 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
             names=["nova.servers"],
             users=self.context["users"],
             superclass=nova_utils.NovaScenario,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])

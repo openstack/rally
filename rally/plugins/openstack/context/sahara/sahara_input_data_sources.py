@@ -22,7 +22,6 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
-from rally.plugins.openstack.cleanup import resources as res_cleanup
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
@@ -100,6 +99,7 @@ class SaharaInputDataSources(context.Context):
                            swift_files, username, password):
         swift_scenario = swift_utils.SwiftScenario(clients=clients,
                                                    context=self.context)
+        # TODO(astudenov): use self.generate_random_name()
         container_name = "rally_" + parse.urlparse(input_url).netloc.rstrip(
             ".sahara")
         self.context["sahara"]["container_name"] = (
@@ -121,14 +121,13 @@ class SaharaInputDataSources(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Input Data"
                                           "Sources`"))
     def cleanup(self):
-        resources = ["data_sources"]
-        for swift_object in self.context["sahara"]["swift_objects"]:
-            res_cleanup.SwiftObject(resource=swift_object[1])
-        res_cleanup.SwiftContainer(
-            resource=self.context["sahara"]["container_name"])
-
         resource_manager.cleanup(
-            names=["sahara.%s" % res for res in resources],
+            names=["swift.object", "swift.container"],
             users=self.context.get("users", []),
-            superclass=utils.SaharaScenario,
-            task_id=self.context["task"]["uuid"])
+            superclass=swift_utils.SwiftScenario,
+            task_id=self.get_owner_id())
+        resource_manager.cleanup(
+            names=["sahara.data_sources"],
+            users=self.context.get("users", []),
+            superclass=self.__class__,
+            task_id=self.get_owner_id())

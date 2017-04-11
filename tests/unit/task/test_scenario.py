@@ -86,6 +86,16 @@ class ScenarioTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           scenario.Scenario().sleep_between, 0, -2)
 
+    def test_get_owner_id_from_task(self):
+        scenario_inst = scenario.Scenario(
+            context={"task": {"uuid": "task_uuid"}})
+        self.assertEqual("task_uuid", scenario_inst.get_owner_id())
+
+    def test_get_owner_id(self):
+        scenario_inst = scenario.Scenario(
+            context={"task": {"uuid": "task_uuid"}, "owner_id": "foo_uuid"})
+        self.assertEqual("foo_uuid", scenario_inst.get_owner_id())
+
     def test_sleep_between(self):
         scenario_inst = scenario.Scenario()
         scenario_inst.sleep_between(0.001, 0.002)

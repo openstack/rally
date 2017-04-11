@@ -42,4 +42,4 @@ class AdminCleanup(base.CleanupMixin, context.Context):
             users=self.context.get("users", []),
             api_versions=self.context["config"].get("api_versions"),
             superclass=scenario.OpenStackScenario,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.get_owner_id())

@@ -133,7 +133,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
             names=["glance.images"],
             users=ctx["users"],
             superclass=sahara_ctx.__class__,
-            task_id=ctx["task"]["uuid"])
+            task_id=ctx["owner_id"])
 
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))

@@ -77,7 +77,8 @@ class StackGenerator(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             heat_scenario = heat_utils.HeatScenario(
-                {"user": user, "task": self.context["task"]})
+                {"user": user, "task": self.context["task"],
+                 "owner_id": self.context["owner_id"]})
             self.context["tenants"][tenant_id]["stacks"] = []
             for i in range(self.config["stacks_per_tenant"]):
                 stack = heat_scenario._create_stack(template)
@@ -88,4 +89,4 @@ class StackGenerator(context.Context):
         resource_manager.cleanup(names=["heat.stacks"],
                                  users=self.context.get("users", []),
                                  superclass=heat_utils.HeatScenario,
-                                 task_id=self.context["task"]["uuid"])
+                                 task_id=self.get_owner_id())

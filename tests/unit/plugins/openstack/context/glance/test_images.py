@@ -197,4 +197,4 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             users=self.context["users"],
             api_versions=self.context["config"].get("api_versions"),
             superclass=images_ctx.__class__,
-            task_id=self.context["task"]["uuid"])
+            task_id=self.context["owner_id"])
