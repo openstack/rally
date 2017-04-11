@@ -1031,7 +1031,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """Returns list of all os-aggregates."""
         return self.admin_clients("nova").aggregates.list()
 
-    @atomic.action_timer("nova.list_availbility_zones")
+    @atomic.action_timer("nova.list_availability_zones")
     def _list_availability_zones(self, detailed=True):
         """List availability-zones.
 
@@ -1042,22 +1042,23 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.admin_clients("nova").availability_zones.list(detailed)
 
     @atomic.action_timer("nova.list_hosts")
-    def _list_hosts(self, zone=None):
+    def _list_hosts(self, zone=None, service=None):
         """List nova hosts.
 
         :param zone: List all hosts in the given nova availability-zone ID
+        :param service: Name of service type to filter
         :returns: Nova host list
         """
-        return self.admin_clients("nova").hosts.list(zone)
+        hosts = self.admin_clients("nova").hosts.list(zone)
+        if service:
+            hosts = [host for host in hosts if host.service == service]
+        return hosts
 
     @atomic.optional_action_timer("nova.get_host")
-    def _get_host(self, host_name):
+    def _get_host(self, host_name, atomic_action=None):
         """Describe a specific host.
 
         :param host_name: host name to get.
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator.
         :returns: host object
         """
         return self.admin_clients("nova").hosts.get(host_name)
