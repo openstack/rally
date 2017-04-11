@@ -18,10 +18,14 @@ import traceback
 
 import six
 
+from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
 
 configure = plugin.configure
+
+
+LOG = logging.getLogger(__name__)
 
 
 @plugin.base()
@@ -76,7 +80,12 @@ class RequiredPlatformValidator(Validator):
         if self.admin and credentials.get("admin") is None:
             return self.fail("No admin credential for %s" % self.platform)
         if self.users and len(credentials.get("users", ())) == 0:
-            return self.fail("No user credentials for %s" % self.platform)
+            if credentials.get("admin") is not None:
+                LOG.debug("Plugin %s requires 'users' for launching. There "
+                          "are no specified users, assumes that 'users' "
+                          "context can create them via admin user.")
+            else:
+                return self.fail("No user credentials for %s" % self.platform)
 
 
 def add(name, **kwargs):
@@ -153,7 +162,7 @@ class ValidatablePluginMixin(object):
 
     @classmethod
     def validate(cls, name, credentials, config, plugin_cfg,
-                 namespace=None, allow_hidden=False):
+                 namespace=None, allow_hidden=False, vtype=None):
         """Execute all validators stored in meta of plugin.
 
         Iterate during all validators stored in the meta of Validator
@@ -165,6 +174,10 @@ class ValidatablePluginMixin(object):
         :param credentials: credentials dict for all platforms
         :param config: dict with configuration of specified workload
         :param plugin_cfg: dict, with exact configuration of the plugin
+        :param allow_hidden: do not ignore hidden plugins
+        :param vtype: Type of validation. Allowed types: syntax, platform,
+            semantic. HINT: To specify several types use tuple or list with
+            types
         :returns: list of ValidationResult(is_valid=False) instances
         """
         try:
@@ -175,21 +188,45 @@ class ValidatablePluginMixin(object):
                 cls.__name__, name)
             return [ValidationResult(is_valid=False, msg=msg)]
 
+        if vtype is None:
+            semantic = True
+            syntax = True
+            platform = True
+        else:
+            if not isinstance(vtype, (list, tuple)):
+                vtype = [vtype]
+            wrong_types = set(vtype) - {"semantic", "syntax", "platform"}
+            if wrong_types:
+                raise ValueError("Wrong type of validation: %s" %
+                                 ", ".join(wrong_types))
+            semantic = "semantic" in vtype
+            syntax = "syntax" in vtype
+            platform = "platform" in vtype
+
+        syntax_validators = []
         platform_validators = []
         regular_validators = []
 
         plugin_validators = cls._load_validators(plugin)
         for validator, args, kwargs in plugin_validators:
             if issubclass(validator, RequiredPlatformValidator):
-                platform_validators.append((validator, args, kwargs))
+                if platform:
+                    platform_validators.append((validator, args, kwargs))
             else:
-                regular_validators.append((validator, args, kwargs))
-
-            # Load platform validators from each validator
-            platform_validators.extend(cls._load_validators(validator))
+                validators_of_validators = cls._load_validators(validator)
+                if validators_of_validators:
+                    if semantic:
+                        regular_validators.append((validator, args, kwargs))
+                    if platform:
+                        # Load platform validators from each validator
+                        platform_validators.extend(validators_of_validators)
+                else:
+                    if syntax:
+                        syntax_validators.append((validator, args, kwargs))
 
         results = []
-        for validators in (platform_validators, regular_validators):
+        for validators in (syntax_validators, platform_validators,
+                           regular_validators):
             for validator_cls, args, kwargs in validators:
                 try:
                     validator = validator_cls(*args, **kwargs)
@@ -207,6 +244,8 @@ class ValidatablePluginMixin(object):
                         etype=type(exc).__name__,
                         etraceback=traceback.format_exc())
                 if not result.is_valid:
+                    LOG.debug("Result of validator '%s' is not successful for "
+                              "plugin %s.", validator_cls.get_name(), name)
                     results.append(result)
 
             if results:

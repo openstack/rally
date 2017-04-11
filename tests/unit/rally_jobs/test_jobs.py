@@ -29,10 +29,7 @@ class RallyJobsTestCase(test.TestCase):
     rally_jobs_path = os.path.join(
         os.path.dirname(rally.__file__), "..", "rally-jobs")
 
-    @mock.patch("rally.task.engine.TaskEngine"
-                "._validate_config_semantic")
-    def test_schema_is_valid(
-            self, mock_task_engine__validate_config_semantic):
+    def test_schema_is_valid(self):
         discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
         files = {f for f in os.listdir(self.rally_jobs_path)
@@ -64,7 +61,7 @@ class RallyJobsTestCase(test.TestCase):
 
                     eng = engine.TaskEngine(task, mock.MagicMock(),
                                             mock.Mock())
-                    eng.validate()
+                    eng.validate(only_syntax=True)
                 except Exception:
                     print(traceback.format_exc())
                     self.fail("Wrong task input file: %s" % full_path)

@@ -261,80 +261,92 @@ class TaskEngine(object):
         self.deployment = deployment
         self.abort_on_sla_failure = abort_on_sla_failure
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Task validation of scenarios names."))
-    def _validate_config_scenarios_name(self, config):
-        available = set(s.get_name() for s in scenario.Scenario.get_all())
+    def _validate_workload(self, workload, credentials=None, vtype=None):
+        scenario_cls = scenario.Scenario.get(workload.name)
+        namespace = scenario_cls.get_namespace()
+        scenario_context = copy.deepcopy(scenario_cls.get_default_context())
 
-        specified = set()
-        for subtask in config.subtasks:
-            for s in subtask.workloads:
-                specified.add(s.name)
+        results = []
 
-        if not specified.issubset(available):
-            names = ", ".join(specified - available)
-            raise exceptions.NotFoundScenarios(names=names)
+        results.extend(scenario.Scenario.validate(
+            name=workload.name,
+            credentials=credentials,
+            config=workload.to_dict(),
+            plugin_cfg=None,
+            vtype=vtype))
+
+        if workload.runner:
+            results.extend(runner.ScenarioRunner.validate(
+                name=workload.runner["type"],
+                credentials=credentials,
+                config=None,
+                plugin_cfg=workload.runner,
+                namespace=namespace,
+                vtype=vtype))
+
+        for context_name, context_conf in workload.context.items():
+            results.extend(context.Context.validate(
+                name=context_name,
+                credentials=credentials,
+                config=None,
+                plugin_cfg=context_conf,
+                namespace=namespace,
+                vtype=vtype))
+
+        for context_name, context_conf in scenario_context.items():
+            results.extend(context.Context.validate(
+                name=context_name,
+                credentials=credentials,
+                config=None,
+                plugin_cfg=context_conf,
+                namespace=namespace,
+                allow_hidden=True,
+                vtype=vtype))
+
+        for sla_name, sla_conf in workload.sla.items():
+            results.extend(sla.SLA.validate(
+                name=sla_name,
+                credentials=credentials,
+                config=None,
+                plugin_cfg=sla_conf,
+                vtype=vtype))
+
+        for hook_conf in workload.hooks:
+            results.extend(hook.Hook.validate(
+                name=hook_conf["name"],
+                credentials=credentials,
+                config=None,
+                plugin_cfg=hook_conf["args"],
+                vtype=vtype))
+
+            trigger_conf = hook_conf["trigger"]
+            results.extend(trigger.Trigger.validate(
+                name=trigger_conf["name"],
+                credentials=credentials,
+                config=None,
+                plugin_cfg=trigger_conf["args"],
+                vtype=vtype))
+
+        if results:
+            msg = "\n ".join([str(r) for r in results])
+            kw = workload.make_exception_args(msg)
+            raise exceptions.InvalidTaskConfig(**kw)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
             for workload in subtask.workloads:
-                scenario_cls = scenario.Scenario.get(workload.name)
-                namespace = scenario_cls.get_namespace()
-                scenario_context = copy.deepcopy(
-                    scenario_cls.get_default_context())
+                self._validate_workload(workload, vtype="syntax")
 
-                results = []
-                if workload.runner:
-                    results.extend(runner.ScenarioRunner.validate(
-                        name=workload.runner["type"],
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=workload.runner,
-                        namespace=namespace))
-
-                for context_name, context_conf in workload.context.items():
-                    results.extend(context.Context.validate(
-                        name=context_name,
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=context_conf,
-                        namespace=namespace))
-
-                for context_name, context_conf in scenario_context.items():
-                    results.extend(context.Context.validate(
-                        name=context_name,
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=context_conf,
-                        namespace=namespace,
-                        allow_hidden=True))
-
-                for sla_name, sla_conf in workload.sla.items():
-                    results.extend(sla.SLA.validate(
-                        name=sla_name,
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=sla_conf))
-
-                for hook_conf in workload.hooks:
-                    results.extend(hook.Hook.validate(
-                        name=hook_conf["name"],
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=hook_conf["args"]))
-
-                    trigger_conf = hook_conf["trigger"]
-                    results.extend(trigger.Trigger.validate(
-                        name=trigger_conf["name"],
-                        credentials=None,
-                        config=None,
-                        plugin_cfg=trigger_conf["args"]))
-
-                if results:
-                    msg = "\n ".join([str(r) for r in results])
-                    kw = workload.make_exception_args(msg)
-                    raise exceptions.InvalidTaskConfig(**kw)
+    @logging.log_task_wrapper(LOG.info, _("Task validation of required "
+                                          "platforms."))
+    def _validate_config_platforms(self, config):
+        credentials = self.deployment.get_all_credentials()
+        credentials = dict((p, creds[0]) for p, creds in credentials.items())
+        for subtask in config.subtasks:
+            for workload in subtask.workloads:
+                self._validate_workload(workload, vtype="platform",
+                                        credentials=credentials)
 
     def _validate_config_semantic_helper(self, admin, user_context,
                                          workloads, platform):
@@ -342,15 +354,9 @@ class TaskEngine(object):
             ctx.setup()
             users = ctx.context["users"]
             for workload in workloads:
-                results = scenario.Scenario.validate(
-                    name=workload.name,
-                    credentials={platform: {"admin": admin, "users": users}},
-                    config=workload.to_dict(),
-                    plugin_cfg=None)
-                if results:
-                    msg = "\n ".join([str(r) for r in results])
-                    kw = workload.make_exception_args(msg)
-                    raise exceptions.InvalidTaskConfig(**kw)
+                credentials = {platform: {"admin": admin, "users": users}}
+                self._validate_workload(workload, credentials=credentials,
+                                        vtype="semantic")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
@@ -405,19 +411,25 @@ class TaskEngine(object):
                     platform)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
-    def validate(self):
-        """Perform full task configuration validation."""
+    def validate(self, only_syntax=False):
+        """Perform full task configuration validation.
+
+        :param only_syntax: Check only syntax of task configuration
+        """
         self.task.update_status(consts.TaskStatus.VALIDATING)
         try:
-            self._validate_config_scenarios_name(self.config)
             self._validate_config_syntax(self.config)
+            if only_syntax:
+                return
+            self._validate_config_platforms(self.config)
             self._validate_config_semantic(self.config)
         except Exception as e:
             exception_info = json.dumps(traceback.format_exc(), indent=2,
                                         separators=(",", ": "))
             self.task.set_failed(type(e).__name__,
                                  str(e), exception_info)
-            if logging.is_debug():
+            if (logging.is_debug() and
+                    not isinstance(e, exceptions.InvalidTaskConfig)):
                 LOG.exception(e)
             raise exceptions.InvalidTaskException(str(e))
 
@@ -782,5 +794,5 @@ class Workload(object):
     def make_exception_args(self, reason):
         return {"name": self.name,
                 "pos": self.pos,
-                "config": self.to_dict(),
+                "config": json.dumps(self.to_dict()),
                 "reason": reason}

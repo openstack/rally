@@ -39,6 +39,8 @@ ValidationResult = validation.ValidationResult
 add = validation.add
 
 
+@validation.add("required_platform", platform="openstack", admin=True,
+                users=True)
 @validation.configure(name="old_validator", namespace="openstack")
 class OldValidator(validation.Validator):
     """Legacy validator for OpenStack scenarios"""
