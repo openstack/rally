@@ -460,9 +460,8 @@ class TaskCommands(object):
                     "hooks": x["data"].get("hooks", []),
                     "load_duration": x["data"]["load_duration"],
                     "full_duration": x["data"]["full_duration"],
-                    "created_at": x.get("created_at").strftime(
-                        "%Y-%d-%mT%H:%M:%S")}
-                   for x in task.get_results()]
+                    "created_at": x["created_at"]}
+                   for x in task["results"]]
 
         print(json.dumps(results, sort_keys=False, indent=4))
 
@@ -509,10 +508,7 @@ class TaskCommands(object):
         if not all_deployments:
             filters.setdefault("deployment", deployment)
 
-        task_list = [task.to_dict() for task in api.task.list(**filters)]
-
-        for x in task_list:
-            x["duration"] = x["updated_at"] - x["created_at"]
+        task_list = api.task.list(**filters)
 
         if uuids_only:
             if task_list:
@@ -573,7 +569,7 @@ class TaskCommands(object):
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
-                    api.task.get(task_id).get_results())
+                    api.task.get_detailed(task_id)["results"])
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s")
                       % task_id, file=sys.stderr)
@@ -655,7 +651,7 @@ class TaskCommands(object):
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"],
                                "created_at": x["created_at"]},
-                    api.task.get(task_file_or_uuid).get_results())
+                    api.task.get_detailed(task_file_or_uuid)["results"])
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
@@ -712,7 +708,6 @@ class TaskCommands(object):
         :param task_id: Task uuid or a list of task uuids
         :param force: Force delete or not
         """
-
         def _delete_single_task(tid, force):
             try:
                 api.task.delete(tid, force=force)
@@ -749,7 +744,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = api.task.get(task_id).get_results()
+        results = api.task.get_detailed(task_id)["results"]
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"

@@ -227,6 +227,39 @@ class TaskTestCase(test.TestCase):
         results[0]["iterations"] = "foo_iterations"
         self.assertEqual(results, expected)
 
+    @mock.patch("rally.common.objects.task.db.deployment_get")
+    @mock.patch("rally.common.objects.task.Task.get_results")
+    def test_to_dict(self, mock_get_results, mock_deployment_get):
+        results = [{"created_at": dt.datetime.now(),
+                    "updated_at": dt.datetime.now()}]
+        self.task.update({"deployment_uuid": "deployment_uuid",
+                          "deployment_name": "deployment_name",
+                          "created_at": dt.datetime.now(),
+                          "updated_at": dt.datetime.now(),
+                          "results": results})
+
+        mock_get_results.return_value = results
+        mock_deployment_get.return_value = {"name": "deployment_name"}
+
+        task = objects.Task(task=self.task)
+        serialized_task = task.to_dict()
+
+        mock_get_results.assert_called_once_with()
+        mock_deployment_get.assert_called_once_with(
+            self.task["deployment_uuid"])
+        self.assertEqual(self.task, serialized_task)
+
+    @mock.patch("rally.common.db.api.task_get_detailed")
+    def test_get_detailed(self, mock_task_get_detailed):
+        task = objects.Task(task=self.task)
+        mock_task_get_detailed.return_value = {"results": [{
+            "created_at": dt.datetime.now(),
+            "updated_at": dt.datetime.now()}]}
+
+        task_detailed = task.get_detailed(task_id="task_id")
+        mock_task_get_detailed.assert_called_once_with("task_id")
+        self.assertEqual(mock_task_get_detailed.return_value, task_detailed)
+
     @mock.patch("rally.common.objects.task.db.task_result_get_all_by_uuid",
                 return_value="foo_results")
     def test__get_results(self, mock_task_result_get_all_by_uuid):

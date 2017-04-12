@@ -220,11 +220,15 @@ class _Task(object):
 
     @staticmethod
     def list(**filters):
-        return objects.Task.list(**filters)
+        return [task.to_dict() for task in objects.Task.list(**filters)]
 
     @staticmethod
-    def get(task_id):
+    def _get(task_id):
         return objects.Task.get(task_id)
+
+    @classmethod
+    def get(cls, task_id):
+        return cls._get(task_id).to_dict()
 
     @staticmethod
     def get_detailed(task_id, extended_results=False):
@@ -304,7 +308,8 @@ class _Task(object):
             raise TypeError((len(real_missing) > 1 and multi_msg or single_msg)
                             % ", ".join(real_missing))
 
-        return env.from_string(task_template).render(**kwargs)
+        render_template = env.from_string(task_template).render(**kwargs)
+        return render_template
 
     @classmethod
     def create_template_functions(cls):
@@ -336,7 +341,6 @@ class _Task(object):
         :param tag: tag for this task
         :returns: Task object
         """
-
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
             raise exceptions.DeploymentNotFinishedStatus(
@@ -345,7 +349,7 @@ class _Task(object):
                 status=deployment["status"])
 
         return objects.Task(deployment_uuid=deployment["uuid"],
-                            tag=tag)
+                            tag=tag).to_dict()
 
     @classmethod
     def validate(cls, deployment, config, task_instance=None, task=None):
@@ -449,7 +453,6 @@ class _Task(object):
                       [Default: False]
         :type async: bool
         """
-
         if not async:
             current_status = objects.Task.get_status(task_uuid)
             if current_status in objects.Task.NOT_IMPLEMENTED_STAGES_FOR_ABORT:
