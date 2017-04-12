@@ -73,7 +73,10 @@ class Deployment(object):
         formatters = ["created_at", "completed_at", "started_at", "updated_at"]
         for field, value in self.deployment.items():
             if field in formatters:
-                value = value.strftime(self.TIME_FORMAT)
+                if value is None:
+                    value = "n/a"
+                else:
+                    value = value.strftime(self.TIME_FORMAT)
             result[field] = value
         return result
 
