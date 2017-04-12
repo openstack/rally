@@ -7,15 +7,15 @@
 ..
  This template should be in ReSTructured text. The filename in the git
  repository should match the launchpad URL, for example a URL of
- https://blueprints.launchpad.net/heat/+spec/awesome-thing should be named
+ https://blueprints.launchpad.net/rally/+spec/awesome-thing should be named
  awesome-thing.rst .  Please do not delete any of the sections in this
  template.  If you have nothing to say for a whole section, just write: None
  For help with syntax, see http://sphinx-doc.org/rest.html
  To test out your formatting, see http://www.tele3.cz/jbar/rest/rest.html
 
-=======================
- The title of your Spec
-=======================
+======================
+The title of your Spec
+======================
 
 Rally Road map:
 
@@ -81,3 +81,8 @@ Dependencies
 - Does this feature require any new library dependencies or code otherwise not
   included in OpenStack? Or does it depend on a specific version of library?
 
+
+References
+==========
+
+Links to some external resources.
