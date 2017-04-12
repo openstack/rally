@@ -16,18 +16,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
 
+
 CONF = cfg.CONF
-
-
-WATCHER_BENCHMARK_OPTS = [
-    cfg.FloatOpt("watcher_audit_launch_poll_interval", default=2.0,
-                 help="Watcher audit launch interval"),
-    cfg.IntOpt("watcher_audit_launch_timeout", default=300,
-               help="Watcher audit launch timeout")
-]
-
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(WATCHER_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class WatcherScenario(scenario.OpenStackScenario):

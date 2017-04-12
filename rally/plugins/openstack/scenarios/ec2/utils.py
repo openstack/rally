@@ -20,28 +20,7 @@ from rally.task import atomic
 from rally.task import utils
 
 
-EC2_BENCHMARK_OPTS = [
-    cfg.FloatOpt(
-        "ec2_server_boot_prepoll_delay",
-        default=1.0,
-        help="Time to sleep after boot before polling for status"
-    ),
-    cfg.FloatOpt(
-        "ec2_server_boot_timeout",
-        default=300.0,
-        help="Server boot timeout"
-    ),
-    cfg.FloatOpt(
-        "ec2_server_boot_poll_interval",
-        default=1.0,
-        help="Server boot poll interval"
-    )
-]
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark",
-                               title="benchmark options")
-CONF.register_opts(EC2_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class EC2Scenario(scenario.OpenStackScenario):

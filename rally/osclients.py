@@ -28,6 +28,7 @@ from rally import exceptions
 
 
 LOG = logging.getLogger(__name__)
+
 CONF = cfg.CONF
 
 OSCLIENTS_OPTS = [

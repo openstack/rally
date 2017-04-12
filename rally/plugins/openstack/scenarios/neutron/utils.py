@@ -25,22 +25,9 @@ from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
 from rally.task import utils
 
-NEUTRON_BENCHMARK_OPTS = [
-    cfg.FloatOpt(
-        "neutron_create_loadbalancer_timeout",
-        default=float(500),
-        help="Neutron create loadbalancer timeout"),
-    cfg.FloatOpt(
-        "neutron_create_loadbalancer_poll_interval",
-        default=float(2),
-        help="Neutron create loadbalancer poll interval")
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark",
-                               title="benchmark options")
-CONF.register_group(benchmark_group)
-CONF.register_opts(NEUTRON_BENCHMARK_OPTS, group=benchmark_group)
+
 
 LOG = logging.getLogger(__name__)
 

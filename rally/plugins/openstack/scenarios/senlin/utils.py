@@ -17,15 +17,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
 
-SENLIN_BENCHMARK_OPTS = [
-    cfg.FloatOpt("senlin_action_timeout",
-                 default=3600,
-                 help="Time in seconds to wait for senlin action to finish."),
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(SENLIN_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class SenlinScenario(scenario.OpenStackScenario):

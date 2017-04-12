@@ -28,19 +28,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
 
+
 CONF = cfg.CONF
-
-MURANO_BENCHMARK_OPTS = [
-    cfg.IntOpt("murano_deploy_environment_timeout", default=1200,
-               deprecated_name="deploy_environment_timeout",
-               help="A timeout in seconds for an environment deploy"),
-    cfg.IntOpt("murano_deploy_environment_check_interval", default=5,
-               deprecated_name="deploy_environment_check_interval",
-               help="Deploy environment check interval in seconds"),
-]
-
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MURANO_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MuranoScenario(scenario.OpenStackScenario):

@@ -21,16 +21,8 @@ from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
 
-MISTRAL_BENCHMARK_OPTS = [
-    cfg.IntOpt(
-        "mistral_execution_timeout",
-        default=200,
-        help="mistral execution timeout")
-]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MISTRAL_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MistralScenario(scenario.OpenStackScenario):

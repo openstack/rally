@@ -17,20 +17,7 @@ from rally.plugins.openstack import service
 
 from oslo_config import cfg
 
-GLANCE_BENCHMARK_OPTS = [
-    cfg.FloatOpt("glance_image_create_prepoll_delay",
-                 default=2.0,
-                 help="Time to sleep after creating a resource before "
-                      "polling for it status"),
-    cfg.FloatOpt("glance_image_create_poll_interval",
-                 default=1.0,
-                 help="Interval between checks when waiting for image "
-                      "creation.")
-]
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 
 UnifiedImage = collections.namedtuple("Image", ["id", "name", "visibility",
                                                 "status"])

@@ -25,67 +25,7 @@ from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
 from rally.task import utils
 
-NOVA_BENCHMARK_OPTS = []
-option_names_and_defaults = [
-    # action, prepoll delay, timeout, poll interval
-    ("start", 0, 300, 1),
-    ("stop", 0, 300, 2),
-    ("boot", 1, 300, 1),
-    ("delete", 2, 300, 2),
-    ("reboot", 2, 300, 2),
-    ("rebuild", 1, 300, 1),
-    ("rescue", 2, 300, 2),
-    ("unrescue", 2, 300, 2),
-    ("suspend", 2, 300, 2),
-    ("resume", 2, 300, 2),
-    ("pause", 2, 300, 2),
-    ("unpause", 2, 300, 2),
-    ("shelve", 2, 300, 2),
-    ("unshelve", 2, 300, 2),
-    ("image_create", 0, 300, 2),
-    ("image_delete", 0, 300, 2),
-    ("resize", 2, 400, 5),
-    ("resize_confirm", 0, 200, 2),
-    ("resize_revert", 0, 200, 2),
-    ("live_migrate", 1, 400, 2),
-    ("migrate", 1, 400, 2),
-]
-
-for action, prepoll, timeout, poll in option_names_and_defaults:
-    NOVA_BENCHMARK_OPTS.extend([
-        cfg.FloatOpt(
-            "nova_server_%s_prepoll_delay" % action,
-            default=float(prepoll),
-            help="Time to sleep after %s before polling for status" % action
-        ),
-        cfg.FloatOpt(
-            "nova_server_%s_timeout" % action,
-            default=float(timeout),
-            help="Server %s timeout" % action
-        ),
-        cfg.FloatOpt(
-            "nova_server_%s_poll_interval" % action,
-            default=float(poll),
-            help="Server %s poll interval" % action
-        )
-    ])
-
-NOVA_BENCHMARK_OPTS.extend([
-    cfg.FloatOpt(
-        "nova_detach_volume_timeout",
-        default=float(200),
-        help="Nova volume detach timeout"),
-    cfg.FloatOpt(
-        "nova_detach_volume_poll_interval",
-        default=float(2),
-        help="Nova volume detach poll interval")
-])
-
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name="benchmark",
-                               title="benchmark options")
-CONF.register_group(benchmark_group)
-CONF.register_opts(NOVA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class NovaScenario(scenario.OpenStackScenario):

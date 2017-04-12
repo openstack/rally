@@ -19,17 +19,12 @@ from oslo_config import cfg
 from rally.task import utils
 
 
+from rally.common import opts
+opts.register()
+
 CONF = cfg.CONF
 
-CLEANUP_OPTS = [
-    cfg.IntOpt("resource_deletion_timeout", default=600,
-               help="A timeout in seconds for deleting resources"),
-    cfg.IntOpt("cleanup_threads", default=20,
-               help="Number of cleanup threads to run")
-]
 cleanup_group = cfg.OptGroup(name="cleanup", title="Cleanup Options")
-CONF.register_group(cleanup_group)
-CONF.register_opts(CLEANUP_OPTS, cleanup_group)
 
 
 # NOTE(andreykurilin): There are cases when there is no way to use any kind

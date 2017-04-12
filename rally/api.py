@@ -25,6 +25,7 @@ import jsonschema
 from oslo_config import cfg
 from requests.packages import urllib3
 
+from rally.common import opts
 from rally.common.i18n import _, _LI, _LE, _LW
 from rally.common import logging
 from rally.common import objects
@@ -1107,6 +1108,9 @@ class API(object):
                  project="rally",
                  version=rally_version.version_string(),
                  default_config_files=config_files)
+
+            opts.register()
+
             logging.setup("rally")
             if not CONF.get("log_config_append"):
                 # The below two lines are to disable noise from request module.
