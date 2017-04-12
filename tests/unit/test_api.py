@@ -53,31 +53,77 @@ class TaskAPITestCase(test.TestCase):
     def setUp(self):
         super(TaskAPITestCase, self).setUp()
         self.task_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"
-        self.task = {
-            "uuid": self.task_uuid,
-        }
+        self.task = {"uuid": self.task_uuid}
 
     @mock.patch("rally.api.objects.Task")
-    @mock.patch("rally.api.objects.Deployment.get",
-                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin="fake_admin",
-                                                  users=["fake_user"]))
+    @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
-    def test_validate(
-            self, mock_task_engine, mock_deployment_get, mock_task):
-        api._Task.validate(mock_deployment_get.return_value["uuid"], "config")
+    def test_validate(self, mock_task_engine, mock_deployment_get, mock_task):
+        fake_deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid_1", admin="fake_admin", users=["fake_user"])
+        mock_deployment_get.return_value = fake_deployment
 
-        mock_task_engine.assert_has_calls([
-            mock.call("config", mock_task.return_value,
-                      mock_deployment_get.return_value),
-            mock.call().validate()
-        ])
+        #######################################################################
+        # The case #1 -- create temporary task
+        #######################################################################
+        api._Task.validate(fake_deployment["uuid"], "config")
+
+        mock_task_engine.assert_called_once_with(
+            "config", mock_task.return_value, fake_deployment),
+        mock_task_engine.return_value.validate.assert_called_once_with()
 
         mock_task.assert_called_once_with(
-            temporary=True,
-            deployment_uuid=mock_deployment_get.return_value["uuid"])
+            temporary=True, deployment_uuid=fake_deployment["uuid"])
+        mock_deployment_get.assert_called_once_with(fake_deployment["uuid"])
+        self.assertFalse(mock_task.get.called)
+
+        #######################################################################
+        # The case #2 -- validate pre-created task
+        #######################################################################
+        mock_task_engine.reset_mock()
+        mock_task.reset_mock()
+        mock_deployment_get.reset_mock()
+
+        fake_task = fakes.FakeTask(deployment_uuid="deployment_uuid_2")
+        mock_task.get.return_value = fake_task
+
+        task_uuid = "task-id"
+
+        api._Task.validate(fake_deployment["uuid"], "config", task=task_uuid)
+
+        mock_task_engine.assert_called_once_with("config", fake_task,
+                                                 fake_deployment)
+        mock_task_engine.return_value.validate.assert_called_once_with()
+
+        self.assertFalse(mock_task.called)
+        # check that deployment uuid is taken from task
         mock_deployment_get.assert_called_once_with(
-            mock_deployment_get.return_value["uuid"])
+            fake_task["deployment_uuid"])
+
+        mock_task.get.assert_called_once_with(task_uuid)
+
+        #######################################################################
+        # The case #3 -- validate deprecated way for pre-created task
+        #######################################################################
+        mock_task_engine.reset_mock()
+        mock_task.reset_mock()
+        mock_deployment_get.reset_mock()
+
+        task_instance = fakes.FakeTask(uuid="task-id")
+
+        api._Task.validate(fake_deployment["uuid"], "config",
+                           task_instance=task_instance)
+
+        mock_task_engine.assert_called_once_with("config", fake_task,
+                                                 fake_deployment)
+        mock_task_engine.return_value.validate.assert_called_once_with()
+
+        self.assertFalse(mock_task.called)
+        # check that deployment uuid is taken from task
+        mock_deployment_get.assert_called_once_with(
+            fake_task["deployment_uuid"])
+
+        mock_task.get.assert_called_once_with(task_instance["uuid"])
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment",
@@ -170,16 +216,22 @@ class TaskAPITestCase(test.TestCase):
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
                           api._Task.create, deployment_id, tag)
 
-    @mock.patch("rally.api.objects.Task",
-                return_value=fakes.FakeTask(uuid="some_uuid"))
-    @mock.patch("rally.api.objects.Deployment.get",
-                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin="fake_admin",
-                                                  users=["fake_user"]))
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
     def test_start(self, mock_task_engine, mock_deployment_get,
                    mock_task):
-        api._Task.start(mock_deployment_get.return_value["uuid"], "config")
+        fake_task = fakes.FakeTask(uuid="some_uuid")
+        fake_task.get_status = mock.Mock()
+        mock_task.return_value = fake_task
+        mock_deployment_get.return_value = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_FINISHED)
+
+        self.assertEqual(
+            (fake_task["uuid"], fake_task.get_status.return_value),
+            api._Task.start(mock_deployment_get.return_value["uuid"], "config")
+        )
 
         mock_task_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
@@ -194,29 +246,52 @@ class TaskAPITestCase(test.TestCase):
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
 
-    @mock.patch("rally.api.objects.Task",
-                return_value=fakes.FakeTask(uuid="some_uuid", task={},
-                                            temporary=True))
-    @mock.patch("rally.api.objects.Deployment.get",
-                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
-                                                  admin="fake_admin",
-                                                  users=["fake_user"]))
-    def test_start_temporary_task(self, mock_deployment_get,
-                                  mock_task):
+    @mock.patch("rally.api.objects.Deployment.get")
+    def test_start_temporary_task(self, mock_deployment_get):
+        fake_deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_FINISHED,
+            name="foo")
+        mock_deployment_get.return_value = fake_deployment
+        fake_task = objects.Task(task={"deployment_uuid": "deployment_uuid",
+                                       "uuid": "some_uuid"}, temporary=True)
 
         self.assertRaises(ValueError, api._Task.start,
-                          mock_deployment_get.return_value["uuid"], "config")
+                          fake_deployment, "config", task=fake_task)
+
+    @mock.patch("rally.api.objects.task.db.task_get")
+    @mock.patch("rally.api.objects.Deployment.get")
+    def test_start_with_inconsistent_deployment(self, mock_deployment_get,
+                                                mock_task_get):
+        deployment_uuid = "deployment_uuid"
+        fake_deployment = fakes.FakeDeployment(
+            uuid=deployment_uuid, admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_INCONSISTENT,
+            name="foo")
+        mock_deployment_get.return_value = fake_deployment
+        fake_task_dict = {"deployment_uuid": deployment_uuid,
+                          "uuid": "some_uuid"}
+        fake_task = objects.Task(task=fake_task_dict)
+        mock_task_get.return_value = fake_task_dict
+
+        self.assertRaises(exceptions.DeploymentNotFinishedStatus,
+                          api._Task.start, deployment_uuid, "config",
+                          task=fake_task)
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
     def test_start_exception(self, mock_task_engine, mock_deployment_get,
                              mock_task):
+        fake_deployment = fakes.FakeDeployment(
+            status=consts.DeployStatus.DEPLOY_FINISHED,
+            name="foo", uuid="deployment_uuid")
+        mock_deployment_get.return_value = fake_deployment
         mock_task.return_value.is_temporary = False
         mock_task_engine.return_value.run.side_effect = TypeError
         self.assertRaises(TypeError, api._Task.start, "deployment_uuid",
                           "config")
-        mock_deployment_get().update_status.assert_called_once_with(
+        fake_deployment.update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
 
     @ddt.data(True, False)

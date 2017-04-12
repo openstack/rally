@@ -20,10 +20,11 @@ import os.path
 
 import ddt
 import mock
-import yaml
 
+import rally
 from rally import api
 from rally.cli.commands import task
+from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from tests.unit import fakes
@@ -41,86 +42,136 @@ class TaskCommandsTestCase(test.TestCase):
         with mock.patch("rally.api.API.check_db_revision"):
             self.real_api = api.API()
 
+    @mock.patch("rally.cli.commands.task.os.path.isfile")
     @mock.patch("rally.cli.commands.task.open", create=True)
-    def test__load_task(self, mock_open):
+    def test__load_and_validate_task(self, mock_open, mock_isfile):
         input_task = "{'ab': {{test}}}"
         input_args = "{'test': 2}"
 
-        # NOTE(boris-42): Such order of files is because we are reading
-        #                 file with args before file with template.
         mock_open.side_effect = [
-            mock.mock_open(read_data="{'test': 1}").return_value,
-            mock.mock_open(read_data=input_task).return_value
+            mock.mock_open(read_data=input_task).return_value,
+            mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        task_conf = self.task._load_task(
-            self.real_api, "in_task", task_args_file="in_args_path")
+        task_conf = self.task._load_and_validate_task(
+            self.real_api, "in_task", args_file="in_args_path")
         self.assertEqual({"ab": 1}, task_conf)
 
         mock_open.side_effect = [
             mock.mock_open(read_data=input_task).return_value
         ]
-        task_conf = self.task._load_task(
-            self.real_api, "in_task", task_args=input_args)
+        task_conf = self.task._load_and_validate_task(
+            self.real_api, "in_task", raw_args=input_args)
         self.assertEqual(task_conf, {"ab": 2})
 
         mock_open.side_effect = [
-            mock.mock_open(read_data="{'test': 1}").return_value,
-            mock.mock_open(read_data=input_task).return_value
-
+            mock.mock_open(read_data=input_task).return_value,
+            mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        task_conf = self.task._load_task(
-            self.real_api, "in_task", task_args=input_args,
-            task_args_file="any_file")
+        task_conf = self.task._load_and_validate_task(
+            self.real_api, "in_task", raw_args=input_args,
+            args_file="any_file")
         self.assertEqual(task_conf, {"ab": 2})
 
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    def test__load_task_wrong_task_args_file(self, mock_open):
         mock_open.side_effect = [
-            mock.mock_open(read_data="{'test': {}").return_value
+            mock.mock_open(read_data=input_task).return_value,
+            mock.mock_open(read_data="{'test': 1}").return_value
         ]
-        self.assertRaises(task.FailedToLoadTask,
-                          self.task._load_task,
-                          self.fake_api, "in_task",
-                          task_args_file="in_args_path")
+        task_conf = self.task._load_and_validate_task(
+            self.real_api, "in_task", raw_args="test=2",
+            args_file="any_file")
+        self.assertEqual(task_conf, {"ab": 2})
 
+    @mock.patch("rally.cli.commands.task.os.path.isfile")
+    def test__load_task_wrong_task_args_file(self, mock_isfile):
+        mock_isfile.side_effect = (True, False)
+        # use real file to avoid mocking open
+        task_file = __file__
+
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task,
+                              self.fake_api, task_file=task_file,
+                              args_file="in_args_path")
+        self.assertEqual("Invalid --task-args-file passed:\n\n\t File "
+                         "'in_args_path' doesn't exist.", e.format_message())
+
+    @mock.patch("rally.cli.commands.task.yaml.safe_load")
+    @mock.patch("rally.cli.commands.task.os.path.isfile")
+    def test__load_task_wrong_input_task_args(self, mock_isfile,
+                                              mock_safe_load):
+        mock_safe_load.side_effect = yaml.ParserError("foo")
+        mock_isfile.side_effect = (True, False)
+        # use real file to avoid mocking open
+        task_file = __file__
+
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task, self.real_api,
+                              task_file, raw_args="{'test': {}")
+        self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
+                         "YAML or JSON. Details:\n\nfoo", e.format_message())
+        mock_safe_load.assert_called_once_with("{'test': {}")
+
+        # the case #2
+        mock_safe_load.reset_mock()
+        mock_isfile.side_effect = (True, False)
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task, self.real_api,
+                              task_file, raw_args="[]")
+        self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
+                         "YAML or JSON. Details:\n\nfoo", e.format_message())
+        mock_safe_load.assert_called_once_with("[]")
+
+        # the case #3
+        mock_safe_load.reset_mock()
+        mock_isfile.side_effect = (True, False)
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task, self.real_api,
+                              task_file, raw_args="foo")
+        self.assertEqual("Invalid --task-args passed:\n\n\t Value has to be "
+                         "YAML or JSON. Details:\n\nfoo", e.format_message())
+        mock_safe_load.assert_called_once_with("foo")
+
+    @mock.patch("rally.cli.commands.task.os.path.isfile")
     @mock.patch("rally.cli.commands.task.open", create=True)
-    def test__load_task_wrong_task_args_file_exception(self, mock_open):
-        mock_open.side_effect = IOError
-        self.assertRaises(IOError, self.task._load_task, self.fake_api,
-                          "in_task", task_args_file="in_args_path")
+    def test__load_task_task_render_raise_exc(self, mock_open, mock_isfile):
+        mock_isfile.side_effect = (True, False)
 
-    def test__load_task_wrong_input_task_args(self):
-        self.assertRaises(task.FailedToLoadTask,
-                          self.task._load_task, self.real_api, "in_task",
-                          "{'test': {}")
-        self.assertRaises(task.FailedToLoadTask,
-                          self.task._load_task, self.real_api, "in_task", "[]")
-
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    def test__load_task_task_render_raise_exc(self, mock_open):
         mock_open.side_effect = [
             mock.mock_open(read_data="{'test': {{t}}}").return_value
         ]
-        self.assertRaises(task.FailedToLoadTask,
-                          self.task._load_task, self.real_api, "in_task")
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task, self.real_api,
+                              "in_task")
+        self.assertEqual("Invalid --task passed:\n\n\t Failed to render task "
+                         "template.\n\nPlease specify template task argument: "
+                         "t", e.format_message())
 
+    @mock.patch("rally.cli.commands.task.yaml")
+    @mock.patch("rally.cli.commands.task.os.path.isfile")
     @mock.patch("rally.cli.commands.task.open", create=True)
-    def test__load_task_task_not_in_yaml(self, mock_open):
+    def test__load_task_task_not_in_yaml(self, mock_open, mock_isfile,
+                                         mock_yaml):
         mock_open.side_effect = [
             mock.mock_open(read_data="{'test': {}").return_value
         ]
-        self.fake_api.task.render_template.return_value = "||"
+        mock_isfile.side_effect = (True, )
+        mock_yaml.safe_load.side_effect = Exception("ERROR!!!PANIC!!!")
 
-        self.assertRaises(task.FailedToLoadTask,
-                          self.task._load_task, self.fake_api, "in_task")
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task, self.fake_api,
+                              "in_task")
+        self.assertEqual("Invalid --task passed:\n\n\t Wrong format of "
+                         "rendered input task. It should be YAML or JSON. "
+                         "Details:\n\nERROR!!!PANIC!!!", e.format_message())
 
-    def test_load_task_including_other_template(self):
+    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
+    def test_load_task_including_other_template(self, mock_isfile):
         other_template_path = os.path.join(
-            os.path.dirname(__file__),
-            "..", "..", "..", "..", "samples/tasks/scenarios/nova/boot.json")
+            os.path.dirname(rally.__file__), os.pardir,
+            "samples/tasks/scenarios/nova/boot.json")
         input_task = "{%% include \"%s\" %%}" % os.path.basename(
             other_template_path)
-        expect = self.task._load_task(self.real_api, other_template_path)
+        expect = self.task._load_and_validate_task(self.real_api,
+                                                   other_template_path)
 
         with mock.patch("rally.cli.commands.task.open",
                         create=True) as mock_open:
@@ -129,42 +180,29 @@ class TaskCommandsTestCase(test.TestCase):
             ]
             input_task_file = os.path.join(
                 os.path.dirname(other_template_path), "input_task.json")
-            actual = self.task._load_task(self.real_api, input_task_file)
+            actual = self.task._load_and_validate_task(self.real_api,
+                                                       input_task_file)
         self.assertEqual(expect, actual)
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
-                return_value={"uuid": "some_uuid"})
-    def test__load_and_validate_task(self, mock__load_task,
-                                     mock_os_path_isfile):
-        deployment = "some_deployment_uuid"
-        self.fake_api.task.validate.return_value = fakes.FakeTask()
-        self.task._load_and_validate_task(self.fake_api, "some_task",
-                                          "task_args", "task_args_file",
-                                          deployment)
-        mock__load_task.assert_called_once_with(
-            self.fake_api, "some_task", "task_args", "task_args_file")
-        self.fake_api.task.validate.assert_called_once_with(
-            deployment, mock__load_task.return_value, None)
-
-    def test__load_and_validate_file(self):
-        deployment = "some_deployment_uuid"
-        self.assertRaises(IOError, self.task._load_and_validate_task,
-                          self.fake_api, "some_task", "task_args",
-                          "task_args_file", deployment)
+    def test__load_and_validate_file_failed(self):
+        e = self.assertRaises(task.FailedToLoadTask,
+                              self.task._load_and_validate_task,
+                              api=self.fake_api, task_file="some_task",
+                              raw_args="task_args", args_file="task_args_file")
+        self.assertEqual("Invalid --task passed:\n\n\t File 'some_task' "
+                         "doesn't exist.", e.format_message())
 
     @mock.patch("rally.cli.commands.task.version")
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
     @mock.patch("rally.cli.commands.task.TaskCommands.use")
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value={"some": "json"})
-    def test_start(self, mock__load_task, mock_detailed, mock_use,
-                   mock_os_path_isfile, mock_version):
+    def test_start(self, mock__load_and_validate_task, mock_detailed, mock_use,
+                   mock_version):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
-        self.fake_api.task.create.return_value = fakes.FakeTask(
-            uuid="some_new_uuid", tag="tag")
+        fake_task = fakes.FakeTask(uuid="some_new_uuid", tag="tag")
+        self.fake_api.task.create.return_value = fake_task
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             some="json", uuid="some_uuid", temporary=True)
 
@@ -173,26 +211,25 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.create.assert_called_once_with(
             deployment_id, None)
         self.fake_api.task.start.assert_called_once_with(
-            deployment_id, mock__load_task.return_value,
-            task=self.fake_api.task.validate.return_value,
+            deployment_id, mock__load_and_validate_task.return_value,
+            task=fake_task["uuid"],
             abort_on_sla_failure=False)
-        mock__load_task.assert_called_once_with(
-            self.fake_api, task_path, None, None)
+        mock__load_and_validate_task.assert_called_once_with(
+            self.fake_api, task_path, args_file=None, raw_args=None)
         mock_use.assert_called_once_with(self.fake_api, "some_new_uuid")
         mock_detailed.assert_called_once_with(self.fake_api,
-                                              task_id="some_new_uuid")
+                                              task_id=fake_task["uuid"])
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value="some_config")
-    def test_start_on_unfinished_deployment(
-            self, mock__load_task, mock_detailed, mock_os_path_isfile):
+    def test_start_on_unfinished_deployment(self, mock__load_and_validate_task,
+                                            mock_detailed):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         deployment_name = "xxx_name"
         task_path = "path_to_config.json"
-        self.fake_api.task.create.return_value = fakes.FakeTask(
-            uuid="some_new_uuid", tag="tag")
+        fake_task = fakes.FakeTask(uuid="some_new_uuid", tag="tag")
+        self.fake_api.task.create.return_value = fake_task
 
         exc = exceptions.DeploymentNotFinishedStatus(
             name=deployment_name,
@@ -201,13 +238,14 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.create.side_effect = exc
         self.assertEqual(1, self.task.start(self.fake_api, task_path,
                                             deployment="any", tag="some_tag"))
+        self.assertFalse(mock_detailed.called)
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 return_value="some_config")
-    def test_start_with_task_args(self, mock__load_task, mock_detailed,
-                                  mock_os_path_isfile):
+    def test_start_with_task_args(self, mock__load_and_validate_task,
+                                  mock_detailed):
+        fake_task = fakes.FakeTask(uuid="new_uuid", tag="some_tag")
         self.fake_api.task.create.return_value = fakes.FakeTask(
             uuid="new_uuid", tag="some_tag")
         self.fake_api.task.validate.return_value = fakes.FakeTask(
@@ -219,17 +257,18 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.start(self.fake_api, task_path, deployment="any",
                         task_args=task_args, task_args_file=task_args_file,
                         tag="some_tag")
-        mock__load_task.assert_called_once_with(
-            self.fake_api, task_path, task_args, task_args_file)
-        self.fake_api.task.validate.assert_called_once_with(
-            "any", mock__load_task.return_value, {})
+
+        mock__load_and_validate_task.assert_called_once_with(
+            self.fake_api, task_path, raw_args=task_args,
+            args_file=task_args_file)
+
         self.fake_api.task.start.assert_called_once_with(
-            "any", mock__load_task.return_value,
-            task=self.fake_api.task.create.return_value,
+            "any", mock__load_and_validate_task.return_value,
+            task=fake_task["uuid"],
             abort_on_sla_failure=False)
         mock_detailed.assert_called_once_with(
             self.fake_api,
-            task_id=self.fake_api.task.create.return_value["uuid"])
+            task_id=fake_task["uuid"])
         self.fake_api.task.create.assert_called_once_with("any", "some_tag")
 
     @mock.patch("rally.cli.commands.task.envutils.get_global")
@@ -238,24 +277,40 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.start, "path_to_config.json", None)
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
-                return_value={"some": "json"})
-    def test_start_invalid_task(self, mock__load_task, mock_os_path_isfile):
-        self.fake_api.task.create.return_value = fakes.FakeTask(
-            temporary=False, tag="tag", uuid="uuid")
-        exc = exceptions.InvalidTaskException
-        self.fake_api.task.start.side_effect = exc
-        result = self.task.start(self.fake_api, "task_path", "deployment",
-                                 tag="tag")
-        self.assertEqual(1, result)
+    @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task")
+    def test_start_invalid_task(self, mock__load_and_validate_task,
+                                mock_detailed):
+        task_obj = fakes.FakeTask(temporary=False, tag="tag", uuid="uuid")
+        self.fake_api.task.create.return_value = task_obj
+        exc = exceptions.InvalidTaskException("foo")
+
+        mock__load_and_validate_task.side_effect = exc
+
+        self.assertRaises(exceptions.InvalidTaskException,
+                          self.task.start, self.fake_api, "task_path",
+                          "deployment", tag="tag")
+
+        self.assertFalse(self.fake_api.task.create.called)
+        self.assertFalse(self.fake_api.task.start.called)
+
+        # the case 2
+        task_cfg = {"some": "json"}
+        mock__load_and_validate_task.side_effect = (task_cfg, )
+        self.fake_api.task.start.side_effect = KeyError()
+
+        self.assertRaises(KeyError,
+                          self.task.start, self.fake_api, "task_path",
+                          "deployment", tag="tag")
 
         self.fake_api.task.create.assert_called_once_with("deployment", "tag")
 
         self.fake_api.task.start.assert_called_once_with(
-            "deployment", mock__load_task.return_value,
-            task=self.fake_api.task.create.return_value,
+            "deployment", task_cfg,
+            task=task_obj["uuid"],
             abort_on_sla_failure=False)
+
+        self.assertFalse(mock_detailed.called)
 
     def test_abort(self):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
@@ -894,35 +949,37 @@ class TaskCommandsTestCase(test.TestCase):
                 create=True)
     def test_validate(self, mock_open, mock_os_path_isfile):
         self.fake_api.task.render_template = self.real_api.task.render_template
-        self.task.validate(self.fake_api, "path_to_config.json", "fake_id")
-        self.fake_api.task.validate.assert_called_once_with(
-            "fake_id", {"some": "json"}, None)
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
+        self.task.validate(self.fake_api, "path_to_config.json", "fake_id")
+
+        self.fake_api.task.validate.assert_called_once_with(
+            "fake_id", {"some": "json"})
+
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task",
                 side_effect=task.FailedToLoadTask)
-    def test_validate_failed_to_load_task(self, mock__load_task,
-                                          mock_os_path_isfile):
+    def test_validate_failed_to_load_task(self, mock__load_and_validate_task):
         args = "args"
         args_file = "args_file"
 
-        result = self.task.validate(self.real_api,
-                                    "path_to_task", "fake_deployment_id",
-                                    task_args=args, task_args_file=args_file)
-        self.assertEqual(1, result)
-        mock__load_task.assert_called_once_with(
-            self.real_api, "path_to_task", args, args_file)
+        mock__load_and_validate_task.side_effect = KeyError("foo")
 
-    @mock.patch("rally.cli.commands.task.os.path.isfile", return_value=True)
-    @mock.patch("rally.cli.commands.task.TaskCommands._load_task")
-    def test_validate_invalid(self, mock__load_task, mock_os_path_isfile):
-        exc = exceptions.InvalidTaskException
+        self.assertRaises(KeyError, self.task.validate, self.real_api,
+                          "path_to_task", "fake_deployment_id",
+                          task_args=args, task_args_file=args_file)
+        self.assertFalse(self.fake_api.task.validate.called)
+
+        mock__load_and_validate_task.assert_called_once_with(
+            self.real_api, "path_to_task", raw_args=args, args_file=args_file)
+
+    @mock.patch("rally.cli.commands.task.TaskCommands._load_and_validate_task")
+    def test_validate_invalid(self, mock__load_and_validate_task):
+        exc = exceptions.InvalidTaskException("foo")
         self.fake_api.task.validate.side_effect = exc
-        result = self.task.validate(self.fake_api,
-                                    "path_to_task", "deployment")
-        self.assertEqual(1, result)
+        self.assertRaises(exceptions.InvalidTaskException,
+                          self.task.validate, self.fake_api, "path_to_task",
+                          "deployment")
         self.fake_api.task.validate.assert_called_once_with(
-            "deployment", mock__load_task.return_value, None)
+            "deployment", mock__load_and_validate_task.return_value)
 
     @mock.patch("rally.common.fileutils._rewrite_env_file")
     def test_use(self, mock__rewrite_env_file):

@@ -242,6 +242,7 @@ class _Task(object):
             task["results"] = objects.Task.extend_results(task["results"])
         return task
 
+    # TODO(andreykurilin): move it to some kind of utils
     @classmethod
     def render_template(cls, task_template, template_dir="./", **kwargs):
         """Render jinja2 task template to Rally input task.
@@ -347,40 +348,78 @@ class _Task(object):
                             tag=tag)
 
     @classmethod
-    def validate(cls, deployment, config, task_instance=None):
+    def validate(cls, deployment, config, task_instance=None, task=None):
         """Validate a task config against specified deployment.
 
-        :param deployment: UUID or name of the deployment
+        :param deployment: UUID or name of the deployment (will be ignored in
+            case of transmitting task_instance or task arguments)
         :param config: a dict with a task configuration
+        :param task_instance: DEPRECATED. Use "task" argument to transmit task
+            uuid instead
         """
+        if task_instance is not None:
+            LOG.warning("Transmitting task object in `task validate` is "
+                        "deprecated since Rally 0.10. To use pre-created "
+                        "task, transmit task UUID instead via `task` "
+                        "argument.")
+            task = objects.Task.get(task_instance["uuid"])
+            deployment = task["deployment_uuid"]
+        elif task:
+            task = objects.Task.get(task)
+            deployment = task["deployment_uuid"]
+        else:
+            task = objects.Task(deployment_uuid=deployment, temporary=True)
         deployment = objects.Deployment.get(deployment)
-        task = task_instance or objects.Task(
-            deployment_uuid=deployment["uuid"], temporary=True)
-        benchmark_engine = engine.TaskEngine(config, task, deployment)
 
+        benchmark_engine = engine.TaskEngine(config, task, deployment)
         benchmark_engine.validate()
 
     @classmethod
     def start(cls, deployment, config, task=None, abort_on_sla_failure=False):
-        """Start a task.
+        """Validate and start a task.
 
         Task is a list of benchmarks that will be called one by one, results of
         execution will be stored in DB.
 
-        :param deployment: UUID or name of the deployment
+        :param deployment: UUID or name of the deployment (will be ignored in
+            case of transmitting existing task)
         :param config: a dict with a task configuration
-        :param task: Task object. If None, it will be created
+        :param task: Task UUID to use pre-created task. If None, new task will
+            be created
         :param abort_on_sla_failure: If set to True, the task execution will
                                      stop when any SLA check for it fails
         """
+        if task and isinstance(task, objects.Task):
+            LOG.warning("Transmitting task object in `task start` is "
+                        "deprecated since Rally 0.10. To use pre-created "
+                        "task, transmit task UUID instead.")
+            if task.is_temporary:
+                raise ValueError(_(
+                    "Unable to run a temporary task. Please check your code."))
+            task = objects.Task.get(task["uuid"])
+        elif task is not None:
+            task = objects.Task.get(task)
+
+        if task is not None:
+            deployment = task["deployment_uuid"]
+
         deployment = objects.Deployment.get(deployment)
+        if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
+            raise exceptions.DeploymentNotFinishedStatus(
+                name=deployment["name"],
+                uuid=deployment["uuid"],
+                status=deployment["status"])
 
-        task = task or objects.Task(deployment_uuid=deployment["uuid"])
+        if task is None:
+            task = objects.Task(deployment_uuid=deployment["uuid"])
 
-        if task.is_temporary:
-            raise ValueError(_(
-                "Unable to run a temporary task. Please check your code."))
+        benchmark_engine = engine.TaskEngine(
+            config, task, deployment,
+            abort_on_sla_failure=abort_on_sla_failure)
 
+        benchmark_engine.validate()
+
+        LOG.info("Task %s config is valid." % task["uuid"])
         LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
                                                          deployment["uuid"]))
 
@@ -393,6 +432,8 @@ class _Task(object):
         except Exception:
             deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
             raise
+
+        return task["uuid"], task.get_status(task["uuid"])
 
     @classmethod
     def abort(cls, task_uuid, soft=False, async=True):

@@ -19,7 +19,6 @@ from __future__ import print_function
 import json
 import os
 import sys
-import traceback
 import webbrowser
 
 import jsonschema
@@ -47,7 +46,7 @@ LOG = logging.getLogger(__name__)
 
 
 class FailedToLoadTask(exceptions.RallyException):
-    msg_fmt = _("Failed to load task")
+    msg_fmt = _("Invalid %(source)s passed:\n\n\t %(msg)s")
 
 
 class TaskCommands(object):
@@ -55,101 +54,86 @@ class TaskCommands(object):
 
     """
 
-    def _load_task(self, api, task_file, task_args=None, task_args_file=None):
-        """Load tasks template from file and render it with passed args.
+    def _load_and_validate_task(self, api, task_file, args_file=None,
+                                raw_args=None):
+        """Load, render and validate tasks template from file with passed args.
 
         :param task_file: Path to file with input task
-        :param task_args: JSON or YAML representation of dict with args that
-                          will be used to render input task with jinja2
-        :param task_args_file: Path to file with JSON or YAML representation
-                               of dict, that will be used to render input
-                               with jinja2. If both specified task_args and
-                               task_args_file they will be merged. task_args
-                               has bigger priority so it will update values
-                               from task_args_file.
+        :param raw_args: JSON or YAML representation of dict with args that
+            will be used to render input task with jinja2
+        :param args_file: Path to file with JSON or YAML representation
+            of dict, that will be used to render input with jinja2. If both
+            specified task_args and task_args_file they will be merged.
+            raw_args has bigger priority so it will update values
+            from args_file.
         :returns: Str with loaded and rendered task
         """
+
         print(cliutils.make_header("Preparing input task"))
 
-        def print_invalid_header(source_name, args):
-            print(_("Invalid %(source)s passed: \n\n %(args)s \n")
-                  % {"source": source_name, "args": args},
-                  file=sys.stderr)
-
-        def parse_task_args(src_name, args):
-            try:
-                kw = args and yaml.safe_load(args)
-                kw = {} if kw is None else kw
-            except yaml.ParserError as e:
-                print_invalid_header(src_name, args)
-                print(_("%(source)s has to be YAML or JSON. Details:"
-                        "\n\n%(err)s\n")
-                      % {"source": src_name, "err": e},
-                      file=sys.stderr)
-                raise TypeError()
-
-            if not isinstance(kw, dict):
-                print_invalid_header(src_name, args)
-                print(_("%(src)s has to be dict, actually %(src_type)s\n")
-                      % {"src": src_name, "src_type": type(kw)},
-                      file=sys.stderr)
-                raise TypeError()
-            return kw
-
-        try:
-            kw = {}
-            if task_args_file:
-                with open(task_args_file) as f:
-                    kw.update(parse_task_args("task_args_file", f.read()))
-            kw.update(parse_task_args("task_args", task_args))
-        except TypeError:
-            raise FailedToLoadTask()
-
+        if not os.path.isfile(task_file):
+            raise FailedToLoadTask(source="--task",
+                                   msg="File '%s' doesn't exist." % task_file)
         with open(task_file) as f:
+            input_task = f.read()
+            task_dir = os.path.expanduser(os.path.dirname(task_file)) or "./"
+
+        task_args = {}
+        if args_file:
+            if not os.path.isfile(args_file):
+                raise FailedToLoadTask(
+                    source="--task-args-file",
+                    msg="File '%s' doesn't exist." % args_file)
+            with open(args_file) as f:
+                try:
+                    task_args.update(yaml.safe_load(f.read()))
+                except yaml.ParserError as e:
+                    raise FailedToLoadTask(
+                        source="--task-args-file",
+                        msg="File '%s' has to be YAML or JSON. Details:\n\n%s"
+                            % (args_file, e))
+        if raw_args:
             try:
-                input_task = f.read()
-                task_dir = os.path.expanduser(
-                    os.path.dirname(task_file)) or "./"
-                rendered_task = api.task.render_template(input_task,
-                                                         task_dir, **kw)
-            except Exception as e:
-                print(_("Failed to render task template:\n%(task)s\n%(err)s\n")
-                      % {"task": input_task, "err": e},
-                      file=sys.stderr)
-                raise FailedToLoadTask()
+                data = yaml.safe_load(raw_args)
+                if isinstance(data, (six.text_type, six.string_types)):
+                    raise yaml.ParserError("String '%s' doesn't look like a "
+                                           "dictionary." % raw_args)
+                task_args.update(data)
+            except yaml.ParserError as e:
+                args = [keypair.split("=", 1)
+                        for keypair in raw_args.split(",")]
+                if len([a for a in args if len(a) != 1]) != len(args):
+                    raise FailedToLoadTask(
+                        source="--task-args",
+                        msg="Value has to be YAML or JSON. Details:\n\n%s" % e)
+                else:
+                    task_args.update(dict(args))
 
-            print(_("Task is:\n%s\n") % rendered_task)
-            try:
-                parsed_task = yaml.safe_load(rendered_task)
-
-            except Exception as e:
-                print(_("Wrong format of rendered input task. It should be "
-                        "YAML or JSON.\n%s") % e,
-                      file=sys.stderr)
-                raise FailedToLoadTask()
-
-            print(_("Task syntax is correct :)"))
-            return parsed_task
-
-    def _load_and_validate_task(self, api, task, task_args, task_args_file,
-                                deployment, task_instance=None):
         try:
-            input_task = self._load_task(api, task, task_args, task_args_file)
-        except Exception as err:
-            if task_instance:
-                task_instance.set_validation_failed({
-                    "etype": err.__class__.__name__,
-                    "msg": str(err),
-                    "trace": json.dumps(traceback.format_exc())})
-            raise
-        api.task.validate(deployment, input_task, task_instance)
-        print(_("Task config is valid :)"))
-        return input_task
+            rendered_task = api.task.render_template(input_task, task_dir,
+                                                     **task_args)
+        except Exception as e:
+            raise FailedToLoadTask(
+                source="--task",
+                msg="Failed to render task template.\n\n%s" % e)
+
+        print(_("Task is:\n%s\n") % rendered_task.strip())
+        try:
+            parsed_task = yaml.safe_load(rendered_task)
+        except Exception as e:
+            raise FailedToLoadTask(
+                source="--task",
+                msg="Wrong format of rendered input task. It should be YAML or"
+                    " JSON. Details:\n\n%s" % e)
+
+        print(_("Task syntax is correct :)"))
+        return parsed_task
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
     @cliutils.args("--task", "--filename", metavar="<path>",
+                   dest="task_file",
                    help="Path to the input task file.")
     @cliutils.args("--task-args", metavar="<json>", dest="task_args",
                    help="Input task args (JSON dict). These args are used "
@@ -160,7 +144,7 @@ class TaskCommands(object):
                         "to render the Jinja2 template in the input task.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
-    def validate(self, api, task, deployment=None, task_args=None,
+    def validate(self, api, task_file, deployment=None, task_args=None,
                  task_args_file=None):
         """Validate a task configuration file.
 
@@ -171,7 +155,7 @@ class TaskCommands(object):
         be merged. task_args has a higher priority so it will override
         values from task_args_file.
 
-        :param task: Path to the input task file.
+        :param task_file: Path to the input task file.
         :param task_args: Input task args (JSON dict). These args are
                           used to render the Jinja2 template in the
                           input task.
@@ -181,19 +165,20 @@ class TaskCommands(object):
                                the input task.
         :param deployment: UUID or name of the deployment
         """
-        try:
-            self._load_and_validate_task(api, task, task_args, task_args_file,
-                                         deployment)
 
-        except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
-            print(e, file=sys.stderr)
-            return(1)
+        task = self._load_and_validate_task(api, task_file, raw_args=task_args,
+                                            args_file=task_args_file)
+
+        api.task.validate(deployment, config=task)
+
+        print(_("Task config is valid :)"))
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
     @cliutils.args("--task", "--filename", metavar="<path>",
-                   help="Path to the input task file")
+                   dest="task_file",
+                   help="Path to the input task file.")
     @cliutils.args("--task-args", dest="task_args", metavar="<json>",
                    help="Input task args (JSON dict). These args are used "
                         "to render the Jinja2 template in the input task.")
@@ -210,7 +195,7 @@ class TaskCommands(object):
                         "any SLA check for it fails.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
-    def start(self, api, task, deployment=None, task_args=None,
+    def start(self, api, task_file, deployment=None, task_args=None,
               task_args_file=None, tag=None, do_use=False,
               abort_on_sla_failure=False):
         """Start benchmark task.
@@ -219,7 +204,7 @@ class TaskCommands(object):
         be merged. task_args has a higher priority so it will override
         values from task_args_file.
 
-        :param task: Path to the input task file.
+        :param task_file: Path to the input task file.
         :param task_args: Input task args (JSON dict). These args are
                           used to render the Jinja2 template in the
                           input task.
@@ -236,18 +221,18 @@ class TaskCommands(object):
                                      for it fails
         """
 
+        input_task = self._load_and_validate_task(api, task_file,
+                                                  raw_args=task_args,
+                                                  args_file=task_args_file)
+        print("Running Rally version", version.version_string())
+
         try:
             task_instance = api.task.create(deployment, tag)
 
-            print("Running Rally version", version.version_string())
-            input_task = self._load_and_validate_task(
-                api, task, task_args, task_args_file, deployment,
-                task_instance=task_instance)
-
             print(cliutils.make_header(
-                  _("Task %(tag)s %(uuid)s: started")
-                  % {"uuid": task_instance["uuid"],
-                     "tag": task_instance["tag"]}))
+                _("Task %(tag)s %(uuid)s: started")
+                % {"uuid": task_instance["uuid"],
+                   "tag": task_instance["tag"]}))
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
@@ -255,20 +240,14 @@ class TaskCommands(object):
             if do_use:
                 self.use(api, task_instance["uuid"])
 
-            api.task.start(deployment, input_task, task=task_instance,
+            api.task.start(deployment, input_task, task=task_instance["uuid"],
                            abort_on_sla_failure=abort_on_sla_failure)
-            self.detailed(api, task_id=task_instance["uuid"])
 
         except exceptions.DeploymentNotFinishedStatus as e:
             print(_("Cannot start a task on unfinished deployment: %s") % e)
             return 1
-        except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
-            task_instance.set_validation_failed({
-                "etype": type(e).__name__,
-                "msg": str(e),
-                "trace": json.dumps(traceback.format_exc())})
-            print(e, file=sys.stderr)
-            return(1)
+
+        self.detailed(api, task_id=task_instance["uuid"])
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
