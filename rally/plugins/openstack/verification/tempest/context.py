@@ -233,7 +233,7 @@ class TempestContext(context.VerifierContext):
         }
         LOG.debug("Creating image '%s'." % params["image_name"])
         image_service = image.Image(self.clients)
-        image_obj = image_service.create_image(params)
+        image_obj = image_service.create_image(**params)
         LOG.debug("Image '%s' (ID = %s) has been "
                   "successfully created!" % (image_obj.name, image_obj.id))
         self._created_images.append(image_obj)

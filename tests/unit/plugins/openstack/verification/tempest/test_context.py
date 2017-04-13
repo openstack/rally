@@ -229,7 +229,7 @@ class TempestContextTestCase(test.TestCase):
                   "disk_format": CONF.tempest.img_disk_format,
                   "image_name": mock.ANY,
                   "visibility": "public"}
-        client.create_image.assert_called_once_with(params)
+        client.create_image.assert_called_once_with(**params)
 
     def test__discover_or_create_flavor_when_flavor_exists(self):
         client = self.context.clients.nova()
