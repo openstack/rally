@@ -460,19 +460,6 @@ def external_network_exists(config, clients, deployment, network_name):
 
 
 @validator
-def required_parameters(config, clients, deployment, *required_params):
-    """Validator for checking required parameters are specified.
-
-    :param *required_params: list of required parameters
-    """
-    missing = set(required_params) - set(config.get("args", {}))
-    if missing:
-        message = _("%s parameters are not defined in "
-                    "the benchmark config file") % ", ".join(missing)
-        return ValidationResult(False, message)
-
-
-@validator
 def required_services(config, clients, deployment, *required_services):
     """Validator checks if specified OpenStack services are available.
 

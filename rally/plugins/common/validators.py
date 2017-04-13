@@ -67,3 +67,39 @@ class ArgsValidator(validation.Validator):
                        {"args": "', '".join(redundant_args),
                         "hint": hint_msg})
                 return self.fail(msg)
+
+
+@validation.configure(name="required_params")
+class RequiredParameterValidator(validation.Validator):
+    """Scenario required parameter validator.
+
+    This allows us to search required parameters in subdict of config.
+
+    :param subdict: sub-dict of "config" to search. if
+                    not defined - will search in "config"
+    :param params: list of required parameters
+    """
+
+    def __init__(self, params=None, subdict=None):
+        super(RequiredParameterValidator, self).__init__()
+        self.subdict = subdict
+        self.params = params
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        missing = []
+        args = config.get("args", {})
+        if self.subdict:
+            args = args.get(self.subdict, {})
+        for arg in self.params:
+            if isinstance(arg, (tuple, list)):
+                for case in arg:
+                    if case not in args:
+                        missing.append(case)
+            else:
+                if arg not in args:
+                    missing.append(arg)
+
+        if missing:
+            msg = ("%s parameters are not defined in "
+                   "the benchmark config file") % ", ".join(missing)
+            return self.fail(msg)

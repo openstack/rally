@@ -23,7 +23,6 @@ from rally.task import validation
 
 
 @validation.restricted_parameters("label")
-@validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova.networks"]},
@@ -49,7 +48,6 @@ class CreateAndListNetworks(utils.NovaScenario):
 
 
 @validation.restricted_parameters("label")
-@validation.required_parameters("start_cidr")
 @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova.networks"]},

@@ -105,7 +105,7 @@ class CreateAndDeleteNetworks(utils.NeutronScenario):
 class CreateAndListSubnets(utils.NeutronScenario):
 
     def run(self, network_create_args=None, subnet_create_args=None,
-            subnet_cidr_start=None, subnets_per_network=None):
+            subnet_cidr_start=None, subnets_per_network=1):
         """Create and a given number of subnets and list all subnets.
 
         The scenario creates a network, a given number of subnets and then
@@ -132,7 +132,7 @@ class CreateAndUpdateSubnets(utils.NeutronScenario):
 
     def run(self, subnet_update_args, network_create_args=None,
             subnet_create_args=None, subnet_cidr_start=None,
-            subnets_per_network=None):
+            subnets_per_network=1):
         """Create and update a subnet.
 
         The scenario creates a network, a given number of subnets
@@ -186,14 +186,14 @@ class CreateAndShowSubnets(utils.NeutronScenario):
                 self._show_subnet(subnet, atomic_action=False)
 
 
-@validation.required_parameters("subnets_per_network")
+@validation.number("subnets_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_delete_subnets")
 class CreateAndDeleteSubnets(utils.NeutronScenario):
 
     def run(self, network_create_args=None, subnet_create_args=None,
-            subnet_cidr_start=None, subnets_per_network=None):
+            subnet_cidr_start=None, subnets_per_network=1):
         """Create and delete a given number of subnets.
 
         The scenario creates a network, a given number of subnets and then
@@ -221,7 +221,7 @@ class CreateAndDeleteSubnets(utils.NeutronScenario):
 class CreateAndListRouters(utils.NeutronScenario):
 
     def run(self, network_create_args=None, subnet_create_args=None,
-            subnet_cidr_start=None, subnets_per_network=None,
+            subnet_cidr_start=None, subnets_per_network=1,
             router_create_args=None):
         """Create and a given number of routers and list all routers.
 
@@ -242,7 +242,6 @@ class CreateAndListRouters(utils.NeutronScenario):
 
 
 @validation.number("subnets_per_network", minval=1, integer_only=True)
-@validation.required_parameters("subnets_per_network")
 @validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_routers")
@@ -250,7 +249,7 @@ class CreateAndUpdateRouters(utils.NeutronScenario):
 
     def run(self, router_update_args, network_create_args=None,
             subnet_create_args=None, subnet_cidr_start=None,
-            subnets_per_network=None, router_create_args=None):
+            subnets_per_network=1, router_create_args=None):
         """Create and update a given number of routers.
 
         Create a network, a given number of subnets and routers
@@ -272,14 +271,14 @@ class CreateAndUpdateRouters(utils.NeutronScenario):
             self._update_router(router, router_update_args)
 
 
-@validation.required_parameters("subnets_per_network")
+@validation.number("subnets_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_delete_routers")
 class CreateAndDeleteRouters(utils.NeutronScenario):
 
     def run(self, network_create_args=None, subnet_create_args=None,
-            subnet_cidr_start=None, subnets_per_network=None,
+            subnet_cidr_start=None, subnets_per_network=1,
             router_create_args=None):
         """Create and delete a given number of routers.
 
@@ -339,7 +338,7 @@ class SetAndClearRouterGateway(utils.NeutronScenario):
 class CreateAndListPorts(utils.NeutronScenario):
 
     def run(self, network_create_args=None,
-            port_create_args=None, ports_per_network=None):
+            port_create_args=None, ports_per_network=1):
         """Create and a given number of ports and list all ports.
 
         :param network_create_args: dict, POST /v2.0/networks request
@@ -362,7 +361,7 @@ class CreateAndListPorts(utils.NeutronScenario):
 class CreateAndUpdatePorts(utils.NeutronScenario):
 
     def run(self, port_update_args, network_create_args=None,
-            port_create_args=None, ports_per_network=None):
+            port_create_args=None, ports_per_network=1):
         """Create and update a given number of ports.
 
         Measure the "neutron port-create" and "neutron port-update" commands
@@ -416,14 +415,14 @@ class CreateAndShowPorts(utils.NeutronScenario):
                                  err_msg=msg)
 
 
-@validation.required_parameters("ports_per_network")
+@validation.number("ports_per_network", minval=1, integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_delete_ports")
 class CreateAndDeletePorts(utils.NeutronScenario):
 
     def run(self, network_create_args=None,
-            port_create_args=None, ports_per_network=None):
+            port_create_args=None, ports_per_network=1):
             """Create and delete a port.
 
             Measure the "neutron port-create" and "neutron port-delete"

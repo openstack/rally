@@ -17,6 +17,7 @@ import ddt
 
 from rally.common.plugin import plugin
 from rally.common import validation
+from rally.plugins.common import validators
 from rally.task import scenario
 from tests.unit import test
 
@@ -96,3 +97,23 @@ class ArgsValidatorTestCase(test.TestCase):
             self.assertIn(err_msg, result[0].msg)
 
         DummyPlugin2.func_based.unregister()
+
+
+@ddt.ddt
+class RequiredParameterValidatorTestCase(test.TestCase):
+
+    @ddt.data(({"args": {"a": 10, "b": 20}}, "a", None, None),
+              ({"args": {"a": 10, "b": 20}}, ("a", "b", "c"), None,
+               "c parameters are not defined in the benchmark config file"),
+              ({"args": {"a": 10, "b": {"c": 20, "d": 30}}}, ("c", "d"),
+               "b", None),
+              ({"args": {"a": 10, "b": {"c": 20, "d": 30}}}, ("c", "e"), "b",
+               "e parameters are not defined in the benchmark config file"))
+    @ddt.unpack
+    def test_validate(self, config, params, subdict, err_msg):
+        validator = validators.RequiredParameterValidator(params, subdict)
+        result = validator.validate(None, config, None, None)
+        if err_msg:
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)

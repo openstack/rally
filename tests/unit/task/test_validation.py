@@ -657,15 +657,6 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"name": "custom"}}, clients, None)
         self.assertTrue(result.is_valid, result.msg)
 
-    def test_required_parameters(self):
-        validator = self._unwrap_validator(validation.required_parameters,
-                                           "a", "b")
-        result = validator({"args": {"a": 1, "b": 2, "c": 3}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator({"args": {"a": 1, "c": 3}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
     def test_required_service(self):
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,
