@@ -111,7 +111,7 @@ class MultihostEngineTestCase(test.TestCase):
                                                 {"uuid": "uuid2"}]
         self.engine.cleanup()
         api_calls = [
-            mock.call.Deployment.destroy("uuid1"),
-            mock.call.Deployment.destroy("uuid2"),
+            mock.call._Deployment.destroy("uuid1"),
+            mock.call._Deployment.destroy("uuid2"),
         ]
         self.assertEqual(api_calls, mock_api.mock_calls)

@@ -63,7 +63,7 @@ class FileExporter(exporter.Exporter):
 
         :param uuid: uuid of the task object
         """
-        task = api.Task.get_detailed(uuid)
+        task = api._Task.get_detailed(uuid)
 
         LOG.debug("Got the task object by it's uuid %s. " % uuid)
 
