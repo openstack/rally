@@ -44,9 +44,6 @@ class NeutronScenario(scenario.OpenStackScenario):
     HM_MAX_RETRIES = 3
     HM_DELAY = 20
     HM_TIMEOUT = 10
-    # BGPVPN
-    BGPVPNS_PATH = "/bgpvpn/bgpvpns"
-    BGPVPN_PATH = "/bgpvpn/bgpvpns/%s"
 
     def _get_network_id(self, network, **kwargs):
         """Get Neutron network ID for the network name.
@@ -701,23 +698,46 @@ class NeutronScenario(scenario.OpenStackScenario):
                                                           **lb_list_args)
 
     @atomic.action_timer("neutron.create_bgpvpn")
-    def _create_bgpvpn(self, bgpvpn_create_args):
+    def _create_bgpvpn(self, **kwargs):
         """Create Bgpvpn resource (POST /bgpvpn/bgpvpn)
 
-        param: bgpvpn_create_args: dict bgpvpn options
-        returns: dict, bgpvpn resource details
+        :param kwargs: optional parameters to create BGP VPN
+        :returns dict, bgpvpn resource details
         """
-        if "name" not in bgpvpn_create_args:
-            bgpvpn_create_args["name"] = self.generate_random_name()
-        return self.admin_clients("neutron").create_ext(
-            self.BGPVPNS_PATH, {"bgpvpn": bgpvpn_create_args})
+        kwargs["name"] = self.generate_random_name()
+        return self.admin_clients("neutron").create_bgpvpn({"bgpvpn": kwargs})
 
     @atomic.action_timer("neutron.delete_bgpvpn")
     def _delete_bgpvpn(self, bgpvpn):
         """Delete Bgpvpn resource.(DELETE /bgpvpn/bgpvpns/{id})
 
-        param: bgpvpn: dict, bgpvpn
-        return: dict, bgpvpn
+        :param bgpvpn: dict, bgpvpn
+        :return dict, bgpvpn
         """
-        return self.admin_clients("neutron").delete_ext(
-            self.BGPVPN_PATH, bgpvpn["bgpvpn"]["id"])
+        return self.admin_clients("neutron").delete_bgpvpn(
+            bgpvpn["bgpvpn"]["id"])
+
+    @atomic.action_timer("neutron.list_bgpvpns")
+    def _list_bgpvpns(self, **kwargs):
+        """Return bgpvpns list.
+
+        :param kwargs: dict, POST /bgpvpn/bgpvpns request options
+        :returns: bgpvpns list
+        """
+        return self.admin_clients("neutron").list_bgpvpns(
+            True, **kwargs)["bgpvpns"]
+
+    @atomic.action_timer("neutron.update_bgpvpn")
+    def _update_bgpvpn(self, bgpvpn, update_name=False, **kwargs):
+        """Update a bgpvpn.
+
+        :param bgpvpn: dict, bgpvpn
+        :param update_name: update_name: bool, whether or not to modify
+        BGP VPN name
+        :param **kwargs: dict, PUT /bgpvpn/bgpvpns update options
+        :return dict, updated bgpvpn
+        """
+        if update_name or "name" in kwargs:
+            kwargs["name"] = self.generate_random_name()
+        return self.admin_clients("neutron").update_bgpvpn(
+            bgpvpn["bgpvpn"]["id"], {"bgpvpn": kwargs})

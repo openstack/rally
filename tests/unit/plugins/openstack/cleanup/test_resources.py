@@ -413,6 +413,38 @@ class NeutronV2LoadbalancerTestCase(test.TestCase):
             neutron_lb.id())
 
 
+class NeutronBgpvpnTestCase(test.TestCase):
+
+    def get_neutron_bgpvpn_mixin(self, extensions=None):
+        if extensions is None:
+            extensions = []
+        admin = mock.Mock()
+        neut = resources.NeutronBgpvpn(admin=admin)
+        neut._manager = mock.Mock()
+        neut._manager().list_extensions.return_value = {
+            "extensions": [{"alias": ext} for ext in extensions]
+        }
+        return neut
+
+    def test_list_user(self):
+        neut = self.get_neutron_bgpvpn_mixin(extensions=["bgpvpn"])
+        user_bgpvpns = {"bgpvpns": [{"tenant_id": "foo", "id": "bgpvpn_id"}]}
+        neut._manager().list_bgpvpns.return_value = user_bgpvpns
+
+        bgpvpns_list = neut.list()
+        self.assertEqual("bgpvpn", neut._resource)
+        neut._manager().list_bgpvpns.assert_called_once_with()
+        self.assertEqual(bgpvpns_list, user_bgpvpns["bgpvpns"])
+
+    def test_list_admin(self):
+        neut = self.get_neutron_bgpvpn_mixin(extensions=["bgpvpn"])
+        admin_bgpvpns = {"bgpvpns": [{"tenant_id": "foo", "id": "bgpvpn_id"}]}
+        neut._manager().list_bgpvpns.return_value = admin_bgpvpns
+
+        self.assertEqual("bgpvpn", neut._resource)
+        self.assertEqual(neut.list(), admin_bgpvpns["bgpvpns"])
+
+
 class NeutronFloatingIPTestCase(test.TestCase):
 
     def test_name(self):

@@ -307,9 +307,11 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
     def list(self):
         resources = self._resource + "s"
         list_method = getattr(self._manager(), "list_%s" % resources)
+        result = list_method(tenant_id=self.tenant_uuid)[resources]
+        if self.tenant_uuid:
+            result = [r for r in result if r["tenant_id"] == self.tenant_uuid]
 
-        return filter(lambda r: r["tenant_id"] == self.tenant_uuid,
-                      list_method(tenant_id=self.tenant_uuid)[resources])
+        return result
 
 
 class NeutronLbaasV1Mixin(NeutronMixin):
@@ -357,6 +359,15 @@ class NeutronV2Loadbalancer(NeutronLbaasV2Mixin):
             return getattr(e, "status_code", 400) == 404
 
         return False
+
+
+@base.resource("neutron", "bgpvpn", order=next(_neutron_order),
+               admin_required=True, perform_for_admin_only=True)
+class NeutronBgpvpn(NeutronMixin):
+    def list(self):
+        if self.supports_extension("bgpvpn"):
+            return self._manager().list_bgpvpns()["bgpvpns"]
+        return []
 
 
 # NOTE(andreykurilin): There are scenarios which uses unified way for creating
