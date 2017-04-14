@@ -215,7 +215,7 @@ class ResultConsumer(object):
 class TaskAborted(Exception):
     """Task aborted exception
 
-    Used by TaskEngine to interupt task run.
+    Used by TaskEngine to interrupt task run.
     """
 
 
