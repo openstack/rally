@@ -389,7 +389,8 @@ class CreateAndDeleteSnapshot(cinder_utils.CinderBasic):
                flavor={"type": "nova_flavor"})
 @validation.restricted_parameters(["name", "display_name"],
                                   subdict="create_volume_params")
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},

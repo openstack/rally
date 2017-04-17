@@ -16,13 +16,17 @@
 import re
 
 from glanceclient import exc as glance_exc
+from novaclient import exceptions as nova_exc
+from rally.task import types
 
 from rally.common import logging
 from rally.common import validation
 from rally import exceptions
+from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 
 LOG = logging.getLogger(__name__)
+ValidationResult = validation.ValidationResult
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -144,3 +148,142 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
                 msg = ("Neutron extension %s "
                        "is not configured") % extension
                 return self.fail(msg)
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="image_valid_on_flavor", namespace="openstack")
+class ImageValidOnFlavorValidator(validation.Validator):
+
+    def __init__(self, flavor_param, image_param,
+                 fail_on_404_image=True, validate_disk=True):
+        """Returns validator for image could be used for current flavor
+
+        :param flavor_param: defines which variable should be used
+                           to get flavor id value.
+        :param image_param: defines which variable should be used
+                           to get image id value.
+        :param validate_disk: flag to indicate whether to validate flavor's
+                              disk. Should be True if instance is booted from
+                              image. Should be False if instance is booted
+                              from volume. Default value is True.
+        :param fail_on_404_image: flag what indicate whether to validate image
+                                  or not.
+        """
+        super(ImageValidOnFlavorValidator, self).__init__()
+        self.flavor_name = flavor_param
+        self.image_name = image_param
+        self.fail_on_404_image = fail_on_404_image
+        self.validate_disk = validate_disk
+
+    def _get_validated_image(self, config, clients, param_name):
+        image_context = config.get("context", {}).get("images", {})
+        image_args = config.get("args", {}).get(param_name)
+        image_ctx_name = image_context.get("image_name")
+
+        if not image_args:
+            msg = ("Parameter %s is not specified.") % param_name
+            return (ValidationResult(False, msg), None)
+
+        if "image_name" in image_context:
+            # NOTE(rvasilets) check string is "exactly equal to" a regex
+            # or image name from context equal to image name from args
+            if "regex" in image_args:
+                match = re.match(image_args.get("regex"), image_ctx_name)
+            if image_ctx_name == image_args.get("name") or ("regex"
+                                                            in image_args
+                                                            and match):
+                image = {
+                    "size": image_context.get("min_disk", 0),
+                    "min_ram": image_context.get("min_ram", 0),
+                    "min_disk": image_context.get("min_disk", 0)
+                }
+                return (ValidationResult(True), image)
+        try:
+            image_id = openstack_types.GlanceImage.transform(
+                clients=clients, resource_config=image_args)
+            image = clients.glance().images.get(image_id)
+            if hasattr(image, "to_dict"):
+                # NOTE(stpierre): Glance v1 images are objects that can be
+                # converted to dicts; Glance v2 images are already
+                # dict-like
+                image = image.to_dict()
+            if not image.get("size"):
+                image["size"] = 0
+            if not image.get("min_ram"):
+                image["min_ram"] = 0
+            if not image.get("min_disk"):
+                image["min_disk"] = 0
+            return (ValidationResult(True), image)
+        except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
+            message = ("Image '%s' not found") % image_args
+            return (ValidationResult(False, message), None)
+
+    def _get_flavor_from_context(self, config, flavor_value):
+        if "flavors" not in config.get("context", {}):
+            raise exceptions.InvalidScenarioArgument("No flavors context")
+
+        flavors = [flavors_ctx.FlavorConfig(**f)
+                   for f in config["context"]["flavors"]]
+        resource = types.obj_from_name(resource_config=flavor_value,
+                                       resources=flavors, typename="flavor")
+        flavor = flavors_ctx.FlavorConfig(**resource)
+        flavor.id = "<context flavor: %s>" % flavor.name
+        return (ValidationResult(True), flavor)
+
+    def _get_validated_flavor(self, config, clients, param_name):
+        flavor_value = config.get("args", {}).get(param_name)
+        if not flavor_value:
+            msg = "Parameter %s is not specified." % param_name
+            return (ValidationResult(False, msg), None)
+        try:
+            flavor_id = openstack_types.Flavor.transform(
+                clients=clients, resource_config=flavor_value)
+            flavor = clients.nova().flavors.get(flavor=flavor_id)
+            return (ValidationResult(True), flavor)
+        except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
+            try:
+                return self._get_flavor_from_context(config, flavor_value)
+            except exceptions.InvalidScenarioArgument:
+                pass
+            message = ("Flavor '%s' not found") % flavor_value
+            return (ValidationResult(False, message), None)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        flavor = None
+        for user in credentials["openstack"]["users"]:
+            clients = user["credential"].clients()
+
+            if not flavor:
+                valid_result, flavor = self._get_validated_flavor(
+                    config, clients, self.flavor_name)
+                if not valid_result.is_valid:
+                    return valid_result
+
+            valid_result, image = self._get_validated_image(
+                config, clients, self.image_name)
+
+            if not image and not self.fail_on_404_image:
+                return
+
+            if not valid_result.is_valid:
+                return valid_result
+
+            if flavor.ram < image["min_ram"]:
+                message = ("The memory size for flavor '%s' is too small "
+                           "for requested image '%s'") % (flavor.id,
+                                                          image["id"])
+                return self.fail(message)
+
+            if flavor.disk and self.validate_disk:
+                if image["size"] > flavor.disk * (1024 ** 3):
+                    message = ("The disk size for flavor '%s' is too small "
+                               "for requested image '%s'") % (flavor.id,
+                                                              image["id"])
+                    return self.fail(message)
+
+                if image["min_disk"] > flavor.disk:
+                    message = ("The minimal disk size for flavor '%s' is "
+                               "too small for requested "
+                               "image '%s'") % (flavor.id, image["id"])
+                    return self.fail(message)

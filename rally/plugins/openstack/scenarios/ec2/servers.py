@@ -39,7 +39,8 @@ class ListServers(utils.EC2Scenario):
 
 @types.convert(image={"type": "ec2_image"},
                flavor={"type": "ec2_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.EC2)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ec2"]},
