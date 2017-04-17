@@ -41,12 +41,15 @@ add = validation.add
 
 @validation.configure(name="old_validator", namespace="openstack")
 class OldValidator(validation.Validator):
-    """Legacy validator for OpenStack scenarios"""
 
     class Deployment(object):
         pass
 
     def __init__(self, fn, *args, **kwargs):
+        """Legacy validator for OpenStack scenarios
+
+        :param fn: function that performs validation
+        """
         self.fn = fn
         self.args = args
         self.kwargs = kwargs

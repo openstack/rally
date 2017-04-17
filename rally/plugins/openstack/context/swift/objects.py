@@ -25,6 +25,7 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="swift_objects", order=360)
 class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
+    """Create containers and objects in each tenant."""
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,

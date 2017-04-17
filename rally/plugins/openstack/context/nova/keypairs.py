@@ -25,6 +25,7 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="keypair", order=310)
 class Keypair(context.Context):
+    """Create Nova KeyPair for each user."""
 
     # NOTE(andreykurilin): "type" != "null", since we need to support backward
     #   compatibility(previously empty dict was valid) and I hope in near

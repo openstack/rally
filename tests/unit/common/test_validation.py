@@ -54,6 +54,10 @@ class ValidationHelpersTestCase(test.TestCase):
 class DummyValidator(validation.Validator):
 
     def __init__(self, foo):
+        """Dummy validator
+
+        :param foo: additional parameter for Dummy validator
+        """
         super(DummyValidator, self).__init__()
         self.foo = foo
 

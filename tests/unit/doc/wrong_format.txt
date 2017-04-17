@@ -1,6 +1,0 @@
-Tempest
-Constant
-Constant_For_Duration
-RPS
-Serial
-some_fake_verifier

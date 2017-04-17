@@ -70,6 +70,8 @@ def configure(name, default_version=None, default_service_type=None,
 
 @plugin.base()
 class OSClient(plugin.Plugin):
+    """Base class for openstack clients"""
+
     def __init__(self, credential, api_info, cache_obj):
         self.credential = credential
         self.api_info = api_info
@@ -216,6 +218,7 @@ class OSClient(plugin.Plugin):
 
 @configure("keystone", supported_versions=("2", "3"))
 class Keystone(OSClient):
+    """Wrapper for KeystoneClient which hides OpenStack auth details."""
 
     @property
     def keystone(self):
@@ -326,6 +329,8 @@ class Keystone(OSClient):
 
 @configure("nova", default_version="2", default_service_type="compute")
 class Nova(OSClient):
+    """Wrapper for NovaClient which returns a authenticated native client."""
+
     @classmethod
     def validate_version(cls, version):
         from novaclient import api_versions
@@ -351,6 +356,10 @@ class Nova(OSClient):
 @configure("neutron", default_version="2.0", default_service_type="network",
            supported_versions=["2.0"])
 class Neutron(OSClient):
+    """Wrapper for NeutronClient which returns an authenticated native client.
+
+    """
+
     def create_client(self, version=None, service_type=None):
         """Return neutron client."""
         from neutronclient.neutron import client as neutron
@@ -370,6 +379,10 @@ class Neutron(OSClient):
 @configure("glance", default_version="2", default_service_type="image",
            supported_versions=["1", "2"])
 class Glance(OSClient):
+    """Wrapper for GlanceClient which returns an authenticated native client.
+
+    """
+
     def create_client(self, version=None, service_type=None):
         """Return glance client."""
         import glanceclient as glance
@@ -385,6 +398,7 @@ class Glance(OSClient):
 @configure("heat", default_version="1", default_service_type="orchestration",
            supported_versions=["1"])
 class Heat(OSClient):
+    """Wrapper for HeatClient which returns an authenticated native client."""
     def create_client(self, version=None, service_type=None):
         """Return heat client."""
         from heatclient import client as heat
@@ -409,6 +423,9 @@ class Heat(OSClient):
 @configure("cinder", default_version="2", default_service_type="volumev2",
            supported_versions=["1", "2"])
 class Cinder(OSClient):
+    """Wrapper for CinderClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return cinder client."""
         from cinderclient import client as cinder
@@ -423,6 +440,9 @@ class Cinder(OSClient):
 @configure("manila", default_version="1", default_service_type="share",
            supported_versions=["1", "2"])
 class Manila(OSClient):
+    """Wrapper for ManilaClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return manila client."""
         from manilaclient import client as manila
@@ -436,6 +456,9 @@ class Manila(OSClient):
 @configure("ceilometer", default_version="2", default_service_type="metering",
            supported_versions=["1", "2"])
 class Ceilometer(OSClient):
+    """Wrapper for CeilometerClient which returns authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return ceilometer client."""
         from ceilometerclient import client as ceilometer
@@ -450,6 +473,9 @@ class Ceilometer(OSClient):
 @configure("gnocchi", default_service_type="metric", default_version="1",
            supported_versions=["1"])
 class Gnocchi(OSClient):
+    """Wrapper for GnocchiClient which returns an authenticated native client.
+
+    """
 
     def create_client(self, version=None, service_type=None):
         """Return gnocchi client."""
@@ -467,6 +493,9 @@ class Gnocchi(OSClient):
 @configure("ironic", default_version="1", default_service_type="baremetal",
            supported_versions=["1"])
 class Ironic(OSClient):
+    """Wrapper for IronicClient which returns an authenticated native client.
+
+    """
 
     def create_client(self, version=None, service_type=None):
         """Return Ironic client."""
@@ -482,6 +511,10 @@ class Ironic(OSClient):
 @configure("sahara", default_version="1.1", supported_versions=["1.0", "1.1"],
            default_service_type="data-processing")
 class Sahara(OSClient):
+    """Wrapper for SaharaClient which returns an authenticated native client.
+
+    """
+
     # NOTE(andreykurilin): saharaclient supports "1.0" version and doesn't
     # support "1". `choose_version` and `validate_version` methods are written
     # as a hack to covert 1 -> 1.0, which can simplify setting saharaclient
@@ -508,6 +541,9 @@ class Sahara(OSClient):
 @configure("zaqar", default_version="1.1", default_service_type="messaging",
            supported_versions=["1", "1.1"])
 class Zaqar(OSClient):
+    """Wrapper for ZaqarClient which returns an authenticated native client.
+
+    """
     def choose_version(self, version=None):
         # zaqarclient accepts only int or float obj as version
         return float(super(Zaqar, self).choose_version(version))
@@ -525,6 +561,9 @@ class Zaqar(OSClient):
            default_service_type="application-catalog",
            supported_versions=["1"])
 class Murano(OSClient):
+    """Wrapper for MuranoClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return Murano client."""
         from muranoclient import client as murano
@@ -539,6 +578,9 @@ class Murano(OSClient):
 @configure("designate", default_version="1", default_service_type="dns",
            supported_versions=["1", "2"])
 class Designate(OSClient):
+    """Wrapper for DesignateClient which returns authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return designate client."""
         from designateclient import client
@@ -559,6 +601,9 @@ class Designate(OSClient):
 @configure("trove", default_version="1.0", supported_versions=["1.0"],
            default_service_type="database")
 class Trove(OSClient):
+    """Wrapper for TroveClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Returns trove client."""
         from troveclient import client as trove
@@ -571,6 +616,9 @@ class Trove(OSClient):
 
 @configure("mistral", default_service_type="workflowv2")
 class Mistral(OSClient):
+    """Wrapper for MistralClient which returns an authenticated native client.
+
+    """
     def create_client(self, service_type=None):
         """Return Mistral client."""
         from mistralclient.api import client as mistral
@@ -584,6 +632,9 @@ class Mistral(OSClient):
 
 @configure("swift", default_service_type="object-store")
 class Swift(OSClient):
+    """Wrapper for SwiftClient which returns an authenticated native client.
+
+    """
     def create_client(self, service_type=None):
         """Return swift client."""
         from swiftclient import client as swift
@@ -602,6 +653,9 @@ class Swift(OSClient):
 
 @configure("ec2")
 class EC2(OSClient):
+    """Wrapper for EC2Client which returns an authenticated native client.
+
+    """
     def create_client(self):
         """Return ec2 client."""
         import boto
@@ -625,6 +679,9 @@ class EC2(OSClient):
 @configure("monasca", default_version="2_0",
            default_service_type="monitoring", supported_versions=["2_0"])
 class Monasca(OSClient):
+    """Wrapper for MonascaClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return monasca client."""
         from monascaclient import client as monasca
@@ -643,6 +700,9 @@ class Monasca(OSClient):
 @configure("senlin", default_version="1", default_service_type="clustering",
            supported_versions=["1"])
 class Senlin(OSClient):
+    """Wrapper for SenlinClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return senlin client."""
         from senlinclient import client as senlin
@@ -657,6 +717,9 @@ class Senlin(OSClient):
 @configure("magnum", default_version="1", supported_versions=["1"],
            default_service_type="container-infra",)
 class Magnum(OSClient):
+    """Wrapper for MagnumClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return magnum client."""
         from magnumclient import client as magnum
@@ -673,6 +736,9 @@ class Magnum(OSClient):
 @configure("watcher", default_version="1", default_service_type="infra-optim",
            supported_versions=["1"])
 class Watcher(OSClient):
+    """Wrapper for WatcherClient which returns an authenticated native client.
+
+    """
     def create_client(self, version=None, service_type=None):
         """Return watcher client."""
         from watcherclient import client as watcher_client

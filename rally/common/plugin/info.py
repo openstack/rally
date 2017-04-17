@@ -17,7 +17,6 @@ import re
 
 from sphinx.util import docstrings
 
-
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
 RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
 PARAM_REGEX = re.compile(":param (?P<name>[\*\w]+): (?P<doc>.*?)"
