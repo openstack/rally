@@ -302,22 +302,6 @@ def validate_share_proto(config, clients, deployment):
 
 
 @validator
-def image_exists(config, clients, deployment, param_name, nullable=False):
-    """Returns validator for image_id
-
-    :param param_name: defines which variable should be used
-                       to get image id value.
-    :param nullable: defines image id param is required
-    """
-    image_value = config.get("args", {}).get(param_name)
-    if not image_value and nullable:
-        return ValidationResult(True)
-    res = _get_validated_image(config, clients, param_name)
-    if res:
-        return res[0]
-
-
-@validator
 def flavor_exists(config, clients, deployment, param_name):
     """Returns validator for flavor
 

@@ -33,7 +33,7 @@ LOG = logging.getLogger(__name__)
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -69,7 +69,7 @@ class CreateAndListVolume(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -156,7 +156,7 @@ class ListTransfers(cinder_utils.CinderBasic):
                                   subdict="create_volume_kwargs")
 @validation.restricted_parameters(["name", "display_name"],
                                   subdict="update_volume_kwargs")
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -190,7 +190,7 @@ class CreateAndUpdateVolume(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -226,7 +226,7 @@ class CreateAndDeleteVolume(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -700,7 +700,7 @@ class CreateAndListVolumeBackups(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -773,7 +773,7 @@ class CreateVolumeFromSnapshot(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
@@ -798,7 +798,7 @@ class CreateVolumeAndUpdateReadonlyFlag(cinder_utils.CinderBasic):
 
 @types.convert(image={"type": "glance_image"})
 @validation.restricted_parameters(["name", "display_name"])
-@validation.image_exists("image", nullable=True)
+@validation.add("image_exists", param_name="image", nullable=True)
 @validation.required_services(consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
