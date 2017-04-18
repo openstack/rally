@@ -847,6 +847,37 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._update_server.assert_called_once_with(
             scenario._boot_server.return_value, "desp")
 
+    def test_boot_server_and_attach_interface(self):
+        network_create_args = {"router:external": True}
+        subnet_create_args = {"allocation_pools": []}
+        subnet_cidr_start = "10.1.0.0/16"
+        boot_server_args = {}
+        net = mock.MagicMock()
+        subnet = mock.MagicMock()
+        server = mock.MagicMock()
+
+        scenario = servers.BootServerAndAttachInterface(self.context)
+        scenario._get_or_create_network = mock.Mock(return_value=net)
+        scenario._create_subnet = mock.Mock(return_value=subnet)
+        scenario._boot_server = mock.Mock(return_value=server)
+        scenario._attach_interface = mock.Mock()
+
+        scenario.run("image", "flavor",
+                     network_create_args=network_create_args,
+                     subnet_create_args=subnet_create_args,
+                     subnet_cidr_start=subnet_cidr_start,
+                     boot_server_args=boot_server_args)
+
+        scenario._get_or_create_network.assert_called_once_with(
+            network_create_args)
+        scenario._create_subnet.assert_called_once_with(net,
+                                                        subnet_create_args,
+                                                        subnet_cidr_start)
+        scenario._boot_server.assert_called_once_with("image", "flavor",
+                                                      **boot_server_args)
+        scenario._attach_interface.assert_called_once_with(
+            server, net_id=net["network"]["id"])
+
     def test_boot_server_from_volume_snapshot(self):
         fake_volume = mock.MagicMock(id="volume_id")
         fake_snapshot = mock.MagicMock(id="snapshot_id")
