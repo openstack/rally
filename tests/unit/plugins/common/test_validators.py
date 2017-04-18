@@ -117,3 +117,59 @@ class RequiredParameterValidatorTestCase(test.TestCase):
             self.assertEqual(err_msg, result.msg)
         else:
             self.assertIsNone(result)
+
+
+class NumberValidatorTestCase(test.TestCase):
+
+    @staticmethod
+    def get_validator(minval=None, maxval=None, nullable=False,
+                      integer_only=False):
+        validator_cls = validation.Validator.get("number")
+        return validator_cls("foo", minval=minval, maxval=maxval,
+                             nullable=nullable, integer_only=integer_only)
+
+    def test_number_not_nullable(self):
+        result = self.get_validator().validate({}, {}, None, None)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo is None which is not a valid float",
+                         "%s" % result)
+
+    def test_number_nullable(self):
+        self.assertIsNone(self.get_validator(nullable=True).validate(
+            {}, {}, None, None))
+
+    def test_number_min_max_value(self):
+        validator = self.get_validator(minval=4, maxval=10)
+
+        result = validator.validate({}, {"args": {validator.param_name: 3.9}},
+                                    None, None)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo is 3.9 which is less than the minimum (4)",
+                         "%s" % result)
+
+        result = validator.validate({}, {"args": {validator.param_name: 4.1}},
+                                    None, None)
+        self.assertIsNone(result)
+
+        result = validator.validate({}, {"args": {validator.param_name: 11}},
+                                    None, None)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo is 11.0 which is greater than the maximum (10)",
+                         "%s" % result)
+
+    def test_number_integer_only(self):
+        validator = self.get_validator(integer_only=True)
+
+        result = validator.validate({}, {"args": {validator.param_name: 3.9}},
+                                    None, None)
+        self.assertFalse(result.is_valid, result.msg)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo is 3.9 which hasn't int type", "%s" % result)
+
+        result = validator.validate({}, {"args": {validator.param_name: 3}},
+                                    None, None)
+        self.assertIsNone(result)

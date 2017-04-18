@@ -14,10 +14,10 @@ import random
 
 from rally.common.i18n import _
 from rally.common import utils
+from rally.common import validation
 from rally import exceptions
 from rally.task import atomic
 from rally.task import scenario
-from rally.task import validation
 
 
 """Dummy scenarios for testing Rally engine at scale."""
@@ -63,8 +63,8 @@ class Dummy(scenario.Scenario):
         utils.interruptable_sleep(sleep)
 
 
-@validation.number("size_of_message",
-                   minval=1, integer_only=True, nullable=True)
+@validation.add("number", param_name="size_of_message", minval=1,
+                integer_only=True, nullable=True)
 @scenario.configure(name="Dummy.dummy_exception")
 class DummyException(scenario.Scenario):
 
@@ -86,8 +86,8 @@ class DummyException(scenario.Scenario):
         raise DummyScenarioException(message)
 
 
-@validation.number("exception_probability",
-                   minval=0, maxval=1, integer_only=False, nullable=True)
+@validation.add("number", param_name="exception_probability",
+                minval=0, maxval=1, integer_only=False, nullable=True)
 @scenario.configure(name="Dummy.dummy_exception_probability")
 class DummyExceptionProbability(scenario.Scenario):
 

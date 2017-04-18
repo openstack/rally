@@ -103,3 +103,63 @@ class RequiredParameterValidator(validation.Validator):
             msg = ("%s parameters are not defined in "
                    "the benchmark config file") % ", ".join(missing)
             return self.fail(msg)
+
+
+@validation.configure(name="number")
+class NumberValidator(validation.Validator):
+    """Checks that parameter is a number that pass specified condition.
+
+    Ensure a parameter is within the range [minval, maxval]. This is a
+    closed interval so the end points are included.
+
+    :param param_name: Name of parameter to validate
+    :param minval: Lower endpoint of valid interval
+    :param maxval: Upper endpoint of valid interval
+    :param nullable: Allow parameter not specified, or parameter=None
+    :param integer_only: Only accept integers
+    """
+
+    def __init__(self, param_name, minval=None, maxval=None, nullable=False,
+                 integer_only=False):
+        self.param_name = param_name
+        self.minval = minval
+        self.maxval = maxval
+        self.nullable = nullable
+        self.integer_only = integer_only
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+
+        value = config.get("args", {}).get(self.param_name)
+
+        num_func = float
+        if self.integer_only:
+            # NOTE(boris-42): Force check that passed value is not float, this
+            #   is important cause int(float_numb) won't raise exception
+            if type(value) == float:
+                return self.fail("%(name)s is %(val)s which hasn't int type"
+                                 % {"name": self.param_name, "val": value})
+            num_func = int
+
+        # None may be valid if the scenario sets a sensible default.
+        if self.nullable and value is None:
+            return
+
+        try:
+            number = num_func(value)
+            if self.minval is not None and number < self.minval:
+                return self.fail(
+                    "%(name)s is %(val)s which is less than the minimum "
+                    "(%(min)s)" % {"name": self.param_name,
+                                   "val": number,
+                                   "min": self.minval})
+            if self.maxval is not None and number > self.maxval:
+                return self.fail(
+                    "%(name)s is %(val)s which is greater than the maximum "
+                    "(%(max)s)" % {"name": self.param_name,
+                                   "val": number,
+                                   "max": self.maxval})
+        except (ValueError, TypeError):
+            return self.fail("%(name)s is %(val)s which is not a valid "
+                             "%(type)s" % {"name": self.param_name,
+                                           "val": value,
+                                           "type": num_func.__name__})

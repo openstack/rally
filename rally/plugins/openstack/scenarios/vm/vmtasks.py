@@ -38,8 +38,8 @@ LOG = logging.getLogger(__name__)
                flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image", fail_on_404_image=False)
 @validation.valid_command("command")
-@validation.number("port", minval=1, maxval=65535, nullable=True,
-                   integer_only=True)
+@validation.add("number", param_name="port", minval=1, maxval=65535,
+                nullable=True, integer_only=True)
 @validation.external_network_exists("floating_network")
 @validation.required_param_or_context(arg_name="image",
                                       ctx_name="image_command_customizer")
@@ -393,8 +393,8 @@ EOF
                flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
 @validation.valid_command("command")
-@validation.number("port", minval=1, maxval=65535, nullable=True,
-                   integer_only=True)
+@validation.add("number", param_name="port", minval=1, maxval=65535,
+                nullable=True, integer_only=True)
 @validation.external_network_exists("floating_network")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)

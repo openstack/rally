@@ -100,59 +100,6 @@ def validator(fn):
     return wrap_given
 
 
-@validator
-def number(config, clients, deployment, param_name, minval=None, maxval=None,
-           nullable=False, integer_only=False):
-    """Checks that parameter is number that pass specified condition.
-
-    Ensure a parameter is within the range [minval, maxval]. This is a
-    closed interval so the end points are included.
-
-    :param param_name: Name of parameter to validate
-    :param minval: Lower endpoint of valid interval
-    :param maxval: Upper endpoint of valid interval
-    :param nullable: Allow parameter not specified, or parameter=None
-    :param integer_only: Only accept integers
-    """
-
-    val = config.get("args", {}).get(param_name)
-
-    num_func = float
-    if integer_only:
-        # NOTE(boris-42): Force check that passed value is not float, this is
-        #                 important cause int(float_numb) won't raise exception
-        if type(val) == float:
-            return ValidationResult(False,
-                                    "%(name)s is %(val)s which hasn't int type"
-                                    % {"name": param_name, "val": val})
-        num_func = int
-
-    # None may be valid if the scenario sets a sensible default.
-    if nullable and val is None:
-        return ValidationResult(True)
-
-    try:
-        number = num_func(val)
-        if minval is not None and number < minval:
-            return ValidationResult(
-                False,
-                "%(name)s is %(val)s which is less than the minimum "
-                "(%(min)s)"
-                % {"name": param_name, "val": number, "min": minval})
-        if maxval is not None and number > maxval:
-            return ValidationResult(
-                False,
-                "%(name)s is %(val)s which is greater than the maximum "
-                "(%(max)s)"
-                % {"name": param_name, "val": number, "max": maxval})
-        return ValidationResult(True)
-    except (ValueError, TypeError):
-        return ValidationResult(
-            False,
-            "%(name)s is %(val)s which is not a valid %(type)s"
-            % {"name": param_name, "val": val, "type": num_func.__name__})
-
-
 def _file_access_ok(filename, mode, param_name, required=True):
     if not filename:
         return ValidationResult(not required,
@@ -747,3 +694,5 @@ _deprecated_platform_validator = deprecated_validator(
 
 required_openstack = functools.partial(
     _deprecated_platform_validator, platform="openstack")
+
+number = deprecated_validator("number", "number", "0.10.0")

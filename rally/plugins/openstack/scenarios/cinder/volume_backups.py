@@ -21,7 +21,7 @@ from rally.task import validation
 """Scenarios for Cinder Volume Backup."""
 
 
-@validation.number("size", minval=1, integer_only=True)
+@validation.add("number", param_name="size", minval=1, integer_only=True)
 @validation.restricted_parameters(["name", "display_name"],
                                   subdict="create_volume_kwargs")
 @validation.restricted_parameters("name",
