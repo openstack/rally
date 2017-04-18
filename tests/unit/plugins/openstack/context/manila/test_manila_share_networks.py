@@ -214,8 +214,7 @@ class ShareNetworksTestCase(test.TestCase):
         self.assertEqual(expected_ctxt["task"], inst.context.get("task"))
         self.assertEqual(expected_ctxt["config"], inst.context.get("config"))
         self.assertEqual(expected_ctxt["users"], inst.context.get("users"))
-        self.assertEqual(
-            False,
+        self.assertFalse(
             inst.context.get(consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
                 "delete_share_networks"))
         self.assertEqual(expected_ctxt["tenants"], inst.context.get("tenants"))

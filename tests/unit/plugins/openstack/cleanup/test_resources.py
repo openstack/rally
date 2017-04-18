@@ -121,7 +121,7 @@ class NovaFlavorsTestCase(test.TestCase):
         mock_resource_manager__manager().get.side_effect = exc
         flavor = resources.NovaFlavors()
         flavor.raw_resource = mock.MagicMock()
-        self.assertEqual(True, flavor.is_deleted())
+        self.assertTrue(flavor.is_deleted())
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
     def test_is_deleted_fail(self, mock_resource_manager__manager):
