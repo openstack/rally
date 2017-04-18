@@ -541,6 +541,11 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertEqual(1, atomic_wrapper.get("action_1"))
         self.assertIsNone(atomic_wrapper.get("action_3"))
         self.assertEqual(2, len(atomic_wrapper))
+        self.assertEqual([{"name": "action_1", "started_at": 0,
+                           "finished_at": 1, "children": []},
+                          {"name": "action_2", "started_at": 0,
+                           "finished_at": 2, "children": []}
+                          ], atomic_wrapper)
 
     def test_list_atomic(self):
         atomic_actions = [{"name": "action_1", "started_at": 1,
@@ -561,3 +566,14 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertIsNone(None, atomic_wrapper.get("action_3"))
         self.assertEqual(2, len(atomic_wrapper))
         self.assertEqual(atomic_actions[0], six.next(iter(atomic_wrapper)))
+
+    def test__convert_new_atomic_actions(self):
+        atomic_actions = collections.OrderedDict(
+            [("action_1", 1), ("action_2", 2)])
+        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
+        self.assertEqual(
+            [{"name": "action_1", "started_at": 0,
+              "finished_at": 1, "children": []},
+             {"name": "action_2", "started_at": 0,
+              "finished_at": 2, "children": []}],
+            atomic_wrapper._convert_old_atomic_actions(atomic_actions))

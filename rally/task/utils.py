@@ -417,20 +417,31 @@ class ActionBuilder(object):
 # we can use these wrapper to simulate new and old format.
 class WrapperForAtomicActions(list):
 
-    LOG_INFO = "Atomic actions format is changed. It is a list now."
-
     def __init__(self, atomic_actions):
-        super(WrapperForAtomicActions, self).__init__(atomic_actions)
-        self.__atomic_actions = atomic_actions
-        self.__old_atomic_actions = objects.Task.convert_atomic_actions(
-            self.__atomic_actions)
+        if isinstance(atomic_actions, list):
+            self.__atomic_actions = atomic_actions
+            self.__old_atomic_actions = objects.Task.convert_atomic_actions(
+                self.__atomic_actions)
+        else:
+            self.__atomic_actions = self._convert_old_atomic_actions(
+                atomic_actions)
+            self.__old_atomic_actions = atomic_actions
+
+        super(WrapperForAtomicActions, self).__init__(self.__atomic_actions)
+
+    def _convert_old_atomic_actions(self, old_atomic_actions):
+        atomic_actions = []
+        for name, duration in old_atomic_actions.items():
+            atomic_actions.append({"name": name,
+                                   "started_at": 0,
+                                   "finished_at": duration,
+                                   "children": []})
+        return atomic_actions
 
     def items(self):
-        LOG.warning(self.LOG_INFO)
         return self.__old_atomic_actions.items()
 
     def get(self, name, default=None):
-        LOG.warning(self.LOG_INFO)
         return self.__old_atomic_actions.get(name, default)
 
     def __iter__(self):
@@ -444,5 +455,4 @@ class WrapperForAtomicActions(list):
             # it is a call to list:
             return self.__atomic_actions[item]
         else:
-            LOG.warning(self.LOG_INFO)
             return self.__old_atomic_actions[item]
