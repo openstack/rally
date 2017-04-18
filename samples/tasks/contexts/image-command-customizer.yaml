@@ -1,0 +1,25 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        concurrency: 1
+        timeout: 3000
+        times: 1
+        type: "constant"
+      context:
+        image_command_customizer:
+          command:
+            local_path: "rally-jobs/extra/install_benchmark.sh"
+            remote_path: "./install_benchmark.sh"
+          flavor:
+            name: m1.small
+          image:
+            name: "Fedora-x86_64-20-20140618-sda"
+          userdata: "#cloud-config\ndisable_root: 0\nssh_pwauth: 1"
+          username: root
+        network: {}
+        users:
+          tenants: 1
+          users_per_tenant: 1

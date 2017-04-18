@@ -1,0 +1,38 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "audit_templates": {
+                    "audit_templates_per_admin": 5,
+                    "fill_strategy": "random",
+                    "params": [
+                        {
+                            "goal": {
+                                "name": "workload_balancing"
+                            },
+                            "strategy": {
+                                "name": "workload_stabilization"
+                            }
+                        },
+                        {
+                            "goal": {
+                                "name": "dummy"
+                            },
+                            "strategy": {
+                                "name": "dummy"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

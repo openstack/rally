@@ -1,0 +1,60 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "quotas": {
+                    "manila": {
+                        "shares": -1,
+                        "gigabytes": -1,
+                        "share_networks": -1
+                    }
+                },
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "manila_share_networks": {
+                    "use_share_networks": true
+                },
+                "manila_security_services": {
+                    "security_services": [
+                        {
+                            "type": "ldap",
+                            "server": "LDAP server address",
+                            "user": "User that will be used",
+                            "password": "Password for specified user"
+                        },
+                        {
+                            "type": "kerberos",
+                            "dns_ip": "IP address of DNS service to be used",
+                            "server": "Kerberos server address",
+                            "domain": "Kerberos realm",
+                            "user": "User that will be used",
+                            "password": "Password for specified user"
+                        },
+                        {
+                            "type": "active_directory",
+                            "dns_ip": "IP address of DNS service to be used",
+                            "domain": "Domain from 'Active Directory'",
+                            "user": "User from 'Active Directory'",
+                            "password": "password for specified user"
+                        }
+                    ]
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
+        }
+    ]
+}

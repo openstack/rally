@@ -1,0 +1,26 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 2,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2
+                },
+                "images": {
+                    "image_url": "http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img",
+                    "image_type": "qcow2",
+                    "image_container": "bare",
+                    "images_per_tenant": 4
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        sahara_input_data_sources:
+          input_type: "hdfs"
+          input_url: "/"
+        sahara_output_data_sources:
+          output_type: "hdfs"
+          output_url_prefix: "/out_"
+        network: {}

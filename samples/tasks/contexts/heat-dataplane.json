@@ -1,0 +1,40 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2
+                },
+                "network": {
+                    "start_cidr": "10.2.0.0/24",
+                    "networks_per_tenant": 1,
+                    "subnets_per_network": 1,
+                    "network_create_args": {},
+                    "dns_nameservers": ["10.2.0.1"]
+                },
+                "heat_dataplane": {
+                    "stacks_per_tenant": 1,
+                    "template": "samples/tasks/scenarios/heat/templates/resource-group-with-constraint.yaml.template",
+                    "files": {
+                        "file1": "f1.yaml",
+                        "file2": "f2.yaml"
+                    },
+                    "parameters": {
+                        "count": 40,
+                        "delay": 0.1
+                    },
+                    "context_parameters": {}
+                }
+            }
+        }
+    ]
+}

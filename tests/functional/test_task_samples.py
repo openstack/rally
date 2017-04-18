@@ -23,8 +23,10 @@ import unittest
 
 import six
 
+import rally as rally_module
 from rally import api
 from rally.common import db
+from rally.common import yamlutils as yaml
 from rally import plugins
 from rally.plugins.openstack.context.keystone import users
 from tests.functional import utils
@@ -88,9 +90,8 @@ class TestTaskSamples(unittest.TestCase):
               write_report=False)
 
         samples_path = os.path.join(
-            os.path.dirname(__file__), os.pardir, os.pardir,
+            os.path.dirname(rally_module.__file__), os.pardir,
             "samples", "tasks")
-        matcher = re.compile("\.json$")
 
         for dirname, dirnames, filenames in os.walk(samples_path):
             # NOTE(rvasilets): Skip by suggest of boris-42 because in
@@ -102,13 +103,13 @@ class TestTaskSamples(unittest.TestCase):
 
                 # NOTE(hughsaunders): Skip non config files
                 # (bug https://bugs.launchpad.net/rally/+bug/1314369)
-                if not matcher.search(filename):
+                if os.path.splitext(filename)[1] not in (".json"):
                     continue
                 with open(full_path) as task_file:
                     try:
                         input_task = task_file.read()
                         rendered_task = api.Task.render_template(input_task)
-                        task_config = json.loads(rendered_task)
+                        task_config = yaml.safe_load(rendered_task)
                         api.Task.validate("MAIN", task_config)
                     except Exception as e:
                         if not self._skip(six.text_type(e)):

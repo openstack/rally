@@ -1,18 +1,15 @@
 ---
-  NovaServers.boot_server:
+  Dummy.openstack:
     -
       args:
-        flavor:
-            name: "^ram64$"
-        image:
-            name: "^cirros.*-disk$"
+        sleep: 0.1
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 1
           users_per_tenant: 2
         flavors:
           -

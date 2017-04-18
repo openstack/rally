@@ -1,0 +1,29 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "sahara_cluster": {
+                    "master_flavor_id": "4",
+                    "worker_flavor_id": "3",
+                    "workers_count": 3,
+                    "plugin_name": "vanilla",
+                    "hadoop_version": "2.6.0",
+                    "auto_security_group": true
+                },
+                "network": {}
+            }
+        }
+    ]
+}

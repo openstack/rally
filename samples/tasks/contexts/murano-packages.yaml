@@ -1,0 +1,32 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        murano_packages:
+          app_package: "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter.zip"
+        roles:
+          - "admin"
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        murano_packages:
+          app_package: "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+        roles:
+          - "admin"

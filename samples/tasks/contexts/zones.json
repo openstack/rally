@@ -1,0 +1,23 @@
+{
+    "Dummy.openstack": [
+        {
+            "args": {
+                "sleep": 0.1
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2
+                },
+                "zones": {
+                    "zones_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
