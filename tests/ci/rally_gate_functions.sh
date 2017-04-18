@@ -34,12 +34,6 @@ function setUp () {
 
     source ~/.rally/openrc admin admin
 
-    if [[ $(rally deployment config) == *"project_name"* ]]; then
-        export OS_IDENTITY_API_VERSION=3
-    else
-        export OS_IDENTITY_API_VERSION="2.0"
-    fi
-
     OPENSTACK_SERVICES=$(openstack service list)
     if [[ $OPENSTACK_SERVICES == *"glance"* ]]; then
         openstack image list
