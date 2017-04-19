@@ -203,6 +203,28 @@ class CinderMixin(object):
 
             return image_inst
 
+    def create_qos(self, specs):
+        """Create a qos specs.
+
+        :param specs: A dict of key/value pairs to be set
+        :rtype: :class:'QoSSpecs'
+        """
+        aname = "cinder_v%s.create_qos" % self.version
+        name = self.generate_random_name()
+
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().qos_specs.create(name, specs)
+
+    def list_qos(self, search_opts=None):
+        """Get a list of all qos specs.
+
+        :param search_opts: search options
+        :rtype: list of :class: 'QoSpecs'
+        """
+        aname = "cinder_v%s.list_qos" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().qos_specs.list(search_opts)
+
     def delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 
@@ -448,6 +470,22 @@ class UnifiedCinderMixin(object):
         return self._impl.upload_volume_to_image(
             volume, force=force, container_format=container_format,
             disk_format=disk_format)
+
+    def create_qos(self, specs):
+        """Create a qos specs.
+
+        :param specs: A dict of key/value pairs to be set
+        :rtype: :class:'QoSSpecs'
+        """
+        return self._impl.create_qos(specs)
+
+    def list_qos(self, search_opts=None):
+        """Get a list of all qos specs.
+
+        :param search_opts: search options
+        :rtype: list of :class: 'QoSpecs'
+        """
+        return self._impl.list_qos(search_opts)
 
     def delete_snapshot(self, snapshot):
         """Delete the given backup.
