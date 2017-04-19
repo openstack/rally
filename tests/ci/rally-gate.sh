@@ -19,6 +19,9 @@ source $SCRIPT_DIR/rally_gate_functions.sh
 
 PROJECT=`echo $ZUUL_PROJECT | cut -d \/ -f 2`
 
+echo "Rally gate is turned off due to the issue with devstack plugin. It will be fixed soon, sorry."
+exit 0
+
 RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-scenarios
 if [ ! -d $RALLY_JOB_DIR ]; then
     RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-jobs
