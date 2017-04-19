@@ -13,9 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import ddt
 import mock
 
+from rally import exceptions
 from rally.task import context
 from tests.unit import fakes
 from tests.unit import test
@@ -148,12 +150,12 @@ class BaseContextTestCase(test.TestCase):
 
 
 class ContextManagerTestCase(test.TestCase):
+    @mock.patch("rally.task.context.ContextManager._get_sorted_context_lst")
+    def test_setup(self, mock__get_sorted_context_lst):
+        foo_context = mock.MagicMock()
+        bar_context = mock.MagicMock()
+        mock__get_sorted_context_lst.return_value = [foo_context, bar_context]
 
-    @mock.patch("rally.task.context.Context.get")
-    def test_setup(self, mock_context_get):
-        mock_context = mock.MagicMock()
-        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
-        mock_context_get.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []},
                       "scenario_namespace": "foo"}
 
@@ -161,29 +163,96 @@ class ContextManagerTestCase(test.TestCase):
         result = manager.setup()
 
         self.assertEqual(result, ctx_object)
-        mock_context_get.assert_has_calls(
-            [mock.call("a", namespace="foo", allow_hidden=True),
-             mock.call("b", namespace="foo", allow_hidden=True)],
-            any_order=True)
-        mock_context.assert_has_calls(
-            [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
-        self.assertEqual([mock_context(), mock_context()], manager._visited)
-        mock_context.return_value.assert_has_calls(
-            [mock.call.setup(), mock.call.setup()], any_order=True)
+        foo_context.setup.assert_called_once_with()
+        bar_context.setup.assert_called_once_with()
+
+    @mock.patch("rally.task.context.Context.get_all")
+    @mock.patch("rally.task.context.Context.get")
+    def test_get_sorted_context_lst(self, mock_context_get,
+                                    mock_context_get_all):
+
+        # use ordereddict to predict the order of calls
+        ctx_object = {"config": collections.OrderedDict([("a@foo", []),
+                                                         ("b", []),
+                                                         ("c", []),
+                                                         ("d", [])]),
+                      "scenario_namespace": "foo"}
+
+        def OrderableMock(**kwargs):
+            return mock.Mock(__lt__=(lambda x, y: x), **kwargs)
+
+        a_ctx = mock.Mock(return_value=OrderableMock())
+        mock_context_get.return_value = a_ctx
+
+        b_ctx = mock.Mock(return_value=OrderableMock())
+        c_ctx = mock.Mock(get_namespace=lambda: "foo",
+                          return_value=OrderableMock())
+        d_ctx = mock.Mock(get_namespace=lambda: "default",
+                          return_value=OrderableMock())
+        all_plugins = {
+            # it is a case when search is performed for any namespace and only
+            # one possible match is found
+            "b": [b_ctx],
+            # it is a case when plugin should be filtered by the scenario
+            # namespace
+            "c": [mock.Mock(get_namespace=lambda: "default"), c_ctx],
+            # it is a case when plugin should be filtered by the scenario
+            # namespace
+            "d": [mock.Mock(get_namespace=lambda: "bar"), d_ctx]
+        }
+
+        def fake_get_all(name, allow_hidden=True):
+            # use pop to ensure that get_all is called only one time per ctx
+            result = all_plugins.pop(name, None)
+            if result is None:
+                self.fail("Unexpected call of Context.get_all for %s plugin" %
+                          name)
+            return result
+
+        mock_context_get_all.side_effect = fake_get_all
+
+        manager = context.ContextManager(ctx_object)
+
+        self.assertEqual({a_ctx.return_value, b_ctx.return_value,
+                          c_ctx.return_value, d_ctx.return_value},
+                         set(manager._get_sorted_context_lst()))
+
+        mock_context_get.assert_called_once_with("a", namespace="foo",
+                                                 fallback_to_default=False,
+                                                 allow_hidden=True)
+        a_ctx.assert_called_once_with(ctx_object)
+        self.assertEqual([mock.call(name=name, allow_hidden=True)
+                          for name in ("b", "c", "d")],
+                         mock_context_get_all.call_args_list)
+
+    @mock.patch("rally.task.context.Context.get_all")
+    def test_get_sorted_context_lst_fails(self, mock_context_get_all):
+        ctx_object = {"config": {"foo": "bar"},
+                      "scenario_namespace": "foo"}
+
+        mock_context_get_all.return_value = []
+        manager = context.ContextManager(ctx_object)
+
+        self.assertRaises(exceptions.PluginNotFound,
+                          manager._get_sorted_context_lst)
+
+        mock_context_get_all.assert_called_once_with(name="foo",
+                                                     allow_hidden=True)
 
     @mock.patch("rally.task.context.Context.get")
     def test_cleanup(self, mock_context_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a": [], "b": []},
-                      "scenario_namespace": "foo"}
+        ctx_object = {"config": {"a@foo": [], "b@foo": []}}
 
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
         mock_context_get.assert_has_calls(
-            [mock.call("a", namespace="foo", allow_hidden=True),
-             mock.call("b", namespace="foo", allow_hidden=True)],
+            [mock.call("a", namespace="foo", allow_hidden=True,
+                       fallback_to_default=False),
+             mock.call("b", namespace="foo", allow_hidden=True,
+                       fallback_to_default=False)],
             any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
@@ -196,14 +265,15 @@ class ContextManagerTestCase(test.TestCase):
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context.cleanup.side_effect = Exception()
         mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a": [], "b": []},
-                      "scenario_namespace": "foo"}
+        ctx_object = {"config": {"a@foo": [], "b@foo": []}}
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
 
         mock_context_get.assert_has_calls(
-            [mock.call("a", namespace="foo", allow_hidden=True),
-             mock.call("b", namespace="foo", allow_hidden=True)],
+            [mock.call("a", namespace="foo", allow_hidden=True,
+                       fallback_to_default=False),
+             mock.call("b", namespace="foo", allow_hidden=True,
+                       fallback_to_default=False)],
             any_order=True)
         mock_context.assert_has_calls(
             [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
@@ -223,7 +293,7 @@ class ContextManagerTestCase(test.TestCase):
 
     @mock.patch("rally.task.context.ContextManager.cleanup")
     @mock.patch("rally.task.context.ContextManager.setup")
-    def test_with_statement_excpetion_during_setup(
+    def test_with_statement_exception_during_setup(
             self, mock_context_manager_setup, mock_context_manager_cleanup):
         mock_context_manager_setup.side_effect = Exception("abcdef")
 
