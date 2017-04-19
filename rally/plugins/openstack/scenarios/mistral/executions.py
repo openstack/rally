@@ -51,7 +51,6 @@ class ListExecutions(utils.MistralScenario):
                               sort_keys=sort_keys, sort_dirs=sort_dirs)
 
 
-@validation.required_parameters("definition")
 @validation.file_exists("definition")
 @types.convert(definition={"type": "file"})
 @types.convert(params={"type": "file"})

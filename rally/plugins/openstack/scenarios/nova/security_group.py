@@ -32,8 +32,6 @@ class NovaSecurityGroupException(exceptions.RallyException):
     msg_fmt = _("%(message)s")
 
 
-@validation.required_parameters("security_group_count",
-                                "rules_per_security_group")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -59,8 +57,6 @@ class CreateAndDeleteSecgroups(utils.NovaScenario):
         self._delete_security_groups(security_groups)
 
 
-@validation.required_parameters("security_group_count",
-                                "rules_per_security_group")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -91,7 +87,6 @@ class CreateAndListSecgroups(utils.NovaScenario):
                             [i.id for i in pool_groups])
 
 
-@validation.required_parameters("security_group_count")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -114,8 +109,6 @@ class CreateAndUpdateSecgroups(utils.NovaScenario):
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
 @validation.image_valid_on_flavor("flavor", "image")
-@validation.required_parameters("security_group_count",
-                                "rules_per_security_group")
 @validation.required_contexts("network")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)

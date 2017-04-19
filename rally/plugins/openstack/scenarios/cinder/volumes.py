@@ -569,7 +569,6 @@ class CreateAndListSnapshots(cinder_utils.CinderBasic,
 @validation.restricted_parameters(["name", "display_name"])
 @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_parameters("size")
 @scenario.configure(context={"cleanup": ["cinder", "glance"]},
                     name="CinderVolumes.create_and_upload_volume_to_image")
 class CreateAndUploadVolumeToImage(cinder_utils.CinderBasic,

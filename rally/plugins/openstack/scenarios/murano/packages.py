@@ -25,7 +25,6 @@ from rally.task import validation
 """Scenarios for Murano packages."""
 
 
-@validation.required_parameters("package")
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
@@ -57,7 +56,6 @@ class ImportAndListPackages(utils.MuranoScenario):
             os.remove(package_path)
 
 
-@validation.required_parameters("package")
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
@@ -86,7 +84,6 @@ class ImportAndDeletePackage(utils.MuranoScenario):
             os.remove(package_path)
 
 
-@validation.required_parameters("package", "body")
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
@@ -124,7 +121,6 @@ class PackageLifecycle(utils.MuranoScenario):
             os.remove(package_path)
 
 
-@validation.required_parameters("package", "filter_query")
 @validation.file_exists(param_name="package", mode=os.F_OK)
 @validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)

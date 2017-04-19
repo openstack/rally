@@ -38,7 +38,6 @@ class ListWorkbooks(utils.MistralScenario):
         self._list_workbooks()
 
 
-@validation.required_parameters("definition")
 @validation.file_exists("definition")
 @types.convert(definition={"type": "file"})
 @validation.required_clients("mistral")
