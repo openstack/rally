@@ -36,7 +36,8 @@ MODES = {"full": "--pattern set=full", "light": "--pattern set=smoke"}
 DEPLOYMENT_NAME = "devstack"
 VERIFIER_TYPE = "tempest"
 VERIFIER_SOURCE = "https://git.openstack.org/openstack/tempest"
-VERIFIER_EXT_REPO = "https://git.openstack.org/openstack/keystone"
+VERIFIER_EXT_REPO = (
+    "https://git.openstack.org/openstack/keystone-tempest-plugin")
 VERIFIER_EXT_NAME = "keystone_tests"
 SKIP_TESTS = (
     "tempest.api.compute.flavors.test_flavors.FlavorsV2TestJSON."

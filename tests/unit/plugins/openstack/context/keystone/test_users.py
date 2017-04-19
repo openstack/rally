@@ -33,8 +33,9 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(UserGeneratorTestCase, self).setUp()
-        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
-        self.osclients = self.osclients_patcher.start()
+        osclients_patcher = mock.patch("%s.osclients" % CTX)
+        self.addCleanup(osclients_patcher.stop)
+        self.osclients = osclients_patcher.start()
         self.context.update({
             "config": {
                 "users": {
@@ -47,10 +48,6 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
             "users": [],
             "task": {"uuid": "task_id"}
         })
-
-    def tearDown(self):
-        self.osclients_patcher.stop()
-        super(UserGeneratorTestCase, self).tearDown()
 
     @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_not_needed(self, mock_wrap):
@@ -98,7 +95,15 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         admin_clients.services.return_value = {
             "compute": consts.Service.NOVA,
             "neutron": consts.Service.NEUTRON}
-        user_clients = [mock.Mock(), mock.Mock()]
+        user1 = mock.Mock()
+        user1.neutron.return_value.list_security_groups.return_value = {
+            "security_groups": [{"id": "id-1", "name": "default"},
+                                {"id": "id-2", "name": "not-default"}]}
+        user2 = mock.Mock()
+        user2.neutron.return_value.list_security_groups.return_value = {
+            "security_groups": [{"id": "id-3", "name": "default"},
+                                {"id": "id-4", "name": "not-default"}]}
+        user_clients = [user1, user2]
         self.osclients.Clients.side_effect = [admin_clients] + user_clients
 
         mock_iterate_per_tenants.return_value = [
@@ -117,17 +122,14 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
             for u, t in mock_iterate_per_tenants.return_value]
         self.osclients.Clients.assert_has_calls(expected, any_order=True)
 
-        expected_deletes = []
-        for clients in user_clients:
-            user_nova = clients.nova.return_value
-            user_nova.security_groups.find.assert_called_once_with(
-                name="default")
-            expected_deletes.append(
-                mock.call(user_nova.security_groups.find.return_value.id))
-
-        nova_admin = admin_clients.neutron.return_value
-        nova_admin.delete_security_group.assert_has_calls(expected_deletes,
-                                                          any_order=True)
+        user_net = user1.neutron.return_value
+        user_net.list_security_groups.assert_called_once_with()
+        user_net = user2.neutron.return_value
+        user_net.list_security_groups.assert_called_once_with()
+        admin_neutron = admin_clients.neutron.return_value
+        self.assertEqual(
+            [mock.call("id-1"), mock.call("id-3")],
+            admin_neutron.delete_security_group.call_args_list)
 
     @mock.patch("rally.task.utils.check_service_status",
                 return_value=True)

@@ -29,7 +29,7 @@ virtualenv                                             # MIT
 boto>=2.32.1,<=2.46.1                                  # MIT
 gnocchiclient>=2.7.0,<=3.1.1                           # Apache Software License
 keystoneauth1>=2.18.0,<=2.19.0                         # Apache Software License
-os-faults>=0.1.5,<=0.1.11                              # Apache Software License
+os-faults>=0.1.15,<0.2.0                               # Apache Software License
 python-ceilometerclient>=2.5.0,<=2.8.0                 # Apache Software License
 python-cinderclient>=1.6.0,!=1.7.0,!=1.7.1,<=2.0.1     # Apache Software License
 python-designateclient>=1.5.0,<=2.6.0                  # Apache License, Version 2.0

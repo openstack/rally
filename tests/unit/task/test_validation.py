@@ -522,10 +522,15 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"net": "custom2"}}, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_external_network_exists(self):
+    @mock.patch("rally.task.validation.osclients.Clients")
+    @mock.patch("rally.task.validation.objects.Credential")
+    def test_external_network_exists(self, mock_credential, mock_clients):
+        admin_client = mock_clients.return_value.nova.return_value
+        admin_client.services.list.return_value = [
+            mock.Mock(binary="nova-network", status="enabled")]
         validator = self._unwrap_validator(
             validation.external_network_exists, "name")
-        result = validator({"args": {}}, None, None)
+        result = validator({"args": {}}, None, mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
 
         clients = mock.MagicMock()
@@ -535,17 +540,20 @@ class ValidatorsTestCase(test.TestCase):
 
         net1.name = "public"
         net2.name = "custom"
-        result = validator({}, clients, None)
+        result = validator({}, clients, mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
 
-        result = validator({"args": {"name": "custom"}}, clients, None)
+        result = validator({"args": {"name": "custom"}}, clients,
+                           mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
-        result = validator({"args": {"name": "non_exist"}}, clients, None)
+        result = validator({"args": {"name": "non_exist"}}, clients,
+                           mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)
 
         net1.name = {"name": "public"}
         net2.name = {"name": "custom"}
-        result = validator({"args": {"name": "custom"}}, clients, None)
+        result = validator({"args": {"name": "custom"}}, clients,
+                           mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
 
     def test_required_parameters(self):

@@ -170,6 +170,13 @@ class NovaServerGroups(base.ResourceManager):
 @base.resource("nova", "floating_ips", order=next(_nova_order))
 class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
 
+    def list(self):
+        # dirty workaround for openstack gates
+        try:
+            return super(NovaFloatingIPs, self).list()
+        except AttributeError:
+            return []
+
     def name(self):
         return self.raw_resource.pool
 
@@ -184,8 +191,12 @@ class NovaKeypair(SynchronizedDeletion, base.ResourceManager):
 class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
-        return filter(lambda x: x.name != "default",
-                      super(NovaSecurityGroup, self).list())
+        # dirty workaround for openstack gates
+        try:
+            return filter(lambda x: x.name != "default",
+                          super(NovaSecurityGroup, self).list())
+        except AttributeError:
+            return []
 
 
 @base.resource("nova", "quotas", order=next(_nova_order),
@@ -218,6 +229,13 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
     def name(self):
         return None
 
+    def list(self):
+        # dirty workaround for openstack gates
+        try:
+            return super(NovaFloatingIpsBulk, self).list()
+        except AttributeError:
+            return []
+
 
 @base.resource("nova", "networks", order=next(_nova_order),
                admin_required=True, tenant_resource=True)
@@ -225,6 +243,13 @@ class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
 
     def name(self):
         return self.raw_resource.label
+
+    def list(self):
+        # dirty workaround for openstack gates
+        try:
+            return super(NovaNetworks, self).list()
+        except AttributeError:
+            return []
 
 
 @base.resource("nova", "aggregates", order=next(_nova_order),

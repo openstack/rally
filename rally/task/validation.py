@@ -424,17 +424,33 @@ def external_network_exists(config, clients, deployment, network_name):
     if not ext_network:
         return ValidationResult(True)
 
-    networks = [net.name for net in clients.nova().floating_ip_pools.list()]
+    creds = deployment.get_credentials_for("openstack")
+    admin_nova = osclients.Clients(
+        objects.Credential(**creds["admin"])).nova()
+    nova_net = False
 
-    if networks and isinstance(networks[0], dict):
-        networks = [n["name"] for n in networks]
+    for service in admin_nova.services.list():
+        if (service.binary == consts.Service.NOVA_NET and
+                service.status == "enabled"):
+            nova_net = True
+            break
 
-    if ext_network not in networks:
+    if nova_net:
+        external_networks = [net.name for net in
+                             clients.nova().floating_ip_pools.list()]
+        if external_networks and isinstance(external_networks[0], dict):
+            external_networks = [n["name"] for n in external_networks]
+    else:
+        networks = clients.neutron().list_networks()["networks"]
+        external_networks = [net["name"] for net in networks if
+                             net.get("router:external", False)]
+
+    if ext_network not in external_networks:
         message = _("External (floating) network with name %(network)s "
                     "not found. "
                     "Available networks: %(networks)s") % {
                         "network": ext_network,
-                        "networks": networks}
+                        "networks": external_networks}
         return ValidationResult(False, message)
 
 

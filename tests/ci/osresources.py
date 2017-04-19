@@ -163,6 +163,7 @@ class Nova(ResourceManager):
     def list_flavors(self):
         return self.client.flavors.list()
 
+    @skip_if_service(consts.Service.NEUTRON)
     def list_floating_ip_pools(self):
         return self.client.floating_ip_pools.list()
 
@@ -170,6 +171,7 @@ class Nova(ResourceManager):
     def list_floating_ips(self):
         return self.client.floating_ips.list()
 
+    @skip_if_service(consts.Service.NEUTRON)
     def list_floating_ips_bulk(self):
         return self.client.floating_ips_bulk.list()
 
