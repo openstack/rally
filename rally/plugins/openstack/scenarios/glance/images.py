@@ -198,3 +198,46 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
         self._boot_servers(image.id, flavor, number_instances,
                            **boot_server_kwargs)
+
+
+@types.convert(image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
+@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_update_image")
+class CreateAndUpdateImage(GlanceBasic):
+
+    def run(self, container_format, image_location, disk_format,
+            remove_props=None, visibility="private", create_min_disk=0,
+            create_min_ram=0, update_min_disk=0, update_min_ram=0):
+        """Create an image then update it.
+
+        Measure the "glance image-create" and "glance image-update" commands
+        performance.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param remove_props: List of property names to remove.
+                             (It is only supported by Glance v2.)
+        :param visibility: The access permission for the created image
+        :param create_min_disk: The min disk of created images
+        :param create_min_ram: The min ram of created images
+        :param update_min_disk: The min disk of updated images
+        :param update_min_ram: The min ram of updated images
+        """
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            visibility=visibility,
+            min_disk=create_min_disk,
+            min_ram=create_min_ram)
+
+        self.glance.update_image(image.id,
+                                 min_disk=update_min_disk,
+                                 min_ram=update_min_ram,
+                                 remove_props=remove_props)

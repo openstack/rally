@@ -75,6 +75,42 @@ class GlanceV2ServiceTestCase(test.TestCase):
         self.gc.images.create.assert_called_once_with(**call_args)
         self.assertEqual(image, self.mock_wait_for_status.mock.return_value)
 
+    def test_update_image(self):
+        image_id = "image_id"
+        image_name1 = self.name_generator.return_value
+        image_name2 = "image_name"
+        min_disk = 0
+        min_ram = 0
+        remove_props = None
+
+        # case: image_name is None:
+        call_args1 = {"image_id": image_id,
+                      "name": image_name1,
+                      "min_disk": min_disk,
+                      "min_ram": min_ram,
+                      "remove_props": remove_props}
+        image1 = self.service.update_image(image_id=image_id,
+                                           image_name=None,
+                                           min_disk=min_disk,
+                                           min_ram=min_ram,
+                                           remove_props=remove_props)
+        self.assertEqual(self.gc.images.update.return_value, image1)
+        self.gc.images.update.assert_called_once_with(**call_args1)
+
+        # case: image_name is not None:
+        call_args2 = {"image_id": image_id,
+                      "name": image_name2,
+                      "min_disk": min_disk,
+                      "min_ram": min_ram,
+                      "remove_props": remove_props}
+        image2 = self.service.update_image(image_id=image_id,
+                                           image_name=image_name2,
+                                           min_disk=min_disk,
+                                           min_ram=min_ram,
+                                           remove_props=remove_props)
+        self.assertEqual(self.gc.images.update.return_value, image2)
+        self.gc.images.update.assert_called_with(**call_args2)
+
     def test_get_image(self):
         image_id = "image_id"
         self.service.get_image(image_id)
@@ -142,6 +178,22 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
 
         self.assertEqual(mock_image__unify_image.return_value, image)
         self.service._impl.create_image.assert_called_once_with(**callargs)
+
+    @mock.patch(PATH)
+    def test_update_image(self, mock_image__unify_image):
+        image_id = "image_id"
+        image_name = "image_name"
+        callargs = {"image_id": image_id,
+                    "image_name": image_name,
+                    "min_disk": 0,
+                    "min_ram": 0,
+                    "remove_props": None}
+
+        image = self.service.update_image(image_id,
+                                          image_name=image_name)
+
+        self.assertEqual(mock_image__unify_image.return_value, image)
+        self.service._impl.update_image.assert_called_once_with(**callargs)
 
     @mock.patch(PATH)
     def test_get_image(self, mock_image__unify_image):

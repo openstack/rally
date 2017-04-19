@@ -55,6 +55,20 @@ class ImageTestCase(test.TestCase):
             image_location=image_location, disk_format=disk_format,
             visibility=visibility, min_disk=min_disk, min_ram=min_ram)
 
+    @ddt.data(("image_id", "image_name", "min_disk", "min_ram",
+               "remove_props"))
+    def test_update_image(self, params):
+        (image_id, image_name, min_disk, min_ram, remove_props) = params
+        service = self.get_service_with_fake_impl()
+        service.update_image(image_id,
+                             image_name=image_name,
+                             min_disk=min_disk,
+                             min_ram=min_ram,
+                             remove_props=remove_props)
+        service._impl.update_image.assert_called_once_with(
+            image_id, image_name=image_name, min_disk=min_disk,
+            min_ram=min_ram, remove_props=remove_props)
+
     @ddt.data("image_id")
     def test_get_image(self, param):
         image_id = param
