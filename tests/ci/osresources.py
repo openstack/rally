@@ -417,7 +417,7 @@ class Trove(ResourceManager):
         return self.client.module.list(datastore="all")
 
 
-class ES2(ResourceManager):
+class EC2(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.EC2
 
