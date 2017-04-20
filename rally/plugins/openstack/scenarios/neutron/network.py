@@ -159,7 +159,7 @@ class CreateAndUpdateSubnets(utils.NeutronScenario):
 @validation.add("number", param_name="subnets_per_network", minval=1,
                 integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_show_subnets")
 class CreateAndShowSubnets(utils.NeutronScenario):
@@ -309,7 +309,7 @@ class CreateAndDeleteRouters(utils.NeutronScenario):
 
 
 @validation.required_services(consts.Service.NEUTRON)
-@validation.required_openstack(users=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.set_and_clear_router_gateway")
 class SetAndClearRouterGateway(utils.NeutronScenario):
