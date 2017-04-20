@@ -374,23 +374,6 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
 
 
 @validator
-def network_exists(config, clients, deployment, network_name):
-    """Validator checks that network with network_name exist."""
-
-    network = config.get("args", {}).get(network_name, "private")
-
-    networks = [net.label for net in
-                clients.nova().networks.list()]
-    if network not in networks:
-        message = _("Network with name %(network)s not found. "
-                    "Available networks: %(networks)s") % {
-                        "network": network,
-                        "networks": networks
-        }
-        return ValidationResult(False, message)
-
-
-@validator
 def external_network_exists(config, clients, deployment, network_name):
     """Validator checks that external network with given name exists."""
     ext_network = config.get("args", {}).get(network_name)
