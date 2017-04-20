@@ -30,6 +30,7 @@ from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
 from rally.task import utils
+from rally.task import validation
 
 from rally.common import opts
 opts.register()
@@ -45,6 +46,7 @@ PROJECT_DOMAIN_DESCR = "ID of domain in which projects will be created."
 USER_DOMAIN_DESCR = "ID of domain in which users will be created."
 
 
+@validation.add("required_platform", platform="openstack", admin=True)
 @context.configure(name="users", namespace="openstack", order=100)
 class UserGenerator(context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""

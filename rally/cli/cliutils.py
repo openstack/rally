@@ -664,7 +664,8 @@ def run(argv, categories):
             exceptions.RallyException, jsonschema.ValidationError) as e:
         if logging.is_debug():
             LOG.exception(e)
-        print(e)
+        else:
+            print(e)
         return 1
     except sqlalchemy.exc.OperationalError as e:
         if logging.is_debug():

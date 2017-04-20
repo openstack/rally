@@ -40,10 +40,7 @@ class TaskSampleTestCase(test.TestCase):
         if os.environ.get("TOX_ENV_NAME") == "cover":
             self.skipTest("There is no need to check samples in coverage job.")
 
-    @mock.patch("rally.task.engine.TaskEngine"
-                "._validate_config_semantic")
-    def test_schema_is_valid(self,
-                             mock_task_engine__validate_config_semantic):
+    def test_schema_is_valid(self):
         scenarios = set()
 
         for dirname, dirnames, filenames in os.walk(self.samples_path):
@@ -61,7 +58,7 @@ class TaskSampleTestCase(test.TestCase):
                                                      (task_file.read()))
                         eng = engine.TaskEngine(task_config,
                                                 mock.MagicMock(), mock.Mock())
-                        eng.validate()
+                        eng.validate(only_syntax=True)
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid task file: %s" % full_path)
