@@ -210,6 +210,23 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
             {"session": self.ksa_session, "timeout": 180.0, "version": "3"},
             called_with)
 
+    @ddt.data({"original": "https://example.com/identity/foo/v3",
+               "cropped": "https://example.com/identity/foo"},
+              {"original": "https://example.com/identity/foo/v3/",
+               "cropped": "https://example.com/identity/foo"},
+              {"original": "https://example.com/identity/foo/v2.0",
+               "cropped": "https://example.com/identity/foo"},
+              {"original": "https://example.com/identity/foo/v2.0/",
+               "cropped": "https://example.com/identity/foo"},
+              {"original": "https://example.com/identity/foo",
+               "cropped": "https://example.com/identity/foo"})
+    @ddt.unpack
+    def test__remove_url_version(self, original, cropped):
+        credential = oscredential.OpenStackCredential(
+            original, "user", "pass", "tenant")
+        keystone = osclients.Keystone(credential, {}, {})
+        self.assertEqual(cropped, keystone._remove_url_version())
+
     @ddt.data("http://auth_url/v2.0", "http://auth_url/v3",
               "http://auth_url/", "auth_url")
     def test_keystone_get_session(self, auth_url):

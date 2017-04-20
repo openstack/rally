@@ -287,10 +287,13 @@ class Keystone(OSClient):
         if a version override is used.
         """
         url = parse.urlparse(self.credential.auth_url)
-        path = os.path.join(*os.path.split(url.path)[:-1])
-        parts = (url.scheme, url.netloc, path, url.params, url.query,
-                 url.fragment)
-        return parse.urlunparse(parts)
+        path = url.path.rstrip("/")
+        if path.endswith("v2.0") or path.endswith("v3"):
+            path = os.path.join(*os.path.split(path)[:-1])
+            parts = (url.scheme, url.netloc, path, url.params, url.query,
+                     url.fragment)
+            return parse.urlunparse(parts)
+        return self.credential.auth_url
 
     def create_client(self, version=None):
         """Return a keystone client.
