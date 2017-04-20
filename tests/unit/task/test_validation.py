@@ -179,33 +179,6 @@ class ValidatorsTestCase(test.TestCase):
                     common_validation.ValidationResult(True))
         return wrap_validator
 
-    def test_number_not_nullable(self):
-        validator = self._unwrap_validator(validation.number, param_name="n")
-        self.assertFalse(validator({}, None, None).is_valid)
-
-    def test_number_nullable(self):
-        validator = self._unwrap_validator(validation.number, param_name="n",
-                                           nullable=True)
-        self.assertTrue(validator({}, None, None).is_valid)
-
-    def test_number_min_max_value(self):
-        validator = self._unwrap_validator(validation.number,
-                                           param_name="a", minval=4, maxval=10)
-        result = validator({"args": {"a": 3.9}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-        result = validator({"args": {"a": 4.1}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-        result = validator({"args": {"a": 11}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_number_integer_only(self):
-        validator = self._unwrap_validator(validation.number,
-                                           param_name="b", integer_only=True)
-        result = validator({"args": {"b": 3.9}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-        result = validator({"args": {"b": 3}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
     @mock.patch(MODULE + "os.access")
     def test__file_access_ok(self, mock_access):
         mock_access.return_value = True

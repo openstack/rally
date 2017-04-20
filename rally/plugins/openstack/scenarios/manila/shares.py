@@ -205,9 +205,8 @@ class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
 @validation.validate_share_proto()
 @validation.required_services(consts.Service.MANILA)
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(
-    context={"cleanup": ["manila"]},
-    name=("ManilaShares.create_and_list_share"))
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name=("ManilaShares.create_and_list_share"))
 class CreateAndListShare(utils.ManilaScenario):
 
     def run(self, share_proto, size=1, min_sleep=0, max_sleep=0, detailed=True,
@@ -231,14 +230,16 @@ class CreateAndListShare(utils.ManilaScenario):
         self._list_shares(detailed=detailed)
 
 
-@validation.number("sets", minval=1, integer_only=True)
-@validation.number("set_size", minval=1, integer_only=True)
-@validation.number("key_min_length", minval=1, maxval=256, integer_only=True)
-@validation.number("key_max_length", minval=1, maxval=256, integer_only=True)
-@validation.number(
-    "value_min_length", minval=1, maxval=1024, integer_only=True)
-@validation.number(
-    "value_max_length", minval=1, maxval=1024, integer_only=True)
+@validation.add("number", param_name="sets", minval=1, integer_only=True)
+@validation.add("number", param_name="set_size", minval=1, integer_only=True)
+@validation.add("number", param_name="key_min_length", minval=1, maxval=256,
+                integer_only=True)
+@validation.add("number", param_name="key_max_length", minval=1, maxval=256,
+                integer_only=True)
+@validation.add("number", param_name="value_min_length", minval=1, maxval=1024,
+                integer_only=True)
+@validation.add("number", param_name="value_max_length", minval=1, maxval=1024,
+                integer_only=True)
 @validation.required_services(consts.Service.MANILA)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts(manila_consts.SHARES_CONTEXT_NAME)

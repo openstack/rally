@@ -118,7 +118,7 @@ class AuthenticateUserAndValidateToken(KeystoneBasic):
         self.admin_keystone.validate_token(token)
 
 
-@validation.number("users_per_tenant", minval=1)
+@validation.add("number", param_name="users_per_tenant", minval=1)
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
                     name="KeystoneBasic.create_tenant_with_users")
