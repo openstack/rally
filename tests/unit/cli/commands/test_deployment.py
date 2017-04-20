@@ -296,7 +296,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "export OS_AUTH_URL='fake_auth_url'\n"
                 "export OS_USERNAME='fake_username'\n"
                 "export OS_PASSWORD='fake_password'\n"
-                "export OS_TENANT_NAME='fake_tenant_name'\n")
+                "export OS_TENANT_NAME='fake_tenant_name'\n"
+                "export OS_PROJECT_NAME='fake_tenant_name'\n")
             mock_symlink.assert_called_once_with(
                 os.path.expanduser("~/.rally/openrc-%s" % deployment_id),
                 os.path.expanduser("~/.rally/openrc"))
@@ -337,8 +338,10 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "export OS_AUTH_URL='http://localhost:5000/v3'\n"
                 "export OS_USERNAME='fake_username'\n"
                 "export OS_PASSWORD='fake_password'\n"
-                "export OS_TENANT_NAME='fake_tenant_name'\n")
+                "export OS_TENANT_NAME='fake_tenant_name'\n"
+                "export OS_PROJECT_NAME='fake_tenant_name'\n")
             mock_file.return_value.write.assert_any_call(
+                "export OS_IDENTITY_API_VERSION=3\n"
                 "export OS_USER_DOMAIN_NAME='fake_user_domain'\n"
                 "export OS_PROJECT_DOMAIN_NAME='fake_project_domain'\n")
             mock_symlink.assert_called_once_with(
