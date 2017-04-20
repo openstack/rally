@@ -24,6 +24,7 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="lbaas", order=360)
 class Lbaas(context.Context):
+    """Creates a lb-pool for every subnet created in network context."""
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,

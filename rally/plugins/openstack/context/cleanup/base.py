@@ -20,9 +20,12 @@ from rally.plugins.openstack.cleanup import manager
 
 @validation.configure("check_cleanup_resources")
 class CheckCleanupResourcesValidator(validation.Validator):
-    """Validates that openstack resource managers exist"""
 
     def __init__(self, admin_required):
+        """Validates that openstack resource managers exist
+
+        :param admin_required: describes access level to resource
+        """
         super(CheckCleanupResourcesValidator, self).__init__()
         self.admin_required = admin_required
 

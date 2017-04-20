@@ -28,6 +28,9 @@ configure = plugin.configure
 @six.add_metaclass(abc.ABCMeta)
 class Validator(plugin.Plugin):
 
+    def __init__(self):
+        pass
+
     @abc.abstractmethod
     def validate(self, credentials, config, plugin_cls, plugin_cfg):
         """Method that validates something.
@@ -42,23 +45,34 @@ class Validator(plugin.Plugin):
     def fail(self, msg):
         return ValidationResult(False, msg=msg)
 
+    @classmethod
+    def _get_doc(cls):
+        doc = ""
+        if cls.__doc__ is not None:
+            doc = cls.__doc__
+        if cls.__init__.__doc__ is not None:
+            if not cls.__init__.__doc__.startswith("\n"):
+                doc += "\n"
+            doc += cls.__init__.__doc__
+        return doc
+
 
 @configure(name="required_platform")
 class RequiredPlatformValidator(Validator):
-    """Validates credentials for specified platform.
-
-    This allows us to create 4 kind of benchmarks:
-    1) platform independent (validator is not specified)
-    2) requires platform with admin
-    3) requires platform with admin + users
-    4) requires platform with users
-
-    :param platform: name of the platform
-    :param admin: requires admin credential
-    :param users: requires user credentials
-    """
 
     def __init__(self, platform, admin=False, users=False):
+        """Validates credentials for specified platform.
+
+        This allows us to create 4 kind of benchmarks:
+        1) platform independent (validator is not specified)
+        2) requires platform with admin
+        3) requires platform with admin + users
+        4) requires platform with users
+
+        :param platform: name of the platform
+        :param admin: requires admin credential
+        :param users: requires user credentials
+        """
         super(RequiredPlatformValidator, self).__init__()
         self.platform = platform
         self.admin = admin

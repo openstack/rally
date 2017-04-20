@@ -30,6 +30,7 @@ LOG = logging.getLogger(__name__)
 
 @exporter.configure(name="file")
 class FileExporter(exporter.Exporter):
+    """Export task results in the file."""
 
     def validate(self):
         """Validate connection string.

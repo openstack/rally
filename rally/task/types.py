@@ -115,6 +115,10 @@ class ResourceType(plugin.Plugin):
         :returns: transformed value of resource
         """
 
+    @classmethod
+    def _get_doc(cls):
+        return cls.transform.__doc__
+
 
 def obj_from_name(resource_config, resources, typename):
     """Return the resource whose name matches the pattern.
