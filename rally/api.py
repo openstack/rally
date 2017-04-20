@@ -26,7 +26,7 @@ from oslo_config import cfg
 from requests.packages import urllib3
 
 from rally.common import opts
-from rally.common.i18n import _, _LI, _LE, _LW
+from rally.common.i18n import _, _LI, _LE
 from rally.common import logging
 from rally.common import objects
 from rally.common.plugin import discover
@@ -1104,21 +1104,6 @@ class _Verification(object):
         return {"verification": verification.to_dict(),
                 "totals": results.totals,
                 "tests": results.tests}
-
-
-class _DeprecatedAPIClass(object):
-    """Deprecates direct usage of api classes."""
-    def __init__(self, cls):
-        self._cls = cls
-
-    def __getattr__(self, attr, default=None):
-        LOG.warning(_LW("'%s' is deprecated since Rally 0.8.0 in favor of "
-                        "'rally.api.API' class.") % self._cls.__name__[1:])
-        return getattr(self._cls, attr, default)
-
-
-Deployment = _DeprecatedAPIClass(_Deployment)
-Task = _DeprecatedAPIClass(_Task)
 
 
 class API(object):
