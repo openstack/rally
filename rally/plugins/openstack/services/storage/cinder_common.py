@@ -225,6 +225,16 @@ class CinderMixin(object):
         with atomic.ActionTimer(self, aname):
             return self._get_client().qos_specs.list(search_opts)
 
+    def get_qos(self, qos_id):
+        """Get a specific qos specs.
+
+        :param qos_id: The ID of the :class: 'QoSSpecs' to get
+        :rtype: :class: 'QoSSpecs'
+        """
+        aname = "cinder_v%s.get_qos" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().qos_specs.get(qos_id)
+
     def delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 
@@ -486,6 +496,14 @@ class UnifiedCinderMixin(object):
         :rtype: list of :class: 'QoSpecs'
         """
         return self._impl.list_qos(search_opts)
+
+    def get_qos(self, qos_id):
+        """Get a specific qos specs.
+
+        :param qos_id: The ID of the :class: 'QoSSpecs' to get
+        :rtype: :class: 'QoSSpecs'
+        """
+        return self._impl.get_qos(qos_id)
 
     def delete_snapshot(self, snapshot):
         """Delete the given backup.
