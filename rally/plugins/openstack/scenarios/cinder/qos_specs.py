@@ -39,3 +39,18 @@ class CreateAndListQos(cinder_utils.CinderBasic):
                "created qos:{}\n"
                "Pool of qos:{}").format(qos, pool_list)
         self.assertIn(qos, pool_list, err_msg=msg)
+
+
+@validation.restricted_parameters("name")
+@validation.required_services(consts.Service.CINDER)
+@validation.add("required_platform", platform="openstack", admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderQos.create_and_get_qos")
+class CreateAndGetQos(cinder_utils.CinderBasic):
+    def run(self, specs):
+        """Create a qos, then get details of the qos.
+
+        :param specs: A dict of key/value pairs to create qos
+        """
+        qos = self.admin_cinder.create_qos(specs)
+        self.admin_cinder.get_qos(qos.id)

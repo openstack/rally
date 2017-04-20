@@ -208,6 +208,15 @@ class BlockStorage(service.UnifiedOpenStackService):
         return self._impl.list_qos(search_opts)
 
     @service.should_be_overridden
+    def get_qos(self, qos_id):
+        """Get a specific qos specs.
+
+        :param qos_id: The ID of the :class:`QoSSpecs` to get.
+        :rtype: :class:`QoSSpecs`
+        """
+        return self._impl.get_qos(qos_id)
+
+    @service.should_be_overridden
     def create_snapshot(self, volume_id, force=False,
                         name=None, description=None, metadata=None):
         """Create one snapshot.

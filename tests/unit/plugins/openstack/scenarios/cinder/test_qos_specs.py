@@ -43,7 +43,6 @@ class CinderQosTestCase(test.ScenarioTestCase):
     def test_create_and_list_qos(self):
         mock_service = self.mock_cinder.return_value
         qos = mock.MagicMock()
-        qos = mock.MagicMock()
         list_qos = [mock.MagicMock(),
                     mock.MagicMock(),
                     qos]
@@ -78,3 +77,17 @@ class CinderQosTestCase(test.ScenarioTestCase):
                           scenario.run, specs)
         mock_service.create_qos.assert_called_once_with(specs)
         mock_service.list_qos.assert_called_once_with()
+
+    def test_create_and_get_qos(self):
+        mock_service = self.mock_cinder.return_value
+        qos = mock.MagicMock()
+        specs = {"consumer": "both",
+                 "write_iops_sec": "10",
+                 "read_iops_sec": "1000"}
+
+        scenario = qos_specs.CreateAndGetQos(self._get_context())
+        mock_service.create_qos.return_value = qos
+
+        scenario.run(specs)
+        mock_service.create_qos.assert_called_once_with(specs)
+        mock_service.get_qos.assert_called_once_with(qos.id)

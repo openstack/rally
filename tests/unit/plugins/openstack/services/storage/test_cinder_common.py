@@ -251,6 +251,13 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         )
         self.cinder.qos_specs.list.assert_called_once_with(True)
 
+    def test_get_qos(self):
+        result = self.service.get_qos("qos")
+        self.assertEqual(
+            self.cinder.qos_specs.get.return_value,
+            result)
+        self.cinder.qos_specs.get.assert_called_once_with("qos")
+
     def test_delete_snapshot(self):
         snapshot = mock.Mock()
         self.service.delete_snapshot(snapshot)
@@ -492,6 +499,12 @@ class UnifiedCinderMixinTestCase(test.TestCase):
             self.service.list_qos(True)
         )
         self.service._impl.list_qos.assert_called_once_with(True)
+
+    def test_get_qos(self):
+        self.assertEqual(
+            self.service._impl.get_qos.return_value,
+            self.service.get_qos("qos"))
+        self.service._impl.get_qos.assert_called_once_with("qos")
 
     def test_delete_snapshot(self):
         self.service.delete_snapshot("snapshot")

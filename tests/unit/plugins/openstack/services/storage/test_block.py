@@ -131,6 +131,12 @@ class BlockTestCase(test.TestCase):
         )
         self.service._impl.list_qos.assert_called_once_with(True)
 
+    def test_get_qos(self):
+        self.assertEqual(
+            self.service._impl.get_qos.return_value,
+            self.service.get_qos("qos"))
+        self.service._impl.get_qos.assert_called_once_with("qos")
+
     def test_create_snapshot(self):
         self.assertEqual(
             self.service._impl.create_snapshot.return_value,
