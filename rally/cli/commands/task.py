@@ -16,6 +16,7 @@
 """Rally command: task"""
 
 from __future__ import print_function
+import collections
 import json
 import os
 import sys
@@ -40,6 +41,7 @@ from rally import exceptions
 from rally import plugins
 from rally.task import exporter
 from rally.task.processing import plot
+from rally.task import utils as tutils
 
 
 LOG = logging.getLogger(__name__)
@@ -455,6 +457,16 @@ class TaskCommands(object):
             print(_("Task status is %s. Results available when it is one "
                     "of %s.") % (task["status"], ", ".join(finished_statuses)))
             return 1
+
+        # TODO(chenhb): Ensure `rally task results` puts out old format.
+        for result in task["results"]:
+            for itr in result["data"]["raw"]:
+                if "atomic_actions" in itr:
+                    itr["atomic_actions"] = collections.OrderedDict(
+                        tutils.WrapperForAtomicActions(
+                            itr["atomic_actions"]).items()
+                    )
+
         results = [{"key": x["key"], "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "hooks": x["data"].get("hooks", []),

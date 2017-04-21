@@ -435,16 +435,8 @@ class Task(object):
     def add_subtask(self, **subtask):
         return Subtask(self.task["uuid"], **subtask)
 
-    def _get_results(self):
-        return db.task_result_get_all_by_uuid(self.task["uuid"])
-
     def get_results(self):
-        results = self._get_results()
-        for result in results:
-            for itr in result["data"]["raw"]:
-                itr["atomic_actions"] = self.convert_atomic_actions(
-                    itr["atomic_actions"])
-        return results
+        return db.task_result_get_all_by_uuid(self.task["uuid"])
 
     """TODO(chenhb): Remove this method after replacing old format.
     Now we do not convert children actions, because our output

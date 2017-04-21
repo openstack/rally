@@ -61,9 +61,8 @@ class SLAChecker(object):
         """
         if isinstance(iteration, dict):
             atomic_actions = iteration.get("atomic_actions", None)
-            if isinstance(atomic_actions, list):
-                iteration["atomic_actions"] = utils.WrapperForAtomicActions(
-                    atomic_actions)
+            iteration["atomic_actions"] = utils.WrapperForAtomicActions(
+                atomic_actions)
         return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
 
     def merge(self, other):
