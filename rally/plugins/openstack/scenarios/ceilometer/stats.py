@@ -22,7 +22,8 @@ from rally.task import validation
 """Scenarios for Ceilometer Stats API."""
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerStats.create_meter_and_get_stats")
 class CreateMeterAndGetStats(utils.CeilometerScenario):
@@ -41,7 +42,8 @@ class CreateMeterAndGetStats(utils.CeilometerScenario):
         self._get_stats(meter.counter_name)
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.required_contexts("ceilometer")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerStats.get_stats")

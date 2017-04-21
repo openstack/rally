@@ -26,7 +26,7 @@ from rally.task import validation
 @logging.log_deprecated_args("Useless arguments detected", "0.10.0",
                              ("marker", "limit", "sort_key"), once=True)
 @validation.restricted_parameters(["name"])
-@validation.required_services(consts.Service.IRONIC)
+@validation.add("required_services", services=[consts.Service.IRONIC])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["ironic"]},
                     name="IronicNodes.create_and_list_node")
@@ -66,7 +66,7 @@ class CreateAndListNode(utils.IronicScenario):
 
 
 @validation.restricted_parameters(["name"])
-@validation.required_services(consts.Service.IRONIC)
+@validation.add("required_services", services=[consts.Service.IRONIC])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["ironic"]},
                     name="IronicNodes.create_and_delete_node")

@@ -28,7 +28,8 @@ from rally.task import validation
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_services(consts.Service.MISTRAL)
+@validation.add("required_services",
+                services=[consts.Service.MISTRAL])
 @scenario.configure(name="MistralExecutions.list_executions",
                     context={"cleanup": ["mistral"]})
 class ListExecutions(utils.MistralScenario):
@@ -55,7 +56,8 @@ class ListExecutions(utils.MistralScenario):
 @types.convert(params={"type": "file"})
 @types.convert(wf_input={"type": "file"})
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_services(consts.Service.MISTRAL)
+@validation.add("required_services",
+                services=[consts.Service.MISTRAL])
 @validation.workbook_contains_workflow("definition", "workflow_name")
 @scenario.configure(
     name="MistralExecutions.create_execution_from_workbook",

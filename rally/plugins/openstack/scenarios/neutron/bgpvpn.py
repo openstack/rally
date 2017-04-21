@@ -19,8 +19,9 @@ from rally.task import validation
 
 
 @validation.add("required_neutron_extensions", extensions=["bgpvpn"])
-@validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", admin=True)
+@validation.add("required_services",
+                services=[consts.Service.NEUTRON])
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_and_delete_bgpvpns")
 class CreateAndDeleteBgpvpns(utils.NeutronScenario):
@@ -50,7 +51,7 @@ class CreateAndDeleteBgpvpns(utils.NeutronScenario):
 
 
 @validation.add("required_neutron_extensions", extensions=["bgpvpn"])
-@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_and_list_bgpvpns")
@@ -81,7 +82,7 @@ class CreateAndListBgpvpns(utils.NeutronScenario):
 
 
 @validation.add("required_neutron_extensions", extensions=["bgpvpn"])
-@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_and_update_bgpvpns")

@@ -21,7 +21,8 @@ from rally.task import validation
 """Scenarios for monasca Metrics API."""
 
 
-@validation.required_services(consts.Service.MONASCA)
+@validation.add("required_services",
+                services=[consts.Service.MONASCA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="MonascaMetrics.list_metrics")
 class ListMetrics(monascautils.MonascaScenario):

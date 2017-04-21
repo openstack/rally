@@ -23,7 +23,6 @@ import six
 
 from rally.common.plugin import plugin
 from rally.common import validation as common_validation
-from rally import consts
 from rally import exceptions
 from rally.task import validation
 from tests.unit import fakes
@@ -468,42 +467,6 @@ class ValidatorsTestCase(test.TestCase):
     def test_flavor_exists(self):
         validator = self._unwrap_validator(validation.flavor_exists, "param")
         result = validator({}, "clients", "deployment")
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_required_service(self):
-        validator = self._unwrap_validator(validation.required_services,
-                                           consts.Service.KEYSTONE,
-                                           consts.Service.NOVA,
-                                           consts.Service.NOVA_NET)
-        admin = fakes.fake_credential(foo="bar")
-        clients = mock.Mock()
-        clients.services().values.return_value = [consts.Service.KEYSTONE,
-                                                  consts.Service.NOVA,
-                                                  consts.Service.NOVA_NET]
-
-        fake_service = mock.Mock(binary="nova-network", status="enabled")
-        admin_clients = admin.clients.return_value
-        nova_client = admin_clients.nova.return_value
-        nova_client.services.list.return_value = [fake_service]
-        deployment = fakes.FakeDeployment(admin=admin)
-        result = validator({}, clients, deployment)
-
-        self.assertTrue(result.is_valid, result.msg)
-
-        validator = self._unwrap_validator(validation.required_services,
-                                           consts.Service.KEYSTONE,
-                                           consts.Service.NOVA)
-        clients.services().values.return_value = [consts.Service.KEYSTONE]
-
-        result = validator({}, clients, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_required_service_wrong_service(self):
-        validator = self._unwrap_validator(validation.required_services,
-                                           consts.Service.KEYSTONE,
-                                           consts.Service.NOVA, "lol")
-        clients = mock.MagicMock()
-        result = validator({}, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 
     def test_required_contexts(self):

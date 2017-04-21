@@ -161,7 +161,8 @@ class ValidateHeat(scenario.OpenStackScenario):
 
 @validation.add("number", param_name="repetitions", minval=1)
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_services(consts.Service.MONASCA)
+@validation.add("required_services",
+                services=[consts.Service.MONASCA])
 @scenario.configure(name="Authenticate.validate_monasca")
 class ValidateMonasca(scenario.OpenStackScenario):
 

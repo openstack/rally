@@ -42,7 +42,7 @@ class GlanceBasic(scenario.OpenStackScenario):
 @validation.restricted_parameters(["image_name", "name"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
-@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_list_image")
@@ -78,7 +78,7 @@ class CreateAndListImage(GlanceBasic):
 
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
-@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_get_image")
@@ -109,7 +109,7 @@ class CreateAndGetImage(GlanceBasic):
         self.assertEqual(image.id, image_info.id)
 
 
-@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.list_images")
@@ -131,7 +131,7 @@ class ListImages(GlanceBasic):
 @validation.restricted_parameters(["image_name", "name"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
-@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_delete_image")
@@ -160,7 +160,8 @@ class CreateAndDeleteImage(GlanceBasic):
                image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.flavor_exists("flavor")
-@validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.GLANCE,
+                                               consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance", "nova"]},
                     name="GlanceImages.create_image_and_boot_instances")
@@ -202,7 +203,7 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
-@validation.required_services(consts.Service.GLANCE)
+@validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
                     name="GlanceImages.create_and_update_image")

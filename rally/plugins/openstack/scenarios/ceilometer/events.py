@@ -27,8 +27,8 @@ from rally.task import validation
 # no other way except emit suitable notification from one of services,
 # for example create new user in keystone.
 
-@validation.required_services(consts.Service.CEILOMETER,
-                              consts.Service.KEYSTONE)
+@validation.add("required_services", services=[consts.Service.CEILOMETER,
+                                               consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
@@ -49,8 +49,8 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
         self.assertTrue(events, msg)
 
 
-@validation.required_services(consts.Service.CEILOMETER,
-                              consts.Service.KEYSTONE)
+@validation.add("required_services", services=[consts.Service.CEILOMETER,
+                                               consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
@@ -71,8 +71,8 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
         self.assertTrue(event_types, msg)
 
 
-@validation.required_services(consts.Service.CEILOMETER,
-                              consts.Service.KEYSTONE)
+@validation.add("required_services", services=[consts.Service.CEILOMETER,
+                                               consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},

@@ -22,7 +22,7 @@ from rally.task import validation
 """Scenarios for Nova Group servers."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServerGroups.create_and_list_server_groups")
@@ -51,7 +51,7 @@ class CreateAndListServerGroups(utils.NovaScenario):
         self.assertIn(server_group, server_groups_list, err_msg=msg)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServerGroups.create_and_get_server_group")

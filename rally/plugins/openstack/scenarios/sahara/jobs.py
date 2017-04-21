@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 """Benchmark scenarios for Sahara jobs."""
 
 
-@validation.required_services(consts.Service.SAHARA)
+@validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.required_contexts("users", "sahara_image",
                               "sahara_job_binaries", "sahara_cluster")
 @scenario.configure(context={"cleanup": ["sahara"]},
@@ -72,7 +72,7 @@ class CreateLaunchJob(utils.SaharaScenario):
                                 job_idx=job_idx)
 
 
-@validation.required_services(consts.Service.SAHARA)
+@validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.required_contexts("users", "sahara_image",
                               "sahara_job_binaries", "sahara_cluster")
 @scenario.configure(context={"cleanup": ["sahara"]},
@@ -95,7 +95,7 @@ class CreateLaunchJobSequence(utils.SaharaScenario):
             launch_job.run(job["job_type"], job["configs"], idx)
 
 
-@validation.required_services(consts.Service.SAHARA)
+@validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.required_contexts("users", "sahara_image",
                               "sahara_job_binaries", "sahara_cluster")
 @scenario.configure(context={"cleanup": ["sahara"]},

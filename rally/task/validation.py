@@ -26,7 +26,6 @@ from rally.common.i18n import _
 from rally.common import logging
 from rally.common import validation
 from rally.common import yamlutils as yaml
-from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
@@ -312,36 +311,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def required_services(config, clients, deployment, *required_services):
-    """Validator checks if specified OpenStack services are available.
-
-    :param *required_services: list of services names
-    """
-    available_services = list(clients.services().values())
-
-    if consts.Service.NOVA_NET in required_services:
-        creds = deployment.get_credentials_for("openstack")
-        nova = creds["admin"].clients().nova()
-        for service in nova.services.list():
-            if (service.binary == consts.Service.NOVA_NET and
-                    service.status == "enabled"):
-                available_services.append(consts.Service.NOVA_NET)
-
-    for service in required_services:
-        # NOTE(andreykurilin): validator should ignore services configured via
-        # context(a proper validation should be in context)
-        service_config = config.get("context", {}).get(
-            "api_versions", {}).get(service, {})
-        if (service not in available_services and
-                not ("service_type" in service_config or
-                     "service_name" in service_config)):
-            return ValidationResult(
-                False, _("'{0}' service is not available. Hint: If '{0}' "
-                         "service has non-default service_type, try to setup "
-                         "it via 'api_versions' context.").format(service))
-
-
-@validator
 def required_cinder_services(config, clients, deployment, service_name):
     """Validator checks that specified Cinder service is available.
 
@@ -582,3 +551,6 @@ image_valid_on_flavor = deprecated_validator("image_valid_on_flavor",
 
 required_clients = deprecated_validator("required_clients", "required_clients",
                                         "0.10.0")
+
+required_services = deprecated_validator("required_services",
+                                         "required_servcies", "0.10.0")

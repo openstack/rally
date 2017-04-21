@@ -21,7 +21,8 @@ from rally.task import validation
 """Scenarios for Ceilometer Meters API."""
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.required_contexts("ceilometer")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerMeters.list_meters")
@@ -44,7 +45,8 @@ class ListMeters(ceiloutils.CeilometerScenario):
             scenario.run(limit=limit)
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.required_contexts("ceilometer")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerMeters.list_matched_meters")

@@ -25,7 +25,7 @@ from rally.task import validation
 """Scenarios for Swift Objects."""
 
 
-@validation.required_services(consts.Service.SWIFT)
+@validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
@@ -56,7 +56,7 @@ class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
         self._list_objects(container_name)
 
 
-@validation.required_services(consts.Service.SWIFT)
+@validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
@@ -95,7 +95,7 @@ class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
         self._delete_container(container_name)
 
 
-@validation.required_services(consts.Service.SWIFT)
+@validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["swift"]},
                     name="SwiftObjects.create_container"
@@ -133,7 +133,7 @@ class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
                                       atomic_action=False)
 
 
-@validation.required_services(consts.Service.SWIFT)
+@validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"swift_objects": {}},
                     name="SwiftObjects.list_objects_in_containers")
@@ -153,7 +153,7 @@ class ListObjectsInContainers(utils.SwiftScenario):
                 self._list_objects(container["name"], atomic_action=False)
 
 
-@validation.required_services(consts.Service.SWIFT)
+@validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"swift_objects": {}},
                     name="SwiftObjects.list_and_"

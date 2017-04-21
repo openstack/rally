@@ -22,7 +22,7 @@ from rally.task import validation
 """Scenarios for Nova agents."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAgents.list_agents")
 class ListAgents(utils.NovaScenario):

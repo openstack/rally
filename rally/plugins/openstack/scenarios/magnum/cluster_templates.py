@@ -21,7 +21,7 @@ from rally.task import validation
 """Scenarios for Magnum cluster_templates."""
 
 
-@validation.required_services(consts.Service.MAGNUM)
+@validation.add("required_services", services=[consts.Service.MAGNUM])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["magnum"]},
                     name="MagnumClusterTemplates.list_cluster_templates")
