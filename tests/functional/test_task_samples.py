@@ -69,7 +69,8 @@ class TestTaskSamples(unittest.TestCase):
         admin_cred = deployment.get_credentials_for("openstack")["admin"]
 
         ctx = {"admin": {"credential": admin_cred},
-               "task": {"uuid": self.__class__.__name__}}
+               "task": {"uuid": self.__class__.__name__,
+                        "deployment_uuid": deployment["uuid"]}}
         user_ctx = users.UserGenerator(ctx)
         user_ctx.setup()
         self.addCleanup(user_ctx.cleanup)

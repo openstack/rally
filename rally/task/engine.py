@@ -401,37 +401,12 @@ class TaskEngine(object):
             if admin:
                 admin.verify_connection()
 
-            workloads_with_users = []
-            workloads_with_existing_users = []
+            ctx_conf = {"task": self.task, "admin": {"credential": admin}}
+            user_context = context.Context.get("users", namespace=platform,
+                                               allow_hidden=True)(ctx_conf)
 
-            for workload in workloads:
-                if creds["users"] and "users" not in workload.context:
-                    workloads_with_existing_users.append(workload)
-                else:
-                    workloads_with_users.append(workload)
-
-            if workloads_with_users:
-                ctx_conf = {"task": self.task,
-                            "admin": {"credential": admin}}
-                user_context = context.Context.get(
-                    "users", namespace=platform,
-                    allow_hidden=True)(ctx_conf)
-
-                self._validate_config_semantic_helper(
-                    admin, user_context, workloads_with_users, platform)
-
-            if workloads_with_existing_users:
-                ctx_conf = {"task": self.task,
-                            "config": {"existing_users": creds["users"]}}
-                # NOTE(astudenov): allow_hidden=True is required
-                # for openstack existing_users context
-                user_context = context.Context.get(
-                    "existing_users", namespace=platform,
-                    allow_hidden=True)(ctx_conf)
-
-                self._validate_config_semantic_helper(
-                    admin, user_context, workloads_with_existing_users,
-                    platform)
+            self._validate_config_semantic_helper(admin, user_context,
+                                                  workloads, platform)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self, only_syntax=False):
@@ -465,12 +440,9 @@ class TaskEngine(object):
         namespace = scenario_cls.get_namespace()
 
         creds = self.deployment.get_credentials_for(namespace)
-        existing_users = creds["users"]
 
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
-        if existing_users and "users" not in ctx:
-            scenario_context.setdefault("existing_users", existing_users)
-        elif "users" not in ctx:
+        if "users" not in [c.split("@", 1)[0] for c in ctx.keys()]:
             scenario_context.setdefault("users", {})
 
         scenario_context.update(ctx)

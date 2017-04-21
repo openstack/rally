@@ -21,7 +21,9 @@ from oslo_config import cfg
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import objects
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -29,7 +31,6 @@ from rally.plugins.openstack import credential
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
-from rally.task import validation
 
 from rally.common import opts
 opts.register()
@@ -45,7 +46,7 @@ PROJECT_DOMAIN_DESCR = "ID of domain in which projects will be created."
 USER_DOMAIN_DESCR = "ID of domain in which users will be created."
 
 
-@validation.add("required_platform", platform="openstack", admin=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="users", namespace="openstack", order=100)
 class UserGenerator(context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
@@ -53,57 +54,77 @@ class UserGenerator(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
-        "properties": {
-            "tenants": {
-                "type": "integer",
-                "minimum": 1,
-                "description": "The number of tenants to create."
-            },
-            "users_per_tenant": {
-                "type": "integer",
-                "minimum": 1,
-                "description": "The number of users to create per one tenant."
-            },
-            "resource_management_workers": {
-                "type": "integer",
-                "minimum": 1,
-                "description": RESOURCE_MANAGEMENT_WORKERS_DESCR,
-
-            },
-            "project_domain": {
-                "type": "string",
-                "description": PROJECT_DOMAIN_DESCR
-            },
-            "user_domain": {
-                "type": "string",
-                "description": USER_DOMAIN_DESCR
-            },
+        "oneOf": [
+            {"description": "Create new temporary users and tenants.",
+             "properties": {
+                "tenants": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "The number of tenants to create."
+                },
+                 "users_per_tenant": {
+                     "type": "integer",
+                     "minimum": 1,
+                     "description": "The number of users to create per one "
+                                    "tenant."},
+                 "resource_management_workers": {
+                     "type": "integer",
+                     "minimum": 1,
+                     "description": RESOURCE_MANAGEMENT_WORKERS_DESCR},
+                 "project_domain": {
+                     "type": "string",
+                     "description": PROJECT_DOMAIN_DESCR},
+                 "user_domain": {
+                     "type": "string",
+                     "description": USER_DOMAIN_DESCR},
+                 "user_choice_method": {
+                     "$ref": "#/definitions/user_choice_method"}},
+             "additionalProperties": False},
+            # TODO(andreykurilin): add ability to specify users here.
+            {"description": "Use existing users and tenants.",
+             "properties": {
+                 "user_choice_method": {
+                     "$ref": "#/definitions/user_choice_method"}
+             },
+             "additionalProperties": False}
+        ],
+        "definitions": {
             "user_choice_method": {
                 "enum": ["random", "round_robin"],
                 "description": "The mode of balancing usage of users between "
-                               "scenario iterations."
-            },
-        },
-        "additionalProperties": False
+                               "scenario iterations."}
+
+        }
     }
 
-    DEFAULT_CONFIG = {
+    DEFAULT_CONFIG = {"user_choice_method": "random"}
+
+    DEFAULT_FOR_NEW_USERS = {
         "tenants": 1,
         "users_per_tenant": 1,
         "resource_management_workers":
             cfg.CONF.users_context.resource_management_workers,
-        "user_choice_method": "random",
     }
 
     def __init__(self, context):
-        self.credential = context["admin"]["credential"]
-        project_domain = (self.credential.project_domain_name or
-                          cfg.CONF.users_context.project_domain)
-        user_domain = (self.credential.user_domain_name or
-                       cfg.CONF.users_context.user_domain)
-        self.DEFAULT_CONFIG["project_domain"] = project_domain
-        self.DEFAULT_CONFIG["user_domain"] = user_domain
         super(UserGenerator, self).__init__(context)
+
+        deployment = objects.Deployment.get(context["task"]["deployment_uuid"])
+        existing_users = deployment.get_credentials_for("openstack")["users"]
+        if existing_users and not (set(self.config) - {"user_choice_method"}):
+            self.existing_users = existing_users
+        else:
+            self.existing_users = []
+            self.credential = context["admin"]["credential"]
+            project_domain = (self.credential.project_domain_name or
+                              cfg.CONF.users_context.project_domain)
+            user_domain = (self.credential.user_domain_name or
+                           cfg.CONF.users_context.user_domain)
+            self.DEFAULT_FOR_NEW_USERS["project_domain"] = project_domain
+            self.DEFAULT_FOR_NEW_USERS["user_domain"] = user_domain
+            with self.config.unlocked():
+                for key, value in self.DEFAULT_FOR_NEW_USERS.items():
+                    self.config.setdefault(key, value)
 
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
@@ -236,14 +257,8 @@ class UserGenerator(context.Context):
                    threads)
         self.context["users"] = []
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
-    def setup(self):
+    def create_users(self):
         """Create tenants and users, using the broker pattern."""
-        super(UserGenerator, self).setup()
-        self.context["users"] = []
-        self.context["tenants"] = {}
-        self.context["user_choice_method"] = self.config["user_choice_method"]
-
         threads = self.config["resource_management_workers"]
 
         LOG.debug("Creating %(tenants)d tenants using %(threads)s threads" %
@@ -267,9 +282,43 @@ class UserGenerator(context.Context):
                 ctx_name=self.get_name(),
                 msg=_("Failed to create the requested number of users."))
 
+    def use_existing_users(self):
+        LOG.debug("Using existing users")
+        for user_credential in self.existing_users:
+            user_clients = user_credential.clients()
+            user_id = user_clients.keystone.auth_ref.user_id
+            tenant_id = user_clients.keystone.auth_ref.project_id
+
+            if tenant_id not in self.context["tenants"]:
+                self.context["tenants"][tenant_id] = {
+                    "id": tenant_id,
+                    "name": user_credential.tenant_name
+                }
+
+            self.context["users"].append({
+                "credential": user_credential,
+                "id": user_id,
+                "tenant_id": tenant_id
+            })
+
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
+    def setup(self):
+        self.context["users"] = []
+        self.context["tenants"] = {}
+        self.context["user_choice_method"] = self.config["user_choice_method"]
+
+        if self.existing_users:
+            self.use_existing_users()
+        else:
+            self.create_users()
+
     @logging.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):
         """Delete tenants and users, using the broker pattern."""
-        self._remove_default_security_group()
-        self._delete_users()
-        self._delete_tenants()
+        if self.existing_users:
+            # nothing to do here.
+            return
+        else:
+            self._remove_default_security_group()
+            self._delete_users()
+            self._delete_tenants()

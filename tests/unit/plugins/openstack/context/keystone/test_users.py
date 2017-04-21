@@ -24,7 +24,216 @@ from tests.unit import test
 CTX = "rally.plugins.openstack.context.keystone.users"
 
 
-class UserGeneratorTestCase(test.ScenarioTestCase):
+class UserGeneratorBaseTestCase(test.ScenarioTestCase):
+    def setUp(self):
+        super(UserGeneratorBaseTestCase, self).setUp()
+        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
+        self.osclients = self.osclients_patcher.start()
+        self.addCleanup(self.osclients_patcher.stop)
+
+        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
+        self.deployment_get = self.deployment_patcher.start()
+        self.addCleanup(self.deployment_patcher.stop)
+
+        self.deployment_uuid = "deployment_id"
+        self.admin_cred = mock.MagicMock()
+
+        self.context.update({
+            "config": {"users": {}},
+            "admin": {"credential": self.admin_cred},
+            "users": [],
+            "task": {"uuid": "task_id",
+                     "deployment_uuid": self.deployment_uuid}
+        })
+
+    def test___init__for_new_users(self):
+        deployment = self.deployment_get.return_value
+        deployment.get_credentials_for.return_value = {"users": []}
+        self.context["config"]["users"] = {
+            "tenants": 1, "users_per_tenant": 1,
+            "resource_management_workers": 1}
+
+        user_generator = users.UserGenerator(self.context)
+
+        self.assertEqual([], user_generator.existing_users)
+        self.assertEqual(self.admin_cred.project_domain_name,
+                         user_generator.config["project_domain"])
+        self.assertEqual(self.admin_cred.user_domain_name,
+                         user_generator.config["user_domain"])
+
+        self.deployment_get.assert_called_once_with(self.deployment_uuid)
+        deployment.get_credentials_for.assert_called_once_with("openstack")
+
+        self.deployment_get.reset_mock()
+        deployment.get_credentials_for.reset_mock()
+
+        # the case #2 - existing users are presented in deployment but
+        #   the user forces to create new ones
+        deployment.get_credentials_for.return_value = {"users": [mock.Mock()]}
+
+        user_generator = users.UserGenerator(self.context)
+
+        self.assertEqual([], user_generator.existing_users)
+        self.assertEqual(self.admin_cred.project_domain_name,
+                         user_generator.config["project_domain"])
+        self.assertEqual(self.admin_cred.user_domain_name,
+                         user_generator.config["user_domain"])
+
+        self.deployment_get.assert_called_once_with(self.deployment_uuid)
+        deployment.get_credentials_for.assert_called_once_with("openstack")
+
+    def test___init__for_existing_users(self):
+        deployment = self.deployment_get.return_value
+        foo_user = mock.Mock()
+        deployment.get_credentials_for.return_value = {"users": [foo_user]}
+
+        user_generator = users.UserGenerator(self.context)
+
+        self.assertEqual([foo_user], user_generator.existing_users)
+        self.assertEqual({"user_choice_method": "random"},
+                         user_generator.config)
+
+        self.deployment_get.assert_called_once_with(self.deployment_uuid)
+        deployment.get_credentials_for.assert_called_once_with("openstack")
+
+        self.deployment_get.reset_mock()
+        deployment.get_credentials_for.reset_mock()
+
+        # the case #2: the config with `user_choice_method` option
+        self.context["config"]["users"] = {"user_choice_method": "foo"}
+
+        user_generator = users.UserGenerator(self.context)
+
+        self.assertEqual([foo_user], user_generator.existing_users)
+        self.assertEqual({"user_choice_method": "foo"}, user_generator.config)
+
+        self.deployment_get.assert_called_once_with(self.deployment_uuid)
+        deployment.get_credentials_for.assert_called_once_with("openstack")
+
+    def test_setup(self):
+        user_generator = users.UserGenerator(self.context)
+        user_generator.use_existing_users = mock.Mock()
+        user_generator.create_users = mock.Mock()
+
+        # no existing users -> new users should be created
+        user_generator.existing_users = []
+
+        user_generator.setup()
+
+        user_generator.create_users.assert_called_once_with()
+        self.assertFalse(user_generator.use_existing_users.called)
+
+        user_generator.create_users.reset_mock()
+        user_generator.use_existing_users.reset_mock()
+
+        # existing_users is not empty -> existing users should be created
+        user_generator.existing_users = [mock.Mock()]
+
+        user_generator.setup()
+
+        user_generator.use_existing_users.assert_called_once_with()
+        self.assertFalse(user_generator.create_users.called)
+
+    def test_cleanup(self):
+        user_generator = users.UserGenerator(self.context)
+        user_generator._remove_default_security_group = mock.Mock()
+        user_generator._delete_users = mock.Mock()
+        user_generator._delete_tenants = mock.Mock()
+
+        # In case if existing users nothing should be done
+        user_generator.existing_users = [mock.Mock]
+
+        user_generator.cleanup()
+
+        self.assertFalse(user_generator._remove_default_security_group.called)
+        self.assertFalse(user_generator._delete_users.called)
+        self.assertFalse(user_generator._delete_tenants.called)
+
+        # In case when new users were created, the proper cleanup should be
+        #   performed
+        user_generator.existing_users = []
+
+        user_generator.cleanup()
+
+        user_generator._remove_default_security_group.assert_called_once_with()
+        user_generator._delete_users.assert_called_once_with()
+        user_generator._delete_tenants.assert_called_once_with()
+
+
+class UserGeneratorForExistingUsersTestCase(test.ScenarioTestCase):
+    def setUp(self):
+        super(UserGeneratorForExistingUsersTestCase, self).setUp()
+        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
+        self.osclients = self.osclients_patcher.start()
+        self.addCleanup(self.osclients_patcher.stop)
+
+        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
+        self.deployment_get = self.deployment_patcher.start()
+        self.addCleanup(self.deployment_patcher.stop)
+
+        self.deployment_uuid = "deployment_id"
+
+        self.context.update({
+            "config": {"users": {}},
+            "users": [],
+            "task": {"uuid": "task_id",
+                     "deployment_uuid": self.deployment_uuid}
+        })
+
+    def test_use_existing_users(self):
+        user1 = mock.MagicMock(tenant_id="1", user_id="1",
+                               tenant_name="proj", username="usr")
+        user2 = mock.MagicMock(tenant_id="1", user_id="2",
+                               tenant_name="proj", username="usr")
+        user3 = mock.MagicMock(tenant_id="2", user_id="3",
+                               tenant_name="proj", username="usr")
+
+        user_list = [user1, user2, user3]
+
+        class AuthRef(object):
+            USER_ID_COUNT = 0
+            PROJECT_ID_COUNT = 0
+
+            @property
+            def user_id(self):
+                self.USER_ID_COUNT += 1
+                return user_list[self.USER_ID_COUNT - 1].user_id
+
+            @property
+            def project_id(self):
+                self.PROJECT_ID_COUNT += 1
+                return user_list[self.PROJECT_ID_COUNT - 1].tenant_id
+
+        auth_ref = AuthRef()
+
+        user1.clients.return_value.keystone.auth_ref = auth_ref
+        user2.clients.return_value.keystone.auth_ref = auth_ref
+        user3.clients.return_value.keystone.auth_ref = auth_ref
+
+        deployment = self.deployment_get.return_value
+        deployment.get_credentials_for.return_value = {"users": user_list}
+
+        user_generator = users.UserGenerator(self.context)
+        user_generator.setup()
+
+        self.assertIn("users", self.context)
+        self.assertIn("tenants", self.context)
+        self.assertIn("user_choice_method", self.context)
+        self.assertEqual("random", self.context["user_choice_method"])
+        self.assertEqual(
+            [{"id": user1.user_id, "credential": user1,
+              "tenant_id": user1.tenant_id},
+             {"id": user2.user_id, "credential": user2,
+              "tenant_id": user2.tenant_id},
+             {"id": user3.user_id, "credential": user3,
+              "tenant_id": user3.tenant_id}], self.context["users"]
+        )
+        self.assertEqual({"1": {"id": "1", "name": user1.tenant_name},
+                          "2": {"id": "2", "name": user3.tenant_name}},
+                         self.context["tenants"])
+
+
+class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
 
     tenants_num = 1
     users_per_tenant = 5
@@ -32,9 +241,19 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
     threads = 10
 
     def setUp(self):
-        super(UserGeneratorTestCase, self).setUp()
+        super(UserGeneratorForNewUsersTestCase, self).setUp()
         self.osclients_patcher = mock.patch("%s.osclients" % CTX)
         self.osclients = self.osclients_patcher.start()
+        self.addCleanup(self.osclients_patcher.stop)
+
+        self.deployment_patcher = mock.patch("%s.objects.Deployment.get" % CTX)
+        self.deployment_get = self.deployment_patcher.start()
+        self.addCleanup(self.deployment_patcher.stop)
+
+        # Force the case of creating new users
+        deployment = self.deployment_get.return_value
+        deployment.get_credentials_for.return_value = {"users": []}
+
         self.context.update({
             "config": {
                 "users": {
@@ -45,12 +264,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
             },
             "admin": {"credential": mock.MagicMock()},
             "users": [],
-            "task": {"uuid": "task_id"}
+            "task": {"uuid": "task_id", "deployment_uuid": "dep_uuid"}
         })
-
-    def tearDown(self):
-        self.osclients_patcher.stop()
-        super(UserGeneratorTestCase, self).tearDown()
 
     @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_not_needed(self, mock_wrap):
@@ -203,6 +418,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                              self.users_num)
             self.assertEqual(len(ctx.context["tenants"]),
                              self.tenants_num)
+
             self.assertEqual("random", ctx.context["user_choice_method"])
 
         # Cleanup (called by content manager)
@@ -289,7 +505,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {"credential": credential},
-            "task": {"uuid": "task_id"}
+            "task": {"uuid": "task_id", "deployment_uuid": "deployment_id"}
         }
 
         user_generator = users.UserGenerator(config)
@@ -311,7 +527,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {"credential": credential},
-            "task": {"uuid": "task_id"}
+            "task": {"uuid": "task_id", "deployment_uuid": "deployment_id"}
         }
 
         user_generator = users.UserGenerator(config)

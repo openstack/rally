@@ -73,7 +73,7 @@ class RallyJobsTestCase(test.TestCase):
                         if not isinstance(args, dict):
                             raise TypeError(
                                 "args file %s must be dict in yaml or json "
-                                "presenatation" % args_file)
+                                "presentation" % args_file)
 
                     task_inst = api._Task(api.API(skip_db_check=True))
                     task = task_inst.render_template(

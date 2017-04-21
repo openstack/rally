@@ -399,10 +399,8 @@ class TaskEngineTestCase(test.TestCase):
 
         user_context = mock_context.get.return_value.return_value
 
-        mock__validate_config_semantic_helper.assert_has_calls([
-            mock.call(admin, user_context, [wconf1], "openstack"),
-            mock.call(admin, user_context, [wconf2, wconf3], "openstack"),
-        ], any_order=True)
+        mock__validate_config_semantic_helper.assert_called_once_with(
+            admin, user_context, [wconf1, wconf2, wconf3], "openstack")
 
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.TaskEngine._validate_workload")
@@ -624,36 +622,6 @@ class TaskEngineTestCase(test.TestCase):
             "scenario_name": name,
             "scenario_namespace": "openstack",
             "config": {"a": 1, "b": 3, "c": 4, "users": {}}
-        }
-        self.assertEqual(result, expected_result)
-        mock_scenario_get.assert_called_once_with(name)
-
-    @mock.patch("rally.task.engine.TaskConfig")
-    @mock.patch("rally.task.engine.scenario.Scenario.get")
-    def test__prepare_context_with_existing_users(self, mock_scenario_get,
-                                                  mock_task_config):
-        mock_scenario = mock_scenario_get.return_value
-        mock_scenario.get_default_context.return_value = {}
-        mock_scenario.get_namespace.return_value = "openstack"
-        task = mock.MagicMock()
-        name = "a.task"
-        context = {"b": 3, "c": 4}
-        config = {
-            "a.task": [{"context": {"context_a": {"a": 1}}}],
-        }
-        admin = fakes.fake_credential(foo="admin")
-        users = [fakes.fake_credential(bar="user1")]
-        deployment = fakes.FakeDeployment(uuid="deployment_uuid",
-                                          admin=admin, users=users)
-        eng = engine.TaskEngine(config, task, deployment)
-        result = eng._prepare_context(context, name, "foo_uuid")
-        expected_result = {
-            "task": task,
-            "owner_id": "foo_uuid",
-            "admin": {"credential": admin},
-            "scenario_name": name,
-            "scenario_namespace": "openstack",
-            "config": {"b": 3, "c": 4, "existing_users": users}
         }
         self.assertEqual(result, expected_result)
         mock_scenario_get.assert_called_once_with(name)
