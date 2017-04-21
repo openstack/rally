@@ -1097,8 +1097,8 @@ class API(object):
         :type skip_db_check: bool
         """
         if rally_endpoint:
-            raise NotImplementedError(_LE("Sorry, but Rally-as-a-Service is "
-                                          "not ready yet."))
+            raise NotImplementedError(_("Sorry, but Rally-as-a-Service is "
+                                        "not ready yet."))
         try:
             config_files = ([config_file] if config_file else
                             self._default_config_file())
@@ -1144,7 +1144,7 @@ class API(object):
 
         except cfg.ConfigFilesNotFoundError as e:
             cfg_files = e.config_files
-            raise exceptions.RallyException(_LE(
+            raise exceptions.RallyException(_(
                 "Failed to read configuration file(s): %s") % cfg_files)
 
         # Check that db is upgraded to the latest revision
@@ -1177,13 +1177,13 @@ class API(object):
 
         # Check that db exists
         if rev["revision"] is None:
-            raise exceptions.RallyException(_LE(
+            raise exceptions.RallyException(_(
                 "Database is missing. Create database by command "
                 "`rally-manage db create'"))
 
         # Check that db is updated
         if rev["revision"] != rev["current_head"]:
-            raise exceptions.RallyException(_LE(
+            raise exceptions.RallyException(_(
                 "Database seems to be outdated. Run upgrade from "
                 "revision %(revision)s to %(current_head)s by command "
                 "`rally-manage db upgrade'") % rev)
