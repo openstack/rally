@@ -21,6 +21,7 @@ from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally.common import validation
+from rally import exceptions
 from rally.task import functional
 
 LOG = logging.getLogger(__name__)
@@ -157,11 +158,38 @@ class ContextManager(object):
         self.context_obj = context_obj
 
     def _get_sorted_context_lst(self):
-        return sorted([
-            Context.get(ctx_name,
-                        namespace=self.context_obj["scenario_namespace"],
-                        allow_hidden=True)(self.context_obj)
-            for ctx_name in self.context_obj["config"].keys()])
+        context_list = []
+        for ctx_name in self.context_obj["config"].keys():
+            # TODO(andreykurilin): move this logic to some "find" method
+            if "@" in ctx_name:
+                ctx_name, ctx_namespace = ctx_name.split("@", 1)
+                context_list.append(Context.get(ctx_name,
+                                                namespace=ctx_namespace,
+                                                fallback_to_default=False,
+                                                allow_hidden=True))
+            else:
+                potential_result = Context.get_all(name=ctx_name,
+                                                   allow_hidden=True)
+                if len(potential_result) == 1:
+                    context_list.append(potential_result[0])
+                    continue
+                elif len(potential_result) > 1:
+                    scen_namespace = self.context_obj["scenario_namespace"]
+                    another_attempt = [c for c in potential_result
+                                       if c.get_namespace() == scen_namespace]
+                    if another_attempt:
+                        context_list.append(another_attempt[0])
+                        continue
+                    another_attempt = [c for c in potential_result
+                                       if c.get_namespace() == "default"]
+                    if another_attempt:
+                        context_list.append(another_attempt[0])
+                        continue
+
+                raise exceptions.PluginNotFound(name=ctx_name,
+                                                namespace="any of")
+
+        return sorted([ctx(self.context_obj) for ctx in context_list])
 
     def setup(self):
         """Creates benchmark environment from config."""
