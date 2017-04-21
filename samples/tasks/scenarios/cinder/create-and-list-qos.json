@@ -2,11 +2,9 @@
     "CinderQos.create_and_list_qos": [
         {
             "args": {
-                "specs": {
-                     "consumer": "both",
-                     "write_iops_sec": "10",
-                     "read_iops_sec": "1000"
-                }
+                "consumer": "both",
+                "write_iops_sec": "10",
+                "read_iops_sec": "1000"
             },
             "runner": {
                 "type": "constant",

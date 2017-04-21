@@ -55,7 +55,7 @@ class CinderQosTestCase(test.ScenarioTestCase):
         mock_service.create_qos.return_value = qos
         mock_service.list_qos.return_value = list_qos
 
-        scenario.run(specs)
+        scenario.run("both", "10", "1000")
         mock_service.create_qos.assert_called_once_with(specs)
         mock_service.list_qos.assert_called_once_with()
 
@@ -74,7 +74,7 @@ class CinderQosTestCase(test.ScenarioTestCase):
         mock_service.list_qos.return_value = list_qos
 
         self.assertRaises(rally_exceptions.RallyAssertionError,
-                          scenario.run, specs)
+                          scenario.run, "both", "10", "1000")
         mock_service.create_qos.assert_called_once_with(specs)
         mock_service.list_qos.assert_called_once_with()
 
@@ -88,6 +88,25 @@ class CinderQosTestCase(test.ScenarioTestCase):
         scenario = qos_specs.CreateAndGetQos(self._get_context())
         mock_service.create_qos.return_value = qos
 
-        scenario.run(specs)
+        scenario.run("both", "10", "1000")
         mock_service.create_qos.assert_called_once_with(specs)
         mock_service.get_qos.assert_called_once_with(qos.id)
+
+    def test_create_and_set_qos(self):
+        mock_service = self.mock_cinder.return_value
+        qos = mock.MagicMock()
+        create_specs_args = {"consumer": "back-end",
+                             "write_iops_sec": "10",
+                             "read_iops_sec": "1000"}
+
+        set_specs_args = {"consumer": "both",
+                          "write_iops_sec": "11",
+                          "read_iops_sec": "1001"}
+        scenario = qos_specs.CreateAndSetQos(self._get_context())
+        mock_service.create_qos.return_value = qos
+
+        scenario.run("back-end", "10", "1000",
+                     "both", "11", "1001")
+        mock_service.create_qos.assert_called_once_with(create_specs_args)
+        mock_service.set_qos.assert_called_once_with(
+            qos=qos, set_specs_args=set_specs_args)

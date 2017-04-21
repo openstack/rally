@@ -1,10 +1,13 @@
 ---
-  CinderQos.create_and_get_qos:
+  CinderQos.create_and_set_qos:
     -
       args:
-        consumer: "both"
+        consumer: "back-end"
         write_iops_sec: "10"
         read_iops_sec: "1000"
+        set_consumer: "both"
+        set_write_iops_sec: "11"
+        set_read_iops_sec: "1001"
       runner:
         type: "constant"
         times: 5

@@ -258,6 +258,15 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             result)
         self.cinder.qos_specs.get.assert_called_once_with("qos")
 
+    def test_set_qos(self):
+        set_specs_args = {"test": "foo"}
+        result = self.service.set_qos("qos", set_specs_args)
+        self.assertEqual(
+            self.cinder.qos_specs.set_keys.return_value,
+            result)
+        self.cinder.qos_specs.set_keys.assert_called_once_with("qos",
+                                                               set_specs_args)
+
     def test_delete_snapshot(self):
         snapshot = mock.Mock()
         self.service.delete_snapshot(snapshot)
@@ -466,10 +475,12 @@ class UnifiedCinderMixinTestCase(test.TestCase):
     def test__unify_qos(self):
         class Qos(object):
             id = 1
-            name = "transfer"
+            name = "qos"
+            specs = {"key1": "value1"}
         qos = self.service._unify_qos(Qos())
         self.assertEqual(1, qos.id)
-        self.assertEqual("transfer", qos.name)
+        self.assertEqual("qos", qos.name)
+        self.assertEqual({"key1": "value1"}, qos.specs)
 
     def test__unify_encryption_type(self):
         class SomeEncryptionType(object):
@@ -548,6 +559,17 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         self.service._unify_qos.assert_called_once_with(
             self.service._impl.get_qos.return_value
         )
+
+    def test_set_qos(self):
+        set_specs_args = {"test": "foo"}
+        self.service._unify_qos = mock.MagicMock()
+        qos = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_qos.return_value,
+            self.service.set_qos(qos, set_specs_args))
+        self.service._impl.set_qos.assert_called_once_with(qos.id,
+                                                           set_specs_args)
+        self.service._unify_qos.assert_called_once_with(qos)
 
     def test_delete_snapshot(self):
         self.service.delete_snapshot("snapshot")

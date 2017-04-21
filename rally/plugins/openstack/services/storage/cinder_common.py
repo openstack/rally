@@ -235,6 +235,19 @@ class CinderMixin(object):
         with atomic.ActionTimer(self, aname):
             return self._get_client().qos_specs.get(qos_id)
 
+    def set_qos(self, qos_id, set_specs_args):
+        """Add/Update keys in qos specs.
+
+        :param qos_id: The ID of the :class:`QoSSpecs` to get
+        :param set_specs_args: A dict of key/value pairs to be set
+        :rtype: class 'cinderclient.apiclient.base.DictWithMeta'
+                {"qos_specs": set_specs_args}
+        """
+        aname = "cinder_v%s.set_qos" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().qos_specs.set_keys(qos_id,
+                                                         set_specs_args)
+
     def delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 
@@ -444,7 +457,7 @@ class UnifiedCinderMixin(object):
 
     @staticmethod
     def _unify_qos(qos):
-        return block.QoSSpecs(id=qos.id, name=qos.name)
+        return block.QoSSpecs(id=qos.id, name=qos.name, specs=qos.specs)
 
     @staticmethod
     def _unify_encryption_type(encryption_type):
@@ -533,6 +546,16 @@ class UnifiedCinderMixin(object):
         :rtype: :class: 'QoSSpecs'
         """
         return self._unify_qos(self._impl.get_qos(qos_id))
+
+    def set_qos(self, qos, set_specs_args):
+        """Add/Update keys in qos specs.
+
+        :param qos: The instance of the :class:`QoSSpecs` to set
+        :param set_specs_args: A dict of key/value pairs to be set
+        :rtype: :class: 'QoSSpecs'
+        """
+        self._impl.set_qos(qos.id, set_specs_args)
+        return self._unify_qos(qos)
 
     def delete_snapshot(self, snapshot):
         """Delete the given backup.
