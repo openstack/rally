@@ -661,6 +661,8 @@ class EC2(OSClient):
     """
     def create_client(self):
         """Return ec2 client."""
+        LOG.warning("rally.osclient.EC2 is deprecated since Rally 0.10.0.")
+
         import boto
 
         kc = self.keystone()

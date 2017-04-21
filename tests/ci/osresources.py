@@ -417,14 +417,6 @@ class Trove(ResourceManager):
         return self.client.module.list(datastore="all")
 
 
-class EC2(ResourceManager):
-
-    REQUIRED_SERVICE = consts.Service.EC2
-
-    def list_servers(self):
-        return self.client.get_only_instance()
-
-
 class Monasca(ResourceManager):
 
     REQUIRED_SERVICE = consts.Service.MONASCA
