@@ -104,15 +104,22 @@ class KeystoneV3Service(service.Service, keystone_common.KeystoneMixin):
 
         if project_id:
             # we can't setup role without project_id
-            for role in self.list_roles():
-                if default_role in role.name.lower():
+            roles = self.list_roles()
+            for role in roles:
+                if default_role == role.name.lower():
                     self.add_role(role_id=role.id,
                                   user_id=user.id,
                                   project_id=project_id)
-                    break
-            else:
-                LOG.warning("Unable to set %s role to created user." %
-                            default_role)
+                    return user
+            for role in roles:
+                if default_role == role.name.lower().strip("_"):
+                    self.add_role(role_id=role.id,
+                                  user_id=user.id,
+                                  project_id=project_id)
+                    return user
+
+            LOG.warning("Unable to set %s role to created user." %
+                        default_role)
         return user
 
     @atomic.action_timer("keystone_v3.create_users")
