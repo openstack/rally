@@ -15,9 +15,12 @@
 
 import imp
 import os
+import pkg_resources
+import pkgutil
 import sys
 
 from oslo_utils import importutils
+import six
 
 import rally
 from rally.common.i18n import _
@@ -58,6 +61,34 @@ def import_modules_from_package(package):
             if module_name not in sys.modules:
                 sys.modules[module_name] = importutils.import_module(
                     module_name)
+
+
+def import_modules_by_entry_point():
+    """Import plugins by entry-point 'rally_plugins'."""
+    for ep in pkg_resources.iter_entry_points("rally_plugins"):
+        if ep.name == "path":
+            try:
+                m = ep.load()
+                if hasattr(m, "__path__"):
+                    path = pkgutil.extend_path(m.__path__, m.__name__)
+                else:
+                    path = m.__file__
+                prefix = m.__name__ + "."
+                for loader, name, _is_pkg in pkgutil.walk_packages(
+                        path, prefix=prefix):
+                    mod = loader.find_module(name).load_module(name)
+                    sys.modules[name] = mod
+            except Exception as e:
+                LOG.warning(
+                    "\t Failed to load plugins from module '%(module)s' "
+                    "(package: '%(package)s'): '%(error)s')" % {
+                        "module": ep.module_name,
+                        "package": "%s %s" % (ep.dist.project_name,
+                                              ep.dist.version),
+                        "error": six.text_type(e)
+                    })
+                if logging.is_debug():
+                    LOG.exception(e)
 
 
 def load_plugins(dir_or_file):
