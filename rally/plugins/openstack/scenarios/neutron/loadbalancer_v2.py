@@ -19,7 +19,7 @@ from rally.task import validation
 """Scenarios for Neutron Loadbalancer v2."""
 
 
-@validation.required_neutron_extensions("lbaasv2")
+@validation.add("required_neutron_extensions", extensions=["lbaasv2"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")

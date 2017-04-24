@@ -19,7 +19,7 @@ from rally.task import validation
 
 
 @validation.restricted_parameters(["name"])
-@validation.required_neutron_extensions("bgpvpn")
+@validation.add("required_neutron_extensions", extensions=["bgpvpn"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"admin_cleanup": ["neutron"]},

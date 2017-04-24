@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import ddt
 import mock
 
@@ -155,3 +154,32 @@ class ExternalNetworkExistsValidatorTestCase(test.TestCase):
                                             net1, net2), result.msg[0])
         elif result:
             self.assertIsNone(result, "Unexpected result '%s'" % result)
+
+
+@ddt.ddt
+class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredNeutronExtensionsValidatorTestCase, self).setUp()
+        self.config = config
+
+    @ddt.unpack
+    @ddt.data(
+        {"ext_validate": "existing_extension"},
+        {"ext_validate": "absent_extension",
+         "err_msg": "Neutron extension absent_extension is not configured"}
+    )
+    def test_validator(self, ext_validate, err_msg=False):
+        validator = validators.RequiredNeutronExtensionsValidator(
+            ext_validate)
+        clients = credentials["openstack"]["users"][0]["credential"].clients()
+
+        clients.neutron().list_extensions.return_value = {
+            "extensions": [{"alias": "existing_extension"}]}
+        result = validator.validate({}, credentials, {}, None)
+
+        if err_msg:
+            self.assertTrue(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)

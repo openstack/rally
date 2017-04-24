@@ -13,14 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import re
 
 from glanceclient import exc as glance_exc
 
+from rally.common import logging
 from rally.common import validation
 from rally import exceptions
 from rally.plugins.openstack import types as openstack_types
+
+LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -107,3 +109,38 @@ class ExternalNetworkExistsValidator(validation.Validator):
                 result.append(message)
         if result:
             return self.fail(result)
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="required_neutron_extensions",
+                      namespace="openstack")
+class RequiredNeutronExtensionsValidator(validation.Validator):
+
+    def __init__(self, extensions, *args):
+        """Validator checks if the specified Neutron extension is available
+
+        :param extensions: list of Neutron extensions
+        """
+        super(RequiredNeutronExtensionsValidator, self).__init__()
+        if isinstance(extensions, (list, tuple)):
+            # services argument is a list, so it is a new way of validators
+            #  usage, args in this case should not be provided
+            self.req_ext = extensions
+            if args:
+                LOG.warning("Positional argument is not what "
+                            "'required_neutron_extensions' decorator expects. "
+                            "Use `extensions` argument instead")
+        else:
+            # it is old way validator
+            self.req_ext = [extensions]
+            self.req_ext.extend(args)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        clients = credentials["openstack"]["users"][0]["credential"].clients()
+        extensions = clients.neutron().list_extensions()["extensions"]
+        aliases = [x["alias"] for x in extensions]
+        for extension in self.req_ext:
+            if extension not in aliases:
+                msg = ("Neutron extension %s "
+                       "is not configured") % extension
+                return self.fail(msg)

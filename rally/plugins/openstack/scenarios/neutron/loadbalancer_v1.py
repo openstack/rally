@@ -24,7 +24,7 @@ from rally.task import validation
 
 @validation.restricted_parameters("subnet_id",
                                   subdict="pool_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -48,7 +48,7 @@ class CreateAndListPools(utils.NeutronScenario):
 
 @validation.restricted_parameters("subnet_id",
                                   subdict="pool_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -74,7 +74,7 @@ class CreateAndDeletePools(utils.NeutronScenario):
 
 @validation.restricted_parameters("subnet_id",
                                   subdict="pool_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -102,7 +102,7 @@ class CreateAndUpdatePools(utils.NeutronScenario):
 
 @validation.restricted_parameters(["pool_id", "subnet_id"],
                                   subdict="vip_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -132,7 +132,7 @@ class CreateAndListVips(utils.NeutronScenario):
 
 @validation.restricted_parameters(["pool_id", "subnet_id"],
                                   subdict="vip_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -164,7 +164,7 @@ class CreateAndDeleteVips(utils.NeutronScenario):
 
 @validation.restricted_parameters(["pool_id", "subnet_id"],
                                   subdict="vip_create_args")
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -197,7 +197,7 @@ class CreateAndUpdateVips(utils.NeutronScenario):
             self._update_v1_vip(vip, **vip_update_args)
 
 
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
@@ -219,7 +219,7 @@ class CreateAndListHealthmonitors(utils.NeutronScenario):
         self._list_v1_healthmonitors()
 
 
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
@@ -243,7 +243,7 @@ class CreateAndDeleteHealthmonitors(utils.NeutronScenario):
         self._delete_v1_healthmonitor(healthmonitor["health_monitor"])
 
 
-@validation.required_neutron_extensions("lbaas")
+@validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
