@@ -439,6 +439,14 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         self.assertEqual("volume", transfer.volume_id)
         self.assertEqual("st", transfer.status)
 
+    def test__unify_qos(self):
+        class Qos(object):
+            id = 1
+            name = "transfer"
+        qos = self.service._unify_qos(Qos())
+        self.assertEqual(1, qos.id)
+        self.assertEqual("transfer", qos.name)
+
     def test__unify_encryption_type(self):
         class SomeEncryptionType(object):
             encryption_id = 1
@@ -487,24 +495,35 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         specs = {"consumer": "both",
                  "write_iops_sec": "10",
                  "read_iops_sec": "1000"}
+        self.service._unify_qos = mock.MagicMock()
         self.assertEqual(
-            self.service._impl.create_qos.return_value,
+            self.service._unify_qos.return_value,
             self.service.create_qos(specs)
         )
         self.service._impl.create_qos.assert_called_once_with(specs)
+        self.service._unify_qos.assert_called_once_with(
+            self.service._impl.create_qos.return_value
+        )
 
     def test_list_qos(self):
+        self.service._unify_qos = mock.MagicMock()
+        self.service._impl.list_qos.return_value = ["qos"]
         self.assertEqual(
-            self.service._impl.list_qos.return_value,
+            [self.service._unify_qos.return_value],
             self.service.list_qos(True)
         )
         self.service._impl.list_qos.assert_called_once_with(True)
+        self.service._unify_qos.assert_called_once_with("qos")
 
     def test_get_qos(self):
+        self.service._unify_qos = mock.MagicMock()
         self.assertEqual(
-            self.service._impl.get_qos.return_value,
+            self.service._unify_qos.return_value,
             self.service.get_qos("qos"))
         self.service._impl.get_qos.assert_called_once_with("qos")
+        self.service._unify_qos.assert_called_once_with(
+            self.service._impl.get_qos.return_value
+        )
 
     def test_delete_snapshot(self):
         self.service.delete_snapshot("snapshot")
