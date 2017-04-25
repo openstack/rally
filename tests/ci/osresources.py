@@ -296,7 +296,7 @@ class Cinder(ResourceManager):
         # ignore cache volumes for images
         volumes = self.client.volumes.list(search_opts={"all_tenants": True})
         return [v for v in volumes
-                if not v.name.startswith("image-")]
+                if not v.name or not v.name.startswith("image-")]
 
     def list_qos(self):
         return self.client.qos_specs.list()
