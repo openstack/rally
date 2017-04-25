@@ -172,11 +172,22 @@ class ImageGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
+        if self.context.get("admin", {}):
+            admin = self.context["admin"]
+            admin_required = None
+        else:
+            admin = None
+            admin_required = False
+
         if "image_name" in self.config:
             matcher = rutils.make_name_matcher(self.config["image_name"])
         else:
             matcher = self.__class__
-        resource_manager.cleanup(names=["glance.images"],
+
+        resource_manager.cleanup(names=["glance.images",
+                                        "cinder.image_volumes_cache"],
+                                 admin=admin,
+                                 admin_required=admin_required,
                                  users=self.context.get("users", []),
                                  api_versions=self.context["config"].get(
                                      "api_versions"),

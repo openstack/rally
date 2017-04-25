@@ -293,10 +293,7 @@ class Cinder(ResourceManager):
         return self.client.transfers.list()
 
     def list_volumes(self):
-        # ignore cache volumes for images
-        volumes = self.client.volumes.list(search_opts={"all_tenants": True})
-        return [v for v in volumes
-                if not v.name or not v.name.startswith("image-")]
+        return self.client.volumes.list(search_opts={"all_tenants": True})
 
     def list_qos(self):
         return self.client.qos_specs.list()
@@ -547,16 +544,25 @@ def main():
         changes = resources.compare(with_list=given_list)
         removed, added = changes
 
+        # Cinder has a feature - cache images. let's filter such volumes
+        volume_names = [
+            "image-%s" % i["id"]["id"] for i in given_list
+            if i["cls"] == "glance" and i["resource_name"] == "image"]
+
         # filter out expected additions
         expected = []
         for resource in added:
             if ((resource["cls"] == "keystone" and
                  resource["resource_name"] == "role" and
                  resource["id"].get("name") == "_member_") or
-                (resource["cls"] == "nova" and
+                (resource["cls"] == "neutron" and
                  resource["resource_name"] == "security_group" and
-                 resource["id"].get("name") == "default")):
+                 resource["id"].get("name") == "default") or
+                (resource["cls"] == "cinder" and
+                 resource["resource_name"] == "volume" and
+                 resource["id"].get("name") in volume_names)):
                 expected.append(resource)
+
         for resource in expected:
             added.remove(resource)
 

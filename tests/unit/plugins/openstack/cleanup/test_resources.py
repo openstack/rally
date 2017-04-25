@@ -1077,3 +1077,47 @@ class WatcherActionPlanTestCase(test.TestCase):
 
         self.assertEqual("action_plan", watcher._resource)
         watcher._manager().list.assert_called_once_with(limit=0)
+
+
+class CinderImageVolumeCacheTestCase(test.TestCase):
+
+    class Resource(object):
+        def __init__(self, id=None, name=None):
+            self.id = id
+            self.name = name
+
+    @mock.patch("rally.plugins.openstack.services.image.image.Image")
+    def test_list(self, mock_image):
+        admin = mock.Mock()
+
+        glance = mock_image.return_value
+        cinder = admin.cinder.return_value
+
+        image_1 = self.Resource("foo", name="foo-name")
+        image_2 = self.Resource("bar", name="bar-name")
+        glance.list_images.return_value = [image_1, image_2]
+        volume_1 = self.Resource(name="v1")
+        volume_2 = self.Resource(name="image-foo")
+        volume_3 = self.Resource(name="foo")
+        volume_4 = self.Resource(name="bar")
+        cinder.volumes.list.return_value = [volume_1, volume_2, volume_3,
+                                            volume_4]
+
+        manager = resources.CinderImageVolumeCache(admin=admin)
+
+        self.assertEqual([{"volume": volume_2, "image": image_1}],
+                         manager.list())
+
+        mock_image.assert_called_once_with(admin)
+        glance.list_images.assert_called_once_with()
+        cinder.volumes.list.assert_called_once_with(
+            search_opts={"all_tenants": 1})
+
+    def test_id_and_name(self):
+
+        res = resources.CinderImageVolumeCache(
+            {"volume": self.Resource("volume-id", "volume-name"),
+             "image": self.Resource("image-id", "image-name")})
+
+        self.assertEqual("volume-id", res.id())
+        self.assertEqual("image-name", res.name())

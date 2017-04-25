@@ -541,6 +541,30 @@ class CinderVolume(base.ResourceManager):
     pass
 
 
+@base.resource("cinder", "image_volumes_cache", order=next(_cinder_order),
+               admin_required=True, perform_for_admin_only=True)
+class CinderImageVolumeCache(base.ResourceManager):
+
+    def _glance(self):
+        return image.Image(self.admin)
+
+    def _manager(self):
+        return self.admin.cinder().volumes
+
+    def list(self):
+        images = dict(("image-%s" % i.id, i)
+                      for i in self._glance().list_images())
+        return [{"volume": v, "image": images[v.name]}
+                for v in self._manager().list(search_opts={"all_tenants": 1})
+                if v.name in images]
+
+    def name(self):
+        return self.raw_resource["image"].name
+
+    def id(self):
+        return self.raw_resource["volume"].id
+
+
 @base.resource("cinder", "quotas", order=next(_cinder_order),
                admin_required=True, tenant_resource=True)
 class CinderQuotas(QuotaMixin, base.ResourceManager):
