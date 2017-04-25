@@ -46,23 +46,22 @@ class ImageGenerator(context.Context):
         "properties": {
             "image_url": {
                 "type": "string",
-            },
-            "image_type": {
-                "enum": ["qcow2", "raw", "vhd", "vmdk", "vdi", "iso", "aki",
-                         "ari", "ami"],
+                "description": "Location of the source to create image from."
             },
             "disk_format": {
+                "description": "The format of the disk.",
                 "enum": ["qcow2", "raw", "vhd", "vmdk", "vdi", "iso", "aki",
                          "ari", "ami"]
             },
-            "image_container": {
-                "type": "string",
-            },
             "container_format": {
+                "description": "Format of the image container.",
                 "enum": ["aki", "ami", "ari", "bare", "docker", "ova", "ovf"]
             },
             "image_name": {
                 "type": "string",
+                "description": "The name of image to create. NOTE: it will be "
+                               "ignored in case when `images_per_tenant` is "
+                               "bigger then 1."
             },
             "min_ram": {
                 "description": "Amount of RAM in MB",
@@ -75,70 +74,99 @@ class ImageGenerator(context.Context):
                 "minimum": 0
             },
             "visibility": {
+                "description": "Visibility for this image ('shared' and "
+                               "'community' are available only in case of "
+                               "Glance V2).",
                 "enum": ["public", "private", "shared", "community"]
             },
             "images_per_tenant": {
+                "description": "The number of images to create per one single "
+                               "tenant.",
                 "type": "integer",
                 "minimum": 1
             },
             "image_args": {
-                "description": "This param is deprecated from Rally-0.10.0",
+                "description": "This param is deprecated since Rally-0.10.0, "
+                               "specify exact arguments in a root section of "
+                               "context instead.",
                 "type": "object",
                 "additionalProperties": True
-            }
+            },
+            "image_container": {
+                "description": "This param is deprecated since Rally-0.10.0, "
+                               "use `container_format` instead.",
+                "type": "string",
+            },
+            "image_type": {
+                "description": "This param is deprecated since Rally-0.10.0, "
+                               "use `disk_format` instead.",
+                "enum": ["qcow2", "raw", "vhd", "vmdk", "vdi", "iso", "aki",
+                         "ari", "ami"],
+            },
         },
         "oneOf": [{"description": "It is been used since Rally 0.10.0",
                    "required": ["image_url", "disk_format",
-                                "container_format", "images_per_tenant"]},
+                                "container_format"]},
                   {"description": "One of backward compatible way",
                    "required": ["image_url", "image_type",
-                                "container_format", "images_per_tenant"]},
+                                "container_format"]},
                   {"description": "One of backward compatible way",
                    "required": ["image_url", "disk_format",
-                                "image_container", "images_per_tenant"]},
+                                "image_container"]},
                   {"description": "One of backward compatible way",
                    "required": ["image_url", "image_type",
-                                "image_container", "images_per_tenant"]}],
+                                "image_container"]}],
         "additionalProperties": False
     }
+
+    DEFAULT_CONFIG = {"images_per_tenant": 1}
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
         image_url = self.config.get("image_url")
-        image_type = self.config.get("image_type")
         disk_format = self.config.get("disk_format")
-        image_container = self.config.get("image_container")
         container_format = self.config.get("container_format")
         images_per_tenant = self.config.get("images_per_tenant")
-        image_name = self.config.get("image_name")
         visibility = self.config.get("visibility", "private")
         min_disk = self.config.get("min_disk", 0)
         min_ram = self.config.get("min_ram", 0)
         image_args = self.config.get("image_args", {})
-        is_public = image_args.get("is_public")
 
-        if is_public:
-            LOG.warning(_("The 'is_public' argument is deprecated "
-                          "since Rally 0.10.0; specify visibility "
-                          "arguments instead"))
-            if "visibility" not in self.config:
-                visibility = "public" if is_public else "private"
-
-        if image_type:
+        if "image_type" in self.config:
             LOG.warning(_("The 'image_type' argument is deprecated "
-                          "since Rally 0.10.0; specify disk_format "
-                          "arguments instead"))
-            disk_format = image_type
+                          "since Rally 0.10.0, use disk_format "
+                          "arguments instead."))
+            if not disk_format:
+                disk_format = self.config["image_type"]
 
-        if image_container:
+        if "image_container" in self.config:
             LOG.warning(_("The 'image_container' argument is deprecated "
-                          "since Rally 0.10.0; specify container_format "
+                          "since Rally 0.10.0; use container_format "
                           "arguments instead"))
-            container_format = image_container
+            if not container_format:
+                container_format = self.config["image_container"]
 
         if image_args:
-            LOG.warning(_("The 'kwargs' argument is deprecated since "
-                          "Rally 0.10.0; specify exact arguments instead"))
+            LOG.warning(_("The 'image_args' argument is deprecated since "
+                          "Rally 0.10.0; specify exact arguments in a root "
+                          "section of context instead."))
+
+            if "is_public" in image_args:
+                if "visibility" not in self.config:
+                    visibility = ("public" if image_args["is_public"]
+                                  else "private")
+            if "min_ram" in image_args:
+                if "min_ram" not in self.config:
+                    min_ram = image_args["min_ram"]
+
+            if "min_disk" in image_args:
+                if "min_disk" not in self.config:
+                    min_disk = image_args["min_disk"]
+
+        # None image_name means that image.Image will generate a random name
+        image_name = None
+        if "image_name" in self.config and images_per_tenant == 1:
+            image_name = self.config["image_name"]
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -147,19 +175,11 @@ class ImageGenerator(context.Context):
                 user["credential"],
                 api_info=self.context["config"].get("api_versions"))
             image_service = image.Image(
-                clients,
-                name_generator=self.generate_random_name)
+                clients, name_generator=self.generate_random_name)
 
             for i in range(images_per_tenant):
-                if image_name and i > 0:
-                    cur_name = image_name + str(i)
-                elif image_name:
-                    cur_name = image_name
-                else:
-                    cur_name = self.generate_random_name()
-
                 image_obj = image_service.create_image(
-                    image_name=cur_name,
+                    image_name=image_name,
                     container_format=container_format,
                     image_location=image_url,
                     disk_format=disk_format,
