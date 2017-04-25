@@ -16,6 +16,7 @@
 
 import json
 import os
+import sys
 
 from six.moves.urllib import parse as urlparse
 
@@ -64,7 +65,8 @@ class FileExporter(exporter.Exporter):
 
         :param uuid: uuid of the task object
         """
-        task = api._Task.get_detailed(uuid)
+        rapi = api.API(config_args=sys.argv[1:], skip_db_check=True)
+        task = rapi.task.get_detailed(uuid)
 
         LOG.debug("Got the task object by it's uuid %s. " % uuid)
 

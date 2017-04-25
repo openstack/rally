@@ -60,7 +60,8 @@ class TestTaskSamples(unittest.TestCase):
             db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir)
 
         # let's use pre-created users to make TestTaskSamples quicker
-        deployment = api._Deployment._get("MAIN")
+        rapi = api.API(config_file=rally.config_filename)
+        deployment = rapi.deployment._get("MAIN")
         admin_cred = deployment.get_credentials_for("openstack")["admin"]
 
         ctx = {"admin": {"credential": admin_cred},
@@ -108,9 +109,9 @@ class TestTaskSamples(unittest.TestCase):
                 with open(full_path) as task_file:
                     try:
                         input_task = task_file.read()
-                        rendered_task = api._Task.render_template(input_task)
+                        rendered_task = rapi.task.render_template(input_task)
                         task_config = yaml.safe_load(rendered_task)
-                        api._Task.validate("MAIN", task_config)
+                        rapi.task.validate("MAIN", task_config)
                     except Exception as e:
                         if not self._skip(six.text_type(e)):
                             print(traceback.format_exc())

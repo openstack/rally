@@ -45,10 +45,18 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-class _Deployment(object):
+class APIGroup(object):
+    def __init__(self, api):
+        """Initialize API group.
 
-    @classmethod
-    def _create(cls, config, name):
+        :param api: an instance of rally.api.API object
+        """
+        self.api = api
+
+
+class _Deployment(APIGroup):
+
+    def _create(self, config, name):
         """Create a deployment.
 
         :param config: a dict with deployment configuration
@@ -78,12 +86,10 @@ class _Deployment(object):
             deployment.update_credentials(credentials)
             return deployment
 
-    @classmethod
-    def create(cls, config, name):
-        return cls._create(config, name).to_dict()
+    def create(self, config, name):
+        return self._create(config, name).to_dict()
 
-    @classmethod
-    def destroy(cls, deployment):
+    def destroy(self, deployment):
         """Destroy the deployment.
 
         :param deployment: UUID or name of the deployment
@@ -102,13 +108,13 @@ class _Deployment(object):
             LOG.info(_("Deployment %s will be deleted despite exception")
                      % deployment["uuid"])
 
-        for verifier in _Verifier.list():
-            _Verifier.delete(verifier.name, deployment["name"], force=True)
+        for verifier in self.api.verifier.list():
+            self.api.verifier.delete(verifier.name, deployment["name"],
+                                     force=True)
 
         deployment.delete()
 
-    @classmethod
-    def recreate(cls, deployment, config=None):
+    def recreate(self, deployment, config=None):
         """Performs a cleanup and then makes a deployment again.
 
         :param deployment: UUID or name of the deployment
@@ -138,8 +144,7 @@ class _Deployment(object):
             credentials = deployer.make_deploy()
             deployment.update_credentials(credentials)
 
-    @classmethod
-    def _get(cls, deployment):
+    def _get(self, deployment):
         """Get the deployment.
 
         :param deployment: UUID or name of the deployment
@@ -147,12 +152,10 @@ class _Deployment(object):
         """
         return objects.Deployment.get(deployment)
 
-    @classmethod
-    def get(cls, deployment):
-        return cls._get(deployment).to_dict()
+    def get(self, deployment):
+        return self._get(deployment).to_dict()
 
-    @classmethod
-    def service_list(cls, deployment):
+    def service_list(self, deployment):
         """Get the services list.
 
         :param deployment: Deployment object
@@ -162,23 +165,21 @@ class _Deployment(object):
         admin = deployment.get_credentials_for("openstack")["admin"]
         return admin.list_services()
 
-    @staticmethod
-    def list(status=None, parent_uuid=None, name=None):
+    def list(self, status=None, parent_uuid=None, name=None):
         """Get the deployments list.
 
         :returns: Deployment list
         """
         return objects.Deployment.list(status, parent_uuid, name)
 
-    @classmethod
-    def check(cls, deployment):
+    def check(self, deployment):
         """Check keystone authentication and list all available services.
 
         :param deployment: UUID of deployment
         :returns: Service list
         """
         result = {}
-        all_credentials = cls._get(deployment).get_all_credentials()
+        all_credentials = self._get(deployment).get_all_credentials()
         for platform in all_credentials:
             result[platform] = []
             for credential in all_credentials[platform]:
@@ -214,24 +215,20 @@ class _Deployment(object):
         return result
 
 
-class _Task(object):
+class _Task(APIGroup):
 
     TASK_RESULT_SCHEMA = objects.task.TASK_RESULT_SCHEMA
 
-    @staticmethod
-    def list(**filters):
+    def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
 
-    @staticmethod
-    def _get(task_id):
+    def _get(self, task_id):
         return objects.Task.get(task_id)
 
-    @classmethod
-    def get(cls, task_id):
-        return cls._get(task_id).to_dict()
+    def get(self, task_id):
+        return self._get(task_id).to_dict()
 
-    @staticmethod
-    def get_detailed(task_id, extended_results=False):
+    def get_detailed(self, task_id, extended_results=False):
         """Get detailed task data.
 
         :param task_id: str task UUID
@@ -247,8 +244,7 @@ class _Task(object):
         return task
 
     # TODO(andreykurilin): move it to some kind of utils
-    @classmethod
-    def render_template(cls, task_template, template_dir="./", **kwargs):
+    def render_template(self, task_template, template_dir="./", **kwargs):
         """Render jinja2 task template to Rally input task.
 
         :param task_template: String that contains template
@@ -278,7 +274,7 @@ class _Task(object):
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_dir, encoding="utf8"))
-        env.globals.update(cls.create_template_functions())
+        env.globals.update(self.create_template_functions())
         ast = env.parse(task_template)
         # NOTE(Julia Varigina):
         # Bug in jinja2.meta.find_undeclared_variables
@@ -311,8 +307,7 @@ class _Task(object):
         render_template = env.from_string(task_template).render(**kwargs)
         return render_template
 
-    @classmethod
-    def create_template_functions(cls):
+    def create_template_functions(self):
 
         def template_min(int1, int2):
             return min(int1, int2)
@@ -330,8 +325,7 @@ class _Task(object):
         return {"min": template_min, "max": template_max,
                 "ceil": template_ceil, "round": template_round}
 
-    @classmethod
-    def create(cls, deployment, tag):
+    def create(self, deployment, tag):
         """Create a task without starting it.
 
         Task is a list of benchmarks that will be called one by one, results of
@@ -351,8 +345,7 @@ class _Task(object):
         return objects.Task(deployment_uuid=deployment["uuid"],
                             tag=tag).to_dict()
 
-    @classmethod
-    def validate(cls, deployment, config, task_instance=None, task=None):
+    def validate(self, deployment, config, task_instance=None, task=None):
         """Validate a task config against specified deployment.
 
         :param deployment: UUID or name of the deployment (will be ignored in
@@ -378,8 +371,7 @@ class _Task(object):
         benchmark_engine = engine.TaskEngine(config, task, deployment)
         benchmark_engine.validate()
 
-    @classmethod
-    def start(cls, deployment, config, task=None, abort_on_sla_failure=False):
+    def start(self, deployment, config, task=None, abort_on_sla_failure=False):
         """Validate and start a task.
 
         Task is a list of benchmarks that will be called one by one, results of
@@ -439,8 +431,7 @@ class _Task(object):
 
         return task["uuid"], task.get_status(task["uuid"])
 
-    @classmethod
-    def abort(cls, task_uuid, soft=False, async=True):
+    def abort(self, task_uuid, soft=False, async=True):
         """Abort running task.
 
         :param task_uuid: The UUID of the task
@@ -473,8 +464,7 @@ class _Task(object):
             while objects.Task.get_status(task_uuid) not in finished_stages:
                 time.sleep(1)
 
-    @classmethod
-    def delete(cls, task_uuid, force=False):
+    def delete(self, task_uuid, force=False):
         """Delete the task.
 
         :param task_uuid: The UUID of the task
@@ -496,10 +486,9 @@ class _Task(object):
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
 
-class _Verifier(object):
+class _Verifier(APIGroup):
 
-    @classmethod
-    def list_plugins(cls, namespace=None):
+    def list_plugins(self, namespace=None):
         """List all plugins for verifiers management.
 
         :param namespace: Verifier plugin namespace
@@ -510,8 +499,7 @@ class _Verifier(object):
                  "location": "%s.%s" % (p.__module__, p.__name__)}
                 for p in vmanager.VerifierManager.get_all(namespace=namespace)]
 
-    @classmethod
-    def create(cls, name, vtype, namespace=None, source=None, version=None,
+    def create(self, name, vtype, namespace=None, source=None, version=None,
                system_wide=False, extra_settings=None):
         """Create a verifier.
 
@@ -533,7 +521,7 @@ class _Verifier(object):
         LOG.info("Creating verifier '%s'.", name)
 
         try:
-            verifier = cls._get(name)
+            verifier = self._get(name)
         except exceptions.ResourceNotFound:
             verifier = objects.Verifier.create(
                 name=name, source=source, system_wide=system_wide,
@@ -569,32 +557,27 @@ class _Verifier(object):
 
         return verifier.uuid
 
-    @staticmethod
-    def _get(verifier_id):
+    def _get(self, verifier_id):
         """Get a verifier.
 
         :param verifier_id: Verifier name or UUID
         """
         return objects.Verifier.get(verifier_id)
 
-    @classmethod
-    def get(cls, verifier_id):
-        return cls._get(verifier_id).to_dict()
+    def get(self, verifier_id):
+        return self._get(verifier_id).to_dict()
 
-    @staticmethod
-    def _list(status=None):
+    def _list(self, status=None):
         """List all verifiers.
 
         :param status: Status to filter verifiers by
         """
         return objects.Verifier.list(status)
 
-    @classmethod
-    def list(cls, status=None):
-        return [item.to_dict() for item in cls._list(status)]
+    def list(self, status=None):
+        return [item.to_dict() for item in self._list(status)]
 
-    @classmethod
-    def delete(cls, verifier_id, deployment_id=None, force=False):
+    def delete(self, verifier_id, deployment_id=None, force=False):
         """Delete a verifier.
 
         :param verifier_id: Verifier name or UUID
@@ -605,8 +588,8 @@ class _Verifier(object):
                       If deployment_id specified, only verifications of this
                       deployment will be deleted
         """
-        verifier = cls._get(verifier_id)
-        verifications = _Verification.list(verifier_id, deployment_id)
+        verifier = self._get(verifier_id)
+        verifications = self.api.verification.list(verifier_id, deployment_id)
         if verifications:
             d_msg = ((" for deployment '%s'" % deployment_id)
                      if deployment_id else "")
@@ -614,7 +597,7 @@ class _Verifier(object):
                 LOG.info("Deleting all verifications created by verifier "
                          "%s%s.", verifier, d_msg)
                 for verification in verifications:
-                    _Verification.delete(verification["uuid"])
+                    self.api.verification.delete(verification["uuid"])
             else:
                 raise exceptions.RallyException(
                     "Failed to delete verifier {0} because there are stored "
@@ -635,8 +618,7 @@ class _Verifier(object):
             objects.Verifier.delete(verifier_id)
             LOG.info("Verifier has been successfully deleted!")
 
-    @classmethod
-    def update(cls, verifier_id, system_wide=None, version=None,
+    def update(self, verifier_id, system_wide=None, version=None,
                update_venv=False):
         """Update a verifier.
 
@@ -651,7 +633,7 @@ class _Verifier(object):
                 "At least one of the following parameters should be "
                 "specified: 'system_wide', 'version', 'update_venv'.")
 
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         LOG.info("Updating verifier %s.", verifier)
 
         if verifier.status != consts.VerifierStatus.INSTALLED:
@@ -724,8 +706,7 @@ class _Verifier(object):
 
         return verifier.uuid
 
-    @classmethod
-    def configure(cls, verifier, deployment_id, extra_options=None,
+    def configure(self, verifier, deployment_id, extra_options=None,
                   reconfigure=False):
         """Configure a verifier.
 
@@ -735,7 +716,7 @@ class _Verifier(object):
         :param reconfigure: Reconfigure verifier
         """
         if not isinstance(verifier, objects.Verifier):
-            verifier = cls._get(verifier)
+            verifier = self._get(verifier)
         verifier.set_deployment(deployment_id)
         LOG.info(
             "Configuring verifier %s for deployment '%s' (UUID=%s).",
@@ -778,8 +759,7 @@ class _Verifier(object):
 
         return raw_config
 
-    @classmethod
-    def override_configuration(cls, verifier_id, deployment_id,
+    def override_configuration(self, verifier_id, deployment_id,
                                new_configuration):
         """Override verifier configuration (e.g., rewrite the config file).
 
@@ -787,7 +767,7 @@ class _Verifier(object):
         :param deployment_id: Deployment name or UUID
         :param new_configuration: New configuration for verifier
         """
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to override verifier configuration for deployment "
@@ -806,14 +786,13 @@ class _Verifier(object):
                  "overridden for deployment '%s' (UUID=%s)!", verifier,
                  verifier.deployment["name"], verifier.deployment["uuid"])
 
-    @classmethod
-    def list_tests(cls, verifier_id, pattern=""):
+    def list_tests(self, verifier_id, pattern=""):
         """List all verifier tests.
 
         :param verifier_id: Verifier name or UUID
         :param pattern: Pattern which will be used for matching
         """
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier tests because verifier %s is in '%s' "
@@ -826,8 +805,7 @@ class _Verifier(object):
 
         return verifier.manager.list_tests(pattern)
 
-    @classmethod
-    def add_extension(cls, verifier_id, source, version=None,
+    def add_extension(self, verifier_id, source, version=None,
                       extra_settings=None):
         """Add a verifier extension.
 
@@ -838,7 +816,7 @@ class _Verifier(object):
         :param extra_settings: Extra installation settings for verifier
                                extension
         """
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to add verifier extension because verifier %s "
@@ -860,13 +838,12 @@ class _Verifier(object):
         LOG.info("Extension for verifier %s has been successfully added!",
                  verifier)
 
-    @classmethod
-    def list_extensions(cls, verifier_id):
+    def list_extensions(self, verifier_id):
         """List all verifier extensions.
 
         :param verifier_id: Verifier name or UUID
         """
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to list verifier extensions because verifier %s "
@@ -876,14 +853,13 @@ class _Verifier(object):
 
         return verifier.manager.list_extensions()
 
-    @classmethod
-    def delete_extension(cls, verifier_id, name):
+    def delete_extension(self, verifier_id, name):
         """Delete a verifier extension.
 
         :param verifier_id: Verifier name or UUID
         :param name: Verifier extension name
         """
-        verifier = cls._get(verifier_id)
+        verifier = self._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to delete verifier extension because verifier %s "
@@ -897,10 +873,9 @@ class _Verifier(object):
                  verifier)
 
 
-class _Verification(object):
+class _Verification(APIGroup):
 
-    @classmethod
-    def start(cls, verifier_id, deployment_id, tags=None, **run_args):
+    def start(self, verifier_id, deployment_id, tags=None, **run_args):
         """Start a verification.
 
         :param verifier_id: Verifier name or UUID
@@ -921,7 +896,7 @@ class _Verification(object):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
-        verifier = _Verifier._get(verifier_id)
+        verifier = self.api.verifier._get(verifier_id)
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
                 "Failed to start verification because verifier %s is in '%s' "
@@ -931,7 +906,7 @@ class _Verification(object):
 
         verifier.set_deployment(deployment_id)
         if not verifier.manager.is_configured():
-            _Verifier.configure(verifier, deployment_id)
+            self.api.verifier.configure(verifier, deployment_id)
 
         # TODO(andreykurilin): save validation results to db
         verifier.manager.validate(run_args)
@@ -969,8 +944,7 @@ class _Verification(object):
                 "totals": results.totals,
                 "tests": results.tests}
 
-    @classmethod
-    def rerun(cls, verification_uuid, deployment_id=None, failed=False,
+    def rerun(self, verification_uuid, deployment_id=None, failed=False,
               tags=None, concurrency=0):
         """Rerun tests from a verification.
 
@@ -987,7 +961,7 @@ class _Verification(object):
         if concurrency:
             run_args["concurrency"] = concurrency
 
-        verification = cls._get(verification_uuid)
+        verification = self._get(verification_uuid)
         tests = verification.tests
 
         if failed:
@@ -999,29 +973,27 @@ class _Verification(object):
         else:
             tests = tests.keys()
 
-        deployment = _Deployment.get(deployment_id or
-                                     verification.deployment_uuid)
+        deployment = self.api.deployment.get(deployment_id or
+                                             verification.deployment_uuid)
         LOG.info("Re-running %stests from verification (UUID=%s) for "
                  "deployment '%s' (UUID=%s).", "failed " if failed else "",
                  verification.uuid, deployment["name"], deployment["uuid"])
-        return cls.start(verification.verifier_uuid,
-                         deployment["uuid"], load_list=tests,
-                         tags=tags, **run_args)
+        return self.start(verification.verifier_uuid,
+                          deployment["uuid"], load_list=tests,
+                          tags=tags, **run_args)
 
-    @staticmethod
-    def _get(verification_uuid):
+    def _get(self, verification_uuid):
         """Get a verification.
 
         :param verification_uuid: Verification UUID
         """
         return objects.Verification.get(verification_uuid)
 
-    @classmethod
-    def get(cls, verification_uuid):
-        return cls._get(verification_uuid).to_dict()
+    def get(self, verification_uuid):
+        return self._get(verification_uuid).to_dict()
 
-    @staticmethod
-    def list(verifier_id=None, deployment_id=None, tags=None, status=None):
+    def list(self, verifier_id=None, deployment_id=None,
+             tags=None, status=None):
         """List all verifications.
 
         :param verifier_id: Verifier name or UUID
@@ -1033,26 +1005,24 @@ class _Verification(object):
             verifier_id, deployment_id=deployment_id,
             tags=tags, status=status)]
 
-    @classmethod
-    def delete(cls, verification_uuid):
+    def delete(self, verification_uuid):
         """Delete a verification.
 
         :param verification_uuid: Verification UUID
         """
-        verification = cls._get(verification_uuid)
+        verification = self._get(verification_uuid)
         LOG.info("Deleting verification (UUID=%s).", verification.uuid)
         verification.delete()
         LOG.info("Verification has been successfully deleted!")
 
-    @classmethod
-    def report(cls, uuids, output_type, output_dest=None):
+    def report(self, uuids, output_type, output_dest=None):
         """Generate a report for a verification or a few verifications.
 
         :param uuids: List of verifications UUIDs
         :param output_type: Plugin name of verification reporter
         :param output_dest: Destination for verification report
         """
-        verifications = [cls._get(uuid) for uuid in uuids]
+        verifications = [self._get(uuid) for uuid in uuids]
 
         reporter_cls = vreporter.VerificationReporter.get(output_type)
         reporter_cls.validate(output_dest)
@@ -1065,8 +1035,7 @@ class _Verification(object):
         LOG.info(_LI("The report has been successfully built."))
         return result
 
-    @classmethod
-    def import_results(cls, verifier_id, deployment_id, data, **run_args):
+    def import_results(self, verifier_id, deployment_id, data, **run_args):
         """Import results of a test run into Rally database.
 
         :param verifier_id: Verifier name or UUID
@@ -1078,7 +1047,7 @@ class _Verification(object):
         # required in the blueprint [1].
         # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
 
-        verifier = _Verifier._get(verifier_id)
+        verifier = self.api.verifier._get(verifier_id)
         verifier.set_deployment(deployment_id)
         LOG.info("Importing test results into a new verification for "
                  "deployment '%s' (UUID=%s), using verifier %s.",
@@ -1191,10 +1160,10 @@ class API(object):
 
         # NOTE(andreykurilin): There is no reason to auto-discover API's. We
         # have only 4 classes, so let's do it in good old way - hardcode them:)
-        self._deployment = _Deployment
-        self._task = _Task
-        self._verifier = _Verifier
-        self._verification = _Verification
+        self._deployment = _Deployment(self)
+        self._task = _Task(self)
+        self._verifier = _Verifier(self)
+        self._verification = _Verification(self)
 
     def _default_config_file(self):
         for path in self.CONFIG_SEARCH_PATHS:
