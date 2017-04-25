@@ -47,7 +47,7 @@ class NovaScenario(scenario.OpenStackScenario):
             return [{"net-id": nets[net_idx]}]
 
     @atomic.action_timer("nova.boot_server")
-    def _boot_server(self, image_id, flavor_id,
+    def _boot_server(self, image, flavor,
                      auto_assign_nic=False, **kwargs):
         """Boot a server.
 
@@ -56,8 +56,8 @@ class NovaScenario(scenario.OpenStackScenario):
         If multiple networks created by Network context are present, the first
         network found that isn't associated with a floating IP pool is used.
 
-        :param image_id: int, image ID for server creation
-        :param flavor_id: int, flavor ID for server creation
+        :param image: image ID or instance for server creation
+        :param flavor: int, flavor ID or instance for server creation
         :param auto_assign_nic: bool, whether or not to auto assign NICs
         :param kwargs: other optional parameters to initialize the server
         :returns: nova Server instance
@@ -76,7 +76,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 kwargs["nics"] = nic
 
         server = self.clients("nova").servers.create(
-            server_name, image_id, flavor_id, **kwargs)
+            server_name, image, flavor, **kwargs)
 
         self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
         server = utils.wait_for_status(
