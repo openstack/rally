@@ -18,6 +18,7 @@ from rally.plugins.openstack.context.cinder import volume_types
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
+SERVICE = "rally.plugins.openstack.services.storage"
 
 
 class VolumeTypeGeneratorTestCase(test.ContextTestCase):
@@ -25,23 +26,24 @@ class VolumeTypeGeneratorTestCase(test.ContextTestCase):
         super(VolumeTypeGeneratorTestCase, self).setUp()
         self.context.update({"admin": {"credential": "admin_creds"}})
 
-    def test_setup(self):
+    @mock.patch("%s.block.BlockStorage" % SERVICE)
+    def test_setup(self, mock_block_storage):
         self.context.update({"config": {"volume_types": ["foo", "bar"]}})
-        create = self.clients("cinder",
-                              admin=True).volume_types.create
-        create.side_effect = (mock.Mock(id="foo-id"),
-                              mock.Mock(id="bar-id"))
+        mock_service = mock_block_storage.return_value
+        mock_service.create_volume_type.side_effect = (
+            mock.Mock(id="foo-id"), mock.Mock(id="bar-id"))
 
         vtype_ctx = volume_types.VolumeTypeGenerator(self.context)
         vtype_ctx.setup()
 
-        create.assert_has_calls(
+        mock_service.create_volume_type.assert_has_calls(
             [mock.call("foo"), mock.call("bar")])
         self.assertEqual(self.context["volume_types"],
                          [{"id": "foo-id", "name": "foo"},
                           {"id": "bar-id", "name": "bar"}])
 
-    def test_cleanup(self):
+    @mock.patch("%s.block.BlockStorage" % SERVICE)
+    def test_cleanup(self, mock_block_storage):
         self.context.update({
             "config": {"volume_types": ["foo", "bar"]},
             "volume_types": [
@@ -50,10 +52,10 @@ class VolumeTypeGeneratorTestCase(test.ContextTestCase):
             "api_versions": {
                 "cinder": {"version": 2, "service_type": "volumev2"}}})
 
+        mock_service = mock_block_storage.return_value
+
         vtype_ctx = volume_types.VolumeTypeGenerator(self.context)
         vtype_ctx.cleanup()
 
-        delete = self.clients("cinder",
-                              admin=True).volume_types.delete
-        delete.assert_has_calls(
+        mock_service.delete_volume_type.assert_has_calls(
             [mock.call("foo_id"), mock.call("bar_id")])
