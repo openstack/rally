@@ -319,7 +319,6 @@ class WorkloadData(BASE, RallyBase):
                            nullable=False)
     finished_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
                             nullable=False)
-    # chunk_data = sa.Column(sa.Text, nullable=False)
     chunk_data = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 

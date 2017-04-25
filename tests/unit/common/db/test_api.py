@@ -14,6 +14,8 @@
 #    under the License.
 
 """Tests for db.api layer."""
+
+import collections
 import copy
 import datetime as dt
 import json
@@ -27,7 +29,6 @@ from rally.common.db import api as db_api
 from rally import consts
 from rally import exceptions
 from tests.unit import test
-
 
 NOW = dt.datetime.now()
 
@@ -61,7 +62,6 @@ class SerializeTestCase(test.DBTestCase):
     )
     @ddt.unpack
     def test_serialize(self, data, serialized):
-
         @db_api.serialize
         def fake_method():
             return data
@@ -70,18 +70,17 @@ class SerializeTestCase(test.DBTestCase):
         self.assertEqual(results, serialized)
 
     def test_serialize_value_error(self):
-
         @db_api.serialize
         def fake_method():
             class Fake(object):
                 pass
+
             return Fake()
 
         self.assertRaises(ValueError, fake_method)
 
 
 class ConnectionTestCase(test.DBTestCase):
-
     def test_schema_revision(self):
         rev = db.schema_revision()
         drev = db.schema_revision(detailed=True)
@@ -305,6 +304,70 @@ class TasksTestCase(test.DBTestCase):
             self.assertEqual(res[0]["key"], key)
             self.assertEqual(res[0]["data"], data)
 
+    def test_task_result_get_all_by_uuid__transform_atomics(self):
+        task = self._create_task()["uuid"]
+        key = {
+            "name": "atata",
+            "description": "tatata",
+            "pos": 0,
+            "kw": {
+                "args": {"task_id": "task_id"},
+                "context": {"c": "C"},
+                "sla": {"s": "S"},
+                "runner": {"r": "R", "type": "T"},
+                "hooks": [],
+            }
+        }
+
+        workloads_data = [
+            {"raw": [
+                {"duration": 1, "timestamp": 1, "idle_duration": 1,
+                 "error": None, "output": None,
+                 "atomic_actions": collections.OrderedDict(
+                     [("foo", 1), ("bar", 2)])},
+                {"duration": 1, "timestamp": 1, "idle_duration": 1,
+                 "error": None, "output": None,
+                 "atomic_actions": collections.OrderedDict(
+                     [("xxx", 1), ("yyy", 2)])},
+            ]},
+            {"raw": [
+                {"duration": 1, "timestamp": 1, "idle_duration": 1,
+                 "error": None, "output": None,
+                 "atomic_actions": collections.OrderedDict(
+                     [("xxx", 1), ("yyy", 2), ("zzz", 2)])}
+            ]}
+        ]
+
+        key["kw"]["args"]["task_id"] = task
+        subtask = db.subtask_create(task, title="foo")
+        workload = db.workload_create(task, subtask["uuid"], key)
+
+        for i, data in enumerate(workloads_data):
+            db.workload_data_create(task, workload["uuid"], i, data)
+
+        db.workload_set_results(workload["uuid"], {"sla": [{"success": True}],
+                                                   "load_duration": 13,
+                                                   "full_duration": 42,
+                                                   "hooks": []})
+        results = db.task_result_get_all_by_uuid(task)
+        self.assertEqual(1, len(results))
+        self.assertEqual(
+            [[{"started_at": 1, "finished_at": 2, "children": [],
+               "name": "foo"},
+              {"started_at": 2, "finished_at": 4, "children": [],
+               "name": "bar"}],
+             [{"started_at": 1, "finished_at": 2, "children": [],
+               "name": "xxx"},
+              {"started_at": 2, "finished_at": 4, "children": [],
+               "name": "yyy"}],
+             [{"started_at": 1, "finished_at": 2, "children": [],
+               "name": "xxx"},
+              {"started_at": 2, "finished_at": 4, "children": [],
+               "name": "yyy"},
+              {"started_at": 4, "finished_at": 6, "children": [],
+               "name": "zzz"}]],
+            [w["atomic_actions"] for w in results[0]["data"]["raw"]])
+
     def test_task_get_detailed(self):
         validation_result = {
             "etype": "FooError",
@@ -425,9 +488,12 @@ class TasksTestCase(test.DBTestCase):
         }
         raw_data = {
             "raw": [
-                {"error": "anError", "duration": 0, "timestamp": 1},
-                {"duration": 1, "timestamp": 1},
-                {"duration": 2, "timestamp": 2}
+                {"error": "anError", "duration": 0, "timestamp": 1,
+                 "atomic_actions": []},
+                {"duration": 1, "timestamp": 1,
+                 "atomic_actions": []},
+                {"duration": 2, "timestamp": 2,
+                 "atomic_actions": []}
             ],
         }
         data = {
@@ -442,8 +508,8 @@ class TasksTestCase(test.DBTestCase):
                 {"config": {"name": "foo_hook", "args": "bar",
                             "trigger": {"name": "foo_trigger", "args": "baz"}},
                  "results": [
-                    {"status": "success", "started_at": 10.0,
-                     "finished_at": 11.0, "triggered_by": {"time": 5}}],
+                     {"status": "success", "started_at": 10.0,
+                      "finished_at": 11.0, "triggered_by": {"time": 5}}],
                  "summary": {}}
             ],
         }
@@ -478,26 +544,36 @@ class TasksTestCase(test.DBTestCase):
 
         db.workload_data_create(task_id, workload["uuid"], 0, {
             "raw": [
-                {"error": "anError", "timestamp": 10, "duration": 1},
-                {"duration": 1, "timestamp": 10, "duration": 1},
-                {"duration": 2, "timestamp": 10, "duration": 1},
-                {"duration": 3, "timestamp": 10, "duration": 1},
+                {"error": "anError", "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 1, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 2, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 3, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
             ],
         })
 
         db.workload_data_create(task_id, workload["uuid"], 1, {
             "raw": [
-                {"error": "anError2", "timestamp": 10, "duration": 1},
-                {"duration": 6, "timestamp": 10, "duration": 1},
-                {"duration": 5, "timestamp": 10, "duration": 1},
-                {"duration": 4, "timestamp": 10, "duration": 1},
+                {"error": "anError2", "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 6, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 5, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 4, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
             ],
         })
 
         db.workload_data_create(task_id, workload["uuid"], 2, {
             "raw": [
-                {"duration": 7, "timestamp": 10, "duration": 1},
-                {"duration": 8, "timestamp": 10, "duration": 1},
+                {"duration": 7, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 8, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
             ],
         })
 
@@ -512,16 +588,26 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(res[0]["key"], key)
         self.assertEqual(res[0]["data"], {
             "raw": [
-                {"error": "anError", "timestamp": 10, "duration": 1},
-                {"duration": 1, "timestamp": 10, "duration": 1},
-                {"duration": 2, "timestamp": 10, "duration": 1},
-                {"duration": 3, "timestamp": 10, "duration": 1},
-                {"error": "anError2", "timestamp": 10, "duration": 1},
-                {"duration": 6, "timestamp": 10, "duration": 1},
-                {"duration": 5, "timestamp": 10, "duration": 1},
-                {"duration": 4, "timestamp": 10, "duration": 1},
-                {"duration": 7, "timestamp": 10, "duration": 1},
-                {"duration": 8, "timestamp": 10, "duration": 1},
+                {"error": "anError", "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 1, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 2, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 3, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"error": "anError2", "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 6, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 5, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 4, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 7, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
+                {"duration": 8, "timestamp": 10, "duration": 1,
+                 "atomic_actions": []},
             ],
             "sla": [{"success": True}],
             "hooks": [],
@@ -601,9 +687,10 @@ class WorkloadTestCase(test.DBTestCase):
         }
         raw_data = {
             "raw": [
-                {"error": "anError", "duration": 0, "timestamp": 1},
-                {"duration": 1, "timestamp": 1},
-                {"duration": 2, "timestamp": 2}
+                {"error": "anError", "duration": 0, "timestamp": 1,
+                 "atomic_actions": []},
+                {"duration": 1, "timestamp": 1, "atomic_actions": []},
+                {"duration": 2, "timestamp": 2, "atomic_actions": []}
             ],
         }
         data = {
@@ -956,7 +1043,6 @@ class ResourceTestCase(test.DBTestCase):
 
 
 class VerifierTestCase(test.DBTestCase):
-
     def test_verifier_create(self):
         v = db.verifier_create("a", "b", "c", "d", "e", False)
         self.assertEqual("a", v["name"])
@@ -994,7 +1080,6 @@ class VerifierTestCase(test.DBTestCase):
 
 
 class VerificationTestCase(test.DBTestCase):
-
     def setUp(self):
         super(VerificationTestCase, self).setUp()
 
