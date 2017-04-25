@@ -16,15 +16,16 @@ import re
 
 import docutils.core
 
+import rally
 from tests.unit import test
 
 
 class TitlesTestCase(test.TestCase):
 
+    OPTIONAL_SECTIONS = ["References"]
+
     specs_path = os.path.join(
-        os.path.dirname(__file__),
-        os.pardir, os.pardir, os.pardir,
-        "doc", "specs")
+        os.path.dirname(rally.__file__), os.pardir, "doc", "specs")
 
     def _get_title(self, section_tree):
         section = {"subtitles": []}
@@ -46,7 +47,9 @@ class TitlesTestCase(test.TestCase):
         return titles
 
     def _check_titles(self, filename, expect, actual):
-        missing_sections = [x for x in expect.keys() if x not in actual.keys()]
+        missing_sections = [
+            x for x in expect.keys()
+            if x not in actual.keys() and x not in self.OPTIONAL_SECTIONS]
         extra_sections = [x for x in actual.keys() if x not in expect.keys()]
 
         msgs = []
