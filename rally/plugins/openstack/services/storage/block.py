@@ -34,6 +34,7 @@ VolumeTransfer = collections.namedtuple("VolumeTransfer", ["id", "name",
                                                            "auth_key"])
 VolumeEncryptionType = collections.namedtuple("VolumeEncryptionType",
                                               ["id", "volume_type_id"])
+QoSSpecs = collections.namedtuple("QoSSpecs", ["id", "name"])
 
 
 class BlockStorage(service.UnifiedOpenStackService):

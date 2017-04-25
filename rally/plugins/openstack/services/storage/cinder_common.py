@@ -419,6 +419,10 @@ class UnifiedCinderMixin(object):
                                     auth_key=auth_key)
 
     @staticmethod
+    def _unify_qos(qos):
+        return block.QoSSpecs(id=qos.id, name=qos.name)
+
+    @staticmethod
     def _unify_encryption_type(encryption_type):
         return block.VolumeEncryptionType(
             id=encryption_type.encryption_id,
@@ -487,7 +491,7 @@ class UnifiedCinderMixin(object):
         :param specs: A dict of key/value pairs to be set
         :rtype: :class:'QoSSpecs'
         """
-        return self._impl.create_qos(specs)
+        return self._unify_qos(self._impl.create_qos(specs))
 
     def list_qos(self, search_opts=None):
         """Get a list of all qos specs.
@@ -495,7 +499,8 @@ class UnifiedCinderMixin(object):
         :param search_opts: search options
         :rtype: list of :class: 'QoSpecs'
         """
-        return self._impl.list_qos(search_opts)
+        return [self._unify_qos(qos)
+                for qos in self._impl.list_qos(search_opts)]
 
     def get_qos(self, qos_id):
         """Get a specific qos specs.
@@ -503,7 +508,7 @@ class UnifiedCinderMixin(object):
         :param qos_id: The ID of the :class: 'QoSSpecs' to get
         :rtype: :class: 'QoSSpecs'
         """
-        return self._impl.get_qos(qos_id)
+        return self._unify_qos(self._impl.get_qos(qos_id))
 
     def delete_snapshot(self, snapshot):
         """Delete the given backup.
