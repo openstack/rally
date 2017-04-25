@@ -16,6 +16,7 @@ from rally.common.i18n import _
 from rally.common import logging
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.services.storage import block
 from rally.task import context
 
 
@@ -37,11 +38,12 @@ class VolumeTypeGenerator(context.Context):
         admin_clients = osclients.Clients(
             self.context.get("admin", {}).get("credential"),
             api_info=self.context["config"].get("api_versions"))
-        cinder = admin_clients.cinder()
+        cinder_service = block.BlockStorage(
+            admin_clients, name_generator=self.generate_random_name)
         self.context["volume_types"] = []
         for vtype_name in self.config:
             LOG.debug("Creating Cinder volume type %s" % vtype_name)
-            vtype = cinder.volume_types.create(vtype_name)
+            vtype = cinder_service.create_volume_type(vtype_name)
             self.context["volume_types"].append({"id": vtype.id,
                                                  "name": vtype_name})
 
@@ -50,7 +52,7 @@ class VolumeTypeGenerator(context.Context):
         admin_clients = osclients.Clients(
             self.context.get("admin", {}).get("credential"),
             api_info=self.context["config"].get("api_versions"))
-        cinder = admin_clients.cinder()
+        cinder_service = block.BlockStorage(admin_clients)
         for vtype in self.context["volume_types"]:
             LOG.debug("Deleting Cinder volume type %s" % vtype["name"])
-            cinder.volume_types.delete(vtype["id"])
+            cinder_service.delete_volume_type(vtype["id"])
