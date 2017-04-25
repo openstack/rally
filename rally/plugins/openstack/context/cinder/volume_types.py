@@ -14,8 +14,11 @@
 
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import utils
+from rally.common import validation
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.services.storage import block
 from rally.task import context
 
@@ -23,6 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", admin=True)
 @context.configure(name="volume_types", order=410)
 class VolumeTypeGenerator(context.Context):
     """Context class for adding volumes types for benchmarks."""
@@ -49,10 +53,10 @@ class VolumeTypeGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `volume_types`"))
     def cleanup(self):
-        admin_clients = osclients.Clients(
-            self.context.get("admin", {}).get("credential"),
-            api_info=self.context["config"].get("api_versions"))
-        cinder_service = block.BlockStorage(admin_clients)
-        for vtype in self.context["volume_types"]:
-            LOG.debug("Deleting Cinder volume type %s" % vtype["name"])
-            cinder_service.delete_volume_type(vtype["id"])
+        mather = utils.make_name_matcher(*self.config)
+        resource_manager.cleanup(
+            names=["cinder.volume_types"],
+            admin=self.context["admin"],
+            api_versions=self.context["config"].get("api_versions"),
+            superclass=mather,
+            task_id=self.get_owner_id())

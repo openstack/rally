@@ -19,7 +19,6 @@ import ddt
 import mock
 import six
 
-from rally import consts as rally_consts
 from rally import exceptions
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.context.manila import manila_share_networks
@@ -146,17 +145,6 @@ class ShareNetworksTestCase(test.TestCase):
         self.assertEqual(
             {"foo": "bar", "share_networks": {}, "use_share_networks": False},
             inst.config)
-        self.assertIn(
-            rally_consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
-        self.assertFalse(inst.CONFIG_SCHEMA.get("additionalProperties"))
-        self.assertEqual("object", inst.CONFIG_SCHEMA.get("type"))
-        props = inst.CONFIG_SCHEMA.get("properties", {})
-        self.assertEqual({"type": "object"}, props.get("share_networks"))
-        self.assertEqual({"type": "boolean"}, props.get("use_share_networks"))
-        self.assertEqual(450, inst.get_order())
-        self.assertEqual(
-            consts.SHARE_NETWORKS_CONTEXT_NAME,
-            inst.get_name())
 
     def test_setup_share_networks_disabled(self):
         ctxt = {

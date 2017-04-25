@@ -15,6 +15,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
@@ -24,6 +25,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="clusters", order=480)
 class ClusterGenerator(context.Context):
     """Context class for generating temporary cluster for benchmarks."""

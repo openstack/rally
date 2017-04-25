@@ -18,6 +18,7 @@ import requests
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -29,6 +30,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="sahara_job_binaries", order=442)
 class SaharaJobBinaries(context.Context):
     """Context class for setting up Job Binaries for an EDP job."""

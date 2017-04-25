@@ -13,6 +13,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.wrappers import network as network_wrapper
@@ -22,6 +23,8 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", admin=True,
+                users=True)
 @context.configure(name="lbaas", order=360)
 class Lbaas(context.Context):
     """Creates a lb-pool for every subnet created in network context."""

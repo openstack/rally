@@ -17,7 +17,7 @@ import mock
 from rally.plugins.openstack.context.cinder import volume_types
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.cinder.volume_types"
 SERVICE = "rally.plugins.openstack.services.storage"
 
 
@@ -42,20 +42,24 @@ class VolumeTypeGeneratorTestCase(test.ContextTestCase):
                          [{"id": "foo-id", "name": "foo"},
                           {"id": "bar-id", "name": "bar"}])
 
-    @mock.patch("%s.block.BlockStorage" % SERVICE)
-    def test_cleanup(self, mock_block_storage):
+    @mock.patch("%s.utils.make_name_matcher" % CTX)
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    def test_cleanup(self, mock_cleanup, mock_make_name_matcher):
         self.context.update({
-            "config": {"volume_types": ["foo", "bar"]},
-            "volume_types": [
-                {"id": "foo_id", "name": "foo"},
-                {"id": "bar_id", "name": "bar"}],
-            "api_versions": {
-                "cinder": {"version": 2, "service_type": "volumev2"}}})
-
-        mock_service = mock_block_storage.return_value
+            "config": {"volume_types": ["foo", "bar"],
+                       "api_versions": {
+                           "cinder": {"version": 2,
+                                      "service_type": "volumev2"}}}})
 
         vtype_ctx = volume_types.VolumeTypeGenerator(self.context)
+
         vtype_ctx.cleanup()
 
-        mock_service.delete_volume_type.assert_has_calls(
-            [mock.call("foo_id"), mock.call("bar_id")])
+        mock_cleanup.assert_called_once_with(
+            names=["cinder.volume_types"],
+            admin=self.context["admin"],
+            api_versions=self.context["config"]["api_versions"],
+            superclass=mock_make_name_matcher.return_value,
+            task_id=vtype_ctx.get_owner_id())
+
+        mock_make_name_matcher.assert_called_once_with("foo", "bar")

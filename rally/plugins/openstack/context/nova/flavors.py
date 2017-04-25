@@ -18,13 +18,16 @@ from novaclient import exceptions as nova_exceptions
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.task import context
 
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", admin=True)
 @context.configure(name="flavors", order=340)
 class FlavorsGenerator(context.Context):
     """Context creates a list of flavors."""
@@ -99,12 +102,13 @@ class FlavorsGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
     def cleanup(self):
         """Delete created flavors."""
-        clients = osclients.Clients(self.context["admin"]["credential"])
-        for flavor in self.context["flavors"].values():
-            with logging.ExceptionLogger(
-                    LOG, _("Can't delete flavor %s") % flavor["id"]):
-                rutils.retry(3, clients.nova().flavors.delete, flavor["id"])
-                LOG.debug("Flavor is deleted %s" % flavor["id"])
+        mather = rutils.make_name_matcher(*[f["name"] for f in self.config])
+        resource_manager.cleanup(
+            names=["nova.flavors"],
+            admin=self.context["admin"]["credential"],
+            api_versions=self.context["config"].get("api_versions"),
+            superclass=mather,
+            task_id=self.get_owner_id())
 
 
 class FlavorConfig(dict):

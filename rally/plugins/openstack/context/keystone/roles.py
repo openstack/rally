@@ -18,6 +18,7 @@ from oslo_config import cfg
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -30,6 +31,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="roles", order=330)
 class RoleGenerator(context.Context):
     """Context class for assigning roles for users."""

@@ -16,6 +16,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.wrappers import network as network_wrapper
@@ -25,6 +26,9 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+# NOTE(andreykurilin): admin is used only by cleanup
+@validation.add("required_platform", platform="openstack", admin=True,
+                users=True)
 @context.configure(name="network", order=350)
 class Network(context.Context):
     """Create networking resources.

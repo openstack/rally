@@ -13,6 +13,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.senlin import utils as senlin_utils
 from rally.task import context
@@ -20,6 +21,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="profiles", order=190)
 class ProfilesGenerator(context.Context):
     """Context creates a temporary profile for Senlin test."""

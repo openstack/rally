@@ -19,6 +19,7 @@ from six.moves.urllib import parse
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
@@ -30,6 +31,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="sahara_input_data_sources", order=443)
 class SaharaInputDataSources(context.Context):
     """Context class for setting up Input Data Sources for an EDP job."""

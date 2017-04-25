@@ -133,7 +133,8 @@ class ScenarioTestCase(test.TestCase):
                     config=None,
                     plugin_cfg=context_conf,
                     namespace=namespace,
-                    allow_hidden=True))
+                    allow_hidden=True,
+                    vtype="syntax"))
 
             if results:
                 msg = "\n ".join([str(r) for r in results])
