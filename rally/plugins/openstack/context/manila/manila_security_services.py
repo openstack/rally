@@ -18,6 +18,7 @@ from oslo_config import cfg
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts as rally_consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.context.manila import consts
@@ -30,6 +31,7 @@ LOG = logging.getLogger(__name__)
 CONTEXT_NAME = consts.SECURITY_SERVICES_CONTEXT_NAME
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name=CONTEXT_NAME, order=445)
 class SecurityServices(context.Context):
     """This context creates 'security services' for Manila project."""

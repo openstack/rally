@@ -15,6 +15,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
@@ -25,6 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="servers", order=430)
 class ServerGenerator(context.Context):
     """Context class for adding temporary servers for benchmarks.
@@ -88,7 +90,7 @@ class ServerGenerator(context.Context):
         kwargs = {}
         if self.config.get("nics"):
             if isinstance(self.config["nics"][0], dict):
-                # it is format that Nova expects
+                # it is a format that Nova API expects
                 kwargs["nics"] = self.config["nics"]
             else:
                 kwargs["nics"] = [{"net-id": nic}

@@ -94,15 +94,15 @@ class FlavorsGeneratorTestCase(test.TestCase):
             name="flavor_name", ram=2048, vcpus=3,
             disk=10, ephemeral=3, swap=5)
 
-    @mock.patch("%s.flavors.osclients.Clients" % CTX)
-    def test_cleanup(self, mock_clients):
+    @mock.patch("%s.flavors.rutils.make_name_matcher" % CTX)
+    @mock.patch("%s.flavors.resource_manager.cleanup" % CTX)
+    def test_cleanup(self, mock_cleanup, mock_make_name_matcher):
         # Setup and mock
         real_context = {
-            "flavors": {
-                "flavor_name": {
-                    "flavor_name": "flavor_name",
-                    "id": "flavor_name"
-                }
+            "config": {
+                "flavors": [
+                    {"name": "flavor_name"},
+                ]
             },
             "admin": {
                 "credential": mock.MagicMock()
@@ -114,8 +114,11 @@ class FlavorsGeneratorTestCase(test.TestCase):
         flavors_ctx = flavors.FlavorsGenerator(real_context)
         flavors_ctx.cleanup()
 
-        # Assertions
-        mock_clients.assert_called_with(real_context["admin"]["credential"])
+        mock_cleanup.assert_called_once_with(
+            names=["nova.flavors"],
+            admin=real_context["admin"]["credential"],
+            api_versions=None,
+            superclass=mock_make_name_matcher.return_value,
+            task_id=flavors_ctx.get_owner_id())
 
-        mock_flavors_delete = mock_clients().nova().flavors.delete
-        mock_flavors_delete.assert_called_with("flavor_name")
+        mock_make_name_matcher.assert_called_once_with("flavor_name")

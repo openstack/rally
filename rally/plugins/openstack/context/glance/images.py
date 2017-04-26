@@ -17,6 +17,7 @@ from oslo_config import cfg
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
@@ -34,6 +35,7 @@ CONF.import_opt("glance_image_delete_poll_interval",
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="images", order=410)
 class ImageGenerator(context.Context):
     """Context class for adding images to each user for benchmarks."""
@@ -170,9 +172,13 @@ class ImageGenerator(context.Context):
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
+        if "image_name" in self.config:
+            matcher = rutils.make_name_matcher(self.config["image_name"])
+        else:
+            matcher = self.__class__
         resource_manager.cleanup(names=["glance.images"],
                                  users=self.context.get("users", []),
                                  api_versions=self.context["config"].get(
                                      "api_versions"),
-                                 superclass=self.__class__,
+                                 superclass=matcher,
                                  task_id=self.get_owner_id())

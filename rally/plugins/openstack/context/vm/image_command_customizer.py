@@ -15,12 +15,15 @@
 
 import copy
 
+from rally.common import validation
 from rally import exceptions
 from rally.plugins.openstack.context.vm import custom_image
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 import rally.task.context as context
 
 
+@validation.add("required_platform", platform="openstack", admin=True,
+                users=True)
 @context.configure(name="image_command_customizer", order=501)
 class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
     """Context class for generating image customized by a command execution.

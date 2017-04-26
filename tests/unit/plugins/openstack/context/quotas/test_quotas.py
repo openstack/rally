@@ -87,7 +87,8 @@ class QuotasTestCase(test.TestCase):
             ({group: {parameter: -2}}, False),
         ]
         for config, valid in configs:
-            results = context.Context.validate("quotas", None, None, config)
+            results = context.Context.validate(
+                "quotas", None, None, config, vtype="syntax")
             if valid:
                 self.assertEqual([], results)
             else:

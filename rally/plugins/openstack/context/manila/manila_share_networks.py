@@ -18,6 +18,7 @@ from oslo_config import cfg
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts as rally_consts
 from rally import exceptions
 from rally.plugins.openstack.context.manila import consts
@@ -30,7 +31,37 @@ LOG = logging.getLogger(__name__)
 
 CONTEXT_NAME = consts.SHARE_NETWORKS_CONTEXT_NAME
 
+SHARE_NETWORKS_ARG_DESCR = """
+This context arg will be used only when context arg "use_share_networks" is
+set to True.
 
+If context arg 'share_networks' has values then they will be used else share
+networks will be autocreated - one for each tenant network. If networks do not
+exist then will be created one share network for each tenant without network
+data.
+
+Expected value is dict of lists where tenant Name or ID is key and list of
+share_network Names or IDs is value. Example:
+
+   .. code-block:: json
+
+     "context": {
+         "manila_share_networks": {
+         "use_share_networks": true,
+         "share_networks": {
+             "tenant_1_name_or_id": ["share_network_1_name_or_id",
+                                     "share_network_2_name_or_id"],
+             "tenant_2_name_or_id": ["share_network_3_name_or_id"]}
+         }
+     }
+
+Also, make sure that all 'existing users' in appropriate registered deployment
+have share networks if its usage is enabled, else Rally will randomly take
+users that does not satisfy criteria.
+"""
+
+
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name=CONTEXT_NAME, order=450)
 class ShareNetworks(context.Context):
     """This context creates share networks for Manila project."""
@@ -38,34 +69,15 @@ class ShareNetworks(context.Context):
         "type": "object",
         "$schema": rally_consts.JSON_SCHEMA,
         "properties": {
-            # NOTE(vponomaryov): specifies whether manila should use
-            # share networks for share creation or not.
-            "use_share_networks": {"type": "boolean"},
+            "use_share_networks": {
+                "type": "boolean",
+                "description": "specifies whether manila should use share "
+                               "networks for share creation or not."},
 
-            # NOTE(vponomaryov): this context arg will be used only when
-            # context arg "use_share_networks" is set to True.
-            # If context arg 'share_networks' has values
-            # then they will be used else share networks will be autocreated -
-            # one for each tenant network. If networks do not exist then will
-            # be created one share network for each tenant without network
-            # data.
-            # Expected value is dict of lists where tenant Name or ID is key
-            # and list of share_network Names or IDs is value. Example:
-            # "context": {
-            #   "manila_share_networks": {
-            #     "use_share_networks": true,
-            #     "share_networks": {
-            #       "tenant_1_name_or_id": ["share_network_1_name_or_id",
-            #                               "share_network_2_name_or_id"],
-            #       "tenant_2_name_or_id": ["share_network_3_name_or_id"]
-            #     }
-            #   }
-            # }
-            # Also, make sure that all 'existing users' in appropriate
-            # registered deployment have share networks if its usage is
-            # enabled, else Rally will randomly take users that does not
-            # satisfy criteria.
-            "share_networks": {"type": "object"},
+            "share_networks": {
+                "type": "object",
+                "description": SHARE_NETWORKS_ARG_DESCR
+            },
         },
         "additionalProperties": False
     }

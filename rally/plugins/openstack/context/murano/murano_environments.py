@@ -16,6 +16,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.murano import utils as murano_utils
@@ -25,6 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="murano_environments", order=402)
 class EnvironmentGenerator(context.Context):
     """Context class for creating murano environments."""

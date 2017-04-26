@@ -18,6 +18,7 @@ from oslo_config import cfg
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.cleanup import manager as resource_manager
@@ -30,6 +31,7 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="sahara_cluster", order=441)
 class SaharaCluster(context.Context):
     """Context class for setting up the Cluster an EDP job."""

@@ -16,6 +16,7 @@
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
+from rally.common import validation
 from rally import osclients
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
@@ -81,6 +82,7 @@ def _prepare_open_secgroup(credential, secgroup_name):
     return rally_open.to_dict()
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="allow_ssh", order=320)
 class AllowSSH(context.Context):
     """Sets up security groups for all users to access VM via SSH."""

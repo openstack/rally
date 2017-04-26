@@ -409,6 +409,26 @@ def name_matches_object(name, *objects, **kwargs):
                for obj in unique_rng_options.values())
 
 
+def make_name_matcher(*names):
+    """Construct a matcher for custom names
+
+    In case of contexts, there can be custom names. To reuse common cleanup
+    mechanism for cleaning up such resources, this method creates a subclass of
+    RandomNameGeneratorMixin with customized `name_matches_object` method.
+    """
+    class CustomNameMatcher(RandomNameGeneratorMixin):
+        # generate unique string to guarantee processing that custom names
+        RESOURCE_NAME_FORMAT = str(uuid.uuid4())
+
+        NAMES = names
+
+        @classmethod
+        def name_matches_object(cls, name, task_id=None, exact=True):
+            return name in cls.NAMES
+
+    return CustomNameMatcher
+
+
 def merge(length, *sources):
     """Merge lists of lists.
 

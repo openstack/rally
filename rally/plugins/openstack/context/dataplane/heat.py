@@ -18,6 +18,7 @@ import pkgutil
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -34,6 +35,7 @@ def get_data(filename_or_resource):
     return open(filename_or_resource).read()
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="heat_dataplane", order=435)
 class HeatDataplane(context.Context):
     """Context class for create stack by given template.

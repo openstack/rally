@@ -15,6 +15,7 @@
 
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import validation
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.task import context
@@ -23,6 +24,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="keypair", order=310)
 class Keypair(context.Context):
     """Create Nova KeyPair for each user."""

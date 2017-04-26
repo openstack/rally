@@ -401,6 +401,12 @@ class RandomNameTestCase(test.TestCase):
         task_id_parts = set([n.split("_")[0] for n in names])
         self.assertEqual(len(task_id_parts), 1)
 
+    def test_make_name_matcher(self):
+        matcher = utils.make_name_matcher("foo", "bar")
+        self.assertTrue(matcher.name_matches_object("foo", task_id="task"))
+        self.assertTrue(matcher.name_matches_object("bar", task_id="task"))
+        self.assertFalse(matcher.name_matches_object("foo1", task_id="task"))
+
 
 @ddt.ddt
 class MergeTestCase(test.TestCase):

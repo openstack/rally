@@ -15,6 +15,7 @@
 
 from rally.common.i18n import _
 from rally.common import logging
+from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.quotas import cinder_quotas
@@ -28,6 +29,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
+@validation.add("required_platform", platform="openstack", admin=True)
 @context.configure(name="quotas", order=300)
 class Quotas(context.Context):
     """Context class for updating benchmarks' tenants quotas."""

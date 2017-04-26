@@ -173,21 +173,12 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                     "users_per_tenant": self.users_per_tenant,
                     "concurrent": 10,
                 },
-                "images": {
-                    "image_url": "mock_url",
-                    "image_type": "qcow2",
-                    "image_container": "bare",
-                    "images_per_tenant": images_per_tenant,
-                    "image_name": "some_name",
-                    "min_ram": 128,
-                    "min_disk": 1,
-                }
+                "images": {}
             },
             "admin": {
                 "credential": mock.MagicMock()
             },
-            "users": users,
-            "tenants": tenants
+            "users": mock.Mock()
         })
 
         images_ctx = images.ImageGenerator(self.context)
@@ -197,4 +188,24 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             users=self.context["users"],
             api_versions=self.context["config"].get("api_versions"),
             superclass=images_ctx.__class__,
+            task_id=self.context["owner_id"])
+
+    @mock.patch("%s.rutils.make_name_matcher" % CTX)
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    def test_cleanup_for_predefined_name(self, mock_cleanup,
+                                         mock_make_name_matcher):
+        self.context.update({
+            "config": {
+                "images": {"image_name": "foo"}
+            },
+            "users": mock.Mock()
+        })
+
+        images_ctx = images.ImageGenerator(self.context)
+        images_ctx.cleanup()
+        mock_cleanup.assert_called_once_with(
+            names=["glance.images"],
+            users=self.context["users"],
+            api_versions=None,
+            superclass=mock_make_name_matcher.return_value,
             task_id=self.context["owner_id"])
