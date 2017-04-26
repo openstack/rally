@@ -26,6 +26,7 @@ from rally.cli.commands import task
 from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
+from rally.task import utils as tutils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -336,12 +337,15 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.status, None)
 
-    def test_detailed(self):
+    @ddt.data({"iterations_data": False, "has_output": True},
+              {"iterations_data": True, "has_output": False})
+    @ddt.unpack
+    def test_detailed(self, iterations_data, has_output):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
-        self.fake_api.task.get_detailed.return_value = {
+        detailed_value = {
             "id": "task",
             "uuid": test_uuid,
-            "status": "status",
+            "status": "finished",
             "results": [
                 {
                     "key": {
@@ -350,22 +354,32 @@ class TaskCommandsTestCase(test.TestCase):
                         "kw": "fake_kw"
                     },
                     "info": {
+                        "stat": {"cols": ["col"] * 9,
+                                 "rows":[["row1"] * 9, ["row2"] * 9]},
                         "load_duration": 3.2,
                         "full_duration": 3.5,
                         "iterations_count": 4,
-                        "atomic": {"foo": {}, "bar": {}}},
+                        "atomic": {"foo": {"count": 1}, "bar": {"count": 2}}},
                     "iterations": [
                         {"duration": 0.9,
                          "idle_duration": 0.1,
                          "output": {"additive": [], "complete": []},
-                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                             "finished_at": 0.6},
+                                            {"name": "bar", "started_at": 0.6,
+                                             "finished_at": 1.3}
+                                            ],
                          "error": ["type", "message", "traceback"]
                          },
                         {"duration": 1.2,
                          "idle_duration": 0.3,
                          "output": {"additive": [], "complete": []},
-                            "atomic_actions": {"foo": 0.6, "bar": 0.7},
-                            "error": ["type", "message", "traceback"]
+                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                             "finished_at": 0.6},
+                                            {"name": "bar", "started_at": 0.6,
+                                             "finished_at": 1.3}
+                                            ],
+                         "error": ["type", "message", "traceback"]
                          },
                         {"duration": 0.7,
                          "idle_duration": 0.5,
@@ -373,23 +387,34 @@ class TaskCommandsTestCase(test.TestCase):
                              "data": {"foo": 0.6, "bar": 0.7},
                              "errors": "some"
                          },
-                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                             "finished_at": 0.6},
+                                            {"name": "bar", "started_at": 0.6,
+                                             "finished_at": 1.3}
+                                            ],
                          "error": ["type", "message", "traceback"]
                          },
                         {"duration": 0.5,
                          "idle_duration": 0.5,
-                         "output": {"additive": [], "complete": []},
-                         "atomic_actions": {"foo": 0.6, "bar": 0.7},
+                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                             "finished_at": 0.6},
+                                            {"name": "bar", "started_at": 0.6,
+                                             "finished_at": 1.3}
+                                            ],
                          "error": ["type", "message", "traceback"]
                          }
                     ]
                 }
             ]
         }
-        self.task.detailed(self.fake_api, test_uuid)
+        if has_output:
+            detailed_value["results"][0]["output"] = {"additive": [],
+                                                      "complete": []}
+        self.fake_api.task.get_detailed.return_value = detailed_value
+        self.task.detailed(self.fake_api, test_uuid,
+                           iterations_data=iterations_data)
         self.fake_api.task.get_detailed.assert_called_once_with(
             test_uuid, extended_results=True)
-        self.task.detailed(self.fake_api, test_uuid, iterations_data=True)
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
     @mock.patch("rally.cli.commands.task.logging")
@@ -459,7 +484,9 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
         created_at = dt.datetime(2017, 2, 6, 1, 1, 1)
         data = [
-            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": [],
+            {"key": "foo_key", "data": {"raw": [{"atomic_actions": {
+                                                 "foo": 1.1}}],
+                                        "sla": [],
                                         "hooks": [],
                                         "load_duration": 1.0,
                                         "full_duration": 2.0},
@@ -509,24 +536,25 @@ class TaskCommandsTestCase(test.TestCase):
                           "load_duration": 1.2,
                           "full_duration": 2.3}} for key in keys]
 
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
     @mock.patch("rally.cli.commands.task.os.path")
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
     def test_trends(self, mock_webbrowser, mock_plot,
-                    mock_open, mock_os_path, mock_validate):
+                    mock_open, mock_os_path):
         mock_os_path.exists = lambda p: p.startswith("path_to_")
         mock_os_path.expanduser = lambda p: p + "_expanded"
         mock_os_path.realpath.side_effect = lambda p: "realpath_" + p
+        self.task._load_task_results_file = mock.MagicMock(
+            return_value=["result_1_from_file", "result_2_from_file"]
+        )
+        mock_fd = mock.mock_open()
+        mock_open.side_effect = mock_fd
 
         self.fake_api.task.get_detailed.return_value = {
             "results": self._make_result(["bar"])}
         mock_plot.trends.return_value = "rendered_trends_report"
-        mock_fd = mock.mock_open(
-            read_data="[\"result_1_from_file\", \"result_2_from_file\"]")
-        mock_open.side_effect = mock_fd
+
         ret = self.task.trends(self.fake_api,
                                tasks=["ab123456-38d8-4c8f-bbcc-fc8f74b004ae",
                                       "cd654321-38d8-4c8f-bbcc-fc8f74b004ae",
@@ -541,32 +569,27 @@ class TaskCommandsTestCase(test.TestCase):
              "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
             "result_1_from_file", "result_2_from_file"]
         mock_plot.trends.assert_called_once_with(expected)
-        self.assertEqual([mock.call("path_to_file_expanded", "r"),
-                          mock.call("output.html_expanded", "w+")],
+        self.assertEqual([mock.call(self.fake_api, "path_to_file")],
+                         self.task._load_task_results_file.mock_calls)
+        self.assertEqual([mock.call("output.html_expanded", "w+")],
                          mock_open.mock_calls)
         self.assertIsNone(ret)
-        self.assertEqual([mock.call("result_1_from_file",
-                                    self.fake_api.task.TASK_RESULT_SCHEMA),
-                          mock.call("result_2_from_file",
-                                    self.fake_api.task.TASK_RESULT_SCHEMA)],
-                         mock_validate.mock_calls)
         self.assertFalse(mock_webbrowser.open_new_tab.called)
         mock_fd.return_value.write.assert_called_once_with(
             "rendered_trends_report")
 
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
     @mock.patch("rally.cli.commands.task.os.path")
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
     def test_trends_single_file_and_open_webbrowser(
-            self, mock_webbrowser, mock_plot, mock_open, mock_os_path,
-            mock_validate):
+            self, mock_webbrowser, mock_plot, mock_open, mock_os_path):
         mock_os_path.exists.return_value = True
         mock_os_path.expanduser = lambda path: path
         mock_os_path.realpath.side_effect = lambda p: "realpath_" + p
-        mock_open.side_effect = mock.mock_open(read_data="[\"result\"]")
+        self.task._load_task_results_file = mock.MagicMock(
+            return_value=["result"]
+        )
         ret = self.task.trends(self.real_api,
                                tasks=["path_to_file"], open_it=True,
                                out="output.html", out_format="html")
@@ -593,30 +616,11 @@ class TaskCommandsTestCase(test.TestCase):
                                out="output.html", out_format="html")
         self.assertEqual(1, ret)
 
-    @mock.patch("rally.cli.commands.task.os.path")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.plot")
-    def test_trends_wrong_results_format(self, mock_plot,
-                                         mock_open, mock_os_path):
-        mock_os_path.exists.return_value = True
-        mock_open.side_effect = mock.mock_open(read_data="[42]")
-        ret = self.task.trends(self.real_api, tasks=["path_to_file"],
-                               out="output.html", out_format="html")
-        self.assertEqual(1, ret)
-
-        with mock.patch("rally.api._Task.TASK_RESULT_SCHEMA",
-                        {"type": "number"}):
-            ret = self.task.trends(self.real_api, tasks=["path_to_file"],
-                                   out="output.html", out_format="html")
-            self.assertIsNone(ret)
-
     def test_trends_no_tasks_given(self):
         ret = self.task.trends(self.fake_api, tasks=[],
                                out="output.html", out_format="html")
         self.assertEqual(1, ret)
 
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
     @mock.patch("rally.cli.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
     @mock.patch("rally.cli.commands.task.open",
@@ -624,8 +628,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
     def test_report_one_uuid(self, mock_webbrowser,
-                             mock_plot, mock_open, mock_realpath,
-                             mock_validate):
+                             mock_plot, mock_open, mock_realpath):
         task_id = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         data = [
             {"key": {"name": "class.test", "pos": 0},
@@ -686,8 +689,6 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertFalse(mock_webbrowser.open_new_tab.called)
         mock_plot.plot.assert_called_once_with(results, include_libs=True)
 
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
     @mock.patch("rally.cli.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
     @mock.patch("rally.cli.commands.task.open",
@@ -695,8 +696,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
     def test_report_bunch_uuids(self, mock_webbrowser,
-                                mock_plot, mock_open, mock_realpath,
-                                mock_validate):
+                                mock_plot, mock_open, mock_realpath):
         tasks = ["eb290c30-38d8-4c8f-bbcc-fc8f74b004ae",
                  "eb290c30-38d8-4c8f-bbcc-fc8f74b004af"]
         data = [
@@ -741,26 +741,25 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.get_detailed.assert_has_calls(
             expected_get_calls, any_order=True)
 
-    @mock.patch("rally.cli.commands.task.json.load")
     @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
-    @mock.patch("rally.cli.commands.task.jsonschema.validate",
-                return_value=None)
     @mock.patch("rally.cli.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.plot")
     def test_report_one_file(self, mock_plot, mock_open, mock_realpath,
-                             mock_validate, mock_path_exists, mock_json_load):
+                             mock_path_exists):
 
         task_file = "/tmp/some_file.json"
         data = [
             {"key": {"name": "test", "pos": 0},
-             "data": {"raw": "foo_raw", "sla": "foo_sla",
+             "data": {"raw": "foo_raw",
+                      "sla": "foo_sla",
                       "load_duration": 0.1,
                       "full_duration": 1.2},
              "created_at": "2017-06-02 07:33:04"},
             {"key": {"name": "test", "pos": 1},
-             "data": {"raw": "bar_raw", "sla": "bar_sla",
+             "data": {"raw": "bar_raw",
+                      "sla": "bar_sla",
                       "load_duration": 2.1,
                       "full_duration": 2.2},
              "created_at": "2017-06-02 07:33:04"}]
@@ -774,60 +773,27 @@ class TaskCommandsTestCase(test.TestCase):
                    for x in data]
 
         mock_plot.plot.return_value = "html_report"
-        mock_open.side_effect = mock.mock_open(read_data=results)
+        mock_open.side_effect = mock.mock_open()
+        self.task._load_task_results_file = mock.MagicMock(
+            return_value=results
+        )
 
-        mock_json_load.return_value = results
-
-        def reset_mocks():
-            for m in mock_plot, mock_open, mock_json_load, mock_validate:
-                m.reset_mock()
         self.task.report(self.real_api, tasks=task_file,
                          out="/tmp/1_test.html")
-        expected_open_calls = [mock.call(task_file, "r"),
-                               mock.call("/tmp/1_test.html", "w+")]
+
+        self.task._load_task_results_file.assert_called_once_with(
+            self.real_api, task_file)
+        expected_open_calls = [mock.call("/tmp/1_test.html", "w+")]
         mock_open.assert_has_calls(expected_open_calls, any_order=True)
         mock_plot.plot.assert_called_once_with(results, include_libs=False)
-
         mock_open.side_effect().write.assert_called_once_with("html_report")
 
-    @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
-    @mock.patch("rally.cli.commands.task.json.load")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    def test_report_exceptions(self, mock_open, mock_json_load,
-                               mock_path_exists):
-
-        results = [
-            {"key": {"name": "test", "pos": 0},
-             "data": {"raw": "foo_raw", "sla": "foo_sla",
-                      "load_duration": 0.1,
-                      "full_duration": 1.2}}]
-
-        mock_open.side_effect = mock.mock_open(read_data=results)
-        mock_json_load.return_value = results
-
-        ret = self.task.report(self.real_api, tasks="/tmp/task.json",
-                               out="/tmp/tmp.hsml")
-
-        self.assertEqual(ret, 1)
-        for m in mock_open, mock_json_load:
-            m.reset_mock()
-        mock_path_exists.return_value = False
+    @mock.patch("rally.cli.commands.task.os.path.exists", return_value=False)
+    @mock.patch("rally.cli.commands.task.tutils.open", create=True)
+    def test_report_exceptions(self, mock_open, mock_path_exists):
         ret = self.task.report(self.real_api, tasks="/tmp/task.json",
                                out="/tmp/tmp.hsml")
         self.assertEqual(ret, 1)
-
-    @mock.patch("rally.cli.commands.task.sys.stderr")
-    @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
-    @mock.patch("rally.cli.commands.task.json.load")
-    @mock.patch("rally.cli.commands.task.open", create=True)
-    def test_report_invalid_format(self, mock_open, mock_json_load,
-                                   mock_path_exists, mock_stderr):
-        result = self.task.report(self.real_api, tasks="/tmp/task.json",
-                                  out="/tmp/tmp.html",
-                                  out_format="invalid")
-        self.assertEqual(1, result)
-        expected_out = "Invalid output format: invalid"
-        mock_stderr.write.assert_has_calls([mock.call(expected_out)])
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
@@ -1073,3 +1039,33 @@ class TaskCommandsTestCase(test.TestCase):
         mock_stdout.write.assert_has_calls([
             mock.call(error_traceback or "No traceback available.")
         ], any_order=False)
+
+    @mock.patch("rally.cli.commands.task.open", create=True)
+    @mock.patch("rally.cli.commands.task.json.load")
+    @mock.patch("rally.cli.commands.task.jsonschema.validate",
+                return_value=None)
+    def test__load_task_results_file(self, mock_validate, mock_json_load,
+                                     mock_open):
+        task_file = "/tmp/task.json"
+        results = [{
+            "result": [{"atomic_actions": {"foo": 1.0}},
+                       {"atomic_actions": {"bar": 1.1}}
+                       ]}]
+        mock_json_load.return_value = results
+        ret = self.task._load_task_results_file(self.fake_api, task_file)
+        foo_wrapper = tutils.WrapperForAtomicActions({"foo": 1.0})
+        bar_wrapper = tutils.WrapperForAtomicActions({"bar": 1.1})
+        expected = [{"result": [{"atomic_actions": list(foo_wrapper)},
+                                {"atomic_actions": list(bar_wrapper)}]}]
+        self.assertEqual(expected, ret)
+
+    @mock.patch("rally.cli.commands.task.open", create=True)
+    @mock.patch("rally.cli.commands.task.json.load")
+    def test__load_task_results_file_wrong_format(self,
+                                                  mock_json_load,
+                                                  mock_open):
+        task_id = "/tmp/task.json"
+        mock_json_load.return_value = "results"
+        self.assertRaises(task.FailedToLoadResults,
+                          self.task._load_task_results_file,
+                          api=self.real_api, task_id=task_id)

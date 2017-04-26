@@ -70,16 +70,25 @@ class Chart(plugin.Plugin):
         return [(name, points.get_zipped_graph())
                 for name, points in self._data.items()]
 
-    def _fix_atomic_actions(self, iteration):
+    def _fix_atomic_actions(self, atomic_actions):
         """Set `0' for missed atomic actions.
 
         Since some atomic actions can absent in some iterations
         due to failures, this method must be used in all cases
         related to atomic actions processing.
         """
-        for name in self._workload_info["atomic"]:
-            iteration["atomic_actions"].setdefault(name, 0)
-        return iteration
+        for name in self._get_atomic_names():
+            atomic_actions.setdefault(name, 0)
+        return atomic_actions
+
+    def _get_atomic_names(self):
+        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
+        return atomic_merger.get_merged_names()
+
+    def _merge_atomic_actions(self, atomic_actions):
+        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
+        return atomic_merger.merge_atomic_actions(
+            atomic_actions)
 
     @abc.abstractmethod
     def _map_iteration_values(self, iteration):
@@ -110,8 +119,10 @@ class AtomicStackedAreaChart(Chart):
     widget = "StackedArea"
 
     def _map_iteration_values(self, iteration):
-        iteration = self._fix_atomic_actions(iteration)
-        atomics = list(iteration["atomic_actions"].items())
+        atomic_actions = self._merge_atomic_actions(
+            iteration["atomic_actions"])
+        atomic_actions = self._fix_atomic_actions(atomic_actions)
+        atomics = list(atomic_actions.items())
         if self._workload_info["iterations_failed"]:
             if iteration["error"]:
                 failed_duration = (
@@ -141,8 +152,10 @@ class AvgChart(Chart):
 class AtomicAvgChart(AvgChart):
 
     def _map_iteration_values(self, iteration):
-        iteration = self._fix_atomic_actions(iteration)
-        return list(iteration["atomic_actions"].items())
+        atomic_actions = self._merge_atomic_actions(
+            iteration["atomic_actions"])
+        atomic_actions = self._fix_atomic_actions(atomic_actions)
+        return list(atomic_actions.items())
 
 
 class LoadProfileChart(Chart):
@@ -269,16 +282,19 @@ class AtomicHistogramChart(HistogramChart):
 
     def __init__(self, workload_info):
         super(AtomicHistogramChart, self).__init__(workload_info)
-        for i, atomic in enumerate(self._workload_info["atomic"].items()):
-            name, value = atomic
-            self._data[name] = {
+        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
+        for i, name in enumerate(self._workload_info["atomic"]):
+            value = self._workload_info["atomic"][name]
+            self._data[atomic_merger.get_merged_name(name)] = {
                 "views": self._init_views(value["min_duration"],
                                           value["max_duration"]),
                 "disabled": i}
 
     def _map_iteration_values(self, iteration):
-        iteration = self._fix_atomic_actions(iteration)
-        return list(iteration["atomic_actions"].items())
+        atomic_actions = self._merge_atomic_actions(
+            iteration["atomic_actions"])
+        atomic_actions = self._fix_atomic_actions(atomic_actions)
+        return list(atomic_actions.items())
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -357,7 +373,7 @@ class MainStatsTable(Table):
     def __init__(self, *args, **kwargs):
         super(MainStatsTable, self).__init__(*args, **kwargs)
         iters_num = self._workload_info["iterations_count"]
-        for name in (list(self._workload_info["atomic"].keys()) + ["total"]):
+        for name in (self._get_atomic_names() + ["total"]):
             self._data[name] = [
                 [streaming.MinComputation(), None],
                 [streaming.PercentileComputation(0.5, iters_num), None],
@@ -372,7 +388,9 @@ class MainStatsTable(Table):
                  lambda st, has_result: st.result()]]
 
     def _map_iteration_values(self, iteration):
-        return dict(iteration["atomic_actions"], total=iteration["duration"])
+        atomic_actions = self._merge_atomic_actions(
+            iteration["atomic_actions"])
+        return dict(atomic_actions, total=iteration["duration"])
 
     def add_iteration(self, iteration):
         for name, value in self._map_iteration_values(iteration).items():

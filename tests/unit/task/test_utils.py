@@ -16,6 +16,7 @@
 import collections
 import datetime as dt
 
+import ddt
 from jsonschema import exceptions as schema_exceptions
 import mock
 import six
@@ -528,6 +529,7 @@ class WaitForStatusTestCase(test.TestCase):
                           update_resource=upd, timeout=2, id_attr="uuid")
 
 
+@ddt.ddt
 class WrapperForAtomicActionsTestCase(test.TestCase):
 
     def test_dict_atomic(self):
@@ -577,3 +579,28 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
              {"name": "action_2", "started_at": 0,
               "finished_at": 2, "children": []}],
             atomic_wrapper._convert_old_atomic_actions(atomic_actions))
+
+    @ddt.data(
+        {"atomic_actions": [{"name": "some", "started_at": 1.0,
+                             "finished_at": 2.0, "children": []}],
+         "expected": {"some": 1.0}},
+        {"atomic_actions": [{"name": "some", "started_at": 1.0,
+                             "finished_at": 2.0, "children": []},
+                            {"name": "some", "started_at": 2.0,
+                             "finished_at": 3.0, "children": []}],
+         "expected": {"some": 1.0, "some (2)": 1.0}},
+        {"atomic_actions": [{"name": "some", "started_at": 1.0,
+                             "finished_at": 2.0, "children": []},
+                            {"name": "some", "started_at": 2.0,
+                             "finished_at": 3.0, "children": []},
+                            {"name": "some", "started_at": 3.0,
+                             "finished_at": 4.0, "children": []}
+                            ],
+         "expected": {"some": 1.0, "some (2)": 1.0, "some (3)": 1.0}}
+    )
+    @ddt.unpack
+    def test_convert_new_atomic_actions(self, atomic_actions, expected):
+        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
+        self.assertEqual(expected,
+                         atomic_wrapper._convert_new_atomic_actions(
+                             atomic_actions))

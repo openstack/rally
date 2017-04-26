@@ -36,7 +36,8 @@ class ChartTestCase(test.TestCase):
 
     @property
     def wload_info(self):
-        return {"iterations_count": 42, "atomic": {"a": {}, "b": {}, "c": {}}}
+        return {"iterations_count": 42, "atomic": collections.OrderedDict(
+            [("a", {}), ("b", {}), ("c", {})])}
 
     def test___init__(self):
         self.assertRaises(TypeError, charts.Chart, self.wload_info)
@@ -72,8 +73,24 @@ class ChartTestCase(test.TestCase):
     def test__fix_atomic_actions(self):
         chart = self.Chart(self.wload_info)
         self.assertEqual(
-            {"atomic_actions": {"a": 5, "b": 6, "c": 0}},
-            chart._fix_atomic_actions({"atomic_actions": {"a": 5, "b": 6}}))
+            {"a": 5, "b": 6, "c": 0},
+            chart._fix_atomic_actions({"a": 5, "b": 6}))
+
+    def test__get_atomic_names(self):
+        chart = self.Chart(self.wload_info)
+        self.assertEqual(
+            ["a", "b", "c"],
+            chart._get_atomic_names())
+
+    def test__merge_atomic_actions(self):
+        chart = self.Chart(self.wload_info)
+        atomic_actions = [{"name": "a", "started_at": 0, "finished_at": 1},
+                          {"name": "b", "started_at": 1, "finished_at": 2},
+                          {"name": "c", "started_at": 2, "finished_at": 3}]
+        self.assertEqual(
+            {"a": 1, "b": 1, "c": 1},
+            chart._merge_atomic_actions(atomic_actions)
+        )
 
 
 class MainStackedAreaChartTestCase(test.TestCase):
@@ -108,10 +125,17 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         iterations = (
-            {"atomic_actions": {"foo": 1.1}, "error": []},
-            {"atomic_actions": {"foo": 1.1, "bar": 1.2},
+            {"atomic_actions": [{"name": "foo", "started_at": 0,
+                                 "finished_at": 1.1}],
+             "error": []},
+            {"atomic_actions": [{"name": "foo", "started_at": 0,
+                                 "finished_at": 1.1},
+                                {"name": "bar", "started_at": 0,
+                                 "finished_at": 1.2}
+                                ],
              "error": [], "duration": 40, "idle_duration": 2},
-            {"atomic_actions": {"bar": 1.2},
+            {"atomic_actions": [{"name": "bar", "started_at": 0,
+                                 "finished_at": 1.2}],
              "error": [], "duration": 5.5, "idle_duration": 2.5})
         expected = [("bar", [[1, 0], [2, 1.2], [3, 1.2]]),
                     ("foo", [[1, 1.1], [2, 1.1], [3, 0]])]
@@ -124,10 +148,16 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render_with_failed_iterations(self):
         iterations = (
-            {"atomic_actions": {"foo": 1.1}, "error": []},
-            {"atomic_actions": {"foo": 1.1, "bar": 1.2},
+            {"atomic_actions": [{"name": "foo", "started_at": 0,
+                                 "finished_at": 1.1}], "error": []},
+            {"atomic_actions": [{"name": "foo", "started_at": 0,
+                                 "finished_at": 1.1},
+                                {"name": "bar", "started_at": 0,
+                                 "finished_at": 1.2}
+                                ],
              "error": ["foo_err"], "duration": 40, "idle_duration": 2},
-            {"atomic_actions": {"bar": 1.2},
+            {"atomic_actions": [{"name": "bar", "started_at": 0,
+                                 "finished_at": 1.2}],
              "error": ["foo_err"], "duration": 5.5, "idle_duration": 2.5})
         expected = [("bar", [[1, 0], [2, 1.2], [3, 1.2]]),
                     ("failed_duration", [[1, 0], [2, 39.7], [3, 6.8]]),
@@ -160,10 +190,14 @@ class AtomicAvgChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         chart = charts.AtomicAvgChart({"iterations_count": 3,
-                                       "atomic": {"foo": {}, "bar": {}}})
+                                       "atomic": {"foo": {},
+                                                  "bar": {}}})
         self.assertIsInstance(chart, charts.AvgChart)
-        [chart.add_iteration({"atomic_actions": collections.OrderedDict(a)})
-         for a in ([("foo", 2), ("bar", 5)], [("foo", 4)], [("bar", 7)])]
+        [chart.add_iteration({"atomic_actions": a})
+         for a in ([{"name": "foo", "started_at": 0, "finished_at": 2},
+                    {"name": "bar", "started_at": 0, "finished_at": 5}],
+                   [{"name": "foo", "started_at": 0, "finished_at": 4}],
+                   [{"name": "bar", "started_at": 0, "finished_at": 7}])]
         self.assertEqual([("bar", 4.0), ("foo", 2.0)], sorted(chart.render()))
 
 
@@ -231,7 +265,8 @@ class HistogramChartTestCase(test.TestCase):
                           {"iterations_count": 3})
         chart = self.HistogramChart({"iterations_count": 3})
         self.assertIsInstance(chart, charts.HistogramChart)
-        [chart.add_iteration({"foo": x}) for x in ({"bar": 1.2}, {"bar": 2.4},
+        [chart.add_iteration({"foo": x}) for x in ({"bar": 1.2},
+                                                   {"bar": 2.4},
                                                    {"bar": 4.2})]
         expected = {
             "data": [
@@ -313,7 +348,10 @@ class AtomicHistogramChartTestCase(test.TestCase):
                   ("bar", {"min_duration": 3.1, "max_duration": 5.5})])})
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"atomic_actions": a})
-         for a in ({"foo": 1.6, "bar": 3.1}, {"foo": 2.8}, {"bar": 5.5})]
+         for a in ([{"name": "foo", "started_at": 0, "finished_at": 1.6},
+                    {"name": "bar", "started_at": 0, "finished_at": 3.1}],
+                   [{"name": "foo", "started_at": 0, "finished_at": 2.8}],
+                   [{"name": "bar", "started_at": 0, "finished_at": 5.5}])]
         expected = {
             "data": [
                 [{"disabled": 0, "key": "foo", "view": "Square Root Choice",
@@ -407,8 +445,11 @@ class TableTestCase(test.TestCase):
 
 
 def generate_iteration(duration, error, *actions):
+    atomic_actions = [{"name": name, "started_at": 0,
+                       "finished_at": finished_at}
+                      for name, finished_at in actions]
     return {
-        "atomic_actions": collections.OrderedDict(actions),
+        "atomic_actions": atomic_actions,
         "duration": duration,
         "error": error
     }
@@ -421,7 +462,8 @@ class MainStatsTableTestCase(test.TestCase):
         {
             "info": {
                 "iterations_count": 1,
-                "atomic": collections.OrderedDict([("foo", {}), ("bar", {})])
+                "atomic": collections.OrderedDict([("foo", {}),
+                                                   ("bar", {})])
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
@@ -454,7 +496,8 @@ class MainStatsTableTestCase(test.TestCase):
         {
             "info": {
                 "iterations_count": 4,
-                "atomic": collections.OrderedDict([("foo", {}), ("bar", {})])
+                "atomic": collections.OrderedDict([("foo", {}),
+                                                   ("bar", {})])
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 4.0)),
