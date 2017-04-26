@@ -21,10 +21,10 @@ from rally.common import utils
 from rally.common import validation
 from rally import consts as rally_consts
 from rally import exceptions
+from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.task import context
-from rally.task import utils as bench_utils
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -95,9 +95,6 @@ class ShareNetworks(context.Context):
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(), msg=msg)
 
-        # Set flag that says we will not delete/cleanup share networks
-        self.context[CONTEXT_NAME]["delete_share_networks"] = False
-
         for tenant_name_or_id, share_networks in self.config[
                 "share_networks"].items():
             # Verify project existence
@@ -151,11 +148,13 @@ class ShareNetworks(context.Context):
             networks = self.context["tenants"][tenant_id].get("networks")
             manila_scenario = manila_utils.ManilaScenario({
                 "task": self.task,
+                "owner_id": self.get_owner_id(),
                 "user": user,
                 "config": {
                     "api_versions": self.context["config"].get(
                         "api_versions", [])}
             })
+            manila_scenario.RESOURCE_NAME_FORMAT = self.RESOURCE_NAME_FORMAT
             self.context["tenants"][tenant_id][CONTEXT_NAME] = {
                 "share_networks": []}
             data = {}
@@ -191,92 +190,22 @@ class ShareNetworks(context.Context):
     def setup(self):
         self.context[CONTEXT_NAME] = {}
         if not self.config["use_share_networks"]:
-            self.context[CONTEXT_NAME]["delete_share_networks"] = False
+            pass
         elif self.context["config"].get("existing_users"):
             self._setup_for_existing_users()
         else:
             self._setup_for_autocreated_users()
 
-    def _cleanup_tenant_resources(self, resources_plural_name,
-                                  resources_singular_name):
-        """Cleans up tenant resources.
-
-        :param resources_plural_name: plural name for resources
-        :param resources_singular_name: singular name for resource. Expected
-            to be part of resource deletion method name (obj._delete_%s)
-        """
-        for user, tenant_id in (utils.iterate_per_tenants(
-                self.context.get("users", []))):
-            manila_scenario = manila_utils.ManilaScenario({
-                "user": user,
-                "config": {
-                    "api_versions": self.context["config"].get(
-                        "api_versions", [])}
-            })
-            resources = self.context["tenants"][tenant_id][CONTEXT_NAME].get(
-                resources_plural_name, [])
-            for resource in resources:
-                logger = logging.ExceptionLogger(
-                    LOG,
-                    _("Failed to delete %(name)s %(id)s for tenant %(t)s.") % {
-                        "id": resource, "t": tenant_id,
-                        "name": resources_singular_name})
-                with logger:
-                    delete_func = getattr(
-                        manila_scenario,
-                        "_delete_%s" % resources_singular_name)
-                    delete_func(resource)
-
-    def _wait_for_cleanup_of_share_networks(self):
-        """Waits for deletion of Manila service resources."""
-        for user, tenant_id in (utils.iterate_per_tenants(
-                self.context.get("users", []))):
-            self._wait_for_resources_deletion(
-                self.context["tenants"][tenant_id][CONTEXT_NAME].get("shares"))
-            manila_scenario = manila_utils.ManilaScenario({
-                "user": user,
-                "admin": self.context["admin"],
-                "config": {
-                    "api_versions": self.context["config"].get(
-                        "api_versions", [])}
-            })
-            for sn in self.context["tenants"][tenant_id][CONTEXT_NAME][
-                    "share_networks"]:
-                share_servers = manila_scenario._list_share_servers(
-                    search_opts={"share_network": sn["id"]})
-                self._wait_for_resources_deletion(share_servers)
-
-    def _wait_for_resources_deletion(self, resources):
-        """Waiter for resources deletion.
-
-        :param resources: resource or list of resources for deletion
-            verification
-        """
-        if not resources:
-            return
-        if not isinstance(resources, list):
-            resources = [resources]
-        for resource in resources:
-            bench_utils.wait_for_status(
-                resource,
-                ready_statuses=["deleted"],
-                check_deletion=True,
-                update_resource=bench_utils.get_from_manager(),
-                timeout=CONF.benchmark.manila_share_delete_timeout,
-                check_interval=(
-                    CONF.benchmark.manila_share_delete_poll_interval))
-
     @logging.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
-        if self.context[CONTEXT_NAME].get("delete_share_networks", True):
-            # NOTE(vponomaryov): Schedule 'share networks' deletion.
-            self._cleanup_tenant_resources("share_networks", "share_network")
-
-            # NOTE(vponomaryov): Share network deletion schedules deletion of
-            # share servers. So, we should wait for its deletion too to avoid
-            # further failures of network resources release.
-            # Use separate cycle to make share servers be deleted in parallel.
-            self._wait_for_cleanup_of_share_networks()
+        if (not self.context["config"].get("existing_users") or
+                self.config["use_share_networks"]):
+            resource_manager.cleanup(
+                names=["manila.share_networks"],
+                users=self.context.get("users", []),
+                superclass=self.__class__,
+                api_versions=self.context["config"].get("api_versions"),
+                task_id=self.get_owner_id())
         else:
             # NOTE(vponomaryov): assume that share networks were not created
             # by test run.

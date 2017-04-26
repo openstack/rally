@@ -154,9 +154,7 @@ class ShareNetworksTestCase(test.TestCase):
                     "use_share_networks": False,
                 },
             },
-            consts.SHARE_NETWORKS_CONTEXT_NAME: {
-                "delete_share_networks": False,
-            },
+            consts.SHARE_NETWORKS_CONTEXT_NAME: {},
         }
         inst = manila_share_networks.ShareNetworks(ctxt)
 
@@ -380,62 +378,23 @@ class ShareNetworksTestCase(test.TestCase):
             self.assertIn(mock.call(user["credential"], {}),
                           mock_clients.mock_calls)
 
-    @ddt.data(True, False)
-    @mock.patch("rally.task.utils.wait_for_status")
-    @mock.patch("rally.osclients.Clients")
-    @mock.patch(MANILA_UTILS_PATH + "_delete_share_network")
-    @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
-    @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
-    @mock.patch(MANILA_UTILS_PATH + "_list_share_servers")
-    def test_cleanup_autocreated_share_networks(
-            self, use_security_services,
-            mock_manila_scenario__list_share_servers,
-            mock_manila_scenario__add_security_service_to_share_network,
-            mock_manila_scenario__create_share_network,
-            mock_manila_scenario__delete_share_network,
-            mock_clients,
-            mock_wait_for_status):
-        fake_share_servers = ["fake_share_server"]
-        mock_manila_scenario__list_share_servers.return_value = (
-            fake_share_servers)
-        networks_per_tenant = 2
-        ctxt = self._get_context(
-            networks_per_tenant=networks_per_tenant,
-            use_security_services=use_security_services,
-        )
-        inst = manila_share_networks.ShareNetworks(ctxt)
-        for tenant_id in list(ctxt["tenants"].keys()):
-            inst.context["tenants"][tenant_id][
-                consts.SECURITY_SERVICES_CONTEXT_NAME] = {
-                    "security_services": [
-                        Fake(id="fake_id").to_dict() for i in (1, 2, 3)
-                    ]
-            }
-        inst.setup()
+    @mock.patch("rally.plugins.openstack.context.manila.manila_share_networks."
+                "resource_manager.cleanup")
+    def test_cleanup_autocreated_share_networks(self, mock_cleanup):
+        task_id = "task"
+        ctxt = {
+            "config": {"manila_share_networks": {
+                "use_share_networks": True}},
+            "users": [mock.Mock()],
+            "task": {"uuid": task_id}}
 
-        mock_clients.assert_has_calls([
-            mock.call("fake", {}) for i in range(self.TENANTS_AMOUNT)])
+        inst = manila_share_networks.ShareNetworks(ctxt)
 
         inst.cleanup()
 
-        self.assertEqual(self.TENANTS_AMOUNT * 4, mock_clients.call_count)
-        self.assertEqual(
-            self.TENANTS_AMOUNT * networks_per_tenant,
-            mock_manila_scenario__list_share_servers.call_count)
-        mock_manila_scenario__list_share_servers.assert_has_calls(
-            [mock.call(search_opts=mock.ANY)])
-        self.assertEqual(
-            self.TENANTS_AMOUNT * networks_per_tenant,
-            mock_manila_scenario__delete_share_network.call_count)
-        self.assertEqual(
-            self.TENANTS_AMOUNT * networks_per_tenant,
-            mock_wait_for_status.call_count)
-        mock_wait_for_status.assert_has_calls([
-            mock.call(
-                fake_share_servers[0],
-                ready_statuses=["deleted"],
-                check_deletion=True,
-                update_resource=mock.ANY,
-                timeout=180,
-                check_interval=2),
-        ])
+        mock_cleanup.assert_called_once_with(
+            names=["manila.share_networks"],
+            users=ctxt["users"],
+            superclass=manila_share_networks.ShareNetworks,
+            api_versions=None,
+            task_id=task_id)
