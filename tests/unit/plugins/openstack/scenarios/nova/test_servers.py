@@ -774,6 +774,21 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                       fakearg="fakearg")
         scenario._show_server.assert_called_once_with(server)
 
+    def test_boot_server_and_list_interfaces(self):
+        server = fakes.FakeServer()
+        image = fakes.FakeImage()
+        flavor = fakes.FakeFlavor()
+
+        scenario = servers.BootServerAndListInterfaces(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=server)
+        scenario._list_interfaces = mock.MagicMock()
+
+        scenario.run(image, flavor, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      fakearg="fakearg")
+        scenario._list_interfaces.assert_called_once_with(server)
+
     @ddt.data({"length": None},
               {"length": 10})
     @ddt.unpack

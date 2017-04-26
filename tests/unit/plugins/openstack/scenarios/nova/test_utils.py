@@ -941,6 +941,17 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.get_host")
 
+    def test__list_interfaces(self):
+        nova_scenario = utils.NovaScenario()
+        result = nova_scenario._list_interfaces("server")
+        self.assertEqual(
+            self.clients("nova").servers.interface_list.return_value,
+            result)
+        self.clients("nova").servers.interface_list.assert_called_once_with(
+            "server")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_interfaces")
+
     def test__list_images(self):
         nova_scenario = utils.NovaScenario()
         result = nova_scenario._list_images(detailed=False, fakearg="fakearg")

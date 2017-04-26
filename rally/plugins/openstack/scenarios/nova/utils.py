@@ -989,6 +989,15 @@ class NovaScenario(scenario.OpenStackScenario):
             hosts = [host for host in hosts if host.service == service]
         return hosts
 
+    @atomic.action_timer("nova.list_interfaces")
+    def _list_interfaces(self, server):
+        """List interfaces attached to a server.
+
+        :param server:Instance or ID of server.
+        :returns: Server interface list
+        """
+        return self.clients("nova").servers.interface_list(server)
+
     @atomic.optional_action_timer("nova.get_host")
     def _get_host(self, host_name):
         """Describe a specific host.

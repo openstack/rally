@@ -1421,3 +1421,24 @@
       sla:
         failure_rate:
           max: 0
+
+  NovaServers.boot_server_and_list_interfaces:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        network:
+          start_cidr: "100.1.0.0/26"
+      sla:
+        failure_rate:
+          max: 0
