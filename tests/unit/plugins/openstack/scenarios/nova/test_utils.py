@@ -879,22 +879,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_floating_ips_bulk")
 
-    @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
-    def test__create_floating_ips_bulk(self, mock_generate_cidr):
-        fake_cidr = "10.2.0.0/24"
-        fake_pool = "test1"
-        fake_floating_ips_bulk = mock.MagicMock()
-        fake_floating_ips_bulk.ip_range = fake_cidr
-        fake_floating_ips_bulk.pool = fake_pool
-        self.admin_clients("nova").floating_ips_bulk.create.return_value = (
-            fake_floating_ips_bulk)
-        nova_scenario = utils.NovaScenario(context=self.context)
-        return_iprange = nova_scenario._create_floating_ips_bulk(fake_cidr)
-        mock_generate_cidr.assert_called_once_with(start_cidr=fake_cidr)
-        self.assertEqual(return_iprange, fake_floating_ips_bulk)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.create_floating_ips_bulk")
-
     def test__delete_floating_ips_bulk(self):
         fake_cidr = "10.2.0.0/24"
         nova_scenario = utils.NovaScenario(context=self.context)
@@ -993,27 +977,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "fake_net_id")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_network")
-
-    @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
-    def test__create_network(self, mock_generate_cidr):
-        nova_scenario = utils.NovaScenario()
-        nova_scenario.generate_random_name = mock.Mock(
-            return_value="rally_novanet_fake")
-
-        result = nova_scenario._create_network("fake_start_cidr",
-                                               fakearg="fakearg")
-
-        mock_generate_cidr.assert_called_once_with(
-            start_cidr="fake_start_cidr")
-
-        self.assertEqual(
-            self.admin_clients("nova").networks.create.return_value,
-            result)
-        self.admin_clients("nova").networks.create.assert_called_once_with(
-            label="rally_novanet_fake", cidr=mock_generate_cidr.return_value,
-            fakearg="fakearg")
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.create_network")
 
     def test__list_flavors(self):
         nova_scenario = utils.NovaScenario()

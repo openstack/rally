@@ -23,10 +23,8 @@ from rally.common import logging
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally.task import utils as task_utils
 
 from neutronclient.common import exceptions as neutron_exceptions
-from novaclient import exceptions as nova_exceptions
 
 
 LOG = logging.getLogger(__name__)
@@ -111,118 +109,6 @@ class NetworkWrapper(object):
     @abc.abstractmethod
     def supports_extension(self):
         """Checks whether a network extension is supported."""
-
-
-class NovaNetworkWrapper(NetworkWrapper):
-    SERVICE_IMPL = consts.Service.NOVA
-
-    def __init__(self, *args, **kwargs):
-        super(NovaNetworkWrapper, self).__init__(*args, **kwargs)
-        self.skip_cidrs = [n.cidr for n in self.client.networks.list()]
-
-    def _generate_cidr(self):
-        cidr = generate_cidr(start_cidr=self.start_cidr)
-        while cidr in self.skip_cidrs:
-            cidr = generate_cidr(start_cidr=self.start_cidr)
-        return cidr
-
-    def _marshal_network_object(self, net_obj):
-        """Convert a Network object to a dict.
-
-        This helps keep return values from the NovaNetworkWrapper
-        compatible with those from NeutronWrapper.
-
-        :param net_obj: The Network object to convert to a dict
-        """
-        return {"id": net_obj.id,
-                "cidr": net_obj.cidr,
-                "name": net_obj.label,
-                "status": "ACTIVE",
-                "external": False,
-                "tenant_id": net_obj.project_id}
-
-    def create_network(self, tenant_id, **kwargs):
-        """Create network.
-
-        :param tenant_id: str, tenant ID
-        :param **kwargs: Additional keyword arguments. Only
-                         ``network_create_args`` is honored; other
-                         arguments are accepted for compatibility, but
-                         are not used here. ``network_create_args``
-                         can be used to provide additional arbitrary
-                         network creation arguments.
-        :returns: dict, network data
-        """
-        cidr = self._generate_cidr()
-        label = self.owner.generate_random_name()
-        network_create_args = kwargs.get("network_create_args", {})
-        network = self.client.networks.create(
-            project_id=tenant_id, cidr=cidr, label=label,
-            **network_create_args)
-        return self._marshal_network_object(network)
-
-    def delete_network(self, network):
-        self.client.networks.disassociate(network["id"],
-                                          disassociate_host=False,
-                                          disassociate_project=True)
-        return self.client.networks.delete(network["id"])
-
-    def list_networks(self):
-        return [self._marshal_network_object(n)
-                for n in self.client.networks.list()]
-
-    def create_floating_ip(self, ext_network=None, **kwargs):
-        """Allocate a floating ip from the given nova-network pool
-
-        :param ext_network: name or external network, str
-        :param **kwargs: for compatibility, not used here
-        :returns: floating IP dict
-        """
-        if not ext_network:
-            try:
-                ext_network = self.client.floating_ip_pools.list()[0].name
-            except IndexError:
-                raise NetworkWrapperException("No floating IP pools found")
-        fip = self.client.floating_ips.create(ext_network)
-        return {"id": fip.id, "ip": fip.ip}
-
-    def _get_floating_ip(self, fip_id, do_raise=False):
-        try:
-            fip = self.client.floating_ips.get(fip_id)
-        except nova_exceptions.NotFound:
-            if not do_raise:
-                return None
-            raise exceptions.GetResourceNotFound(
-                resource="Floating IP %s" % fip_id)
-        return fip.id
-
-    def delete_floating_ip(self, fip_id, wait=False):
-        """Delete floating IP.
-
-        :param fip_id: int floating IP id
-        :param wait: if True then wait to return until floating ip is deleted
-        """
-        self.client.floating_ips.delete(fip_id)
-        if not wait:
-            return
-        task_utils.wait_for_status(
-            fip_id,
-            ready_statuses=["deleted"],
-            check_deletion=True,
-            update_resource=lambda i: self._get_floating_ip(i, do_raise=True))
-
-    def supports_extension(self, extension):
-        """Check whether a Nova-network extension is supported
-
-        :param extension: str Nova network extension
-        :returns: result tuple. Always (True, "") for secgroups in nova-network
-        :rtype: (bool, string)
-        """
-        # TODO(rkiran): Add other extensions whenever necessary
-        if extension == "security-group":
-            return True, ""
-
-        return False, _("Nova driver does not support %s") % (extension)
 
 
 class NeutronWrapper(NetworkWrapper):
@@ -486,4 +372,4 @@ def wrap(clients, owner, config=None):
 
     if consts.Service.NEUTRON in services.values():
         return NeutronWrapper(clients, owner, config=config)
-    return NovaNetworkWrapper(clients, owner, config=config)
+    LOG.warning(_("NovaNetworkWrapper is deprecated since 0.9.0"))

@@ -21,7 +21,6 @@ from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
-from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
 from rally.task import utils
 
@@ -852,14 +851,6 @@ class NovaScenario(scenario.OpenStackScenario):
         """List all floating IPs."""
         return self.admin_clients("nova").floating_ips_bulk.list()
 
-    @atomic.action_timer("nova.create_floating_ips_bulk")
-    def _create_floating_ips_bulk(self, ip_range, **kwargs):
-        """Create floating IPs by range."""
-        ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
-        pool_name = self.generate_random_name()
-        return self.admin_clients("nova").floating_ips_bulk.create(
-            ip_range=ip_range, pool=pool_name, **kwargs)
-
     @atomic.action_timer("nova.delete_floating_ips_bulk")
     def _delete_floating_ips_bulk(self, ip_range):
         """Delete floating IPs by range."""
@@ -931,17 +922,6 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server to unlock
         """
         server.unlock()
-
-    @atomic.action_timer("nova.create_network")
-    def _create_network(self, ip_range, **kwargs):
-        """Create nova network.
-
-        :param ip_range: IP range in CIDR notation to create
-        """
-        net_label = self.generate_random_name()
-        ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
-        return self.admin_clients("nova").networks.create(
-            label=net_label, cidr=ip_range, **kwargs)
 
     @atomic.action_timer("nova.delete_network")
     def _delete_network(self, net_id):
