@@ -13,7 +13,7 @@
 
 import collections
 
-from rally.plugins.openstack import service
+from rally.task import service
 
 from oslo_config import cfg
 
@@ -35,7 +35,7 @@ class RemovePropsException(Exception):
     """
 
 
-class Image(service.UnifiedOpenStackService):
+class Image(service.UnifiedService):
     @classmethod
     def is_applicable(cls, clients):
         cloud_version = str(clients.glance().version).split(".")[0]
