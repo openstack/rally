@@ -71,8 +71,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                    image_url="http://example.com/fake/url",
                    tenants=1, users_per_tenant=1, images_per_tenant=1,
                    image_name=None, min_ram=None, min_disk=None,
-                   image_args={"is_public": True}, api_versions=None,
-                   visibility="public"):
+                   api_versions=None, visibility="public"):
         image_service = self.mock_image.return_value
 
         tenant_data = self._gen_tenants(tenants)
@@ -91,14 +90,10 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                 },
                 "images": {
                     "image_url": image_url,
-                    "image_type": disk_format,
                     "disk_format": disk_format,
-                    "image_container": container_format,
                     "container_format": container_format,
                     "images_per_tenant": images_per_tenant,
-                    "is_public": visibility,
                     "visibility": visibility,
-                    "image_args": image_args
                 }
             },
             "admin": {
@@ -111,9 +106,6 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             self.context["config"]["api_versions"] = api_versions
 
         expected_image_args = {}
-        if image_args is not None:
-            self.context["config"]["images"]["image_args"] = image_args
-            expected_image_args.update(image_args)
         if image_name is not None:
             self.context["config"]["images"]["image_name"] = image_name
         if min_ram is not None:
@@ -144,6 +136,90 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
 
         mock_clients.assert_has_calls(
             [mock.call(mock.ANY, api_info=api_versions)] * tenants)
+
+    @mock.patch("%s.image.Image" % CTX)
+    @mock.patch("%s.LOG" % CTX)
+    def test_setup_with_deprecated_args(self, mock_log, mock_image):
+        image_type = "itype"
+        image_container = "icontainer"
+        is_public = True
+        d_min_ram = mock.Mock()
+        d_min_disk = mock.Mock()
+        self.context.update({
+            "config": {
+                "images": {"image_type": image_type,
+                           "image_container": image_container,
+                           "image_args": {"is_public": is_public,
+                                          "min_ram": d_min_ram,
+                                          "min_disk": d_min_disk}}
+            },
+            "users": [{"tenant_id": "foo-tenant",
+                       "credential": mock.MagicMock()}],
+            "tenants": {"foo-tenant": {}}
+        })
+        images_ctx = images.ImageGenerator(self.context)
+        images_ctx.setup()
+
+        mock_image.return_value.create_image.assert_called_once_with(
+            image_name=None,
+            container_format=image_container,
+            image_location=None,
+            disk_format=image_type,
+            visibility="public",
+            min_disk=d_min_disk,
+            min_ram=d_min_ram
+        )
+        self.assertEqual(
+            [mock.call("The 'image_type' argument is deprecated since "
+                       "Rally 0.10.0, use disk_format arguments instead."),
+             mock.call("The 'image_container' argument is deprecated since "
+                       "Rally 0.10.0; use container_format arguments instead"),
+             mock.call("The 'image_args' argument is deprecated since "
+                       "Rally 0.10.0; specify exact arguments in a root "
+                       "section of context instead.")],
+            mock_log.warning.call_args_list)
+
+        mock_image.return_value.create_image.reset_mock()
+        mock_log.warning.reset_mock()
+
+        min_ram = mock.Mock()
+        min_disk = mock.Mock()
+        visibility = "foo"
+        disk_format = "dformat"
+        container_format = "cformat"
+
+        self.context["config"]["images"].update({
+            "min_ram": min_ram,
+            "min_disk": min_disk,
+            "visibility": visibility,
+            "disk_format": disk_format,
+            "container_format": container_format
+        })
+
+        images_ctx = images.ImageGenerator(self.context)
+        images_ctx.setup()
+
+        # check that deprecated arguments are not used
+        mock_image.return_value.create_image.assert_called_once_with(
+            image_name=None,
+            container_format=container_format,
+            image_location=None,
+            disk_format=disk_format,
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram
+        )
+        # No matter will be deprecated arguments used or not, if they are
+        # specified, warning message should be printed.
+        self.assertEqual(
+            [mock.call("The 'image_type' argument is deprecated since "
+                       "Rally 0.10.0, use disk_format arguments instead."),
+             mock.call("The 'image_container' argument is deprecated since "
+                       "Rally 0.10.0; use container_format arguments instead"),
+             mock.call("The 'image_args' argument is deprecated since "
+                       "Rally 0.10.0; specify exact arguments in a root "
+                       "section of context instead.")],
+            mock_log.warning.call_args_list)
 
     @ddt.data(
         {"admin": True},
