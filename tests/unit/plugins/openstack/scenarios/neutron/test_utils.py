@@ -1017,6 +1017,37 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_lbaasv2_loadbalancers")
 
+    @ddt.data(
+        {"bgpvpn_create_args": {}},
+        {"bgpvpn_create_args": {"name": "given-name"}}
+    )
+    @ddt.unpack
+    def test__create_bgpvpn(self, atomic_action=True, bgpvpn_create_args=None):
+        bgpvpn_create_args = bgpvpn_create_args or {}
+        bv = {"bgpvpn": {"id": "bgpvpn-id"}}
+        self.admin_clients("neutron").create_ext.return_value = bv
+        if bgpvpn_create_args.get("name") is None:
+            self.scenario.generate_random_name = mock.Mock(
+                return_value="random_name")
+        args = {"name": "random_name"}
+        args.update(bgpvpn_create_args)
+        expected_bv_data = {"bgpvpn": args}
+        resultant_bv = self.scenario._create_bgpvpn(
+            bgpvpn_create_args=bgpvpn_create_args)
+        self.assertEqual(bv, resultant_bv)
+        self.admin_clients("neutron").create_ext.assert_called_once_with(
+            self.scenario.BGPVPNS_PATH, expected_bv_data)
+        if atomic_action:
+            self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                           "neutron.create_bgpvpn")
+
+    def test_delete_bgpvpn(self):
+        bgpvpn_create_args = {}
+        bgpvpn = self.scenario._create_bgpvpn(bgpvpn_create_args)
+        self.scenario._delete_bgpvpn(bgpvpn)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.delete_bgpvpn")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 

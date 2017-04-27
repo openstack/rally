@@ -44,6 +44,9 @@ class NeutronScenario(scenario.OpenStackScenario):
     HM_MAX_RETRIES = 3
     HM_DELAY = 20
     HM_TIMEOUT = 10
+    # BGPVPN
+    BGPVPNS_PATH = "/bgpvpn/bgpvpns"
+    BGPVPN_PATH = "/bgpvpn/bgpvpns/%s"
 
     def _get_network_id(self, network, **kwargs):
         """Get Neutron network ID for the network name.
@@ -696,3 +699,25 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").list_loadbalancers(retrieve_all,
                                                           **lb_list_args)
+
+    @atomic.action_timer("neutron.create_bgpvpn")
+    def _create_bgpvpn(self, bgpvpn_create_args):
+        """Create Bgpvpn resource (POST /bgpvpn/bgpvpn)
+
+        param: bgpvpn_create_args: dict bgpvpn options
+        returns: dict, bgpvpn resource details
+        """
+        if "name" not in bgpvpn_create_args:
+            bgpvpn_create_args["name"] = self.generate_random_name()
+        return self.admin_clients("neutron").create_ext(
+            self.BGPVPNS_PATH, {"bgpvpn": bgpvpn_create_args})
+
+    @atomic.action_timer("neutron.delete_bgpvpn")
+    def _delete_bgpvpn(self, bgpvpn):
+        """Delete Bgpvpn resource.(DELETE /bgpvpn/bgpvpns/{id})
+
+        param: bgpvpn: dict, bgpvpn
+        return: dict, bgpvpn
+        """
+        return self.admin_clients("neutron").delete_ext(
+            self.BGPVPN_PATH, bgpvpn["bgpvpn"]["id"])
