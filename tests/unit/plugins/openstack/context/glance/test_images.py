@@ -146,11 +146,11 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             [mock.call(mock.ANY, api_info=api_versions)] * tenants)
 
     @ddt.data(
-        {},
+        {"admin": True},
         {"api_versions": {"glance": {"version": 2, "service_type": "image"}}})
     @ddt.unpack
     @mock.patch("%s.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup, api_versions=None):
+    def test_cleanup(self, mock_cleanup, admin=None, api_versions=None):
         images_per_tenant = 5
 
         tenants = self._gen_tenants(self.tenants_num)
@@ -173,20 +173,26 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                     "users_per_tenant": self.users_per_tenant,
                     "concurrent": 10,
                 },
-                "images": {}
-            },
-            "admin": {
-                "credential": mock.MagicMock()
+                "images": {},
+                "api_versions": api_versions
             },
             "users": mock.Mock()
         })
 
+        if admin:
+            self.context["admin"] = {"credential": mock.MagicMock()}
+        else:
+            # ensure that there is no admin
+            self.context.pop("admin")
+
         images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
-            names=["glance.images"],
+            names=["glance.images", "cinder.image_volumes_cache"],
+            admin=self.context.get("admin"),
+            admin_required=None if admin else False,
             users=self.context["users"],
-            api_versions=self.context["config"].get("api_versions"),
+            api_versions=api_versions,
             superclass=images_ctx.__class__,
             task_id=self.context["owner_id"])
 
@@ -204,7 +210,9 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
         mock_cleanup.assert_called_once_with(
-            names=["glance.images"],
+            names=["glance.images", "cinder.image_volumes_cache"],
+            admin=self.context.get("admin"),
+            admin_required=None,
             users=self.context["users"],
             api_versions=None,
             superclass=mock_make_name_matcher.return_value,
