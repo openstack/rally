@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
+import mock
+
 from rally.task import exporter
 from tests.unit import test
 
@@ -33,3 +36,59 @@ class ExporterTestCase(test.TestCase):
 
     def test_task_export_instantiate(self):
         TestExporter("fake_connection")
+
+
+class TaskExporterTestCase(test.TestCase):
+
+    def test_make(self):
+        reporter_cls = mock.Mock()
+
+        reporter_cls.return_value.generate.return_value = {}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"files": {}}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+        reporter_cls.return_value.generate.return_value = {
+            "files": {"/path/foo": "content"}}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"open": "/path/foo"}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"print": "foo"}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {
+            "files": {"/path/foo": "content"}, "open": "/path/foo",
+            "print": "foo"}
+        exporter.TaskExporter.make(reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"files": []}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"files": ""}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"files": {"a": {}}}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"open": []}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"print": []}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)
+
+        reporter_cls.return_value.generate.return_value = {"additional": ""}
+        self.assertRaises(jsonschema.ValidationError,
+                          exporter.TaskExporter.make,
+                          reporter_cls, None, None, None)

@@ -25,7 +25,6 @@ import webbrowser
 import jsonschema
 from oslo_utils import uuidutils
 import six
-from six.moves.urllib import parse as urlparse
 
 from rally.cli import cliutils
 from rally.cli import envutils
@@ -39,7 +38,6 @@ from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally import plugins
-from rally.task import exporter
 from rally.task.processing import plot
 from rally.task.processing import utils as putils
 from rally.task import utils as tutils
@@ -450,7 +448,7 @@ class TaskCommands(object):
             print(_("* To plot HTML graphics with this data, run:"))
             print("\trally task report %s --out output.html\n" % task["uuid"])
             print(_("* To generate a JUnit report, run:"))
-            print("\trally task report %s --junit --out output.xml\n" %
+            print("\trally task export %s --type junit --to output.xml\n" %
                   task["uuid"])
             print(_("* To get raw JSON output of task results, run:"))
             print("\trally task results %s\n" % task["uuid"])
@@ -624,31 +622,47 @@ class TaskCommands(object):
         else:
             print(result)
 
-    @cliutils.args("--tasks", dest="tasks", nargs="+",
-                   help="UUIDs of tasks, or JSON files with task results")
+    @cliutils.deprecated_args("--tasks", dest="task_id", nargs="+",
+                              release="0.10.0", alternative="--uuid")
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,
-                   help="Path to output file.")
+                   help="Report destination. Can be a path to a file (in case"
+                        " of HTML, HTML-STATIC, etc. types) to save the"
+                        " report to or a connection string.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    help="Open the output in a browser.")
     @cliutils.args("--html", dest="out_format",
-                   action="store_const", const="html",
-                   help="Generate the report in HTML.")
+                   action="store_const", const="html")
     @cliutils.args("--html-static", dest="out_format",
-                   action="store_const", const="html_static",
-                   help=("Generate the report in HTML with embedded "
-                         "JS and CSS, so it will not depend on "
-                         "Internet availability."))
-    @cliutils.args("--junit", dest="out_format",
-                   action="store_const", const="junit",
-                   help="Generate the report in the JUnit format.")
-    @envutils.default_from_global("tasks", envutils.ENV_TASK, "tasks")
+                   action="store_const", const="html-static")
+    @cliutils.deprecated_args("--junit", dest="out_format",
+                              action="store_const", const="junit-xml",
+                              release="0.10.0",
+                              alternative=("rally task export "
+                                           "--type junit-xml"))
+    @cliutils.args("--uuid", dest="task_id", nargs="+", type=str,
+                   help="UUIDs of tasks")
+    @envutils.with_default_task_id
     @cliutils.suppress_warnings
-    def report(self, api, tasks=None, out=None, open_it=False,
-               out_format="html"):
+    def report(self, api, task_id=None, out=None,
+               open_it=False, out_format="html"):
+        """generate report file or string for specified task."""
+
+        if [task for task in task_id if os.path.exists(
+                os.path.expanduser(task))]:
+            self._old_report(api, tasks=task_id, out=out,
+                             open_it=open_it, out_format=out_format)
+        else:
+            self.export(api, task_id=task_id,
+                        output_type=out_format,
+                        output_dest=out,
+                        open_it=open_it)
+
+    def _old_report(self, api, tasks=None, out=None, open_it=False,
+                    out_format="html"):
         """Generate report file for specified task.
 
-        :param tasks: list, UUIDs od tasks or pathes files with tasks results
+        :param tasks: list, UUIDs of tasks or pathes files with tasks results
         :param out: str, output file name
         :param open_it: bool, whether to open output file in web browser
         :param out_format: output format (junit, html or html_static)
@@ -692,7 +706,7 @@ class TaskCommands(object):
         if out_format.startswith("html"):
             result = plot.plot(results,
                                include_libs=(out_format == "html_static"))
-        elif out_format == "junit":
+        elif out_format == "junit-xml":
             test_suite = junit.JUnit("Rally test suite")
             for result in results:
                 if isinstance(result["sla"], list):
@@ -801,51 +815,47 @@ class TaskCommands(object):
         api.task.get(task_id=task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
 
-    @cliutils.args("--uuid", dest="uuid", type=str,
+    @cliutils.args("--uuid", dest="task_id", nargs="+", type=str,
+                   help="UUIDs of tasks")
+    @cliutils.args("--type", dest="output_type", type=str,
                    required=True,
-                   help="UUID of a the task.")
-    @cliutils.args("--connection", dest="connection_string", type=str,
-                   required=True,
-                   help="Connection url to the task export system.")
+                   help="Report type (Defaults to HTML). Out-of-the-box "
+                        "types: HTML, HTML-Static, JUnit-XML. "
+                        "HINT: You can list all types, executing `rally "
+                        "plugin list --plugin-base TaskExporter` "
+                        "command.")
+    @cliutils.args("--to", dest="output_dest", type=str,
+                   metavar="<dest>", required=False,
+                   help="Report destination. Can be a path to a file (in case"
+                        " of HTML, HTML-Static, JUnit-XML, etc. types) to"
+                        " save the report to or a connection string."
+                        " It depends on the report type."
+                   )
+    @envutils.with_default_task_id
     @plugins.ensure_plugins_are_loaded
-    def export(self, api, uuid, connection_string):
+    def export(self, api, task_id=None, output_type=None, output_dest=None,
+               open_it=False):
         """Export task results to the custom task's exporting system.
 
-        :param uuid: UUID of the task
-        :param connection_string: string used to connect to the system
+        :param task_id: UUID of the task
+        :param output_type: str, output type
+        :param output_dest: output format (html, html-static, junit-xml,etc)
         """
+        task_id = isinstance(task_id, list) and task_id or [task_id]
+        report = api.task.export(tasks_uuids=task_id,
+                                 output_type=output_type,
+                                 output_dest=output_dest)
+        if "files" in report:
+            for path in report["files"]:
+                output_file = os.path.expanduser(path)
+                with open(output_file, "w+") as f:
+                    f.write(report["files"][path])
+                if open_it:
+                    if "open" in report:
+                        webbrowser.open_new_tab(report["open"])
 
-        parsed_obj = urlparse.urlparse(connection_string)
-        try:
-            client = exporter.Exporter.get(parsed_obj.scheme)(
-                connection_string)
-        except exceptions.InvalidConnectionString as e:
-            if logging.is_debug():
-                LOG.exception(e)
-            print(e)
-            return 1
-        except exceptions.PluginNotFound as e:
-            if logging.is_debug():
-                LOG.exception(e)
-            msg = ("\nPlease check your connection string. The format of "
-                   "`connection` should be plugin-name://"
-                   "<user>:<pwd>@<full_address>:<port>/<path>.<type>")
-            print(str(e) + msg)
-            return 1
-
-        try:
-            client.export(uuid)
-        except (IOError, exceptions.RallyException) as e:
-            if logging.is_debug():
-                LOG.exception(e)
-            print(e)
-            return 1
-        print(_("Task %(uuid)s results was successfully exported to %("
-                "connection)s using %(name)s plugin.") % {
-                    "uuid": uuid,
-                    "connection": connection_string,
-                    "name": parsed_obj.scheme
-        })
+        if "print" in report:
+            print(report["print"])
 
     @staticmethod
     def _print_task_errors(task_id, task_errors):

@@ -631,8 +631,8 @@ class TaskCommandsTestCase(test.TestCase):
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
-    def test_report_one_uuid(self, mock_webbrowser,
-                             mock_plot, mock_open, mock_realpath):
+    def test_old_report_one_uuid(self, mock_webbrowser,
+                                 mock_plot, mock_open, mock_realpath):
         task_id = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         data = [
             {"key": {"name": "class.test", "pos": 0},
@@ -663,8 +663,8 @@ class TaskCommandsTestCase(test.TestCase):
             for m in (self.fake_api.task.get_detailed, mock_webbrowser,
                       mock_plot, mock_open):
                 m.reset_mock()
-        self.task.report(self.fake_api, tasks=task_id,
-                         out="/tmp/%s.html" % task_id)
+        self.task._old_report(self.fake_api, tasks=task_id,
+                              out="/tmp/%s.html" % task_id)
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
         mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
@@ -674,23 +674,24 @@ class TaskCommandsTestCase(test.TestCase):
 
         # JUnit
         reset_mocks()
-        self.task.report(self.fake_api, tasks=task_id,
-                         out="/tmp/%s.html" % task_id, out_format="junit")
+        self.task._old_report(self.fake_api, tasks=task_id,
+                              out="/tmp/%s.html" % task_id,
+                              out_format="junit-xml")
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
         self.assertFalse(mock_plot.plot.called)
 
         # HTML
         reset_mocks()
-        self.task.report(self.fake_api, task_id, out="output.html",
-                         open_it=True, out_format="html")
+        self.task._old_report(self.fake_api, task_id, out="output.html",
+                              open_it=True, out_format="html")
         mock_webbrowser.open_new_tab.assert_called_once_with(
             "file://realpath_output.html")
         mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
         # HTML with embedded JS/CSS
         reset_mocks()
-        self.task.report(self.fake_api, task_id, open_it=False,
-                         out="output.html", out_format="html_static")
+        self.task._old_report(self.fake_api, task_id, open_it=False,
+                              out="output.html", out_format="html_static")
         self.assertFalse(mock_webbrowser.open_new_tab.called)
         mock_plot.plot.assert_called_once_with(results, include_libs=True)
 
@@ -700,8 +701,8 @@ class TaskCommandsTestCase(test.TestCase):
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cli.commands.task.plot")
     @mock.patch("rally.cli.commands.task.webbrowser")
-    def test_report_bunch_uuids(self, mock_webbrowser,
-                                mock_plot, mock_open, mock_realpath):
+    def test_old_report_bunch_uuids(self, mock_webbrowser,
+                                    mock_plot, mock_open, mock_realpath):
         tasks = ["eb290c30-38d8-4c8f-bbcc-fc8f74b004ae",
                  "eb290c30-38d8-4c8f-bbcc-fc8f74b004af"]
         data = [
@@ -737,7 +738,8 @@ class TaskCommandsTestCase(test.TestCase):
             for m in (self.fake_api.task.get_detailed, mock_webbrowser,
                       mock_plot, mock_open):
                 m.reset_mock()
-        self.task.report(self.fake_api, tasks=tasks, out="/tmp/1_test.html")
+        self.task._old_report(self.fake_api, tasks=tasks,
+                              out="/tmp/1_test.html")
         mock_open.assert_called_once_with("/tmp/1_test.html", "w+")
         mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
@@ -751,8 +753,8 @@ class TaskCommandsTestCase(test.TestCase):
                 side_effect=lambda p: "realpath_%s" % p)
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.plot")
-    def test_report_one_file(self, mock_plot, mock_open, mock_realpath,
-                             mock_path_exists):
+    def test_old_report_one_file(self, mock_plot, mock_open, mock_realpath,
+                                 mock_path_exists):
 
         task_file = "/tmp/some_file.json"
         data = [
@@ -783,8 +785,8 @@ class TaskCommandsTestCase(test.TestCase):
             return_value=results
         )
 
-        self.task.report(self.real_api, tasks=task_file,
-                         out="/tmp/1_test.html")
+        self.task._old_report(self.real_api, tasks=task_file,
+                              out="/tmp/1_test.html")
 
         self.task._load_task_results_file.assert_called_once_with(
             self.real_api, task_file)
@@ -795,10 +797,34 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.task.os.path.exists", return_value=False)
     @mock.patch("rally.cli.commands.task.tutils.open", create=True)
-    def test_report_exceptions(self, mock_open, mock_path_exists):
-        ret = self.task.report(self.real_api, tasks="/tmp/task.json",
-                               out="/tmp/tmp.hsml")
+    def test_old_report_exceptions(self, mock_open, mock_path_exists):
+        ret = self.task._old_report(self.real_api, tasks="/tmp/task.json",
+                                    out="/tmp/tmp.hsml")
         self.assertEqual(ret, 1)
+
+    @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
+    def test_report(self, mock_path_exists):
+        self.task._old_report = mock.MagicMock()
+        self.task.export = mock.MagicMock()
+
+        self.task.report(self.fake_api, task_id="file",
+                         out="out", open_it=False, out_format="html")
+
+        self.task._old_report.assert_called_once_with(
+            self.fake_api, tasks="file", out="out", open_it=False,
+            out_format="html"
+        )
+
+        self.task._old_report.reset_mock()
+        self.task.export.reset_mock()
+        mock_path_exists.return_value = False
+
+        self.task.report(self.fake_api, task_id="uuid",
+                         out="out", open_it=False, out_format="junit-xml")
+        self.task.export.assert_called_once_with(
+            self.fake_api, task_id="uuid", output_type="junit-xml",
+            output_dest="out", open_it=False
+        )
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
@@ -957,38 +983,40 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.TaskNotFound, self.task.use,
                           self.fake_api, task_id)
 
-    @mock.patch("rally.task.exporter.Exporter.get")
-    def test_export(self, mock_exporter_get):
-        mock_client = mock.Mock()
-        mock_exporter_class = mock.Mock(return_value=mock_client)
-        mock_exporter_get.return_value = mock_exporter_class
-        self.task.export(self.fake_api, "fake_uuid", "file:///fake_path.json")
-        mock_exporter_get.assert_called_once_with("file")
-        mock_client.export.assert_called_once_with("fake_uuid")
+    @mock.patch("rally.cli.commands.task.os.path")
+    @mock.patch("rally.cli.commands.task.webbrowser.open_new_tab")
+    @mock.patch("rally.cli.commands.task.open", create=True)
+    @mock.patch("rally.cli.commands.task.print")
+    def test_export(self, mock_print, mock_open, mock_open_new_tab,
+                    mock_path):
 
-    @mock.patch("rally.task.exporter.Exporter.get")
-    def test_export_exception(self, mock_exporter_get):
-        mock_client = mock.Mock()
-        mock_exporter_class = mock.Mock(return_value=mock_client)
-        mock_exporter_get.return_value = mock_exporter_class
-        mock_client.export.side_effect = IOError
-        self.task.export(self.fake_api, "fake_uuid", "file:///fake_path.json")
-        mock_exporter_get.assert_called_once_with("file")
-        mock_client.export.assert_called_once_with("fake_uuid")
+        # file
+        self.fake_api.task.export.return_value = {
+            "files": {"output_dest": "content"}, "open": "output_dest"}
+        mock_path.expanduser.return_value = "output_file"
+        mock_path.realpath.return_value = "real_path"
+        mock_fd = mock.mock_open()
+        mock_open.side_effect = mock_fd
 
-    @mock.patch("rally.cli.commands.task.sys.stdout")
-    @mock.patch("rally.task.exporter.Exporter.get")
-    def test_export_InvalidConnectionString(self, mock_exporter_get,
-                                            mock_stdout):
-        mock_exporter_class = mock.Mock(
-            side_effect=exceptions.InvalidConnectionString)
-        mock_exporter_get.return_value = mock_exporter_class
-        self.task.export(self.fake_api, "fake_uuid", "file:///fake_path.json")
-        mock_stdout.write.assert_has_calls([
-            mock.call("The connection string is not valid: None. "
-                      "Please check your connection string."),
-            mock.call("\n")])
-        mock_exporter_get.assert_called_once_with("file")
+        self.task.export(self.fake_api, task_id="uuid",
+                         output_type="json", output_dest="output_dest",
+                         open_it=True)
+
+        self.fake_api.task.export.assert_called_once_with(
+            tasks_uuids=["uuid"], output_type="json",
+            output_dest="output_dest"
+        )
+        mock_open.assert_called_once_with("output_file", "w+")
+        mock_fd.return_value.write.assert_called_once_with("content")
+
+        # print
+        self.fake_api.task.export.reset_mock()
+        self.fake_api.task.export.return_value = {"print": "content"}
+        self.task.export(self.fake_api, task_id="uuid", output_type="json")
+        self.fake_api.task.export.assert_called_once_with(
+            tasks_uuids=["uuid"], output_type="json", output_dest=None
+        )
+        mock_print.assert_called_once_with("content")
 
     @mock.patch("rally.cli.commands.task.plot.charts")
     @mock.patch("rally.cli.commands.task.sys.stdout")

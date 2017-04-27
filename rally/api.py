@@ -38,6 +38,7 @@ from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally.task import engine
+from rally.task import exporter as texporter
 from rally.verification import context as vcontext
 from rally.verification import manager as vmanager
 from rally.verification import reporter as vreporter
@@ -579,6 +580,33 @@ class _Task(APIGroup):
         LOG.info("Task results have been successfully imported.")
 
         return task_inst.to_dict()
+
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/export",
+                 method="POST")
+    def export(self, tasks_uuids, output_type, output_dest=None):
+        """Generate a report for a task or a few tasks.
+
+        :param tasks_uuids: List of tasks UUIDs
+        :param output_type: Plugin name of task reporter
+        :param output_dest: Destination for task report
+        """
+
+        tasks_results = []
+        for task_uuid in tasks_uuids:
+            tasks_results.extend(self.get_detailed(
+                task_id=task_uuid)["results"])
+
+        reporter_cls = texporter.TaskExporter.get(output_type)
+        reporter_cls.validate(output_dest)
+
+        LOG.info("Building '%s' report for the following task(s): "
+                 "'%s'.", output_type, "', '".join(tasks_uuids))
+        result = texporter.TaskExporter.make(reporter_cls,
+                                             tasks_results,
+                                             output_dest,
+                                             api=self.api)
+        LOG.info("The report has been successfully built.")
+        return result
 
 
 class _Verifier(APIGroup):

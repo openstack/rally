@@ -204,6 +204,8 @@ class TaskTestCase(unittest.TestCase):
         rally = utils.Rally()
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --tasks %s" % FAKE_TASK_UUID)
+        self.assertRaises(utils.RallyCliError,
+                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
 
     def test_sla_check_with_wrong_task_id(self):
         rally = utils.Rally()
@@ -233,16 +235,22 @@ class TaskTestCase(unittest.TestCase):
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        rally("task report --out %s" % rally.gen_report_path(extension="html"))
         html_report = rally.gen_report_path(extension="html")
+        rally("task report --out %s" % html_report)
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
-        rally("task report --junit --out %s" %
-              rally.gen_report_path(extension="junit"))
-        self.assertTrue(os.path.exists(
-            rally.gen_report_path(extension="junit")))
+
+    def test_new_report_one_uuid(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        html_report = rally.gen_report_path(extension="html")
+        rally("task report --out %s" % html_report)
+        self.assertTrue(os.path.exists(html_report))
+        self._assert_html_report_libs_are_embedded(html_report, False)
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
 
@@ -261,6 +269,21 @@ class TaskTestCase(unittest.TestCase):
                                                    html_report))
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
+
+    def test_new_report_bunch_uuids(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        task_uuids = []
+        for i in range(3):
+            res = rally("task start --task %s" % config.filename)
+            for line in res.splitlines():
+                if "finished" in line:
+                    task_uuids.append(line.split(" ")[1][:-1])
+        html_report = rally.gen_report_path(extension="html")
+        rally("task report --uuid %s --out %s" % (" ".join(task_uuids),
+                                                  html_report))
+        self.assertTrue(os.path.exists(html_report))
 
     def test_report_bunch_files(self):
         rally = utils.Rally()
@@ -289,7 +312,8 @@ class TaskTestCase(unittest.TestCase):
         task_result_file = "/tmp/report_42.json"
         if os.path.exists(task_result_file):
             os.remove(task_result_file)
-        rally("task results", report_path=task_result_file, raw=True)
+        rally("task results", report_path=task_result_file,
+              raw=True)
 
         task_run_output = rally(
             "task start --task %s" % config.filename).splitlines()
@@ -310,6 +334,16 @@ class TaskTestCase(unittest.TestCase):
         self._assert_html_report_libs_are_embedded(html_report, False)
 
     def test_report_one_uuid_with_static_libs(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        html_report = rally.gen_report_path(extension="html")
+        rally("task report --out %s --html-static" % html_report)
+        self.assertTrue(os.path.exists(html_report))
+        self._assert_html_report_libs_are_embedded(html_report)
+
+    def test_new_report_one_uuid_with_static_libs(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
@@ -865,58 +899,38 @@ class TaskTestCase(unittest.TestCase):
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
 
-    def test_export(self):
+    def test_export_one_uuid(self):
         rally = utils.Rally()
-        cfg = {
-            "Dummy.dummy": [
-                {
-                    "runner": {
-                        "type": "constant",
-                        "times": 100,
-                        "concurrency": 5
-                    }
-                }
-            ]
-        }
+        cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        output = rally("task start --task %s" % config.filename)
-        uuid = re.search(
-            r"(?P<uuid>[0-9a-f\-]{36}): started", output).group("uuid")
-        connection = (
-            "file-exporter:///" + rally.gen_report_path(extension="json"))
-        output = rally("task export --uuid %s --connection %s" % (
-            uuid, connection))
-        expected = (
-            "Task %(uuid)s results was successfully exported to %("
-            "connection)s using file-exporter plugin." % {
-                "uuid": uuid,
-                "connection": connection,
-            })
-        self.assertIn(expected, output)
+        rally("task start --task %s" % config.filename)
+        html_report = rally.gen_report_path(extension="html")
+        rally("task export --type html --to %s" % html_report)
+        self.assertTrue(os.path.exists(html_report))
+        self._assert_html_report_libs_are_embedded(html_report, False)
 
-    def test_export_with_wrong_connection(self):
+        rally("task export --type html-static --to %s" % html_report)
+        self.assertTrue(os.path.exists(html_report))
+        self._assert_html_report_libs_are_embedded(html_report)
+
+        junit_report = rally.gen_report_path(extension="junit")
+        rally("task export --type junit-xml --to %s" % junit_report)
+        self.assertTrue(os.path.exists(junit_report))
+
+    def test_export_bunch_uuids(self):
         rally = utils.Rally()
-        cfg = {
-            "Dummy.dummy": [
-                {
-                    "runner": {
-                        "type": "constant",
-                        "times": 100,
-                        "concurrency": 5
-                    }
-                }
-            ]
-        }
+        cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        output = rally("task start --task %s" % config.filename)
-        uuid = re.search(
-            r"(?P<uuid>[0-9a-f\-]{36}): started", output).group("uuid")
-        connection = (
-            "fake:///" + rally.gen_report_path(extension="json"))
-        self.assertRaises(utils.RallyCliError,
-                          rally,
-                          "task export --uuid %s --connection %s" % (
-                              uuid, connection))
+        task_uuids = []
+        for i in range(3):
+            res = rally("task start --task %s" % config.filename)
+            for line in res.splitlines():
+                if "finished" in line:
+                    task_uuids.append(line.split(" ")[1][:-1])
+        html_report = rally.gen_report_path(extension="html")
+        rally("task export --uuid %s --type html --to %s" % (
+            " ".join(task_uuids), html_report))
+        self.assertTrue(os.path.exists(html_report))
 
 
 class SLATestCase(unittest.TestCase):

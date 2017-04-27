@@ -419,6 +419,31 @@ class TaskAPITestCase(test.TestCase):
             self.task_uuid,
             status=expected_status)
 
+    @mock.patch("rally.api.texporter.TaskExporter")
+    @mock.patch("rally.api.objects.Task.get_detailed",
+                return_value={"results": ["detail"]})
+    def test_export(self, mock_task_get_detailed, mock_task_exporter):
+        task_id = ["uuid-1", "uuid-2"]
+        output_type = mock.Mock()
+        output_dest = mock.Mock()
+
+        reporter = mock_task_exporter.get.return_value
+
+        self.assertEqual(mock_task_exporter.make.return_value,
+                         self.task_inst.export(
+                             tasks_uuids=task_id,
+                             output_type=output_type,
+                             output_dest=output_dest))
+        mock_task_exporter.get.assert_called_once_with(output_type)
+
+        reporter.validate.assert_called_once_with(output_dest)
+
+        mock_task_exporter.make.assert_called_once_with(
+            reporter, ["detail", "detail"], output_dest,
+            api=self.task_inst.api)
+        self.assertEqual([mock.call(u) for u in task_id],
+                         mock_task_get_detailed.call_args_list)
+
     @mock.patch("rally.api.objects.Task")
     def test_get_detailed(self, mock_task):
         mock_task.get_detailed.return_value = "detailed_task_data"
