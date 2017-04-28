@@ -650,10 +650,12 @@ def deprecated_validator(name, old_validator_name, rally_version):
     def decorator(*args, **kwargs):
         def wrapper(plugin):
             plugin_name = plugin.get_name()
-            LOG.warning("Plugin '%s' uses validator '%s'. "
-                        "That validator is deprecated in favor of '%s' "
-                        "in Rally v%s.",
-                        plugin_name, old_validator_name, name, rally_version)
+            LOG.warning(
+                "Plugin '%s' uses validator 'rally.task.validation.%s' which "
+                "is deprecated in favor of '%s' (it should be used "
+                "via new decorator 'rally.common.validation.add') in "
+                "Rally v%s.",
+                plugin_name, old_validator_name, name, rally_version)
             plugin._meta_setdefault("validators", [])
             plugin._meta_get("validators").append((name, args, kwargs,))
             return plugin
@@ -668,3 +670,5 @@ required_openstack = functools.partial(
     _deprecated_platform_validator, platform="openstack")
 
 number = deprecated_validator("number", "number", "0.10.0")
+
+image_exists = deprecated_validator("image_exists", "image_exists", "0.10.0")

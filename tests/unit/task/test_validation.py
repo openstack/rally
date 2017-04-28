@@ -155,8 +155,9 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual([("new_validator", ("foo",), {"bar": "baz"})],
                          my_plugin._meta_get("validators"))
         mock_log_warning.assert_called_once_with(
-            "Plugin '%s' uses validator '%s'. "
-            "That validator is deprecated in favor of '%s' in Rally v%s.",
+            "Plugin '%s' uses validator 'rally.task.validation.%s' which is "
+            "deprecated in favor of '%s' (it should be used via new decorator "
+            "'rally.common.validation.add') in Rally v%s.",
             "my_plugin", "deprecated_validator", "new_validator", "0.10.0")
 
 
