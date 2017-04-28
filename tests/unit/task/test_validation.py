@@ -572,49 +572,6 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(config, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    # def test_network_exists(self):
-    #     validator = self._unwrap_validator(validation.network_exists, "net")
-    #
-    #     net1 = mock.MagicMock()
-    #     net1.label = "private"
-    #     net2 = mock.MagicMock()
-    #     net2.label = "custom"
-    #     clients = mock.MagicMock()
-    #     clients.nova().networks.list.return_value = [net1, net2]
-    #
-    #     result = validator({}, clients, None)
-    #     self.assertTrue(result.is_valid, result.msg)
-    #     result = validator({"args": {"net": "custom"}}, clients, None)
-    #     self.assertTrue(result.is_valid, result.msg)
-    #     result = validator({"args": {"net": "custom2"}}, clients, None)
-    #     self.assertFalse(result.is_valid, result.msg)
-
-    def test_external_network_exists(self):
-        validator = self._unwrap_validator(
-            validation.external_network_exists, "name")
-        result = validator({"args": {}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        clients = mock.MagicMock()
-        net1 = mock.MagicMock()
-        net2 = mock.MagicMock()
-        clients.nova().floating_ip_pools.list.return_value = [net1, net2]
-
-        net1.name = "public"
-        net2.name = "custom"
-        result = validator({}, clients, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator({"args": {"name": "custom"}}, clients, None)
-        self.assertTrue(result.is_valid, result.msg)
-        result = validator({"args": {"name": "non_exist"}}, clients, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-        net1.name = {"name": "public"}
-        net2.name = {"name": "custom"}
-        result = validator({"args": {"name": "custom"}}, clients, None)
-        self.assertTrue(result.is_valid, result.msg)
-
     def test_required_service(self):
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,

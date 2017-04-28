@@ -70,3 +70,40 @@ class ImageExistsValidator(validation.Validator):
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
             message = ("Image '%s' not found") % image_args
             return self.fail(message)
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="external_network_exists", namespace="openstack")
+class ExternalNetworkExistsValidator(validation.Validator):
+
+    def __init__(self, param_name):
+        """Validator checks that external network with given name exists.
+
+        :param param_name: name of validated network
+        """
+        super(ExternalNetworkExistsValidator, self).__init__()
+        self.param_name = param_name
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        ext_network = config.get("args", {}).get(self.param_name)
+        if not ext_network:
+            return
+
+        users = credentials["openstack"]["users"]
+        result = []
+        for user in users:
+            creds = user["credential"]
+
+            networks = creds.clients().neutron().list_networks()["networks"]
+            external_networks = [net["name"] for net in networks if
+                                 net.get("router:external", False)]
+            if ext_network not in external_networks:
+                message = ("External (floating) network with name {1} "
+                           "not found by user {0}. "
+                           "Available networks: {2}").format(creds.username,
+                                                             ext_network,
+                                                             networks)
+                result.append(message)
+        if result:
+            return self.fail(result)

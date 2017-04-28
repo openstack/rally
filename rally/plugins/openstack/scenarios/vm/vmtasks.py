@@ -40,7 +40,7 @@ LOG = logging.getLogger(__name__)
 @validation.valid_command("command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
-@validation.external_network_exists("floating_network")
+@validation.add("external_network_exists", param_name="floating_network")
 @validation.required_param_or_context(arg_name="image",
                                       ctx_name="image_command_customizer")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
@@ -395,7 +395,7 @@ EOF
 @validation.valid_command("command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
-@validation.external_network_exists("floating_network")
+@validation.add("external_network_exists", param_name="floating_network")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],

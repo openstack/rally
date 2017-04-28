@@ -22,28 +22,25 @@ from rally import exceptions
 from rally.plugins.openstack import validators
 from tests.unit import test
 
+
 credentials = {
     "openstack": {
         "admin": mock.Mock(),
-        "users": [mock.Mock()],
+        "users": [mock.MagicMock()],
     }
 }
 
-config = {"args": {
-    "image": {
-        "id": "fake_id",
-        "image_name": "foo_image"
-    },
-    "flavor": {
-        "id": "fake_flavor_id",
-    },
-    "foo_image": {
-        "id": "fake_image_id",
-    }},
-    "context": {
-        "images": {
-            "image_name": "foo_image"
-        }}}
+config = dict(args={"image": {"id": "fake_id",
+                              "min_ram": 10,
+                              "size": 1024 ** 3,
+                              "min_disk": 10.0 * (1024 ** 3),
+                              "image_name": "foo_image"},
+                    "flavor": {"id": "fake_flavor_id",
+                               "name": "test"},
+                    "foo_image": {"id": "fake_image_id"}
+                    },
+              context={"images": {"image_name": "foo_image"}}
+              )
 
 
 @ddt.ddt
@@ -113,3 +110,48 @@ class ImageExistsValidatorTestCase(test.TestCase):
             result = validator.validate(config, credentials, None, None)
 
             self.assertEqual("Image 'fake_image' not found", result.msg)
+
+
+@ddt.ddt
+class ExternalNetworkExistsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(ExternalNetworkExistsValidatorTestCase, self).setUp()
+        self.validator = validators.ExternalNetworkExistsValidator("net")
+        self.config = config
+        self.credentials = credentials
+
+    @ddt.unpack
+    @ddt.data(
+        {"foo_conf": {}},
+        {"foo_conf": {"args": {"net": "custom"}}},
+        {"foo_conf": {"args": {"net": "non_exist"}},
+         "err_msg": "External (floating) network with name non_exist"
+                    " not found by user {}. Available networks:"
+                    " [{}, {}]"},
+        {"foo_conf": {"args": {"net": "custom"}},
+         "net1_name": {"name": {"net": "public"}},
+         "net2_name": {"name": {"net": "custom"}},
+         "err_msg": "External (floating) network with name custom"
+                    " not found by user {}. Available networks:"
+                    " [{}, {}]"}
+    )
+    def test_validator(self, foo_conf, net1_name="public", net2_name="custom",
+                       err_msg=""):
+
+        user = self.credentials["openstack"]["users"][0]
+
+        net1 = {"name": net1_name, "router:external": True}
+        net2 = {"name": net2_name, "router:external": True}
+
+        user["credential"].clients().neutron().list_networks.return_value = {
+            "networks": [net1, net2]}
+
+        result = self.validator.validate(foo_conf, self.credentials,
+                                         None, None)
+        if err_msg:
+            self.assertTrue(result)
+            self.assertEqual(err_msg.format(user["credential"].username,
+                                            net1, net2), result.msg[0])
+        elif result:
+            self.assertIsNone(result, "Unexpected result '%s'" % result)

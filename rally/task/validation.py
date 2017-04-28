@@ -358,27 +358,6 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
 
 
 @validator
-def external_network_exists(config, clients, deployment, network_name):
-    """Validator checks that external network with given name exists."""
-    ext_network = config.get("args", {}).get(network_name)
-    if not ext_network:
-        return ValidationResult(True)
-
-    networks = [net.name for net in clients.nova().floating_ip_pools.list()]
-
-    if networks and isinstance(networks[0], dict):
-        networks = [n["name"] for n in networks]
-
-    if ext_network not in networks:
-        message = _("External (floating) network with name %(network)s "
-                    "not found. "
-                    "Available networks: %(networks)s") % {
-                        "network": ext_network,
-                        "networks": networks}
-        return ValidationResult(False, message)
-
-
-@validator
 def required_services(config, clients, deployment, *required_services):
     """Validator checks if specified OpenStack services are available.
 
@@ -672,3 +651,7 @@ required_openstack = functools.partial(
 number = deprecated_validator("number", "number", "0.10.0")
 
 image_exists = deprecated_validator("image_exists", "image_exists", "0.10.0")
+
+external_network_exists = deprecated_validator("external_network_exists",
+                                               "external_network_exists",
+                                               "0.10.0")

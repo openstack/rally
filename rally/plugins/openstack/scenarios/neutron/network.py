@@ -449,7 +449,7 @@ class CreateAndDeletePorts(utils.NeutronScenario):
 
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.external_network_exists("floating_network")
+@validation.add("external_network_exists", param_name="floating_network")
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_list_floating_ips")
 class CreateAndListFloatingIps(utils.NeutronScenario):
@@ -470,7 +470,7 @@ class CreateAndListFloatingIps(utils.NeutronScenario):
 
 @validation.required_services(consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.external_network_exists("floating_network")
+@validation.add("external_network_exists", param_name="floating_network")
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_delete_floating_ips")
 class CreateAndDeleteFloatingIps(utils.NeutronScenario):
