@@ -104,8 +104,11 @@ class SaharaImage(context.Context):
                 visibility = image["visibility"]
 
             if visibility != "public":
-                raise exceptions.BenchmarkSetupFailure(
-                    "Image provided in the Sahara context should be public.")
+                raise exceptions.ContextSetupFailure(
+                    ctx_name=self.get_name(),
+                    msg=_("Image provided in the Sahara context"
+                          " should be public.")
+                )
             image_id = image_uuid
 
             for user, tenant_id in rutils.iterate_per_tenants(

@@ -49,10 +49,12 @@ LOG = logging.getLogger(__name__)
 
 
 class FailedToLoadTask(exceptions.RallyException):
+    error_code = 472
     msg_fmt = _("Invalid %(source)s passed:\n\n\t %(msg)s")
 
 
 class FailedToLoadResults(exceptions.RallyException):
+    error_code = 529
     msg_fmt = _("ERROR: Invalid task result format in %(source)s\n\n\t%(msg)s")
 
 

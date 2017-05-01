@@ -13,6 +13,7 @@
 
 import collections
 
+from rally import exceptions
 from rally.task import service
 
 from oslo_config import cfg
@@ -23,16 +24,18 @@ UnifiedImage = collections.namedtuple("Image", ["id", "name", "visibility",
                                                 "status"])
 
 
-class VisibilityException(Exception):
+class VisibilityException(exceptions.RallyException):
     """Wrong visibility value exception.
 
     """
+    error_code = 531
 
 
-class RemovePropsException(Exception):
+class RemovePropsException(exceptions.RallyException):
     """Remove Props it not supported exception.
 
     """
+    error_code = 560
 
 
 class Image(service.UnifiedService):

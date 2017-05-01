@@ -178,7 +178,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
 
         ctx = self.existing_image_context
         sahara_ctx = sahara_image.SaharaImage(ctx)
-        self.assertRaises(exceptions.BenchmarkSetupFailure,
+        self.assertRaises(exceptions.ContextSetupFailure,
                           sahara_ctx.setup)
 
         mock_glance_create_client.images.get.asser_called_once_with("some_id")

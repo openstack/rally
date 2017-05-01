@@ -170,9 +170,13 @@ class SaharaCluster(context.Context):
         for cluster, client in dct.items():
             cluster_status = cluster.status.lower()
             if cluster_status == "error":
-                raise exceptions.SaharaClusterFailure(
-                    name=cluster.name, action="start",
-                    reason=cluster.status_description)
+                msg = _("Sahara cluster %(name)s has failed to"
+                        " %(action)s. Reason: '%(reason)s'") % {
+                    "name": cluster.name, "action": "start",
+                    "reason": cluster.status_description}
+                raise exceptions.ContextSetupFailure(
+                    ctx_name=self.get_name(),
+                    msg=msg)
             elif cluster_status != "active":
                 return False
         return True

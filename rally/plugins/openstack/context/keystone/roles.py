@@ -61,7 +61,8 @@ class RoleGenerator(context.Context):
             if str(def_role.name) == context_role:
                 return def_role
         else:
-            raise exceptions.NoSuchRole(role=context_role)
+            raise exceptions.NotFoundException(_(
+                "There is no role with name `%s`") % context_role)
 
     def _get_consumer(self, func_name):
         def consume(cache, args):

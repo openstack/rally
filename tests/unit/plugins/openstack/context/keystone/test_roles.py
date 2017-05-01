@@ -71,10 +71,11 @@ class RoleGeneratorTestCase(test.TestCase):
                                 {"id": "u2", "tenant_id": "t2"}]
         ctx.config = ["unknown_role"]
         ctx.credential = mock.MagicMock()
-        ex = self.assertRaises(exceptions.NoSuchRole, ctx._get_role_object,
-                               "unknown_role")
+        ex = self.assertRaises(exceptions.NotFoundException,
+                               ctx._get_role_object, "unknown_role")
 
-        expected = "There is no role with name `unknown_role`."
+        expected = ("The resource can not be found: There is no role "
+                    "with name `unknown_role`")
         self.assertEqual(expected, str(ex))
 
     @mock.patch("%s.osclients" % CTX)

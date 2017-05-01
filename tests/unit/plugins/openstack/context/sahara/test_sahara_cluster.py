@@ -146,4 +146,4 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
             mock.MagicMock(status="error")
         ]
 
-        self.assertRaises(exceptions.SaharaClusterFailure, sahara_ctx.setup)
+        self.assertRaises(exceptions.ContextSetupFailure, sahara_ctx.setup)

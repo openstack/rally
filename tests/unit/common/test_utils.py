@@ -33,7 +33,7 @@ class ImmutableMixinTestCase(test.TestCase):
 
     def test_without_base_values(self):
         im = utils.ImmutableMixin()
-        self.assertRaises(exceptions.ImmutableException,
+        self.assertRaises(AttributeError,
                           im.__setattr__, "test", "test")
 
     def test_with_base_values(self):
@@ -44,7 +44,7 @@ class ImmutableMixinTestCase(test.TestCase):
                 super(A, self).__init__()
 
         a = A("test")
-        self.assertRaises(exceptions.ImmutableException,
+        self.assertRaises(AttributeError,
                           a.__setattr__, "abc", "test")
         self.assertEqual(a.test, "test")
 

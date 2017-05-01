@@ -16,6 +16,10 @@
 import six
 
 from rally.common.i18n import _
+from rally.common.plugin import discover
+
+
+_exception_map = None
 
 
 class RallyException(Exception):
@@ -27,6 +31,7 @@ class RallyException(Exception):
 
     """
     msg_fmt = _("%(message)s")
+    error_code = 500
 
     def __init__(self, message=None, **kwargs):
         self.kwargs = kwargs
@@ -40,32 +45,44 @@ class RallyException(Exception):
         return six.text_type(self)
 
 
-class ImmutableException(RallyException):
-    msg_fmt = _("This object is immutable.")
+def find_exception(response):
+    """Discover a proper exception class based on response object."""
+    global _exception_map
+    if _exception_map is None:
+        _exception_map = dict(
+            (e.error_code, e) for e in discover.itersubclasses(RallyException))
+    exc_class = _exception_map.get(response.status_code, RallyException)
+
+    error_data = response.json()["error"]
+    if error_data["args"]:
+        return exc_class(error_data["args"])
+    return exc_class(error_data["msg"])
+
+
+def make_exception(exc):
+    """Check a class of exception and convert it to rally-like if needed."""
+    if isinstance(exc, RallyException):
+        return exc
+    return RallyException(str(exc))
 
 
 class InvalidArgumentsException(RallyException):
+    error_code = 455
     msg_fmt = _("Invalid arguments: '%(message)s'")
 
 
 class InvalidConfigException(RallyException):
+    error_code = 456
     msg_fmt = _("This config has invalid schema: `%(message)s`")
 
 
-class InvalidRunnerResult(RallyException):
-    msg_fmt = _("Type of result of `%(name)s` runner should be"
-                " `base.ScenarioRunnerResult`. Got: `%(results_type)s`")
-
-
 class InvalidTaskException(InvalidConfigException):
+    error_code = 457
     msg_fmt = _("Task config is invalid: `%(message)s`")
 
 
-class NotFoundScenarios(InvalidTaskException):
-    msg_fmt = _("There are no benchmark scenarios with names: `%(names)s`.")
-
-
 class InvalidTaskConfig(InvalidTaskException):
+    error_code = 458
     msg_fmt = _("Input task is invalid!\n\n"
                 "Subtask %(name)s[%(pos)s] has wrong configuration"
                 "\nSubtask configuration:\n%(config)s\n"
@@ -73,51 +90,52 @@ class InvalidTaskConfig(InvalidTaskException):
 
 
 class NotFoundException(RallyException):
+    error_code = 404
     msg_fmt = _("The resource can not be found: %(message)s")
 
 
 class ThreadTimeoutException(RallyException):
+    error_code = 515
     msg_fmt = _("Iteration interrupted due to timeout.")
 
 
 class PluginNotFound(NotFoundException):
+    error_code = 459
     msg_fmt = _("There is no plugin with name: `%(name)s` in "
                 "%(namespace)s namespace.")
 
 
 class PluginWithSuchNameExists(RallyException):
+    error_code = 516
     msg_fmt = _("Plugin with such name: %(name)s already exists in "
                 "%(namespace)s namespace. It's module allocates at "
                 "%(existing_path)s. You are trying to add plugin whose module "
                 "allocates at %(new_path)s.")
 
 
-class NoSuchConfigField(NotFoundException):
-    msg_fmt = _("There is no field in the task config with name `%(name)s`.")
-
-
-class NoSuchRole(NotFoundException):
-    msg_fmt = _("There is no role with name `%(role)s`.")
-
-
 class TaskNotFound(NotFoundException):
+    error_code = 460
     msg_fmt = _("Task with uuid=%(uuid)s not found.")
 
 
 class DeploymentNotFound(NotFoundException):
+    error_code = 461
     msg_fmt = _("Deployment %(deployment)s not found.")
 
 
 class DeploymentNameExists(RallyException):
+    error_code = 462
     msg_fmt = _("Deployment name '%(deployment)s' already registered.")
 
 
 class DeploymentNotFinishedStatus(RallyException):
+    error_code = 463
     msg_fmt = _("Deployment '%(name)s' (UUID=%(uuid)s) is in"
                 " '%(status)s' status.")
 
 
 class DeploymentIsBusy(RallyException):
+    error_code = 464
     msg_fmt = _("There are allocated resources for the deployment with "
                 "uuid=%(uuid)s.")
 
@@ -127,24 +145,29 @@ class RallyAssertionError(RallyException):
 
 
 class ResourceNotFound(NotFoundException):
+    error_code = 465
     msg_fmt = _("Resource with id=%(id)s not found.")
 
 
 class TimeoutException(RallyException):
+    error_code = 517
     msg_fmt = _("Rally tired waiting for %(resource_type)s %(resource_name)s:"
                 "%(resource_id)s to become %(desired_status)s current "
                 "status %(resource_status)s")
 
 
 class GetResourceFailure(RallyException):
+    error_code = 518
     msg_fmt = _("Failed to get the resource %(resource)s: %(err)s")
 
 
 class GetResourceNotFound(GetResourceFailure):
+    error_code = 519
     msg_fmt = _("Resource %(resource)s is not found.")
 
 
 class GetResourceErrorStatus(GetResourceFailure):
+    error_code = 520
     msg_fmt = _("Resource %(resource)s has %(status)s status.\n"
                 "Fault: %(fault)s")
 
@@ -154,94 +177,54 @@ class ScriptError(RallyException):
 
 
 class TaskInvalidStatus(RallyException):
+    error_code = 466
     msg_fmt = _("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
                 "required.")
 
 
-class ChecksumMismatch(RallyException):
-    msg_fmt = _("Checksum mismatch for image: %(url)s")
-
-
 class InvalidAdminException(InvalidArgumentsException):
+    error_code = 521
     msg_fmt = _("user '%(username)s' doesn't have 'admin' role")
 
 
 class InvalidEndpointsException(InvalidArgumentsException):
+    error_code = 522
     msg_fmt = _("wrong keystone credentials specified in your endpoint"
                 " properties. (HTTP 401)")
 
 
 class HostUnreachableException(InvalidArgumentsException):
+    error_code = 523
     msg_fmt = _("unable to establish connection to the remote host: %(url)s")
 
 
 class InvalidScenarioArgument(RallyException):
+    error_code = 467
     msg_fmt = _("Invalid scenario argument: '%(message)s'")
 
 
-class BenchmarkSetupFailure(RallyException):
-    msg_fmt = _("Unable to setup benchmark: '%(message)s'")
-
-
 class ContextSetupFailure(RallyException):
+    error_code = 524
     msg_fmt = _("Unable to setup context '%(ctx_name)s': '%(msg)s'")
 
 
 class ValidationError(RallyException):
+    error_code = 468
     msg_fmt = _("Validation error: %(message)s")
 
 
-class NoNodesFound(RallyException):
-    msg_fmt = _("There is no nodes matching filters: %(filters)r")
-
-
-class UnknownRelease(RallyException):
-    msg_fmt = _("Unknown release '%(release)s'")
-
-
-class CleanUpException(RallyException):
-    msg_fmt = _("Cleanup failed.")
-
-
-class ImageCleanUpException(CleanUpException):
-    msg_fmt = _("Image Deletion Failed")
-
-
-class EncryptionTypeDeleteException(CleanUpException):
-    msg_fmt = _("EncryptionType Deletion Failed")
-
-
-class IncompatiblePythonVersion(RallyException):
-    msg_fmt = _("Incompatible python version found '%(version)s', "
-                "required '%(required_version)s'")
-
-
 class WorkerNotFound(NotFoundException):
+    error_code = 469
     msg_fmt = _("Worker %(worker)s could not be found")
 
 
 class WorkerAlreadyRegistered(RallyException):
+    error_code = 525
     msg_fmt = _("Worker %(worker)s already registered")
 
 
-class SaharaClusterFailure(RallyException):
-    msg_fmt = _("Sahara cluster %(name)s has failed to %(action)s. "
-                "Reason: '%(reason)s'")
-
-
-class LiveMigrateException(RallyException):
-    msg_fmt = _("Live Migration failed: %(message)s")
-
-
-class MigrateException(RallyException):
-    msg_fmt = _("Migration failed: %(message)s")
-
-
-class InvalidHostException(RallyException):
-    msg_fmt = _("Live Migration failed: %(message)s")
-
-
 class MultipleMatchesFound(RallyException):
+    error_code = 470
     msg_fmt = _("Found multiple %(needle)s: %(haystack)s")
 
     def __init__(self, **kwargs):
@@ -251,17 +234,21 @@ class MultipleMatchesFound(RallyException):
 
 
 class SSHTimeout(RallyException):
+    error_code = 526
     pass
 
 
 class SSHError(RallyException):
+    error_code = 527
     pass
 
 
 class InvalidConnectionString(RallyException):
+    error_code = 471
     msg_fmt = _("The connection string is not valid: %(message)s. Please "
                 "check your connection string.")
 
 
 class DowngradeNotSupported(RallyException):
+    error_code = 528
     msg_fmt = _("Database schema downgrade is not supported.")

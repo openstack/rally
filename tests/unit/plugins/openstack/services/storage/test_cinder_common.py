@@ -400,7 +400,7 @@ class CinderMixinTestCase(test.ScenarioTestCase):
     def test_delete_encryption_type_raise(self):
         resp = mock.MagicMock(status_code=404)
         self.cinder.volume_encryption_types.delete.return_value = [resp]
-        self.assertRaises(exceptions.EncryptionTypeDeleteException,
+        self.assertRaises(exceptions.RallyException,
                           self.service.delete_encryption_type, "type")
         self.cinder.volume_encryption_types.delete.assert_called_once_with(
             "type")
