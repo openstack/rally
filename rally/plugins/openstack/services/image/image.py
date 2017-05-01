@@ -41,18 +41,6 @@ class Image(service.UnifiedOpenStackService):
         cloud_version = str(clients.glance().version).split(".")[0]
         return cloud_version == cls._meta_get("impl")._meta_get("version")
 
-    @staticmethod
-    def _unify_image(image):
-        if hasattr(image, "visibility"):
-            return UnifiedImage(id=image.id, name=image.name,
-                                status=image.status,
-                                visibility=image.visibility)
-        else:
-            return UnifiedImage(
-                id=image.id, name=image.name,
-                status=image.status,
-                visibility=("public" if image.is_public else "private"))
-
     @service.should_be_overridden
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
