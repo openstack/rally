@@ -19,11 +19,9 @@ from __future__ import print_function
 
 import json
 import os
-import re
 import sys
 
 import jsonschema
-from six.moves.urllib import parse
 
 from rally.cli import cliutils
 from rally.cli import envutils
@@ -306,8 +304,7 @@ class DeploymentCommands(object):
             if credential.get("https_cacert"):
                 env_file.write("export OS_CACERT='%s'\n" %
                                credential["https_cacert"])
-            if re.match(r"^[a-zA-Z0-9/\-_]*/v3/?$", parse.urlparse(
-                    credential["auth_url"]).path) is not None:
+            if credential.get("project_domain_name"):
                 env_file.write("export OS_IDENTITY_API_VERSION=3\n"
                                "export OS_USER_DOMAIN_NAME='%s'\n"
                                "export OS_PROJECT_DOMAIN_NAME='%s'\n" %

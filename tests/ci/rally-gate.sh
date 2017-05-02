@@ -28,6 +28,11 @@ echo $RALLY_JOB_DIR
 echo $RALLY_DIR
 ls $BASE/new/$PROJECT
 
+if [ "$RALLY_SCENARIO" == "rally-keystone-api-v2" ]; then
+    echo "WARNING: RALLY TASK WILL NOT BE LAUNCHED."
+    exit 0
+fi
+
 setUp $RALLY_JOB_DIR
 
 BASE_FOR_TASK=${RALLY_JOB_DIR}/${RALLY_SCENARIO}
