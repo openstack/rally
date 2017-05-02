@@ -14,25 +14,15 @@
 import mock
 
 from rally.plugins.openstack import service
+from rally.task import service as base_service
 from tests.unit import test
 
 
 class DiscoverTestCase(test.TestCase):
     def test_discover_network_impl_based_on_service(self):
 
-        class SomeService(service.UnifiedOpenStackService):
+        class SomeService(base_service.UnifiedService):
             pass
-
-        @service.service("nova-network", "network", version="1",
-                         client_name="nova")
-        class NovaNetService(service.Service):
-            pass
-
-        @service.compat_layer(NovaNetService)
-        class UnifiedNovaNetService(SomeService):
-            @classmethod
-            def is_applicable(cls, clients):
-                return True
 
         @service.service("neutron", "network", version="2")
         class NeutronV2Service(service.Service):
@@ -43,14 +33,9 @@ class DiscoverTestCase(test.TestCase):
             pass
 
         clients = mock.MagicMock()
-        clients.nova.choose_version.return_value = "1"
         clients.neutron.choose_version.return_value = "2"
 
         clients.services.return_value = {}
-        self.assertIsInstance(SomeService(clients)._impl,
-                              UnifiedNovaNetService)
-
-        clients.nova.return_value.services.list.reset_mock()
 
         clients.services.return_value = {"network": "neutron"}
         self.assertIsInstance(SomeService(clients)._impl,

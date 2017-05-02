@@ -14,7 +14,7 @@
 
 import collections
 
-from rally.plugins.openstack import service
+from rally.task import service
 
 
 Project = collections.namedtuple("Project", ["id", "name", "domain_id"])
@@ -24,7 +24,7 @@ Service = collections.namedtuple("Service", ["id", "name"])
 Role = collections.namedtuple("Role", ["id", "name"])
 
 
-class Identity(service.UnifiedOpenStackService):
+class Identity(service.UnifiedService):
     @classmethod
     def is_applicable(cls, clients):
         cloud_version = clients.keystone().version.split(".")[0][1:]

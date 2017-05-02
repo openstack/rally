@@ -16,7 +16,7 @@ import collections
 
 from oslo_config import cfg
 
-from rally.plugins.openstack import service
+from rally.task import service
 
 
 CONF = cfg.CONF
@@ -37,7 +37,7 @@ VolumeEncryptionType = collections.namedtuple("VolumeEncryptionType",
 QoSSpecs = collections.namedtuple("QoSSpecs", ["id", "name"])
 
 
-class BlockStorage(service.UnifiedOpenStackService):
+class BlockStorage(service.UnifiedService):
 
     @service.should_be_overridden
     def create_volume(self, size, consistencygroup_id=None,
