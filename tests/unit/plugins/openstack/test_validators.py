@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import ddt
 import mock
 
@@ -25,7 +26,7 @@ from tests.unit import test
 
 credentials = {
     "openstack": {
-        "admin": mock.Mock(),
+        "admin": mock.MagicMock(),
         "users": [mock.MagicMock()],
     }
 }
@@ -123,8 +124,8 @@ class ExternalNetworkExistsValidatorTestCase(test.TestCase):
     def setUp(self):
         super(ExternalNetworkExistsValidatorTestCase, self).setUp()
         self.validator = validators.ExternalNetworkExistsValidator("net")
-        self.config = config
-        self.credentials = credentials
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
 
     @ddt.unpack
     @ddt.data(
@@ -167,7 +168,7 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
 
     def setUp(self):
         super(RequiredNeutronExtensionsValidatorTestCase, self).setUp()
-        self.config = config
+        self.config = copy.deepcopy(config)
 
     @ddt.unpack
     @ddt.data(
@@ -468,3 +469,41 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         self.assertIsInstance(result[0], validators.ValidationResult)
         self.assertTrue(result[0].is_valid)
         self.assertEqual("<context flavor: %s>" % result[1].name, result[1].id)
+
+
+class RequiredClientsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredClientsValidatorTestCase, self).setUp()
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
+
+    def test_validate(self):
+        validator = validators.RequiredClientsValidator(components=["keystone",
+                                                                    "nova"])
+        clients = self.credentials[
+            "openstack"]["users"][0]["credential"].clients.return_value
+
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertIsNone(result)
+
+        clients.nova.side_effect = ImportError
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertTrue(result)
+        self.assertEqual("Client for nova is not installed. To install it "
+                         "run `pip install python-novaclient`", result.msg)
+
+    def test_validate_with_admin(self):
+        validator = validators.RequiredClientsValidator(components=["keystone",
+                                                                    "nova"],
+                                                        admin=True)
+        clients = self.credentials[
+            "openstack"]["admin"].clients.return_value
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertIsNone(result)
+
+        clients.keystone.side_effect = ImportError
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertTrue(result)
+        self.assertEqual("Client for keystone is not installed. To install it "
+                         "run `pip install python-keystoneclient`", result.msg)

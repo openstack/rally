@@ -23,7 +23,6 @@ from rally.task import validation
 """Scenarios for Mistral workbook."""
 
 
-@validation.required_clients("mistral")
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_services(consts.Service.MISTRAL)
 @scenario.configure(name="MistralWorkbooks.list_workbooks")
@@ -40,7 +39,6 @@ class ListWorkbooks(utils.MistralScenario):
 
 @validation.file_exists("definition")
 @types.convert(definition={"type": "file"})
-@validation.required_clients("mistral")
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_services(consts.Service.MISTRAL)
 @scenario.configure(context={"cleanup": ["mistral"]},

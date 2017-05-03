@@ -23,7 +23,6 @@ from rally.task import validation
 """Scenarios for Murano environments."""
 
 
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @scenario.configure(context={"cleanup": ["murano.environments"]},
                     name="MuranoEnvironments.list_environments")
@@ -37,7 +36,6 @@ class ListEnvironments(utils.MuranoScenario):
         self._list_environments()
 
 
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @scenario.configure(context={"cleanup": ["murano.environments"]},
                     name="MuranoEnvironments.create_and_delete_environment")
@@ -51,7 +49,6 @@ class CreateAndDeleteEnvironment(utils.MuranoScenario):
         self._delete_environment(environment)
 
 
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @validation.required_contexts("murano_packages")
 @scenario.configure(context={"cleanup": ["murano"], "roles": ["admin"]},

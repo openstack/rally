@@ -27,7 +27,6 @@ from rally.task import validation
 """Scenarios for Mistral execution."""
 
 
-@validation.required_clients("mistral")
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_services(consts.Service.MISTRAL)
 @scenario.configure(name="MistralExecutions.list_executions",
@@ -55,7 +54,6 @@ class ListExecutions(utils.MistralScenario):
 @types.convert(definition={"type": "file"})
 @types.convert(params={"type": "file"})
 @types.convert(wf_input={"type": "file"})
-@validation.required_clients("mistral")
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_services(consts.Service.MISTRAL)
 @validation.workbook_contains_workflow("definition", "workflow_name")

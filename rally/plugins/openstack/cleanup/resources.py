@@ -899,26 +899,6 @@ class IronicNodes(base.ResourceManager):
         return self.raw_resource.uuid
 
 
-# FUEL
-
-@base.resource("fuel", "environment", order=1400,
-               admin_required=True, perform_for_admin_only=True)
-class FuelEnvironment(base.ResourceManager):
-    """Fuel environment.
-
-    That is the only resource that can be deleted by fuelclient explicitly.
-    """
-
-    def id(self):
-        return self.raw_resource["id"]
-
-    def name(self):
-        return self.raw_resource["name"]
-
-    def is_deleted(self):
-        return not self._manager().get(self.id())
-
-
 # WATCHER
 
 _watcher_order = get_order(1500)

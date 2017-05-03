@@ -930,29 +930,6 @@ class MistralWorkbookTestCase(test.TestCase):
             "TEST_NAME")
 
 
-class FuelEnvironmentTestCase(test.TestCase):
-
-    def test_id(self):
-        fres = resources.FuelEnvironment()
-        fres.raw_resource = {"id": 42, "name": "chavez"}
-        self.assertEqual(42, fres.id())
-
-    def test_name(self):
-        fuel = resources.FuelEnvironment()
-        fuel.raw_resource = {"id": "test_id", "name": "test_name"}
-        self.assertEqual("test_name", fuel.name())
-
-    @mock.patch("%s.FuelEnvironment._manager" % BASE)
-    def test_is_deleted(self, mock__manager):
-        mock__manager.return_value.get.return_value = None
-        fres = resources.FuelEnvironment()
-        fres.id = mock.Mock()
-        self.assertTrue(fres.is_deleted())
-        mock__manager.return_value.get.return_value = "env"
-        self.assertFalse(fres.is_deleted())
-        mock__manager.return_value.get.assert_called_with(fres.id.return_value)
-
-
 class SenlinMixinTestCase(test.TestCase):
 
     def test_id(self):

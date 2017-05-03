@@ -363,28 +363,6 @@ def required_cinder_services(config, clients, deployment, service_name):
 
 
 @validator
-def required_clients(config, clients, deployment, *components, **kwargs):
-    """Validator checks if specified OpenStack clients are available.
-
-    :param *components: list of client components names
-    :param **kwargs: optional parameters:
-                     admin - bool, whether to use admin clients
-    """
-    if kwargs.get("admin", False):
-        creds = deployment.get_credentials_for("openstack")
-        clients = creds["admin"].clients()
-
-    for client_component in components:
-        try:
-            getattr(clients, client_component)()
-        except ImportError:
-            return ValidationResult(
-                False,
-                _("Client for {0} is not installed. To install it run "
-                  "`pip install python-{0}client`").format(client_component))
-
-
-@validator
 def required_contexts(config, clients, deployment, *context_names):
     """Validator checks if required benchmark contexts are specified.
 
@@ -601,3 +579,6 @@ required_neutron_extensions = deprecated_validator(
 image_valid_on_flavor = deprecated_validator("image_valid_on_flavor",
                                              "image_valid_on_flavor",
                                              "0.10.0")
+
+required_clients = deprecated_validator("required_clients", "required_clients",
+                                        "0.10.0")

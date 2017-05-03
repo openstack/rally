@@ -287,3 +287,57 @@ class ImageValidOnFlavorValidator(validation.Validator):
                                "too small for requested "
                                "image '%s'") % (flavor.id, image["id"])
                     return self.fail(message)
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="required_clients", namespace="openstack")
+class RequiredClientsValidator(validation.Validator):
+
+    def __init__(self, components, *args, **kwargs):
+        """Validator checks if specified OpenStack clients are available.
+
+        :param components: list of client components names
+        :param **kwargs: optional parameters:
+                         admin - bool, whether to use admin clients
+        """
+        super(RequiredClientsValidator, self).__init__()
+        if isinstance(components, (list, tuple)):
+            # services argument is a list, so it is a new way of validators
+            #  usage, args in this case should not be provided
+            self.components = components
+            if args:
+                LOG.warning("Positional argument is not what "
+                            "'required_clients' decorator expects. "
+                            "Use `components` argument instead")
+        else:
+            # it is old way validator
+            self.components = [components]
+            self.components.extend(args)
+        self.options = kwargs
+
+    def _check_component(self, clients):
+        for client_component in self.components:
+            try:
+                getattr(clients, client_component)()
+            except ImportError:
+                msg = ("Client for {0} is not installed. To install it run "
+                       "`pip install python-{0}client`").format(
+                    client_component)
+                return validation.ValidationResult(False, msg)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        LOG.warning("The validator 'required_clients' is deprecated since "
+                    "Rally 0.10.0. If you are interested in it, please "
+                    "contact Rally team via E-mail, IRC or Gitter (see "
+                    "https://rally.readthedocs.io/en/latest/project_info"
+                    "/index.html#where-can-i-discuss-and-propose-changes for "
+                    "more details).")
+        if self.options.get("admin", False):
+            clients = credentials["openstack"]["admin"].clients()
+            result = self._check_component(clients)
+        else:
+            for user in credentials["openstack"]["users"]:
+                clients = user["credential"].clients()
+                result = self._check_component(clients)
+        if result:
+            return self.fail(result.msg)

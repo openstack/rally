@@ -609,37 +609,6 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(context, clients, mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_required_clients(self):
-        validator = self._unwrap_validator(validation.required_clients,
-                                           "keystone", "nova")
-        clients = mock.Mock()
-        clients.keystone.return_value = "keystone"
-        clients.nova.return_value = "nova"
-        deployment = fakes.FakeDeployment()
-        result = validator({}, clients, deployment)
-        self.assertTrue(result.is_valid, result.msg)
-
-        clients.nova.side_effect = ImportError
-        result = validator({}, clients, deployment)
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_required_clients_with_admin(self):
-        validator = self._unwrap_validator(validation.required_clients,
-                                           "keystone", "nova", admin=True)
-        admin = fakes.fake_credential(foo="bar")
-
-        clients = admin.clients.return_value
-        clients.keystone.return_value = "keystone"
-        clients.nova.return_value = "nova"
-
-        deployment = fakes.FakeDeployment(admin=admin)
-        result = validator({}, clients, deployment)
-        self.assertTrue(result.is_valid, result.msg)
-
-        clients.nova.side_effect = ImportError
-        result = validator({}, clients, deployment)
-        self.assertFalse(result.is_valid, result.msg)
-
     def test_required_cinder_services(self):
         validator = self._unwrap_validator(
             validation.required_cinder_services,

@@ -26,7 +26,6 @@ from rally.task import validation
 
 
 @validation.file_exists(param_name="package", mode=os.F_OK)
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
@@ -57,7 +56,6 @@ class ImportAndListPackages(utils.MuranoScenario):
 
 
 @validation.file_exists(param_name="package", mode=os.F_OK)
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
@@ -85,7 +83,6 @@ class ImportAndDeletePackage(utils.MuranoScenario):
 
 
 @validation.file_exists(param_name="package", mode=os.F_OK)
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
@@ -122,7 +119,6 @@ class PackageLifecycle(utils.MuranoScenario):
 
 
 @validation.file_exists(param_name="package", mode=os.F_OK)
-@validation.required_clients("murano")
 @validation.required_services(consts.Service.MURANO)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["murano.packages"]},
