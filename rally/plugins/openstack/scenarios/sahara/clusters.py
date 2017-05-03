@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
                floating_ip_pool={"type": "neutron_network"})
 @validation.flavor_exists("master_flavor")
 @validation.flavor_exists("worker_flavor")
-@validation.required_contexts("users", "sahara_image")
+@validation.add("required_contexts", contexts=["users", "sahara_image"])
 @validation.add("number", param_name="workers_count", minval=1,
                 integer_only=True)
 @validation.add("required_services", services=[consts.Service.SAHARA])
@@ -124,7 +124,7 @@ class CreateAndDeleteCluster(utils.SaharaScenario):
 @validation.flavor_exists("master_flavor")
 @validation.flavor_exists("worker_flavor")
 @validation.add("required_services", services=[consts.Service.SAHARA])
-@validation.required_contexts("users", "sahara_image")
+@validation.add("required_contexts", contexts=["users", "sahara_image"])
 @validation.add("number", param_name="workers_count", minval=1,
                 integer_only=True)
 @scenario.configure(context={"cleanup": ["sahara"]},

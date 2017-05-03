@@ -26,7 +26,6 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAgents.list_agents")
 class ListAgents(utils.NovaScenario):
-
     def run(self, hypervisor=None):
         """List all builds.
 

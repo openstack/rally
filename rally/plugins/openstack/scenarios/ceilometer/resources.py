@@ -23,7 +23,7 @@ from rally.task import validation
 
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])
-@validation.required_contexts("ceilometer")
+@validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerResource.list_resources")
 class ListResources(ceiloutils.CeilometerScenario):
@@ -77,7 +77,7 @@ class GetTenantResources(ceiloutils.CeilometerScenario):
 
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])
-@validation.required_contexts("ceilometer")
+@validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerResource.list_matched_resources")
 class ListMatchedResources(ceiloutils.CeilometerScenario):

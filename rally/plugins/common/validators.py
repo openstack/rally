@@ -17,7 +17,10 @@ import inspect
 
 import jsonschema
 
+from rally.common import logging
 from rally.common import validation
+
+LOG = logging.getLogger(__name__)
 
 
 @validation.configure(name="jsonschema")
@@ -229,3 +232,48 @@ class RestrictedParametersValidator(validation.Validator):
             return self.fail(msg.format(
                 ", ".join(restricted_params),
                 self.subdict if self.subdict else "args"))
+
+
+@validation.configure(name="required_contexts")
+class RequiredContextsValidator(validation.Validator):
+
+    def __init__(self, contexts, *args):
+        """Validator checks if required benchmark contexts are specified.
+
+        :param contexts: list of strings and tuples with context names that
+                         should be specified. Tuple represent 'at least one
+                         of the'.
+        """
+        super(RequiredContextsValidator, self).__init__()
+        if isinstance(contexts, (list, tuple)):
+            # services argument is a list, so it is a new way of validators
+            #  usage, args in this case should not be provided
+            self.contexts = contexts
+            if args:
+                LOG.warning("Positional argument is not what "
+                            "'required_context' decorator expects. "
+                            "Use `contexts` argument instead")
+        else:
+            # it is old way validator
+            self.contexts = [contexts]
+            self.contexts.extend(args)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        missing_contexts = []
+        context = config.get("context", {})
+
+        for name in self.contexts:
+            if isinstance(name, tuple):
+                if not set(name) & set(context):
+                    # formatted string like: 'foo or bar or baz'
+                    formatted_names = "'{}'".format(" or ".join(name))
+                    missing_contexts.append(formatted_names)
+            else:
+                if name not in context:
+                    missing_contexts.append(name)
+
+        if missing_contexts:
+            msg = ("The following context(s) are required but missing from "
+                   "the benchmark configuration file: {}").format(
+                ", ".join(missing_contexts))
+            return self.fail(msg)

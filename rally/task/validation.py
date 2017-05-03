@@ -311,34 +311,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def required_contexts(config, clients, deployment, *context_names):
-    """Validator checks if required benchmark contexts are specified.
-
-    :param *context_names: list of strings and tuples with context names that
-        should be specified. Tuple represent 'at least one of the'.
-    """
-    missing_contexts = []
-    context = config.get("context", {})
-
-    for name in context_names:
-        if isinstance(name, tuple):
-            if not set(name) & set(context):
-                # formatted string like: 'foo or bar or baz'
-                formatted_names = "'{}'".format(" or ".join(name))
-                missing_contexts.append(formatted_names)
-        else:
-            if name not in context:
-                missing_contexts.append(name)
-
-    if missing_contexts:
-        message = (_("The following contexts are required but missing from "
-                     "the benchmark configuration file: %s") %
-                   ", ".join(missing_contexts))
-
-        return ValidationResult(False, message)
-
-
-@validator
 def required_param_or_context(config, clients, deployment,
                               arg_name, ctx_name):
     """Validator checks if required image is specified.
@@ -459,3 +431,7 @@ required_cinder_services = deprecated_validator("required_cinder_services",
 required_api_versions = deprecated_validator("required_api_versions",
                                              "required_api_versions",
                                              "0.10.0")
+
+required_contexts = deprecated_validator("required_contexts",
+                                         "required_contexts",
+                                         "0.10.0")

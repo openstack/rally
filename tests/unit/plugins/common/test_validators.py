@@ -236,3 +236,51 @@ class RestrictedParametersValidatorTestCase(test.TestCase):
         validator = validators.RestrictedParametersValidator("param_name")
         result = validator.validate({"args": {}}, self.credentials, None, None)
         self.assertIsNone(result)
+
+
+@ddt.ddt
+class RequiredContextsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredContextsValidatorTestCase, self).setUp()
+        self.credentials = dict(openstack={"admin": mock.MagicMock(),
+                                           "users": [mock.MagicMock()], })
+
+    @ddt.unpack
+    @ddt.data(
+        {"config": {"context": {"a": 1}},
+         "err_msg": "The following context(s) are required but missing from "
+                    "the benchmark configuration file: c1, c2, c3"},
+        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3}}},
+        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}}}
+    )
+    def test_validate(self, config, err_msg=False):
+        validator = validators.RequiredContextsValidator(
+            contexts=("c1", "c2", "c3"))
+        result = validator.validate(config, self.credentials, None, None)
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)
+
+    @ddt.unpack
+    @ddt.data(
+        {"config": {"context": {"c1": 1, "c2": 2}},
+         "err_msg": "The following context(s) are required but missing "
+                    "from the benchmark configuration "
+                    "file: 'a1 or a2', 'b1 or b2'"},
+        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "b1": 1, "a1": 1}}},
+        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3,
+                                "b1": 1, "b2": 2, "a1": 1}}},
+    )
+    def test_validate_with_or(self, config, err_msg=None):
+        validator = validators.RequiredContextsValidator(
+            contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
+        result = validator.validate(config, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)

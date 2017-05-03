@@ -26,8 +26,9 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_services", services=[consts.Service.SAHARA])
-@validation.required_contexts("users", "sahara_image",
-                              "sahara_job_binaries", "sahara_cluster")
+@validation.add("required_contexts", contexts=["users", "sahara_image",
+                                               "sahara_job_binaries",
+                                               "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaJob.create_launch_job")
 class CreateLaunchJob(utils.SaharaScenario):
@@ -73,8 +74,9 @@ class CreateLaunchJob(utils.SaharaScenario):
 
 
 @validation.add("required_services", services=[consts.Service.SAHARA])
-@validation.required_contexts("users", "sahara_image",
-                              "sahara_job_binaries", "sahara_cluster")
+@validation.add("required_contexts", contexts=["users", "sahara_image",
+                                               "sahara_job_binaries",
+                                               "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaJob.create_launch_job_sequence")
 class CreateLaunchJobSequence(utils.SaharaScenario):
@@ -96,8 +98,9 @@ class CreateLaunchJobSequence(utils.SaharaScenario):
 
 
 @validation.add("required_services", services=[consts.Service.SAHARA])
-@validation.required_contexts("users", "sahara_image",
-                              "sahara_job_binaries", "sahara_cluster")
+@validation.add("required_contexts", contexts=["users", "sahara_image",
+                                               "sahara_job_binaries",
+                                               "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
                     name="SaharaJob.create_launch_job_sequence_with_scaling")
 class CreateLaunchJobSequenceWithScaling(utils.SaharaScenario,):

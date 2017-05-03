@@ -83,6 +83,7 @@ class ListAuditTemplates(utils.WatcherScenario):
 @validation.add("required_services",
                 services=[consts.Service.WATCHER])
 @validation.required_contexts("audit_templates")
+@validation.add("required_contexts", contexts=("audit_templates"))
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
                     name="Watcher.create_audit_and_delete")
 class CreateAuditAndDelete(utils.WatcherScenario):
