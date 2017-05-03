@@ -77,7 +77,6 @@ class ImageExistsValidatorTestCase(test.TestCase):
         result = validator.validate(self.config, self.credentials, None, None)
 
         if err_msg:
-            print(result)
             self.assertEqual(err_msg, result.msg)
         elif result:
             self.assertIsNone(result, "Unexpected result '%s'" % result.msg)
@@ -660,3 +659,27 @@ class ValidateHeatTemplateValidatorTestCase(test.TestCase):
         expected_msg = "No file found by the given path fake_path1"
         self.assertIsNotNone(result)
         self.assertEqual(expected_msg, result.msg)
+
+
+class RequiredCinderServicesValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredCinderServicesValidatorTestCase, self).setUp()
+        self.credentials = copy.deepcopy(credentials)
+        self.config = copy.deepcopy(config)
+
+    def test_validate(self):
+        validator = validators.RequiredCinderServicesValidator(
+            "cinder_service")
+
+        fake_service = mock.Mock(binary="cinder_service", state="up")
+        clients = self.credentials["openstack"]["admin"].clients()
+        clients.cinder().services.list.return_value = [fake_service]
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertIsNone(result)
+
+        fake_service.state = "down"
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertTrue(result)
+        self.assertEqual("cinder_service service is not available",
+                         result.msg)

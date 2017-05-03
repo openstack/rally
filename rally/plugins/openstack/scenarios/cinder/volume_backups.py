@@ -26,8 +26,8 @@ from rally.task import validation
                 subdict="create_volume_kwargs")
 @validation.add("restricted_parameters", param_names="name",
                 subdict="create_backup_kwargs")
-@validation.required_cinder_services("cinder-backup")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("required_cinder_services", services="cinder-backup")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumeBackups."

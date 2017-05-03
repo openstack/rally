@@ -311,27 +311,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def required_cinder_services(config, clients, deployment, service_name):
-    """Validator checks that specified Cinder service is available.
-
-    It uses Cinder client with admin permissions to call 'cinder service-list'
-    call
-
-    :param service_name: Cinder service name
-    """
-    creds = deployment.get_credentials_for("openstack")
-    admin_client = creds["admin"].clients().cinder()
-
-    for service in admin_client.services.list():
-        if (service.binary == six.text_type(service_name) and
-                service.state == six.text_type("up")):
-            return ValidationResult(True)
-
-    msg = _("%s service is not available") % service_name
-    return ValidationResult(False, msg)
-
-
-@validator
 def required_contexts(config, clients, deployment, *context_names):
     """Validator checks if required benchmark contexts are specified.
 
@@ -502,3 +481,7 @@ validate_heat_template = deprecated_validator("validate_heat_template",
 restricted_parameters = deprecated_validator("restricted_parameters",
                                              "restricted_parameters",
                                              "0.10.0")
+
+required_cinder_services = deprecated_validator("required_cinder_services",
+                                                "required_cinder_services",
+                                                "0.10.0")
