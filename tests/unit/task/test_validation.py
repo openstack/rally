@@ -468,42 +468,6 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, "clients", "deployment")
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_required_param_or_context(self):
-        validator = self._unwrap_validator(
-            validation.required_param_or_context, "image", "custom_image")
-        result = validator({"args": {"image": {"name": ""}},
-                            "context": {"custom_image": {
-                                        "name": "fake_image"}}},
-                           None, None)
-        self.assertTrue(result.is_valid)
-
-        result = validator({"context": {"custom_image": {
-                                        "name": "fake_image"}}},
-                           None, None)
-        self.assertTrue(result.is_valid)
-
-        validator = self._unwrap_validator(
-            validation.required_param_or_context, "image", "custom_image")
-        result = validator({"args": {"image": {"name": "fake_image"}},
-                            "context": {"custom_image": ""}}, None, None)
-        self.assertTrue(result.is_valid)
-
-        result = validator({"args": {"image": {"name": "fake_image"}}},
-                           None, None)
-        self.assertTrue(result.is_valid)
-
-        validator = self._unwrap_validator(
-            validation.required_param_or_context, "image", "custom_image")
-        result = validator({"args": {"image": {"name": ""}},
-                            "context": {"custom_image": {"name": ""}}}, None,
-                           None)
-        self.assertTrue(result.is_valid)
-
-        validator = self._unwrap_validator(
-            validation.required_param_or_context, "image", "custom_image")
-        result = validator({}, None, None)
-        self.assertFalse(result.is_valid)
-
     def test_volume_type_exists(self):
         validator = self._unwrap_validator(validation.volume_type_exists,
                                            param_name="volume_type")
