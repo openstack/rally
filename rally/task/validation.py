@@ -312,52 +312,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def image_valid_on_flavor(config, clients, deployment, flavor_name,
-                          image_name, validate_disk=True,
-                          fail_on_404_image=True):
-    """Returns validator for image could be used for current flavor
-
-    :param flavor_name: defines which variable should be used
-                       to get flavor id value.
-    :param image_name: defines which variable should be used
-                       to get image id value.
-    :param validate_disk: flag to indicate whether to validate flavor's disk.
-                          Should be True if instance is booted from image.
-                          Should be False if instance is booted from volume.
-                          Default value is True.
-    :param fail_on_404_image: flag what indicate whether to validate image
-                              or not.
-    """
-    valid_result, flavor = _get_validated_flavor(config, clients, flavor_name)
-    if not valid_result.is_valid:
-        return valid_result
-
-    valid_result, image = _get_validated_image(config, clients, image_name)
-
-    if not image and not fail_on_404_image:
-        return ValidationResult(True)
-
-    if not valid_result.is_valid:
-        return valid_result
-
-    if flavor.ram < image["min_ram"]:
-        message = _("The memory size for flavor '%s' is too small "
-                    "for requested image '%s'") % (flavor.id, image["id"])
-        return ValidationResult(False, message)
-
-    if flavor.disk and validate_disk:
-        if image["size"] > flavor.disk * (1024 ** 3):
-            message = _("The disk size for flavor '%s' is too small "
-                        "for requested image '%s'") % (flavor.id, image["id"])
-            return ValidationResult(False, message)
-
-        if image["min_disk"] > flavor.disk:
-            message = _("The disk size for flavor '%s' is too small "
-                        "for requested image '%s'") % (flavor.id, image["id"])
-            return ValidationResult(False, message)
-
-
-@validator
 def required_services(config, clients, deployment, *required_services):
     """Validator checks if specified OpenStack services are available.
 
@@ -643,3 +597,7 @@ external_network_exists = deprecated_validator("external_network_exists",
 
 required_neutron_extensions = deprecated_validator(
     "required_neutron_extensions", "required_neutron_extensions", "0.10.0")
+
+image_valid_on_flavor = deprecated_validator("image_valid_on_flavor",
+                                             "image_valid_on_flavor",
+                                             "0.10.0")

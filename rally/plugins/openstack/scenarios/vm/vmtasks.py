@@ -36,7 +36,8 @@ LOG = logging.getLogger(__name__)
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image", fail_on_404_image=False)
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", fail_on_404_image=False)
 @validation.valid_command("command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
@@ -391,7 +392,8 @@ EOF
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.valid_command("command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)

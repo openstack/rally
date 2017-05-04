@@ -65,7 +65,8 @@ class CreateAndDeleteKeypair(utils.NovaScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},

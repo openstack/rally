@@ -35,7 +35,8 @@ LOG = logging.getLogger(__name__)
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -90,7 +91,8 @@ class ListServers(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -119,7 +121,8 @@ class BootAndDeleteServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -151,7 +154,8 @@ class BootAndDeleteMultipleServers(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image", validate_disk=False)
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", validate_disk=False)
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
@@ -190,7 +194,8 @@ class BootServerFromVolumeAndDelete(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -230,7 +235,8 @@ class BootAndBounceServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -263,7 +269,8 @@ class BootLockUnlockAndDelete(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.GLANCE)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "glance"]},
@@ -290,7 +297,8 @@ class SnapshotServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -313,7 +321,8 @@ class BootServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image", validate_disk=False)
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", validate_disk=False)
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
@@ -346,7 +355,8 @@ class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderScenario):
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -379,7 +389,8 @@ class ResizeServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -414,7 +425,8 @@ class ResizeShutoffServer(utils.NovaScenario):
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
@@ -470,7 +482,8 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"},
                to_flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image", validate_disk=False)
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", validate_disk=False)
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
@@ -530,7 +543,8 @@ class BootServerFromVolumeAndResize(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -553,7 +567,8 @@ class SuspendAndResumeServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -577,7 +592,8 @@ class PauseAndUnpauseServer(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -601,7 +617,8 @@ class ShelveAndUnshelveServer(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -643,7 +660,8 @@ class BootAndLiveMigrateServer(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image", validate_disk=False)
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image", validate_disk=False)
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -697,7 +715,8 @@ class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -755,7 +774,8 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -789,8 +809,10 @@ class BootAndMigrateServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @types.convert(from_image={"type": "glance_image"},
                to_image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "from_image")
-@validation.image_valid_on_flavor("flavor", "to_image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="from_image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="to_image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
@@ -816,7 +838,8 @@ class BootAndRebuildServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -840,7 +863,8 @@ class BootAndAssociateFloatingIp(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.NEUTRON)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "neutron"]},
@@ -872,7 +896,8 @@ class BootServerAndAttachInterface(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -896,7 +921,8 @@ class BootAndShowServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -922,7 +948,8 @@ class BootAndGetConsoleOutput(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
@@ -946,7 +973,8 @@ class BootAndUpdateServer(utils.NovaScenario, cinder_utils.CinderScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
@@ -982,7 +1010,8 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
@@ -1011,7 +1040,8 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
 
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
-@validation.image_valid_on_flavor("flavor", "image")
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.required_services(consts.Service.NOVA)
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
