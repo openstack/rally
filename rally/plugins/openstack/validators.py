@@ -469,3 +469,52 @@ class RequiredCinderServicesValidator(validation.Validator):
 
         msg = ("%s service is not available") % self.services
         return self.fail(msg)
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="required_api_versions",
+                      namespace="openstack")
+class RequiredAPIVersionsValidator(validation.Validator):
+
+    def __init__(self, component, versions):
+        """Validator checks component API versions.
+
+        :param component: name of required component
+        :param versions: version of required component
+        """
+        super(RequiredAPIVersionsValidator, self).__init__()
+        self.component = component
+        self.versions = versions
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        versions = [str(v) for v in self.versions]
+        versions_str = ", ".join(versions)
+        msg = ("Task was designed to be used with %(component)s "
+               "V%(version)s, but V%(found_version)s is "
+               "selected.")
+        for user in credentials["openstack"]["users"]:
+            clients = user["credential"].clients()
+            if self.component == "keystone":
+                if "2.0" not in versions and hasattr(
+                        clients.keystone(), "tenants"):
+                    return self.fail(msg % {"component": self.component,
+                                            "version": versions_str,
+                                            "found_version": "2.0"})
+                if "3" not in versions and hasattr(
+                        clients.keystone(), "projects"):
+                    return self.fail(msg % {"component": self.component,
+                                            "version": versions_str,
+                                            "found_version": "3"})
+            else:
+                used_version = config.get(
+                    "context", {}).get(
+                    "api_versions", {}).get(
+                    self.component, {}).get(
+                    "version", getattr(
+                        clients, self.component).choose_version())
+                if not used_version:
+                    return self.fail("Unable to determine the API version.")
+                if str(used_version) not in versions:
+                    return self.fail(msg % {"component": self.component,
+                                            "version": versions_str,
+                                            "found_version": used_version})

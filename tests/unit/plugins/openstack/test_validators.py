@@ -53,8 +53,8 @@ class ImageExistsValidatorTestCase(test.TestCase):
     def setUp(self):
         super(ImageExistsValidatorTestCase, self).setUp()
         self.validator = validators.ImageExistsValidator("image", True)
-        self.config = config
-        self.credentials = credentials
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
 
     @ddt.unpack
     @ddt.data(
@@ -115,7 +115,8 @@ class ImageExistsValidatorTestCase(test.TestCase):
         for ex in exs:
             clients.glance().images.get.side_effect = ex
 
-            result = self.validator.validate(config, credentials, None, None)
+            result = self.validator.validate(config, self.credentials,
+                                             None, None)
 
             self.assertEqual("Image 'fake_image' not found", result.msg)
 
@@ -187,7 +188,7 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
 
         clients.neutron().list_extensions.return_value = {
             "extensions": [{"alias": "existing_extension"}]}
-        result = validator.validate({}, self.credentials, {}, None)
+        result = validator.validate({}, self.credentials, None, None)
 
         if err_msg:
             self.assertTrue(result)
@@ -683,3 +684,99 @@ class RequiredCinderServicesValidatorTestCase(test.TestCase):
         self.assertTrue(result)
         self.assertEqual("cinder_service service is not available",
                          result.msg)
+
+
+@ddt.ddt
+class RequiredAPIVersionsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredAPIVersionsValidatorTestCase, self).setUp()
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
+
+    def _get_keystone_v2_mock_client(self):
+        keystone = mock.Mock()
+        del keystone.projects
+        keystone.tenants = mock.Mock()
+        return keystone
+
+    def _get_keystone_v3_mock_client(self):
+        keystone = mock.Mock()
+        del keystone.tenants
+        keystone.projects = mock.Mock()
+        return keystone
+
+    @ddt.unpack
+    @ddt.data(
+        {"versions": [2.0], "err_msg": "Task was designed to be used with"
+                                       " keystone V2.0, but V3 is selected."},
+        {"versions": [3], "err_msg": "Task was designed to be used with"
+                                     " keystone V3, but V2.0 is selected."},
+        {"versions": [2.0, 3], "err_msg": None}
+    )
+    def test_validate_keystone(self, versions, err_msg):
+        validator = validators.RequiredAPIVersionsValidator("keystone",
+                                                            versions)
+
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
+
+        clients.keystone.return_value = self._get_keystone_v3_mock_client()
+        result = validator.validate(self.config, self.credentials, None, None)
+
+        if result:
+            self.assertEqual(err_msg, result.msg)
+
+        clients.keystone.return_value = self._get_keystone_v2_mock_client()
+        result = validator.validate(self.config, self.credentials, None, None)
+
+        if result:
+            self.assertEqual(err_msg, result.msg)
+
+    @ddt.unpack
+    @ddt.data(
+        {"nova": 2, "versions": [2], "err_msg": None},
+        {"nova": 3, "versions": [2],
+         "err_msg": "Task was designed to be used with nova V2, "
+                    "but V3 is selected."},
+        {"nova": None, "versions": [2],
+         "err_msg": "Unable to determine the API version."},
+        {"nova": 2, "versions": [2, 3], "err_msg": None},
+        {"nova": 4, "versions": [2, 3],
+         "err_msg": "Task was designed to be used with nova V2, 3, "
+                    "but V4 is selected."}
+    )
+    def test_validate_nova(self, nova, versions, err_msg):
+        validator = validators.RequiredAPIVersionsValidator("nova",
+                                                            versions)
+
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
+
+        clients.nova.choose_version.return_value = nova
+
+        result = validator.validate(self.config, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)
+
+    @ddt.unpack
+    @ddt.data({"version": 2, "err_msg": None},
+              {"version": 3, "err_msg": "Task was designed to be used with "
+                                        "nova V3, but V2 is selected."})
+    def test_validate_context(self, version, err_msg):
+        validator = validators.RequiredAPIVersionsValidator("nova",
+                                                            [version])
+
+        config = {"context": {"api_versions": {"nova": {"version": 2}}}}
+
+        result = validator.validate(config, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)
