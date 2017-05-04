@@ -29,6 +29,8 @@ from rally.common import objects
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+# TODO(andreykurilin): remove openstack specific import after Rally 0.10.0
+from rally.plugins.openstack import scenario as os_scenario
 from rally.task import context
 from rally.task import hook
 from rally.task import runner
@@ -369,6 +371,30 @@ class TaskEngine(object):
                 # requires (regular users or admin)
                 scenario_cls = scenario.Scenario.get(workload.name)
                 namespace = scenario_cls.get_namespace()
+
+                # TODO(andreykurilin): Remove check for plugin namespace after
+                #   Rally 0.10.0
+                if scenario_cls.is_classbased:
+                    cls = scenario_cls
+                else:
+                    cls = scenario_cls._plugin
+                if (issubclass(cls, os_scenario.OpenStackScenario)
+                        and namespace == "default"):
+                    LOG.warning(
+                        "Scenario '%(scen)s' is located in 'default' "
+                        "namespace. Since it inherits from OpenStackScenario, "
+                        "possibly it's namespace should be 'openstack'. "
+                        "Please contact plugin maintainer to fix that issue if"
+                        " it is true (this change is backward compatible). "
+                        "Proper namespace is a guarantee of proper discovering"
+                        " contexts (users context is different for different "
+                        "platforms, i.e openstack, kubernetes). As for now, "
+                        "we assume that your plugin is in openstack namespace,"
+                        " but after Rally 0.10.0 it will be changed since "
+                        "default namespace doesn't need users context and so "
+                        "on + we do not want to align to only OpenStack "
+                        "deployments.")
+                    namespace = "openstack"
                 platforms[namespace].append(workload)
 
         for platform, workloads in platforms.items():

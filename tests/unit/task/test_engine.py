@@ -366,8 +366,19 @@ class TaskEngineTestCase(test.TestCase):
         deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin=admin, users=users)
 
-        scenario_cls = mock_scenario_get.return_value
-        scenario_cls.get_namespace.return_value = "openstack"
+        class SomeScen(object):
+
+            is_classbased = True
+
+            @classmethod
+            def get_namespace(cls):
+                return "openstack"
+
+            @classmethod
+            def get_info(cls):
+                return {"title": "foo"}
+
+        mock_scenario_get.return_value = SomeScen
 
         mock_task_instance = mock.MagicMock()
         mock_subtask1 = mock.MagicMock()
