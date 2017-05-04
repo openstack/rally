@@ -14,12 +14,11 @@
 
 import os
 
-from glanceclient import exc as glance_exc
 from oslo_config import cfg
 
 from rally.common import utils as rutils
-from rally import exceptions
 from rally.plugins.openstack import service
+from rally.plugins.openstack.services.image import glance_common
 from rally.plugins.openstack.services.image import image
 from rally.task import atomic
 from rally.task import utils
@@ -28,7 +27,7 @@ CONF = cfg.CONF
 
 
 @service.service("glance", service_type="image", version="1")
-class GlanceV1Service(service.Service):
+class GlanceV1Service(service.Service, glance_common.GlanceMixin):
 
     @atomic.action_timer("glance_v1.create_image")
     def create_image(self, image_name=None, container_format=None,
@@ -96,18 +95,6 @@ class GlanceV1Service(service.Service):
                                                        min_disk=min_disk,
                                                        min_ram=min_ram)
 
-    @atomic.action_timer("glance_v1.get_image")
-    def get_image(self, image):
-        """Get specified image.
-
-        :param image: ID or object with ID of image to obtain.
-        """
-        image_id = getattr(image, "id", image)
-        try:
-            return self._clients.glance("1").images.get(image_id)
-        except glance_exc.HTTPNotFound:
-            raise exceptions.GetResourceNotFound(resource=image)
-
     @atomic.action_timer("glance_v1.list_images")
     def list_images(self, status="active", is_public=None, owner=None):
         """List images.
@@ -131,14 +118,9 @@ class GlanceV1Service(service.Service):
         """
         self._clients.glance("1").images.update(image_id, is_public=is_public)
 
-    @atomic.action_timer("glance_v1.delete_image")
-    def delete_image(self, image_id):
-        """Delete image."""
-        self._clients.glance("1").images.delete(image_id)
-
 
 @service.compat_layer(GlanceV1Service)
-class UnifiedGlanceV1Service(image.Image):
+class UnifiedGlanceV1Service(glance_common.UnifiedGlanceMixin, image.Image):
     """Compatibility layer for Glance V1."""
 
     @staticmethod
@@ -220,15 +202,3 @@ class UnifiedGlanceV1Service(image.Image):
 
         is_public = visibility != "private"
         self._impl.set_visibility(image_id=image_id, is_public=is_public)
-
-    def get_image(self, image):
-        """Get specified image.
-
-        :param image: ID or object with ID of image to obtain.
-        """
-        image_obj = self._impl.get_image(image=image)
-        return self._unify_image(image_obj)
-
-    def delete_image(self, image_id):
-        """Delete image."""
-        self._impl.delete_image(image_id=image_id)

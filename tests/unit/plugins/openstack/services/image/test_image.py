@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import ddt
 import mock
 
@@ -91,29 +89,6 @@ class ImageTestCase(test.TestCase):
         service.set_visibility(image_id=image_id, visibility=visibility)
         service._impl.set_visibility.assert_called_once_with(
             image_id, visibility=visibility)
-
-    def test_unify_image(self):
-        class Image(object):
-            def __init__(self, visibility=None, is_public=None, status=None):
-                self.id = uuid.uuid4()
-                self.name = str(uuid.uuid4())
-                self.visibility = visibility
-                self.is_public = is_public
-                self.status = status
-
-        service = self.get_service_with_fake_impl()
-        visibility = "private"
-        image_obj = Image(visibility=visibility)
-        unified_image = service._unify_image(image_obj)
-        self.assertIsInstance(unified_image, image.UnifiedImage)
-        self.assertEqual(image_obj.id, unified_image.id)
-        self.assertEqual(image_obj.visibility, unified_image.visibility)
-
-        image_obj = Image(is_public="public")
-        del image_obj.visibility
-        unified_image = service._unify_image(image_obj)
-        self.assertEqual(image_obj.id, unified_image.id)
-        self.assertEqual(image_obj.is_public, unified_image.visibility)
 
     def test_delete_image(self):
         image_id = "image_id"

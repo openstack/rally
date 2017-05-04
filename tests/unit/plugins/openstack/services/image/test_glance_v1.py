@@ -15,17 +15,16 @@
 import tempfile
 
 import ddt
-from glanceclient import exc as glance_exc
 import mock
 
-from rally import exceptions
 from rally.plugins.openstack.services.image import glance_v1
 from rally.plugins.openstack.services.image import image
 from tests.unit import test
 
 from oslotest import mockpatch
 
-PATH = "rally.plugins.openstack.services.image.image.Image._unify_image"
+PATH = ("rally.plugins.openstack.services.image.glance_common."
+        "UnifiedGlanceMixin._unify_image")
 
 
 @ddt.ddt
@@ -107,19 +106,6 @@ class GlanceV1ServiceTestCase(test.TestCase):
         self.assertEqual(self.gc.images.update.return_value, image2)
         self.gc.images.update.assert_called_with(**call_args2)
 
-    def test_get_image(self):
-        image_id = "image_id"
-        self.service.get_image(image_id)
-        self.gc.images.get.assert_called_once_with(image_id)
-
-    def test_get_image_exception(self):
-        image_id = "image_id"
-        self.clients.glance(
-            "1").images.get.side_effect = glance_exc.HTTPNotFound
-
-        self.assertRaises(exceptions.GetResourceNotFound,
-                          self.service.get_image, image_id)
-
     @ddt.data({"status": "activate", "is_public": True, "owner": "owner"},
               {"status": "activate", "is_public": False, "owner": "owner"},
               {"status": "activate", "is_public": None, "owner": "owner"})
@@ -136,11 +122,6 @@ class GlanceV1ServiceTestCase(test.TestCase):
         self.service.set_visibility(image_id=image_id)
         self.gc.images.update.assert_called_once_with(
             image_id, is_public=is_public)
-
-    def test_delete_image(self):
-        image_id = "image_id"
-        self.service.delete_image(image_id)
-        self.gc.images.delete.assert_called_once_with(image_id)
 
 
 @ddt.ddt
@@ -193,14 +174,6 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
         self.service._impl.update_image.assert_called_once_with(**callargs)
 
     @mock.patch(PATH)
-    def test_get_image(self, mock_image__unify_image):
-        image_id = "image_id"
-        image = self.service.get_image(image=image_id)
-
-        self.assertEqual(mock_image__unify_image.return_value, image)
-        self.service._impl.get_image.assert_called_once_with(image=image_id)
-
-    @mock.patch(PATH)
     def test_list_images(self, mock_image__unify_image):
         images = [mock.MagicMock()]
         self.service._impl.list_images.return_value = images
@@ -230,9 +203,3 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
                           self.service.set_visibility,
                           image_id=image_id,
                           visibility=visibility)
-
-    def test_delete_image(self):
-        image_id = "image_id"
-        self.service.delete_image(image_id)
-        self.service._impl.delete_image.assert_called_once_with(
-            image_id=image_id)
