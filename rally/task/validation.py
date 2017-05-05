@@ -311,22 +311,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def volume_type_exists(config, clients, deployment, param_name):
-    """Returns validator for volume types.
-
-       check_types: defines variable to be used as the flag to determine if
-                    volume types should be checked for existence.
-    """
-    val = config.get("args", {}).get(param_name)
-    if val:
-        volume_types_list = clients.cinder().volume_types.list()
-        if not volume_types_list:
-            message = (_("Must have at least one volume type created "
-                         "when specifying use of volume types."))
-            return ValidationResult(False, message)
-
-
-@validator
 def workbook_contains_workflow(config, clients, deployment, workbook,
                                workflow_name):
     """Validate that workflow exist in workbook when workflow is passed
@@ -422,3 +406,7 @@ required_contexts = deprecated_validator("required_contexts",
 required_param_or_context = deprecated_validator("required_param_or_context",
                                                  "required_param_or_context",
                                                  "0.10.0")
+
+volume_type_exists = deprecated_validator("volume_type_exists",
+                                          "volume_type_exists",
+                                          "0.10.0")

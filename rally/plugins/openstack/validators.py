@@ -518,3 +518,35 @@ class RequiredAPIVersionsValidator(validation.Validator):
                     return self.fail(msg % {"component": self.component,
                                             "version": versions_str,
                                             "found_version": used_version})
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="volume_type_exists", namespace="openstack")
+class VolumeTypeExistsValidator(validation.Validator):
+
+    def __init__(self, param_name):
+        """Returns validator for volume types.
+
+        :param param_name: defines variable to be used as the flag to
+                           determine if volume types should be checked for
+                           existence.
+        """
+        super(VolumeTypeExistsValidator, self).__init__()
+        self.param = param_name
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        volume_type = config.get("args", {}).get(self.param, False)
+        if volume_type:
+            for user in credentials["openstack"]["users"]:
+                clients = user["credential"].clients()
+                vt_names = [vt.name for vt in
+                            clients.cinder().volume_types.list()]
+                volume_types_ctx = config.get(
+                    "context", {}).get("volume_types", [])
+                if volume_type not in vt_names + volume_types_ctx:
+                    msg = ("Specified volume type {} not found for user {}. "
+                           "List of available types: {}")
+                    return self.fail(msg.format(volume_type, user, vt_names))
+        else:
+            msg = ("The parameter '{}' is required and should not be empty.")
+            return self.fail(msg.format(self.param))
