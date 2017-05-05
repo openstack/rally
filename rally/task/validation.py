@@ -424,31 +424,6 @@ def volume_type_exists(config, clients, deployment, param_name):
 
 
 @validator
-def restricted_parameters(config, clients, deployment, param_names,
-                          subdict=None):
-    """Validates that parameters is not set.
-
-    :param param_names: parameter or parameters list to be validated.
-    :param subdict: sub-dict of "config" to search for param_names. if
-                    not defined - will search in "config"
-    """
-    if not isinstance(param_names, (list, tuple)):
-        param_names = [param_names]
-
-    restricted_params = []
-    for param_name in param_names:
-        args = config.get("args", {})
-        a_dict, a_key = (args, subdict) if subdict else (config, "args")
-        if param_name in a_dict.get(a_key, {}):
-            restricted_params.append(param_name)
-    if restricted_params:
-        msg = (_("You can't specify parameters '%(params)s' in '%(a_dict)s'")
-               % {"params": ", ".join(restricted_params),
-                  "a_dict": subdict if subdict else "args"})
-        return ValidationResult(False, msg)
-
-
-@validator
 def workbook_contains_workflow(config, clients, deployment, workbook,
                                workflow_name):
     """Validate that workflow exist in workbook when workflow is passed
@@ -519,8 +494,11 @@ required_clients = deprecated_validator("required_clients", "required_clients",
                                         "0.10.0")
 
 required_services = deprecated_validator("required_services",
-                                         "required_servcies", "0.10.0")
+                                         "required_services", "0.10.0")
 
 validate_heat_template = deprecated_validator("validate_heat_template",
                                               "validate_heat_template",
                                               "0.10.0")
+restricted_parameters = deprecated_validator("restricted_parameters",
+                                             "restricted_parameters",
+                                             "0.10.0")

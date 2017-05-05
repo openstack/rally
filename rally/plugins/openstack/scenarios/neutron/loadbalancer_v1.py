@@ -22,8 +22,8 @@ from rally.task import validation
 """Scenarios for Neutron Loadbalancer v1."""
 
 
-@validation.restricted_parameters("subnet_id",
-                                  subdict="pool_create_args")
+@validation.add("restricted_parameters", param_names="subnet_id",
+                subdict="pool_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
@@ -47,8 +47,8 @@ class CreateAndListPools(utils.NeutronScenario):
         self._list_v1_pools()
 
 
-@validation.restricted_parameters("subnet_id",
-                                  subdict="pool_create_args")
+@validation.add("restricted_parameters", param_names="subnet_id",
+                subdict="pool_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
@@ -74,8 +74,8 @@ class CreateAndDeletePools(utils.NeutronScenario):
             self._delete_v1_pool(pool["pool"])
 
 
-@validation.restricted_parameters("subnet_id",
-                                  subdict="pool_create_args")
+@validation.add("restricted_parameters", param_names="subnet_id",
+                subdict="pool_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
@@ -103,8 +103,8 @@ class CreateAndUpdatePools(utils.NeutronScenario):
             self._update_v1_pool(pool, **pool_update_args)
 
 
-@validation.restricted_parameters(["pool_id", "subnet_id"],
-                                  subdict="vip_create_args")
+@validation.add("restricted_parameters", param_names=["pool_id", "subnet_id"],
+                subdict="vip_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
@@ -134,8 +134,8 @@ class CreateAndListVips(utils.NeutronScenario):
         self._list_v1_vips()
 
 
-@validation.restricted_parameters(["pool_id", "subnet_id"],
-                                  subdict="vip_create_args")
+@validation.add("restricted_parameters", param_names=["pool_id", "subnet_id"],
+                subdict="vip_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
@@ -167,8 +167,8 @@ class CreateAndDeleteVips(utils.NeutronScenario):
             self._delete_v1_vip(vip["vip"])
 
 
-@validation.restricted_parameters(["pool_id", "subnet_id"],
-                                  subdict="vip_create_args")
+@validation.add("restricted_parameters", param_names=["pool_id", "subnet_id"],
+                subdict="vip_create_args")
 @validation.add("required_neutron_extensions", extensions=["lbaas"])
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])

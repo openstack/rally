@@ -21,8 +21,8 @@ from rally.task import validation
 """Scenarios for Cinder QoS."""
 
 
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_list_qos")
@@ -41,8 +41,8 @@ class CreateAndListQos(cinder_utils.CinderBasic):
         self.assertIn(qos, pool_list, err_msg=msg)
 
 
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_get_qos")

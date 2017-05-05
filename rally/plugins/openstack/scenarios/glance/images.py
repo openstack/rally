@@ -178,14 +178,15 @@ class CreateAndDeleteImage(GlanceBasic):
         self.glance.delete_image(image.id)
 
 
+@types.convert(flavor={"type": "nova_flavor"},
+               image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
 @validation.add("enum", param_name="container_format",
                 values=["ami", "ari", "aki", "bare", "ovf"])
 @validation.add("enum", param_name="disk_format",
                 values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
                         "qcow2", "vdi", "iso"])
-@types.convert(flavor={"type": "nova_flavor"},
-               image_location={"type": "path_or_url"},
-               kwargs={"type": "glance_image_args"})
+@validation.add("restricted_parameters", param_names=["image_name", "name"])
 @validation.flavor_exists("flavor")
 @validation.add("required_services", services=[consts.Service.GLANCE,
                                                consts.Service.NOVA])

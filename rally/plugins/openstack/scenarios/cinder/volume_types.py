@@ -26,8 +26,8 @@ LOG = logging.getLogger(__name__)
 """Scenarios for Cinder Volume Type."""
 
 
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_volume_type")
@@ -43,8 +43,8 @@ class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
         self.admin_cinder.delete_volume_type(volume_type)
 
 
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_get_volume_type")
@@ -118,7 +118,7 @@ class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
                       err_msg=msg)
 
 
-@validation.restricted_parameters("name")
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
@@ -164,7 +164,6 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 
 
 @validation.add("required_params", params=[("create_specs", "provider")])
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
@@ -210,8 +209,8 @@ class CreateAndListEncryptionType(cinder_utils.CinderBasic):
         self.admin_cinder.list_encryption_type(search_opts)
 
 
-@validation.restricted_parameters("name")
 @validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_set_volume_type_keys")

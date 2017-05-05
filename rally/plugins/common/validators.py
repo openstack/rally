@@ -197,3 +197,35 @@ class EnumValidator(validation.Validator):
             if not self.missed:
                 return self.fail("%s parameter is not defined in the "
                                  "task config file" % self.param_name)
+
+
+@validation.configure(name="restricted_parameters")
+class RestrictedParametersValidator(validation.Validator):
+
+    def __init__(self, param_names, subdict=None):
+        """Validates that parameters is not set.
+
+        :param param_names: parameter or parameters list to be validated.
+        :param subdict: sub-dict of "config" to search for param_names. if
+                        not defined - will search in "config"
+        """
+        super(RestrictedParametersValidator, self).__init__()
+        if isinstance(param_names, (list, tuple)):
+            self.params = param_names
+        else:
+            self.params = [param_names]
+        self.subdict = subdict
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        restricted_params = []
+        for param_name in self.params:
+            args = config.get("args", {})
+            a_dict, a_key = (args, self.subdict) if self.subdict else (
+                config, "args")
+            if param_name in a_dict.get(a_key, {}):
+                restricted_params.append(param_name)
+        if restricted_params:
+            msg = ("You can't specify parameters '{}' in '{}'")
+            return self.fail(msg.format(
+                ", ".join(restricted_params),
+                self.subdict if self.subdict else "args"))

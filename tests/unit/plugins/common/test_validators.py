@@ -14,6 +14,7 @@
 #    under the License.
 
 import ddt
+import mock
 
 from rally.common.plugin import plugin
 from rally.common import validation
@@ -200,3 +201,38 @@ class EnumValidatorTestCase(test.TestCase):
         self.assertFalse(result.is_valid)
         self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
                          "%s" % result)
+
+
+@ddt.ddt
+class RestrictedParametersValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RestrictedParametersValidatorTestCase, self).setUp()
+        self.credentials = dict(openstack={"admin": mock.MagicMock(),
+                                           "users": [mock.MagicMock()]})
+
+    @ddt.unpack
+    @ddt.data(
+        {"context": {"args": {}}},
+        {"context": {"args": {"param_name": "value"}},
+         "err_msg": "You can't specify parameters 'param_name' in 'args'"},
+        {"context": {"args": {"subdict": {}}}, "subdict": "subdict"},
+        {"context": {"args": {"subdict": {"param_name": "value"}}},
+         "subdict": "subdict",
+         "err_msg": "You can't specify parameters 'param_name' in 'subdict'"}
+    )
+    def test_validate(self, context, subdict=None, err_msg=None):
+        validator = validators.RestrictedParametersValidator(
+            ["param_name"], subdict)
+        result = validator.validate(context, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)
+
+    def test_restricted_parameters_string_param_names(self):
+        validator = validators.RestrictedParametersValidator("param_name")
+        result = validator.validate({"args": {}}, self.credentials, None, None)
+        self.assertIsNone(result)

@@ -22,10 +22,10 @@ from rally.task import validation
 
 
 @validation.add("number", param_name="size", minval=1, integer_only=True)
-@validation.restricted_parameters(["name", "display_name"],
-                                  subdict="create_volume_kwargs")
-@validation.restricted_parameters("name",
-                                  subdict="create_backup_kwargs")
+@validation.add("restricted_parameters", param_names=["name", "display_name"],
+                subdict="create_volume_kwargs")
+@validation.add("restricted_parameters", param_names="name",
+                subdict="create_backup_kwargs")
 @validation.required_cinder_services("cinder-backup")
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
