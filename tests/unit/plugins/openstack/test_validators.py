@@ -172,6 +172,7 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
     def setUp(self):
         super(RequiredNeutronExtensionsValidatorTestCase, self).setUp()
         self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
 
     @ddt.unpack
     @ddt.data(
@@ -182,11 +183,12 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
     def test_validator(self, ext_validate, err_msg=False):
         validator = validators.RequiredNeutronExtensionsValidator(
             ext_validate)
-        clients = credentials["openstack"]["users"][0]["credential"].clients()
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
 
         clients.neutron().list_extensions.return_value = {
             "extensions": [{"alias": "existing_extension"}]}
-        result = validator.validate({}, credentials, {}, None)
+        result = validator.validate({}, self.credentials, {}, None)
 
         if err_msg:
             self.assertTrue(result)
@@ -202,8 +204,8 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         super(ImageValidOnFlavorValidatorTestCase, self).setUp()
         self.validator = validators.ImageValidOnFlavorValidator("foo_flavor",
                                                                 "image")
-        self.config = config
-        self.credentials = credentials
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
 
     @ddt.unpack
     @ddt.data(
@@ -492,7 +494,7 @@ class RequiredClientsValidatorTestCase(test.TestCase):
 
         clients.nova.side_effect = ImportError
         result = validator.validate(self.config, self.credentials, None, None)
-        self.assertTrue(result)
+        self.assertIsNotNone(result)
         self.assertEqual("Client for nova is not installed. To install it "
                          "run `pip install python-novaclient`", result.msg)
 
@@ -507,7 +509,7 @@ class RequiredClientsValidatorTestCase(test.TestCase):
 
         clients.keystone.side_effect = ImportError
         result = validator.validate(self.config, self.credentials, None, None)
-        self.assertTrue(result)
+        self.assertIsNotNone(result)
         self.assertEqual("Client for keystone is not installed. To install it "
                          "run `pip install python-keystoneclient`", result.msg)
 
@@ -557,7 +559,7 @@ class RequiredServicesValidatorTestCase(test.TestCase):
             consts.Service.KEYSTONE]
 
         result = validator.validate(self.config, self.credentials, None, None)
-        self.assertTrue(result)
+        self.assertIsNotNone(result)
         expected_msg = ("'{0}' service is not available. Hint: If '{0}'"
                         " service has non-default service_type, try to setup"
                         " it via 'api_versions' context.").format(
@@ -579,8 +581,82 @@ class RequiredServicesValidatorTestCase(test.TestCase):
             consts.Service.NOVA, "lol"])
 
         result = validator.validate({}, self.credentials, None, None)
-        self.assertTrue(result)
+        self.assertIsNotNone(result)
         expected_msg = ("'{0}' service is not available. Hint: If '{0}'"
                         " service has non-default service_type, try to setup"
                         " it via 'api_versions' context.").format("lol")
+        self.assertEqual(expected_msg, result.msg)
+
+
+@ddt.ddt
+class ValidateHeatTemplateValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(ValidateHeatTemplateValidatorTestCase, self).setUp()
+        self.validator = validators.ValidateHeatTemplateValidator(
+            "template_path1", "template_path2")
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
+
+    @ddt.data(
+        {"exception_msg": "Heat template validation failed on fake_path1. "
+                          "Original error message: fake_msg."},
+        {"exception_msg": None}
+    )
+    @ddt.unpack
+    @mock.patch("rally.plugins.openstack.validators.os.path.exists",
+                return_value=True)
+    @mock.patch("rally.plugins.openstack.validators.open",
+                side_effect=mock.mock_open(), create=True)
+    def test_validate(self, mock_open, mock_exists, exception_msg):
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
+        mock_open().__enter__().read.side_effect = ["fake_template1",
+                                                    "fake_template2"]
+        heat_validator = mock.MagicMock()
+        if exception_msg:
+            heat_validator.side_effect = Exception("fake_msg")
+        clients.heat().stacks.validate = heat_validator
+        context = {"args": {"template_path1": "fake_path1",
+                            "template_path2": "fake_path2"}}
+        result = self.validator.validate(context, self.credentials, None, None)
+
+        if not exception_msg:
+            heat_validator.assert_has_calls([
+                mock.call(template="fake_template1"),
+                mock.call(template="fake_template2")
+            ])
+            mock_open.assert_has_calls([
+                mock.call("fake_path1", "r"),
+                mock.call("fake_path2", "r")
+            ], any_order=True)
+            self.assertIsNone(result)
+        else:
+            heat_validator.assert_called_once_with(
+                template="fake_template1")
+            self.assertIsNotNone(result)
+            self.assertEqual(
+                "Heat template validation failed on fake_path1."
+                " Original error message: fake_msg.", result.msg)
+
+    def test_validate_missed_params(self):
+        validator = validators.ValidateHeatTemplateValidator(
+            params="fake_param")
+
+        result = validator.validate(self.config, self.credentials, None, None)
+
+        expected_msg = ("Path to heat template is not specified. Its needed "
+                        "for heat template validation. Please check the "
+                        "content of `fake_param` scenario argument.")
+        self.assertIsNotNone(result)
+        self.assertEqual(expected_msg, result.msg)
+
+    @mock.patch("rally.plugins.openstack.validators.os.path.exists",
+                return_value=False)
+    def test_validate_file_not_found(self, mock_exists):
+        context = {"args": {"template_path1": "fake_path1",
+                            "template_path2": "fake_path2"}}
+        result = self.validator.validate(context, self.credentials, None, None)
+        expected_msg = "No file found by the given path fake_path1"
+        self.assertIsNotNone(result)
         self.assertEqual(expected_msg, result.msg)

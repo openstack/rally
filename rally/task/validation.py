@@ -449,40 +449,6 @@ def restricted_parameters(config, clients, deployment, param_names,
 
 
 @validator
-def validate_heat_template(config, clients, deployment, *param_names):
-    """Validates heat template.
-
-    :param param_names: list of parameters to be validated.
-    """
-    if param_names is None:
-        return ValidationResult(False, _(
-            "validate_heat_template validator accepts non empty arguments "
-            "in form of `validate_heat_template(\"foo\", \"bar\")`"))
-    for param_name in param_names:
-        template_path = config.get("args", {}).get(param_name)
-        if not template_path:
-            return ValidationResult(False, _(
-                "Path to heat template is not specified. Its needed for "
-                "heat template validation. Please check the content of `%s` "
-                "scenario argument.") % param_name)
-        template_path = os.path.expanduser(template_path)
-        if not os.path.exists(template_path):
-            return ValidationResult(False, _("No file found by the given path "
-                                             "%s") % template_path)
-        with open(template_path, "r") as f:
-            try:
-                clients.heat().stacks.validate(template=f.read())
-            except Exception as e:
-                dct = {
-                    "path": template_path,
-                    "msg": str(e),
-                }
-                msg = (_("Heat template validation failed on %(path)s. "
-                         "Original error message: %(msg)s.") % dct)
-                return ValidationResult(False, msg)
-
-
-@validator
 def workbook_contains_workflow(config, clients, deployment, workbook,
                                workflow_name):
     """Validate that workflow exist in workbook when workflow is passed
@@ -554,3 +520,7 @@ required_clients = deprecated_validator("required_clients", "required_clients",
 
 required_services = deprecated_validator("required_services",
                                          "required_servcies", "0.10.0")
+
+validate_heat_template = deprecated_validator("validate_heat_template",
+                                              "validate_heat_template",
+                                              "0.10.0")
