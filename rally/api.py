@@ -1203,3 +1203,7 @@ class API(object):
     @property
     def verification(self):
         return self._verification
+
+    @property
+    def version(self):
+        return 1
