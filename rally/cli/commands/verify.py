@@ -96,7 +96,7 @@ class VerifyCommands(object):
         """List all plugins for verifiers management."""
         if namespace:
             namespace = namespace.lower()
-        verifier_plugins = api.verifier.list_plugins(namespace)
+        verifier_plugins = api.verifier.list_plugins(namespace=namespace)
 
         fields = ["Plugin name", "Namespace", "Description"]
         if logging.is_debug():
@@ -139,7 +139,7 @@ class VerifyCommands(object):
                         do_use=True):
         """Create a verifier."""
         verifier_uuid = api.verifier.create(
-            name, vtype=vtype, namespace=namespace, source=source,
+            name=name, vtype=vtype, namespace=namespace, source=source,
             version=version, system_wide=system_wide, extra_settings=extra)
 
         if do_use:
@@ -150,7 +150,7 @@ class VerifyCommands(object):
                    help="Verifier name or UUID. " + LIST_VERIFIERS_HINT)
     def use_verifier(self, api, verifier_id):
         """Choose a verifier to use for the future operations."""
-        verifier = api.verifier.get(verifier_id)
+        verifier = api.verifier.get(verifier_id=verifier_id)
         fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
         print(_("Using verifier '%s' (UUID=%s) as the default verifier "
                 "for the future operations.") % (verifier["name"],
@@ -162,7 +162,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifiers(self, api, status=None):
         """List all verifiers."""
-        verifiers = api.verifier.list(status)
+        verifiers = api.verifier.list(status=status)
         if verifiers:
             fields = ["UUID", "Name", "Type", "Namespace", "Created at",
                       "Updated at", "Status", "Version", "System-wide",
@@ -188,7 +188,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def show_verifier(self, api, verifier_id=None):
         """Show detailed information about a verifier."""
-        verifier = api.verifier.get(verifier_id)
+        verifier = api.verifier.get(verifier_id=verifier_id)
         fields = ["UUID", "Status", "Created at", "Updated at", "Active",
                   "Name", "Description", "Type", "Namespace", "Source",
                   "Version", "System-wide", "Extra settings", "Location",
@@ -231,7 +231,9 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def delete_verifier(self, api, verifier_id, deployment=None, force=False):
         """Delete a verifier."""
-        api.verifier.delete(verifier_id, deployment, force)
+        api.verifier.delete(verifier_id=verifier_id,
+                            deployment_id=deployment,
+                            force=force)
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -272,8 +274,10 @@ class VerifyCommands(object):
             return 1
 
         system_wide = False if no_system_wide else (system_wide or None)
-        api.verifier.update(verifier_id, system_wide=system_wide,
-                            version=version, update_venv=update_venv)
+        api.verifier.update(verifier_id=verifier_id,
+                            system_wide=system_wide,
+                            version=version,
+                            update_venv=update_venv)
 
         print(_("HINT: In some cases the verifier config file should be "
                 "updated as well. Use `rally verify configure-verifier` "
@@ -322,8 +326,9 @@ class VerifyCommands(object):
 
             with open(new_configuration) as f:
                 config = f.read()
-            api.verifier.override_configuration(verifier_id, deployment,
-                                                config)
+            api.verifier.override_configuration(verifier_id=verifier_id,
+                                                deployment_id=deployment,
+                                                new_configuration=config)
         else:
             if extra_options:
                 if os.path.isfile(extra_options):
@@ -340,7 +345,8 @@ class VerifyCommands(object):
                 else:
                     extra_options = yaml.safe_load(extra_options)
 
-            config = api.verifier.configure(verifier_id, deployment,
+            config = api.verifier.configure(verifier=verifier_id,
+                                            deployment_id=deployment,
                                             extra_options=extra_options,
                                             reconfigure=reconfigure)
 
@@ -358,7 +364,8 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifier_tests(self, api, verifier_id=None, pattern=""):
         """List all verifier tests."""
-        tests = api.verifier.list_tests(verifier_id, pattern)
+        tests = api.verifier.list_tests(verifier_id=verifier_id,
+                                        pattern=pattern)
         if tests:
             for test in tests:
                 print(test)
@@ -382,8 +389,8 @@ class VerifyCommands(object):
     def add_verifier_ext(self, api, verifier_id=None, source=None,
                          version=None, extra=None):
         """Add a verifier extension."""
-        api.verifier.add_extension(verifier_id, source=source, version=version,
-                                   extra_settings=extra)
+        api.verifier.add_extension(verifier_id=verifier_id, source=source,
+                                   version=version, extra_settings=extra)
 
     @cliutils.help_group("verifier-ext")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -392,7 +399,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list_verifier_exts(self, api, verifier_id=None):
         """List all verifier extensions."""
-        verifier_exts = api.verifier.list_extensions(verifier_id)
+        verifier_exts = api.verifier.list_extensions(verifier_id=verifier_id)
         if verifier_exts:
             fields = ["Name", "Entry point"]
             if logging.is_debug():
@@ -413,7 +420,7 @@ class VerifyCommands(object):
     @plugins.ensure_plugins_are_loaded
     def delete_verifier_ext(self, api, verifier_id=None, name=None):
         """Delete a verifier extension."""
-        api.verifier.delete_extension(verifier_id, name)
+        api.verifier.delete_extension(verifier_id=verifier_id, name=name)
 
     @cliutils.help_group("verification")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -496,7 +503,8 @@ class VerifyCommands(object):
 
         try:
             results = api.verification.start(
-                verifier_id, deployment, tags=tags, **run_args)
+                verifier_id=verifier_id, deployment_id=deployment,
+                tags=tags, **run_args)
             verification_uuid = results["verification"]["uuid"]
         except exceptions.DeploymentNotFinishedStatus as e:
             print(_("Cannot start a verefication on "
@@ -518,7 +526,8 @@ class VerifyCommands(object):
                    help="Verification UUID. " + LIST_VERIFICATIONS_HINT)
     def use(self, api, verification_uuid):
         """Choose a verification to use for the future operations."""
-        verification = api.verification.get(verification_uuid)
+        verification = api.verification.get(
+            verification_uuid=verification_uuid)
         fileutils.update_globals_file(
             envutils.ENV_VERIFICATION, verification["uuid"])
         print(_("Using verification (UUID=%s) as the default verification "
@@ -552,7 +561,7 @@ class VerifyCommands(object):
     def rerun(self, api, verification_uuid=None, deployment=None, tags=None,
               concur=None, failed=False, detailed=False, do_use=True):
         """Rerun tests from a verification for a specific deployment."""
-        results = api.verification.rerun(verification_uuid,
+        results = api.verification.rerun(verification_uuid=verification_uuid,
                                          deployment_id=deployment,
                                          failed=failed,
                                          tags=tags,
@@ -582,9 +591,11 @@ class VerifyCommands(object):
     def show(self, api, verification_uuid=None, sort_by="name",
              detailed=False):
         """Show detailed information about a verification."""
-        verification = api.verification.get(verification_uuid)
-        verifier = api.verifier.get(verification["verifier_uuid"])
-        deployment = api.deployment.get(verification["deployment_uuid"])
+        verification = api.verification.get(
+            verification_uuid=verification_uuid)
+        verifier = api.verifier.get(verifier_id=verification["verifier_uuid"])
+        deployment = api.deployment.get(
+            deployment=verification["deployment_uuid"])
 
         def run_args_formatter(v):
             run_args = []
@@ -665,17 +676,18 @@ class VerifyCommands(object):
     def list(self, api, verifier_id=None, deployment=None, tags=None,
              status=None):
         """List all verifications."""
-        verifications = api.verification.list(verifier_id, deployment,
-                                              tags, status)
+        verifications = api.verification.list(verifier_id=verifier_id,
+                                              deployment_id=deployment,
+                                              tags=tags, status=status)
         if verifications:
             fields = ["UUID", "Tags", "Verifier name", "Deployment name",
                       "Started at", "Finished at", "Duration", "Status"]
             formatters = {
                 "Tags": lambda v: ", ".join(v["tags"]) or "-",
                 "Verifier name": (lambda v: api.verifier.get(
-                    v["verifier_uuid"])["name"]),
+                    verifier_id=v["verifier_uuid"])["name"]),
                 "Deployment name": (lambda v: api.deployment.get(
-                    v["deployment_uuid"])["name"]),
+                    deployment=v["deployment_uuid"])["name"]),
                 "Started at": lambda v: v["created_at"],
                 "Finished at": lambda v: v["updated_at"],
                 "Duration": lambda v: (dt.datetime.strptime(v["updated_at"],
@@ -701,7 +713,7 @@ class VerifyCommands(object):
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
         for v_uuid in verification_uuid:
-            api.verification.delete(v_uuid)
+            api.verification.delete(verification_uuid=v_uuid)
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", nargs="+", dest="verification_uuid", type=str,
@@ -727,8 +739,9 @@ class VerifyCommands(object):
         if not isinstance(verification_uuid, list):
             verification_uuid = [verification_uuid]
 
-        result = api.verification.report(verification_uuid, output_type,
-                                         output_dest)
+        result = api.verification.report(uuids=verification_uuid,
+                                         output_type=output_type,
+                                         output_dest=output_dest)
         if "files" in result:
             print(_("Saving the report to '%s' file. It may take some time.")
                   % output_dest)
@@ -785,7 +798,8 @@ class VerifyCommands(object):
 
         run_args = yaml.safe_load(run_args) if run_args else {}
         verification, results = api.verification.import_results(
-            verifier_id, deployment, data, **run_args)
+            verifier_id=verifier_id, deployment_id=deployment,
+            data=data, **run_args)
         self._print_totals(results["totals"])
 
         verification_uuid = verification["uuid"]

@@ -66,7 +66,7 @@ class FileExporter(exporter.Exporter):
         :param uuid: uuid of the task object
         """
         rapi = api.API(config_args=sys.argv[1:], skip_db_check=True)
-        task = rapi.task.get_detailed(uuid)
+        task = rapi.task.get_detailed(task_id=uuid)
 
         LOG.debug("Got the task object by it's uuid %s. " % uuid)
 

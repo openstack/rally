@@ -137,7 +137,8 @@ class TestTaskSamples(unittest.TestCase):
                         continue
                     with open(full_path) as task_file:
                         input_task = task_file.read()
-                        rendered_task = rapi.task.render_template(input_task)
+                        rendered_task = rapi.task.render_template(
+                            task_template=input_task)
                         queue.append((full_path, rendered_task))
 
         def consumer(_cache, sample):
@@ -145,7 +146,8 @@ class TestTaskSamples(unittest.TestCase):
             full_path, rendered_task = sample
             task_config = yaml.safe_load(rendered_task)
             try:
-                rapi.task.validate("MAIN", task_config)
+                rapi.task.validate(deployment="MAIN",
+                                   config=task_config)
             except Exception as e:
                 if not self._skip(six.text_type(e)):
                     failed_samples[full_path] = traceback.format_exc()
