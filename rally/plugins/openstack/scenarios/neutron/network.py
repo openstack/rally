@@ -248,6 +248,36 @@ class CreateAndListRouters(utils.NeutronScenario):
 @validation.add("number", param_name="subnets_per_network", minval=1,
                 integer_only=True)
 @validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["neutron"]},
+                    name="NeutronNetworks.create_and_show_routers")
+class CreateAndShowRouters(utils.NeutronScenario):
+
+    def run(self, network_create_args=None, subnet_create_args=None,
+            subnet_cidr_start=None, subnets_per_network=1,
+            router_create_args=None):
+        """Create and show a given number of routers.
+
+        Create a network, a given number of subnets and routers
+        and then show all routers.
+
+        :param network_create_args: dict, POST /v2.0/networks request
+                                    options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for each network
+        :param router_create_args: dict, POST /v2.0/routers request options
+        """
+        network, subnets, routers = self._create_network_structure(
+            network_create_args, subnet_create_args, subnet_cidr_start,
+            subnets_per_network, router_create_args)
+
+        for router in routers:
+            self._show_router(router)
+
+
+@validation.number("subnets_per_network", minval=1, integer_only=True)
+@validation.required_services(consts.Service.NEUTRON)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronNetworks.create_and_update_routers")
 class CreateAndUpdateRouters(utils.NeutronScenario):
