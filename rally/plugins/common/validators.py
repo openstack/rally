@@ -93,8 +93,10 @@ class RequiredParameterValidator(validation.Validator):
         for arg in self.params:
             if isinstance(arg, (tuple, list)):
                 for case in arg:
-                    if case not in args:
-                        missing.append(case)
+                    if case in args:
+                        break
+                else:
+                    missing.append(case)
             else:
                 if arg not in args:
                     missing.append(arg)

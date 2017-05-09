@@ -375,6 +375,15 @@ class BlockStorage(service.UnifiedService):
         return self._impl.create_encryption_type(volume_type, specs=specs)
 
     @service.should_be_overridden
+    def get_encryption_type(self, volume_type):
+        """Get the volume encryption type for the specified volume type.
+
+        :param volume_type: the volume type to query
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        return self._impl.get_encryption_type(volume_type)
+
+    @service.should_be_overridden
     def list_encryption_type(self, search_opts=None):
         """List all volume encryption types.
 

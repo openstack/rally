@@ -61,11 +61,55 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
         context = self._get_context()
         context.update({
             "volume_types": [{"id": "fake_id",
-                              "name": "fake_name"}]})
-        scenario = volume_types.CreateAndDeleteEncryptionType(context)
-        scenario.run(create_specs="fakecreatespecs")
+                              "name": "fake_name"}],
+            "iteration": 1})
+        scenario = volume_types.CreateAndDeleteEncryptionType(
+            context)
+
+        # case: create_specs is None
+        specs = {
+            "provider": "prov",
+            "cipher": "cip",
+            "key_size": "ks",
+            "control_location": "cl"
+        }
+        scenario.run(create_specs=None, provider="prov", cipher="cip",
+                     key_size="ks", control_location="cl")
         mock_service.create_encryption_type.assert_called_once_with(
+            "fake_id", specs=specs)
+        mock_service.delete_encryption_type.assert_called_once_with(
+            "fake_id")
+
+        # case: create_specs is not None
+        scenario.run(create_specs="fakecreatespecs", provider="prov",
+                     cipher="cip", key_size="ks", control_location="cl")
+        mock_service.create_encryption_type.assert_called_with(
             "fake_id", specs="fakecreatespecs")
+        mock_service.delete_encryption_type.assert_called_with(
+            "fake_id")
+
+    def test_create_get_and_delete_encryption_type(self):
+        mock_service = self.mock_cinder.return_value
+        context = self._get_context()
+        context.update({
+            "volume_types": [{"id": "fake_id",
+                              "name": "fake_name"}],
+            "iteration": 1})
+        scenario = volume_types.CreateGetAndDeleteEncryptionType(
+            context)
+
+        specs = {
+            "provider": "prov",
+            "cipher": "cip",
+            "key_size": "ks",
+            "control_location": "cl"
+        }
+        scenario.run(provider="prov", cipher="cip",
+                     key_size="ks", control_location="cl")
+        mock_service.create_encryption_type.assert_called_once_with(
+            "fake_id", specs=specs)
+        mock_service.get_encryption_type.assert_called_once_with(
+            "fake_id")
         mock_service.delete_encryption_type.assert_called_once_with(
             "fake_id")
 
@@ -73,25 +117,63 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
         mock_service = self.mock_cinder.return_value
         scenario = volume_types.CreateVolumeTypeAndEncryptionType(
             self._get_context())
-        scenario.run(specs="fakespecs", fakeargs="fakeargs")
+
+        # case: create_specs is None
+        specs = {
+            "provider": "prov",
+            "cipher": "cip",
+            "key_size": "ks",
+            "control_location": "cl"
+        }
+        scenario.run(create_specs=None, provider="prov", cipher="cip",
+                     key_size="ks", control_location="cl", fakeargs="fakeargs")
         mock_service.create_volume_type.assert_called_once_with(
             fakeargs="fakeargs")
         mock_service.create_encryption_type.assert_called_once_with(
+            mock_service.create_volume_type.return_value, specs=specs)
+
+        # case: create_specs is not None
+        scenario.run(create_specs="fakecreatespecs", provider="prov",
+                     cipher="cip", key_size="ks", control_location="cl",
+                     fakeargs="fakeargs")
+        mock_service.create_volume_type.assert_called_with(
+            fakeargs="fakeargs")
+        mock_service.create_encryption_type.assert_called_with(
             mock_service.create_volume_type.return_value,
-            specs="fakespecs")
+            specs="fakecreatespecs")
 
     def test_create_and_list_encryption_type(self):
         mock_service = self.mock_cinder.return_value
+        context = self._get_context()
+        context.update({
+            "volume_types": [{"id": "fake_id",
+                              "name": "fake_name"}],
+            "iteration": 1})
         scenario = volume_types.CreateAndListEncryptionType(
-            self._get_context())
-        scenario.run(specs="fakespecs", search_opts="fakeopts",
-                     fakeargs="fakeargs")
-        mock_service.create_volume_type.assert_called_once_with(
-            fakeargs="fakeargs")
+            context)
+
+        # case: create_specs is None
+        specs = {
+            "provider": "prov",
+            "cipher": "cip",
+            "key_size": "ks",
+            "control_location": "cl"
+        }
+        scenario.run(create_specs=None, provider="prov", cipher="cip",
+                     key_size="ks", control_location="cl",
+                     search_opts="fakeopts")
         mock_service.create_encryption_type.assert_called_once_with(
-            mock_service.create_volume_type.return_value,
-            specs="fakespecs")
+            "fake_id", specs=specs)
         mock_service.list_encryption_type.assert_called_once_with(
+            "fakeopts")
+
+        # case: create_specs is not None
+        scenario.run(create_specs="fakecreatespecs", provider="prov",
+                     cipher="cip", key_size="ks", control_location="cl",
+                     search_opts="fakeopts")
+        mock_service.create_encryption_type.assert_called_with(
+            "fake_id", specs="fakecreatespecs")
+        mock_service.list_encryption_type.assert_called_with(
             "fakeopts")
 
     def test_create_and_set_volume_type_keys(self):

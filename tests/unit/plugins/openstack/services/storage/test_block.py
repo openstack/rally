@@ -230,6 +230,13 @@ class BlockTestCase(test.TestCase):
         self.service._impl.create_encryption_type.assert_called_once_with(
             "type", specs=2)
 
+    def test_get_encryption_type(self):
+        self.assertEqual(
+            self.service._impl.get_encryption_type.return_value,
+            self.service.get_encryption_type("type"))
+        self.service._impl.get_encryption_type.assert_called_once_with(
+            "type")
+
     def test_list_encryption_type(self):
         self.assertEqual(self.service._impl.list_encryption_type.return_value,
                          self.service.list_encryption_type(search_opts=None))

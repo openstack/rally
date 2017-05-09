@@ -378,6 +378,17 @@ class CinderMixin(object):
             return self._get_client().volume_encryption_types.create(
                 volume_type, specs)
 
+    def get_encryption_type(self, volume_type):
+        """Get the volume encryption type for the specified volume type.
+
+        :param volume_type: the volume type to query
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        aname = "cinder_v%s.get_encryption_type" % self.version
+        with atomic.ActionTimer(self, aname):
+            return self._get_client().volume_encryption_types.get(
+                volume_type)
+
     def list_encryption_type(self, search_opts=None):
         """List all volume encryption types.
 
@@ -595,6 +606,15 @@ class UnifiedCinderMixin(object):
         """
         return self._unify_encryption_type(
             self._impl.create_encryption_type(volume_type, specs=specs))
+
+    def get_encryption_type(self, volume_type):
+        """Get the volume encryption type for the specified volume type.
+
+        :param volume_type: the volume type to query
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        return self._unify_encryption_type(
+            self._impl.get_encryption_type(volume_type))
 
     def list_encryption_type(self, search_opts=None):
         """List all volume encryption types.

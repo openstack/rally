@@ -1,5 +1,5 @@
 {
-    "CinderVolumeTypes.create_and_list_encryption_type": [
+    "CinderVolumeTypes.create_get_and_delete_encryption_type": [
         {
             "args": {
               "provider": "LuksEncryptor",

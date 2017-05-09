@@ -376,6 +376,15 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.cinder.volume_encryption_types.create.assert_called_once_with(
             volume_type, specs)
 
+    def test_get_encryption_type(self):
+        volume_type = mock.Mock()
+        result = self.service.get_encryption_type(volume_type)
+
+        self.assertEqual(
+            self.cinder.volume_encryption_types.get.return_value, result)
+        self.cinder.volume_encryption_types.get.assert_called_once_with(
+            volume_type)
+
     def test_list_encryption_type(self):
         return_encryption_types_list = self.service.list_encryption_type()
         self.assertEqual(self.cinder.volume_encryption_types.list.return_value,
@@ -599,6 +608,16 @@ class UnifiedCinderMixinTestCase(test.TestCase):
             "type", specs=2)
         self.service._unify_encryption_type.assert_called_once_with(
             self.service._impl.create_encryption_type.return_value)
+
+    def test_get_encryption_type(self):
+        self.service._unify_encryption_type = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_encryption_type.return_value,
+            self.service.get_encryption_type("type"))
+        self.service._impl.get_encryption_type.assert_called_once_with(
+            "type")
+        self.service._unify_encryption_type.assert_called_once_with(
+            self.service._impl.get_encryption_type.return_value)
 
     def test_list_encryption_type(self):
         self.service._unify_encryption_type = mock.MagicMock()
