@@ -14,6 +14,7 @@
 
 import mock
 
+from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.cinder import volume_types
 from tests.unit import test
 
@@ -112,6 +113,41 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             "fake_id")
         mock_service.delete_encryption_type.assert_called_once_with(
             "fake_id")
+
+    def test_create_and_list_volume_types(self):
+        mock_service = self.mock_cinder.return_value
+        fake_type = mock.Mock()
+        pool_list = [mock.Mock(), mock.Mock(), fake_type]
+        description = "rally tests creating types"
+        is_public = False
+
+        scenario = volume_types.CreateAndListVolumeTypes(self._get_context())
+        mock_service.create_volume_type.return_value = fake_type
+        mock_service.list_types.return_value = pool_list
+        scenario.run(description=description, is_public=is_public)
+
+        mock_service.create_volume_type.assert_called_once_with(
+            description=description, is_public=is_public)
+        mock_service.list_types.assert_called_once_with()
+
+    def test_create_and_list_volume_types_with_fails(self):
+        # Negative case: type isn't listed
+        mock_service = self.mock_cinder.return_value
+        fake_type = mock.Mock()
+        pool_list = [mock.Mock(), mock.Mock(), mock.Mock()]
+        description = "rally tests creating types"
+        is_public = False
+
+        scenario = volume_types.CreateAndListVolumeTypes(self._get_context())
+        mock_service.create_volume_type.return_value = fake_type
+        mock_service.list_types.return_value = pool_list
+        self.assertRaises(rally_exceptions.RallyAssertionError,
+                          scenario.run,
+                          description=description, is_public=is_public)
+
+        mock_service.create_volume_type.assert_called_once_with(
+            description=description, is_public=is_public)
+        mock_service.list_types.assert_called_once_with()
 
     def test_create_volume_type_and_encryption_type(self):
         mock_service = self.mock_cinder.return_value

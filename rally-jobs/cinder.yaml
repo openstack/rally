@@ -929,6 +929,22 @@
         failure_rate:
           max: 0
 
+  CinderVolumeTypes.create_and_list_volume_types:
+    -
+      args:
+        description: "rally tests creating types"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumeTypes.create_volume_type_and_encryption_type:
     -
       args:

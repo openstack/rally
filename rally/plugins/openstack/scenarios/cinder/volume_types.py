@@ -60,6 +60,32 @@ class CreateAndGetVolumeType(cinder_utils.CinderBasic):
 
 
 @validation.required_services(consts.Service.CINDER)
+@validation.add("required_platform", platform="openstack", admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderVolumeTypes.create_and_list_volume_types")
+class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
+
+    def run(self, description=None, is_public=True):
+        """Create a volume Type, then list all types.
+
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
+        """
+        volume_type = self.admin_cinder.create_volume_type(
+            description=description,
+            is_public=is_public)
+
+        pool_list = self.admin_cinder.list_types()
+        msg = ("type not included into list of available types"
+               "created type: {}\n"
+               "pool of types: {}\n").format(volume_type, pool_list)
+        self.assertIn(volume_type.id,
+                      [vtype.id for vtype in pool_list],
+                      err_msg=msg)
+
+
+@validation.restricted_parameters("name")
+@validation.required_services(consts.Service.CINDER)
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
