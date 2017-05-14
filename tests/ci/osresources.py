@@ -250,6 +250,10 @@ class Neutron(ResourceManager):
         if self.has_extension("lbaas"):
             return self.client.list_vips()["vips"]
 
+    def list_bgpvpns(self):
+        if self.has_extension("bgpvpn"):
+            return self.client.list_bgpvpns()["bgpvpns"]
+
 
 class Glance(ResourceManager):
 
