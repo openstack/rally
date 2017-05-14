@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 import mock
 
 from rally.common.plugin import discover
@@ -101,3 +103,69 @@ class LoadExtraModulesTestCase(test.TestCase):
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
         discover.load_plugins("/somewhere")
+
+    @mock.patch("%s.pkgutil.walk_packages" % DISCOVER)
+    @mock.patch("%s.pkg_resources" % DISCOVER)
+    def test_import_modules_by_entry_point(self, mock_pkg_resources,
+                                           mock_walk_packages):
+
+        class Package(object):
+            def __init__(self, name, path=None, file=None):
+                self.__name__ = name
+                if path is not None:
+                    self.__path__ = path
+                if file is not None:
+                    self.__file__ = file
+
+        class FakeEntryPoint(object):
+            def __init__(self, ep_name, package_name, package_path=None,
+                         package_file=None):
+                self.name = ep_name
+                self.module_name = self.name
+                self.dist = mock.Mock()
+                self.load = mock.Mock(return_value=Package(package_name,
+                                                           package_path,
+                                                           package_file))
+
+        entry_points = [FakeEntryPoint("path", "plugin1", "/foo"),
+                        FakeEntryPoint("path", "plugin2", None, "/bar"),
+                        FakeEntryPoint("path", "plugin3", "/xxx", "/yyy"),
+                        FakeEntryPoint("foo", None),
+                        FakeEntryPoint("rally", None),
+                        FakeEntryPoint("path", "error", None)]
+        mock_pkg_resources.iter_entry_points.return_value = entry_points
+        loader = mock.Mock()
+
+        def load_module(name):
+            if name == "error":
+                raise KeyError()
+            else:
+                return mock.Mock()
+
+        loader.find_module.return_value.load_module.side_effect = load_module
+        # use random uuid to not have conflicts in sys.modules
+        names = [str(uuid.uuid4()) for i in range(3)]
+        mock_walk_packages.side_effect = [
+            [(loader, names[0], None)],
+            [(loader, names[1], None)],
+            [(loader, names[2], None)]
+        ]
+
+        discover.import_modules_by_entry_point()
+
+        mock_pkg_resources.iter_entry_points.assert_called_once_with(
+            "rally_plugins")
+        entry_points[0].load.assert_called_once_with()
+        entry_points[1].load.assert_called_once_with()
+        entry_points[2].load.assert_called_once_with()
+        self.assertFalse(entry_points[3].load.called)
+        self.assertFalse(entry_points[4].load.called)
+        self.assertEqual([mock.call("/foo", prefix="plugin1."),
+                          mock.call("/bar", prefix="plugin2."),
+                          mock.call("/xxx", prefix="plugin3.")],
+                         mock_walk_packages.call_args_list)
+        self.assertEqual([mock.call(n) for n in names],
+                         loader.find_module.call_args_list)
+        self.assertEqual(
+            [mock.call(n) for n in names],
+            loader.find_module.return_value.load_module.call_args_list)

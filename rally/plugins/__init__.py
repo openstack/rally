@@ -31,6 +31,8 @@ def load():
         discover.import_modules_from_package("rally.deployment.serverprovider")
         discover.import_modules_from_package("rally.plugins")
 
+        discover.import_modules_by_entry_point()
+
         discover.load_plugins("/opt/rally/plugins/")
         discover.load_plugins(os.path.expanduser("~/.rally/plugins/"))
 
