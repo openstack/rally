@@ -15,8 +15,6 @@
 
 import random
 
-import six
-
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common.objects import task  # noqa
@@ -45,65 +43,22 @@ def configure(name=None, namespace="default", context=None):
                     If there are custom user specified contexts this one
                     will be updated by provided contexts.
     """
-    def wrapper(scen):
-        scen.is_classbased = hasattr(scen, "run") and callable(scen.run)
-        if not scen.is_classbased:
-            plugin.from_func(Scenario)(scen)
-
-        scen._meta_init()
+    def wrapper(cls):
+        # TODO(boris-42): Drop this check as soon as we refactor rally report
         if name:
             if "." not in name.strip("."):
                 msg = (_("Scenario name must include a dot: '%s'") % name)
                 raise exceptions.RallyException(msg)
-            scen._set_name_and_namespace(name, namespace)
-        else:
-            scen._meta_set("namespace", namespace)
-        scen._meta_set("default_context", context or {})
-        return scen
+
+        cls = plugin.configure(name=name, namespace=namespace)(cls)
+        cls._meta_set("default_context", context or {})
+        return cls
+
     return wrapper
-
-
-class ConfigurePluginMeta(type):
-    """Finish Scenario plugin configuration.
-
-    After @scenario.configure() is performed to cls.method, method.im_class is
-    pointing to FuncPlugin class instead of original cls. There is no way to
-    fix this, mostly because im_class is add to method when it's called via
-    cls, e.g. cls.method. Decorator is different case so there is no
-    information about cls. method._plugin is pointing to FuncPlugin that has
-    FuncPlugin pointer to method. What should be done is to set properly
-    FuncPluing.func_ref to the cls.method
-
-    This metaclass iterates over all cls methods and fix func_ref of FuncPlugin
-    class so func_ref will be cls.method instead of FuncPlugin.method.
-
-    Additionally this metaclass sets plugin names if they were not set explicit
-    via configure(). Default name is <cls_name>.<method_name>
-
-    As well we need to keep cls_ref inside of _meta because Python3 loves us.
-
-    Viva black magic and dirty hacks.
-    """
-    def __init__(cls, name, bases, namespaces):
-
-        super(ConfigurePluginMeta, cls).__init__(name, bases, namespaces)
-
-        for name, field in namespaces.items():
-            if callable(field) and hasattr(field, "_plugin"):
-                field._plugin._meta_set("cls_ref", cls)
-
-                if not field._meta_get("name", None):
-                    field._set_name_and_namespace(
-                        "%s.%s" % (cls.__name__, field.__name__),
-                        field.get_namespace())
-
-                field._plugin.func_ref = getattr(
-                    cls, field._plugin.func_ref.__name__)
 
 
 @validation.add_default("args-spec")
 @plugin.base()
-@six.add_metaclass(ConfigurePluginMeta)
 class Scenario(plugin.Plugin,
                atomic.ActionTimerMixin,
                functional.FunctionalMixin,
@@ -203,6 +158,4 @@ class Scenario(plugin.Plugin,
 
     @classmethod
     def _get_doc(cls):
-        if cls.is_classbased:
-            return cls.run.__doc__
-        return cls.__doc__
+        return cls.run.__doc__

@@ -20,20 +20,23 @@ from rally.task import types
 from tests.unit import test
 
 
-class TestConvertPlugin(scenario.Scenario):
-    @types.convert(bar={"type": "test_bar"})
-    @scenario.configure()
-    def one_arg(self, bar):
+@types.convert(bar={"type": "test_bar"})
+@scenario.configure(name="TestConvertPlugin.one_arg")
+class TestConvertOneArgPlugin(scenario.Scenario):
+    def run(self, bar):
         """Dummy docstring.
 
         :param bar: dummy parameter
         """
         pass
 
-    @types.convert(bar={"type": "test_bar"},
-                   baz={"type": "test_baz"})
-    @scenario.configure()
-    def two_args(self, bar, baz):
+
+@types.convert(bar={"type": "test_bar"},
+               baz={"type": "test_baz"})
+@scenario.configure(name="TestConvertPlugin.two_args")
+class TestConvertTwoArgsPlugin(scenario.Scenario):
+
+    def run(self, bar, baz):
         """Dummy docstring.
 
         :param bar: dummy parameter

@@ -60,9 +60,7 @@ class ArgsValidator(validation.Validator):
         scenario = plugin_cls
         name = scenario.get_name()
         namespace = scenario.get_namespace()
-        if scenario.is_classbased:
-            # We need initialize scenario class to access instancemethods
-            scenario = scenario().run
+        scenario = scenario().run
         args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
 
         hint_msg = (" Use `rally plugin show --name %s --namespace %s` "

@@ -33,22 +33,27 @@ MODULE = "rally.task.validation."
 
 class ValidationUtilsTestCase(test.TestCase):
 
-    def test_old_validator_admin(self):
-        @plugin.from_func()
-        def scenario():
+    def setUp(self):
+        super(ValidationUtilsTestCase, self).setUp()
+
+        class Plugin(plugin.Plugin):
             pass
 
-        scenario._meta_init()
+        Plugin._meta_init()
+        self.Plugin = Plugin
+
+    def test_old_validator_admin(self):
 
         validator_func = mock.Mock()
         validator_func.return_value = None
 
         validator = validation.validator(validator_func)
 
-        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
-        self.assertEqual(1, len(scenario._meta_get("validators")))
+        self.assertEqual(self.Plugin,
+                         validator("a", "b", "c", d=1)(self.Plugin))
+        self.assertEqual(1, len(self.Plugin._meta_get("validators")))
 
-        vname, args, kwargs = scenario._meta_get("validators")[0]
+        vname, args, kwargs = self.Plugin._meta_get("validators")[0]
         validator_cls = common_validation.Validator.get(vname)
         validator_inst = validator_cls(*args, **kwargs)
         fake_admin = fakes.fake_credential()
@@ -64,21 +69,17 @@ class ValidationUtilsTestCase(test.TestCase):
                          deployment.get_credentials_for("openstack"))
 
     def test_old_validator_users(self):
-        @plugin.from_func()
-        def scenario():
-            pass
-
-        scenario._meta_init()
 
         validator_func = mock.Mock()
         validator_func.return_value = None
 
         validator = validation.validator(validator_func)
 
-        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
-        self.assertEqual(1, len(scenario._meta_get("validators")))
+        self.assertEqual(self.Plugin,
+                         validator("a", "b", "c", d=1)(self.Plugin))
+        self.assertEqual(1, len(self.Plugin._meta_get("validators")))
 
-        vname, args, kwargs = scenario._meta_get("validators")[0]
+        vname, args, kwargs = self.Plugin._meta_get("validators")[0]
         validator_cls = common_validation.Validator.get(vname)
         validator_inst = validator_cls(*args, **kwargs)
         fake_admin = fakes.fake_credential()
@@ -104,21 +105,17 @@ class ValidationUtilsTestCase(test.TestCase):
                              deployment.get_credentials_for("openstack"))
 
     def test_old_validator_users_error(self):
-        @plugin.from_func()
-        def scenario():
-            pass
-
-        scenario._meta_init()
 
         validator_func = mock.Mock()
         validator_func.return_value = common_validation.ValidationResult(False)
 
         validator = validation.validator(validator_func)
 
-        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
-        self.assertEqual(1, len(scenario._meta_get("validators")))
+        self.assertEqual(self.Plugin,
+                         validator("a", "b", "c", d=1)(self.Plugin))
+        self.assertEqual(1, len(self.Plugin._meta_get("validators")))
 
-        vname, args, kwargs = scenario._meta_get("validators")[0]
+        vname, args, kwargs = self.Plugin._meta_get("validators")[0]
         validator_cls = common_validation.Validator.get(vname)
         validator_inst = validator_cls(*args, **kwargs)
         fake_admin = fakes.fake_credential()
@@ -141,22 +138,18 @@ class ValidationUtilsTestCase(test.TestCase):
 
     @mock.patch("rally.task.validation.LOG.warning")
     def test_deprecated_validator(self, mock_log_warning):
-        @plugin.from_func()
-        def my_plugin():
-            pass
-        my_plugin._meta_init()
-        my_plugin._meta_set("name", "my_plugin")
 
         my_deprecated_validator = validation.deprecated_validator(
             "new_validator", "deprecated_validator", "0.10.0")
-        my_plugin = my_deprecated_validator("foo", bar="baz")(my_plugin)
+        self.Plugin = my_deprecated_validator("foo", bar="baz")(self.Plugin)
         self.assertEqual([("new_validator", ("foo",), {"bar": "baz"})],
-                         my_plugin._meta_get("validators"))
+                         self.Plugin._meta_get("validators"))
         mock_log_warning.assert_called_once_with(
             "Plugin '%s' uses validator 'rally.task.validation.%s' which is "
             "deprecated in favor of '%s' (it should be used via new decorator "
             "'rally.common.validation.add') in Rally v%s.",
-            "my_plugin", "deprecated_validator", "new_validator", "0.10.0")
+            self.Plugin.get_name(), "deprecated_validator", "new_validator",
+            "0.10.0")
 
 
 @ddt.ddt
@@ -164,14 +157,13 @@ class ValidatorsTestCase(test.TestCase):
 
     def _unwrap_validator(self, validator, *args, **kwargs):
 
-        @plugin.from_func()
-        def func():
+        class Plugin(plugin.Plugin):
             pass
 
-        func._meta_init()
-        validator(*args, **kwargs)(func)
+        Plugin._meta_init()
+        validator(*args, **kwargs)(Plugin)
 
-        fn = func._meta_get("validators")[0][1][0]
+        fn = Plugin._meta_get("validators")[0][1][0]
 
         def wrap_validator(config, admin_clients, clients):
             return (fn(config, admin_clients, clients, *args, **kwargs) or

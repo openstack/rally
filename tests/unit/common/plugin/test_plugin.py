@@ -20,30 +20,6 @@ from tests.unit import test
 
 class PluginModuleTestCase(test.TestCase):
 
-    def test_deprecated_func(self):
-
-        @plugin.deprecated("some", "0.0.1")
-        @plugin.configure(name="deprecated_func_plugin_test")
-        @plugin.from_func()
-        def func():
-            return 42
-
-        self.assertEqual("deprecated_func_plugin_test", func.get_name())
-        self.assertEqual({"reason": "some", "rally_version": "0.0.1"},
-                         func.is_deprecated())
-        self.assertEqual(42, func())
-
-    def test_configure(self):
-
-        @plugin.configure(name="configure_func_plugin_test")
-        @plugin.from_func()
-        def func(a):
-            return a
-
-        self.assertEqual("configure_func_plugin_test", func.get_name())
-        self.assertFalse(func.is_hidden())
-        self.assertEqual(42, func(42))
-
     def test_deprecated_cls(self):
 
         @plugin.deprecated("God why?", "0.0.2")
@@ -105,38 +81,6 @@ class PluginModuleTestCase(test.TestCase):
 
         self.assertRaises(exceptions.MultipleMatchesFound, plugin.Plugin.get,
                           name, name)
-
-    def test_from_func(self):
-
-        @plugin.from_func()
-        def func():
-            return 42
-
-        missing = [field for field in set(dir(plugin.Plugin)) - set(dir(func))
-                   if not field.startswith("__")]
-        self.assertEqual([], missing)
-        self.assertTrue(issubclass(func._plugin, plugin.Plugin))
-        self.assertEqual(42, func())
-
-    def test_from_func_with_basecls(self):
-
-        class FakeFuncBasePlugin(plugin.Plugin):
-            pass
-
-        @plugin.from_func(FakeFuncBasePlugin)
-        def func():
-            return 43
-
-        self.assertTrue(issubclass(func._plugin, FakeFuncBasePlugin))
-        self.assertEqual(43, func())
-
-    def test_from_func_with_bad_basecls(self):
-
-        class FakeFuncBasePlugin(object):
-            pass
-
-        self.assertRaises(TypeError,
-                          plugin.from_func, FakeFuncBasePlugin)
 
 
 @plugin.configure(name="test_base_plugin")

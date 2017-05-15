@@ -22,7 +22,6 @@ import rally
 from rally.common.plugin import plugin
 from rally.common import validation
 from rally.plugins.common import validators
-from rally.task import scenario
 from tests.unit import test
 
 
@@ -67,7 +66,7 @@ class ArgsValidatorTestCase(test.TestCase):
         @plugin.base()
         class DummyPluginBase(plugin.Plugin,
                               validation.ValidatablePluginMixin):
-            is_classbased = True
+            pass
 
         @validation.add(name="args-spec")
         @plugin.configure(name="dummy_plugin")
@@ -84,23 +83,6 @@ class ArgsValidatorTestCase(test.TestCase):
             self.assertIn(err_msg, result[0].msg)
 
         DummyPlugin.unregister()
-
-        class DummyPlugin2(DummyPluginBase):
-            @scenario.configure(name="dummy_plugin.func_based")
-            def func_based(self, a, b, c="spam"):
-                pass
-
-        result = scenario.Scenario.validate(
-            "dummy_plugin.func_based", None, config, None)
-
-        if err_msg is None:
-            self.assertEqual(0, len(result))
-        else:
-            self.assertEqual(1, len(result))
-            self.assertFalse(result[0].is_valid)
-            self.assertIn(err_msg, result[0].msg)
-
-        DummyPlugin2.func_based.unregister()
 
 
 @ddt.ddt
