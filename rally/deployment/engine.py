@@ -22,7 +22,6 @@ from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import consts
-from rally.deployment.serverprovider import provider
 from rally import exceptions
 
 
@@ -30,10 +29,6 @@ LOG = logging.getLogger(__name__)
 configure = plugin.configure
 
 
-# FIXME(boris-42): We should make decomposition of this class.
-#                  it should be called DeploymentManager
-#                  and it should just manages server providers and engines
-#                  engines class should have own base.
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class Engine(plugin.Plugin):
@@ -83,12 +78,6 @@ class Engine(plugin.Plugin):
             jsonschema.validate(config or self.config, self.CONFIG_SCHEMA)
 
     # FIXME(boris-42): Get rid of this method
-    def get_provider(self):
-        if "provider" in self.config:
-            return provider.ProviderFactory.get_provider(
-                self.config["provider"], self.deployment)
-
-    # FIXME(boris-42): Get rid of this method
     @staticmethod
     def get_engine(name, deployment):
         """Returns instance of a deploy engine with corresponding name."""
@@ -123,9 +112,6 @@ class Engine(plugin.Plugin):
     def make_cleanup(self):
         self.deployment.update_status(consts.DeployStatus.CLEANUP_STARTED)
         self.cleanup()
-        provider = self.get_provider()
-        if provider:
-            provider.destroy_servers()
         self.deployment.update_status(consts.DeployStatus.CLEANUP_FINISHED)
 
     def __enter__(self):
