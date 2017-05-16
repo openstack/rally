@@ -554,15 +554,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             nova_scenario.check_ip_address(floating_ip, must_exist=False)
             (fake_server))
 
-    def test__list_networks(self):
-        network_list = []
-        self.clients("nova").networks.list.return_value = network_list
-        nova_scenario = utils.NovaScenario(context=self.context)
-        return_network_list = nova_scenario._list_networks()
-        self.assertEqual(network_list, return_network_list)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_networks")
-
     def test__resize(self):
         nova_scenario = utils.NovaScenario(context=self.context)
         to_flavor = mock.Mock()
@@ -704,79 +695,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                           nova_scenario._migrate,
                           fake_server, skip_host_check=False)
 
-    def test__create_security_groups(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario.generate_random_name = mock.MagicMock()
-
-        security_group_count = 5
-
-        sec_groups = nova_scenario._create_security_groups(
-            security_group_count)
-
-        self.assertEqual(security_group_count, len(sec_groups))
-        self.assertEqual(security_group_count,
-                         nova_scenario.generate_random_name.call_count)
-        self.assertEqual(
-            security_group_count,
-            self.clients("nova").security_groups.create.call_count)
-        self._test_atomic_action_timer(
-            nova_scenario.atomic_actions(),
-            "nova.create_%s_security_groups" % security_group_count)
-
-    def test__create_rules_for_security_group(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-
-        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
-                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
-        rules_per_security_group = 10
-
-        nova_scenario._create_rules_for_security_group(
-            fake_secgroups, rules_per_security_group)
-
-        self.assertEqual(
-            len(fake_secgroups) * rules_per_security_group,
-            self.clients("nova").security_group_rules.create.call_count)
-        self._test_atomic_action_timer(
-            nova_scenario.atomic_actions(),
-            "nova.create_%s_rules" %
-            (rules_per_security_group * len(fake_secgroups)))
-
-    def test__update_security_groups(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
-                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
-        nova_scenario._update_security_groups(fake_secgroups)
-        self.assertEqual(
-            len(fake_secgroups),
-            self.clients("nova").security_groups.update.call_count)
-        self._test_atomic_action_timer(
-            nova_scenario.atomic_actions(),
-            "nova.update_%s_security_groups" % len(fake_secgroups))
-
-    def test__delete_security_groups(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-
-        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
-                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
-
-        nova_scenario._delete_security_groups(fake_secgroups)
-
-        self.assertSequenceEqual(
-            map(lambda x: mock.call(x.id), fake_secgroups),
-            self.clients("nova").security_groups.delete.call_args_list)
-        self._test_atomic_action_timer(
-            nova_scenario.atomic_actions(),
-            "nova.delete_%s_security_groups" % len(fake_secgroups))
-
-    def test__list_security_groups(self):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._list_security_groups()
-
-        self.clients("nova").security_groups.list.assert_called_once_with()
-
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_security_groups")
-
     def test__add_server_secgroups(self):
         server = mock.Mock()
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1")]
@@ -868,25 +786,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "fake_keypair")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.get_keypair")
-
-    def test__list_floating_ips_bulk(self):
-        floating_ips_bulk_list = ["foo_floating_ips_bulk"]
-        self.admin_clients("nova").floating_ips_bulk.list.return_value = (
-            floating_ips_bulk_list)
-        nova_scenario = utils.NovaScenario(context=self.context)
-        return_floating_ips_bulk_list = nova_scenario._list_floating_ips_bulk()
-        self.assertEqual(floating_ips_bulk_list, return_floating_ips_bulk_list)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_floating_ips_bulk")
-
-    def test__delete_floating_ips_bulk(self):
-        fake_cidr = "10.2.0.0/24"
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._delete_floating_ips_bulk(fake_cidr)
-        self.admin_clients(
-            "nova").floating_ips_bulk.delete.assert_called_once_with(fake_cidr)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.delete_floating_ips_bulk")
 
     def test__list_hypervisors(self):
         nova_scenario = utils.NovaScenario()

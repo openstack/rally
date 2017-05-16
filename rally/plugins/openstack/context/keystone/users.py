@@ -29,7 +29,6 @@ from rally.plugins.openstack import credential
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
-from rally.task import utils
 from rally.task import validation
 
 from rally.common import opts
@@ -124,32 +123,11 @@ class UserGenerator(context.Context):
             with logging.ExceptionLogger(
                     LOG, _("Unable to delete default security group")):
                 uclients = osclients.Clients(user["credential"])
-                sg = uclients.nova().security_groups.find(name="default")
-                clients.neutron().delete_security_group(sg.id)
-
-    def _remove_associated_networks(self):
-        """Delete associated Nova networks from tenants."""
-        # NOTE(rmk): Ugly hack to deal with the fact that Nova Network
-        # networks can only be disassociated in an admin context. Discussed
-        # with boris-42 before taking this approach [LP-Bug #1350517].
-        clients = osclients.Clients(self.credential)
-        if consts.Service.NOVA not in clients.services().values():
-            return
-
-        nova_admin = clients.nova()
-
-        if not utils.check_service_status(nova_admin, "nova-network"):
-            return
-
-        for net in nova_admin.networks.list():
-            network_tenant_id = nova_admin.networks.get(net).project_id
-            if network_tenant_id in self.context["tenants"]:
-                try:
-                    nova_admin.networks.disassociate(net)
-                except Exception as ex:
-                    LOG.warning("Failed disassociate net: %(tenant_id)s. "
-                                "Exception: %(ex)s" %
-                                {"tenant_id": network_tenant_id, "ex": ex})
+                security_groups = uclients.neutron().list_security_groups()
+                default = [sg for sg in security_groups["security_groups"]
+                           if sg["name"] == "default"]
+                if default:
+                    clients.neutron().delete_security_group(default[0]["id"])
 
     def _create_tenants(self):
         threads = self.config["resource_management_workers"]
@@ -237,8 +215,6 @@ class UserGenerator(context.Context):
 
     def _delete_tenants(self):
         threads = self.config["resource_management_workers"]
-
-        self._remove_associated_networks()
 
         def publish(queue):
             for tenant_id in self.context["tenants"]:

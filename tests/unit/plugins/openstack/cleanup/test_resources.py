@@ -105,14 +105,6 @@ class NovaServerTestCase(test.TestCase):
             server.raw_resource.id)
 
 
-class NovaFloatingIPsTestCase(test.TestCase):
-
-    def test_name(self):
-        fips = resources.NovaFloatingIPs()
-        fips.raw_resource = mock.MagicMock()
-        self.assertTrue(fips.name())
-
-
 class NovaFlavorsTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
@@ -143,41 +135,6 @@ class NovaServerGroupsTestCase(test.TestCase):
         mock_name_matches_object.side_effect = [False, True, True]
         mock_resource_manager__manager().list.return_value = server_groups
         self.assertEqual(server_groups, resources.NovaServerGroups().list())
-
-
-class NovaSecurityGroupTestCase(test.TestCase):
-
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    def test_list(self, mock_resource_manager__manager):
-        secgroups = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
-        secgroups[0].name = "a"
-        secgroups[1].name = "b"
-        secgroups[2].name = "default"
-
-        mock_resource_manager__manager().list.return_value = secgroups
-        self.assertSequenceEqual(secgroups[:2],
-                                 resources.NovaSecurityGroup().list())
-
-
-class NovaFloatingIpsBulkTestCase(test.TestCase):
-
-    def test_id(self):
-        ip_range = resources.NovaFloatingIpsBulk()
-        ip_range.raw_resource = mock.MagicMock()
-        self.assertEqual(ip_range.raw_resource.address, ip_range.id())
-
-    def test_name(self):
-        fips = resources.NovaFloatingIpsBulk()
-        fips.raw_resource = mock.MagicMock()
-        self.assertIsNone(fips.name())
-
-
-class NovaNetworksTestCase(test.TestCase):
-
-    def test_name(self):
-        network = resources.NovaNetworks()
-        network.raw_resource = mock.MagicMock()
-        self.assertEqual(network.raw_resource.label, network.name())
 
 
 class EC2MixinTestCase(test.TestCase):

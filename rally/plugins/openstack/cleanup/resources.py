@@ -167,25 +167,9 @@ class NovaServerGroups(base.ResourceManager):
     pass
 
 
-@base.resource("nova", "floating_ips", order=next(_nova_order))
-class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
-
-    def name(self):
-        return self.raw_resource.pool
-
-
 @base.resource("nova", "keypairs", order=next(_nova_order))
 class NovaKeypair(SynchronizedDeletion, base.ResourceManager):
     pass
-
-
-@base.resource("nova", "security_groups", order=next(_nova_order),
-               tenant_resource=True)
-class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
-
-    def list(self):
-        return filter(lambda x: x.name != "default",
-                      super(NovaSecurityGroup, self).list())
 
 
 @base.resource("nova", "quotas", order=next(_nova_order),
@@ -206,25 +190,6 @@ class NovaFlavors(base.ResourceManager):
             return True
 
         return False
-
-
-@base.resource("nova", "floating_ips_bulk", order=next(_nova_order),
-               admin_required=True)
-class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
-
-    def id(self):
-        return self.raw_resource.address
-
-    def name(self):
-        return None
-
-
-@base.resource("nova", "networks", order=next(_nova_order),
-               admin_required=True, tenant_resource=True)
-class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
-
-    def name(self):
-        return self.raw_resource.label
 
 
 @base.resource("nova", "aggregates", order=next(_nova_order),

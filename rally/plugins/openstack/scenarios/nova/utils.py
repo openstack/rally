@@ -613,11 +613,6 @@ class NovaScenario(scenario.OpenStackScenario):
             return not must_exist
         return _check_addr
 
-    @atomic.action_timer("nova.list_networks")
-    def _list_networks(self):
-        """Return user networks list."""
-        return self.clients("nova").networks.list()
-
     @atomic.action_timer("nova.resize")
     def _resize(self, server, flavor):
         server.resize(flavor)
@@ -774,63 +769,6 @@ class NovaScenario(scenario.OpenStackScenario):
                     "Migration complete but instance did not change host: %s" %
                     host_pre_migrate)
 
-    def _create_security_groups(self, security_group_count):
-        security_groups = []
-        with atomic.ActionTimer(self, "nova.create_%s_security_groups" %
-                                security_group_count):
-            for i in range(security_group_count):
-                sg_name = self.generate_random_name()
-                sg = self.clients("nova").security_groups.create(sg_name,
-                                                                 sg_name)
-                security_groups.append(sg)
-
-        return security_groups
-
-    def _create_rules_for_security_group(self, security_groups,
-                                         rules_per_security_group,
-                                         ip_protocol="tcp", cidr="0.0.0.0/0"):
-        action_name = ("nova.create_%s_rules" % (rules_per_security_group *
-                                                 len(security_groups)))
-        creation_status = True
-        with atomic.ActionTimer(self, action_name):
-            for i, security_group in enumerate(security_groups):
-                result = True
-                for j in range(rules_per_security_group):
-                    result = self.clients("nova").security_group_rules.create(
-                        security_group.id,
-                        from_port=(i * rules_per_security_group + j + 1),
-                        to_port=(i * rules_per_security_group + j + 1),
-                        ip_protocol=ip_protocol,
-                        cidr=cidr)
-                if not result:
-                    creation_status = False
-        return creation_status
-
-    def _update_security_groups(self, security_groups):
-        """Update a list of security groups
-
-        :param security_groups: list, security_groups that are to be updated
-        """
-        with atomic.ActionTimer(self, "nova.update_%s_security_groups" %
-                                len(security_groups)):
-            for sec_group in security_groups:
-                sg_new_name = self.generate_random_name()
-                sg_new_desc = self.generate_random_name()
-                self.clients("nova").security_groups.update(sec_group.id,
-                                                            sg_new_name,
-                                                            sg_new_desc)
-
-    def _delete_security_groups(self, security_group):
-        with atomic.ActionTimer(self, "nova.delete_%s_security_groups" %
-                                len(security_group)):
-            for sg in security_group:
-                self.clients("nova").security_groups.delete(sg.id)
-
-    def _list_security_groups(self):
-        """Return security groups list."""
-        with atomic.ActionTimer(self, "nova.list_security_groups"):
-            return self.clients("nova").security_groups.list()
-
     @atomic.optional_action_timer("nova.add_server_secgroups")
     def _add_server_secgroups(self, server, security_group,
                               atomic_action=False):
@@ -845,16 +783,6 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.clients("nova").servers.add_security_group(server,
                                                                security_group)
-
-    @atomic.action_timer("nova.list_floating_ips_bulk")
-    def _list_floating_ips_bulk(self):
-        """List all floating IPs."""
-        return self.admin_clients("nova").floating_ips_bulk.list()
-
-    @atomic.action_timer("nova.delete_floating_ips_bulk")
-    def _delete_floating_ips_bulk(self, ip_range):
-        """Delete floating IPs by range."""
-        return self.admin_clients("nova").floating_ips_bulk.delete(ip_range)
 
     @atomic.action_timer("nova.list_hypervisors")
     def _list_hypervisors(self, detailed=True):

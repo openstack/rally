@@ -164,16 +164,6 @@ class Nova(ResourceManager):
     def list_flavors(self):
         return self.client.flavors.list()
 
-    def list_floating_ip_pools(self):
-        return self.client.floating_ip_pools.list()
-
-    @skip_if_service(consts.Service.NEUTRON)
-    def list_floating_ips(self):
-        return self.client.floating_ips.list()
-
-    def list_floating_ips_bulk(self):
-        return self.client.floating_ips_bulk.list()
-
     def list_aggregates(self):
         return self.client.aggregates.list()
 
@@ -188,15 +178,6 @@ class Nova(ResourceManager):
 
     def list_keypairs(self):
         return self.client.keypairs.list()
-
-    @skip_if_service(consts.Service.NEUTRON)
-    def list_networks(self):
-        return self.client.networks.list()
-
-    @skip_if_service(consts.Service.NEUTRON)
-    def list_security_groups(self):
-        return self.client.security_groups.list(
-            search_opts={"all_tenants": True})
 
     def list_servers(self):
         return self.client.servers.list(

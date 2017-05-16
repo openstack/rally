@@ -36,13 +36,16 @@ def _prepare_open_secgroup(credential, secgroup_name):
 
     :returns: dict with security group details
     """
-    nova = osclients.Clients(credential).nova()
-
-    if secgroup_name not in [sg.name for sg in nova.security_groups.list()]:
+    neutron = osclients.Clients(credential).neutron()
+    security_groups = neutron.list_security_groups()["security_groups"]
+    rally_open = [sg for sg in security_groups if sg["name"] == secgroup_name]
+    if not rally_open:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"
-        rally_open = nova.security_groups.create(secgroup_name, descr)
-
-    rally_open = nova.security_groups.find(name=secgroup_name)
+        rally_open = neutron.create_security_groups(
+            {"security_group": {"name": secgroup_name,
+                                "description": descr}})
+    else:
+        rally_open = rally_open[0]
 
     rules_to_add = [
         {
@@ -71,15 +74,17 @@ def _prepare_open_secgroup(credential, secgroup_name):
 
     for new_rule in rules_to_add:
         if not any(rule_match(new_rule, existing_rule) for existing_rule
-                   in rally_open.rules):
-            nova.security_group_rules.create(
-                rally_open.id,
-                from_port=new_rule["from_port"],
-                to_port=new_rule["to_port"],
-                ip_protocol=new_rule["ip_protocol"],
-                cidr=new_rule["ip_range"]["cidr"])
+                   in rally_open["security_group_rules"]):
+            neutron.create_security_group_rules(
+                {"security_group_rule": {
+                    "security_group_id": rally_open["id"],
+                    "port_range_min": new_rule["from_port"],
+                    "port_range_max": new_rule["to_port"],
+                    "protocol": new_rule["ip_protocol"],
+                    "ethertype": new_rule["ip_range"]["cidr"]
+                }})
 
-    return rally_open.to_dict()
+    return rally_open
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -113,5 +118,4 @@ class AllowSSH(context.Context):
                     LOG, _("Unable to delete secgroup: %s.") %
                     user["secgroup"]["name"]):
                 clients = osclients.Clients(user["credential"])
-                clients.nova().security_groups.get(
-                    user["secgroup"]["id"]).delete()
+                clients.neutron().delete_security_group(user["secgroup"]["id"])

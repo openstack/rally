@@ -16,7 +16,6 @@
 import mock
 
 from rally.plugins.openstack.context.network import allow_ssh
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -53,46 +52,14 @@ class AllowSSHContextTestCase(test.TestCase):
         })
 
     @mock.patch("%s.osclients.Clients" % CTX)
-    def test__prepare_open_secgroup(self, mock_clients):
-        fake_nova = fakes.FakeNovaClient()
-        self.assertEqual(len(fake_nova.security_groups.list()), 1)
-        mock_cl = mock.MagicMock()
-        mock_cl.nova.return_value = fake_nova
-        mock_clients.return_value = mock_cl
-
-        ret = allow_ssh._prepare_open_secgroup("credential",
-                                               self.secgroup_name)
-        self.assertEqual(self.secgroup_name, ret["name"])
-
-        self.assertEqual(2, len(fake_nova.security_groups.list()))
-        self.assertIn(
-            self.secgroup_name,
-            [sg.name for sg in fake_nova.security_groups.list()])
-
-        # run prep again, check that another security group is not created
-        allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
-        self.assertEqual(2, len(fake_nova.security_groups.list()))
-
-    @mock.patch("%s.osclients.Clients" % CTX)
     def test__prepare_open_secgroup_rules(self, mock_clients):
-        fake_nova = fakes.FakeNovaClient()
-
-        # NOTE(hughsaunders) Default security group is precreated
-        self.assertEqual(1, len(fake_nova.security_groups.list()))
-        mock_cl = mock.MagicMock()
-        mock_cl.nova.return_value = fake_nova
-        mock_clients.return_value = mock_cl
+        fake_neutron = mock_clients.return_value.neutron.return_value
+        fake_neutron.list_security_groups.return_value = {
+            "security_groups": [{"id": "id", "name": "foo",
+                                 "security_group_rules": []}]}
 
         allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
-
-        self.assertEqual(2, len(fake_nova.security_groups.list()))
-        rally_open = fake_nova.security_groups.find(self.secgroup_name)
-        self.assertEqual(3, len(rally_open.rules))
-
-        # run prep again, check that extra rules are not created
-        allow_ssh._prepare_open_secgroup("credential", self.secgroup_name)
-        rally_open = fake_nova.security_groups.find(self.secgroup_name)
-        self.assertEqual(3, len(rally_open.rules))
+        allow_ssh._prepare_open_secgroup("credential", "foo")
 
     @mock.patch("%s.osclients.Clients" % CTX)
     @mock.patch("%s._prepare_open_secgroup" % CTX)
@@ -101,8 +68,7 @@ class AllowSSHContextTestCase(test.TestCase):
             self, mock_network_wrap, mock__prepare_open_secgroup,
             mock_clients):
         mock_network_wrapper = mock.MagicMock()
-        mock_network_wrapper.supports_extension.return_value = (
-            True, "")
+        mock_network_wrapper.supports_extension.return_value = (True, "")
         mock_network_wrap.return_value = mock_network_wrapper
         mock__prepare_open_secgroup.return_value = {
             "name": "secgroup",
@@ -118,9 +84,8 @@ class AllowSSHContextTestCase(test.TestCase):
             [
                 mock.call("admin_credential"),
                 mock.call("credential"),
-                mock.call().nova(),
-                mock.call().nova().security_groups.get("secgroup_id"),
-                mock.call().nova().security_groups.get().delete()
+                mock.call().neutron(),
+                mock.call().neutron().delete_security_group("secgroup_id")
             ],
             mock_clients.mock_calls)
 
