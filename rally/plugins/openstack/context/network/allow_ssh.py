@@ -41,30 +41,31 @@ def _prepare_open_secgroup(credential, secgroup_name):
     rally_open = [sg for sg in security_groups if sg["name"] == secgroup_name]
     if not rally_open:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"
-        rally_open = neutron.create_security_groups(
+        rally_open = neutron.create_security_group(
             {"security_group": {"name": secgroup_name,
-                                "description": descr}})
+                                "description": descr}})["security_group"]
     else:
         rally_open = rally_open[0]
 
     rules_to_add = [
         {
-            "ip_protocol": "tcp",
-            "to_port": 65535,
-            "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "protocol": "tcp",
+            "port_range_max": 65535,
+            "port_range_min": 1,
+            "remote_ip_prefix": "0.0.0.0/0",
+            "direction": "ingress"
         },
         {
-            "ip_protocol": "udp",
-            "to_port": 65535,
-            "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "protocol": "udp",
+            "port_range_max": 65535,
+            "port_range_min": 1,
+            "remote_ip_prefix": "0.0.0.0/0",
+            "direction": "ingress"
         },
         {
-            "ip_protocol": "icmp",
-            "to_port": -1,
-            "from_port": -1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "protocol": "icmp",
+            "remote_ip_prefix": "0.0.0.0/0",
+            "direction": "ingress"
         }
     ]
 
@@ -74,15 +75,10 @@ def _prepare_open_secgroup(credential, secgroup_name):
 
     for new_rule in rules_to_add:
         if not any(rule_match(new_rule, existing_rule) for existing_rule
-                   in rally_open["security_group_rules"]):
-            neutron.create_security_group_rules(
-                {"security_group_rule": {
-                    "security_group_id": rally_open["id"],
-                    "port_range_min": new_rule["from_port"],
-                    "port_range_max": new_rule["to_port"],
-                    "protocol": new_rule["ip_protocol"],
-                    "ethertype": new_rule["ip_range"]["cidr"]
-                }})
+                   in rally_open.get("security_group_rules", [])):
+            new_rule["security_group_id"] = rally_open["id"]
+            neutron.create_security_group_rule(
+                {"security_group_rule": new_rule})
 
     return rally_open
 
