@@ -17,14 +17,16 @@ import random
 
 from oslo_config import cfg
 
+from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
+from rally.plugins.openstack.services.image import image as image_service
 from rally.task import atomic
 from rally.task import utils
 
 CONF = cfg.CONF
+LOG = logging.getLogger(__file__)
 
 
 class NovaScenario(scenario.OpenStackScenario):
@@ -438,17 +440,21 @@ class NovaScenario(scenario.OpenStackScenario):
 
         :param image: Image object
         """
-        self.clients("glance").images.delete(image.id)
-        wrapper = glance_wrapper.wrap(self._clients.glance, self)
+        LOG.warning("Method '_delete_image' of NovaScenario class is "
+                    "deprecated since Rally 0.10.0. Use GlanceUtils instead.")
+        glance = image_service.Image(self._clients,
+                                     atomic_inst=self.atomic_actions())
+        glance.delete_image(image.id)
         check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
-        utils.wait_for_status(
-            image,
-            ready_statuses=["deleted", "pending_delete"],
-            check_deletion=True,
-            update_resource=wrapper.get_image,
-            timeout=CONF.benchmark.nova_server_image_delete_timeout,
-            check_interval=check_interval
-        )
+        with atomic.ActionTimer(self, "glance.wait_for_delete"):
+            utils.wait_for_status(
+                image,
+                ready_statuses=["deleted", "pending_delete"],
+                check_deletion=True,
+                update_resource=glance.get_image,
+                timeout=CONF.benchmark.nova_server_image_delete_timeout,
+                check_interval=check_interval
+            )
 
     @atomic.action_timer("nova.create_image")
     def _create_image(self, server):
@@ -463,15 +469,18 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         image_uuid = self.clients("nova").servers.create_image(server,
                                                                server.name)
-        image = self.clients("nova").images.get(image_uuid)
+        glance = image_service.Image(self._clients,
+                                     atomic_inst=self.atomic_actions())
+        image = glance.get_image(image_uuid)
         check_interval = CONF.benchmark.nova_server_image_create_poll_interval
-        image = utils.wait_for_status(
-            image,
-            ready_statuses=["ACTIVE"],
-            update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_image_create_timeout,
-            check_interval=check_interval
-        )
+        with atomic.ActionTimer(self, "glance.wait_for_image"):
+            image = utils.wait_for_status(
+                image,
+                ready_statuses=["ACTIVE"],
+                update_resource=glance.get_image,
+                timeout=CONF.benchmark.nova_server_image_create_timeout,
+                check_interval=check_interval
+            )
         return image
 
     @atomic.action_timer("nova.list_images")
@@ -484,7 +493,11 @@ class NovaScenario(scenario.OpenStackScenario):
 
         :returns: Image list
         """
-        return self.clients("nova").images.list(detailed, **kwargs)
+        LOG.warning("Method '_delete_image' of NovaScenario class is "
+                    "deprecated since Rally 0.10.0. Use GlanceUtils instead.")
+        glance = image_service.Image(self._clients,
+                                     atomic_inst=self.atomic_actions())
+        return glance.list_images()
 
     @atomic.action_timer("nova.get_keypair")
     def _get_keypair(self, keypair):
