@@ -89,7 +89,13 @@ def preprocess(name, context, args):
     """
     preprocessors = scenario.Scenario.get(name)._meta_get("preprocessors",
                                                           default={})
-    clients = osclients.Clients(context["admin"]["credential"])
+
+    clients = None
+    if context.get("admin"):
+        clients = osclients.Clients(context["admin"]["credential"])
+    elif context.get("users"):
+        clients = osclients.Clients(context["users"][0]["credential"])
+
     processed_args = copy.deepcopy(args)
 
     for src, preprocessor in preprocessors.items():

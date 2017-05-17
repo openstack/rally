@@ -118,11 +118,11 @@ class OpenStackScenario(scenario.Scenario):
         if context is not None:
             cred = None
             profiler_hmac_key = None
-            if "admin" in context:
+            if context.get("admin"):
                 cred = context["admin"]["credential"]
                 if cred.profiler_hmac_key is not None:
                     profiler_hmac_key = cred.profiler_hmac_key
-            if "user" in context:
+            if context.get("user"):
                 cred = context["user"]["credential"]
                 if cred.profiler_hmac_key is not None:
                     profiler_hmac_key = cred.profiler_hmac_key

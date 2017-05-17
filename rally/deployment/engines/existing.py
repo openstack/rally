@@ -154,10 +154,18 @@ class ExistingCloud(engine.Engine):
             "https_cacert": {"type": "string"},
             "profiler_hmac_key": {"type": ["string", "null"]},
             "admin": USER_SCHEMA,
-            "users": {"type": "array", "items": USER_SCHEMA},
+            "users": {"type": "array", "items": USER_SCHEMA, "minItems": 1},
             "extra": {"type": "object", "additionalProperties": True}
         },
-        "required": ["type", "auth_url", "admin"],
+        "anyOf": [
+            {"description": "The case when the admin is specified and the "
+                            "users can be created via 'users' context or "
+                            "'existing_users' will be used.",
+             "required": ["type", "auth_url", "admin"]},
+            {"description": "The case when the only existing users are "
+                            "specified.",
+             "required": ["type", "auth_url", "users"]}
+        ],
         "additionalProperties": False
     }
 

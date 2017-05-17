@@ -142,7 +142,7 @@ class OpenStackCredentialBuilder(credential.CredentialBuilder):
         "type": "object",
         "properties": {
             "admin": USER_SCHEMA,
-            "users": {"type": "array", "items": USER_SCHEMA},
+            "users": {"type": "array", "items": USER_SCHEMA, "minItems": 1},
             "auth_url": {"type": "string"},
             "region_name": {"type": "string"},
             # NOTE(andreykurilin): it looks like we do not use endpoint
@@ -157,7 +157,15 @@ class OpenStackCredentialBuilder(credential.CredentialBuilder):
             "https_cacert": {"type": "string"},
             "profiler_hmac_key": {"type": ["string", "null"]}
         },
-        "required": ["auth_url", "admin"],
+        "anyOf": [
+            {"description": "The case when the admin is specified and the "
+                            "users can be created via 'users' context or "
+                            "'existing_users' will be used.",
+             "required": ["auth_url", "admin"]},
+            {"description": "The case when the only existing users are "
+                            "specified.",
+             "required": ["auth_url", "users"]}
+        ],
         "additionalProperties": False
     }
 
@@ -185,9 +193,11 @@ class OpenStackCredentialBuilder(credential.CredentialBuilder):
         users = [self._create_credential(self.config, user, permissions.USER)
                  for user in self.config.get("users", [])]
 
-        admin = self._create_credential(self.config,
-                                        self.config.get("admin"),
-                                        permissions.ADMIN)
+        admin = None
+        if self.config.get("admin"):
+            admin = self._create_credential(self.config,
+                                            self.config.get("admin"),
+                                            permissions.ADMIN)
 
         return {"admin": admin, "users": users}
 
