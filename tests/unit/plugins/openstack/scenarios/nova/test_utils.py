@@ -231,18 +231,19 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unshelve_server")
 
-    def test__create_image(self):
-        self.clients("nova").images.get.return_value = self.image
+    @mock.patch("rally.plugins.openstack.scenarios.nova.utils.image_service")
+    def test__create_image(self, mock_image_service):
+        glance = mock_image_service.Image.return_value
+        glance.get_image.return_value = self.image
         nova_scenario = utils.NovaScenario(context=self.context)
         return_image = nova_scenario._create_image(self.server)
         self.mock_wait_for_status.mock.assert_called_once_with(
             self.image,
             ready_statuses=["ACTIVE"],
-            update_resource=self.mock_get_from_manager.mock.return_value,
+            update_resource=glance.get_image,
             check_interval=CONF.benchmark.
             nova_server_image_create_poll_interval,
             timeout=CONF.benchmark.nova_server_image_create_timeout)
-        self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for_status.mock.return_value,
                          return_image)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -408,18 +409,18 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__force_delete_servers(self):
         self._test_delete_servers(force=True)
 
-    @mock.patch("rally.plugins.openstack.wrappers.glance.wrap")
-    def test__delete_image(self, mock_wrap):
-        nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._clients = mock.Mock()
+    @mock.patch("rally.plugins.openstack.scenarios.nova.utils.image_service")
+    def test__delete_image(self, mock_image_service):
+        glance = mock_image_service.Image.return_value
+        nova_scenario = utils.NovaScenario(context=self.context,
+                                           clients=mock.Mock())
         nova_scenario._delete_image(self.image)
-        self.clients("glance").images.delete.assert_called_once_with(
-            self.image.id)
+        glance.delete_image.assert_called_once_with(self.image.id)
         self.mock_wait_for_status.mock.assert_called_once_with(
             self.image,
             ready_statuses=["deleted", "pending_delete"],
             check_deletion=True,
-            update_resource=mock_wrap.return_value.get_image,
+            update_resource=glance.get_image,
             check_interval=CONF.benchmark.
             nova_server_image_delete_poll_interval,
             timeout=CONF.benchmark.nova_server_image_delete_timeout)
@@ -851,15 +852,12 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_interfaces")
 
-    def test__list_images(self):
-        nova_scenario = utils.NovaScenario()
-        result = nova_scenario._list_images(detailed=False, fakearg="fakearg")
-        self.assertEqual(self.clients("nova").images.list.return_value,
-                         result)
-        self.clients("nova").images.list.assert_called_once_with(
-            False, fakearg="fakearg")
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_images")
+    @mock.patch("rally.plugins.openstack.scenarios.nova.utils.image_service")
+    def test__list_images(self, mock_image_service):
+        result = utils.NovaScenario(clients=mock.Mock())._list_images()
+        glance = mock_image_service.Image.return_value
+        self.assertEqual(glance.list_images.return_value, result)
+        glance.list_images.assert_called_once_with()
 
     def test__lock_server(self):
         server = mock.Mock()
