@@ -14,6 +14,7 @@
 #    under the License.
 
 import imp
+import importlib
 import os
 import pkg_resources
 import pkgutil
@@ -72,23 +73,21 @@ def import_modules_by_entry_point():
                 if hasattr(m, "__path__"):
                     path = pkgutil.extend_path(m.__path__, m.__name__)
                 else:
-                    path = m.__file__
+                    path = [m.__file__]
                 prefix = m.__name__ + "."
                 for loader, name, _is_pkg in pkgutil.walk_packages(
                         path, prefix=prefix):
-                    mod = loader.find_module(name).load_module(name)
-                    sys.modules[name] = mod
+                    sys.modules[name] = importlib.import_module(name)
             except Exception as e:
-                LOG.warning(
-                    "\t Failed to load plugins from module '%(module)s' "
-                    "(package: '%(package)s'): '%(error)s')" % {
-                        "module": ep.module_name,
+                msg = ("\t Failed to load plugins from module '%(module)s' "
+                       "(package: '%(package)s')" %
+                       {"module": ep.module_name,
                         "package": "%s %s" % (ep.dist.project_name,
-                                              ep.dist.version),
-                        "error": six.text_type(e)
-                    })
+                                              ep.dist.version)})
                 if logging.is_debug():
-                    LOG.exception(e)
+                    LOG.exception(msg)
+                else:
+                    LOG.warning(msg + (": %s" % six.text_type(e)))
 
 
 def load_plugins(dir_or_file):
