@@ -400,3 +400,14 @@ class BlockStorage(service.UnifiedService):
                             must be deleted
         """
         self._impl.delete_encryption_type(volume_type)
+
+    @service.should_be_overridden
+    def update_encryption_type(self, volume_type, specs):
+        """Update the encryption type information for the specified volume type.
+
+        :param volume_type: the volume type whose encryption type information
+                            will be updated
+        :param specs: the encryption type specifications to update
+        :return: an instance of :class: VolumeEncryptionType
+        """
+        return self._impl.update_encryption_type(volume_type, specs=specs)

@@ -224,3 +224,36 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
         mock_service.set_volume_type_keys.assert_called_once_with(
             mock_service.create_volume_type.return_value,
             metadata=volume_type_key)
+
+    def test_create_and_update_encryption_type(self):
+        mock_service = self.mock_cinder.return_value
+        context = self._get_context()
+        context.update({
+            "volume_types": [{"id": "fake_id",
+                              "name": "fake_name"}],
+            "iteration": 1})
+        scenario = volume_types.CreateAndUpdateEncryptionType(
+            context)
+
+        create_specs = {
+            "provider": "create_prov",
+            "cipher": "create_cip",
+            "key_size": "create_ks",
+            "control_location": "create_cl"
+        }
+        update_specs = {
+            "provider": "update_prov",
+            "cipher": "update_cip",
+            "key_size": "update_ks",
+            "control_location": "update_cl"
+        }
+        scenario.run(create_provider="create_prov", create_cipher="create_cip",
+                     create_key_size="create_ks",
+                     create_control_location="create_cl",
+                     update_provider="update_prov", update_cipher="update_cip",
+                     update_key_size="update_ks",
+                     update_control_location="update_cl")
+        mock_service.create_encryption_type.assert_called_once_with(
+            "fake_id", specs=create_specs)
+        mock_service.update_encryption_type.assert_called_once_with(
+            "fake_id", specs=update_specs)
