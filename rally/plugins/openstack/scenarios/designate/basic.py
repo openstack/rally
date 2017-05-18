@@ -25,7 +25,8 @@ from rally.task import validation
 """Basic scenarios for Designate."""
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_domains")
@@ -49,7 +50,8 @@ class CreateAndListDomains(utils.DesignateScenario):
         self.assertIn(domain, list_domains)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.list_domains")
@@ -68,7 +70,8 @@ class ListDomains(utils.DesignateScenario):
         self._list_domains()
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_domain")
@@ -84,7 +87,8 @@ class CreateAndDeleteDomain(utils.DesignateScenario):
         self._delete_domain(domain["id"])
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_update_domain")
@@ -100,7 +104,8 @@ class CreateAndUpdateDomain(utils.DesignateScenario):
         self._update_domain(domain)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_records")
@@ -131,7 +136,8 @@ class CreateAndDeleteRecords(utils.DesignateScenario):
                     domain["id"], record["id"], atomic_action=False)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.list_records")
@@ -153,7 +159,8 @@ class ListRecords(utils.DesignateScenario):
         self._list_records(domain_id)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_records")
@@ -183,7 +190,8 @@ class CreateAndListRecords(utils.DesignateScenario):
         self.assertEqual(records, list_records)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_servers")
@@ -204,7 +212,8 @@ class CreateAndListServers(utils.DesignateScenario):
         self.assertIn(server, list_servers)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_server")
@@ -220,7 +229,8 @@ class CreateAndDeleteServer(utils.DesignateScenario):
         self._delete_server(server["id"])
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="DesignateBasic.list_servers")
 class ListServers(utils.DesignateScenario):
@@ -235,7 +245,8 @@ class ListServers(utils.DesignateScenario):
 
 
 # NOTE: API V2
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_zones")
@@ -258,7 +269,8 @@ class CreateAndListZones(utils.DesignateScenario):
         self.assertIn(zone, list_zones)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.list_zones")
@@ -274,7 +286,8 @@ class ListZones(utils.DesignateScenario):
         self._list_zones()
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_zone")
@@ -290,7 +303,8 @@ class CreateAndDeleteZone(utils.DesignateScenario):
         self._delete_zone(zone["id"])
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.list_recordsets")
@@ -308,7 +322,8 @@ class ListRecordsets(utils.DesignateScenario):
         self._list_recordsets(zone_id)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("zones")
 @scenario.configure(context={"cleanup": ["designate"]},
@@ -340,7 +355,8 @@ class CreateAndDeleteRecordsets(utils.DesignateScenario):
                     zone["id"], recordset["id"], atomic_action=False)
 
 
-@validation.required_services(consts.Service.DESIGNATE)
+@validation.add("required_services",
+                services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("zones")
 @scenario.configure(context={"cleanup": ["designate"]},

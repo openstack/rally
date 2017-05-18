@@ -19,6 +19,8 @@ import mock
 
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
+
+from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import validators
 from tests.unit import test
@@ -40,7 +42,8 @@ config = dict(args={"image": {"id": "fake_id",
                                "name": "test"},
                     "foo_image": {"id": "fake_image_id"}
                     },
-              context={"images": {"image_name": "foo_image"}}
+              context={"images": {"image_name": "foo_image"},
+                       "api_versions": mock.MagicMock()}
               )
 
 
@@ -507,3 +510,77 @@ class RequiredClientsValidatorTestCase(test.TestCase):
         self.assertTrue(result)
         self.assertEqual("Client for keystone is not installed. To install it "
                          "run `pip install python-keystoneclient`", result.msg)
+
+
+class RequiredServicesValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredServicesValidatorTestCase, self).setUp()
+        self.validator = validators.RequiredServicesValidator([
+            consts.Service.KEYSTONE,
+            consts.Service.NOVA,
+            consts.Service.NOVA_NET])
+        self.config = config
+        self.credentials = credentials
+
+    def test_validator(self):
+
+        self.config["context"]["api_versions"].get = mock.Mock(
+            return_value={consts.Service.KEYSTONE: "service_type"})
+
+        clients = self.credentials["openstack"]["admin"].clients()
+
+        clients.services().values.return_value = [
+            consts.Service.KEYSTONE, consts.Service.NOVA,
+            consts.Service.NOVA_NET]
+        fake_service = mock.Mock(binary="nova-network", status="enabled")
+        clients.nova.services.list.return_value = [fake_service]
+        result = self.validator.validate(self.config, self.credentials,
+                                         None, None)
+        self.assertIsNone(result)
+
+        fake_service = mock.Mock(binary="keystone", status="enabled")
+        clients.nova.services.list.return_value = [fake_service]
+        result = self.validator.validate(self.config, self.credentials,
+                                         None, None)
+        self.assertIsNone(result)
+
+        fake_service = mock.Mock(binary="nova-network", status="disabled")
+        clients.nova.services.list.return_value = [fake_service]
+        result = self.validator.validate(self.config, self.credentials,
+                                         None, None)
+        self.assertIsNone(result)
+
+        validator = validators.RequiredServicesValidator([
+            consts.Service.NOVA])
+        clients.services().values.return_value = [
+            consts.Service.KEYSTONE]
+
+        result = validator.validate(self.config, self.credentials, None, None)
+        self.assertTrue(result)
+        expected_msg = ("'{0}' service is not available. Hint: If '{0}'"
+                        " service has non-default service_type, try to setup"
+                        " it via 'api_versions' context.").format(
+            consts.Service.NOVA)
+        self.assertEqual(expected_msg, result.msg)
+
+    def test_validator_wrong_service(self):
+
+        self.config["context"]["api_versions"].get = mock.Mock(
+            return_value={consts.Service.KEYSTONE: "service_type",
+                          consts.Service.NOVA: "service_name"})
+
+        clients = self.credentials["openstack"]["admin"].clients()
+        clients.services().values.return_value = [
+            consts.Service.KEYSTONE, consts.Service.NOVA]
+
+        validator = validators.RequiredServicesValidator([
+            consts.Service.KEYSTONE,
+            consts.Service.NOVA, "lol"])
+
+        result = validator.validate({}, self.credentials, None, None)
+        self.assertTrue(result)
+        expected_msg = ("'{0}' service is not available. Hint: If '{0}'"
+                        " service has non-default service_type, try to setup"
+                        " it via 'api_versions' context.").format("lol")
+        self.assertEqual(expected_msg, result.msg)

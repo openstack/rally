@@ -21,6 +21,7 @@ from rally.task import types
 
 from rally.common import logging
 from rally.common import validation
+from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
@@ -341,3 +342,52 @@ class RequiredClientsValidator(validation.Validator):
                 result = self._check_component(clients)
         if result:
             return self.fail(result.msg)
+
+
+@validation.add("required_platform", platform="openstack", admin=True)
+@validation.configure(name="required_services", namespace="openstack")
+class RequiredServicesValidator(validation.Validator):
+
+    def __init__(self, services, *args):
+        """Validator checks if specified OpenStack services are available.
+
+        :param services: list with names of required services
+        """
+
+        super(RequiredServicesValidator, self).__init__()
+        if isinstance(services, (list, tuple)):
+            # services argument is a list, so it is a new way of validators
+            #  usage, args in this case should not be provided
+            self.services = services
+            if args:
+                LOG.warning("Positional argument is not what "
+                            "'required_services' decorator expects. "
+                            "Use `services` argument instead")
+        else:
+            # it is old way validator
+            self.services = [services]
+            self.services.extend(args)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        clients = credentials["openstack"]["admin"].clients()
+        available_services = list(clients.services().values())
+        if consts.Service.NOVA_NET in self.services:
+            LOG.warning("We are sorry, but Nova-network was deprecated for "
+                        "a long time and latest novaclient doesn't support "
+                        "it, so we too.")
+
+        for service in self.services:
+            # NOTE(andreykurilin): validator should ignore services configured
+            # via context(a proper validation should be in context)
+            service_config = config.get("context", {}).get(
+                "api_versions", {}).get(service, {})
+
+            if (service not in available_services and
+                    not ("service_type" in service_config or
+                         "service_name" in service_config)):
+                return self.fail(
+                    ("'{0}' service is not available. Hint: If '{0}' "
+                     "service has non-default service_type, try to"
+                     " setup it via 'api_versions'"
+                     " context.").format(service))

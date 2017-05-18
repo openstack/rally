@@ -23,7 +23,7 @@ from rally.task import validation
 """Scenarios for Nova hypervisors."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_hypervisors")
 class ListHypervisors(utils.NovaScenario):
@@ -39,7 +39,7 @@ class ListHypervisors(utils.NovaScenario):
         self._list_hypervisors(detailed)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_get_hypervisors")
 class ListAndGetHypervisors(utils.NovaScenario):
@@ -62,7 +62,7 @@ class ListAndGetHypervisors(utils.NovaScenario):
                 self._get_hypervisor(hypervisor, atomic_action=False)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.statistics_hypervisors")
 class StatisticsHypervisors(utils.NovaScenario):
@@ -75,7 +75,7 @@ class StatisticsHypervisors(utils.NovaScenario):
         self._statistics_hypervisors()
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors")
 class ListAndGetUptimeHypervisors(utils.NovaScenario):
@@ -97,7 +97,7 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
                 self._uptime_hypervisor(hypervisor, atomic_action=False)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHypervisors.list_and_search_hypervisors")
 class ListAndSearchHypervisors(utils.NovaScenario):

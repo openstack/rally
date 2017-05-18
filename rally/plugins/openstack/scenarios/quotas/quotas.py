@@ -21,7 +21,7 @@ from rally.task import validation
 """Scenarios for quotas."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
@@ -38,7 +38,7 @@ class NovaUpdate(utils.QuotasScenario):
                             max_quota)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
@@ -56,7 +56,7 @@ class NovaUpdateAndDelete(utils.QuotasScenario):
         self._delete_quotas("nova", self.context["tenant"]["id"])
 
 
-@validation.required_services(consts.Service.CINDER)
+@validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
@@ -73,7 +73,7 @@ class CinderUpdate(utils.QuotasScenario):
                             max_quota)
 
 
-@validation.required_services(consts.Service.CINDER)
+@validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
@@ -89,7 +89,7 @@ class CinderGet(utils.QuotasScenario):
         self._get_quotas("cinder", self.context["tenant"]["id"])
 
 
-@validation.required_services(consts.Service.CINDER)
+@validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
@@ -107,7 +107,8 @@ class CinderUpdateAndDelete(utils.QuotasScenario):
         self._delete_quotas("cinder", self.context["tenant"]["id"])
 
 
-@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_services",
+                services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["neutron.quota"]},
@@ -125,7 +126,7 @@ class NeutronUpdate(utils.QuotasScenario):
                             max_quota, quota_update_fn)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["nova.quotas"]},

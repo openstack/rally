@@ -22,7 +22,7 @@ from rally.task import validation
 """Scenarios for Nova availability-zones."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAvailabilityZones.list_availability_zones")
 class ListAvailabilityZones(utils.NovaScenario):

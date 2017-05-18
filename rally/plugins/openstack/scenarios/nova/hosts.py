@@ -22,7 +22,7 @@ from rally.task import validation
 """Scenarios for Nova hosts."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHosts.list_hosts")
 class ListHosts(utils.NovaScenario):
@@ -39,7 +39,7 @@ class ListHosts(utils.NovaScenario):
         self._list_hosts(zone)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaHosts.list_and_get_hosts")
 class ListAndGetHosts(utils.NovaScenario):

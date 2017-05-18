@@ -26,8 +26,8 @@ from rally.task import validation
 # there are no other way except emit suitable notification from one of
 # services, for example create new user in keystone.
 
-@validation.required_services(consts.Service.CEILOMETER,
-                              consts.Service.KEYSTONE)
+@validation.add("required_services", services=[consts.Service.CEILOMETER,
+                                               consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
@@ -49,8 +49,8 @@ class CreateUserAndListTraits(cutils.CeilometerScenario,
                                 trait_name=trait_name)
 
 
-@validation.required_services(consts.Service.CEILOMETER,
-                              consts.Service.KEYSTONE)
+@validation.add("required_services", services=[consts.Service.CEILOMETER,
+                                               consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},

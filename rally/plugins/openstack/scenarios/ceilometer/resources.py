@@ -21,7 +21,8 @@ from rally.task import validation
 """Scenarios for Ceilometer Resource API."""
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.required_contexts("ceilometer")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerResource.list_resources")
@@ -54,7 +55,8 @@ class ListResources(ceiloutils.CeilometerScenario):
             scenario.run(limit=limit)
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerResource.get_tenant_resources")
 class GetTenantResources(ceiloutils.CeilometerScenario):
@@ -73,7 +75,8 @@ class GetTenantResources(ceiloutils.CeilometerScenario):
             self._get_resource(res_id)
 
 
-@validation.required_services(consts.Service.CEILOMETER)
+@validation.add("required_services",
+                services=[consts.Service.CEILOMETER])
 @validation.required_contexts("ceilometer")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerResource.list_matched_resources")

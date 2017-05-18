@@ -24,7 +24,7 @@ from rally.task import validation
 """Scenarios for Nova aggregates."""
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(name="NovaAggregates.list_aggregates")
 class ListAggregates(utils.NovaScenario):
@@ -37,7 +37,7 @@ class ListAggregates(utils.NovaScenario):
         self._list_aggregates()
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaAggregates.create_and_list_aggregates")
@@ -59,7 +59,7 @@ class CreateAndListAggregates(utils.NovaScenario):
         self.assertIn(aggregate, all_aggregates, err_msg=msg)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaAggregates.create_and_delete_aggregate")
@@ -76,7 +76,7 @@ class CreateAndDeleteAggregate(utils.NovaScenario):
         self._delete_aggregate(aggregate)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaAggregates.create_and_update_aggregate")
@@ -94,7 +94,7 @@ class CreateAndUpdateAggregate(utils.NovaScenario):
         self._update_aggregate(aggregate)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaAggregates.create_aggregate_add_and_remove_host")
@@ -115,7 +115,7 @@ class CreateAggregateAddAndRemoveHost(utils.NovaScenario):
         self._aggregate_remove_host(aggregate, host_name)
 
 
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
                     name="NovaAggregates.create_and_get_aggregate_details")
@@ -133,7 +133,7 @@ class CreateAndGetAggregateDetails(utils.NovaScenario):
 
 
 @types.convert(image={"type": "glance_image"})
-@validation.required_services(consts.Service.NOVA)
+@validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["nova"], "cleanup": ["nova"]},

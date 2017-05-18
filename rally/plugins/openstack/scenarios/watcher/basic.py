@@ -23,7 +23,8 @@ from rally.task import validation
 
 @types.convert(strategy={"type": "watcher_strategy"},
                goal={"type": "watcher_goal"})
-@validation.required_services(consts.Service.WATCHER)
+@validation.add("required_services",
+                services=[consts.Service.WATCHER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
                     name="Watcher.create_audit_template_and_delete")
@@ -44,7 +45,8 @@ class CreateAuditTemplateAndDelete(utils.WatcherScenario):
         self._delete_audit_template(audit_template.uuid)
 
 
-@validation.required_services(consts.Service.WATCHER)
+@validation.add("required_services",
+                services=[consts.Service.WATCHER])
 @scenario.configure(name="Watcher.list_audit_templates")
 class ListAuditTemplates(utils.WatcherScenario):
 
@@ -78,7 +80,8 @@ class ListAuditTemplates(utils.WatcherScenario):
                                    sort_dir=sort_dir, detail=detail)
 
 
-@validation.required_services(consts.Service.WATCHER)
+@validation.add("required_services",
+                services=[consts.Service.WATCHER])
 @validation.required_contexts("audit_templates")
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
                     name="Watcher.create_audit_and_delete")

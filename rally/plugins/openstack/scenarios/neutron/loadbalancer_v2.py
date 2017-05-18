@@ -20,7 +20,8 @@ from rally.task import validation
 
 
 @validation.add("required_neutron_extensions", extensions=["lbaasv2"])
-@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_services",
+                services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.required_contexts("network")
 @scenario.configure(context={"cleanup": ["neutron"]},
