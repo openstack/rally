@@ -175,3 +175,28 @@ class NumberValidatorTestCase(test.TestCase):
         result = validator.validate({}, {"args": {validator.param_name: 3}},
                                     None, None)
         self.assertIsNone(result)
+
+
+class EnumValidatorTestCase(test.TestCase):
+
+    @staticmethod
+    def get_validator(values, missed=False):
+        validator_cls = validation.Validator.get("enum")
+        return validator_cls("foo", values=values, missed=missed)
+
+    def test_param_defined(self):
+        validator = self.get_validator(values=["a", "b"])
+        result = validator.validate({}, {"args": {}}, None, None)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo parameter is not defined in the task "
+                         "config file", "%s" % result)
+
+    def test_right_value(self):
+        validator = self.get_validator(values=["a", "b"])
+        result = validator.validate({}, {"args": {validator.param_name: "c"}},
+                                    None, None)
+        self.assertIsNotNone(result)
+        self.assertFalse(result.is_valid)
+        self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
+                         "%s" % result)

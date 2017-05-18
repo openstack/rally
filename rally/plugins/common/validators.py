@@ -165,3 +165,35 @@ class NumberValidator(validation.Validator):
                              "%(type)s" % {"name": self.param_name,
                                            "val": value,
                                            "type": num_func.__name__})
+
+
+@validation.configure(name="enum")
+class EnumValidator(validation.Validator):
+    """Checks that parameter is in a list.
+
+    Ensure a parameter has the right value. This value need to be defined
+    in a list.
+
+    :param param_name: Name of parameter to validate
+    :param values: List of values accepted
+    :param missed: Allow to accept optional parameter
+    """
+
+    def __init__(self, param_name, values, missed=False):
+        self.param_name = param_name
+        self.values = values
+        self.missed = missed
+
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+        value = config.get("args", {}).get(self.param_name)
+        if value:
+            if value not in self.values:
+                return self.fail("%(name)s is %(val)s which is not a "
+                                 "valid value from %(list)s"
+                                 % {"name": self.param_name,
+                                    "val": value,
+                                    "list": self.values})
+        else:
+            if not self.missed:
+                return self.fail("%s parameter is not defined in the "
+                                 "task config file" % self.param_name)
