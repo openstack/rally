@@ -94,12 +94,14 @@ class RequiredPlatformValidator(Validator):
         if self.admin and credentials.get("admin") is None:
             return self.fail("No admin credential for %s" % self.platform)
         if self.users and len(credentials.get("users", ())) == 0:
-            if credentials.get("admin") is not None:
-                LOG.debug("Plugin %s requires 'users' for launching. There "
-                          "are no specified users, assumes that 'users' "
-                          "context can create them via admin user.")
-            else:
+            if credentials.get("admin") is None:
                 return self.fail("No user credentials for %s" % self.platform)
+            else:
+                # NOTE(andreykurilin): It is a case whem the plugin requires
+                #   'users' for launching, but there are no specified users in
+                #   deployment. Let's assume that 'users' context can create
+                #   them via admin user and do not fail."
+                pass
 
 
 def add(name, **kwargs):
