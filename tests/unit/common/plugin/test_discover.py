@@ -104,10 +104,11 @@ class LoadExtraModulesTestCase(test.TestCase):
         # TODO(olkonami): check exception is handled correct
         discover.load_plugins("/somewhere")
 
+    @mock.patch("%s.importlib" % DISCOVER)
     @mock.patch("%s.pkgutil.walk_packages" % DISCOVER)
     @mock.patch("%s.pkg_resources" % DISCOVER)
     def test_import_modules_by_entry_point(self, mock_pkg_resources,
-                                           mock_walk_packages):
+                                           mock_walk_packages, mock_importlib):
 
         class Package(object):
             def __init__(self, name, path=None, file=None):
@@ -134,22 +135,17 @@ class LoadExtraModulesTestCase(test.TestCase):
                         FakeEntryPoint("rally", None),
                         FakeEntryPoint("path", "error", None)]
         mock_pkg_resources.iter_entry_points.return_value = entry_points
-        loader = mock.Mock()
 
-        def load_module(name):
+        def mock_import_module(name):
             if name == "error":
                 raise KeyError()
             else:
                 return mock.Mock()
 
-        loader.find_module.return_value.load_module.side_effect = load_module
+        mock_importlib.import_module.side_effect = mock_import_module
         # use random uuid to not have conflicts in sys.modules
-        names = [str(uuid.uuid4()) for i in range(3)]
-        mock_walk_packages.side_effect = [
-            [(loader, names[0], None)],
-            [(loader, names[1], None)],
-            [(loader, names[2], None)]
-        ]
+        packages = [[(mock.Mock(), str(uuid.uuid4()), None)] for i in range(3)]
+        mock_walk_packages.side_effect = packages
 
         discover.import_modules_by_entry_point()
 
@@ -161,11 +157,8 @@ class LoadExtraModulesTestCase(test.TestCase):
         self.assertFalse(entry_points[3].load.called)
         self.assertFalse(entry_points[4].load.called)
         self.assertEqual([mock.call("/foo", prefix="plugin1."),
-                          mock.call("/bar", prefix="plugin2."),
+                          mock.call(["/bar"], prefix="plugin2."),
                           mock.call("/xxx", prefix="plugin3.")],
                          mock_walk_packages.call_args_list)
-        self.assertEqual([mock.call(n) for n in names],
-                         loader.find_module.call_args_list)
-        self.assertEqual(
-            [mock.call(n) for n in names],
-            loader.find_module.return_value.load_module.call_args_list)
+        self.assertEqual([mock.call(n[0][1]) for n in packages],
+                         mock_importlib.import_module.call_args_list)
