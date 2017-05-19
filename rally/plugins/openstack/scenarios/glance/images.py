@@ -39,7 +39,11 @@ class GlanceBasic(scenario.OpenStackScenario):
                 atomic_inst=self.atomic_actions())
 
 
-@validation.restricted_parameters(["image_name", "name"])
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
@@ -48,7 +52,8 @@ class GlanceBasic(scenario.OpenStackScenario):
                     name="GlanceImages.create_and_list_image")
 class CreateAndListImage(GlanceBasic):
 
-    def run(self, container_format, image_location, disk_format, **kwargs):
+    def run(self, container_format, image_location, disk_format,
+            visibility="private", min_disk=0, min_ram=0):
         """Create an image and then list all images.
 
         Measure the "glance image-list" command performance.
@@ -64,18 +69,27 @@ class CreateAndListImage(GlanceBasic):
         :param image_location: image file location
         :param disk_format: disk format of image. Acceptable formats:
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
-        :param kwargs: optional parameters to create image
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
         """
         image = self.glance.create_image(
             container_format=container_format,
             image_location=image_location,
             disk_format=disk_format,
-            **kwargs)
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram)
         self.assertTrue(image)
         image_list = self.glance.list_images()
         self.assertIn(image.id, [i.id for i in image_list])
 
 
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
@@ -128,7 +142,11 @@ class ListImages(GlanceBasic):
         self.glance.list_images()
 
 
-@validation.restricted_parameters(["image_name", "name"])
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
@@ -137,7 +155,8 @@ class ListImages(GlanceBasic):
                     name="GlanceImages.create_and_delete_image")
 class CreateAndDeleteImage(GlanceBasic):
 
-    def run(self, container_format, image_location, disk_format, **kwargs):
+    def run(self, container_format, image_location, disk_format,
+            visibility="private", min_disk=0, min_ram=0):
         """Create and then delete an image.
 
         :param container_format: container format of image. Acceptable
@@ -145,17 +164,25 @@ class CreateAndDeleteImage(GlanceBasic):
         :param image_location: image file location
         :param disk_format: disk format of image. Acceptable formats:
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
-        :param kwargs: optional parameters to create image
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
         """
         image = self.glance.create_image(
             container_format=container_format,
             image_location=image_location,
             disk_format=disk_format,
-            **kwargs)
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram)
         self.glance.delete_image(image.id)
 
 
-@validation.restricted_parameters(["image_name", "name"])
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
 @types.convert(flavor={"type": "nova_flavor"},
                image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
@@ -168,8 +195,8 @@ class CreateAndDeleteImage(GlanceBasic):
 class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format,
-            flavor, number_instances, create_image_kwargs=None,
-            boot_server_kwargs=None, **kwargs):
+            flavor, number_instances, visibility="private", min_disk=0,
+            min_ram=0, boot_server_kwargs=None, **kwargs):
         """Create an image and boot several instances from it.
 
         :param container_format: container format of image. Acceptable
@@ -177,13 +204,15 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
         :param image_location: image file location
         :param disk_format: disk format of image. Acceptable formats:
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
         :param flavor: Nova flavor to be used to launch an instance
         :param number_instances: number of Nova servers to boot
         :param create_image_kwargs: optional parameters to create image
         :param boot_server_kwargs: optional parameters to boot server
         :param kwargs: optional parameters to create server (deprecated)
         """
-        create_image_kwargs = create_image_kwargs or {}
         boot_server_kwargs = boot_server_kwargs or kwargs or {}
 
         if kwargs:
@@ -195,12 +224,19 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
             container_format=container_format,
             image_location=image_location,
             disk_format=disk_format,
-            **create_image_kwargs)
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram)
 
         self._boot_servers(image.id, flavor, number_instances,
                            **boot_server_kwargs)
 
 
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
 @types.convert(image_location={"type": "path_or_url"},
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])

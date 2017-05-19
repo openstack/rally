@@ -59,18 +59,19 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         call_args = {"container_format": "cf",
                      "image_location": "url",
                      "disk_format": "df",
-                     "fakearg": "f"}
-
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0}
         # Positive case
         images.CreateAndListImage(self.context).run(
-            "cf", "url", "df", fakearg="f")
+            "cf", "url", "df", "vs", 0, 0)
         image_service.create_image.assert_called_once_with(**call_args)
 
         # Negative case: image isn't created
         image_service.create_image.return_value = None
         self.assertRaises(exceptions.RallyAssertionError,
                           images.CreateAndListImage(self.context).run,
-                          "cf", "url", "df", fakearg="f")
+                          "cf", "url", "df", "vs", 0, 0)
         image_service.create_image.assert_called_with(**call_args)
 
         # Negative case: created image n ot in the list of available images
@@ -78,7 +79,7 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
             id=12, name="img_nameN")
         self.assertRaises(exceptions.RallyAssertionError,
                           images.CreateAndListImage(self.context).run,
-                          "cf", "url", "df", fakearg="f")
+                          "cf", "url", "df", "vs", 0, 0)
         image_service.create_image.assert_called_with(**call_args)
         image_service.list_images.assert_called_with()
 
@@ -96,10 +97,12 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         call_args = {"container_format": "cf",
                      "image_location": "url",
                      "disk_format": "df",
-                     "fakearg": "f"}
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0}
 
         images.CreateAndDeleteImage(self.context).run(
-            "cf", "url", "df", fakearg="f")
+            "cf", "url", "df", "vs", 0, 0)
 
         image_service.create_image.assert_called_once_with(**call_args)
         image_service.delete_image.assert_called_once_with(fake_image.id)
@@ -153,16 +156,16 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         fake_servers = [mock.Mock() for i in range(5)]
         image_service.create_image.return_value = fake_image
         mock_boot_servers.return_value = fake_servers
-        create_image_kwargs = {"fakeimagearg": "f"}
         boot_server_kwargs = {"fakeserverarg": "f"}
         call_args = {"container_format": "cf",
                      "image_location": "url",
                      "disk_format": "df",
-                     "fakeimagearg": "f"}
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0}
 
         images.CreateImageAndBootInstances(self.context).run(
-            "cf", "url", "df", "fid", 5,
-            create_image_kwargs=create_image_kwargs,
+            "cf", "url", "df", "fid", 5, "vs", 0, 0,
             boot_server_kwargs=boot_server_kwargs)
         image_service.create_image.assert_called_once_with(**call_args)
         mock_boot_servers.assert_called_once_with("image-id-0", "fid",
