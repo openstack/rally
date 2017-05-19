@@ -196,7 +196,8 @@ class UserGenerator(context.Context):
                 endpoint_type=self.credential.endpoint_type,
                 https_insecure=self.credential.https_insecure,
                 https_cacert=self.credential.https_cacert,
-                region_name=self.credential.region_name)
+                region_name=self.credential.region_name,
+                profiler_hmac_key=self.credential.profiler_hmac_key)
             users.append({"id": user.id,
                           "credential": user_credential,
                           "tenant_id": tenant_id})

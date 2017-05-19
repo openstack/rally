@@ -41,8 +41,16 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
-                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
+                {
+                    "id": "u1",
+                    "tenant_id": "t1",
+                    "credential": mock.MagicMock()
+                },
+                {
+                    "id": "u2",
+                    "tenant_id": "t2",
+                    "credential": mock.MagicMock()
+                }
             ]
         })
 
@@ -122,8 +130,16 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
-                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
+                {
+                    "id": "u1",
+                    "tenant_id": "t1",
+                    "credential": mock.MagicMock()
+                },
+                {
+                    "id": "u2",
+                    "tenant_id": "t2",
+                    "credential": mock.MagicMock()
+                }
             ]
         })
         mock_swift = mock_clients.return_value.swift.return_value
@@ -143,8 +159,16 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 "t2": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "t1", "credential": "c1"},
-                {"id": "u2", "tenant_id": "t2", "credential": "c2"}
+                {
+                    "id": "u1",
+                    "tenant_id": "t1",
+                    "credential": mock.MagicMock()
+                },
+                {
+                    "id": "u2",
+                    "tenant_id": "t2",
+                    "credential": mock.MagicMock()
+                }
             ]
         })
         mock_swift = mock_clients.return_value.swift.return_value
@@ -163,7 +187,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t1_name",
                     "containers": [
                         {"user": {"id": "u1", "tenant_id": "t1",
-                                  "credential": "c1"},
+                                  "credential": mock.MagicMock()},
                          "container": "coooon",
                          "objects": []}] * 3
                 }
@@ -184,7 +208,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "name": "t1_name",
                     "containers": [
                         {"user": {"id": "u1", "tenant_id": "t1",
-                                  "credential": "c1"},
+                                  "credential": mock.MagicMock()},
                          "container": "c1",
                          "objects": ["oooo"] * 3}
                     ]

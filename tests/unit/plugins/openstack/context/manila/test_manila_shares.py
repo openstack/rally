@@ -56,8 +56,9 @@ class SharesTestCase(test.TestCase):
         users = []
         for t_id in sorted(list(tenants.keys())):
             for i in range(self.USERS_PER_TENANT):
-                users.append(
-                    {"id": i, "tenant_id": t_id, "credential": "fake"})
+                users.append({
+                    "id": i, "tenant_id": t_id,
+                    "credential": mock.MagicMock()})
         context = {
             "config": {
                 "users": {

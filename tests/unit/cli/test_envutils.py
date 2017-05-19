@@ -112,6 +112,7 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_ENDPOINT_TYPE": "fake_endpoint_typeURL",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
+                                  "OSPROFILER_HMAC_KEY": "fake_hmac_key",
                                   "OS_CACERT": "fake_cacert"})
     def test_get_creds_from_env_vars_keystone_v2(self):
         expected_creds = {
@@ -125,7 +126,8 @@ class EnvUtilsTestCase(test.TestCase):
             "endpoint": "fake_endpoint",
             "region_name": "fake_region_name",
             "https_cacert": "fake_cacert",
-            "https_insecure": True
+            "https_insecure": True,
+            "profiler_hmac_key": "fake_hmac_key"
         }
         creds = envutils.get_creds_from_env_vars()
         self.assertEqual(expected_creds, creds)
@@ -140,6 +142,7 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_INSECURE": "True",
                                   "OS_PROJECT_DOMAIN_NAME": "fake_pdn",
                                   "OS_USER_DOMAIN_NAME": "fake_udn",
+                                  "OSPROFILER_HMAC_KEY": "fake_hmac_key",
                                   "OS_CACERT": "fake_cacert"})
     def test_get_creds_from_env_vars_keystone_v3(self):
         expected_creds = {
@@ -155,7 +158,8 @@ class EnvUtilsTestCase(test.TestCase):
             "endpoint": "fake_endpoint",
             "region_name": "fake_region_name",
             "https_cacert": "fake_cacert",
-            "https_insecure": True
+            "https_insecure": True,
+            "profiler_hmac_key": "fake_hmac_key"
         }
         creds = envutils.get_creds_from_env_vars()
         self.assertEqual(expected_creds, creds)
@@ -165,6 +169,7 @@ class EnvUtilsTestCase(test.TestCase):
                                   "OS_REGION_NAME": "fake_region_name",
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
+                                  "OSPROFILER_HMAC_KEY": "fake_hmac_key",
                                   "OS_CACERT": "fake_cacert"})
     def test_get_creds_from_env_vars_when_required_vars_missing(self):
         if "OS_USERNAME" in os.environ:

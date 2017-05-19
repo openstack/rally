@@ -26,14 +26,15 @@ class SwiftObjectMixinTestCase(test.TestCase):
         tenants = 2
         containers_per_tenant = 2
         context = test.get_test_context()
+        c = [mock.MagicMock(), mock.MagicMock()]
         context.update({
             "tenants": {
                 "1001": {"name": "t1_name"},
                 "1002": {"name": "t2_name"}
             },
             "users": [
-                {"id": "u1", "tenant_id": "1001", "credential": "c1"},
-                {"id": "u2", "tenant_id": "1002", "credential": "c2"}
+                {"id": "u1", "tenant_id": "1001", "credential": c[0]},
+                {"id": "u2", "tenant_id": "1002", "credential": c[1]}
             ]
         })
 
@@ -51,7 +52,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
             self.assertEqual(containers_per_tenant, len(containers))
             for container in containers:
                 self.assertEqual("u%d" % index, container["user"]["id"])
-                self.assertEqual("c%d" % index,
+                self.assertEqual(c[index - 1],
                                  container["user"]["credential"])
                 self.assertEqual(0, len(container["objects"]))
 
@@ -68,7 +69,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "credential": "c0"},
+                            "credential": mock.MagicMock()},
                          "container": "c1",
                          "objects": []}
                     ]
@@ -78,7 +79,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "credential": "c2"},
+                            "credential": mock.MagicMock()},
                          "container": "c2",
                          "objects": []}
                     ]
@@ -114,7 +115,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "credential": "c1"},
+                            "credential": mock.MagicMock()},
                          "container": "c1",
                          "objects": []}
                     ]
@@ -124,7 +125,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "credential": "c2"},
+                            "credential": mock.MagicMock()},
                          "container": "c2",
                          "objects": []}
                     ]
@@ -154,7 +155,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u1", "tenant_id": "1001",
-                            "credential": "c1"},
+                            "credential": mock.MagicMock()},
                          "container": "c1",
                          "objects": ["o1", "o2", "o3"]}
                     ]
@@ -164,7 +165,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     "containers": [
                         {"user": {
                             "id": "u2", "tenant_id": "1002",
-                            "credential": "c2"},
+                            "credential": mock.MagicMock()},
                          "container": "c2",
                          "objects": ["o4", "o5", "o6"]}
                     ]

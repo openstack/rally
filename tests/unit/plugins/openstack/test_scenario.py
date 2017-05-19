@@ -16,9 +16,21 @@
 import ddt
 import mock
 from oslotest import mockpatch
-
+from rally.plugins.openstack.credential import OpenStackCredential
 from rally.plugins.openstack import scenario as base_scenario
 from tests.unit import test
+
+
+CREDENTIAL_WITHOUT_HMAC = OpenStackCredential(
+    "auth_url",
+    "username",
+    "password")
+
+CREDENTIAL_WITH_HMAC = OpenStackCredential(
+    "auth_url",
+    "username",
+    "password",
+    profiler_hmac_key="test_profiler_hmac_key")
 
 
 @ddt.ddt
@@ -79,6 +91,31 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.assertEqual(self.context, scenario.context)
 
         self.assertEqual("foobar", scenario._clients)
+
+    @ddt.data(([], 0),
+              ([("admin", CREDENTIAL_WITHOUT_HMAC)], 0),
+              ([("user", CREDENTIAL_WITHOUT_HMAC)], 0),
+              ([("admin", CREDENTIAL_WITH_HMAC)], 1),
+              ([("user", CREDENTIAL_WITH_HMAC)], 1),
+              ([("admin", CREDENTIAL_WITH_HMAC),
+                ("user", CREDENTIAL_WITH_HMAC)], 1),
+              ([("admin", CREDENTIAL_WITHOUT_HMAC),
+                ("user", CREDENTIAL_WITH_HMAC)], 1),
+              ([("admin", CREDENTIAL_WITH_HMAC),
+                ("user", CREDENTIAL_WITHOUT_HMAC)], 1),
+              ([("admin", CREDENTIAL_WITHOUT_HMAC),
+                ("user", CREDENTIAL_WITHOUT_HMAC)], 0))
+    @ddt.unpack
+    @mock.patch("rally.plugins.openstack.scenario.profiler.init")
+    def test_profiler_init(self, users_credentials,
+                           expected_init_call_count,
+                           mock_profiler_init):
+        for user, credential in users_credentials:
+            print(user, credential.profiler_hmac_key)
+            self.context.update({user: {"credential": credential}})
+        base_scenario.OpenStackScenario(self.context)
+        self.assertEqual(expected_init_call_count,
+                         mock_profiler_init.call_count)
 
     def test__choose_user_random(self):
         users = [{"credential": mock.Mock(), "tenant_id": "foo"}

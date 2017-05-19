@@ -109,7 +109,8 @@ def get_creds_from_env_vars():
         "region_name": os.environ.get("OS_REGION_NAME", ""),
         "https_cacert": os.environ.get("OS_CACERT", ""),
         "https_insecure": strutils.bool_from_string(
-            os.environ.get("OS_INSECURE"))
+            os.environ.get("OS_INSECURE")),
+        "profiler_hmac_key": os.environ.get("OSPROFILER_HMAC_KEY")
     }
 
     user_domain_name = os.environ.get("OS_USER_DOMAIN_NAME")

@@ -54,7 +54,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
-                                  "RALLY_DEPLOYMENT": "fake_deployment_id"})
+                                  "RALLY_DEPLOYMENT": "fake_deployment_id",
+                                  "OSPROFILER_HMAC_KEY": "fake_hmac_key"})
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
     def test_createfromenv_keystonev2(self, mock_list):
         self.deployment.create(self.fake_api, "from_env", True)
@@ -73,7 +74,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                             "tenant_name": "fake_tenant_name"
                         },
                         "https_insecure": True,
-                        "https_cacert": "fake_cacert"
+                        "https_cacert": "fake_cacert",
+                        "profiler_hmac_key": "fake_hmac_key"
                     }
                 }
             },
@@ -91,7 +93,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_ENDPOINT": "fake_endpoint",
                                   "OS_INSECURE": "True",
                                   "OS_CACERT": "fake_cacert",
-                                  "RALLY_DEPLOYMENT": "fake_deployment_id"})
+                                  "RALLY_DEPLOYMENT": "fake_deployment_id",
+                                  "OSPROFILER_HMAC_KEY": "fake_hmac_key"})
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
     def test_createfromenv_keystonev3(self, mock_list):
         self.deployment.create(self.fake_api, "from_env", True)
@@ -112,7 +115,8 @@ class DeploymentCommandsTestCase(test.TestCase):
                             "project_name": "fake_tenant_name"
                         },
                         "https_insecure": True,
-                        "https_cacert": "fake_cacert"
+                        "https_cacert": "fake_cacert",
+                        "profiler_hmac_key": "fake_hmac_key"
                     }
                 }
             },

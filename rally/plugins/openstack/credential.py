@@ -32,7 +32,8 @@ class OpenStackCredential(credential.Credential):
                  region_name=None, endpoint_type=None,
                  domain_name=None, endpoint=None, user_domain_name=None,
                  project_domain_name=None,
-                 https_insecure=False, https_cacert=None):
+                 https_insecure=False, https_cacert=None,
+                 profiler_hmac_key=None):
         self.auth_url = auth_url
         self.username = username
         self.password = password
@@ -46,6 +47,7 @@ class OpenStackCredential(credential.Credential):
         self.endpoint = endpoint
         self.https_insecure = https_insecure
         self.https_cacert = https_cacert
+        self.profiler_hmac_key = profiler_hmac_key
 
         self._clients_cache = {}
 
@@ -76,7 +78,8 @@ class OpenStackCredential(credential.Credential):
                 "https_cacert": self.https_cacert,
                 "user_domain_name": self.user_domain_name,
                 "project_domain_name": self.project_domain_name,
-                "permission": self.permission}
+                "permission": self.permission,
+                "profiler_hmac_key": self.profiler_hmac_key}
 
     def verify_connection(self):
         from keystoneclient import exceptions as keystone_exceptions
@@ -152,6 +155,7 @@ class OpenStackCredentialBuilder(credential.CredentialBuilder):
                          None]},
             "https_insecure": {"type": "boolean"},
             "https_cacert": {"type": "string"},
+            "profiler_hmac_key": {"type": ["string", "null"]}
         },
         "required": ["auth_url", "admin"],
         "additionalProperties": False
@@ -171,7 +175,8 @@ class OpenStackCredentialBuilder(credential.CredentialBuilder):
             user_domain_name=user.get("user_domain_name", None),
             project_domain_name=user.get("project_domain_name", None),
             https_insecure=common.get("https_insecure", False),
-            https_cacert=common.get("https_cacert"))
+            https_cacert=common.get("https_cacert"),
+            profiler_hmac_key=common.get("profiler_hmac_key"))
         return cred.to_dict()
 
     def build_credentials(self):

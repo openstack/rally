@@ -25,6 +25,7 @@ from rally.plugins.openstack.cfg import monasca
 from rally.plugins.openstack.cfg import murano
 from rally.plugins.openstack.cfg import neutron
 from rally.plugins.openstack.cfg import nova
+from rally.plugins.openstack.cfg import profiler
 from rally.plugins.openstack.cfg import sahara
 from rally.plugins.openstack.cfg import senlin
 from rally.plugins.openstack.cfg import vm
@@ -43,9 +44,10 @@ def list_opts():
     opts = {}
     for l_opts in (cinder.OPTS, ec2.OPTS, heat.OPTS, ironic.OPTS, magnum.OPTS,
                    manila.OPTS, mistral.OPTS, monasca.OPTS, murano.OPTS,
-                   nova.OPTS, sahara.OPTS, vm.OPTS, glance.OPTS, watcher.OPTS,
-                   tempest.OPTS, keystone_roles.OPTS, keystone_users.OPTS,
-                   cleanup.OPTS, senlin.OPTS, neutron.OPTS):
+                   nova.OPTS, profiler.OPTS, sahara.OPTS, vm.OPTS, glance.OPTS,
+                   watcher.OPTS, tempest.OPTS, keystone_roles.OPTS,
+                   keystone_users.OPTS, cleanup.OPTS, senlin.OPTS,
+                   neutron.OPTS):
         for category, opt in l_opts.items():
             opts.setdefault(category, [])
             opts[category].extend(opt)

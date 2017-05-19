@@ -50,12 +50,12 @@ class MuranoEnvironmentGeneratorTestCase(test.TestCase):
                 {
                     "id": "user_0",
                     "tenant_id": "tenant_0",
-                    "credential": "credential"
+                    "credential": mock.MagicMock()
                 },
                 {
                     "id": "user_1",
                     "tenant_id": "tenant_1",
-                    "credential": "credential"
+                    "credential": mock.MagicMock()
                 }
             ],
             "tenants": {
