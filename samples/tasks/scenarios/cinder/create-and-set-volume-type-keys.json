@@ -2,6 +2,7 @@
     "CinderVolumeTypes.create_and_set_volume_type_keys": [
         {
             "args": {
+                "description": "rally tests creating types",
                 "volume_type_key": {
                      "volume_backend_name": "LVM_iSCSI"
                 }

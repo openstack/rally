@@ -869,7 +869,8 @@
 
   CinderVolumeTypes.create_and_get_volume_type:
     -
-      args: {}
+      args:
+        description: "rally tests creating types"
       runner:
         type: "constant"
         times: 5
@@ -884,7 +885,8 @@
 
   CinderVolumeTypes.create_and_delete_volume_type:
     -
-      args: {}
+      args:
+        description: "rally tests creating types"
       runner:
         type: "constant"
         times: 5
@@ -965,6 +967,7 @@
   CinderVolumeTypes.create_volume_type_and_encryption_type:
     -
       args:
+        description: "rally tests creating types"
         provider: "LuksEncryptor"
         cipher: "aes-xts-plain64"
         key_size: 512
@@ -1051,6 +1054,7 @@
   CinderVolumeTypes.create_and_set_volume_type_keys:
     -
       args:
+        description: "rally tests creating types"
         volume_type_key:
           volume_backend_name: "LVM_iSCSI"
       runner:

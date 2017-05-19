@@ -27,36 +27,38 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_volume_type")
 class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
 
-    def run(self, **kwargs):
+    def run(self, description=None, is_public=True):
         """Create and delete a volume Type.
 
-        :param kwargs: Optional parameters used during volume
-                       type creation.
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
         """
-        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        volume_type = self.admin_cinder.create_volume_type(
+            description=description,
+            is_public=is_public)
         self.admin_cinder.delete_volume_type(volume_type)
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_get_volume_type")
 class CreateAndGetVolumeType(cinder_utils.CinderBasic):
 
-    def run(self, **kwargs):
+    def run(self, description=None, is_public=True):
         """Create a volume Type, then get the details of the type.
 
-        :param kwargs: Optional parameters used during volume
-                       type creation.
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
         """
-        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        volume_type = self.admin_cinder.create_volume_type(
+            description=description,
+            is_public=is_public)
         self.admin_cinder.get_volume_type(volume_type)
 
 
@@ -118,7 +120,6 @@ class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
                       err_msg=msg)
 
 
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
@@ -128,7 +129,8 @@ class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
 class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 
     def run(self, create_specs=None, provider=None, cipher=None,
-            key_size=None, control_location="front-end", **kwargs):
+            key_size=None, control_location="front-end", description=None,
+            is_public=True):
         """Create encryption type
 
           This scenario first creates a volume type, then creates an encryption
@@ -143,10 +145,12 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
         :param control_location: Notional service where encryption is
                                  performed. Valid values are "front-end"
                                  or "back-end."
-        :param kwargs: Optional parameters used during volume
-                       type creation.
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
         """
-        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        volume_type = self.admin_cinder.create_volume_type(
+            description=description,
+            is_public=is_public)
         if create_specs is None:
             specs = {
                 "provider": provider,
@@ -210,20 +214,21 @@ class CreateAndListEncryptionType(cinder_utils.CinderBasic):
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderVolumeTypes.create_and_set_volume_type_keys")
 class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
 
-    def run(self, volume_type_key, **kwargs):
+    def run(self, volume_type_key, description=None, is_public=True):
         """Create and set a volume type's extra specs.
 
         :param volume_type_key:  A dict of key/value pairs to be set
-        :param kwargs: Optional parameters used during volume
-                       type creation.
+        :param description: Description of the volume type
+        :param is_public: Volume type visibility
         """
-        volume_type = self.admin_cinder.create_volume_type(**kwargs)
+        volume_type = self.admin_cinder.create_volume_type(
+            description=description,
+            is_public=is_public)
         self.admin_cinder.set_volume_type_keys(volume_type,
                                                metadata=volume_type_key)
 

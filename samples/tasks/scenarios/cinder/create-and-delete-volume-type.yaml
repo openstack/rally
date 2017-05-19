@@ -1,7 +1,8 @@
 ---
   CinderVolumeTypes.create_and_delete_volume_type:
     -
-      args: {}
+      args:
+        description: "rally tests creating types"
       runner:
         type: "constant"
         times: 5

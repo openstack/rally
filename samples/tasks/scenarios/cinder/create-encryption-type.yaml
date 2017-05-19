@@ -2,6 +2,7 @@
   CinderVolumeTypes.create_volume_type_and_encryption_type:
     -
       args:
+        description: "rally tests creating types"
         provider: "LuksEncryptor"
         cipher: "aes-xts-plain64"
         key_size: 512

@@ -46,17 +46,22 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
     def test_create_and_get_volume_type(self):
         mock_service = self.mock_cinder.return_value
         scenario = volume_types.CreateAndGetVolumeType(self._get_context())
-        scenario.run(fakeargs="f")
-        mock_service.create_volume_type.assert_called_once_with(fakeargs="f")
+        description = "rally tests creating types"
+        is_public = False
+        scenario.run(description=description, is_public=is_public)
+        mock_service.create_volume_type.assert_called_once_with(
+            description=description, is_public=is_public)
         mock_service.get_volume_type.assert_called_once_with(
             mock_service.create_volume_type.return_value)
 
     def test_create_and_delete_volume_type(self):
         mock_service = self.mock_cinder.return_value
         scenario = volume_types.CreateAndDeleteVolumeType(self._get_context())
-        scenario.run(fakeargs="fakeargs")
+        description = "rally tests creating types"
+        is_public = False
+        scenario.run(description=description, is_public=is_public)
         mock_service.create_volume_type.assert_called_once_with(
-            fakeargs="fakeargs")
+            description=description, is_public=is_public)
         mock_service.delete_volume_type.assert_called_once_with(
             mock_service.create_volume_type.return_value)
 
@@ -176,7 +181,8 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
         mock_service = self.mock_cinder.return_value
         scenario = volume_types.CreateVolumeTypeAndEncryptionType(
             self._get_context())
-
+        description = "rally tests creating types"
+        is_public = False
         # case: create_specs is None
         specs = {
             "provider": "prov",
@@ -185,18 +191,19 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             "control_location": "cl"
         }
         scenario.run(create_specs=None, provider="prov", cipher="cip",
-                     key_size="ks", control_location="cl", fakeargs="fakeargs")
+                     key_size="ks", control_location="cl",
+                     description=description, is_public=is_public)
         mock_service.create_volume_type.assert_called_once_with(
-            fakeargs="fakeargs")
+            description=description, is_public=is_public)
         mock_service.create_encryption_type.assert_called_once_with(
             mock_service.create_volume_type.return_value, specs=specs)
 
         # case: create_specs is not None
         scenario.run(create_specs="fakecreatespecs", provider="prov",
                      cipher="cip", key_size="ks", control_location="cl",
-                     fakeargs="fakeargs")
+                     description=description, is_public=is_public)
         mock_service.create_volume_type.assert_called_with(
-            fakeargs="fakeargs")
+            description=description, is_public=is_public)
         mock_service.create_encryption_type.assert_called_with(
             mock_service.create_volume_type.return_value,
             specs="fakecreatespecs")
@@ -238,12 +245,15 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
     def test_create_and_set_volume_type_keys(self):
         mock_service = self.mock_cinder.return_value
         volume_type_key = {"volume_backend_name": "LVM_iSCSI"}
+        description = "rally tests creating types"
+        is_public = False
         scenario = volume_types.CreateAndSetVolumeTypeKeys(
             self._get_context())
-        scenario.run(volume_type_key, fakeargs="fakeargs")
+        scenario.run(volume_type_key, description=description,
+                     is_public=is_public)
 
         mock_service.create_volume_type.assert_called_once_with(
-            fakeargs="fakeargs")
+            description=description, is_public=is_public)
         mock_service.set_volume_type_keys.assert_called_once_with(
             mock_service.create_volume_type.return_value,
             metadata=volume_type_key)
