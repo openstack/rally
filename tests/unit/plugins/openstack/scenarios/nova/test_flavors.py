@@ -27,16 +27,13 @@ class NovaFlavorsTestCase(test.TestCase):
     def test_list_flavors(self):
         scenario = flavors.ListFlavors()
         scenario._list_flavors = mock.Mock()
-        scenario.run(detailed=True, fakearg="fakearg")
-        scenario._list_flavors.assert_called_once_with(True, fakearg="fakearg")
+        scenario.run(detailed=True, is_public=True, limit=None, marker=None,
+                     min_disk=None, min_ram=None, sort_dir=None, sort_key=None)
+        scenario._list_flavors.assert_called_once_with(
+            detailed=True, is_public=True, limit=None, marker=None,
+            min_disk=None, min_ram=None, sort_dir=None, sort_key=None)
 
-    @ddt.data({},
-              {"is_public": True},
-              {"is_public": False},
-              {"fakeargs": "fakeargs"},
-              {"is_public": False, "fakeargs": "fakeargs"})
-    @ddt.unpack
-    def test_create_and_list_flavor_access(self, **kwargs):
+    def test_create_and_list_flavor_access(self):
         # Common parameters
         ram = 100
         vcpus = 1
@@ -47,23 +44,25 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario._list_flavor_access = mock.Mock()
 
         # Positive case:
-        scenario.run(ram, vcpus, disk, **kwargs)
-        kwargs.pop("is_public", None)
-        scenario._create_flavor.assert_called_once_with(ram, vcpus, disk,
-                                                        is_public=False,
-                                                        **kwargs)
+        scenario.run(
+            ram, vcpus, disk, ephemeral=0, flavorid="auto",
+            is_public=False, rxtx_factor=1.0, swap=0)
+        scenario._create_flavor.assert_called_once_with(
+            ram, vcpus, disk, ephemeral=0, flavorid="auto",
+            is_public=False, rxtx_factor=1.0, swap=0)
         scenario._list_flavor_access.assert_called_once_with(
             scenario._create_flavor.return_value.id)
 
         # Negative case1: flavor wasn't created
         scenario._create_flavor.return_value = None
         self.assertRaises(exceptions.RallyAssertionError, scenario.run,
-                          ram, vcpus, disk, **kwargs)
-        scenario._create_flavor.assert_called_with(ram, vcpus, disk,
-                                                   is_public=False,
-                                                   **kwargs)
+                          ram, vcpus, disk, ephemeral=0, flavorid="auto",
+                          is_public=False, rxtx_factor=1.0, swap=0)
+        scenario._create_flavor.assert_called_with(
+            ram, vcpus, disk, ephemeral=0, flavorid="auto",
+            is_public=False, rxtx_factor=1.0, swap=0)
 
-    def test_create_flavor_add_tenant_access(self, **kwargs):
+    def test_create_flavor_add_tenant_access(self):
         flavor = mock.MagicMock()
         context = {"user": {"tenant_id": "fake"},
                    "tenant": {"id": "fake"}}
@@ -74,44 +73,56 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario._add_tenant_access = mock.MagicMock()
 
         # Positive case:
-        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+        scenario.run(ram=100, vcpus=1, disk=1, ephemeral=0,
+                     flavorid="auto", is_public=True, rxtx_factor=1.0, swap=0)
 
-        scenario._create_flavor.assert_called_once_with(100, 1, 1,
-                                                        **kwargs)
+        scenario._create_flavor.assert_called_once_with(
+            100, 1, 1, ephemeral=0, flavorid="auto", is_public=True,
+            rxtx_factor=1.0, swap=0)
         scenario._add_tenant_access.assert_called_once_with(flavor.id,
                                                             "fake")
 
         # Negative case1: flavor wasn't created
         scenario._create_flavor.return_value = None
         self.assertRaises(exceptions.RallyAssertionError, scenario.run,
-                          100, 1, 1, **kwargs)
-        scenario._create_flavor.assert_called_with(100, 1, 1,
-                                                   **kwargs)
+                          100, 1, 1, ephemeral=0, flavorid="auto",
+                          is_public=True, rxtx_factor=1.0, swap=0)
+        scenario._create_flavor.assert_called_with(
+            100, 1, 1, ephemeral=0, flavorid="auto", is_public=True,
+            rxtx_factor=1.0, swap=0)
 
     def test_create_flavor(self):
         scenario = flavors.CreateFlavor()
         scenario._create_flavor = mock.MagicMock()
-        scenario.run(ram=100, vcpus=1, disk=1, fakeargs="fakeargs")
-        scenario._create_flavor.assert_called_once_with(100, 1, 1,
-                                                        fakeargs="fakeargs")
+        scenario.run(ram=100, vcpus=1, disk=1, ephemeral=0, flavorid="auto",
+                     is_public=True, rxtx_factor=1.0, swap=0)
+        scenario._create_flavor.assert_called_once_with(
+            100, 1, 1, ephemeral=0,
+            flavorid="auto", is_public=True, rxtx_factor=1.0, swap=0)
 
     def test_create_and_get_flavor(self, **kwargs):
         scenario = flavors.CreateAndGetFlavor()
         scenario._create_flavor = mock.Mock()
         scenario._get_flavor = mock.Mock()
-        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+        scenario.run(ram=100, vcpus=1, disk=1, ephemeral=0, flavorid="auto",
+                     is_public=True, rxtx_factor=1.0, swap=0)
 
-        scenario._create_flavor.assert_called_once_with(100, 1, 1, **kwargs)
+        scenario._create_flavor.assert_called_once_with(
+            100, 1, 1, ephemeral=0, flavorid="auto", is_public=True,
+            rxtx_factor=1.0, swap=0)
         scenario._get_flavor.assert_called_once_with(
             scenario._create_flavor.return_value.id)
 
-    def test_create_and_delete_flavor(self, **kwargs):
+    def test_create_and_delete_flavor(self):
         scenario = flavors.CreateAndDeleteFlavor()
         scenario._create_flavor = mock.Mock()
         scenario._delete_flavor = mock.Mock()
-        scenario.run(ram=100, vcpus=1, disk=1, **kwargs)
+        scenario.run(ram=100, vcpus=1, disk=1, ephemeral=0, flavorid="auto",
+                     is_public=True, rxtx_factor=1.0, swap=0)
 
-        scenario._create_flavor.assert_called_once_with(100, 1, 1, **kwargs)
+        scenario._create_flavor.assert_called_once_with(
+            100, 1, 1, ephemeral=0, flavorid="auto", is_public=True,
+            rxtx_factor=1.0, swap=0)
         scenario._delete_flavor.assert_called_once_with(
             scenario._create_flavor.return_value.id)
 
@@ -120,10 +131,13 @@ class NovaFlavorsTestCase(test.TestCase):
         scenario._create_flavor = mock.MagicMock()
         scenario._set_flavor_keys = mock.MagicMock()
         specs_args = {"fakeargs": "foo"}
-        scenario.run(ram=100, vcpus=1, disk=1, extra_specs=specs_args,
-                     fakeargs="fakeargs")
+        scenario.run(
+            ram=100, vcpus=1, disk=1, extra_specs=specs_args,
+            ephemeral=0, flavorid="auto", is_public=True,
+            rxtx_factor=1.0, swap=0)
 
-        scenario._create_flavor.assert_called_once_with(100, 1, 1,
-                                                        fakeargs="fakeargs")
+        scenario._create_flavor.assert_called_once_with(
+            100, 1, 1, ephemeral=0, flavorid="auto",
+            is_public=True, rxtx_factor=1.0, swap=0)
         scenario._set_flavor_keys.assert_called_once_with(
             scenario._create_flavor.return_value, specs_args)
