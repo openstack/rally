@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import re
 
 from glanceclient import exc as glance_exc
@@ -391,3 +392,53 @@ class RequiredServicesValidator(validation.Validator):
                      "service has non-default service_type, try to"
                      " setup it via 'api_versions'"
                      " context.").format(service))
+
+
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="validate_heat_template", namespace="openstack")
+class ValidateHeatTemplateValidator(validation.Validator):
+
+    def __init__(self, params, *args):
+        """Validates heat template.
+
+        :param params: list of parameters to be validated.
+        """
+        super(ValidateHeatTemplateValidator, self).__init__()
+        if isinstance(params, (list, tuple)):
+            # services argument is a list, so it is a new way of validators
+            #  usage, args in this case should not be provided
+            self.params = params
+            if args:
+                LOG.warning("Positional argument is not what "
+                            "'validate_heat_template' decorator expects. "
+                            "Use `params` argument instead")
+        else:
+            # it is old way validator
+            self.params = [params]
+            self.params.extend(args)
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        for param_name in self.params:
+            template_path = config.get("args", {}).get(param_name)
+            if not template_path:
+                msg = ("Path to heat template is not specified. Its needed "
+                       "for heat template validation. Please check the "
+                       "content of `{}` scenario argument.")
+
+                return self.fail(msg.format(param_name))
+            template_path = os.path.expanduser(template_path)
+            if not os.path.exists(template_path):
+                msg = "No file found by the given path {}"
+                return self.fail(msg.format(template_path))
+            with open(template_path, "r") as f:
+                try:
+                    for user in credentials["openstack"]["users"]:
+                        clients = user["credential"].clients()
+                        clients.heat().stacks.validate(template=f.read())
+                except Exception as e:
+                    dct = {"path": template_path,
+                           "msg": str(e)}
+                    msg = ("Heat template validation failed on %(path)s. "
+                           "Original error message: %(msg)s.") % dct
+                    return self.fail(msg)
