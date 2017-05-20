@@ -222,6 +222,23 @@ class CinderV2ServiceTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.atomic_actions(),
                                        "cinder_v2.create_volume_type")
 
+    def test_update_volume_type(self):
+        volume_type = mock.Mock()
+        name = "random_name"
+        self.service.generate_random_name = mock.MagicMock(
+            return_value=name)
+        description = "test update"
+
+        result = self.service.update_volume_type(volume_type,
+                                                 description=description,
+                                                 update_name=True,
+                                                 is_public=None)
+        self.assertEqual(
+            self.cinder.volume_types.update.return_value,
+            result)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.update_volume_type")
+
 
 class UnifiedCinderV2ServiceTestCase(test.TestCase):
     def setUp(self):
