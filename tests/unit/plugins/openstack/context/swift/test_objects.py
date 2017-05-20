@@ -130,9 +130,9 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
         mock_swift.put_container.side_effect = [Exception, True,
                                                 Exception, Exception]
         objects_ctx = objects.SwiftObjectGenerator(context)
-        self.assertRaisesRegexp(exceptions.ContextSetupFailure,
-                                "containers, expected 4 but got 1",
-                                objects_ctx.setup)
+        self.assertRaisesRegex(exceptions.ContextSetupFailure,
+                               "containers, expected 4 but got 1",
+                               objects_ctx.setup)
 
     @mock.patch("rally.osclients.Clients")
     def test_setup_failure_clients_put_object(self, mock_clients):
@@ -150,9 +150,9 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
         mock_swift = mock_clients.return_value.swift.return_value
         mock_swift.put_object.side_effect = [Exception, True]
         objects_ctx = objects.SwiftObjectGenerator(context)
-        self.assertRaisesRegexp(exceptions.ContextSetupFailure,
-                                "objects, expected 2 but got 1",
-                                objects_ctx.setup)
+        self.assertRaisesRegex(exceptions.ContextSetupFailure,
+                               "objects, expected 2 but got 1",
+                               objects_ctx.setup)
 
     @mock.patch("rally.osclients.Clients")
     def test_cleanup_failure_clients_delete_container(self, mock_clients):

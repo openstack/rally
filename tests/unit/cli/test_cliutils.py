@@ -468,7 +468,7 @@ class CliUtilsTestCase(test.TestCase):
 
     def test_print_list_raises(self):
         out = six.moves.StringIO()
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValueError,
             "Field labels list.*has different number "
             "of elements than fields list",
