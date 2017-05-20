@@ -17,6 +17,7 @@ import random
 
 from oslo_config import cfg
 
+from rally.common.i18n import _
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -727,9 +728,9 @@ class NovaScenario(scenario.OpenStackScenario):
         server_admin = self.admin_clients("nova").servers.get(server.id)
         if (host_pre_migrate == getattr(server_admin, "OS-EXT-SRV-ATTR:host")
                 and not skip_host_check):
-            raise exceptions.LiveMigrateException(
-                "Migration complete but instance did not change host: %s" %
-                host_pre_migrate)
+            raise exceptions.RallyException(_(
+                "Live Migration failed: Migration complete "
+                "but instance did not change host: %s") % host_pre_migrate)
 
     @atomic.action_timer("nova.find_host_to_migrate")
     def _find_host_to_migrate(self, server):
@@ -752,8 +753,8 @@ class NovaScenario(scenario.OpenStackScenario):
                     value.get("nova-compute", {}).get("available", False)])
             return new_host
         except IndexError:
-            raise exceptions.InvalidHostException(
-                "No valid host found to migrate")
+            raise exceptions.RallyException(
+                _("Live Migration failed: No valid host found to migrate"))
 
     @atomic.action_timer("nova.migrate")
     def _migrate(self, server, skip_host_check=False):
@@ -778,9 +779,9 @@ class NovaScenario(scenario.OpenStackScenario):
             server_admin = self.admin_clients("nova").servers.get(server.id)
             host_after_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
             if host_pre_migrate == host_after_migrate:
-                raise exceptions.MigrateException(
-                    "Migration complete but instance did not change host: %s" %
-                    host_pre_migrate)
+                raise exceptions.RallyException(
+                    _("Migration failed: Migration complete but instance"
+                      " did not change host: %s") % host_pre_migrate)
 
     @atomic.optional_action_timer("nova.add_server_secgroups")
     def _add_server_secgroups(self, server, security_group,

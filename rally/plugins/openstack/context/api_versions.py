@@ -244,9 +244,10 @@ class OpenStackAPIVersions(context.Context):
                     % conf["service_type"])
             elif "service_name" in conf:
                 if not self.context.get("admin", {}).get("credential"):
-                    raise exceptions.BenchmarkSetupFailure(_(
-                        "Setting 'service_name' is allowed only for 'admin' "
-                        "user."))
+                    raise exceptions.ContextSetupFailure(
+                        ctx_name=self.get_name(),
+                        msg=_("Setting 'service_name' is allowed"
+                              " only for 'admin' user."))
                 if not services_from_admin:
                     services_from_admin = dict(
                         [(s.name, s.type)

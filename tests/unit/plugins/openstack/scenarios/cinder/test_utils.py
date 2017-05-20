@@ -425,7 +425,7 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
     def test__delete_encryption_type(self):
         volume_type = mock.Mock()
 
-        self.assertRaises(exceptions.EncryptionTypeDeleteException,
+        self.assertRaises(exceptions.RallyException,
                           self.scenario._delete_encryption_type,
                           volume_type)
 

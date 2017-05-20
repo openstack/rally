@@ -127,8 +127,9 @@ class UnifiedGlanceV1Service(glance_common.UnifiedGlanceMixin, image.Image):
     def _check_v1_visibility(visibility):
         visibility_values = ["public", "private"]
         if visibility and visibility not in visibility_values:
-            raise image.VisibilityException("Improper visibility value: %s "
-                                            "in glance_v1" % visibility)
+            raise image.VisibilityException(
+                message="Improper visibility value: %s in glance_v1"
+                        % visibility)
 
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,

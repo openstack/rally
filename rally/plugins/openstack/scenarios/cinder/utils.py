@@ -17,6 +17,7 @@ import random
 
 from oslo_config import cfg
 
+from rally.common.i18n import _
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.services.storage import block
@@ -496,4 +497,5 @@ class CinderScenario(scenario.OpenStackScenario):
         resp = self.admin_clients("cinder").volume_encryption_types.delete(
             volume_type)
         if (resp[0].status_code != 202):
-            raise exceptions.EncryptionTypeDeleteException()
+            raise exceptions.RallyException(
+                _("EncryptionType Deletion Failed"))

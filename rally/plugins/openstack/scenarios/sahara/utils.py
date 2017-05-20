@@ -125,9 +125,10 @@ class SaharaScenario(scenario.OpenStackScenario):
                     if net["name"] == name_or_id:
                         return net["id"]
                 # If the name is not found in the list. Exit with error.
-                raise exceptions.BenchmarkSetupFailure(
-                    "Could not resolve Floating IP Pool name %s to id" %
-                    name_or_id)
+                raise exceptions.ContextSetupFailure(
+                    ctx_name=self.get_name(),
+                    msg=_("Could not resolve Floating IP Pool"
+                          " name %s to id") % name_or_id)
         else:
             # Pool is not provided. Using the one set as GW for current router.
 

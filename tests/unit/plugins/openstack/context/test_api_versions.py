@@ -67,7 +67,7 @@ class OpenStackServicesTestCase(test.TestCase):
                 "nova": {"service_name": "service_name"}}},
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context_obj)
-        self.assertRaises(exceptions.BenchmarkSetupFailure, ctx.setup)
+        self.assertRaises(exceptions.ContextSetupFailure, ctx.setup)
         self.service_catalog.get_endpoints.assert_called_once_with()
         self.assertFalse(self.mock_kc.services.list.called)
 

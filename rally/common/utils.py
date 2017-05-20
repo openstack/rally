@@ -32,7 +32,7 @@ import uuid
 
 from six import moves
 
-from rally.common.i18n import _LE
+from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally import exceptions
 
@@ -47,7 +47,7 @@ class ImmutableMixin(object):
 
     def __setattr__(self, key, value):
         if self._inited:
-            raise exceptions.ImmutableException()
+            raise AttributeError(_("This object is immutable."))
         super(ImmutableMixin, self).__setattr__(key, value)
 
 

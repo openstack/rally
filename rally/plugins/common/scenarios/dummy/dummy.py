@@ -24,6 +24,7 @@ from rally.task import scenario
 
 
 class DummyScenarioException(exceptions.RallyException):
+    error_code = 530
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 

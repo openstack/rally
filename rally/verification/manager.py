@@ -43,6 +43,7 @@ URL_RE = re.compile(
 
 
 class VerifierSetupFailure(exceptions.RallyException):
+    error_code = 533
     msg_fmt = "Failed to set up verifier '%(verifier)s': %(message)s"
 
 

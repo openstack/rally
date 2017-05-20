@@ -692,7 +692,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.migrate")
 
-        self.assertRaises(rally_exceptions.MigrateException,
+        self.assertRaises(rally_exceptions.RallyException,
                           nova_scenario._migrate,
                           fake_server, skip_host_check=False)
 
