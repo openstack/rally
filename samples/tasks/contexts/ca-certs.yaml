@@ -1,0 +1,48 @@
+---
+  Dummy.openstack:
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        cluster_templates:
+          image_id: "fedora-atomic-latest"
+          external_network_id: "public"
+          dns_nameserver: "8.8.8.8"
+          flavor_id: "m1.small"
+          docker_volume_size: 5
+          network_driver: "flannel"
+          coe: "kubernetes"
+        clusters:
+          node_count: 2
+        ca_certs:
+          directory: "/home/stack"
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        cluster_templates:
+          image_id: "fedora-atomic-latest"
+          external_network_id: "public"
+          dns_nameserver: "8.8.8.8"
+          flavor_id: "m1.small"
+          docker_volume_size: 5
+          network_driver: "docker"
+          coe: "swarm"
+        clusters:
+          node_count: 2
+        ca_certs:
+          directory: "/home/stack"

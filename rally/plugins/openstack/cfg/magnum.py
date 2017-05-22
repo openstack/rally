@@ -28,4 +28,18 @@ OPTS = {"benchmark": [
                  default=1.0,
                  help="Time interval(in sec) between checks when waiting for "
                       "cluster creation."),
+    cfg.FloatOpt("k8s_pod_create_timeout",
+                 default=600.0,
+                 help="Time(in sec) to wait for k8s pod to be created."),
+    cfg.FloatOpt("k8s_pod_create_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "k8s pod creation."),
+    cfg.FloatOpt("k8s_rc_create_timeout",
+                 default=600.0,
+                 help="Time(in sec) to wait for k8s rc to be created."),
+    cfg.FloatOpt("k8s_rc_create_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "k8s rc creation."),
 ]}
