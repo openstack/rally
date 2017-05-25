@@ -196,7 +196,8 @@ class CreateAndShowSubnets(utils.NeutronScenario):
                 self._show_subnet(subnet, atomic_action=False)
 
 
-@validation.number("subnets_per_network", minval=1, integer_only=True)
+@validation.add("number", param_name="subnets_per_network", minval=1,
+                integer_only=True)
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @scenario.configure(context={"cleanup": ["neutron"]},
@@ -285,7 +286,8 @@ class CreateAndShowRouters(utils.NeutronScenario):
             self._show_router(router)
 
 
-@validation.number("subnets_per_network", minval=1, integer_only=True)
+@validation.add("number", param_name="subnets_per_network", minval=1,
+                integer_only=True)
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @scenario.configure(context={"cleanup": ["neutron"]},
@@ -316,7 +318,8 @@ class CreateAndUpdateRouters(utils.NeutronScenario):
             self._update_router(router, router_update_args)
 
 
-@validation.number("subnets_per_network", minval=1, integer_only=True)
+@validation.add("number", param_name="subnets_per_network", minval=1,
+                integer_only=True)
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @scenario.configure(context={"cleanup": ["neutron"]},
@@ -468,7 +471,8 @@ class CreateAndShowPorts(utils.NeutronScenario):
                                  err_msg=msg)
 
 
-@validation.number("ports_per_network", minval=1, integer_only=True)
+@validation.add("number", param_name="ports_per_network", minval=1,
+                integer_only=True)
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @scenario.configure(context={"cleanup": ["neutron"]},
