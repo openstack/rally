@@ -149,31 +149,31 @@
         failure_rate:
           max: 0
 
-#    -
-#      args:
-#        size: 1
-#        image:
-#          name: "image-context-test"
-#      runner:
-#        type: "constant"
-#        times: 1
-#        concurrency: 1
-#      context:
-#        users:
-#          tenants: 1
-#          users_per_tenant: 2
-#        roles:
-#          - admin
-#        images:
-#          image_url: "~/.rally/extra/fake-image.img"
-#          disk_format: "qcow2"
-#          container_format: "bare"
-#          images_per_tenant: 1
-#          image_name: "image-context-test"
-#          visibility: "public"
-#      sla:
-#        failure_rate:
-#          max: 0
+    -
+      args:
+        size: 1
+        image:
+          name: "image-context-test"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 2
+        roles:
+          - admin
+        images:
+          image_url: "~/.rally/extra/fake-image.img"
+          disk_format: "raw"
+          container_format: "bare"
+          images_per_tenant: 1
+          image_name: "image-context-test"
+          visibility: "public"
+      sla:
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_update_volume:
     -
