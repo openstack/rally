@@ -316,7 +316,7 @@ class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
         self.admin_cinder.delete_encryption_type(volume_type["id"])
 
 
-@validation.required_services(consts.Service.CINDER)
+@validation.add("required_services", services=consts.Service.CINDER)
 @validation.required_contexts("volume_types")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},

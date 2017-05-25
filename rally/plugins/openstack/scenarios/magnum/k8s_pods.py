@@ -23,8 +23,8 @@ from rally.task import validation
 """Scenarios for Kubernetes pods and rcs."""
 
 
-@validation.required_services(consts.Service.MAGNUM)
-@validation.required_openstack(users=True)
+@validation.add("required_services", services=consts.Service.MAGNUM)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="K8sPods.list_pods")
 class ListPods(utils.MagnumScenario):
 
@@ -35,8 +35,8 @@ class ListPods(utils.MagnumScenario):
         self._list_v1pods()
 
 
-@validation.required_services(consts.Service.MAGNUM)
-@validation.required_openstack(users=True)
+@validation.add("required_services", services=consts.Service.MAGNUM)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="K8sPods.create_pods")
 class CreatePods(utils.MagnumScenario):
 
@@ -54,8 +54,8 @@ class CreatePods(utils.MagnumScenario):
             self.assertTrue(pod, err_msg=msg)
 
 
-@validation.required_services(consts.Service.MAGNUM)
-@validation.required_openstack(users=True)
+@validation.add("required_services", services=consts.Service.MAGNUM)
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="K8sPods.create_rcs")
 class CreateRcs(utils.MagnumScenario):
 
