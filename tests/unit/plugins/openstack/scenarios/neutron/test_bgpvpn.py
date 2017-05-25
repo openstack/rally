@@ -106,3 +106,74 @@ class NeutronBgpvpnTestCase(test.TestCase):
             type="l3", **create_data)
         scenario._update_bgpvpn.assert_called_once_with(
             scenario._create_bgpvpn.return_value, **update_data)
+
+    @ddt.data(
+        {"list_networks": []},
+        {"list_networks": [{"tenant_id": "tenant_id", "id": "network_id"}]},
+    )
+    @ddt.unpack
+    def test_create_and_associate_disassociate_networks(self,
+                                                        list_networks=None):
+        scenario = bgpvpn.CreateAndAssociateDissassociateNetworks(
+            self._get_context())
+        create_data = self._get_bgpvpn_create_data()
+        create_data["tenant_id"] = "tenant_id"
+        network = {"network": {"tenant_id": "tenant_id",
+                               "id": "network_id"}}
+        scenario.context = {"user": {"tenant_id": "tenant_id"}}
+        scenario._list_networks = mock.Mock(return_value=list_networks)
+        if not list_networks:
+            scenario._create_network = mock.Mock(return_value=network)
+        scenario._create_bgpvpn = mock.Mock()
+        scenario._create_bgpvpn_network_assoc = mock.Mock()
+        scenario._delete_bgpvpn_network_assoc = mock.Mock()
+        scenario.run()
+        scenario._create_bgpvpn.assert_called_once_with(
+            type="l3", **create_data)
+        if list_networks:
+            given_network = {"network": {"tenant_id": "tenant_id",
+                                         "id": "network_id"}}
+        else:
+            scenario._create_network.assert_called_once_with({})
+            given_network = scenario._create_network.return_value
+
+        scenario._create_bgpvpn_network_assoc.assert_called_once_with(
+            scenario._create_bgpvpn.return_value, given_network)
+        scenario._delete_bgpvpn_network_assoc.assert_called_once_with(
+            scenario._create_bgpvpn.return_value,
+            scenario._create_bgpvpn_network_assoc.return_value)
+
+    @ddt.data(
+        {"list_routers": []},
+        {"list_routers": [{"tenant_id": "tenant_id", "id": "router_id"}]},
+    )
+    @ddt.unpack
+    def test_create_and_associate_disassociate_routers(self,
+                                                       list_routers=None):
+        scenario = bgpvpn.CreateAndAssociateDissassociateRouters(
+            self._get_context())
+        create_data = self._get_bgpvpn_create_data()
+        create_data["tenant_id"] = "tenant_id"
+        router = {"router": {"tenant_id": "tenant_id",
+                             "id": "router_id"}}
+        scenario._list_routers = mock.Mock(return_value=list_routers)
+        if not list_routers:
+            scenario._create_router = mock.Mock(return_value=router)
+        scenario._create_bgpvpn = mock.Mock()
+        scenario._create_bgpvpn_router_assoc = mock.Mock()
+        scenario._delete_bgpvpn_router_assoc = mock.Mock()
+        scenario.run()
+        scenario._create_bgpvpn.assert_called_once_with(
+            type="l3", **create_data)
+        if list_routers:
+            given_router = {"router": {"tenant_id": "tenant_id",
+                                       "id": "router_id"}}
+        else:
+            scenario._create_router.assert_called_once_with({})
+            given_router = scenario._create_router.return_value
+
+        scenario._create_bgpvpn_router_assoc.assert_called_once_with(
+            scenario._create_bgpvpn.return_value, given_router)
+        scenario._delete_bgpvpn_router_assoc.assert_called_once_with(
+            scenario._create_bgpvpn.return_value,
+            scenario._create_bgpvpn_router_assoc.return_value)

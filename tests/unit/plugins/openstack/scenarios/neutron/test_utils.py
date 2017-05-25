@@ -1086,6 +1086,45 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_bgpvpn")
 
+    def test__create_bgpvpn_network_assoc(self):
+        network_id = "network_id"
+        bgpvpn_id = "bgpvpn_id"
+        value = {"network_association": {
+            "network_id": network_id,
+            "id": bgpvpn_id}}
+        self.clients(
+            "neutron").create_bgpvpn_network_assoc.return_value = value
+        network = {"network": {"id": network_id}}
+        bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
+        return_value = self.scenario._create_bgpvpn_network_assoc(bgpvpn,
+                                                                  network)
+        netassoc = {"network_id": network["network"]["id"]}
+        self.clients(
+            "neutron").create_bgpvpn_network_assoc.assert_called_once_with(
+            bgpvpn_id, {"network_association": netassoc})
+        self.assertEqual(return_value, value)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_bgpvpn_network_assoc")
+
+    def test__create_router_network_assoc(self):
+        router_id = "router_id"
+        bgpvpn_id = "bgpvpn_id"
+        value = {"router_association": {
+            "router_id": router_id,
+            "id": "asso_id"}}
+        self.clients("neutron").create_bgpvpn_router_assoc.return_value = value
+        router = {"router": {"id": router_id}}
+        bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
+        return_value = self.scenario._create_bgpvpn_router_assoc(bgpvpn,
+                                                                 router)
+        router_assoc = {"router_id": router["router"]["id"]}
+        self.clients(
+            "neutron").create_bgpvpn_router_assoc.assert_called_once_with(
+            bgpvpn_id, {"router_association": router_assoc})
+        self.assertEqual(return_value, value)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_bgpvpn_router_assoc")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 

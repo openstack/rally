@@ -752,3 +752,49 @@ class NeutronScenario(scenario.OpenStackScenario):
             kwargs["name"] = self.generate_random_name()
         return self.admin_clients("neutron").update_bgpvpn(
             bgpvpn["bgpvpn"]["id"], {"bgpvpn": kwargs})
+
+    @atomic.action_timer("neutron.create_bgpvpn_network_assoc")
+    def _create_bgpvpn_network_assoc(self, bgpvpn, network):
+        """Creates a new BGP VPN network association.
+
+        :param bgpvpn: dict, bgpvpn
+        :param network: dict, network
+        :return dict: network_association
+        """
+        netassoc = {"network_id": network["network"]["id"]}
+        return self.clients("neutron").create_bgpvpn_network_assoc(
+            bgpvpn["bgpvpn"]["id"], {"network_association": netassoc})
+
+    @atomic.action_timer("neutron.delete_bgpvpn_network_assoc")
+    def _delete_bgpvpn_network_assoc(self, bgpvpn, net_assoc):
+        """Delete the specified BGP VPN network association
+
+        :param bgpvpn: dict, bgpvpn
+        :param net_assoc: dict, network
+        :return dict: network_association
+        """
+        return self.clients("neutron").delete_bgpvpn_network_assoc(
+            bgpvpn["bgpvpn"]["id"], net_assoc["network_association"]["id"])
+
+    @atomic.action_timer("neutron.create_bgpvpn_router_assoc")
+    def _create_bgpvpn_router_assoc(self, bgpvpn, router):
+        """Creates a new BGP VPN router association.
+
+        :param bgpvpn: dict, bgpvpn
+        :param router: dict, router
+        :return dict: network_association
+        """
+        router_assoc = {"router_id": router["router"]["id"]}
+        return self.clients("neutron").create_bgpvpn_router_assoc(
+            bgpvpn["bgpvpn"]["id"], {"router_association": router_assoc})
+
+    @atomic.action_timer("neutron.delete_bgpvpn_router_assoc")
+    def _delete_bgpvpn_router_assoc(self, bgpvpn, router_assoc):
+        """Delete the specified BGP VPN router association
+
+        :param bgpvpn: dict, bgpvpn
+        :param router_assoc: dict, router
+        :return dict: router_association
+        """
+        return self.clients("neutron").delete_bgpvpn_router_assoc(
+            bgpvpn["bgpvpn"]["id"], router_assoc["router_association"]["id"])
