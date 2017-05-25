@@ -15,6 +15,7 @@
 
 import os
 import re
+import six
 
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
@@ -46,8 +47,7 @@ class ImageExistsValidator(validation.Validator):
         self.param_name = param_name
         self.nullable = nullable
 
-    def validate(self, config, credentials, plugin_cls,
-                 plugin_cfg):
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
 
         image_args = config.get("args", {}).get(self.param_name)
 
@@ -442,3 +442,30 @@ class ValidateHeatTemplateValidator(validation.Validator):
                     msg = ("Heat template validation failed on %(path)s. "
                            "Original error message: %(msg)s.") % dct
                     return self.fail(msg)
+
+
+@validation.add("required_platform", platform="openstack", admin=True)
+@validation.configure(name="required_cinder_services", namespace="openstack")
+class RequiredCinderServicesValidator(validation.Validator):
+
+    def __init__(self, services):
+        """Validator checks that specified Cinder service is available.
+
+        It uses Cinder client with admin permissions to call
+        'cinder service-list' call
+
+        :param services: Cinder service name
+        """
+        super(RequiredCinderServicesValidator, self).__init__()
+        self.services = services
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        clients = credentials["openstack"]["admin"].clients().cinder()
+        for service in clients.services.list():
+            if (service.binary == six.text_type(self.services)
+                    and service.state == six.text_type("up")):
+                return
+
+        msg = ("%s service is not available") % self.services
+        return self.fail(msg)

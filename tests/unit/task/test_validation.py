@@ -19,7 +19,6 @@ import ddt
 from glanceclient import exc as glance_exc
 import mock
 from novaclient import exceptions as nova_exc
-import six
 
 from rally.common.plugin import plugin
 from rally.common import validation as common_validation
@@ -570,23 +569,6 @@ class ValidatorsTestCase(test.TestCase):
         context = {"args": {"volume_type": True}}
 
         result = validator(context, clients, mock.MagicMock())
-        self.assertFalse(result.is_valid, result.msg)
-
-    def test_required_cinder_services(self):
-        validator = self._unwrap_validator(
-            validation.required_cinder_services,
-            service_name=six.text_type("cinder-service"))
-
-        fake_service = mock.Mock(binary="cinder-service", state="up")
-        admin = fakes.fake_credential(foo="bar")
-        cinder = admin.clients.return_value.cinder.return_value
-        cinder.services.list.return_value = [fake_service]
-        deployment = fakes.FakeDeployment(admin=admin)
-        result = validator({}, None, deployment)
-        self.assertTrue(result.is_valid, result.msg)
-
-        fake_service.state = "down"
-        result = validator({}, None, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
     def _get_keystone_v2_mock_client(self):
