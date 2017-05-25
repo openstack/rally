@@ -239,11 +239,11 @@ class BlockStorage(service.UnifiedService):
 
     @service.should_be_overridden
     def delete_snapshot(self, snapshot):
-        """Delete the given backup.
+        """Delete the given snapshot.
 
-        Returns when the backup is actually deleted.
+        Returns when the snapshot is actually deleted.
 
-        :param backup: backup instance
+        :param snapshot: snapshot instance
         """
         self._impl.delete_snapshot(snapshot)
 
