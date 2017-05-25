@@ -356,37 +356,6 @@ def required_param_or_context(config, clients, deployment,
 
 
 @validator
-def required_api_versions(config, clients, deployment, component, versions):
-    """Validator checks component API versions."""
-    versions = [str(v) for v in versions]
-    versions_str = ", ".join(versions)
-    msg = _("Task was designed to be used with %(component)s "
-            "V%(version)s, but V%(found_version)s is "
-            "selected.")
-    if component == "keystone":
-        if "2.0" not in versions and hasattr(clients.keystone(), "tenants"):
-            return ValidationResult(False, msg % {"component": component,
-                                                  "version": versions_str,
-                                                  "found_version": "2.0"})
-        if "3" not in versions and hasattr(clients.keystone(), "projects"):
-            return ValidationResult(False, msg % {"component": component,
-                                                  "version": versions_str,
-                                                  "found_version": "3"})
-    else:
-        used_version = config.get("context", {}).get("api_versions", {}).get(
-            component, {}).get("version",
-                               getattr(clients, component).choose_version())
-        if not used_version:
-            return ValidationResult(
-                False, _("Unable to determine the API version."))
-        if str(used_version) not in versions:
-            return ValidationResult(
-                False, msg % {"component": component,
-                              "version": versions_str,
-                              "found_version": used_version})
-
-
-@validator
 def volume_type_exists(config, clients, deployment, param_name):
     """Returns validator for volume types.
 
@@ -478,6 +447,7 @@ required_services = deprecated_validator("required_services",
 validate_heat_template = deprecated_validator("validate_heat_template",
                                               "validate_heat_template",
                                               "0.10.0")
+
 restricted_parameters = deprecated_validator("restricted_parameters",
                                              "restricted_parameters",
                                              "0.10.0")
@@ -485,3 +455,7 @@ restricted_parameters = deprecated_validator("restricted_parameters",
 required_cinder_services = deprecated_validator("required_cinder_services",
                                                 "required_cinder_services",
                                                 "0.10.0")
+
+required_api_versions = deprecated_validator("required_api_versions",
+                                             "required_api_versions",
+                                             "0.10.0")
