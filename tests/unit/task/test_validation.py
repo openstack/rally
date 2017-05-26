@@ -468,37 +468,6 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, "clients", "deployment")
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_required_contexts(self):
-        validator = self._unwrap_validator(validation.required_contexts,
-                                           "c1", "c2", "c3")
-        result = validator({"context": {"a": 1}}, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3}},
-                           None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}},
-                           None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-    def test_required_contexts_with_or(self):
-        validator = self._unwrap_validator(validation.required_contexts,
-                                           ("a1", "a2"), "c1", ("b1", "b2"),
-                                           "c2")
-        result = validator({"context": {"c1": 1, "c2": 2}},
-                           None, None)
-        self.assertFalse(result.is_valid, result.msg)
-
-        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3,
-                                        "b1": 1, "a1": 1}}, None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
-        result = validator({"context": {"c1": 1, "c2": 2, "c3": 3,
-                                        "b1": 1, "b2": 2, "a1": 1}},
-                           None, None)
-        self.assertTrue(result.is_valid, result.msg)
-
     def test_required_param_or_context(self):
         validator = self._unwrap_validator(
             validation.required_param_or_context, "image", "custom_image")

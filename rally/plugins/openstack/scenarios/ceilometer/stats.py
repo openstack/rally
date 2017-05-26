@@ -44,7 +44,7 @@ class CreateMeterAndGetStats(utils.CeilometerScenario):
 
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])
-@validation.required_contexts("ceilometer")
+@validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(name="CeilometerStats.get_stats")
 class GetStats(utils.CeilometerScenario):

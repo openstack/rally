@@ -28,7 +28,7 @@ from rally.task import validation
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_list_pools")
 class CreateAndListPools(utils.NeutronScenario):
@@ -53,7 +53,7 @@ class CreateAndListPools(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_delete_pools")
 class CreateAndDeletePools(utils.NeutronScenario):
@@ -80,7 +80,7 @@ class CreateAndDeletePools(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_update_pools")
 class CreateAndUpdatePools(utils.NeutronScenario):
@@ -109,7 +109,7 @@ class CreateAndUpdatePools(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_list_vips")
 class CreateAndListVips(utils.NeutronScenario):
@@ -140,7 +140,7 @@ class CreateAndListVips(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_delete_vips")
 class CreateAndDeleteVips(utils.NeutronScenario):
@@ -173,7 +173,7 @@ class CreateAndDeleteVips(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name="NeutronLoadbalancerV1.create_and_update_vips")
 class CreateAndUpdateVips(utils.NeutronScenario):

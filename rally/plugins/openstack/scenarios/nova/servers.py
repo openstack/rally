@@ -849,7 +849,7 @@ class BootAndRebuildServer(utils.NovaScenario, cinder_utils.CinderScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
                     name="NovaServers.boot_and_associate_floating_ip")
 class BootAndAssociateFloatingIp(utils.NovaScenario,
@@ -1023,7 +1023,7 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
                     name="NovaServers.boot_server_associate_and"
                          "_dissociate_floating_ip")
@@ -1053,7 +1053,7 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("network")
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_server_and_list_interfaces")
 class BootServerAndListInterfaces(utils.NovaScenario):

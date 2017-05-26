@@ -325,7 +325,7 @@ class ListRecordsets(utils.DesignateScenario):
 @validation.add("required_services",
                 services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("zones")
+@validation.add("required_contexts", contexts=("zones"))
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_delete_recordsets")
 class CreateAndDeleteRecordsets(utils.DesignateScenario):
@@ -358,7 +358,7 @@ class CreateAndDeleteRecordsets(utils.DesignateScenario):
 @validation.add("required_services",
                 services=[consts.Service.DESIGNATE])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("zones")
+@validation.add("required_contexts", contexts=("zones"))
 @scenario.configure(context={"cleanup": ["designate"]},
                     name="DesignateBasic.create_and_list_recordsets")
 class CreateAndListRecordsets(utils.DesignateScenario):

@@ -254,7 +254,7 @@ class CreateVolume(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts("volumes")
+@validation.add("required_contexts", contexts=("volumes"))
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.modify_volume_metadata")
 class ModifyVolumeMetadata(cinder_utils.CinderBasic):
@@ -323,7 +323,7 @@ class CreateAndExtendVolume(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
-@validation.required_contexts("volumes")
+@validation.add("required_contexts", contexts=("volumes"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_from_volume_and_delete_volume")
@@ -357,7 +357,7 @@ class CreateFromVolumeAndDeleteVolume(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
-@validation.required_contexts("volumes")
+@validation.add("required_contexts", contexts=("volumes"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_delete_snapshot")
@@ -548,7 +548,7 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
-@validation.required_contexts("volumes")
+@validation.add("required_contexts", contexts=("volumes"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_and_list_snapshots")
@@ -751,7 +751,7 @@ class CreateVolumeAndClone(cinder_utils.CinderBasic):
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
 @validation.add("restricted_parameters", param_names=["name", "display_name"],
                 subdict="create_snapshot_kwargs")
-@validation.required_contexts("volumes")
+@validation.add("required_contexts", contexts=("volumes"))
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder"]},
                     name="CinderVolumes.create_volume_from_snapshot")
