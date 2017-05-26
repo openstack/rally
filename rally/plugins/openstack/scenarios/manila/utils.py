@@ -35,7 +35,7 @@ class ManilaScenario(scenario.OpenStackScenario):
         """Create a share.
 
         :param share_proto: share protocol for new share,
-            available values are NFS, CIFS, GlusterFS and HDFS.
+            available values are NFS, CIFS, GlusterFS, HDFS and CEPHFS.
         :param size: size of a share in GB
         :param snapshot_id: ID of the snapshot
         :param name: name of new share

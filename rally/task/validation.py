@@ -291,7 +291,7 @@ def _get_validated_flavor(config, clients, param_name):
 @validator
 def validate_share_proto(config, clients, deployment):
     """Validates value of share protocol for creation of Manila share."""
-    allowed = ("NFS", "CIFS", "GLUSTERFS", "HDFS", )
+    allowed = ("NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS", )
     share_proto = config.get("args", {}).get("share_proto")
     if six.text_type(share_proto).upper() not in allowed:
         message = _("Share protocol '%(sp)s' is invalid, allowed values are "

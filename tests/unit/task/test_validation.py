@@ -446,7 +446,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor(config, clients, "flavor")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @ddt.data("nfS", "Cifs", "GLUSTERFS", "hdfs")
+    @ddt.data("nfS", "Cifs", "GLUSTERFS", "hdfs", "cephfs")
     def test_validate_share_proto_valid(self, share_proto):
         validator = self._unwrap_validator(validation.validate_share_proto)
         result = validator(
