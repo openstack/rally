@@ -137,6 +137,14 @@ class BlockTestCase(test.TestCase):
             self.service.get_qos("qos"))
         self.service._impl.get_qos.assert_called_once_with("qos")
 
+    def test_set_qos(self):
+        set_specs_args = {"test": "foo"}
+        self.assertEqual(
+            self.service._impl.set_qos.return_value,
+            self.service.set_qos(qos="qos", set_specs_args=set_specs_args))
+        self.service._impl.set_qos.assert_called_once_with(
+            qos="qos", set_specs_args=set_specs_args)
+
     def test_create_snapshot(self):
         self.assertEqual(
             self.service._impl.create_snapshot.return_value,

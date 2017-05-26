@@ -34,7 +34,7 @@ VolumeTransfer = collections.namedtuple("VolumeTransfer", ["id", "name",
                                                            "auth_key"])
 VolumeEncryptionType = collections.namedtuple("VolumeEncryptionType",
                                               ["id", "volume_type_id"])
-QoSSpecs = collections.namedtuple("QoSSpecs", ["id", "name"])
+QoSSpecs = collections.namedtuple("QoSSpecs", ["id", "name", "specs"])
 
 
 class BlockStorage(service.UnifiedService):
@@ -216,6 +216,17 @@ class BlockStorage(service.UnifiedService):
         :rtype: :class:`QoSSpecs`
         """
         return self._impl.get_qos(qos_id)
+
+    @service.should_be_overridden
+    def set_qos(self, qos, set_specs_args):
+        """Add/Update keys in qos specs.
+
+        :param qos: The instance of the :class:`QoSSpecs` to set
+        :param set_specs_args: A dict of key/value pairs to be set
+        :rtype: :class:`QoSSpecs`
+        """
+        return self._impl.set_qos(qos=qos,
+                                  set_specs_args=set_specs_args)
 
     @service.should_be_overridden
     def create_snapshot(self, volume_id, force=False,

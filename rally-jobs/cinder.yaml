@@ -1102,7 +1102,6 @@
   CinderQos.create_and_list_qos:
     -
       args:
-        specs:
           consumer: "both"
           write_iops_sec: "10"
           read_iops_sec: "1000"
@@ -1121,7 +1120,6 @@
   CinderQos.create_and_get_qos:
     -
       args:
-        specs:
           consumer: "both"
           write_iops_sec: "10"
           read_iops_sec: "1000"
@@ -1187,6 +1185,27 @@
           "test_type3",
           "test_type4"
         ]
+      sla:
+        failure_rate:
+          max: 0
+
+  CinderQos.create_and_set_qos:
+    -
+      args:
+        consumer: "back-end"
+        write_iops_sec: "10"
+        read_iops_sec: "1000"
+        set_consumer: "both"
+        set_write_iops_sec: "11"
+        set_read_iops_sec: "1001"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0

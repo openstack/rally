@@ -27,11 +27,19 @@ from rally.task import validation
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_list_qos")
 class CreateAndListQos(cinder_utils.CinderBasic):
-    def run(self, specs):
-        """create a qos, then list all qos.
+    def run(self, consumer, write_iops_sec, read_iops_sec):
+        """Create a qos, then list all qos.
 
-        :param specs: A dict of key/value pairs to create qos
+        :param consumer: Consumer behavior
+        :param write_iops_sec: random write limitation
+        :param read_iops_sec: random read limitation
         """
+        specs = {
+            "consumer": consumer,
+            "write_iops_sec": write_iops_sec,
+            "read_iops_sec": read_iops_sec
+        }
+
         qos = self.admin_cinder.create_qos(specs)
 
         pool_list = self.admin_cinder.list_qos()
@@ -47,10 +55,49 @@ class CreateAndListQos(cinder_utils.CinderBasic):
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_get_qos")
 class CreateAndGetQos(cinder_utils.CinderBasic):
-    def run(self, specs):
+    def run(self, consumer, write_iops_sec, read_iops_sec):
         """Create a qos, then get details of the qos.
 
-        :param specs: A dict of key/value pairs to create qos
+        :param consumer: Consumer behavior
+        :param write_iops_sec: random write limitation
+        :param read_iops_sec: random read limitation
         """
+        specs = {
+            "consumer": consumer,
+            "write_iops_sec": write_iops_sec,
+            "read_iops_sec": read_iops_sec
+        }
+
         qos = self.admin_cinder.create_qos(specs)
         self.admin_cinder.get_qos(qos.id)
+
+
+@validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("required_platform", platform="openstack", admin=True)
+@scenario.configure(context={"admin_cleanup": ["cinder"]},
+                    name="CinderQos.create_and_set_qos")
+class CreateAndSetQos(cinder_utils.CinderBasic):
+    def run(self, consumer, write_iops_sec, read_iops_sec,
+            set_consumer, set_write_iops_sec, set_read_iops_sec):
+        """Create a qos, then Add/Update keys in qos specs.
+
+        :param consumer: Consumer behavior
+        :param write_iops_sec: random write limitation
+        :param read_iops_sec: random read limitation
+        :param set_consumer: update Consumer behavior
+        :param set_write_iops_sec: update random write limitation
+        :param set_read_iops_sec: update random read limitation
+        """
+        create_specs = {
+            "consumer": consumer,
+            "write_iops_sec": write_iops_sec,
+            "read_iops_sec": read_iops_sec
+        }
+        set_specs = {
+            "consumer": set_consumer,
+            "write_iops_sec": set_write_iops_sec,
+            "read_iops_sec": set_read_iops_sec
+        }
+
+        qos = self.admin_cinder.create_qos(create_specs)
+        self.admin_cinder.set_qos(qos=qos, set_specs_args=set_specs)
