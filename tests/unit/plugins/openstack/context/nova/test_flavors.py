@@ -116,7 +116,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
 
         mock_cleanup.assert_called_once_with(
             names=["nova.flavors"],
-            admin=real_context["admin"]["credential"],
+            admin=real_context["admin"],
             api_versions=None,
             superclass=mock_make_name_matcher.return_value,
             task_id=flavors_ctx.get_owner_id())

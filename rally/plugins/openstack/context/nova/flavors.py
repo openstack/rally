@@ -105,7 +105,7 @@ class FlavorsGenerator(context.Context):
         mather = rutils.make_name_matcher(*[f["name"] for f in self.config])
         resource_manager.cleanup(
             names=["nova.flavors"],
-            admin=self.context["admin"]["credential"],
+            admin=self.context["admin"],
             api_versions=self.context["config"].get("api_versions"),
             superclass=mather,
             task_id=self.get_owner_id())
