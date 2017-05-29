@@ -23,17 +23,15 @@ from rally.common import logging
 from rally.common import utils
 from rally import consts
 from rally import osclients
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.vm import vmtasks
+from rally.plugins.openstack.services.image import image
 from rally.plugins.openstack import types
-from rally.plugins.openstack.wrappers import glance as glance_wrapper
 from rally.task import context
 
 LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
-@context.configure(name="custom_image", order=500, hidden=True)
 class BaseCustomImageGenerator(context.Context):
     """Base class for the contexts providing customized image with.
 
@@ -116,9 +114,12 @@ class BaseCustomImageGenerator(context.Context):
         """
 
         if "admin" in self.context:
-            # NOTE(pboldin): Create by first user and make it public by
-            #                the admin
-            user = self.context["users"][0]
+            if self.context["users"]:
+                # NOTE(pboldin): Create by first user and make it public by
+                #                the admin
+                user = self.context["users"][0]
+            else:
+                user = self.context["admin"]
             tenant = self.context["tenants"][user["tenant_id"]]
 
             nics = None
@@ -126,6 +127,9 @@ class BaseCustomImageGenerator(context.Context):
                 nics = [{"net-id": tenant["networks"][0]["id"]}]
 
             custom_image = self.create_one_image(user, nics=nics)
+            glance_service = image.Image(
+                self.context["admin"]["credential"].clients())
+            glance_service.set_visibility(custom_image.id)
 
             for tenant in self.context["tenants"].values():
                 tenant["custom_image"] = custom_image
@@ -146,7 +150,6 @@ class BaseCustomImageGenerator(context.Context):
         """Create one image for the user."""
 
         clients = osclients.Clients(user["credential"])
-        admin_clients = osclients.Clients(self.context["admin"]["credential"])
 
         image_id = types.GlanceImage.transform(
             clients=clients, resource_config=self.config["image"])
@@ -155,8 +158,6 @@ class BaseCustomImageGenerator(context.Context):
 
         vm_scenario = vmtasks.BootRuncommandDelete(self.context,
                                                    clients=clients)
-
-        glance_wrap = glance_wrapper.wrap(admin_clients.glance, self)
 
         server, fip = vm_scenario._boot_server_with_fip(
             image=image_id, flavor=flavor_id,
@@ -175,15 +176,8 @@ class BaseCustomImageGenerator(context.Context):
 
             LOG.debug("Creating snapshot for %r", server)
             custom_image = vm_scenario._create_image(server)
-            glance_wrap.set_visibility(custom_image)
         finally:
             vm_scenario._delete_server_with_fip(server, fip)
-
-        if hasattr(custom_image, "to_dict"):
-            # NOTE(stpierre): Glance v1 images are objects that can be
-            # converted to dicts; Glance v2 images are already
-            # dict-like
-            custom_image = custom_image.to_dict()
 
         return custom_image
 
@@ -215,17 +209,11 @@ class BaseCustomImageGenerator(context.Context):
     def delete_one_image(self, user, custom_image):
         """Delete the image created for the user and tenant."""
 
-        clients = osclients.Clients(user["credential"])
-
-        nova_scenario = nova_utils.NovaScenario(
-            context=self.context, clients=clients)
-
         with logging.ExceptionLogger(
-                LOG, _("Unable to delete image %s") % custom_image["id"]):
+                LOG, _("Unable to delete image %s") % custom_image.id):
 
-            custom_image = nova_scenario.clients("nova").images.get(
-                custom_image["id"])
-            nova_scenario._delete_image(custom_image)
+            glance_service = image.Image(user["credential"].clients())
+            glance_service.delete_image(custom_image.id)
 
     @logging.log_task_wrapper(LOG.info,
                               _("Custom image context: customizing"))
