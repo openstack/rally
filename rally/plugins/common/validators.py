@@ -277,3 +277,29 @@ class RequiredContextsValidator(validation.Validator):
                    "the benchmark configuration file: {}").format(
                 ", ".join(missing_contexts))
             return self.fail(msg)
+
+
+@validation.configure(name="required_param_or_context",
+                      namespace="openstack")
+class RequiredParamOrContextValidator(validation.Validator):
+
+    def __init__(self, param_name, ctx_name):
+        """Validator checks if required image is specified.
+
+        :param param_name: name of parameter
+        :param ctx_name: name of context
+        """
+        super(RequiredParamOrContextValidator, self).__init__()
+        self.param_name = param_name
+        self.ctx_name = ctx_name
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        msg = ("You should specify either scenario argument {} or"
+               " use context {}.").format(self.param_name,
+                                          self.ctx_name)
+
+        if self.ctx_name in config.get("context", {}):
+            return
+        if self.param_name in config.get("args", {}):
+            return
+        return self.fail(msg)

@@ -311,23 +311,6 @@ def flavor_exists(config, clients, deployment, param_name):
 
 
 @validator
-def required_param_or_context(config, clients, deployment,
-                              arg_name, ctx_name):
-    """Validator checks if required image is specified.
-
-    :param arg_name: name of parameter
-    :param ctx_name: name of context
-    """
-    message = ("Parameter {} is required but not described into context {}"
-               " or arguments of scenario").format(arg_name, ctx_name)
-    if ctx_name in config.get("context", {}):
-        return ValidationResult(True)
-    if arg_name in config.get("args", {}):
-        return ValidationResult(True)
-    return ValidationResult(False, message)
-
-
-@validator
 def volume_type_exists(config, clients, deployment, param_name):
     """Returns validator for volume types.
 
@@ -435,3 +418,7 @@ required_api_versions = deprecated_validator("required_api_versions",
 required_contexts = deprecated_validator("required_contexts",
                                          "required_contexts",
                                          "0.10.0")
+
+required_param_or_context = deprecated_validator("required_param_or_context",
+                                                 "required_param_or_context",
+                                                 "0.10.0")

@@ -284,3 +284,40 @@ class RequiredContextsValidatorTestCase(test.TestCase):
             self.assertEqual(err_msg, result.msg)
         else:
             self.assertIsNone(result)
+
+
+@ddt.ddt
+class RequiredParamOrContextValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(RequiredParamOrContextValidatorTestCase, self).setUp()
+        self.validator = validators.RequiredParamOrContextValidator(
+            "image", "custom_image")
+        self.credentials = dict(openstack={"admin": mock.MagicMock(),
+                                           "users": [mock.MagicMock()], })
+
+    @ddt.unpack
+    @ddt.data(
+        {"config": {"args": {"image": {"name": ""}},
+                    "context": {"custom_image": {"name": "fake_image"}}}},
+        {"config": {"context": {"custom_image": {"name": "fake_image"}}}},
+        {"config": {"args": {"image": {"name": "fake_image"}},
+                    "context": {"custom_image": ""}}},
+        {"config": {"args": {"image": {"name": "fake_image"}}}},
+        {"config": {"args": {"image": {"name": ""}},
+                    "context": {"custom_image": {"name": ""}}}},
+        {"config": {"args": {}, "context": {}},
+         "err_msg": "You should specify either scenario argument image or "
+                    "use context custom_image."},
+        {"config": {},
+         "err_msg": "You should specify either scenario argument image or "
+                    "use context custom_image."}
+    )
+    def test_validate(self, config, err_msg=False):
+        result = self.validator.validate(config, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result)
