@@ -264,7 +264,11 @@ class NeutronWrapper(NetworkWrapper):
                 self.client.remove_interface_router(
                     port["device_id"], {"port_id": port["id"]})
             else:
-                self.client.delete_port(port["id"])
+                try:
+                    self.client.delete_port(port["id"])
+                except neutron_exceptions.PortNotFoundClient:
+                    # port is auto-removed
+                    pass
 
         for subnet_id in network["subnets"]:
             self._delete_subnet(subnet_id)
