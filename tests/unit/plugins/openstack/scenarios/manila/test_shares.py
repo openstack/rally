@@ -64,6 +64,112 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
             detailed=detailed, search_opts=search_opts)
 
     @ddt.data(
+        {"params": {"share_proto": "nfs"}, "new_size": 4},
+        {
+            "params": {
+                "share_proto": "cifs",
+                "size": 4,
+                "share_network": "foo",
+                "share_type": "bar",
+                "snapshot_id": "snapshot_foo",
+                "description": "foo_description",
+                "metadata": {"foo_metadata": "foo"},
+                "share_network": "foo_network",
+                "share_type": "foo_type",
+                "is_public": True,
+                "availability_zone": "foo_avz",
+                "share_group_id": "foo_group_id"
+            },
+            "new_size": 8
+        }
+    )
+    @ddt.unpack
+    def test_create_and_extend_shares(self, params, new_size):
+        size = params.get("size", 1)
+        share_group_id = params.get("share_group_id", None)
+        snapshot_id = params.get("snapshot_id", None)
+        description = params.get("description", None)
+        metadata = params.get("metadata", None)
+        share_network = params.get("share_network", None)
+        share_type = params.get("share_type", None)
+        is_public = params.get("is_public", False)
+        availability_zone = params.get("availability_zone", None)
+
+        fake_share = mock.MagicMock()
+        scenario = shares.CreateAndExtendShare(self.context)
+        scenario._create_share = mock.MagicMock(return_value=fake_share)
+        scenario._extend_share = mock.MagicMock()
+
+        scenario.run(new_size=new_size, **params)
+
+        scenario._create_share.assert_called_with(
+            share_proto=params["share_proto"],
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        scenario._extend_share.assert_called_with(fake_share, new_size)
+
+    @ddt.data(
+        {"params": {"share_proto": "nfs"}, "new_size": 4},
+        {
+            "params": {
+                "share_proto": "cifs",
+                "size": 4,
+                "share_network": "foo",
+                "share_type": "bar",
+                "snapshot_id": "snapshot_foo",
+                "description": "foo_description",
+                "metadata": {"foo_metadata": "foo"},
+                "share_network": "foo_network",
+                "share_type": "foo_type",
+                "is_public": True,
+                "availability_zone": "foo_avz",
+                "share_group_id": "foo_group_id"
+            },
+            "new_size": 8
+        }
+    )
+    @ddt.unpack
+    def test_create_and_shrink_shares(self, params, new_size):
+        size = params.get("size", 2)
+        share_group_id = params.get("share_group_id", None)
+        snapshot_id = params.get("snapshot_id", None)
+        description = params.get("description", None)
+        metadata = params.get("metadata", None)
+        share_network = params.get("share_network", None)
+        share_type = params.get("share_type", None)
+        is_public = params.get("is_public", False)
+        availability_zone = params.get("availability_zone", None)
+
+        fake_share = mock.MagicMock()
+        scenario = shares.CreateAndShrinkShare(self.context)
+        scenario._create_share = mock.MagicMock(return_value=fake_share)
+        scenario._shrink_share = mock.MagicMock()
+
+        scenario.run(new_size=new_size, **params)
+
+        scenario._create_share.assert_called_with(
+            share_proto=params["share_proto"],
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        scenario._shrink_share.assert_called_with(fake_share, new_size)
+
+    @ddt.data(
         {},
         {"description": "foo_description"},
         {"neutron_net_id": "foo_neutron_net_id"},

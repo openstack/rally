@@ -59,6 +59,51 @@
           max: 0
   {% endfor %}
 
+  ManilaShares.create_and_extend_share:
+    -
+      args:
+        share_proto: "nfs"
+        size: 1
+        share_type: "dhss_false"
+        new_size: 2
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  ManilaShares.create_and_shrink_share:
+    -
+      args:
+        share_proto: "nfs"
+        size: 2
+        share_type: "dhss_false"
+        new_size: 1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
 
   ManilaShares.set_and_delete_metadata:
     -
