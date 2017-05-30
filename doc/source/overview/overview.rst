@@ -161,7 +161,7 @@ The actual **Rally core** consists of 4 main components, listed below in the
 order they go into action:
 
     1. **Server Providers** - provide a **unified interface** for interaction
-       with different **virtualization technologies** (*LXS*, *Virsh* etc.) and
+       with different **virtualization technologies** (*LXC*, *Virsh* etc.) and
        **cloud suppliers** (like *Amazon*): it does so via *ssh* access and in
        one *L3 network*;
     2. **Deploy Engines** - deploy some OpenStack distribution (like *DevStack*
