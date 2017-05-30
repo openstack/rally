@@ -72,7 +72,7 @@ class TempestConfigfileManager(object):
             auth_url_v2 = parse.urljoin(auth_url, "/v2.0")
         else:
             url_path = parse.urlparse(auth_url).path
-            auth_version = url_path[1:3]
+            auth_version = [v for v in url_path.split("/") if v][-1][:2]
             auth_url_v2 = auth_url.replace(url_path, "/v2.0")
         self.conf.set(section_name, "auth_version", auth_version)
         self.conf.set(section_name, "uri", auth_url_v2)
