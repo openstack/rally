@@ -242,7 +242,8 @@ class CreateAndListShare(utils.ManilaScenario):
                 integer_only=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.required_contexts(manila_consts.SHARES_CONTEXT_NAME)
+@validation.add("required_contexts",
+                contexts=manila_consts.SHARES_CONTEXT_NAME)
 @scenario.configure(
     context={"cleanup": ["manila"]},
     name="ManilaShares.set_and_delete_metadata")
