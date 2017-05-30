@@ -1,5 +1,5 @@
 ---
-  NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks:
+  NeutronBGPVPN.create_and_list_networks_associations:
     -
       args: {}
       runner:

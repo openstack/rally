@@ -145,6 +145,7 @@ class CreateAndUpdateBgpvpns(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
+@validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"admin_cleanup": ["neutron"],
                              "cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks")
@@ -167,18 +168,14 @@ class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
                      Acceptable formats: l2 and l3
         """
 
-        networks = self._list_networks(
-            tenant_id=self.context["user"]["tenant_id"])
-        if not networks:
-            network = self._create_network({})
-        else:
-            network = {"network": networks[0]}
+        networks = self.context.get("tenant", {}).get("networks", [])
+        network = networks[0]
         bgpvpn = self._create_bgpvpn(route_targets=route_targets,
                                      import_targets=import_targets,
                                      export_targets=export_targets,
                                      route_distinguishers=route_distinguishers,
                                      type=bgpvpn_type,
-                                     tenant_id=network["network"]["tenant_id"])
+                                     tenant_id=network["tenant_id"])
         net_asso = self._create_bgpvpn_network_assoc(bgpvpn, network)
         self._delete_bgpvpn_network_assoc(bgpvpn, net_asso)
 
@@ -189,6 +186,7 @@ class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
+@validation.add("required_contexts", contexts=("router"))
 @scenario.configure(context={"admin_cleanup": ["neutron"],
                              "cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers")
@@ -212,16 +210,112 @@ class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
                      Acceptable formats: l2 and l3
         """
 
-        routers = self._list_routers()
-        if not routers:
-            router = self._create_router({})
-        else:
-            router = {"router": routers[0]}
+        routers = self.context.get("tenant", {}).get("routers", [])
+        router = routers[0]["router"]
         bgpvpn = self._create_bgpvpn(route_targets=route_targets,
                                      import_targets=import_targets,
                                      export_targets=export_targets,
                                      route_distinguishers=route_distinguishers,
                                      type=bgpvpn_type,
-                                     tenant_id=router["router"]["tenant_id"])
+                                     tenant_id=router["tenant_id"])
         router_asso = self._create_bgpvpn_router_assoc(bgpvpn, router)
         self._delete_bgpvpn_router_assoc(bgpvpn, router_asso)
+
+
+@validation.add("enum", param_name="bgpvpn_type", values=["l2", "l3"],
+                missed=True)
+@validation.add("required_neutron_extensions", extensions=["bgpvpn"])
+@validation.add("required_services", services=[consts.Service.NEUTRON])
+@validation.add("required_platform", platform="openstack",
+                admin=True, users=True)
+@validation.add("required_contexts", contexts=("network"))
+@scenario.configure(context={"admin_cleanup": ["neutron"]},
+                    name="NeutronBGPVPN.create_and_list_networks_associations")
+class CreateAndListNetworksAssocs(utils.NeutronScenario):
+
+    def run(self, route_targets=None, import_targets=None,
+            export_targets=None, route_distinguishers=None, bgpvpn_type="l3"):
+        """Associate a network and list networks associations.
+
+        Measure the "neutron bgpvpn-create",
+        "neutron bgpvpn-net-assoc-create" and
+        "neutron bgpvpn-net-assoc-list" command performance.
+
+        :param route_targets: Route Targets that will be both imported and
+        used for export
+        :param import_targets: Additional Route Targets that will be imported
+        :param export_targets: Additional Route Targets that will be used
+        for export.
+        :param route_distinguishers: List of route distinguisher strings
+        :param bgpvpn_type: type of VPN and the technology behind it.
+                     Acceptable formats: l2 and l3
+        """
+
+        networks = self.context.get("tenant", {}).get("networks", [])
+        network = networks[0]
+        bgpvpn = self._create_bgpvpn(route_targets=route_targets,
+                                     import_targets=import_targets,
+                                     export_targets=export_targets,
+                                     route_distinguishers=route_distinguishers,
+                                     type=bgpvpn_type,
+                                     tenant_id=network["tenant_id"])
+        self._create_bgpvpn_network_assoc(bgpvpn, network)
+        net_assocs = self._list_bgpvpn_network_assocs(
+            bgpvpn)["network_associations"]
+
+        network_id = network["id"]
+        msg = ("Network not included into list of associated networks\n"
+               "Network created: {}\n"
+               "List of associations: {}").format(network, net_assocs)
+        list_networks = [net_assoc["network_id"] for net_assoc in net_assocs]
+        self.assertIn(network_id, list_networks, err_msg=msg)
+
+
+@validation.add("enum", param_name="bgpvpn_type", values=["l2", "l3"],
+                missed=True)
+@validation.add("required_neutron_extensions", extensions=["bgpvpn"])
+@validation.add("required_services", services=[consts.Service.NEUTRON])
+@validation.add("required_platform", platform="openstack",
+                admin=True, users=True)
+@validation.add("required_contexts", contexts=("router"))
+@scenario.configure(context={"admin_cleanup": ["neutron"]},
+                    name="NeutronBGPVPN.create_and_list_routers_associations")
+class CreateAndListRoutersAssocs(utils.NeutronScenario):
+
+    def run(self, route_targets=None, import_targets=None,
+            export_targets=None, route_distinguishers=None, bgpvpn_type="l3"):
+        """Associate a router and list routers associations.
+
+        Measure the "neutron bgpvpn-create",
+        "neutron bgpvpn-router-assoc-create" and
+        "neutron bgpvpn-router-assoc-list" command performance.
+
+        :param route_targets: Route Targets that will be both imported and
+        used for export
+        :param import_targets: Additional Route Targets that will be imported
+        :param export_targets: Additional Route Targets that will be used
+        for export.
+        :param route_distinguishers: List of route distinguisher strings
+        :param bgpvpn_type: type of VPN and the technology behind it.
+                     Acceptable formats: l2 and l3
+        """
+
+        routers = self.context.get("tenant", {}).get("routers", [])
+        router = routers[0]["router"]
+        bgpvpn = self._create_bgpvpn(route_targets=route_targets,
+                                     import_targets=import_targets,
+                                     export_targets=export_targets,
+                                     route_distinguishers=route_distinguishers,
+                                     type=bgpvpn_type,
+                                     tenant_id=router["tenant_id"])
+        self._create_bgpvpn_router_assoc(bgpvpn, router)
+        router_assocs = self._list_bgpvpn_router_assocs(
+            bgpvpn)["router_associations"]
+
+        router_id = router["id"]
+        msg = ("Router not included into list of associated routers\n"
+               "Router created: {}\n"
+               "List of associations: {}").format(router, router_assocs)
+
+        list_routers = [r_assoc["router_id"] for r_assoc in router_assocs]
+        self.assertIn(router_id, list_routers, err_msg=msg)

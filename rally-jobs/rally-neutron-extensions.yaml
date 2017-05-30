@@ -68,6 +68,7 @@
         users:
           tenants: 3
           users_per_tenant: 2
+        network: {}
       sla:
         failure_rate:
           max: 0
@@ -82,6 +83,37 @@
         users:
           tenants: 3
           users_per_tenant: 2
+        router: {}
+      sla:
+        failure_rate:
+          max: 0
+
+  NeutronBGPVPN.create_and_list_networks_associations:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+
+  NeutronBGPVPN.create_and_list_routers_associations:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        router: {}
       sla:
         failure_rate:
           max: 0

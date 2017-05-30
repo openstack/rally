@@ -718,7 +718,7 @@ class NeutronScenario(scenario.OpenStackScenario):
     def _list_bgpvpns(self, **kwargs):
         """Return bgpvpns list.
 
-        :param kwargs: dict, POST /bgpvpn/bgpvpns request options
+        :param kwargs: dict, GET /bgpvpn/bgpvpns request options
         :returns: bgpvpns list
         """
         return self.admin_clients("neutron").list_bgpvpns(
@@ -747,7 +747,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param network: dict, network
         :return dict: network_association
         """
-        netassoc = {"network_id": network["network"]["id"]}
+        netassoc = {"network_id": network["id"]}
         return self.clients("neutron").create_bgpvpn_network_assoc(
             bgpvpn["bgpvpn"]["id"], {"network_association": netassoc})
 
@@ -770,7 +770,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param router: dict, router
         :return dict: network_association
         """
-        router_assoc = {"router_id": router["router"]["id"]}
+        router_assoc = {"router_id": router["id"]}
         return self.clients("neutron").create_bgpvpn_router_assoc(
             bgpvpn["bgpvpn"]["id"], {"router_association": router_assoc})
 
@@ -784,6 +784,28 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").delete_bgpvpn_router_assoc(
             bgpvpn["bgpvpn"]["id"], router_assoc["router_association"]["id"])
+
+    @atomic.action_timer("neutron.list_bgpvpn_network_assocs")
+    def _list_bgpvpn_network_assocs(self, bgpvpn, **kwargs):
+        """List network association of bgpvpn
+
+        :param bgpvpn: dict, bgpvpn
+        :param **kwargs: dict, optional parameters
+        :return dict: network_association
+        """
+        return self.clients("neutron").list_bgpvpn_network_assocs(
+            bgpvpn["bgpvpn"]["id"], **kwargs)
+
+    @atomic.action_timer("neutron.list_bgpvpn_router_assocs")
+    def _list_bgpvpn_router_assocs(self, bgpvpn, **kwargs):
+        """List router association of bgpvpn
+
+        :param bgpvpn: dict, bgpvpn
+        :param **kwargs: dict, optional parameters
+        :return dict: router_association
+        """
+        return self.clients("neutron").list_bgpvpn_router_assocs(
+            bgpvpn["bgpvpn"]["id"], **kwargs)
 
     @atomic.action_timer("neutron.create_security_group_rule")
     def _create_security_group_rule(self, security_group_id,
