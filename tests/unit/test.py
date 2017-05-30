@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fixtures
 import os
 import uuid
 
 import mock
 from oslo_config import fixture
 from oslotest import base
-from oslotest import mockpatch
 
 from rally.common import db
 from rally import plugins
@@ -119,15 +119,15 @@ class ScenarioTestCase(TestCase):
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
         if self.patch_benchmark_utils:
-            self.mock_resource_is = mockpatch.Patch(
+            self.mock_resource_is = fixtures.MockPatch(
                 self.benchmark_utils + ".resource_is")
-            self.mock_get_from_manager = mockpatch.Patch(
+            self.mock_get_from_manager = fixtures.MockPatch(
                 self.benchmark_utils + ".get_from_manager")
-            self.mock_wait_for = mockpatch.Patch(
+            self.mock_wait_for = fixtures.MockPatch(
                 self.benchmark_utils + ".wait_for")
-            self.mock_wait_for_delete = mockpatch.Patch(
+            self.mock_wait_for_delete = fixtures.MockPatch(
                 self.benchmark_utils + ".wait_for_delete")
-            self.mock_wait_for_status = mockpatch.Patch(
+            self.mock_wait_for_status = fixtures.MockPatch(
                 self.benchmark_utils + ".wait_for_status")
             self.useFixture(self.mock_resource_is)
             self.useFixture(self.mock_get_from_manager)
@@ -135,7 +135,7 @@ class ScenarioTestCase(TestCase):
             self.useFixture(self.mock_wait_for_delete)
             self.useFixture(self.mock_wait_for_status)
 
-        self.mock_sleep = mockpatch.Patch("time.sleep")
+        self.mock_sleep = fixtures.MockPatch("time.sleep")
         self.useFixture(self.mock_sleep)
 
         self._clients = {}
