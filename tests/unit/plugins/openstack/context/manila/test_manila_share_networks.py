@@ -27,6 +27,8 @@ from tests.unit import test
 MANILA_UTILS_PATH = ("rally.plugins.openstack.scenarios.manila.utils."
                      "ManilaScenario.")
 
+MOCK_USER_CREDENTIAL = mock.MagicMock()
+
 
 class Fake(object):
     def __init__(self, **kwargs):
@@ -71,8 +73,9 @@ class ShareNetworksTestCase(test.TestCase):
         users = []
         for t_id in tenants.keys():
             for i in range(self.USERS_PER_TENANT):
-                users.append(
-                    {"id": i, "tenant_id": t_id, "credential": "fake"})
+                users.append({
+                    "id": i, "tenant_id": t_id,
+                    "credential": MOCK_USER_CREDENTIAL})
         context = {
             "config": {
                 "users": {
@@ -123,8 +126,8 @@ class ShareNetworksTestCase(test.TestCase):
                 "tenant_2_id": {"id": "tenant_2_id", "name": "tenant_2_name"},
             },
             "users": [
-                {"tenant_id": "tenant_1_id", "credential": {"c1": "foo"}},
-                {"tenant_id": "tenant_2_id", "credential": {"c2": "bar"}},
+                {"tenant_id": "tenant_1_id", "credential": mock.MagicMock()},
+                {"tenant_id": "tenant_2_id", "credential": mock.MagicMock()},
             ],
         }
         self.existing_sns = [
@@ -288,8 +291,8 @@ class ShareNetworksTestCase(test.TestCase):
         ]
         mock_manila_scenario__create_share_network.assert_has_calls(
             expected_calls * (self.TENANTS_AMOUNT * networks_per_tenant))
-        mock_clients.assert_has_calls([
-            mock.call("fake", {}) for i in range(self.TENANTS_AMOUNT)])
+        mock_clients.assert_has_calls([mock.call(MOCK_USER_CREDENTIAL, {})
+                                      for i in range(self.TENANTS_AMOUNT)])
 
     @ddt.data(True, False)
     @mock.patch("rally.osclients.Clients")
@@ -326,8 +329,8 @@ class ShareNetworksTestCase(test.TestCase):
         expected_calls = [mock.call(**sn_args), mock.call().to_dict()]
         mock_manila_scenario__create_share_network.assert_has_calls(
             expected_calls * (self.TENANTS_AMOUNT * networks_per_tenant))
-        mock_clients.assert_has_calls([
-            mock.call("fake", {}) for i in range(self.TENANTS_AMOUNT)])
+        mock_clients.assert_has_calls([mock.call(MOCK_USER_CREDENTIAL, {})
+                                      for i in range(self.TENANTS_AMOUNT)])
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
@@ -351,8 +354,8 @@ class ShareNetworksTestCase(test.TestCase):
         expected_calls = [mock.call(), mock.call().to_dict()]
         mock_manila_scenario__create_share_network.assert_has_calls(
             expected_calls * self.TENANTS_AMOUNT)
-        mock_clients.assert_has_calls([
-            mock.call("fake", {}) for i in range(self.TENANTS_AMOUNT)])
+        mock_clients.assert_has_calls([mock.call(MOCK_USER_CREDENTIAL, {})
+                                      for i in range(self.TENANTS_AMOUNT)])
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_delete_share_network")

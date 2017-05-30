@@ -38,3 +38,4 @@ more complicated cases.
    tutorial/step_8_discovering_more_plugins
    tutorial/step_9_deploying_openstack
    tutorial/step_10_verifying_cloud_via_tempest_verifier
+   tutorial/step_11_profiling_openstack_internals

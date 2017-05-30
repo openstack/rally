@@ -262,7 +262,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
         mock_heat.main.Stack.return_value = fake_stack
         context = {
             "user": {"keypair": {"name": "name", "private": "pk"},
-                     "credential": "ok"},
+                     "credential": mock.MagicMock()},
             "tenant": {"networks": [{"router_id": "1"}]}
         }
         scenario = vmtasks.RuncommandHeat(context)

@@ -37,7 +37,7 @@ class EC2ServerGeneratorTestCase(test.TestCase):
         for tenant_id in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": tenant_id,
-                              "credential": "credential"})
+                              "credential": mock.MagicMock()})
         return tenants, users
 
     def _get_context(self, users, tenants):

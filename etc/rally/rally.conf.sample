@@ -580,6 +580,8 @@
 # Neutron create loadbalancer poll interval (floating point value)
 #neutron_create_loadbalancer_poll_interval = 2.0
 
+# Enable or disable osprofiler to trace the scenarios
+#enable_profiler = True
 
 [cleanup]
 

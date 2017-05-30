@@ -37,6 +37,7 @@ class TestExistingCloud(test.TestCase):
                     "endpoint_type": consts.EndpointType.INTERNAL,
                     "https_insecure": False,
                     "https_cacert": "cacert",
+                    "profiler_hmac_key": None,
                     "admin": {
                         "username": "admin",
                         "password": "myadminpass",
@@ -52,6 +53,7 @@ class TestExistingCloud(test.TestCase):
                     "endpoint_type": consts.EndpointType.INTERNAL,
                     "https_insecure": False,
                     "https_cacert": "cacert",
+                    "profiler_hmac_key": None,
                     "admin": {
                         "username": "admin",
                         "password": "myadminpass",
@@ -72,6 +74,7 @@ class TestExistingCloud(test.TestCase):
                             "endpoint_type": consts.EndpointType.INTERNAL,
                             "https_insecure": False,
                             "https_cacert": "cacert",
+                            "profiler_hmac_key": None,
                             "admin": {
                                 "username": "admin",
                                 "password": "myadminpass",
@@ -159,6 +162,7 @@ class TestExistingCloud(test.TestCase):
             "endpoint_type": "internal",
             "https_cacert": "cacert",
             "https_insecure": False,
+            "profiler_hmac_key": None,
             "password": "myadminpass",
             "permission": "admin",
             "project_domain_name": None,
