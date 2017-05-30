@@ -792,6 +792,10 @@ class APITestCase(test.TestCase):
     def test_init_rally_endpoint(self):
         self.assertRaises(NotImplementedError, api.API, rally_endpoint="foo")
 
+    def test_version(self):
+        api_inst = api.API(skip_db_check=True)
+        self.assertEqual(1, api_inst.version)
+
 
 class FakeVerifierManager(object):
     NAME = "fake_verifier"
