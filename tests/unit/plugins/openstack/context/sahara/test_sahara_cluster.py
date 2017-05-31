@@ -46,8 +46,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                                        "tenant_id": str(i),
                                        "credential": mock.MagicMock()})
 
-        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark",
-                          enforce_type=True)
+        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
 
         self.context.update({
             "config": {
