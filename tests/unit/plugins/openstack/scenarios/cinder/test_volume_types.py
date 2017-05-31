@@ -290,3 +290,20 @@ class CinderVolumeTypesTestCase(test.ScenarioTestCase):
             "fake_id", specs=create_specs)
         mock_service.update_encryption_type.assert_called_once_with(
             "fake_id", specs=update_specs)
+
+    @mock.patch("%s.list_type_access" % CINDER_V2_PATH)
+    @mock.patch("%s.add_type_access" % CINDER_V2_PATH)
+    @mock.patch("%s.create_volume_type" % CINDER_V2_PATH)
+    def test_create_volume_type_add_and_list_type_access(
+        self, mock_create_volume_type, mock_add_type_access,
+            mock_list_type_access):
+        scenario = volume_types.CreateVolumeTypeAddAndListTypeAccess(
+            self._get_context())
+        fake_type = mock.Mock()
+        mock_create_volume_type.return_value = fake_type
+
+        scenario.run(description=None, is_public=False)
+        mock_create_volume_type.assert_called_once_with(
+            description=None, is_public=False)
+        mock_add_type_access.assert_called_once_with(fake_type, project="fake")
+        mock_list_type_access.assert_called_once_with(fake_type)

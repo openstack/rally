@@ -239,6 +239,29 @@ class CinderV2ServiceTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.atomic_actions(),
                                        "cinder_v2.update_volume_type")
 
+    def test_add_type_access(self):
+        volume_type = mock.Mock()
+        project = mock.Mock()
+        type_access = self.service.add_type_access(volume_type,
+                                                   project=project)
+        add_project_access = self.cinder.volume_type_access.add_project_access
+        add_project_access.assert_called_once_with(
+            volume_type, project)
+        self.assertEqual(add_project_access.return_value,
+                         type_access)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.add_type_access")
+
+    def test_list_type_access(self):
+        volume_type = mock.Mock()
+        type_access = self.service.list_type_access(volume_type)
+        self.cinder.volume_type_access.list.assert_called_once_with(
+            volume_type)
+        self.assertEqual(self.cinder.volume_type_access.list.return_value,
+                         type_access)
+        self._test_atomic_action_timer(self.atomic_actions(),
+                                       "cinder_v2.list_type_access")
+
 
 class UnifiedCinderV2ServiceTestCase(test.TestCase):
     def setUp(self):

@@ -1,0 +1,16 @@
+---
+  CinderVolumeTypes.create_volume_type_add_and_list_type_access:
+    -
+      args:
+        description: "rally tests creating types"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
