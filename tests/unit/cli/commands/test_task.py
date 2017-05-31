@@ -1071,3 +1071,31 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(task.FailedToLoadResults,
                           self.task._load_task_results_file,
                           api=self.real_api, task_id=task_id)
+
+    @mock.patch("rally.cli.commands.task.os.path")
+    def test_import_results(self, mock_os_path):
+        mock_os_path.exists.return_value = True
+        mock_os_path.expanduser = lambda path: path
+        self.task._load_task_results_file = mock.MagicMock(
+            return_value=["results"]
+        )
+
+        self.task.import_results(self.fake_api,
+                                 "deployment_uuid",
+                                 "task_file", "tag")
+
+        self.task._load_task_results_file.assert_called_once_with(
+            self.fake_api, "task_file"
+        )
+        self.fake_api.task.import_results.assert_called_once_with(
+            "deployment_uuid", ["results"], tag="tag"
+        )
+
+        # not exist
+        mock_os_path.exists.return_value = False
+        self.assertEqual(
+            1,
+            self.task.import_results(self.fake_api,
+                                     "deployment_uuid",
+                                     "task_file", "tag")
+        )

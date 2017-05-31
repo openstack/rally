@@ -485,6 +485,39 @@ class _Task(APIGroup):
             objects.Task.delete_by_uuid(
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
+    def import_results(self, deployment, task_results, tag=None):
+        """Import json results of a test into rally database"""
+        deployment = objects.Deployment.get(deployment)
+        if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
+            raise exceptions.DeploymentNotFinishedStatus(
+                name=deployment["name"],
+                uuid=deployment["uuid"],
+                status=deployment["status"])
+
+        task_inst = objects.Task(deployment_uuid=deployment["uuid"], tag=tag)
+        task_inst.update_status(consts.TaskStatus.RUNNING)
+        for result in task_results:
+            subtask_obj = task_inst.add_subtask(title=result["key"]["name"])
+            workload_obj = subtask_obj.add_workload(result["key"])
+            chunk_size = CONF.raw_result_chunk_size
+            workload_data_count = 0
+            while len(result["result"]) > chunk_size:
+                results_chunk = result["result"][:chunk_size]
+                result["result"] = result["result"][chunk_size:]
+                results_chunk.sort(key=lambda x: x["timestamp"])
+                workload_obj.add_workload_data(workload_data_count,
+                                               {"raw": results_chunk})
+                workload_data_count += 1
+            workload_obj.add_workload_data(workload_data_count,
+                                           {"raw": result["result"]})
+            workload_obj.set_results(result)
+            subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
+        task_inst.update_status(consts.SubtaskStatus.FINISHED)
+
+        LOG.info("Task results have been successfully imported.")
+
+        return task_inst.to_dict()
+
 
 class _Verifier(APIGroup):
 
