@@ -131,7 +131,7 @@ be done via the following steps:
    In order for the volume to be accessible by the Rally user
    (uid: 65500) inside the container, it must be accessible by UID
    65500 *outside* the container as well, which is why it is created
-   in ``/var/lib/rally``. Creating it in your home directory is only
+   in ``/var/lib/rally_container``. Creating it in your home directory is only
    likely to work if your home directory has excessively open
    permissions (e.g., ``0755``), which is not recommended.
 
@@ -173,4 +173,4 @@ More about docker: https://www.docker.com/
 .. references:
 
 .. _installation script: https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh
-.. _installation instructions for various OSes: https://docs.docker.com/installation/
+.. _installation instructions for various OSes: https://docs.docker.com/engine/installation/
