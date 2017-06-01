@@ -15,12 +15,12 @@
 import tempfile
 
 import ddt
+import fixtures
 import mock
 
 from rally.plugins.openstack.services.image import glance_v2
 from tests.unit import test
 
-from oslotest import mockpatch
 
 PATH = ("rally.plugins.openstack.services.image.glance_common."
         "UnifiedGlanceMixin._unify_image")
@@ -37,7 +37,7 @@ class GlanceV2ServiceTestCase(test.TestCase):
         self.name_generator = mock.MagicMock()
         self.service = glance_v2.GlanceV2Service(
             self.clients, name_generator=self.name_generator)
-        self.mock_wait_for_status = mockpatch.Patch(
+        self.mock_wait_for_status = fixtures.MockPatch(
             "rally.task.utils.wait_for_status")
         self.useFixture(self.mock_wait_for_status)
 
