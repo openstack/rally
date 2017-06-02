@@ -539,6 +539,12 @@ class OSClientsTestCase(test.TestCase):
                 mock_manila.client.Client.return_value,
                 self.clients.cache["manila"])
 
+    def test_manila_validate_version(self):
+        osclients.Manila.validate_version("2.0")
+        osclients.Manila.validate_version("2.32")
+        self.assertRaises(exceptions.RallyException,
+                          osclients.Manila.validate_version, "foo")
+
     @mock.patch("rally.osclients.Ceilometer._get_endpoint")
     def test_ceilometer(self, mock_ceilometer__get_endpoint):
         fake_ceilometer = fakes.FakeCeilometerClient()
