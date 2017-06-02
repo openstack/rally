@@ -1115,6 +1115,28 @@
         failure_rate:
           max: 0
 
+  CinderQos.create_qos_associate_and_disassociate_type:
+    -
+      args:
+        consumer: "both"
+        write_iops_sec: "10"
+        read_iops_sec: "1000"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        volume_types: [
+          "test_type1",
+          "test_type2"
+        ]
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumeTypes.create_get_and_delete_encryption_type:
     -
       args:

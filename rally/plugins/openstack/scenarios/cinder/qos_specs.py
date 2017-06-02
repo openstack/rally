@@ -99,3 +99,36 @@ class CreateAndSetQos(cinder_utils.CinderBasic):
 
         qos = self.admin_cinder.create_qos(create_specs)
         self.admin_cinder.set_qos(qos=qos, set_specs_args=set_specs)
+
+
+@validation.add("required_services", services=[consts.Service.CINDER])
+@validation.add("required_platform", platform="openstack", admin=True)
+@validation.add("required_contexts", contexts=("volume_types"))
+@scenario.configure(
+    context={"admin_cleanup": ["cinder"]},
+    name="CinderQos.create_qos_associate_and_disassociate_type",
+    platform="openstack")
+class CreateQosAssociateAndDisassociateType(cinder_utils.CinderBasic):
+    def run(self, consumer, write_iops_sec, read_iops_sec):
+        """Create a qos, Associate and Disassociate the qos from volume type.
+
+        :param consumer: Consumer behavior
+        :param write_iops_sec: random write limitation
+        :param read_iops_sec: random read limitation
+        """
+        specs = {
+            "consumer": consumer,
+            "write_iops_sec": write_iops_sec,
+            "read_iops_sec": read_iops_sec
+        }
+
+        qos = self.admin_cinder.create_qos(specs)
+
+        vt_idx = self.context["iteration"] % len(self.context["volume_types"])
+        volume_type = self.context["volume_types"][vt_idx]
+
+        self.admin_cinder.qos_associate_type(qos_specs=qos,
+                                             volume_type=volume_type["id"])
+
+        self.admin_cinder.qos_disassociate_type(qos_specs=qos,
+                                                volume_type=volume_type["id"])

@@ -110,3 +110,26 @@ class CinderQosTestCase(test.ScenarioTestCase):
         mock_service.create_qos.assert_called_once_with(create_specs_args)
         mock_service.set_qos.assert_called_once_with(
             qos=qos, set_specs_args=set_specs_args)
+
+    def test_create_qos_associate_and_disassociate_type(self):
+        mock_service = self.mock_cinder.return_value
+        context = self._get_context()
+        context.update({
+            "volume_types": [{"id": "fake_id",
+                              "name": "fake_name"}],
+            "iteration": 1})
+
+        qos = mock.MagicMock()
+        specs = {"consumer": "both",
+                 "write_iops_sec": "10",
+                 "read_iops_sec": "1000"}
+
+        scenario = qos_specs.CreateQosAssociateAndDisassociateType(context)
+        mock_service.create_qos.return_value = qos
+
+        scenario.run("both", "10", "1000")
+        mock_service.create_qos.assert_called_once_with(specs)
+        mock_service.qos_associate_type.assert_called_once_with(
+            qos_specs=qos, volume_type="fake_id")
+        mock_service.qos_disassociate_type.assert_called_once_with(
+            qos_specs=qos, volume_type="fake_id")

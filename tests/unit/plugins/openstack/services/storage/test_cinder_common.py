@@ -267,6 +267,16 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         self.cinder.qos_specs.set_keys.assert_called_once_with("qos",
                                                                set_specs_args)
 
+    def test_qos_associate_type(self):
+        self.service.qos_associate_type("qos", "type_id")
+        self.cinder.qos_specs.associate.assert_called_once_with(
+            "qos", "type_id")
+
+    def test_qos_disassociate_type(self):
+        self.service.qos_disassociate_type("qos", "type_id")
+        self.cinder.qos_specs.disassociate.assert_called_once_with(
+            "qos", "type_id")
+
     def test_delete_snapshot(self):
         snapshot = mock.Mock()
         self.service.delete_snapshot(snapshot)
@@ -570,6 +580,24 @@ class UnifiedCinderMixinTestCase(test.TestCase):
         self.service._impl.set_qos.assert_called_once_with(qos.id,
                                                            set_specs_args)
         self.service._unify_qos.assert_called_once_with(qos)
+
+    def test_qos_associate_type(self):
+        self.service._unify_qos = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_qos.return_value,
+            self.service.qos_associate_type("qos", "type_id"))
+        self.service._impl.qos_associate_type.assert_called_once_with(
+            "qos", "type_id")
+        self.service._unify_qos.assert_called_once_with("qos")
+
+    def test_qos_disassociate_type(self):
+        self.service._unify_qos = mock.MagicMock()
+        self.assertEqual(
+            self.service._unify_qos.return_value,
+            self.service.qos_disassociate_type("qos", "type_id"))
+        self.service._impl.qos_disassociate_type.assert_called_once_with(
+            "qos", "type_id")
+        self.service._unify_qos.assert_called_once_with("qos")
 
     def test_delete_snapshot(self):
         self.service.delete_snapshot("snapshot")
