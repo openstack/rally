@@ -170,6 +170,71 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         scenario._shrink_share.assert_called_with(fake_share, new_size)
 
     @ddt.data(
+        {
+            "share_proto": "nfs",
+            "size": 3,
+            "access": "127.0.0.1",
+            "access_type": "ip"
+        },
+        {
+            "access": "1.2.3.4",
+            "access_type": "ip",
+            "access_level": "ro",
+            "share_proto": "cifs",
+            "size": 4,
+            "share_network": "foo",
+            "share_type": "bar",
+            "snapshot_id": "snapshot_foo",
+            "description": "foo_description",
+            "metadata": {"foo_metadata": "foo"},
+            "share_network": "foo_network",
+            "share_type": "foo_type",
+            "is_public": True,
+            "availability_zone": "foo_avz",
+            "share_group_id": "foo_group_id"
+        }
+    )
+    def test_create_share_and_allow_and_deny_access(self, params):
+        access = params["access"]
+        access_type = params["access_type"]
+        access_level = params.get("access_level", "rw")
+        size = params.get("size", 1)
+        share_group_id = params.get("share_group_id", None)
+        snapshot_id = params.get("snapshot_id", None)
+        description = params.get("description", None)
+        metadata = params.get("metadata", None)
+        share_network = params.get("share_network", None)
+        share_type = params.get("share_type", None)
+        is_public = params.get("is_public", False)
+        availability_zone = params.get("availability_zone", None)
+        fake_share = mock.MagicMock()
+        fake_access = {"id": "foo"}
+
+        scenario = shares.CreateShareThenAllowAndDenyAccess(self.context)
+        scenario._create_share = mock.MagicMock(return_value=fake_share)
+        scenario._allow_access_share = mock.MagicMock(return_value=fake_access)
+        scenario._deny_access_share = mock.MagicMock()
+
+        scenario.run(**params)
+
+        scenario._create_share.assert_called_with(
+            share_proto=params["share_proto"],
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        scenario._allow_access_share.assert_called_with(
+            fake_share, access_type, access, access_level)
+        scenario._deny_access_share.assert_called_with(
+            fake_share, fake_access["id"])
+
+    @ddt.data(
         {},
         {"description": "foo_description"},
         {"neutron_net_id": "foo_neutron_net_id"},

@@ -88,6 +88,34 @@
         failure_rate:
           max: 0
 
+  ManilaShares.create_share_then_allow_and_deny_access:
+    -
+      args:
+        share_proto: "nfs"
+        size: 1
+        share_type: "dhss_true"
+        access: "127.0.0.1"
+        access_type: "ip"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+            share_networks: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+          user_choice_method: "round_robin"
+        manila_share_networks:
+          use_share_networks: True
+      sla:
+        failure_rate:
+          max: 0
+
   {% for s in ("create_and_delete_share", "create_and_list_share") %}
   ManilaShares.{{s}}:
     -

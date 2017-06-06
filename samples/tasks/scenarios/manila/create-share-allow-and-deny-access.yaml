@@ -1,0 +1,23 @@
+---
+  ManilaShares.create_share_then_allow_and_deny_access:
+    -
+      args:
+        share_proto: "nfs"
+        size: 1
+        access: "127.0.0.1"
+        access_type: "ip"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0

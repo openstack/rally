@@ -38,5 +38,23 @@ OPTS = {"benchmark": [
         "manila_share_delete_poll_interval",
         default=2.0,
         help="Interval between checks when waiting for Manila share "
-             "deletion.")
+             "deletion."),
+    cfg.FloatOpt(
+        "manila_access_create_timeout",
+        default=300.0,
+        help="Timeout for Manila access creation."),
+    cfg.FloatOpt(
+        "manila_access_create_poll_interval",
+        default=3.0,
+        help="Interval between checks when waiting for Manila access "
+             "creation."),
+    cfg.FloatOpt(
+        "manila_access_delete_timeout",
+        default=180.0,
+        help="Timeout for Manila access deletion."),
+    cfg.FloatOpt(
+        "manila_access_delete_poll_interval",
+        default=2.0,
+        help="Interval between checks when waiting for Manila access "
+             "deletion."),
 ]}

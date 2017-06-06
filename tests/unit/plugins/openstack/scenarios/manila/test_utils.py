@@ -129,6 +129,132 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             timeout=300, check_interval=3)
         self.mock_get_from_manager.mock.assert_called_once_with()
 
+    @ddt.data(
+        {
+            "access_type": "ip",
+            "access": "1.2.3.4",
+            "access_level": "rw",
+            "access_id": "foo"
+        },
+        {
+            "access_type": "domain",
+            "access": "4.3.2.1",
+            "access_level": "ro",
+            "access_id": "bar"
+        }
+    )
+    @ddt.unpack
+    def test__allow_access_share(self, access_type, access, access_level,
+                                 access_id):
+        fake_allow_result = {"id": access_id}
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_update = mock.MagicMock()
+        self.scenario._update_resource_in_allow_access_share = mock.MagicMock(
+            return_value=fake_update)
+
+        fake_share = mock.MagicMock()
+        fake_share.allow.return_value = fake_allow_result
+        fake_share.access_list.return_value = [fake_access]
+
+        self.assertEqual(self.scenario._allow_access_share(
+            fake_share, access_type, access, access_level), fake_allow_result)
+
+        self.scenario._update_resource_in_allow_access_share \
+            .assert_called_with(fake_share, access_id)
+        self.mock_wait_for_status.mock.assert_called_once_with(
+            fake_access,
+            ready_statuses=["active"],
+            update_resource=fake_update,
+            check_interval=3.0,
+            timeout=300.0)
+
+    def test__get_access_from_share_with_no_access_in_share(self):
+        access_id = "foo"
+        fake_share = mock.MagicMock()
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_share.access_list.return_value = []
+
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          self.scenario._get_access_from_share,
+                          fake_share, access_id)
+
+    def test__get_access_from_share(self):
+        access_id = "foo"
+        fake_share = mock.MagicMock()
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_share.access_list.return_value = [fake_access]
+
+        access = self.scenario._get_access_from_share(fake_share, access_id)
+
+        self.assertEqual(access, fake_access)
+
+    def test__update_resource_in_allow_access_share(self):
+        access_id = "foo"
+        fake_share = mock.MagicMock()
+        fake_resource = mock.MagicMock()
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_share.access_list.return_value = [fake_access]
+
+        fn = self.scenario._update_resource_in_allow_access_share(
+            fake_share, access_id)
+
+        self.assertEqual(fn(fake_resource), fake_access)
+
+    def test__deny_access_share(self):
+        access_id = "foo"
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_update = mock.MagicMock()
+        self.scenario._update_resource_in_deny_access_share = mock.MagicMock(
+            return_value=fake_update)
+
+        fake_share = mock.MagicMock()
+        fake_share.access_list.return_value = [fake_access]
+
+        self.scenario._deny_access_share(fake_share, access_id)
+
+        self.scenario._update_resource_in_deny_access_share  \
+            .assert_called_with(fake_share, access_id)
+
+        self.mock_wait_for_status.mock.assert_called_once_with(
+            fake_access,
+            check_deletion=True,
+            ready_statuses=["deleted"],
+            update_resource=fake_update,
+            check_interval=2.0,
+            timeout=180.0)
+
+    def test__update_resource_in_deny_access_share(self):
+        access_id = "foo"
+        fake_share = mock.MagicMock()
+        fake_resource = mock.MagicMock()
+        fake_access = mock.MagicMock()
+        fake_access.id = access_id
+        fake_share.access_list.return_value = [fake_access]
+
+        fn = self.scenario._update_resource_in_deny_access_share(
+            fake_share, access_id)
+
+        assert fn(fake_resource) == fake_access
+
+    def test__update_resource_in_deny_access_share_with_deleted_resource(self):
+        access_id = "foo"
+        fake_share = mock.MagicMock()
+        fake_resource = mock.MagicMock()
+        fake_access = mock.MagicMock()
+        fake_access.access_id = access_id
+        fake_share.access_list.return_value = []
+
+        fn = self.scenario._update_resource_in_deny_access_share(
+            fake_share, access_id)
+
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          fn, fake_resource)
+
     def test__create_share_network(self):
         fake_sn = mock.Mock()
         self.scenario.generate_random_name = mock.Mock()

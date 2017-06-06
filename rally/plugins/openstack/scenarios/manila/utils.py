@@ -86,6 +86,96 @@ class ManilaScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 
+    def _get_access_from_share(self, share, access_id):
+        """Get access from share
+
+        :param share: :class: `Share`
+        :param access_id: The id of the access we want to get
+        :returns: The access object from the share
+        :raises GetResourceNotFound: if the access is not in the share
+        """
+        try:
+            return next(access for access in share.access_list()
+                        if access.id == access_id)
+        except StopIteration:
+            raise exceptions.GetResourceNotFound(resource=access_id)
+
+    def _update_resource_in_allow_access_share(self, share, access_id):
+        """Helper to update resource state in allow_access_share method
+
+        :param share: :class:`Share`
+        :param access_id: id of the access
+        :returns: A function to be used in wait_for_status for the update
+            resource
+        """
+        def _is_created(_):
+            return self._get_access_from_share(share, access_id)
+
+        return _is_created
+
+    @atomic.action_timer("manila.access_allow_share")
+    def _allow_access_share(self, share, access_type, access, access_level):
+        """Allow access to a share
+
+        :param share: :class:`Share`
+        :param access_type: represents the access type (e.g: 'ip', 'domain'...)
+        :param access: represents the object (e.g: '127.0.0.1'...)
+        :param access_level: access level to the share (e.g: 'rw', 'ro')
+        """
+        access_result = share.allow(access_type, access, access_level)
+        # Get access from the list of accesses of the share
+        access = next(access for access in share.access_list()
+                      if access.id == access_result["id"])
+
+        fn = self._update_resource_in_allow_access_share(share,
+                                                         access_result["id"])
+
+        # We check if the access in that access_list has the active state
+        utils.wait_for_status(
+            access,
+            ready_statuses=["active"],
+            update_resource=fn,
+            check_interval=CONF.benchmark.manila_access_create_poll_interval,
+            timeout=CONF.benchmark.manila_access_create_timeout)
+
+        return access_result
+
+    def _update_resource_in_deny_access_share(self, share, access_id):
+        """Helper to update resource state in deny_access_share method
+
+        :param share: :class:`Share`
+        :param access_id: id of the access
+        :returns: A function to be used in wait_for_status for the update
+            resource
+        """
+        def _is_deleted(_):
+            access = self._get_access_from_share(share, access_id)
+            return access
+
+        return _is_deleted
+
+    @atomic.action_timer("manila.access_deny_share")
+    def _deny_access_share(self, share, access_id):
+        """Deny access to a share
+
+        :param share: :class:`Share`
+        :param access_id: id of the access to delete
+        """
+        # Get the access element that was created in the first place
+        access = self._get_access_from_share(share, access_id)
+        share.deny(access_id)
+
+        fn = self._update_resource_in_deny_access_share(share,
+                                                        access_id)
+
+        utils.wait_for_status(
+            access,
+            ready_statuses=["deleted"],
+            update_resource=fn,
+            check_deletion=True,
+            check_interval=CONF.benchmark.manila_access_delete_poll_interval,
+            timeout=CONF.benchmark.manila_access_delete_timeout)
+
     @atomic.action_timer("manila.list_shares")
     def _list_shares(self, detailed=True, search_opts=None):
         """Returns user shares list.

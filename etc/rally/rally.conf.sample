@@ -48,6 +48,13 @@
 # log_config_append is set. (boolean value)
 #use_syslog = false
 
+# Enable journald for logging. If running in a systemd environment you
+# may wish to enable journal support. Doing so will use the journal
+# native protocol which includes structured metadata in addition to
+# log messages.This option is ignored if log_config_append is set.
+# (boolean value)
+#use_journal = false
+
 # Syslog facility to receive log lines. This option is ignored if
 # log_config_append is set. (string value)
 #syslog_log_facility = LOG_USER
@@ -77,7 +84,7 @@
 
 # List of package logging levels in logger=LEVEL pairs. This option is
 # ignored if log_config_append is set. (list value)
-#default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN,taskflow=WARN,keystoneauth=WARN,oslo.cache=INFO,dogpile.core.dogpile=INFO
+#default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,oslo_messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN,taskflow=WARN,keystoneauth=WARN,oslo.cache=INFO,dogpile.core.dogpile=INFO
 
 # Enables or disables publication of error events. (boolean value)
 #publish_errors = false
@@ -267,6 +274,22 @@
 # creation. (floating point value)
 #magnum_cluster_create_poll_interval = 1.0
 
+# Time(in sec) to wait for k8s pod to be created. (floating point
+# value)
+#k8s_pod_create_timeout = 600.0
+
+# Time interval(in sec) between checks when waiting for k8s pod
+# creation. (floating point value)
+#k8s_pod_create_poll_interval = 1.0
+
+# Time(in sec) to wait for k8s rc to be created. (floating point
+# value)
+#k8s_rc_create_timeout = 600.0
+
+# Time interval(in sec) between checks when waiting for k8s rc
+# creation. (floating point value)
+#k8s_rc_create_poll_interval = 1.0
+
 # Delay between creating Manila share and polling for its status.
 # (floating point value)
 #manila_share_create_prepoll_delay = 2.0
@@ -284,6 +307,20 @@
 # Interval between checks when waiting for Manila share deletion.
 # (floating point value)
 #manila_share_delete_poll_interval = 2.0
+
+# Timeout for Manila access creation. (floating point value)
+#manila_access_create_timeout = 300.0
+
+# Interval between checks when waiting for Manila access creation.
+# (floating point value)
+#manila_access_create_poll_interval = 3.0
+
+# Timeout for Manila access deletion. (floating point value)
+#manila_access_delete_timeout = 180.0
+
+# Interval between checks when waiting for Manila access deletion.
+# (floating point value)
+#manila_access_delete_poll_interval = 2.0
 
 # mistral execution timeout (integer value)
 #mistral_execution_timeout = 200
@@ -516,6 +553,9 @@
 # Nova volume detach poll interval (floating point value)
 #nova_detach_volume_poll_interval = 2.0
 
+# Enable or disable osprofiler to trace the scenarios (boolean value)
+#enable_profiler = true
+
 # A timeout in seconds for a cluster create operation (integer value)
 # Deprecated group/name - [benchmark]/cluster_create_timeout
 #sahara_cluster_create_timeout = 1800
@@ -580,8 +620,6 @@
 # Neutron create loadbalancer poll interval (floating point value)
 #neutron_create_loadbalancer_poll_interval = 2.0
 
-# Enable or disable osprofiler to trace the scenarios
-#enable_profiler = True
 
 [cleanup]
 
@@ -625,6 +663,10 @@
 # mode is set by the server configuration, set this to no value.
 # Example: mysql_sql_mode= (string value)
 #mysql_sql_mode = TRADITIONAL
+
+# If True, transparently enables support for handling MySQL Cluster
+# (NDB). (boolean value)
+#mysql_enable_ndb = false
 
 # Timeout before idle SQL connections are reaped. (integer value)
 # Deprecated group/name - [DEFAULT]/sql_idle_timeout
