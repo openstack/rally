@@ -17,6 +17,8 @@
 
 from __future__ import print_function
 import collections
+import datetime as dt
+import itertools
 import json
 import os
 import sys
@@ -320,12 +322,12 @@ class TaskCommands(object):
         if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
                 consts.TaskStatus.VALIDATION_FAILED):
             print("-" * 80)
-            verification = yaml.safe_load(task["verification_log"])
+            validation = task["validation_result"]
             if logging.is_debug():
-                print(yaml.safe_load(verification["trace"]))
+                print(yaml.safe_load(validation["trace"]))
             else:
-                print(verification["etype"])
-                print(verification["msg"])
+                print(validation["etype"])
+                print(validation["msg"])
                 print(_("\nFor more details run:\nrally -d task detailed %s")
                       % task["uuid"])
             return 0
@@ -337,14 +339,20 @@ class TaskCommands(object):
                 task_id, task["status"], consts.TaskStatus.FINISHED))
             return 0
 
-        for result in task["results"]:
-            key = result["key"]
+        for workload in itertools.chain(
+                *[s["workloads"] for s in task["subtasks"]]):
             print("-" * 80)
             print()
-            print("test scenario %s" % key["name"])
-            print("args position %s" % key["pos"])
+            print("test scenario %s" % workload["name"])
+            print("args position %s" % workload["position"])
             print("args values:")
-            print(json.dumps(key["kw"], indent=2))
+            print(json.dumps(
+                {"args": workload["args"],
+                 "runner": workload["runner"],
+                 "context": workload["context"],
+                 "sla": workload["sla"],
+                 "hooks": [r["config"] for r in workload["hooks"]]},
+                indent=2))
             print()
 
             iterations = []
@@ -353,14 +361,14 @@ class TaskCommands(object):
             output = []
             task_errors = []
             if iterations_data:
-                atomic_merger = putils.AtomicMerger(result["info"]["atomic"])
+                atomic_merger = putils.AtomicMerger(workload["info"]["atomic"])
                 atomic_names = atomic_merger.get_merged_names()
                 for i, atomic_name in enumerate(atomic_names, 1):
                     action = "%i. %s" % (i, atomic_name)
                     iterations_headers.append(action)
                     iterations_actions.append((atomic_name, action))
 
-            for idx, itr in enumerate(result["iterations"], 1):
+            for idx, itr in enumerate(workload["iterations"], 1):
 
                 if iterations_data:
                     row = {"iteration": idx, "duration": itr["duration"]}
@@ -389,7 +397,7 @@ class TaskCommands(object):
                 for idx, additive in enumerate(iteration_output["additive"]):
                     if len(output) <= idx + 1:
                         output_table = plot.charts.OutputStatsTable(
-                            result["info"], title=additive["title"])
+                            workload["info"], title=additive["title"])
                         output.append(output_table)
                     output[idx].add_iteration(additive["data"])
 
@@ -399,11 +407,12 @@ class TaskCommands(object):
             self._print_task_errors(task_id, task_errors)
 
             cols = plot.charts.MainStatsTable.columns
-            float_cols = result["info"]["stat"]["cols"][1:7]
+            float_cols = workload["info"]["stat"]["cols"][1:7]
             formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
-            rows = [dict(zip(cols, r)) for r in result["info"]["stat"]["rows"]]
+            rows = [dict(zip(cols, r))
+                    for r in workload["info"]["stat"]["rows"]]
             cliutils.print_list(rows,
                                 fields=cols,
                                 formatters=formatters,
@@ -439,10 +448,10 @@ class TaskCommands(object):
                                             formatters=formatters)
                         print()
 
-            print(_("Load duration: %s") %
-                  rutils.format_float_to_str(result["info"]["load_duration"]))
-            print(_("Full duration: %s") %
-                  rutils.format_float_to_str(result["info"]["full_duration"]))
+            print(_("Load duration: %s") % rutils.format_float_to_str(
+                workload["info"]["load_duration"]))
+            print(_("Full duration: %s") % rutils.format_float_to_str(
+                workload["info"]["full_duration"]))
 
             print("\nHINTS:")
             print(_("* To plot HTML graphics with this data, run:"))
@@ -463,7 +472,7 @@ class TaskCommands(object):
 
         :param task_id: Task uuid
         """
-        task = api.task.get(task_id=task_id)
+        task = api.task.get_detailed(task_id=task_id)
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
         if task["status"] not in finished_statuses:
@@ -472,20 +481,36 @@ class TaskCommands(object):
             return 1
 
         # TODO(chenhb): Ensure `rally task results` puts out old format.
-        for result in task["results"]:
-            for itr in result["data"]["raw"]:
+        for workload in itertools.chain(
+                *[s["workloads"] for s in task["subtasks"]]):
+            for itr in workload["data"]:
                 itr["atomic_actions"] = collections.OrderedDict(
                     tutils.WrapperForAtomicActions(
                         itr["atomic_actions"]).items()
                 )
 
-        results = [{"key": x["key"], "result": x["data"]["raw"],
-                    "sla": x["data"]["sla"],
-                    "hooks": x["data"].get("hooks", []),
-                    "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"],
-                    "created_at": x["created_at"]}
-                   for x in task["results"]]
+        results = [
+            {
+                "key": {
+                    "name": w["name"],
+                    "description": w["description"],
+                    "pos": w["position"],
+                    "kw": {
+                        "args": w["args"],
+                        "runner": w["runner"],
+                        "context": w["context"],
+                        "sla": w["sla"],
+                        "hooks": [r["config"] for r in w["hooks"]],
+                    }
+                },
+                "result": w["data"],
+                "sla": w["sla_results"].get("sla", []),
+                "hooks": w["hooks"],
+                "load_duration": w["load_duration"],
+                "full_duration": w["full_duration"],
+                "created_at": w["created_at"]}
+            for w in itertools.chain(
+                *[s["workloads"] for s in task["subtasks"]])]
 
         print(json.dumps(results, sort_keys=False, indent=4))
 
@@ -567,22 +592,50 @@ class TaskCommands(object):
     def _load_task_results_file(self, api, task_id):
         """Load the json file which is created by `rally task results` """
         with open(os.path.expanduser(task_id), "r") as inp_js:
-            tasks_results = json.load(inp_js)
-            for result in tasks_results:
-                try:
-                    jsonschema.validate(
-                        result,
-                        api.task.TASK_RESULT_SCHEMA)
-                    # TODO(chenhb): back compatible for atomic_actions
-                    for r in result["result"]:
-                        r["atomic_actions"] = list(
-                            tutils.WrapperForAtomicActions(
-                                r["atomic_actions"], r["timestamp"]))
-                except jsonschema.ValidationError as e:
-                    raise FailedToLoadResults(source=task_id,
-                                              msg=six.text_type(e))
-
-        return tasks_results
+            tasks_results = yaml.safe_load(inp_js)
+            if type(tasks_results) == list:
+                # it is an old format:
+                for result in tasks_results:
+                    try:
+                        jsonschema.validate(
+                            result,
+                            api.task.TASK_RESULT_SCHEMA)
+                        # TODO(chenhb): back compatible for atomic_actions
+                        for r in result["result"]:
+                            r["atomic_actions"] = list(
+                                tutils.WrapperForAtomicActions(
+                                    r["atomic_actions"], r["timestamp"]))
+                    except jsonschema.ValidationError as e:
+                        raise FailedToLoadResults(source=task_id,
+                                                  msg=six.text_type(e))
+            else:
+                raise FailedToLoadResults(
+                    source=task_id, msg="Wrong format")
+        task = {"subtasks": []}
+        for result in tasks_results:
+            pass_sla = all([s.get("success") for s in result["sla"]])
+            updated_at = dt.datetime.strptime(result["created_at"],
+                                              "%Y-%m-%dT%H:%M:%S")
+            updated_at += dt.timedelta(seconds=result["full_duration"])
+            updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
+            workload = {"name": result["key"]["name"],
+                        "position": result["key"]["pos"],
+                        "description": result["key"].get("description", ""),
+                        "full_duration": result["full_duration"],
+                        "load_duration": result["load_duration"],
+                        "created_at": result["created_at"],
+                        "updated_at": updated_at,
+                        "args": result["key"]["kw"]["args"],
+                        "runner": result["key"]["kw"]["runner"],
+                        "hooks": [{"config": h}
+                                  for h in result["key"]["kw"]["hooks"]],
+                        "sla": result["key"]["kw"]["sla"],
+                        "sla_results": {"sla": result["sla"]},
+                        "pass_sla": pass_sla,
+                        "context": result["key"]["kw"]["context"],
+                        "data": result["result"]}
+            task["subtasks"].append({"workloads": [workload]})
+        return task
 
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,
@@ -606,20 +659,13 @@ class TaskCommands(object):
             if os.path.exists(os.path.expanduser(task_id)):
                 task_results = self._load_task_results_file(api, task_id)
             elif uuidutils.is_uuid_like(task_id):
-                task_results = map(
-                    lambda x: {"key": x["key"],
-                               "sla": x["data"]["sla"],
-                               "hooks": x["data"].get("hooks", []),
-                               "result": x["data"]["raw"],
-                               "load_duration": x["data"]["load_duration"],
-                               "full_duration": x["data"]["full_duration"]},
-                    api.task.get_detailed(task_id=task_id)["results"])
+                task_results = api.task.get_detailed(task_id=task_id)
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s")
                       % task_id, file=sys.stderr)
                 return 1
 
-            results.extend(task_results)
+            results.append(task_results)
 
         result = plot.trends(results)
 
@@ -687,49 +733,43 @@ class TaskCommands(object):
         processed_names = {}
         for task_file_or_uuid in tasks:
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
-                tasks_results = self._load_task_results_file(
-                    api, task_file_or_uuid)
+                task = self._load_task_results_file(api, task_file_or_uuid)
             elif uuidutils.is_uuid_like(task_file_or_uuid):
-                tasks_results = map(
-                    lambda x: {"key": x["key"],
-                               "sla": x["data"]["sla"],
-                               "hooks": x["data"].get("hooks", []),
-                               "result": x["data"]["raw"],
-                               "load_duration": x["data"]["load_duration"],
-                               "full_duration": x["data"]["full_duration"],
-                               "created_at": x["created_at"]},
-                    api.task.get_detailed(
-                        task_id=task_file_or_uuid)["results"])
+                task = api.task.get_detailed(task_id=task_file_or_uuid)
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
                       file=sys.stderr)
                 return 1
 
-            for task_result in tasks_results:
-                if task_result["key"]["name"] in processed_names:
-                    processed_names[task_result["key"]["name"]] += 1
-                    task_result["key"]["pos"] = processed_names[
-                        task_result["key"]["name"]]
+            for workload in itertools.chain(
+                    *[s["workloads"] for s in task["subtasks"]]):
+                if workload["name"] in processed_names:
+                    processed_names[workload["name"]] += 1
+                    workload["position"] = processed_names[workload["name"]]
                 else:
-                    processed_names[task_result["key"]["name"]] = 0
-                results.append(task_result)
+                    processed_names[workload["name"]] = 0
+            results.append(task)
 
         if out_format.startswith("html"):
             result = plot.plot(results,
                                include_libs=(out_format == "html_static"))
         elif out_format == "junit-xml":
             test_suite = junit.JUnit("Rally test suite")
-            for result in results:
-                if isinstance(result["sla"], list):
-                    message = ",".join([sla["detail"] for sla in
-                                        result["sla"] if not sla["success"]])
-                if message:
-                    outcome = junit.JUnit.FAILURE
-                else:
-                    outcome = junit.JUnit.SUCCESS
-                test_suite.add_test(result["key"]["name"],
-                                    result["full_duration"], outcome, message)
+            for task in results:
+                for workload in itertools.chain(
+                        *[s["workloads"] for s in task["subtasks"]]):
+                    w_sla = workload["sla_results"].get("sla", [])
+                    if w_sla:
+                        message = ",".join([sla["detail"] for sla in w_sla
+                                            if not sla["success"]])
+                    if message:
+                        outcome = junit.JUnit.FAILURE
+                    else:
+                        outcome = junit.JUnit.SUCCESS
+                    test_suite.add_test(workload["name"],
+                                        workload["full_duration"], outcome,
+                                        message)
             result = test_suite.to_xml()
         else:
             print(_("Invalid output format: %s") % out_format, file=sys.stderr)
@@ -792,19 +832,19 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = api.task.get_detailed(task_id=task_id)["results"]
+        task = api.task.get_detailed(task_id=task_id)
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"
         STATUS_FAIL = "FAIL"
-        for result in results:
-            key = result["key"]
-            for sla in sorted(result["data"]["sla"],
+        for workload in itertools.chain(
+                *[s["workloads"] for s in task["subtasks"]]):
+            for sla in sorted(workload["sla_results"].get("sla", []),
                               key=lambda x: x["criterion"]):
                 success = sla.pop("success")
                 sla["status"] = success and STATUS_PASS or STATUS_FAIL
-                sla["benchmark"] = key["name"]
-                sla["pos"] = key["pos"]
+                sla["benchmark"] = workload["name"]
+                sla["pos"] = workload["position"]
                 failed_criteria += int(not success)
                 data.append(sla if tojson else rutils.Struct(**sla))
         if tojson:

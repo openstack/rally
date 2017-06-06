@@ -18,7 +18,6 @@
 import collections
 import copy
 import datetime as dt
-import json
 
 import ddt
 import mock
@@ -210,42 +209,6 @@ class TasksTestCase(test.DBTestCase):
                           db.task_delete,
                           "da6f820c-b133-4b9f-8534-4c3bcc40724b")
 
-    def test_task_delete_with_results(self):
-        task_id = self._create_task()["uuid"]
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
-            }
-        }
-        data = {
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42
-        }
-        subtask = db.subtask_create(task_id, title="foo")
-        workload = db.workload_create(task_id, subtask["uuid"], key)
-        db.workload_data_create(task_id, workload["uuid"], 0, {"raw": []})
-        db.workload_set_results(workload_uuid=workload["uuid"],
-                                subtask_uuid=workload["subtask_uuid"],
-                                task_uuid=workload["task_uuid"],
-                                data=data)
-
-        res = db.task_result_get_all_by_uuid(task_id)
-        self.assertEqual(len(res), 1)
-        db.task_delete(task_id)
-        res = db.task_result_get_all_by_uuid(task_id)
-        self.assertEqual(len(res), 0)
-
     def test_task_delete_by_uuid_and_status(self):
         values = {
             "status": consts.TaskStatus.FINISHED,
@@ -268,62 +231,14 @@ class TasksTestCase(test.DBTestCase):
                           "fcd0483f-a405-44c4-b712-99c9e52254eb",
                           status=consts.TaskStatus.FINISHED)
 
-    def test_task_result_get_all_by_uuid(self):
-        task1 = self._create_task()["uuid"]
-        task2 = self._create_task()["uuid"]
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"task_id": "task_id"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"},
-                "hooks": [],
-            }
-        }
-        data = {
-            "sla": [{"success": True}],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [],
-        }
+    def test_task_get_detailed__transform_atomics(self):
+        task_id = self._create_task()["uuid"]
+        subtask = db.subtask_create(task_id, title="foo")
 
-        for task_id in (task1, task2):
-            key["kw"]["args"]["task_id"] = task_id
-            data["sla"][0] = {"success": True}
-            subtask = db.subtask_create(task_id, title="foo")
-            workload = db.workload_create(task_id, subtask["uuid"], key)
-            db.workload_data_create(task_id, workload["uuid"], 0, {"raw": []})
-            db.workload_set_results(workload_uuid=workload["uuid"],
-                                    subtask_uuid=workload["subtask_uuid"],
-                                    task_uuid=workload["task_uuid"],
-                                    data=data)
-
-        for task_id in (task1, task2):
-            res = db.task_result_get_all_by_uuid(task_id)
-            key["kw"]["args"]["task_id"] = task_id
-            data["sla"][0] = {"success": True}
-            data["raw"] = []
-            self.assertEqual(len(res), 1)
-            self.assertEqual(res[0]["key"], key)
-            self.assertEqual(res[0]["data"], data)
-
-    def test_task_result_get_all_by_uuid__transform_atomics(self):
-        task = self._create_task()["uuid"]
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"task_id": "task_id"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"},
-                "hooks": [],
-            }
-        }
+        workload = db.workload_create(
+            task_id, subtask["uuid"], name="atata", description="foo",
+            position=0, args={}, context={}, sla={}, runner={},
+            runner_type="r", hooks=[])
 
         workloads_data = [
             {"raw": [
@@ -344,12 +259,8 @@ class TasksTestCase(test.DBTestCase):
             ]}
         ]
 
-        key["kw"]["args"]["task_id"] = task
-        subtask = db.subtask_create(task, title="foo")
-        workload = db.workload_create(task, subtask["uuid"], key)
-
         for i, data in enumerate(workloads_data):
-            db.workload_data_create(task, workload["uuid"], i, data)
+            db.workload_data_create(task_id, workload["uuid"], i, data)
 
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
@@ -358,8 +269,11 @@ class TasksTestCase(test.DBTestCase):
                                       "load_duration": 13,
                                       "full_duration": 42,
                                       "hooks": []})
-        results = db.task_result_get_all_by_uuid(task)
-        self.assertEqual(1, len(results))
+
+        task = db.task_get(task_id, detailed=True)
+        self.assertEqual(1, len(task["subtasks"]))
+        self.assertEqual(1, len(task["subtasks"][0]["workloads"]))
+        workload = task["subtasks"][0]["workloads"][0]
         self.assertEqual(
             [[{"started_at": 1, "finished_at": 2, "children": [],
                "name": "foo"},
@@ -375,9 +289,9 @@ class TasksTestCase(test.DBTestCase):
                "name": "yyy"},
               {"started_at": 4, "finished_at": 6, "children": [],
                "name": "zzz"}]],
-            [w["atomic_actions"] for w in results[0]["data"]["raw"]])
+            [w["atomic_actions"] for w in workload["data"]])
 
-    def test_task_get_detailed(self):
+    def test_task_create_and_get_detailed(self):
         validation_result = {
             "etype": "FooError",
             "msg": "foo message",
@@ -385,180 +299,71 @@ class TasksTestCase(test.DBTestCase):
         }
         task1 = self._create_task({"validation_result": validation_result,
                                    "tags": ["bar"]})
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"},
-                "hooks": [],
-            }
-        }
-        data = {
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [],
-        }
+        w_name = "atata"
+        w_description = "tatata"
+        w_position = 0
+        w_args = {"a": "A"}
+        w_context = {"c": "C"}
+        w_sla = {"s": "S"}
+        w_runner = {"r": "R", "type": "T"}
+        w_runner_type = "T"
+        sla_results = [
+            {"s": "S", "success": True},
+            {"1": "2", "success": True},
+            {"a": "A", "success": True}
+        ]
+        w_load_duration = 13.0
+        w_full_duration = 42.0
+        w_hooks = []
 
         subtask = db.subtask_create(task1["uuid"], title="foo")
-        workload = db.workload_create(task1["uuid"], subtask["uuid"], key)
-        db.workload_data_create(
-            task1["uuid"], workload["uuid"], 0, {"raw": []})
+        workload = db.workload_create(task1["uuid"], subtask["uuid"],
+                                      name=w_name, description=w_description,
+                                      position=w_position, args=w_args,
+                                      context=w_context, sla=w_sla,
+                                      hooks=w_hooks, runner=w_runner,
+                                      runner_type=w_runner_type)
+        db.workload_data_create(task1["uuid"], workload["uuid"], 0,
+                                {"raw": []})
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
                                 task_uuid=workload["task_uuid"],
-                                data=data)
+                                data={"sla": sla_results,
+                                      "load_duration": w_load_duration,
+                                      "full_duration": w_full_duration})
 
-        task1_full = db.task_get_detailed(task1["uuid"])
-        self.assertEqual(validation_result,
-                         json.loads(task1_full["verification_log"]))
+        task1_full = db.task_get(task1["uuid"], detailed=True)
+        self.assertEqual(validation_result, task1_full["validation_result"])
         self.assertEqual(["bar"], task1_full["tags"])
-        results = task1_full["results"]
-        self.assertEqual(1, len(results))
-        self.assertEqual(key, results[0]["key"])
-        self.assertEqual({
-            "raw": [],
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [],
-        }, results[0]["data"])
+        workloads = task1_full["subtasks"][0]["workloads"]
+        self.assertEqual(1, len(workloads))
+        workloads[0].pop("uuid")
+        workloads[0].pop("start_time")
+        workloads[0].pop("created_at")
+        workloads[0].pop("updated_at")
 
-    def test_task_get_detailed_last(self):
-        task1 = self._create_task()
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"},
-                "hooks": [],
-            }
-        }
-        data = {
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [],
-        }
-
-        subtask = db.subtask_create(task1["uuid"], title="foo")
-        workload = db.workload_create(task1["uuid"], subtask["uuid"], key)
-        db.workload_data_create(
-            task1["uuid"], workload["uuid"], 0, {"raw": []})
-        db.workload_set_results(workload_uuid=workload["uuid"],
-                                subtask_uuid=workload["subtask_uuid"],
-                                task_uuid=workload["task_uuid"],
-                                data=data)
-
-        task1_full = db.task_get_detailed_last()
-        results = task1_full["results"]
-        self.assertEqual(1, len(results))
-        self.assertEqual(key, results[0]["key"])
-        self.assertEqual({
-            "raw": [],
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [],
-        }, results[0]["data"])
-
-    def test_task_result_create(self):
-        task_id = self._create_task()["uuid"]
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "hooks": [{"name": "foo_hook", "args": "bar",
-                           "trigger": {"name": "foo_trigger", "args": "baz"}}],
-                "runner": {"r": "R", "type": "T"}
-            }
-        }
-        raw_data = {
-            "raw": [
-                {"error": "anError", "duration": 0, "timestamp": 1,
-                 "atomic_actions": []},
-                {"duration": 1, "timestamp": 1,
-                 "atomic_actions": []},
-                {"duration": 2, "timestamp": 2,
-                 "atomic_actions": []}
-            ],
-        }
-        data = {
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42,
-            "hooks": [
-                {"config": {"name": "foo_hook", "args": "bar",
-                            "trigger": {"name": "foo_trigger", "args": "baz"}},
-                 "results": [
-                     {"status": "success", "started_at": 10.0,
-                      "finished_at": 11.0, "triggered_by": {"time": 5}}],
-                 "summary": {}}
-            ],
-        }
-
-        subtask = db.subtask_create(task_id, title="foo")
-        workload = db.workload_create(task_id, subtask["uuid"], key)
-        db.workload_data_create(task_id, workload["uuid"], 0, raw_data)
-        db.workload_set_results(workload_uuid=workload["uuid"],
-                                subtask_uuid=workload["subtask_uuid"],
-                                task_uuid=workload["task_uuid"],
-                                data=data)
-
-        res = db.task_result_get_all_by_uuid(task_id)
-        self.assertEqual(1, len(res))
-        self.assertEqual(raw_data["raw"], res[0]["data"]["raw"])
-        self.assertEqual(key, res[0]["key"])
+        self.assertEqual(
+            {"subtask_uuid": subtask["uuid"],
+             "task_uuid": task1["uuid"],
+             "name": w_name, "description": w_description,
+             "id": 1, "position": w_position,
+             "data": [],
+             "args": w_args, "context": w_context, "hooks": w_hooks,
+             "runner": w_runner, "runner_type": w_runner_type,
+             "full_duration": w_full_duration,
+             "load_duration": w_load_duration,
+             "max_duration": 0.0, "min_duration": 0.0,
+             "failed_iteration_count": 0, "total_iteration_count": 0,
+             "pass_sla": True, "sla": w_sla,
+             "sla_results": {"sla": sla_results}}, workloads[0])
 
     def test_task_multiple_raw_result_create(self):
         task_id = self._create_task()["uuid"]
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"},
-                "hooks": [],
-            }
-        }
-
         subtask = db.subtask_create(task_id, title="foo")
-        workload = db.workload_create(task_id, subtask["uuid"], key)
+        workload = db.workload_create(task_id, subtask["uuid"], name="atata",
+                                      description="foo", position=0, args={},
+                                      context={}, sla={}, runner={},
+                                      runner_type="r", hooks=[])
 
         db.workload_data_create(task_id, workload["uuid"], 0, {
             "raw": [
@@ -602,41 +407,38 @@ class TasksTestCase(test.DBTestCase):
                                       "load_duration": 13,
                                       "full_duration": 42})
 
-        res = db.task_result_get_all_by_uuid(task_id)
-        self.assertEqual(len(res), 1)
-        self.assertEqual(res[0]["key"], key)
-        self.assertEqual(res[0]["data"], {
-            "raw": [
-                {"error": "anError", "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 1, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 2, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 3, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"error": "anError2", "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 6, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 5, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 4, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 7, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-                {"duration": 8, "timestamp": 10, "duration": 1,
-                 "atomic_actions": []},
-            ],
-            "sla": [{"success": True}],
-            "hooks": [],
-            "load_duration": 13,
-            "full_duration": 42
-        })
+        detailed_task = db.task_get(task_id, detailed=True)
+        self.assertEqual(len(detailed_task["subtasks"]), 1)
+        self.assertEqual(len(detailed_task["subtasks"][0]["workloads"]), 1)
+        workload = detailed_task["subtasks"][0]["workloads"][0]
+        self.assertEqual([
+            {"error": "anError", "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 1, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 2, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 3, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"error": "anError2", "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 6, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 5, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 4, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 7, "timestamp": 10, "duration": 1,
+             "atomic_actions": []},
+            {"duration": 8, "timestamp": 10, "duration": 1,
+             "atomic_actions": []}], workload["data"])
+        self.assertTrue(workload["pass_sla"])
+        self.assertEqual(13, workload["load_duration"])
+        self.assertEqual(42, workload["full_duration"])
+        self.assertEqual(2, workload["failed_iteration_count"])
+        self.assertEqual(10, workload["total_iteration_count"])
 
         db.task_delete(task_id)
-        res = db.task_result_get_all_by_uuid(task_id)
-        self.assertEqual(len(res), 0)
 
 
 class SubtaskTestCase(test.DBTestCase):
@@ -669,41 +471,50 @@ class WorkloadTestCase(test.DBTestCase):
         self.subtask_uuid = self.subtask["uuid"]
 
     def test_workload_create(self):
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
-            }
-        }
-        workload = db.workload_create(self.task_uuid, self.subtask_uuid, key)
-        self.assertEqual("atata", workload["name"])
-        self.assertEqual("tatata", workload["description"])
-        self.assertEqual(0, workload["position"])
-        self.assertEqual({"a": "A"}, workload["args"])
-        self.assertEqual({"c": "C"}, workload["context"])
-        self.assertEqual({"s": "S"}, workload["sla"])
-        self.assertEqual({"r": "R", "type": "T"}, workload["runner"])
-        self.assertEqual("T", workload["runner_type"])
-        self.assertEqual(self.task_uuid, workload["task_uuid"])
-        self.assertEqual(self.subtask_uuid, workload["subtask_uuid"])
+        w_name = "atata"
+        w_description = "tatata"
+        w_position = 0
+        w_args = {"a": "A"}
+        w_context = {"c": "C"}
+        w_sla = {"s": "S"}
+        w_runner = {"r": "R", "type": "T"}
+        w_runner_type = "T"
+        w_hooks = []
+
+        workload = db.workload_create(self.task_uuid, self.subtask_uuid,
+                                      name=w_name, description=w_description,
+                                      position=w_position, args=w_args,
+                                      context=w_context, sla=w_sla,
+                                      hooks=w_hooks, runner=w_runner,
+                                      runner_type=w_runner_type)
+
+        workload.pop("uuid")
+        workload.pop("start_time")
+        workload.pop("created_at")
+        workload.pop("updated_at")
+
+        self.assertEqual(
+            {"_profiling_data": "", "context_execution": {},
+             "statistics": {},
+             "subtask_uuid": self.subtask_uuid,
+             "task_uuid": self.task_uuid,
+             "name": w_name, "description": w_description,
+             "id": 1, "position": w_position,
+             "args": w_args, "context": w_context, "hooks": w_hooks,
+             "runner": w_runner, "runner_type": w_runner_type,
+             "full_duration": 0.0, "load_duration": 0.0,
+             "max_duration": 0.0, "min_duration": 0.0,
+             "failed_iteration_count": 0, "total_iteration_count": 0,
+             "pass_sla": None, "sla": w_sla,
+             "sla_results": {}}, workload)
 
     def test_workload_set_results_with_raw_data(self):
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
-            }
-        }
+        workload = db.workload_create(self.task_uuid, self.subtask_uuid,
+                                      name="foo", description="descr",
+                                      position=0, args={},
+                                      context={}, sla={},
+                                      hooks=[], runner={},
+                                      runner_type="foo")
         raw_data = {
             "raw": [
                 {"error": "anError", "duration": 0, "timestamp": 1,
@@ -722,21 +533,13 @@ class WorkloadTestCase(test.DBTestCase):
             "full_duration": 42
         }
 
-        workload = db.workload_create(self.task_uuid, self.subtask_uuid, key)
         db.workload_data_create(self.task_uuid, workload["uuid"], 0, raw_data)
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=self.subtask_uuid,
                                 task_uuid=self.task_uuid,
                                 data=data)
         workload = db.workload_get(workload["uuid"])
-        self.assertEqual("atata", workload["name"])
-        self.assertEqual("tatata", workload["description"])
-        self.assertEqual(0, workload["position"])
-        self.assertEqual({"a": "A"}, workload["args"])
-        self.assertEqual({"c": "C"}, workload["context"])
-        self.assertEqual({"s": "S"}, workload["sla"])
-        self.assertEqual({"r": "R", "type": "T"}, workload["runner"])
-        self.assertEqual("T", workload["runner_type"])
+
         self.assertEqual(13, workload["load_duration"])
         self.assertEqual(42, workload["full_duration"])
         self.assertEqual(0, workload["min_duration"])
@@ -750,17 +553,12 @@ class WorkloadTestCase(test.DBTestCase):
         self.assertEqual(self.subtask_uuid, workload["subtask_uuid"])
 
     def test_workload_set_results_empty_raw_data(self):
-        key = {
-            "name": "atata",
-            "description": "tatata",
-            "pos": 0,
-            "kw": {
-                "args": {"a": "A"},
-                "context": {"c": "C"},
-                "sla": {"s": "S"},
-                "runner": {"r": "R", "type": "T"}
-            }
-        }
+        workload = db.workload_create(self.task_uuid, self.subtask_uuid,
+                                      name="foo", description="descr",
+                                      position=0, args={},
+                                      context={}, sla={},
+                                      hooks=[], runner={},
+                                      runner_type="foo")
         data = {
             "sla": [
                 {"s": "S", "success": False},
@@ -771,20 +569,11 @@ class WorkloadTestCase(test.DBTestCase):
             "full_duration": 42
         }
 
-        workload = db.workload_create(self.task_uuid, self.subtask_uuid, key)
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=self.subtask_uuid,
                                 task_uuid=self.task_uuid,
                                 data=data)
         workload = db.workload_get(workload["uuid"])
-        self.assertEqual("atata", workload["name"])
-        self.assertEqual("tatata", workload["description"])
-        self.assertEqual(0, workload["position"])
-        self.assertEqual({"a": "A"}, workload["args"])
-        self.assertEqual({"c": "C"}, workload["context"])
-        self.assertEqual({"s": "S"}, workload["sla"])
-        self.assertEqual({"r": "R", "type": "T"}, workload["runner"])
-        self.assertEqual("T", workload["runner_type"])
         self.assertEqual(13, workload["load_duration"])
         self.assertEqual(42, workload["full_duration"])
         self.assertEqual(0, workload["min_duration"])
@@ -792,7 +581,6 @@ class WorkloadTestCase(test.DBTestCase):
         self.assertEqual(0, workload["total_iteration_count"])
         self.assertEqual(0, workload["failed_iteration_count"])
         self.assertFalse(workload["pass_sla"])
-        self.assertEqual([], workload["hooks"])
         self.assertEqual(data["sla"], workload["sla_results"]["sla"])
         self.assertEqual(self.task_uuid, workload["task_uuid"])
         self.assertEqual(self.subtask_uuid, workload["subtask_uuid"])
@@ -806,10 +594,10 @@ class WorkloadDataTestCase(test.DBTestCase):
         self.task_uuid = self.task["uuid"]
         self.subtask = db.subtask_create(self.task_uuid, title="foo")
         self.subtask_uuid = self.subtask["uuid"]
-        self.key = {"name": "atata", "description": "tatata",
-                    "pos": 0, "kw": {"runner": {"r": "R", "type": "T"}}}
-        self.workload = db.workload_create(self.task_uuid, self.subtask_uuid,
-                                           self.key)
+        self.workload = db.workload_create(
+            self.task_uuid, self.subtask_uuid, name="atata", description="foo",
+            position=0, args={}, context={}, sla={}, runner={},
+            runner_type="r", hooks={})
         self.workload_uuid = self.workload["uuid"]
 
     def test_workload_data_create(self):

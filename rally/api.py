@@ -268,8 +268,8 @@ class _Task(APIGroup):
     def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
 
-    def _get(self, task_id):
-        return objects.Task.get(task_id)
+    def _get(self, task_id, detailed=False):
+        return objects.Task.get(task_id, detailed=detailed)
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/get",
                  method="GET")
@@ -287,11 +287,10 @@ class _Task(APIGroup):
         :returns: rally.common.db.sqlalchemy.models.Task
         :returns: dict
         """
-        task = objects.Task.get_detailed(task_id)
-        if task and extended_results:
-            task = dict(task)
-            task["results"] = objects.Task.extend_results(task["results"])
-        return task
+        task = self._get(task_id, detailed=True)
+        if extended_results:
+            task.extend_results()
+        return task.to_dict()
 
     # TODO(andreykurilin): move it to some kind of utils
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/render_template",
@@ -560,21 +559,30 @@ class _Task(APIGroup):
         task_inst = objects.Task(deployment_uuid=deployment["uuid"],
                                  tags=tags)
         task_inst.update_status(consts.TaskStatus.RUNNING)
-        for result in task_results:
-            subtask_obj = task_inst.add_subtask(title=result["key"]["name"])
-            workload_obj = subtask_obj.add_workload(result["key"])
+        for subtask in task_results["subtasks"]:
+            subtask_obj = task_inst.add_subtask(title=subtask.get("title"))
+            for workload in subtask["workloads"]:
+                workload_obj = subtask_obj.add_workload(
+                    name=workload["name"], description=workload["description"],
+                    position=workload["position"], runner=workload["runner"],
+                    context=workload["context"], hooks=workload["hooks"],
+                    sla=workload["sla"], args=workload["args"])
             chunk_size = CONF.raw_result_chunk_size
             workload_data_count = 0
-            while len(result["result"]) > chunk_size:
-                results_chunk = result["result"][:chunk_size]
-                result["result"] = result["result"][chunk_size:]
+            while len(workload["data"]) > chunk_size:
+                results_chunk = workload["data"][:chunk_size]
+                workload["data"] = workload["data"][chunk_size:]
                 results_chunk.sort(key=lambda x: x["timestamp"])
                 workload_obj.add_workload_data(workload_data_count,
                                                {"raw": results_chunk})
                 workload_data_count += 1
             workload_obj.add_workload_data(workload_data_count,
-                                           {"raw": result["result"]})
-            workload_obj.set_results(result)
+                                           {"raw": workload["data"]})
+            workload_obj.set_results(
+                {"sla": workload["sla_results"].get("sla"),
+                 "hooks": workload["hooks"],
+                 "full_duration": workload["full_duration"],
+                 "load_duration": workload["load_duration"]})
             subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
         task_inst.update_status(consts.SubtaskStatus.FINISHED)
 
@@ -594,8 +602,7 @@ class _Task(APIGroup):
 
         tasks_results = []
         for task_uuid in tasks_uuids:
-            tasks_results.extend(self.get_detailed(
-                task_id=task_uuid)["results"])
+            tasks_results.append(self.get_detailed(task_id=task_uuid))
 
         reporter_cls = texporter.TaskExporter.get(output_type)
         reporter_cls.validate(output_dest)

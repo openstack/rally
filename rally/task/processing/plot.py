@@ -16,6 +16,7 @@
 import collections
 import datetime as dt
 import hashlib
+import itertools
 import json
 
 import six
@@ -82,20 +83,20 @@ def _process_hooks(hooks):
     return hooks_ctx
 
 
-def _process_scenario(data, pos):
-    main_area = charts.MainStackedAreaChart(data["info"])
-    main_hist = charts.MainHistogramChart(data["info"])
-    main_stat = charts.MainStatsTable(data["info"])
-    load_profile = charts.LoadProfileChart(data["info"])
-    atomic_pie = charts.AtomicAvgChart(data["info"])
-    atomic_area = charts.AtomicStackedAreaChart(data["info"])
-    atomic_hist = charts.AtomicHistogramChart(data["info"])
+def _process_workload(workload, workload_cfg, pos):
+    main_area = charts.MainStackedAreaChart(workload["info"])
+    main_hist = charts.MainHistogramChart(workload["info"])
+    main_stat = charts.MainStatsTable(workload["info"])
+    load_profile = charts.LoadProfileChart(workload["info"])
+    atomic_pie = charts.AtomicAvgChart(workload["info"])
+    atomic_area = charts.AtomicStackedAreaChart(workload["info"])
+    atomic_hist = charts.AtomicHistogramChart(workload["info"])
 
     errors = []
     output_errors = []
     additive_output_charts = []
     complete_output = []
-    for idx, itr in enumerate(data["iterations"], 1):
+    for idx, itr in enumerate(workload["iterations"], 1):
         if itr["error"]:
             typ, msg, trace = itr["error"]
             errors.append({"iteration": idx,
@@ -107,7 +108,7 @@ def _process_scenario(data, pos):
             except IndexError:
                 chart_cls = plugin.Plugin.get(additive["chart_plugin"])
                 chart = chart_cls(
-                    data["info"], title=additive["title"],
+                    workload["info"], title=additive["title"],
                     description=additive.get("description", ""),
                     label=additive.get("label", ""),
                     axis_label=additive.get("axis_label",
@@ -127,23 +128,22 @@ def _process_scenario(data, pos):
                       atomic_pie, atomic_area, atomic_hist):
             chart.add_iteration(itr)
 
-    kw = data["key"]["kw"]
-    cls, method = data["key"]["name"].split(".")
+    cls, method = workload["name"].split(".")
     additive_output = [chart.render() for chart in additive_output_charts]
-    iterations_count = data["info"]["iterations_count"]
+    iterations_count = workload["info"]["iterations_count"]
 
     return {
         "cls": cls,
         "met": method,
         "pos": str(pos),
         "name": method + (pos and " [%d]" % (pos + 1) or ""),
-        "runner": kw["runner"]["type"],
-        "config": json.dumps({data["key"]["name"]: [kw]}, indent=2),
-        "hooks": _process_hooks(data["hooks"]),
-        "description": data["key"].get("description", ""),
+        "runner": workload["runner"]["type"],
+        "config": json.dumps({workload["name"]: [workload_cfg]}, indent=2),
+        "hooks": _process_hooks(workload["hooks"]),
+        "description": workload.get("description", ""),
         "iterations": {
             "iter": main_area.render(),
-            "pie": [("success", (data["info"]["iterations_count"]
+            "pie": [("success", (workload["info"]["iterations_count"]
                                  - len(errors))),
                     ("errors", len(errors))],
             "histogram": main_hist.render()},
@@ -157,72 +157,60 @@ def _process_scenario(data, pos):
         "has_output": any(additive_output) or any(complete_output),
         "output_errors": output_errors,
         "errors": errors,
-        "load_duration": data["info"]["load_duration"],
-        "full_duration": data["info"]["full_duration"],
-        "created_at": data["created_at"],
-        "sla": data["sla"],
-        "sla_success": all([s["success"] for s in data["sla"]]),
+        "load_duration": workload["info"]["load_duration"],
+        "full_duration": workload["info"]["full_duration"],
+        "created_at": workload["created_at"],
+        "sla": workload["sla"],
+        "sla_success": workload["pass_sla"],
         "iterations_count": iterations_count,
     }
 
 
-def _process_tasks(tasks_results):
-    tasks = []
+def _process_workloads(workloads):
+    p_workloads = []
     source_dict = collections.defaultdict(list)
     position = collections.defaultdict(lambda: -1)
 
-    for scenario in tasks_results:
-        name = scenario["key"]["name"]
+    for workload in workloads:
+        name = workload["name"]
         position[name] += 1
-        source_dict[name].append(scenario["key"]["kw"])
-        tasks.append(_process_scenario(scenario, position[name]))
+        workload_cfg = objects.Workload.format_workload_config(workload)
+        source_dict[name].append(workload_cfg)
+        p_workloads.append(_process_workload(workload, workload_cfg,
+                                             position[name]))
 
     source = json.dumps(source_dict, indent=2, sort_keys=True)
-    return source, sorted(tasks, key=lambda r: (r["cls"], r["met"],
-                                                int(r["pos"])))
-
-
-def _extend_results(results):
-    """Transform tasks results into extended format.
-
-    This is a temporary workaround adapter that allows
-    working with task results using new schema, until
-    database refactoring actually comes.
-
-    :param results: tasks results list in old format
-    :returns: tasks results list in new format
-    """
-    extended_results = []
-    for result in results:
-        generic = {"id": None,
-                   "task_uuid": None,
-                   "key": result["key"],
-                   "data": {"sla": result["sla"],
-                            "hooks": result.get("hooks"),
-                            "raw": result["result"],
-                            "full_duration": result["full_duration"],
-                            "load_duration": result["load_duration"]},
-                   "created_at": result.get("created_at"),
-                   "updated_at": result.get("updated_at")}
-        extended_results.extend(
-            objects.Task.extend_results([generic], True))
-    return extended_results
+    return source, sorted(p_workloads, key=lambda r: (r["cls"], r["met"],
+                                                      int(r["pos"])))
 
 
 def plot(tasks_results, include_libs=False):
-    extended_results = _extend_results(tasks_results)
+    tasks = []
+    subtasks = []
+    workloads = []
+    for task in tasks_results:
+        tasks.append(objects.Task(task).extend_results().to_dict())
+
+        for subtask in tasks[-1]["subtasks"]:
+            workloads.extend(subtask.pop("workloads"))
+        subtasks.extend(tasks[-1].pop("subtasks"))
+
     template = ui_utils.get_template("task/report.html")
-    source, data = _process_tasks(extended_results)
+    source, data = _process_workloads(workloads)
     return template.render(version=version.version_string(),
                            source=json.dumps(source),
                            data=json.dumps(data),
                            include_libs=include_libs)
 
 
-def trends(tasks_results):
+def trends(tasks):
     trends = Trends()
-    for i, scenario in enumerate(_extend_results(tasks_results), 1):
-        trends.add_result(scenario)
+    for task in tasks:
+        task = objects.Task(task).extend_results().to_dict()
+        for workload in itertools.chain(
+                *[s["workloads"] for s in task["subtasks"]]):
+            workload_cfg = objects.Workload.format_workload_config(workload)
+            trends.add_result(workload, workload_cfg)
     template = ui_utils.get_template("task/trends.html")
     return template.render(version=version.version_string(),
                            data=json.dumps(trends.get_data()))
@@ -257,21 +245,20 @@ class Trends(object):
     def _make_hash(self, obj):
         return hashlib.md5(self._to_str(obj).encode("utf8")).hexdigest()
 
-    def add_result(self, result):
-        key = self._make_hash(result["key"]["kw"])
+    def add_result(self, workload, workload_cfg):
+        key = self._make_hash(workload_cfg)
         if key not in self._data:
             self._data[key] = {
                 "actions": {},
                 "sla_failures": 0,
-                "name": result["key"]["name"],
-                "config": json.dumps(result["key"]["kw"], indent=2)}
+                "name": workload["name"],
+                "config": json.dumps(workload_cfg, indent=2)}
 
-        for sla in result["sla"]:
-            self._data[key]["sla_failures"] += not sla["success"]
+        self._data[key]["sla_failures"] += not workload["pass_sla"]
 
-        stat = {row[0]: dict(zip(result["info"]["stat"]["cols"], row))
-                for row in result["info"]["stat"]["rows"]}
-        ts = int(result["info"]["tstamp_start"] * 1000)
+        stat = {row[0]: dict(zip(workload["info"]["stat"]["cols"], row))
+                for row in workload["info"]["stat"]["rows"]}
+        ts = int(workload["info"]["tstamp_start"] * 1000)
 
         for action in stat:
             # NOTE(amaretskiy): some atomic actions can be missed due to

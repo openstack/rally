@@ -28,7 +28,6 @@ from rally.cli.commands import task
 from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
-from rally.task import utils as tutils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -350,73 +349,66 @@ class TaskCommandsTestCase(test.TestCase):
     def test_detailed(self, iterations_data, has_output):
         test_uuid = "c0d874d4-7195-4fd5-8688-abe82bfad36f"
         detailed_value = {
-            "id": "task",
-            "uuid": test_uuid,
-            "status": "finished",
-            "results": [
-                {
-                    "key": {
-                        "name": "fake_name",
-                        "pos": "fake_pos",
-                        "kw": "fake_kw"
-                    },
-                    "info": {
-                        "stat": {"cols": ["col"] * 9,
-                                 "rows":[["row1"] * 9, ["row2"] * 9]},
-                        "load_duration": 3.2,
-                        "full_duration": 3.5,
-                        "iterations_count": 4,
-                        "atomic": {"foo": {"count": 1}, "bar": {"count": 2}}},
-                    "iterations": [
-                        {"duration": 0.9,
-                         "idle_duration": 0.1,
-                         "output": {"additive": [], "complete": []},
-                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                             "finished_at": 0.6},
-                                            {"name": "bar", "started_at": 0.6,
-                                             "finished_at": 1.3}
-                                            ],
-                         "error": ["type", "message", "traceback"]
-                         },
-                        {"duration": 1.2,
-                         "idle_duration": 0.3,
-                         "output": {"additive": [], "complete": []},
-                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                             "finished_at": 0.6},
-                                            {"name": "bar", "started_at": 0.6,
-                                             "finished_at": 1.3}
-                                            ],
-                         "error": ["type", "message", "traceback"]
-                         },
-                        {"duration": 0.7,
-                         "idle_duration": 0.5,
-                         "scenario_output": {
-                             "data": {"foo": 0.6, "bar": 0.7},
-                             "errors": "some"
-                         },
-                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                             "finished_at": 0.6},
-                                            {"name": "bar", "started_at": 0.6,
-                                             "finished_at": 1.3}
-                                            ],
-                         "error": ["type", "message", "traceback"]
-                         },
-                        {"duration": 0.5,
-                         "idle_duration": 0.5,
-                         "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                             "finished_at": 0.6},
-                                            {"name": "bar", "started_at": 0.6,
-                                             "finished_at": 1.3}
-                                            ],
-                         "error": ["type", "message", "traceback"]
-                         }
-                    ]
-                }
-            ]
-        }
+            "id": "task", "uuid": test_uuid, "status": "finished",
+            "subtasks": [{"workloads": [{
+                "name": "fake_name", "position": "fake_pos",
+                "args": "args", "context": "context", "sla": "sla",
+                "runner": "runner", "hooks": [],
+                "data": [],
+                "info": {
+                    "stat": {"cols": ["col"] * 9,
+                             "rows":[["row1"] * 9, ["row2"] * 9]},
+                    "load_duration": 3.2,
+                    "full_duration": 3.5,
+                    "iterations_count": 4,
+                    "atomic": {"foo": {"count": 1}, "bar": {"count": 2}}},
+                "iterations": [
+                    {"duration": 0.9,
+                     "idle_duration": 0.1,
+                     "output": {"additive": [], "complete": []},
+                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                         "finished_at": 0.6},
+                                        {"name": "bar", "started_at": 0.6,
+                                         "finished_at": 1.3}
+                                        ],
+                     "error": ["type", "message", "traceback"]
+                     },
+                    {"duration": 1.2,
+                     "idle_duration": 0.3,
+                     "output": {"additive": [], "complete": []},
+                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                         "finished_at": 0.6},
+                                        {"name": "bar", "started_at": 0.6,
+                                         "finished_at": 1.3}
+                                        ],
+                     "error": ["type", "message", "traceback"]
+                     },
+                    {"duration": 0.7,
+                     "idle_duration": 0.5,
+                     "scenario_output": {
+                         "data": {"foo": 0.6, "bar": 0.7},
+                         "errors": "some"
+                     },
+                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                         "finished_at": 0.6},
+                                        {"name": "bar", "started_at": 0.6,
+                                         "finished_at": 1.3}
+                                        ],
+                     "error": ["type", "message", "traceback"]
+                     },
+                    {"duration": 0.5,
+                     "idle_duration": 0.5,
+                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
+                                         "finished_at": 0.6},
+                                        {"name": "bar", "started_at": 0.6,
+                                         "finished_at": 1.3}
+                                        ],
+                     "error": ["type", "message", "traceback"]
+                     }],
+            }]}]}
         if has_output:
-            detailed_value["results"][0]["output"] = {"additive": [],
-                                                      "complete": []}
+            detailed_value["subtasks"][0]["workloads"][0]["output"] = {
+                "additive": [], "complete": []}
         self.fake_api.task.get_detailed.return_value = detailed_value
         self.task.detailed(self.fake_api, test_uuid,
                            iterations_data=iterations_data)
@@ -435,25 +427,26 @@ class TaskCommandsTestCase(test.TestCase):
             "uuid": test_uuid,
             "status": consts.TaskStatus.CRASHED,
             "results": [],
-            "verification_log": json.dumps({"etype": "error_type",
-                                            "msg": "error_message",
-                                            "trace": "error_traceback"})
+            "validation_result": {"etype": "error_type",
+                                  "msg": "error_message",
+                                  "trace": "error_traceback"}
         }
         self.fake_api.task.get_detailed.return_value = value
 
         mock_logging.is_debug.return_value = debug
         self.task.detailed(self.fake_api, test_uuid)
-        verification = yaml.safe_load(value["verification_log"])
         if debug:
-            expected_calls = [mock.call("Task test_task_id: crashed"),
-                              mock.call("%s" % verification["trace"])]
+            expected_calls = [
+                mock.call("Task test_task_id: crashed"),
+                mock.call("%s" % value["validation_result"]["trace"])]
             mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
         else:
-            expected_calls = [mock.call("Task test_task_id: crashed"),
-                              mock.call("%s" % verification["etype"]),
-                              mock.call("%s" % verification["msg"]),
-                              mock.call("\nFor more details run:\nrally "
-                                        "-d task detailed %s" % test_uuid)]
+            expected_calls = [
+                mock.call("Task test_task_id: crashed"),
+                mock.call("%s" % value["validation_result"]["etype"]),
+                mock.call("%s" % value["validation_result"]["msg"]),
+                mock.call("\nFor more details run:\n"
+                          "rally -d task detailed %s" % test_uuid)]
             mock_stdout.write.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
@@ -486,47 +479,64 @@ class TaskCommandsTestCase(test.TestCase):
         self.fake_api.task.get_detailed.assert_called_once_with(
             task_id=test_uuid, extended_results=True)
 
-    @mock.patch("json.dumps")
+    def _make_task(self, status=None, data=None):
+        return {
+            "status": status or consts.TaskStatus.FINISHED,
+            "subtasks": [{"workloads": [{
+                "full_duration": 1, "load_duration": 2,
+                "created_at": "2016",
+                "name": "Foo.bar", "description": "descr",
+                "position": 2,
+                "args": {"key1": "value1"},
+                "runner": {"type": "rruunneerr"},
+                "hooks": [],
+                "sla": {"failure_rate": {"max": 0}},
+                "sla_results": {"sla": [{"success": True}]},
+                "context": {"users": {}},
+                "data": data or []}]}]}
+
+    @mock.patch("rally.cli.commands.task.json.dumps")
     def test_results(self, mock_json_dumps):
         task_id = "foo_task_id"
-        created_at = dt.datetime(2017, 2, 6, 1, 1, 1)
-        data = [
-            {"key": "foo_key", "data": {"raw": [{"atomic_actions": {
-                                                 "foo": 1.1}}],
-                                        "sla": [],
-                                        "hooks": [],
-                                        "load_duration": 1.0,
-                                        "full_duration": 2.0},
-             "created_at": created_at.strftime("%Y-%d-%mT%H:%M:%S")}
-        ]
-        result = map(lambda x: {"key": x["key"],
-                                "result": x["data"]["raw"],
-                                "load_duration": x["data"]["load_duration"],
-                                "full_duration": x["data"]["full_duration"],
-                                "created_at": x.get("created_at"),
-                                "hooks": x["data"]["hooks"],
-                                "sla": x["data"]["sla"]}, data)
-        fake_task = fakes.FakeTask({"status": consts.TaskStatus.FINISHED,
-                                    "results": data})
-        self.fake_api.task.get.return_value = fake_task
 
-        self.task.results(self.fake_api, task_id)
+        task_obj = self._make_task(data=[{"atomic_actions": {"foo": 1.1}}])
+        result = map(lambda x: {"key": {"kw": {"sla": x["sla"],
+                                               "args": x["args"],
+                                               "context": x["context"],
+                                               "runner": x["runner"],
+                                               "hooks": x["hooks"]},
+                                        "pos": x["position"],
+                                        "name": x["name"],
+                                        "description": x["description"]},
+                                "result": x["data"],
+                                "load_duration": x["load_duration"],
+                                "full_duration": x["full_duration"],
+                                "created_at": x["created_at"],
+                                "hooks": x["hooks"],
+                                "sla": x["sla_results"]["sla"]},
+                     task_obj["subtasks"][0]["workloads"])
+
+        self.fake_api.task.get_detailed.return_value = task_obj
+
+        self.assertIsNone(self.task.results(self.fake_api, task_id))
         self.assertEqual(1, mock_json_dumps.call_count)
         self.assertEqual(1, len(mock_json_dumps.call_args[0]))
         self.assertSequenceEqual(result, mock_json_dumps.call_args[0][0])
         self.assertEqual({"sort_keys": False, "indent": 4},
                          mock_json_dumps.call_args[1])
-        self.fake_api.task.get.assert_called_once_with(task_id=task_id)
+        self.fake_api.task.get_detailed.assert_called_once_with(
+            task_id=task_id)
 
     @mock.patch("rally.cli.commands.task.sys.stdout")
     def test_results_no_data(self, mock_stdout):
-        task_id = "foo_task_id"
-        fake_task = fakes.FakeTask({"status": consts.TaskStatus.CRASHED})
-        self.fake_api.task.get.return_value = fake_task
+        task_id = "foo"
+        self.fake_api.task.get_detailed.return_value = self._make_task(
+            status=consts.TaskStatus.CRASHED)
 
         self.assertEqual(1, self.task.results(self.fake_api, task_id))
 
-        self.fake_api.task.get.assert_called_once_with(task_id=task_id)
+        self.fake_api.task.get_detailed.assert_called_once_with(
+            task_id=task_id)
 
         expected_out = ("Task status is %s. Results "
                         "available when it is one of %s.") % (
@@ -534,14 +544,6 @@ class TaskCommandsTestCase(test.TestCase):
             ", ".join((consts.TaskStatus.FINISHED,
                        consts.TaskStatus.ABORTED)))
         mock_stdout.write.assert_has_calls([mock.call(expected_out)])
-
-    def _make_result(self, keys):
-        return [{"key": {"name": key, "pos": 0},
-                 "data": {"raw": key + "_raw",
-                          "sla": key + "_sla",
-                          "hooks": key + "_hooks",
-                          "load_duration": 1.2,
-                          "full_duration": 2.3}} for key in keys]
 
     @mock.patch("rally.cli.commands.task.os.path")
     @mock.patch("rally.cli.commands.task.open", create=True)
@@ -558,8 +560,8 @@ class TaskCommandsTestCase(test.TestCase):
         mock_fd = mock.mock_open()
         mock_open.side_effect = mock_fd
 
-        self.fake_api.task.get_detailed.return_value = {
-            "results": self._make_result(["bar"])}
+        task_obj = self._make_task()
+        self.fake_api.task.get_detailed.return_value = task_obj
         mock_plot.trends.return_value = "rendered_trends_report"
 
         ret = self.task.trends(self.fake_api,
@@ -567,14 +569,8 @@ class TaskCommandsTestCase(test.TestCase):
                                       "cd654321-38d8-4c8f-bbcc-fc8f74b004ae",
                                       "path_to_file"],
                                out="output.html", out_format="html")
-        expected = [
-            {"load_duration": 1.2, "full_duration": 2.3, "sla": "bar_sla",
-             "hooks": "bar_hooks",
-             "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
-            {"load_duration": 1.2, "full_duration": 2.3, "sla": "bar_sla",
-             "hooks": "bar_hooks",
-             "key": {"name": "bar", "pos": 0}, "result": "bar_raw"},
-            "result_1_from_file", "result_2_from_file"]
+        expected = [task_obj, task_obj,
+                    ["result_1_from_file", "result_2_from_file"]]
         mock_plot.trends.assert_called_once_with(expected)
         self.assertEqual([mock.call(self.fake_api, "path_to_file")],
                          self.task._load_task_results_file.mock_calls)
@@ -610,8 +606,6 @@ class TaskCommandsTestCase(test.TestCase):
     def test_trends_task_id_is_not_uuid_like(self, mock_plot,
                                              mock_open, mock_os_path):
         mock_os_path.exists.return_value = False
-        self.fake_api.task.get_detailed.return_value = {
-            "results": self._make_result(["foo"])}
 
         ret = self.task.trends(self.fake_api,
                                tasks=["ab123456-38d8-4c8f-bbcc-fc8f74b004ae"],
@@ -637,29 +631,9 @@ class TaskCommandsTestCase(test.TestCase):
     def test_old_report_one_uuid(self, mock_webbrowser,
                                  mock_plot, mock_open, mock_realpath):
         task_id = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
-        data = [
-            {"key": {"name": "class.test", "pos": 0},
-             "data": {"raw": "foo_raw", "sla": "foo_sla",
-                      "hooks": "foo_hooks",
-                      "load_duration": 0.1,
-                      "full_duration": 1.2},
-             "created_at": "2017-06-02 07:33:04"},
-            {"key": {"name": "class.test", "pos": 0},
-             "data": {"raw": "bar_raw", "sla": "bar_sla",
-                      "hooks": "bar_hooks",
-                      "load_duration": 2.1,
-                      "full_duration": 2.2},
-             "created_at": "2017-06-02 07:33:04"}]
+        task_obj = self._make_task()
 
-        results = [{"key": x["key"],
-                    "result": x["data"]["raw"],
-                    "sla": x["data"]["sla"],
-                    "hooks": x["data"]["hooks"],
-                    "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"],
-                    "created_at": x["created_at"]}
-                   for x in data]
-        self.fake_api.task.get_detailed.return_value = {"results": data}
+        self.fake_api.task.get_detailed.return_value = task_obj
         mock_plot.plot.return_value = "html_report"
 
         def reset_mocks():
@@ -669,7 +643,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.task._old_report(self.fake_api, tasks=task_id,
                               out="/tmp/%s.html" % task_id)
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
-        mock_plot.plot.assert_called_once_with(results, include_libs=False)
+        mock_plot.plot.assert_called_once_with([task_obj], include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         self.fake_api.task.get_detailed.assert_called_once_with(
@@ -689,14 +663,14 @@ class TaskCommandsTestCase(test.TestCase):
                               open_it=True, out_format="html")
         mock_webbrowser.open_new_tab.assert_called_once_with(
             "file://realpath_output.html")
-        mock_plot.plot.assert_called_once_with(results, include_libs=False)
+        mock_plot.plot.assert_called_once_with([task_obj], include_libs=False)
 
         # HTML with embedded JS/CSS
         reset_mocks()
         self.task._old_report(self.fake_api, task_id, open_it=False,
                               out="output.html", out_format="html_static")
         self.assertFalse(mock_webbrowser.open_new_tab.called)
-        mock_plot.plot.assert_called_once_with(results, include_libs=True)
+        mock_plot.plot.assert_called_once_with([task_obj], include_libs=True)
 
     @mock.patch("rally.cli.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
@@ -708,33 +682,10 @@ class TaskCommandsTestCase(test.TestCase):
                                     mock_plot, mock_open, mock_realpath):
         tasks = ["eb290c30-38d8-4c8f-bbcc-fc8f74b004ae",
                  "eb290c30-38d8-4c8f-bbcc-fc8f74b004af"]
-        data = [
-            {"key": {"name": "test", "pos": 0},
-             "data": {"raw": "foo_raw", "sla": "foo_sla",
-                      "hooks": "foo_hooks",
-                      "load_duration": 0.1,
-                      "full_duration": 1.2},
-             "created_at": "2017-06-02 07:33:04"},
-            {"key": {"name": "test", "pos": 0},
-             "data": {"raw": "bar_raw", "sla": "bar_sla",
-                      "hooks": "bar_hooks",
-                      "load_duration": 2.1,
-                      "full_duration": 2.2},
-             "created_at": "2017-06-02 07:33:04"}]
 
-        results = []
-        for task_uuid in tasks:
-            results.extend(
-                map(lambda x: {"key": x["key"],
-                               "result": x["data"]["raw"],
-                               "sla": x["data"]["sla"],
-                               "hooks": x["data"]["hooks"],
-                               "load_duration": x["data"]["load_duration"],
-                               "full_duration": x["data"]["full_duration"],
-                               "created_at": x["created_at"]},
-                    data))
+        task_obj = self._make_task()
 
-        self.fake_api.task.get_detailed.return_value = {"results": data}
+        self.fake_api.task.get_detailed.return_value = task_obj
         mock_plot.plot.return_value = "html_report"
 
         def reset_mocks():
@@ -744,7 +695,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.task._old_report(self.fake_api, tasks=tasks,
                               out="/tmp/1_test.html")
         mock_open.assert_called_once_with("/tmp/1_test.html", "w+")
-        mock_plot.plot.assert_called_once_with(results, include_libs=False)
+        mock_plot.plot.assert_called_once_with([task_obj, task_obj],
+                                               include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         expected_get_calls = [mock.call(task_id=task) for task in tasks]
@@ -760,32 +712,11 @@ class TaskCommandsTestCase(test.TestCase):
                                  mock_path_exists):
 
         task_file = "/tmp/some_file.json"
-        data = [
-            {"key": {"name": "test", "pos": 0},
-             "data": {"raw": "foo_raw",
-                      "sla": "foo_sla",
-                      "load_duration": 0.1,
-                      "full_duration": 1.2},
-             "created_at": "2017-06-02 07:33:04"},
-            {"key": {"name": "test", "pos": 1},
-             "data": {"raw": "bar_raw",
-                      "sla": "bar_sla",
-                      "load_duration": 2.1,
-                      "full_duration": 2.2},
-             "created_at": "2017-06-02 07:33:04"}]
-
-        results = [{"key": x["key"],
-                    "result": x["data"]["raw"],
-                    "sla": x["data"]["sla"],
-                    "load_duration": x["data"]["load_duration"],
-                    "full_duration": x["data"]["full_duration"],
-                    "created_at": x["created_at"]}
-                   for x in data]
-
+        task_obj = self._make_task()
         mock_plot.plot.return_value = "html_report"
         mock_open.side_effect = mock.mock_open()
         self.task._load_task_results_file = mock.MagicMock(
-            return_value=results
+            return_value=task_obj
         )
 
         self.task._old_report(self.real_api, tasks=task_file,
@@ -795,7 +726,7 @@ class TaskCommandsTestCase(test.TestCase):
             self.real_api, task_file)
         expected_open_calls = [mock.call("/tmp/1_test.html", "w+")]
         mock_open.assert_has_calls(expected_open_calls, any_order=True)
-        mock_plot.plot.assert_called_once_with(results, include_libs=False)
+        mock_plot.plot.assert_called_once_with([task_obj], include_libs=False)
         mock_open.side_effect().write.assert_called_once_with("html_report")
 
     @mock.patch("rally.cli.commands.task.os.path.exists", return_value=False)
@@ -958,24 +889,20 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     def test_sla_check(self, mock_print_list):
-        data = [{"key": {"name": "fake_name",
-                         "pos": "fake_pos",
-                         "kw": "fake_kw"},
-                 "data": {"scenario_duration": 42.0,
-                          "raw": [],
-                          "sla": [{"benchmark": "KeystoneBasic.create_user",
-                                   "criterion": "max_seconds_per_iteration",
-                                   "pos": 0,
-                                   "success": False,
-                                   "detail": "Max foo, actually bar"}]}}]
+        task_obj = self._make_task()
+        task_obj["subtasks"][0]["workloads"][0]["sla_results"]["sla"] = [
+            {"benchmark": "KeystoneBasic.create_user",
+             "criterion": "max_seconds_per_iteration",
+             "pos": 0, "success": False, "detail": "Max foo, actually bar"}]
 
-        self.fake_api.task.get_detailed.return_value = {"results": data}
+        self.fake_api.task.get_detailed.return_value = task_obj
         result = self.task.sla_check(self.fake_api, task_id="fake_task_id")
         self.assertEqual(1, result)
         self.fake_api.task.get_detailed.assert_called_with(
             task_id="fake_task_id")
 
-        data[0]["data"]["sla"][0]["success"] = True
+        task_obj["subtasks"][0]["workloads"][0]["sla_results"]["sla"][0][
+            "success"] = True
 
         result = self.task.sla_check(self.fake_api, task_id="fake_task_id",
                                      tojson=True)
@@ -1093,12 +1020,11 @@ class TaskCommandsTestCase(test.TestCase):
             "id": "task",
             "uuid": test_uuid,
             "status": "finished",
-            "results": [{
-                "key": {
-                    "name": "fake_name",
-                    "pos": "fake_pos",
-                    "kw": "fake_kw"
-                },
+            "subtasks": [{"workloads": [{
+                "name": "fake_name",
+                "position": "fake_pos",
+                "args": {}, "runner": {}, "context": {}, "sla": {},
+                "hooks": {},
                 "info": {
                     "stat": {"cols": ["Column 1", "Column 2"],
                              "rows": [[11, 22], [33, 44]]},
@@ -1116,9 +1042,9 @@ class TaskCommandsTestCase(test.TestCase):
                      "error": error_data
                      },
                 ]},
-            ],
-            "verification_log": json.dumps([error_type, error_message,
-                                            error_traceback])
+            ]}],
+            "validation_result": json.dumps([error_type, error_message,
+                                             error_traceback])
         }
         self.task.detailed(self.fake_api, test_uuid)
         self.fake_api.task.get_detailed.assert_called_once_with(
@@ -1128,33 +1054,56 @@ class TaskCommandsTestCase(test.TestCase):
         ], any_order=False)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.load")
+    @mock.patch("rally.cli.commands.task.yaml.safe_load")
     @mock.patch("rally.cli.commands.task.jsonschema.validate",
                 return_value=None)
-    def test__load_task_results_file(self, mock_validate, mock_json_load,
+    def test__load_task_results_file(self, mock_validate, mock_safe_load,
                                      mock_open):
         task_file = "/tmp/task.json"
-        results = [{
-            "result": [{"timestamp": 0, "atomic_actions": {"foo": 1.0}},
-                       {"timestamp": 0, "atomic_actions": {"bar": 1.1}}
-                       ]}]
-        mock_json_load.return_value = results
+        workload = {
+            "full_duration": 2, "load_duration": 1,
+            "created_at": "2017-07-01T07:03:01",
+            "updated_at": "2017-07-01T07:03:03",
+            "name": "Foo.bar", "description": "descr",
+            "position": 2,
+            "args": {"key1": "value1"},
+            "runner": {"type": "rruunneerr"},
+            "hooks": [{"config": {"type": "hookk"}}],
+            "pass_sla": True,
+            "sla": {"failure_rate": {"max": 0}},
+            "sla_results": {"sla": [{"success": True}]},
+            "context": {"users": {}},
+            "data": [{"timestamp": 0, "atomic_actions": {"foo": 1.0}},
+                     {"timestamp": 0, "atomic_actions": {"bar": 1.1}}]
+        }
+
+        results = [
+            {"key": {"name": workload["name"],
+                     "description": workload["description"],
+                     "pos": workload["position"],
+                     "kw": {
+                         "args": workload["args"],
+                         "runner": workload["runner"],
+                         "hooks": [h["config"] for h in workload["hooks"]],
+                         "sla": workload["sla"],
+                         "context": workload["context"]}},
+             "sla": workload["sla_results"]["sla"],
+             "result": workload["data"],
+             "full_duration": workload["full_duration"],
+             "load_duration": workload["load_duration"],
+             "created_at": workload["created_at"]}
+        ]
+        mock_safe_load.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
-        foo_wrapper = tutils.WrapperForAtomicActions({"foo": 1.0})
-        bar_wrapper = tutils.WrapperForAtomicActions({"bar": 1.1})
-        expected = [{"result": [{"timestamp": 0,
-                                 "atomic_actions": list(foo_wrapper)},
-                                {"timestamp": 0,
-                                 "atomic_actions": list(bar_wrapper)}]}]
-        self.assertEqual(expected, ret)
+        self.assertEqual({"subtasks": [{"workloads": [workload]}]}, ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
-    @mock.patch("rally.cli.commands.task.json.load")
+    @mock.patch("rally.cli.commands.task.yaml.safe_load")
     def test__load_task_results_file_wrong_format(self,
-                                                  mock_json_load,
+                                                  mock_safe_load,
                                                   mock_open):
         task_id = "/tmp/task.json"
-        mock_json_load.return_value = "results"
+        mock_safe_load.return_value = "results"
         self.assertRaises(task.FailedToLoadResults,
                           self.task._load_task_results_file,
                           api=self.real_api, task_id=task_id)

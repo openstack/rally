@@ -18,7 +18,6 @@ SQLAlchemy implementation for DB.API
 
 import copy
 import datetime as dt
-import json
 import os
 import time
 
@@ -181,8 +180,8 @@ class Connection(object):
 
         return query
 
-    def _tags_get(self, uuid, tag_type):
-        tags = (self.model_query(models.Tag).
+    def _tags_get(self, uuid, tag_type, session=None):
+        tags = (self.model_query(models.Tag, session=session).
                 filter_by(uuid=uuid, type=tag_type).all())
 
         return list(set(t.tag for t in tags))
@@ -202,51 +201,8 @@ class Connection(object):
         task = pre_query.filter_by(uuid=uuid).first()
         if not task:
             raise exceptions.TaskNotFound(uuid=uuid)
+        task.tags = sorted(self._tags_get(uuid, consts.TagType.TASK, session))
         return task
-
-    def _make_old_task(self, task):
-        tags = sorted(self._tags_get(task.uuid, consts.TagType.TASK))
-
-        return {
-            "id": task.id,
-            "uuid": task.uuid,
-            "deployment_uuid": task.deployment_uuid,
-            "status": task.status,
-            "created_at": task.created_at,
-            "updated_at": task.updated_at,
-            "tags": tags,
-            "verification_log": json.dumps(task.validation_result)
-        }
-
-    def _make_old_task_result(self, workload, workload_data_list):
-        raw_data = [data
-                    for workload_data in workload_data_list
-                    for data in workload_data.chunk_data["raw"]]
-        return {
-            "id": workload.id,
-            "task_uuid": workload.task_uuid,
-            "created_at": workload.created_at,
-            "updated_at": workload.updated_at,
-            "key": {
-                "name": workload.name,
-                "description": workload.description,
-                "pos": workload.position,
-                "kw": {
-                    "args": workload.args,
-                    "runner": workload.runner,
-                    "context": workload.context,
-                    "sla": workload.sla,
-                    "hooks": [r["config"] for r in workload.hooks],
-                }
-            },
-            "data": {
-                "raw": raw_data,
-                "load_duration": workload.load_duration,
-                "full_duration": workload.full_duration,
-                "sla": workload.sla_results.get("sla", []),
-                "hooks": workload.hooks
-            }
-        }
 
     def _task_workload_data_get_all(self, workload_uuid):
         session = get_session()
@@ -276,30 +232,23 @@ class Connection(object):
                         chunk["atomic_actions"] = new_atomic_actions
                     workload_data.update({"chunk_data": chunk_data})
 
-        return results
+        return [raw for workload_data in results
+                for raw in workload_data.chunk_data["raw"]]
 
-    # @db_api.serialize
-    def task_get(self, uuid):
-        task = self._task_get(uuid)
-        return self._make_old_task(task)
+    @db_api.serialize
+    def task_get(self, uuid=None, detailed=False):
+        session = get_session()
+        task = db_api.serialize_data(self._task_get(uuid, session=session))
 
-    # @db_api.serialize
-    def task_get_detailed(self, uuid):
-        task = self.task_get(uuid)
-        task["results"] = self._task_result_get_all_by_uuid(uuid)
+        if detailed:
+            task["subtasks"] = self._subtasks_get_all_by_task_uuid(
+                uuid, session=session)
+
         return task
 
     @db_api.serialize
     def task_get_status(self, uuid):
         return self._task_get(uuid, load_only="status").status
-
-    # @db_api.serialize
-    def task_get_detailed_last(self):
-        task = (self.model_query(models.Task).
-                order_by(models.Task.id.desc()).first())
-        task = self._make_old_task(task)
-        task["results"] = self._task_result_get_all_by_uuid(task["uuid"])
-        return task
 
     @db_api.serialize
     def task_create(self, values):
@@ -326,7 +275,7 @@ class Connection(object):
         task.tags = sorted(self._tags_get(task.uuid, consts.TagType.TASK))
         return task
 
-    # @db_api.serialize
+    @db_api.serialize
     def task_update(self, uuid, values):
         session = get_session()
         values.pop("uuid", None)
@@ -342,8 +291,9 @@ class Connection(object):
                                 "type": consts.TagType.TASK,
                                 "tag": t})
                     tag.save()
-
-        return self._make_old_task(task)
+            # take an updated instance of task
+            task = self._task_get(uuid, session=session)
+        return task
 
     def task_update_status(self, uuid, statuses, status_value):
         session = get_session()
@@ -361,9 +311,10 @@ class Connection(object):
             raise exceptions.RallyException(msg)
         return result
 
-    # @db_api.serialize
+    @db_api.serialize
     def task_list(self, status=None, deployment=None, tags=None):
         session = get_session()
+        tasks = []
         with session.begin():
             query = self.model_query(models.Task)
 
@@ -381,7 +332,12 @@ class Connection(object):
                     consts.TagType.TASK, tags)
                 query = query.filter(models.Task.uuid.in_(uuids))
 
-        return [self._make_old_task(task) for task in query.all()]
+            for task in query.all():
+                task.tags = sorted(
+                    self._tags_get(task.uuid, consts.TagType.TASK, session))
+                tasks.append(task)
+
+        return tasks
 
     def task_delete(self, uuid, status=None):
         session = get_session()
@@ -414,24 +370,21 @@ class Connection(object):
                                                            actual=task.status)
                 raise exceptions.TaskNotFound(uuid=uuid)
 
-    def _task_result_get_all_by_uuid(self, uuid):
-        results = []
-
-        workloads = (self.model_query(models.Workload).
-                     filter_by(task_uuid=uuid).all())
-
-        for workload in workloads:
-            workload_data_list = self._task_workload_data_get_all(
-                workload.uuid)
-
-            results.append(
-                self._make_old_task_result(workload, workload_data_list))
-
-        return results
-
-    # @db_api.serialize
-    def task_result_get_all_by_uuid(self, uuid):
-        return self._task_result_get_all_by_uuid(uuid)
+    def _subtasks_get_all_by_task_uuid(self, task_uuid, session=None):
+        result = (self.model_query(models.Subtask, session=session).filter_by(
+            task_uuid=task_uuid).all())
+        subtasks = []
+        for subtask in result:
+            subtask = db_api.serialize_data(subtask)
+            subtask["workloads"] = []
+            workloads = (self.model_query(models.Workload, session=session).
+                         filter_by(subtask_uuid=subtask["uuid"]).all())
+            for workload in workloads:
+                workload.data = self._task_workload_data_get_all(
+                    workload.uuid)
+                subtask["workloads"].append(db_api.serialize_data(workload))
+            subtasks.append(subtask)
+        return subtasks
 
     @db_api.serialize
     def subtask_create(self, task_uuid, title, description=None, context=None):
@@ -458,21 +411,22 @@ class Connection(object):
             uuid=workload_uuid).first()
 
     @db_api.serialize
-    def workload_create(self, task_uuid, subtask_uuid, key):
+    def workload_create(self, task_uuid, subtask_uuid, name, description,
+                        position, runner, runner_type, hooks, context, sla,
+                        args, context_execution, statistics):
         workload = models.Workload(task_uuid=task_uuid,
-                                   subtask_uuid=subtask_uuid)
-        workload.update({
-            "name": key["name"],
-            "description": key["description"],
-            "position": key["pos"],
-            "runner": key["kw"]["runner"],
-            "runner_type": key["kw"]["runner"]["type"],
-            "context": key["kw"].get("context", {}),
-            "sla": key["kw"].get("sla", {}),
-            "args": key["kw"].get("args", {}),
-            "context_execution": {},
-            "statistics": {},
-        })
+                                   subtask_uuid=subtask_uuid,
+                                   name=name,
+                                   description=description,
+                                   position=position,
+                                   runner=runner,
+                                   runner_type=runner_type,
+                                   hooks=hooks,
+                                   context=context,
+                                   sla=sla,
+                                   args=args,
+                                   context_execution=context_execution,
+                                   statistics=statistics)
         workload.save()
         return workload
 
@@ -530,19 +484,15 @@ class Connection(object):
                              data):
         session = get_session()
         with session.begin():
-            workload_data_list = self._task_workload_data_get_all(
-                workload_uuid)
+            workload_results = self._task_workload_data_get_all(workload_uuid)
 
-            raw_data = [raw
-                        for workload_data in workload_data_list
-                        for raw in workload_data.chunk_data["raw"]]
-            iter_count = len(raw_data)
+            iter_count = len(workload_results)
 
             failed_iter_count = 0
             max_duration = 0
             min_duration = 0
 
-            for d in raw_data:
+            for d in workload_results:
                 if d.get("error"):
                     failed_iter_count += 1
 

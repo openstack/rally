@@ -295,7 +295,7 @@ class TaskAPITestCase(test.TestCase):
                           deployment=fake_deployment,
                           config="config", task=fake_task)
 
-    @mock.patch("rally.api.objects.task.db.task_get")
+    @mock.patch("rally.api.objects.Task.get")
     @mock.patch("rally.api.objects.Deployment.get")
     def test_start_with_inconsistent_deployment(self, mock_deployment_get,
                                                 mock_task_get):
@@ -308,13 +308,13 @@ class TaskAPITestCase(test.TestCase):
         fake_task_dict = {"deployment_uuid": deployment_uuid,
                           "uuid": "some_uuid"}
         fake_task = objects.Task(task=fake_task_dict)
-        mock_task_get.return_value = fake_task_dict
+        mock_task_get.return_value = fake_task
 
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
                           self.task_inst.start,
                           deployment=deployment_uuid,
                           config="config",
-                          task=fake_task)
+                          task=fake_task["uuid"])
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -420,10 +420,11 @@ class TaskAPITestCase(test.TestCase):
             status=expected_status)
 
     @mock.patch("rally.api.texporter.TaskExporter")
-    @mock.patch("rally.api.objects.Task.get_detailed",
-                return_value={"results": ["detail"]})
-    def test_export(self, mock_task_get_detailed, mock_task_exporter):
+    @mock.patch("rally.api.objects.Task.get")
+    def test_export(self, mock_task_get, mock_task_exporter):
         task_id = ["uuid-1", "uuid-2"]
+        tasks = [mock.Mock(), mock.Mock()]
+        mock_task_get.side_effect = tasks
         output_type = mock.Mock()
         output_dest = mock.Mock()
 
@@ -439,17 +440,20 @@ class TaskAPITestCase(test.TestCase):
         reporter.validate.assert_called_once_with(output_dest)
 
         mock_task_exporter.make.assert_called_once_with(
-            reporter, ["detail", "detail"], output_dest,
-            api=self.task_inst.api)
-        self.assertEqual([mock.call(u) for u in task_id],
-                         mock_task_get_detailed.call_args_list)
+            reporter, [t.to_dict.return_value for t in tasks],
+            output_dest, api=self.task_inst.api)
+        self.assertEqual([mock.call(u, detailed=True) for u in task_id],
+                         mock_task_get.call_args_list)
 
     @mock.patch("rally.api.objects.Task")
     def test_get_detailed(self, mock_task):
-        mock_task.get_detailed.return_value = "detailed_task_data"
-        self.assertEqual("detailed_task_data",
+        mock_task.get.return_value = mock.Mock()
+        task = mock_task.get.return_value
+        self.assertEqual(task.to_dict.return_value,
                          self.task_inst.get_detailed(task_id="task_uuid"))
-        mock_task.get_detailed.assert_called_once_with("task_uuid")
+        mock_task.get.assert_called_once_with("task_uuid", detailed=True)
+        self.assertFalse(task.extend_results.called)
+        task.to_dict.assert_called_once_with()
 
     @mock.patch("rally.api.objects.Task")
     def test_list(self, mock_task):
@@ -461,15 +465,14 @@ class TaskAPITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Task")
     def test_get_detailed_with_extended_results(self, mock_task):
-        mock_task.get_detailed.return_value = (("uuid", "foo_uuid"),
-                                               ("results", "raw_results"))
-        mock_task.extend_results.return_value = "extended_results"
-
-        self.assertEqual({"uuid": "foo_uuid", "results": "extended_results"},
-                         self.task_inst.get_detailed(task_id="foo_uuid",
+        mock_task.get.return_value = mock.Mock()
+        task = mock_task.get.return_value
+        self.assertEqual(task.to_dict.return_value,
+                         self.task_inst.get_detailed(task_id="task_uuid",
                                                      extended_results=True))
-        mock_task.get_detailed.assert_called_once_with("foo_uuid")
-        mock_task.extend_results.assert_called_once_with("raw_results")
+        mock_task.get.assert_called_once_with("task_uuid", detailed=True)
+        task.extend_results.assert_called_once_with()
+        task.to_dict.assert_called_once_with()
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -478,8 +481,22 @@ class TaskAPITestCase(test.TestCase):
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_FINISHED)
 
-        task_results = [{"key": {"name": "test_scenario"},
-                         "result": []}]
+        workload = {"name": "test_scenario",
+                    "description": "scen-description",
+                    "full_duration": 3,
+                    "load_duration": 1,
+                    "position": 77,
+                    "runner": "runner-config",
+                    "context": "ctx-config",
+                    "hooks": "hooks-config",
+                    "sla": "sla-config",
+                    "sla_results": {"sla": "sla=result"},
+                    "args": "scen-args",
+                    "data": ["data-raw"]}
+
+        task_results = {"subtasks": [
+            {"title": "subtask-title",
+             "workloads": [workload]}]}
 
         self.assertEqual(
             mock_task.return_value.to_dict(),
@@ -494,23 +511,25 @@ class TaskAPITestCase(test.TestCase):
             [mock.call(consts.TaskStatus.RUNNING),
              mock.call(consts.SubtaskStatus.FINISHED)]
         )
-        mock_task.return_value.add_subtask.assert_has_calls(
-            [mock.call(title=task_results[0]["key"]["name"])]
-        )
+        mock_task.return_value.add_subtask.assert_called_once_with(
+            title="subtask-title")
         sub_task = mock_task.return_value.add_subtask.return_value
-        sub_task.add_workload.assert_has_calls(
-            [mock.call(task_results[0]["key"])]
+        sub_task.add_workload.assert_called_once_with(
+            name=workload["name"], description=workload["description"],
+            position=workload["position"], runner=workload["runner"],
+            context=workload["context"], sla=workload["sla"],
+            hooks=workload["hooks"], args=workload["args"]
         )
-        sub_task.update_status.assert_has_calls(
-            [mock.call(consts.SubtaskStatus.FINISHED)]
-        )
+        sub_task.update_status.assert_called_once_with(
+            consts.SubtaskStatus.FINISHED)
         work_load = sub_task.add_workload.return_value
-        work_load.add_workload_data.assert_has_calls(
-            [mock.call(0, {"raw": task_results[0]["result"]})]
-        )
-        work_load.set_results.assert_has_calls(
-            [mock.call(task_results[0])]
-        )
+        work_load.add_workload_data.assert_called_once_with(
+            0, {"raw": workload["data"]})
+        work_load.set_results.assert_called_once_with(
+            {"full_duration": workload["full_duration"],
+             "load_duration": workload["load_duration"],
+             "sla": workload["sla_results"]["sla"],
+             "hooks": workload["hooks"]})
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -522,10 +541,22 @@ class TaskAPITestCase(test.TestCase):
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_FINISHED)
 
-        task_results = [{"key": {"name": "test_scenario"},
-                         "result": [{"timestamp": 1},
-                                    {"timestamp": 2},
-                                    {"timestamp": 3}]}]
+        workload = {"name": "test_scenario",
+                    "description": "scen-description",
+                    "full_duration": 3,
+                    "load_duration": 1,
+                    "position": 77,
+                    "runner": "runner-config",
+                    "context": "ctx-config",
+                    "hooks": "hooks-config",
+                    "sla": "sla-config",
+                    "sla_results": {"sla": "sla=result"},
+                    "args": "scen-args",
+                    "data": [{"timestamp": 1},
+                             {"timestamp": 2},
+                             {"timestamp": 3}]}
+        task_results = {"subtasks": [{"title": "scen-subtasks",
+                                      "workloads": [workload]}]}
         mock_conf.raw_result_chunk_size = 2
 
         self.assertEqual(
@@ -541,26 +572,27 @@ class TaskAPITestCase(test.TestCase):
             [mock.call(consts.TaskStatus.RUNNING),
              mock.call(consts.SubtaskStatus.FINISHED)]
         )
-        mock_task.return_value.add_subtask.assert_has_calls(
-            [mock.call(title=task_results[0]["key"]["name"])]
-        )
+        mock_task.return_value.add_subtask.assert_called_once_with(
+            title=task_results["subtasks"][0]["title"])
         sub_task = mock_task.return_value.add_subtask.return_value
-        sub_task.add_workload.assert_has_calls(
-            [mock.call(task_results[0]["key"])]
+        sub_task.add_workload.assert_called_once_with(
+            name=workload["name"], description=workload["description"],
+            position=workload["position"], runner=workload["runner"],
+            context=workload["context"], sla=workload["sla"],
+            hooks=workload["hooks"], args=workload["args"]
         )
-        sub_task.update_status.assert_has_calls(
-            [mock.call(consts.SubtaskStatus.FINISHED)]
-        )
+        sub_task.update_status.assert_called_once_with(
+            consts.SubtaskStatus.FINISHED)
         work_load = sub_task.add_workload.return_value
-        work_load.add_workload_data.assert_has_calls(
-            [mock.call(0, {"raw": [{"timestamp": 1},
-                                   {"timestamp": 2}]}),
-             mock.call(1, {"raw": [{"timestamp": 3}]})
-             ]
-        )
-        work_load.set_results.assert_has_calls(
-            [mock.call(task_results[0])]
-        )
+        self.assertEqual(
+            [mock.call(0, {"raw": [{"timestamp": 1}, {"timestamp": 2}]}),
+             mock.call(1, {"raw": [{"timestamp": 3}]})],
+            work_load.add_workload_data.call_args_list)
+        work_load.set_results.assert_called_once_with(
+            {"full_duration": workload["full_duration"],
+             "load_duration": workload["load_duration"],
+             "sla": workload["sla_results"]["sla"],
+             "hooks": workload["hooks"]})
 
     @mock.patch("rally.api.objects.Deployment.get")
     def test_import_results_with_inconsistent_deployment(

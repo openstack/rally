@@ -28,7 +28,7 @@ PLOT = "rally.task.processing.plot."
 class PlotTestCase(test.TestCase):
 
     @mock.patch(PLOT + "charts")
-    def test__process_scenario(self, mock_charts):
+    def test__process_workload(self, mock_charts):
         for mock_ins, ret in [
                 (mock_charts.MainStatsTable, "main_stats"),
                 (mock_charts.MainStackedAreaChart, "main_stacked"),
@@ -45,20 +45,23 @@ class PlotTestCase(test.TestCase):
              "duration": i + 5, "idle_duration": i,
              "output": {"additive": [], "complete": []},
              "atomic_actions": {"foo_action": i + 10}} for i in range(10)]
-        data = {"iterations": iterations, "sla": [],
-                "key": {"kw": {"runner": {"type": "constant"}}, "pos": 0,
-                        "name": "Foo.bar", "description": "Description!!"},
-                "info": {"atomic": {"foo_action": {"max_duration": 19,
-                                                   "min_duration": 10}},
-                         "full_duration": 40, "load_duration": 32,
-                         "iterations_count": 10, "iterations_passed": 10,
-                         "max_duration": 14, "min_duration": 5,
-                         "output_names": [],
-                         "tstamp_end": 25, "tstamp_start": 2},
-                "created_at": "xxx_time",
-                "hooks": []}
+        workload = {
+            "iterations": iterations, "sla": {}, "pass_sla": True,
+            "position": 0,
+            "name": "Foo.bar", "description": "Description!!",
+            "runner": {"type": "constant"},
+            "info": {"atomic": {"foo_action": {"max_duration": 19,
+                                               "min_duration": 10}},
+                     "full_duration": 40, "load_duration": 32,
+                     "iterations_count": 10, "iterations_passed": 10,
+                     "max_duration": 14, "min_duration": 5,
+                     "output_names": [],
+                     "tstamp_end": 25, "tstamp_start": 2},
+            "created_at": "xxx_time",
+            "hooks": []}
 
-        result = plot._process_scenario(data, 1)
+        result = plot._process_workload(
+            workload, {"runner": {"type": "constant"}}, 1)
         self.assertEqual(
             {"cls": "Foo", "met": "bar", "pos": "1",
              "name": "bar [2]", "description": "Description!!",
@@ -78,7 +81,7 @@ class PlotTestCase(test.TestCase):
              "complete_output": [[], [], [], [], [], [], [], [], [], []],
              "has_output": False,
              "output_errors": [],
-             "sla": [], "sla_success": True, "table": "main_stats"},
+             "sla": {}, "sla_success": True, "table": "main_stats"},
             result)
 
     @ddt.data(
@@ -158,92 +161,104 @@ class PlotTestCase(test.TestCase):
     def test__process_hooks(self, hooks, expected):
         self.assertEqual(expected, plot._process_hooks(hooks))
 
-    @mock.patch(PLOT + "_process_scenario")
+    @mock.patch(PLOT + "_process_workload")
     @mock.patch(PLOT + "json.dumps", return_value="json_data")
-    def test__process_tasks(self, mock_json_dumps, mock__process_scenario):
-        tasks_results = [{"key": {"name": i, "kw": "kw_" + i}}
-                         for i in ("a", "b", "c", "b")]
-        mock__process_scenario.side_effect = lambda a, b: (
-            {"cls": "%s_cls" % a["key"]["name"],
-             "name": str(b),
+    def test__process_workloads(self, mock_json_dumps, mock__process_workload):
+        workloads = [{"id": i, "uuid": "uuid-%s" % i, "task_uuid": "task-uuid",
+                      "subtask_uuid": "subtask-uuid",
+                      "name": "Foo.bar_%s" % i,
+                      "description": "Make something useful (or not).",
+                      "position": i,
+                      "runner": {"type": "constant", "times": 3},
+                      "context": {"users": {}},
+                      "sla": {"failure_rate": {"max": 0}},
+                      "args": {"key1": "value1"},
+                      "hooks": [{"config": {"hook1": "xxx"}}],
+                      "sla_results": {"sla": []},
+                      "start_time": "2997.23.12",
+                      "load_duration": 42,
+                      "full_duration": 37,
+                      "min_duration": 1, "max_duration": 2,
+                      "total_iteration_count": 7, "failed_iteration_count": 2,
+                      "pass_sla": True} for i in (1, 2, 3, 1)]
+        mock__process_workload.side_effect = lambda a, b, c: (
+            {"cls": "%s_cls" % a["name"],
+             "name": str(c),
              "met": "dummy",
-             "pos": str(b)})
-        source, tasks = plot._process_tasks(tasks_results)
+             "pos": str(c)})
+        source, p_workloads = plot._process_workloads(workloads)
         self.assertEqual(source, "json_data")
         mock_json_dumps.assert_called_once_with(
-            {"a": ["kw_a"], "b": ["kw_b", "kw_b"], "c": ["kw_c"]},
+            {"Foo.bar_1": [{"runner": {"type": "constant", "times": 3},
+                            "hooks": [{"hook1": "xxx"}],
+                            "args": {"key1": "value1"},
+                            "sla": {"failure_rate": {"max": 0}},
+                            "context": {"users": {}}},
+                           {"runner": {"type": "constant", "times": 3},
+                            "hooks": [{"hook1": "xxx"}],
+                            "args": {"key1": "value1"},
+                            "sla": {"failure_rate": {"max": 0}},
+                            "context": {"users": {}}}],
+             "Foo.bar_3": [
+                {"runner": {"type": "constant", "times": 3},
+                 "hooks": [{"hook1": "xxx"}], "args": {"key1": "value1"},
+                 "sla": {"failure_rate": {"max": 0}},
+                 "context": {"users": {}}}],
+             "Foo.bar_2": [
+                {"runner": {"type": "constant", "times": 3},
+                 "hooks": [{"hook1": "xxx"}], "args": {"key1": "value1"},
+                 "sla": {"failure_rate": {"max": 0}},
+                 "context": {"users": {}}}]},
             sort_keys=True, indent=2)
-        self.assertEqual(
-            tasks,
-            [{"cls": "a_cls", "met": "dummy", "name": "0", "pos": "0"},
-             {"cls": "b_cls", "met": "dummy", "name": "0", "pos": "0"},
-             {"cls": "b_cls", "met": "dummy", "name": "1", "pos": "1"},
-             {"cls": "c_cls", "met": "dummy", "name": "0", "pos": "0"}])
+        self.assertEqual([
+            {"cls": "Foo.bar_1_cls", "met": "dummy", "name": "0", "pos": "0"},
+            {"cls": "Foo.bar_1_cls", "met": "dummy", "name": "1", "pos": "1"},
+            {"cls": "Foo.bar_2_cls", "met": "dummy", "name": "0", "pos": "0"},
+            {"cls": "Foo.bar_3_cls", "met": "dummy", "name": "0", "pos": "0"}],
+            p_workloads)
 
     @ddt.data({},
               {"include_libs": True},
               {"include_libs": False})
     @ddt.unpack
-    @mock.patch(PLOT + "_process_tasks")
-    @mock.patch(PLOT + "_extend_results")
+    @mock.patch(PLOT + "objects.Task")
+    @mock.patch(PLOT + "_process_workloads")
     @mock.patch(PLOT + "ui_utils.get_template")
-    @mock.patch(PLOT + "json.dumps", side_effect=lambda s: "json_" + s)
     @mock.patch("rally.common.version.version_string", return_value="42.0")
-    def test_plot(self, mock_version_string, mock_dumps, mock_get_template,
-                  mock__extend_results, mock__process_tasks, **ddt_kwargs):
-        mock__process_tasks.return_value = "source", "scenarios"
+    def test_plot(self, mock_version_string, mock_get_template,
+                  mock__process_workloads, mock_task, **ddt_kwargs):
+        task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
+        task = mock_task.return_value
+        task.extend_results.return_value.to_dict.return_value = task_dict
+        mock__process_workloads.return_value = "source", "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
-        mock__extend_results.return_value = ["extended_result"]
-        html = plot.plot("tasks_results", **ddt_kwargs)
+
+        html = plot.plot(["tasks_results"], **ddt_kwargs)
+
         self.assertEqual(html, "tasks_html")
-        mock__extend_results.assert_called_once_with("tasks_results")
         mock_get_template.assert_called_once_with("task/report.html")
-        mock__process_tasks.assert_called_once_with(["extended_result"])
+        mock__process_workloads.assert_called_once_with(["foo", "bar"])
         if "include_libs" in ddt_kwargs:
             mock_get_template.return_value.render.assert_called_once_with(
-                version="42.0", data="json_scenarios", source="json_source",
+                version="42.0", data="\"scenarios\"",
+                source="\"source\"",
                 include_libs=ddt_kwargs["include_libs"])
         else:
             mock_get_template.return_value.render.assert_called_once_with(
-                version="42.0", data="json_scenarios", source="json_source",
-                include_libs=False)
+                version="42.0", data="\"scenarios\"",
+                source="\"source\"", include_libs=False)
 
-    @mock.patch(PLOT + "objects.Task.extend_results")
-    def test__extend_results(self, mock_task_extend_results):
-        mock_task_extend_results.side_effect = iter(
-            [["extended_foo"], ["extended_bar"], ["extended_spam"]])
-        tasks_results = [
-            {"key": "%s_key" % k, "sla": "%s_sla" % k,
-             "hooks": "%s_hooks" % k,
-             "full_duration": "%s_full_duration" % k,
-             "load_duration": "%s_load_duration" % k,
-             "created_at": "%s_time" % k,
-             "result": "%s_result" % k} for k in ("foo", "bar", "spam")]
-        generic_results = [
-            {"id": None, "created_at": None, "updated_at": None,
-             "task_uuid": None, "key": "%s_key" % k,
-             "data": {"raw": "%s_result" % k,
-                      "full_duration": "%s_full_duration" % k,
-                      "load_duration": "%s_load_duration" % k,
-                      "hooks": "%s_hooks" % k,
-                      "sla": "%s_sla" % k},
-             "created_at": "%s_time" % k} for k in ("foo", "bar", "spam")]
-        results = plot._extend_results(tasks_results)
-        self.assertEqual([mock.call([r], True) for r in generic_results],
-                         mock_task_extend_results.mock_calls)
-        self.assertEqual(["extended_foo", "extended_bar", "extended_spam"],
-                         results)
-
-    def test__extend_results_empty(self):
-        self.assertEqual([], plot._extend_results([]))
-
+    @mock.patch(PLOT + "objects.Workload.format_workload_config")
+    @mock.patch(PLOT + "objects.Task")
     @mock.patch(PLOT + "Trends")
     @mock.patch(PLOT + "ui_utils.get_template")
-    @mock.patch(PLOT + "_extend_results")
     @mock.patch("rally.common.version.version_string", return_value="42.0")
-    def test_trends(self, mock_version_string, mock__extend_results,
-                    mock_get_template, mock_trends):
-        mock__extend_results.return_value = ["foo", "bar"]
+    def test_trends(self, mock_version_string, mock_get_template, mock_trends,
+                    mock_task, mock_format_workload_config):
+        task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
+        task = mock_task.return_value
+        task.extend_results.return_value.to_dict.return_value = task_dict
+
         trends = mock.Mock()
         trends.get_data.return_value = ["foo", "bar"]
         mock_trends.return_value = trends
@@ -251,9 +266,13 @@ class PlotTestCase(test.TestCase):
         template.render.return_value = "trends html"
         mock_get_template.return_value = template
 
-        self.assertEqual("trends html", plot.trends("tasks_results"))
-        self.assertEqual([mock.call("foo"), mock.call("bar")],
-                         trends.add_result.mock_calls)
+        result = plot.trends(["tasks_results"])
+
+        self.assertEqual("trends html", result)
+        self.assertEqual(
+            [mock.call("foo", mock_format_workload_config.return_value),
+             mock.call("bar", mock_format_workload_config.return_value)],
+            trends.add_result.mock_calls)
         mock_get_template.assert_called_once_with("task/trends.html")
         template.render.assert_called_once_with(version="42.0",
                                                 data="[\"foo\", \"bar\"]")
@@ -315,7 +334,8 @@ class TrendsTestCase(test.TestCase):
                          ["b", 0.5, 0.75, 0.85, 0.9, 1.1, 0.58, "100.0%", 4],
                          ["total", 1.2, 1.55, 1.7, 1.8, 1.5, 0.8, "100.0%", 4]]
         return {
-            "key": {"kw": "kw_%d" % salt, "name": "Scenario.name_%d" % salt},
+            "name": "Scenario.name_%d" % salt,
+            "pass_sla": sla_success,
             "sla": [{"success": sla_success}],
             "info": {"iterations_count": 4, "atomic": atomic,
                      "tstamp_start": 123456.789 + salt,
@@ -336,7 +356,7 @@ class TrendsTestCase(test.TestCase):
     def test_add_result_and_get_data(self):
         trends = plot.Trends()
         for i in 0, 1:
-            trends.add_result(self._make_result(i))
+            trends.add_result(self._make_result(i), "kw_%s" % i)
         expected = [
             {"actions": [{"durations": [("90%ile", [(123456789, 0.9)]),
                                         ("95%ile", [(123456789, 0.87)]),
@@ -402,7 +422,7 @@ class TrendsTestCase(test.TestCase):
 
     def test_add_result_once_and_get_data(self):
         trends = plot.Trends()
-        trends.add_result(self._make_result(42, sla_success=False))
+        trends.add_result(self._make_result(42, sla_success=False), "kw_42")
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, 0.9)]),
                                         ("95%ile", [(123498789, 0.87)]),
@@ -439,7 +459,7 @@ class TrendsTestCase(test.TestCase):
     def test_add_result_with_na_and_get_data(self):
         trends = plot.Trends()
         trends.add_result(
-            self._make_result(42, sla_success=False, with_na=True))
+            self._make_result(42, sla_success=False, with_na=True), "kw_42")
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, "n/a")]),
                                         ("95%ile", [(123498789, "n/a")]),

@@ -282,7 +282,7 @@ class CliUtilsTestCase(test.TestCase):
         self.assertEqual(ret, 0)
 
     @mock.patch("rally.api.API.check_db_revision")
-    @mock.patch("rally.common.db.task_get",
+    @mock.patch("rally.common.db.api.task_get",
                 side_effect=exceptions.TaskNotFound(uuid=FAKE_TASK_UUID))
     def test_run_task_not_found(self, mock_task_get,
                                 mock_api_check_db_revision):
