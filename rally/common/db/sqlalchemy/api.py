@@ -244,7 +244,7 @@ class Connection(object):
                 "raw": raw_data,
                 "load_duration": workload.load_duration,
                 "full_duration": workload.full_duration,
-                "sla": workload.sla_results["sla"],
+                "sla": workload.sla_results.get("sla", []),
                 "hooks": workload.hooks
             }
         }
