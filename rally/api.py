@@ -381,14 +381,14 @@ class _Task(APIGroup):
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/create",
                  method="POST")
-    def create(self, deployment, tag):
+    def create(self, deployment, tags=None):
         """Create a task without starting it.
 
         Task is a list of benchmarks that will be called one by one, results of
         execution will be stored in DB.
 
         :param deployment: UUID or name of the deployment
-        :param tag: tag for this task
+        :param tags: a list of tags for this task
         :returns: Task object
         """
         deployment = objects.Deployment.get(deployment)
@@ -399,7 +399,7 @@ class _Task(APIGroup):
                 status=deployment["status"])
 
         return objects.Task(deployment_uuid=deployment["uuid"],
-                            tag=tag).to_dict()
+                            tags=tags).to_dict()
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/validate",
                  method="GET")
@@ -548,7 +548,7 @@ class _Task(APIGroup):
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/import_results",
                  method="POST")
-    def import_results(self, deployment, task_results, tag=None):
+    def import_results(self, deployment, task_results, tags=None):
         """Import json results of a test into rally database"""
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
@@ -557,7 +557,8 @@ class _Task(APIGroup):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
-        task_inst = objects.Task(deployment_uuid=deployment["uuid"], tag=tag)
+        task_inst = objects.Task(deployment_uuid=deployment["uuid"],
+                                 tags=tags)
         task_inst.update_status(consts.TaskStatus.RUNNING)
         for result in task_results:
             subtask_obj = task_inst.add_subtask(title=result["key"]["name"])

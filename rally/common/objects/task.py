@@ -406,8 +406,9 @@ class Task(object):
         return db.task_get_status(uuid)
 
     @staticmethod
-    def list(status=None, deployment=None):
-        return [Task(db_task) for db_task in db.task_list(status, deployment)]
+    def list(status=None, deployment=None, tags=None):
+        return [Task(db_task) for db_task in db.task_list(
+            status, deployment=deployment, tags=tags)]
 
     @staticmethod
     def delete_by_uuid(uuid, status=None):

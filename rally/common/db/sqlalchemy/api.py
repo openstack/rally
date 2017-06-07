@@ -205,8 +205,7 @@ class Connection(object):
         return task
 
     def _make_old_task(self, task):
-        tags = self._tags_get(task.uuid, consts.TagType.TASK)
-        tag = tags[0] if tags else ""
+        tags = sorted(self._tags_get(task.uuid, consts.TagType.TASK))
 
         return {
             "id": task.id,
@@ -215,7 +214,7 @@ class Connection(object):
             "status": task.status,
             "created_at": task.created_at,
             "updated_at": task.updated_at,
-            "tag": tag,
+            "tags": tags,
             "verification_log": json.dumps(task.validation_result)
         }
 
@@ -302,9 +301,9 @@ class Connection(object):
         task["results"] = self._task_result_get_all_by_uuid(task["uuid"])
         return task
 
-    # @db_api.serialize
+    @db_api.serialize
     def task_create(self, values):
-        new_tag = values.pop("tag", None)
+        tags = values.pop("tags", None)
         # TODO(ikhudoshyn): currently 'input_task'
         # does not come in 'values'
         # After completely switching to the new
@@ -317,34 +316,32 @@ class Connection(object):
         task.update(values)
         task.save()
 
-        if new_tag:
-            tag = models.Tag()
-            tag.update({
-                "uuid": task.uuid,
-                "type": consts.TagType.TASK,
-                "tag": new_tag
-            })
-            tag.save()
-
-        return self._make_old_task(task)
+        if tags:
+            for t in set(tags):
+                tag = models.Tag()
+                tag.update({"uuid": task.uuid,
+                            "type": consts.TagType.TASK,
+                            "tag": t})
+                tag.save()
+        task.tags = sorted(self._tags_get(task.uuid, consts.TagType.TASK))
+        return task
 
     # @db_api.serialize
     def task_update(self, uuid, values):
         session = get_session()
         values.pop("uuid", None)
-        new_tag = values.pop("tag", None)
+        tags = values.pop("tags", None)
         with session.begin():
             task = self._task_get(uuid, session=session)
             task.update(values)
 
-            if new_tag:
-                tag = models.Tag()
-                tag.update({
-                    "uuid": uuid,
-                    "type": consts.TagType.TASK,
-                    "tag": new_tag
-                })
-                tag.save()
+            if tags:
+                for t in set(tags):
+                    tag = models.Tag()
+                    tag.update({"uuid": task.uuid,
+                                "type": consts.TagType.TASK,
+                                "tag": t})
+                    tag.save()
 
         return self._make_old_task(task)
 
@@ -365,18 +362,24 @@ class Connection(object):
         return result
 
     # @db_api.serialize
-    def task_list(self, status=None, deployment=None):
-        query = self.model_query(models.Task)
+    def task_list(self, status=None, deployment=None, tags=None):
+        session = get_session()
+        with session.begin():
+            query = self.model_query(models.Task)
 
-        filters = {}
-        if status is not None:
-            filters["status"] = status
-        if deployment is not None:
-            filters["deployment_uuid"] = self.deployment_get(
-                deployment)["uuid"]
+            filters = {}
+            if status is not None:
+                filters["status"] = status
+            if deployment is not None:
+                filters["deployment_uuid"] = self.deployment_get(
+                    deployment)["uuid"]
+            if filters:
+                query = query.filter_by(**filters)
 
-        if filters:
-            query = query.filter_by(**filters)
+            if tags:
+                uuids = self._uuids_by_tags_get(
+                    consts.TagType.TASK, tags)
+                query = query.filter(models.Task.uuid.in_(uuids))
 
         return [self._make_old_task(task) for task in query.all()]
 

@@ -194,7 +194,8 @@ class TaskCommands(object):
                    help="Path to the file with input task args (dict in "
                         "JSON/YAML). These args are used "
                         "to render the Jinja2 template in the input task.")
-    @cliutils.args("--tag", help="Tag for this task")
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Mark the task with a tag or a few tags.")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations.")
     @cliutils.args("--abort-on-sla-failure", action="store_true",
@@ -204,7 +205,7 @@ class TaskCommands(object):
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
     def start(self, api, task_file, deployment=None, task_args=None,
-              task_args_file=None, tag=None, do_use=False,
+              task_args_file=None, tags=None, do_use=False,
               abort_on_sla_failure=False):
         """Start benchmark task.
 
@@ -221,26 +222,25 @@ class TaskCommands(object):
                                used to render the Jinja2 template in
                                the input task.
         :param deployment: UUID or name of the deployment
-        :param tag: optional tag for this task
+        :param tags: optional tag for this task
         :param do_use: if True, the new task will be stored as the default one
                        for future operations
         :param abort_on_sla_failure: if True, the execution of a benchmark
                                      scenario will stop when any SLA check
                                      for it fails
         """
-
         input_task = self._load_and_validate_task(api, task_file,
                                                   raw_args=task_args,
                                                   args_file=task_args_file)
         print("Running Rally version", version.version_string())
 
         try:
-            task_instance = api.task.create(deployment=deployment, tag=tag)
+            task_instance = api.task.create(deployment=deployment, tags=tags)
+            tags = "[tags: '%s']" % "', '".join(tags) if tags else ""
 
             print(cliutils.make_header(
-                _("Task %(tag)s %(uuid)s: started")
-                % {"uuid": task_instance["uuid"],
-                   "tag": task_instance["tag"]}))
+                _("Task %(tags)s %(uuid)s: started")
+                % {"uuid": task_instance["uuid"], "tags": tags}))
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
@@ -498,11 +498,13 @@ class TaskCommands(object):
     @cliutils.args("--status", type=str, dest="status",
                    help="List tasks with specified status."
                    " Available statuses: %s" % ", ".join(consts.TaskStatus))
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Tags to filter tasks by.")
     @cliutils.args("--uuids-only", action="store_true",
                    dest="uuids_only", help="List task UUIDs only.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def list(self, api, deployment=None, all_deployments=False, status=None,
-             uuids_only=False):
+             tags=None, uuids_only=False):
         """List tasks, started and finished.
 
         Displayed tasks can be filtered by status or deployment.  By
@@ -518,10 +520,10 @@ class TaskCommands(object):
 
         filters = {}
         headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "tag"]
+                   "status", "tags"]
 
         if status in consts.TaskStatus:
-            filters.setdefault("status", status)
+            filters["status"] = status
         elif status:
             print(_("Error: Invalid task status '%s'.\n"
                     "Available statuses: %s") % (
@@ -530,7 +532,10 @@ class TaskCommands(object):
             return(1)
 
         if not all_deployments:
-            filters.setdefault("deployment", deployment)
+            filters["deployment"] = deployment
+
+        if tags:
+            filters["tags"] = tags
 
         task_list = api.task.list(**filters)
 
@@ -540,9 +545,16 @@ class TaskCommands(object):
                                     print_header=False,
                                     print_border=False)
         elif task_list:
+            def tags_formatter(t):
+                if not t["tags"]:
+                    return ""
+                return "'%s'" % "', '".join(t["tags"])
+
             cliutils.print_list(
                 task_list,
-                headers, sortby_index=headers.index("created_at"))
+                headers,
+                sortby_index=headers.index("created_at"),
+                formatters={"tags": tags_formatter})
         else:
             if status:
                 print(_("There are no tasks in '%s' status. "
@@ -885,26 +897,26 @@ class TaskCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
                    help="UUID or name of a deployment.")
-    @cliutils.args("--tag", help="Tag for this task")
+    @cliutils.args("--tag", nargs="+", dest="tags", type=str, required=False,
+                   help="Mark the task with a tag or a few tags.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @cliutils.alias("import")
     @cliutils.suppress_warnings
-    def import_results(self, api, deployment=None, task_file=None, tag=None):
+    def import_results(self, api, deployment=None, task_file=None, tags=None):
         """Import json results of a test into rally database
 
         :param task_file: list, pathes files with tasks results
         :param deployment: UUID or name of the deployment
-        :param tag: optional tag for this task
+        :param tags: optional tag for this task
         """
 
         if os.path.exists(os.path.expanduser(task_file)):
             tasks_results = self._load_task_results_file(api, task_file)
             task = api.task.import_results(deployment=deployment,
                                            task_results=tasks_results,
-                                           tag=tag)
+                                           tags=tags)
             print(_("Task UUID: %s.") % task["uuid"])
         else:
-            print(_("ERROR: Invalid file name passed: %s"
-                    ) % task_file,
+            print(_("ERROR: Invalid file name passed: %s") % task_file,
                   file=sys.stderr)
             return 1

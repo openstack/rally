@@ -19,9 +19,11 @@ import os.path
 
 import ddt
 import mock
+import six
 
 import rally
 from rally import api
+from rally.cli import cliutils
 from rally.cli.commands import task
 from rally.common import yamlutils as yaml
 from rally import consts
@@ -201,7 +203,7 @@ class TaskCommandsTestCase(test.TestCase):
                    mock_version):
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
-        fake_task = fakes.FakeTask(uuid="some_new_uuid", tag="tag")
+        fake_task = fakes.FakeTask(uuid="some_new_uuid", tags=["tag"])
         self.fake_api.task.create.return_value = fake_task
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             some="json", uuid="some_uuid", temporary=True)
@@ -209,7 +211,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.start(self.fake_api, task_path, deployment_id, do_use=True)
         mock_version.version_string.assert_called_once_with()
         self.fake_api.task.create.assert_called_once_with(
-            deployment=deployment_id, tag=None)
+            deployment=deployment_id, tags=None)
         self.fake_api.task.start.assert_called_once_with(
             deployment=deployment_id,
             config=mock__load_and_validate_task.return_value,
@@ -238,7 +240,8 @@ class TaskCommandsTestCase(test.TestCase):
             status=consts.DeployStatus.DEPLOY_INIT)
         self.fake_api.task.create.side_effect = exc
         self.assertEqual(1, self.task.start(self.fake_api, task_path,
-                                            deployment="any", tag="some_tag"))
+                                            deployment="any",
+                                            tags=["some_tag"]))
         self.assertFalse(mock_detailed.called)
 
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
@@ -246,9 +249,9 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="some_config")
     def test_start_with_task_args(self, mock__load_and_validate_task,
                                   mock_detailed):
-        fake_task = fakes.FakeTask(uuid="new_uuid", tag="some_tag")
+        fake_task = fakes.FakeTask(uuid="new_uuid", tags=["some_tag"])
         self.fake_api.task.create.return_value = fakes.FakeTask(
-            uuid="new_uuid", tag="some_tag")
+            uuid="new_uuid", tags=["some_tag"])
         self.fake_api.task.validate.return_value = fakes.FakeTask(
             uuid="some_id")
 
@@ -257,7 +260,7 @@ class TaskCommandsTestCase(test.TestCase):
         task_args_file = "task_args_file"
         self.task.start(self.fake_api, task_path, deployment="any",
                         task_args=task_args, task_args_file=task_args_file,
-                        tag="some_tag")
+                        tags=["some_tag"])
 
         mock__load_and_validate_task.assert_called_once_with(
             self.fake_api, task_path, raw_args=task_args,
@@ -272,7 +275,7 @@ class TaskCommandsTestCase(test.TestCase):
             self.fake_api,
             task_id=fake_task["uuid"])
         self.fake_api.task.create.assert_called_once_with(
-            deployment="any", tag="some_tag")
+            deployment="any", tags=["some_tag"])
 
     @mock.patch("rally.cli.commands.task.envutils.get_global")
     def test_start_no_deployment_id(self, mock_get_global):
@@ -292,7 +295,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.assertRaises(exceptions.InvalidTaskException,
                           self.task.start, self.fake_api, "task_path",
-                          "deployment", tag="tag")
+                          "deployment", tags=["tag"])
 
         self.assertFalse(self.fake_api.task.create.called)
         self.assertFalse(self.fake_api.task.start.called)
@@ -304,10 +307,10 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.assertRaises(KeyError,
                           self.task.start, self.fake_api, "task_path",
-                          "deployment", tag="tag")
+                          "deployment", tags=["tag"])
 
         self.fake_api.task.create.assert_called_once_with(
-            deployment="deployment", tag="tag")
+            deployment="deployment", tags=["tag"])
 
         self.fake_api.task.start.assert_called_once_with(
             deployment="deployment", config=task_cfg,
@@ -835,7 +838,7 @@ class TaskCommandsTestCase(test.TestCase):
                            created_at=dt.datetime.now(),
                            updated_at=dt.datetime.now(),
                            status="c",
-                           tag="d",
+                           tags=["d"],
                            deployment_name="some_name")]
         self.task.list(self.fake_api, status="running")
         self.fake_api.task.list.assert_called_once_with(
@@ -843,11 +846,12 @@ class TaskCommandsTestCase(test.TestCase):
             status=consts.TaskStatus.RUNNING)
 
         headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "tag"]
+                   "status", "tags"]
 
         mock_print_list.assert_called_once_with(
             self.fake_api.task.list.return_value, headers,
-            sortby_index=headers.index("created_at"))
+            sortby_index=headers.index("created_at"),
+            formatters=mock.ANY)
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
@@ -883,6 +887,54 @@ class TaskCommandsTestCase(test.TestCase):
                                          status=consts.TaskStatus.RUNNING))
         self.fake_api.task.list.assert_called_once_with(
             deployment="d", status=consts.TaskStatus.RUNNING)
+
+    @mock.patch("rally.cli.commands.task.envutils.get_global",
+                return_value="123456789")
+    def test_list_output(self, mock_get_global):
+        self.fake_api.task.list.return_value = [
+            fakes.FakeTask(uuid="UUID-1",
+                           created_at="2007-01-01T00:00:01",
+                           duration="0:00:00.000009",
+                           status="init",
+                           tags=[],
+                           deployment_name="some_name"),
+            fakes.FakeTask(uuid="UUID-2",
+                           created_at="2007-02-01T00:00:01",
+                           duration="0:00:00.000010",
+                           status="finished",
+                           tags=["tag-1", "tag-2"],
+                           deployment_name="some_name")]
+
+        # It is a hard task to mock default value of function argument, so we
+        # need to apply this workaround
+        original_print_list = cliutils.print_list
+        print_list_calls = []
+
+        def print_list(*args, **kwargs):
+            print_list_calls.append(six.StringIO())
+            kwargs["out"] = print_list_calls[-1]
+            original_print_list(*args, **kwargs)
+
+        with mock.patch.object(task.cliutils, "print_list",
+                               new=print_list):
+            self.task.list(self.fake_api, status="running")
+
+        self.assertEqual(1, len(print_list_calls))
+
+        self.assertEqual(
+            "+--------+-----------------+---------------------"
+            "+----------------+----------+------------------+\n"
+            "| uuid   | deployment_name | created_at          "
+            "| duration       | status   | tags             |\n"
+            "+--------+-----------------+---------------------"
+            "+----------------+----------+------------------+\n"
+            "| UUID-1 | some_name       | 2007-01-01T00:00:01 "
+            "| 0:00:00.000009 | init     |                  |\n"
+            "| UUID-2 | some_name       | 2007-02-01T00:00:01 "
+            "| 0:00:00.000010 | finished | 'tag-1', 'tag-2' |\n"
+            "+--------+-----------------+---------------------"
+            "+----------------+----------+------------------+\n",
+            print_list_calls[0].getvalue())
 
     def test_delete(self):
         task_uuid = "8dcb9c5e-d60b-4022-8975-b5987c7833f7"
@@ -1117,13 +1169,14 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.task.import_results(self.fake_api,
                                  "deployment_uuid",
-                                 "task_file", "tag")
+                                 "task_file", tags=["tag"])
 
         self.task._load_task_results_file.assert_called_once_with(
             self.fake_api, "task_file"
         )
         self.fake_api.task.import_results.assert_called_once_with(
-            deployment="deployment_uuid", task_results=["results"], tag="tag")
+            deployment="deployment_uuid", task_results=["results"],
+            tags=["tag"])
 
         # not exist
         mock_os_path.exists.return_value = False
@@ -1131,5 +1184,5 @@ class TaskCommandsTestCase(test.TestCase):
             1,
             self.task.import_results(self.fake_api,
                                      "deployment_uuid",
-                                     "task_file", "tag")
+                                     "task_file", ["tag"])
         )

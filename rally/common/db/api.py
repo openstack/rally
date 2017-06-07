@@ -197,7 +197,7 @@ def task_update_status(task_uuid, status, allowed_statuses):
                                          status)
 
 
-def task_list(status=None, deployment=None):
+def task_list(status=None, deployment=None, tags=None):
     """Get a list of tasks.
 
     :param status: Task status to filter the returned list on. If set to
@@ -205,9 +205,12 @@ def task_list(status=None, deployment=None):
     :param deployment: Deployment UUID to filter the returned list on.
                       If set to None, tasks from all deployments will be
                       returned.
+    :param tags: A list of tags to filter tasks by.
     :returns: A list of dicts with data on the tasks.
     """
-    return get_impl().task_list(status=status, deployment=deployment)
+    return get_impl().task_list(status=status,
+                                deployment=deployment,
+                                tags=tags)
 
 
 def task_delete(uuid, status=None):
