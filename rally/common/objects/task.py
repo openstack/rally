@@ -636,4 +636,7 @@ class Workload(object):
                                 workload_data)
 
     def set_results(self, data):
-        db.workload_set_results(self.workload["uuid"], data)
+        db.workload_set_results(workload_uuid=self.workload["uuid"],
+                                subtask_uuid=self.workload["subtask_uuid"],
+                                task_uuid=self.workload["task_uuid"],
+                                data=data)

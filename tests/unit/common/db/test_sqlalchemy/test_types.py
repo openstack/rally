@@ -16,12 +16,12 @@
 
 import mock
 import sqlalchemy as sa
-import testtools
 
 from rally.common.db.sqlalchemy import types
+from tests.unit import test
 
 
-class JsonEncodedTest(testtools.TestCase):
+class JsonEncodedTest(test.TestCase):
     def test_impl(self):
         self.assertEqual(sa.Text, types.JSONEncodedDict.impl)
         self.assertEqual(sa.Text, types.JSONEncodedList.impl)
@@ -53,7 +53,7 @@ class JsonEncodedTest(testtools.TestCase):
         self.assertIsNone(t.process_result_value(None, None))
 
 
-class MutableDictTest(testtools.TestCase):
+class MutableDictTest(test.TestCase):
     def test_creation(self):
         sample = {"a": 1, "b": 2}
         d = types.MutableDict(sample)
@@ -73,8 +73,7 @@ class MutableDictTest(testtools.TestCase):
         self.assertIs(sample_md, md)
 
     def test_coerce_unsupported(self):
-        with testtools.ExpectedException(ValueError):
-            types.MutableDict.coerce("test", [])
+        self.assertRaises(ValueError, types.MutableDict.coerce, "test", [])
 
     @mock.patch.object(types.MutableDict, "changed")
     def test_changed_on_setitem(self, mock_mutable_dict_changed):
@@ -93,7 +92,7 @@ class MutableDictTest(testtools.TestCase):
         self.assertEqual(1, mock_mutable_dict_changed.call_count)
 
 
-class MutableListTest(testtools.TestCase):
+class MutableListTest(test.TestCase):
     def test_creation(self):
         sample = [1, 2, 3]
         d = types.MutableList(sample)
@@ -113,8 +112,7 @@ class MutableListTest(testtools.TestCase):
         self.assertIs(sample_md, md)
 
     def test_coerce_unsupported(self):
-        with testtools.ExpectedException(ValueError):
-            types.MutableList.coerce("test", {})
+        self.assertRaises(ValueError, types.MutableList.coerce, "test", {})
 
     @mock.patch.object(types.MutableList, "changed")
     def test_changed_on_append(self, mock_mutable_list_changed):
@@ -139,3 +137,23 @@ class MutableListTest(testtools.TestCase):
         del lst[2]
         self.assertEqual([1, 2], lst)
         self.assertEqual(1, mock_mutable_list_changed.call_count)
+
+
+class TimeStampTestCase(test.TestCase):
+    def test_process_bind_param(self):
+        self.assertIsNone(types.TimeStamp().process_bind_param(
+            None, dialect=None))
+
+        self.assertEqual(
+            1498561749348996,
+            types.TimeStamp().process_bind_param(1498561749.348996,
+                                                 dialect=None))
+
+    def test_process_result_value(self):
+        self.assertIsNone(types.TimeStamp().process_result_value(
+            None, dialect=None))
+
+        self.assertEqual(
+            1498561749.348996,
+            types.TimeStamp().process_result_value(1498561749348996,
+                                                   dialect=None))

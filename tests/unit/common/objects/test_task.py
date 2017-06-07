@@ -394,6 +394,7 @@ class WorkloadTestCase(test.TestCase):
         super(WorkloadTestCase, self).setUp()
         self.workload = {
             "task_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
+            "subtask_uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca2",
             "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca3",
         }
 
@@ -423,7 +424,9 @@ class WorkloadTestCase(test.TestCase):
                          mock_workload_set_results):
         mock_workload_create.return_value = self.workload
         workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
-
-        workload = workload.set_results({"data": "foo"})
+        workload.set_results({"data": "foo"})
         mock_workload_set_results.assert_called_once_with(
-            self.workload["uuid"], {"data": "foo"})
+            workload_uuid=self.workload["uuid"],
+            subtask_uuid=self.workload["subtask_uuid"],
+            task_uuid=self.workload["task_uuid"],
+            data={"data": "foo"})
