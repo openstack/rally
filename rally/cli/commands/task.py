@@ -865,3 +865,30 @@ class TaskCommands(object):
         return ("%(error_type)s: %(error_message)s\n" %
                 {"error_type": error_type, "error_message": error_message},
                 error_traceback)
+
+    @cliutils.args("--file", dest="task_file", type=str, metavar="<path>",
+                   required=True, help="JSON file with task results")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   metavar="<uuid>", required=False,
+                   help="UUID or name of a deployment.")
+    @cliutils.args("--tag", help="Tag for this task")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.alias("import")
+    @cliutils.suppress_warnings
+    def import_results(self, api, deployment=None, task_file=None, tag=None):
+        """Import json results of a test into rally database
+
+        :param task_file: list, pathes files with tasks results
+        :param deployment: UUID or name of the deployment
+        :param tag: optional tag for this task
+        """
+
+        if os.path.exists(os.path.expanduser(task_file)):
+            tasks_results = self._load_task_results_file(api, task_file)
+            task = api.task.import_results(deployment, tasks_results, tag=tag)
+            print(_("Task UUID: %s.") % task["uuid"])
+        else:
+            print(_("ERROR: Invalid file name passed: %s"
+                    ) % task_file,
+                  file=sys.stderr)
+            return 1

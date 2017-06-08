@@ -414,6 +414,108 @@ class TaskAPITestCase(test.TestCase):
         mock_task.get_detailed.assert_called_once_with("foo_uuid")
         mock_task.extend_results.assert_called_once_with("raw_results")
 
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment.get")
+    def test_import_results(self, mock_deployment_get, mock_task):
+        mock_deployment_get.return_value = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_FINISHED)
+
+        task_results = [{"key": {"name": "test_scenario"},
+                         "result": []}]
+
+        self.assertEqual(
+            mock_task.return_value.to_dict(),
+            self.task_inst.import_results(
+                mock_deployment_get.return_value["uuid"], task_results)
+        )
+
+        mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
+                                          tag=None)
+        mock_task.return_value.update_status.assert_has_calls(
+            [mock.call(consts.TaskStatus.RUNNING),
+             mock.call(consts.SubtaskStatus.FINISHED)]
+        )
+        mock_task.return_value.add_subtask.assert_has_calls(
+            [mock.call(title=task_results[0]["key"]["name"])]
+        )
+        sub_task = mock_task.return_value.add_subtask.return_value
+        sub_task.add_workload.assert_has_calls(
+            [mock.call(task_results[0]["key"])]
+        )
+        sub_task.update_status.assert_has_calls(
+            [mock.call(consts.SubtaskStatus.FINISHED)]
+        )
+        work_load = sub_task.add_workload.return_value
+        work_load.add_workload_data.assert_has_calls(
+            [mock.call(0, {"raw": task_results[0]["result"]})]
+        )
+        work_load.set_results.assert_has_calls(
+            [mock.call(task_results[0])]
+        )
+
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.CONF")
+    def test_import_results_chunk_size(self, mock_conf,
+                                       mock_deployment_get,
+                                       mock_task):
+        mock_deployment_get.return_value = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_FINISHED)
+
+        task_results = [{"key": {"name": "test_scenario"},
+                         "result": [{"timestamp": 1},
+                                    {"timestamp": 2},
+                                    {"timestamp": 3}]}]
+        mock_conf.raw_result_chunk_size = 2
+
+        self.assertEqual(
+            mock_task.return_value.to_dict(),
+            self.task_inst.import_results(
+                mock_deployment_get.return_value["uuid"], task_results)
+        )
+
+        mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
+                                          tag=None)
+        mock_task.return_value.update_status.assert_has_calls(
+            [mock.call(consts.TaskStatus.RUNNING),
+             mock.call(consts.SubtaskStatus.FINISHED)]
+        )
+        mock_task.return_value.add_subtask.assert_has_calls(
+            [mock.call(title=task_results[0]["key"]["name"])]
+        )
+        sub_task = mock_task.return_value.add_subtask.return_value
+        sub_task.add_workload.assert_has_calls(
+            [mock.call(task_results[0]["key"])]
+        )
+        sub_task.update_status.assert_has_calls(
+            [mock.call(consts.SubtaskStatus.FINISHED)]
+        )
+        work_load = sub_task.add_workload.return_value
+        work_load.add_workload_data.assert_has_calls(
+            [mock.call(0, {"raw": [{"timestamp": 1},
+                                   {"timestamp": 2}]}),
+             mock.call(1, {"raw": [{"timestamp": 3}]})
+             ]
+        )
+        work_load.set_results.assert_has_calls(
+            [mock.call(task_results[0])]
+        )
+
+    @mock.patch("rally.api.objects.Deployment.get")
+    def test_import_results_with_inconsistent_deployment(
+            self, mock_deployment_get):
+        fake_deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_INCONSISTENT,
+            name="foo")
+        mock_deployment_get.return_value = fake_deployment
+
+        self.assertRaises(exceptions.DeploymentNotFinishedStatus,
+                          self.task_inst.import_results,
+                          "deployment_uuid", [], tag="tag")
+
 
 class BaseDeploymentTestCase(test.TestCase):
     def setUp(self):

@@ -123,6 +123,7 @@ function run () {
     cp $TASK rally-plot/task.txt
     tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
     rally task results | python -m json.tool > rally-plot/results.json
+    rally task import --file rally-plot/results.json
     gzip -9 rally-plot/results.json
     rally task detailed > rally-plot/detailed.txt
     gzip -9 rally-plot/detailed.txt

@@ -171,6 +171,20 @@ class TaskTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCliError,
                           rally, "task results --uuid %s" % FAKE_TASK_UUID)
 
+    def test_import_results(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        json_report = rally.gen_report_path(extension="json")
+        with open(json_report, "w+") as f:
+            f.write(rally("task results"))
+        import_print = rally("task import --file %s" % json_report)
+        self.assertIn("successfully", import_print)
+        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        self.assertIn("Dummy.dummy_random_fail_in_atomic",
+                      rally("task results --uuid %s" % task_uuid))
+
     def test_abort_with_wrong_task_id(self):
         rally = utils.Rally()
         self.assertRaises(utils.RallyCliError,
