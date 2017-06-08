@@ -25,6 +25,7 @@ import six
 
 import rally as rally_module
 from rally import api
+from rally.common import broker
 from rally.common import db
 from rally.common import yamlutils as yaml
 from rally import plugins
@@ -33,6 +34,8 @@ from tests.functional import utils
 
 
 class TestTaskSamples(unittest.TestCase):
+
+    NUMBER_OF_THREADS = 20
 
     def _skip(self, validation_output):
         """Help to decide do we want to skip this result or not.
@@ -90,31 +93,43 @@ class TestTaskSamples(unittest.TestCase):
         rally("deployment create --name MAIN --filename %s" % deployment_cfg,
               write_report=False)
 
-        samples_path = os.path.join(
-            os.path.dirname(rally_module.__file__), os.pardir,
-            "samples", "tasks")
+        failed_samples = {}
 
-        for dirname, dirnames, filenames in os.walk(samples_path):
-            # NOTE(rvasilets): Skip by suggest of boris-42 because in
-            # future we don't what to maintain this dir
-            if dirname.find("tempest-do-not-run-against-production") != -1:
-                continue
-            for filename in filenames:
-                full_path = os.path.join(dirname, filename)
+        def publisher(queue):
+            samples_path = os.path.join(
+                os.path.dirname(rally_module.__file__), os.pardir,
+                "samples", "tasks")
 
-                # NOTE(hughsaunders): Skip non config files
-                # (bug https://bugs.launchpad.net/rally/+bug/1314369)
-                if os.path.splitext(filename)[1] not in (".json"):
+            for dirname, dirnames, filenames in os.walk(samples_path):
+                # NOTE(rvasilets): Skip by suggest of boris-42 because in
+                # future we don't what to maintain this dir
+                if dirname.find("tempest-do-not-run-against-production") != -1:
                     continue
-                with open(full_path) as task_file:
-                    try:
+                for filename in filenames:
+                    full_path = os.path.join(dirname, filename)
+
+                    # NOTE(hughsaunders): Skip non config files
+                    # (bug https://bugs.launchpad.net/rally/+bug/1314369)
+                    if os.path.splitext(filename)[1] != ".json":
+                        continue
+                    with open(full_path) as task_file:
                         input_task = task_file.read()
                         rendered_task = rapi.task.render_template(input_task)
-                        task_config = yaml.safe_load(rendered_task)
-                        rapi.task.validate("MAIN", task_config)
-                    except Exception as e:
-                        if not self._skip(six.text_type(e)):
-                            print(traceback.format_exc())
-                            print("Failed on task config %s with error." %
-                                  full_path)
-                            raise
+                        queue.append((full_path, rendered_task))
+
+        def consumer(_cache, sample):
+            full_path, rendered_task = sample
+            task_config = yaml.safe_load(rendered_task)
+            try:
+                rapi.task.validate("MAIN", task_config)
+            except Exception as e:
+                if not self._skip(six.text_type(e)):
+                    failed_samples[full_path] = traceback.format_exc()
+
+        broker.run(publisher, consumer, self.NUMBER_OF_THREADS)
+
+        if failed_samples:
+            self.fail("Validation failed on the one or several samples. "
+                      "See details below:\n\n======%s" %
+                      "".join(["======\n%s\n\n%s" % (k, v)
+                               for k, v in failed_samples.items()]))
