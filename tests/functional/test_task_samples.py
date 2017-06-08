@@ -16,6 +16,7 @@
 
 import copy
 import json
+import mock
 import os
 import re
 import traceback
@@ -93,9 +94,31 @@ class TestTaskSamples(unittest.TestCase):
         rally("deployment create --name MAIN --filename %s" % deployment_cfg,
               write_report=False)
 
+        # NOTE(andreykurilin): mock building credential to share one cache of
+        #   clients(it will allow to avoid hundreds of redundant
+        #   authentications) between validations of different samples
+        deployment = rapi.deployment._get("MAIN")
+        original_get_credentials_for = deployment.get_credentials_for
+        creds_cache = {}
+
+        def get_credentials_for(namespace):
+            if namespace not in creds_cache:
+                creds_cache[namespace] = original_get_credentials_for(
+                    namespace)
+            return creds_cache[namespace]
+
+        deployment.get_credentials_for = get_credentials_for
+
+        deployment_patcher = mock.patch("rally.api.objects.Deployment.get")
+        m_deployment = deployment_patcher.start()
+        m_deployment.return_value = deployment
+        self.addCleanup(deployment_patcher.stop)
+
+        # store all failures and print them at once
         failed_samples = {}
 
         def publisher(queue):
+            """List all samples and render task configs"""
             samples_path = os.path.join(
                 os.path.dirname(rally_module.__file__), os.pardir,
                 "samples", "tasks")
@@ -118,6 +141,7 @@ class TestTaskSamples(unittest.TestCase):
                         queue.append((full_path, rendered_task))
 
         def consumer(_cache, sample):
+            """Validate one sample"""
             full_path, rendered_task = sample
             task_config = yaml.safe_load(rendered_task)
             try:
@@ -130,6 +154,6 @@ class TestTaskSamples(unittest.TestCase):
 
         if failed_samples:
             self.fail("Validation failed on the one or several samples. "
-                      "See details below:\n\n======%s" %
-                      "".join(["======\n%s\n\n%s" % (k, v)
+                      "See details below:\n%s" %
+                      "".join(["\n======\n%s\n\n%s\n" % (k, v)
                                for k, v in failed_samples.items()]))
