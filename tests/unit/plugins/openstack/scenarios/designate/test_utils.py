@@ -122,7 +122,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
                                        "designate.delete_record")
 
         self.clients("designate").records.delete.reset_mock()
-        scenario._delete_record(domain_id, record_id, atomic_action=False)
+        scenario._delete_record(domain_id, record_id)
         self.clients("designate").records.delete.assert_called_once_with(
             domain_id, record_id)
 
@@ -282,6 +282,6 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
                                        "designate.delete_recordset")
 
         self.client.recordsets.delete.reset_mock()
-        scenario._delete_recordset(zone_id, recordset_id, atomic_action=False)
+        scenario._delete_recordset(zone_id, recordset_id)
         self.client.recordsets.delete.assert_called_once_with(
             zone_id, recordset_id)

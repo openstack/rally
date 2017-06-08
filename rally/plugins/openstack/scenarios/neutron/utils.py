@@ -52,7 +52,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         param kwargs: dict, network options
         returns: str, Neutron network-id
         """
-        networks = self._list_networks(atomic_action=False)
+        networks = self._list_networks()
         for net in networks:
             if (net["name"] == network) or (net["id"] == network):
                 return net["id"]
@@ -70,13 +70,10 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").create_network(
             {"network": network_create_args})
 
-    @atomic.optional_action_timer("neutron.list_networks")
+    @atomic.action_timer("neutron.list_networks")
     def _list_networks(self, **kwargs):
         """Return user networks list.
 
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         :param kwargs: network list options
         """
         return self.clients("neutron").list_networks(**kwargs)["networks"]
@@ -151,7 +148,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
-    @atomic.optional_action_timer("neutron.show_subnet")
+    @atomic.action_timer("neutron.show_subnet")
     def _show_subnet(self, subnet, **kwargs):
         """show subnet details.
 
@@ -423,15 +420,12 @@ class NeutronScenario(scenario.OpenStackScenario):
         self.clients("neutron").remove_gateway_router(
             router["router"]["id"])
 
-    @atomic.optional_action_timer("neutron.create_pool")
+    @atomic.action_timer("neutron.create_pool")
     def _create_lb_pool(self, subnet_id, **pool_create_args):
         """Create LB pool(v1)
 
         :param subnet_id: str, neutron subnet-id
         :param pool_create_args: dict, POST /lb/pools request options
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         :returns: dict, neutron lb pool
         """
         args = {"lb_method": self.LB_METHOD,
@@ -452,11 +446,9 @@ class NeutronScenario(scenario.OpenStackScenario):
         pools = []
         for net in networks:
             subnets.extend(net.get("subnets", []))
-        with atomic.ActionTimer(self, "neutron.create_%s_pools" %
-                                len(subnets)):
-            for subnet_id in subnets:
-                pools.append(self._create_lb_pool(
-                    subnet_id, atomic_action=False, **pool_create_args))
+        for subnet_id in subnets:
+            pools.append(self._create_lb_pool(
+                subnet_id, **pool_create_args))
         return pools
 
     @atomic.action_timer("neutron.list_pools")
@@ -555,16 +547,13 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").delete_floatingip(floating_ip["id"])
 
-    @atomic.optional_action_timer("neutron.create_healthmonitor")
+    @atomic.action_timer("neutron.create_healthmonitor")
     def _create_v1_healthmonitor(self, **healthmonitor_create_args):
         """Create LB healthmonitor.
 
         This atomic function creates healthmonitor with the provided
         healthmonitor_create_args.
 
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         :param healthmonitor_create_args: dict, POST /lb/healthmonitors
         :returns: neutron healthmonitor dict
         """
@@ -670,15 +659,12 @@ class NeutronScenario(scenario.OpenStackScenario):
             raise exceptions.GetResourceFailure(resource=lb, err=e)
         return new_lb["loadbalancer"]
 
-    @atomic.optional_action_timer("neutron.create_lbaasv2_loadbalancer")
+    @atomic.action_timer("neutron.create_lbaasv2_loadbalancer")
     def _create_lbaasv2_loadbalancer(self, subnet_id, **lb_create_args):
         """Create LB loadbalancer(v2)
 
         :param subnet_id: str, neutron subnet-id
         :param lb_create_args: dict, POST /lbaas/loadbalancers request options
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         :returns: dict, neutron lb
         """
         args = {"name": self.generate_random_name(),

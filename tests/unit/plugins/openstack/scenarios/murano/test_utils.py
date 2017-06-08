@@ -71,8 +71,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         scenario = utils.MuranoScenario(context=self.context)
 
         create_app = scenario._create_service(mock_env, mock_sess,
-                                              "fake_full_name",
-                                              atomic_action=True)
+                                              "fake_full_name")
 
         self.assertEqual("app", create_app)
         self._test_atomic_action_timer(scenario.atomic_actions(),

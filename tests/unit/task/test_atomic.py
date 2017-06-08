@@ -100,8 +100,10 @@ class AtomicActionTestCase(test.TestCase):
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
+    @mock.patch("rally.task.atomic.LOG.warning")
     @mock.patch("time.time", side_effect=[1, 3, 1, 3])
-    def test_optional_action_timer_decorator(self, mock_time):
+    def test_optional_action_timer_decorator(self, mock_time,
+                                             mock_log_warning):
 
         class TestAtomicTimer(atomic.ActionTimerMixin):
 

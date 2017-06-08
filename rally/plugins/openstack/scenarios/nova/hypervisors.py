@@ -16,7 +16,6 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -57,9 +56,8 @@ class ListAndGetHypervisors(utils.NovaScenario):
         """
         hypervisors = self._list_hypervisors(detailed)
 
-        with atomic.ActionTimer(self, "nova.get_hypervisor"):
-            for hypervisor in hypervisors:
-                self._get_hypervisor(hypervisor, atomic_action=False)
+        for hypervisor in hypervisors:
+            self._get_hypervisor(hypervisor)
 
 
 @validation.add("required_services", services=[consts.Service.NOVA])
@@ -92,9 +90,8 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
         """
         hypervisors = self._list_hypervisors(detailed)
 
-        with atomic.ActionTimer(self, "nova.uptime_hypervisor"):
-            for hypervisor in hypervisors:
-                self._uptime_hypervisor(hypervisor, atomic_action=False)
+        for hypervisor in hypervisors:
+            self._uptime_hypervisor(hypervisor)
 
 
 @validation.add("required_services", services=[consts.Service.NOVA])
@@ -114,9 +111,5 @@ class ListAndSearchHypervisors(utils.NovaScenario):
         """
         hypervisors = self._list_hypervisors(detailed)
 
-        with atomic.ActionTimer(self,
-                                "nova.search_%s_hypervisors" % len(hypervisors)
-                                ):
-            for hypervisor in hypervisors:
-                self._search_hypervisors(hypervisor.hypervisor_hostname,
-                                         atomic_action=False)
+        for hypervisor in hypervisors:
+            self._search_hypervisors(hypervisor.hypervisor_hostname)

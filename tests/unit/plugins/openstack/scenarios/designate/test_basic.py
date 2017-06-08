@@ -98,7 +98,7 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
             "id": "123"}
         mock__create_domain.return_value = domain
         records_per_domain = 5
-        return_value = mock.call(domain, atomic_action=False)
+        return_value = mock.call(domain)
         mock__create_record.return_value = return_value
         mock__list_records.return_value = [return_value] * records_per_domain
 
@@ -130,12 +130,11 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
             records_per_domain=records_per_domain)
         mock__create_domain.assert_called_once_with()
         self.assertEqual(mock__create_record.mock_calls,
-                         [mock.call(domain, atomic_action=False)]
+                         [mock.call(domain)]
                          * records_per_domain)
         self.assertEqual(mock__delete_record.mock_calls,
                          [mock.call(domain["id"],
-                                    "321",
-                                    atomic_action=False)]
+                                    "321")]
                          * records_per_domain)
 
     @mock.patch("%s.ListRecords._list_records" % BASE)
@@ -257,12 +256,11 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
         basic.CreateAndDeleteRecordsets(self.context).run(
             recordsets_per_zone=recordsets_per_zone)
         self.assertEqual(mock__create_recordset.mock_calls,
-                         [mock.call(zone, atomic_action=False)]
+                         [mock.call(zone)]
                          * recordsets_per_zone)
         self.assertEqual(mock__delete_recordset.mock_calls,
                          [mock.call(zone["id"],
-                                    "321",
-                                    atomic_action=False)]
+                                    "321")]
                          * recordsets_per_zone)
 
     @mock.patch("%s.CreateAndListRecordsets._list_recordsets" % BASE)
@@ -281,6 +279,6 @@ class DesignateBasicTestCase(test.ScenarioTestCase):
         basic.CreateAndListRecordsets(self.context).run(
             recordsets_per_zone=recordsets_per_zone)
         self.assertEqual(mock__create_recordset.mock_calls,
-                         [mock.call(zone, atomic_action=False)]
+                         [mock.call(zone)]
                          * recordsets_per_zone)
         mock__list_recordsets.assert_called_once_with(zone["id"])

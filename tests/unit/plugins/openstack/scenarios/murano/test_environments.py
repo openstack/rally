@@ -121,10 +121,6 @@ class MuranoEnvironmentsTestCase(test.ScenarioTestCase):
                         mock_create_service.assert_called_once_with(
                             fake_env,
                             fake_session,
-                            "fake",
-                            atomic_action=False)
+                            "fake")
                         mock_deploy_env.assert_called_once_with(
                             fake_env, fake_session)
-                        self._test_atomic_action_timer(
-                            scenario.atomic_actions(),
-                            "murano.create_services")

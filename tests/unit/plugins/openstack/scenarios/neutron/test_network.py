@@ -180,8 +180,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         scenario._create_subnets.assert_called_once_with(
             net, subnet_create_args, subnet_cidr_start, subnets_per_network)
         for subnet in scenario._create_subnets.return_value:
-            scenario._show_subnet.assert_called_with(subnet,
-                                                     atomic_action=False)
+            scenario._show_subnet.assert_called_with(subnet)
 
     def test_set_and_clear_router_gateway(self):
         network_create_args = {"router:external": True}

@@ -15,7 +15,10 @@
 
 import functools
 
+from rally.common import logging
 from rally.common import utils
+
+LOG = logging.getLogger(__name__)
 
 
 class ActionTimerMixin(object):
@@ -106,6 +109,12 @@ def optional_action_timer(name, argument_name="atomic_action", default=True):
     def wrap(func):
         @functools.wraps(func)
         def func_atomic_actions(self, *args, **kwargs):
+            LOG.warning("'optional_action_timer' is deprecated"
+                        "since rally v0.10.0."
+                        "Please use action_timer instead,"
+                        "we have improved atomic actions,"
+                        "now do not need to explicitly close "
+                        "original action.")
             if kwargs.pop(argument_name, default):
                 with ActionTimer(self, name):
                     f = func(self, *args, **kwargs)
