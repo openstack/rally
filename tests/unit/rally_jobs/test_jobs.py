@@ -57,7 +57,8 @@ class RallyJobsTestCase(test.TestCase):
                                 "presenatation" % args_file)
 
                     task_inst = api._Task(api.API(skip_db_check=True))
-                    task = task_inst.render_template(task_file.read(), **args)
+                    task = task_inst.render_template(
+                        task_template=task_file.read(), **args)
                     task = yaml.safe_load(task)
 
                     eng = engine.TaskEngine(task, mock.MagicMock(),

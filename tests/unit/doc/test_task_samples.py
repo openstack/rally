@@ -15,11 +15,11 @@
 
 import inspect
 import json
-import mock
 import os
 import re
 import traceback
 
+import mock
 import yaml
 
 import rally
@@ -57,7 +57,8 @@ class TaskSampleTestCase(test.TestCase):
                 with open(full_path) as task_file:
                     try:
                         task_config = yaml.safe_load(
-                            self.rapi.task.render_template(task_file.read()))
+                            self.rapi.task.render_template(
+                                task_template=task_file.read()))
                         eng = engine.TaskEngine(task_config,
                                                 mock.MagicMock(), mock.Mock())
                         eng.validate(only_syntax=True)
@@ -84,7 +85,7 @@ class TaskSampleTestCase(test.TestCase):
                 with open(full_path) as task_file:
                     try:
                         json.loads(self.rapi.task.render_template(
-                            task_file.read()))
+                            task_template=task_file.read()))
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid JSON file: %s" % full_path)
@@ -125,10 +126,12 @@ class TaskSampleTestCase(test.TestCase):
                 if os.path.exists(yaml_path) and os.path.exists(json_path):
                     with open(json_path) as json_file:
                         json_config = yaml.safe_load(
-                            self.rapi.task.render_template(json_file.read()))
+                            self.rapi.task.render_template(
+                                task_template=json_file.read()))
                     with open(yaml_path) as yaml_file:
                         yaml_config = yaml.safe_load(
-                            self.rapi.task.render_template(yaml_file.read()))
+                            self.rapi.task.render_template(
+                                task_template=yaml_file.read()))
                     self.assertEqual(json_config, yaml_config,
                                      "Sample task configs are not equal:"
                                      "\n%s\n%s" % (yaml_path, json_path))

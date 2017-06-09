@@ -119,7 +119,8 @@ class TaskCommands(object):
                     task_args.update(dict(args))
 
         try:
-            rendered_task = api.task.render_template(input_task, task_dir,
+            rendered_task = api.task.render_template(task_template=input_task,
+                                                     template_dir=task_dir,
                                                      **task_args)
         except Exception as e:
             raise FailedToLoadTask(
@@ -178,7 +179,7 @@ class TaskCommands(object):
         task = self._load_and_validate_task(api, task_file, raw_args=task_args,
                                             args_file=task_args_file)
 
-        api.task.validate(deployment, config=task)
+        api.task.validate(deployment=deployment, config=task)
 
         print(_("Task config is valid :)"))
 
@@ -236,7 +237,7 @@ class TaskCommands(object):
         print("Running Rally version", version.version_string())
 
         try:
-            task_instance = api.task.create(deployment, tag)
+            task_instance = api.task.create(deployment=deployment, tag=tag)
 
             print(cliutils.make_header(
                 _("Task %(tag)s %(uuid)s: started")
@@ -249,7 +250,8 @@ class TaskCommands(object):
             if do_use:
                 self.use(api, task_instance["uuid"])
 
-            api.task.start(deployment, input_task, task=task_instance["uuid"],
+            api.task.start(deployment=deployment, config=input_task,
+                           task=task_instance["uuid"],
                            abort_on_sla_failure=abort_on_sla_failure)
 
         except exceptions.DeploymentNotFinishedStatus as e:
@@ -276,7 +278,7 @@ class TaskCommands(object):
                   "starting. If you are running task with only one "
                   "scenario, soft abort will not help at all.")
 
-        api.task.abort(task_id, soft, async=False)
+        api.task.abort(task_uuid=task_id, soft=soft, async=False)
 
         print("Task %s successfully stopped." % task_id)
 
@@ -289,7 +291,7 @@ class TaskCommands(object):
         Returns current status of task
         """
 
-        task = api.task.get(task_id)
+        task = api.task.get(task_id=task_id)
         print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
@@ -306,7 +308,7 @@ class TaskCommands(object):
         :param task_id: str, task uuid
         :param iterations_data: bool, include results for each iteration
         """
-        task = api.task.get_detailed(task_id, extended_results=True)
+        task = api.task.get_detailed(task_id=task_id, extended_results=True)
 
         if not task:
             print("The task %s can not be found" % task_id)
@@ -463,7 +465,7 @@ class TaskCommands(object):
 
         :param task_id: Task uuid
         """
-        task = api.task.get(task_id)
+        task = api.task.get(task_id=task_id)
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
         if task["status"] not in finished_statuses:
@@ -601,7 +603,7 @@ class TaskCommands(object):
                                "result": x["data"]["raw"],
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"]},
-                    api.task.get_detailed(task_id)["results"])
+                    api.task.get_detailed(task_id=task_id)["results"])
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s")
                       % task_id, file=sys.stderr)
@@ -671,7 +673,8 @@ class TaskCommands(object):
                                "load_duration": x["data"]["load_duration"],
                                "full_duration": x["data"]["full_duration"],
                                "created_at": x["created_at"]},
-                    api.task.get_detailed(task_file_or_uuid)["results"])
+                    api.task.get_detailed(
+                        task_id=task_file_or_uuid)["results"])
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
@@ -730,7 +733,7 @@ class TaskCommands(object):
         """
         def _delete_single_task(tid, force):
             try:
-                api.task.delete(tid, force=force)
+                api.task.delete(task_uuid=tid, force=force)
                 print("Successfully deleted task `%s`" % tid)
             except exceptions.TaskInvalidStatus as e:
                 print(e)
@@ -764,7 +767,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = api.task.get_detailed(task_id)["results"]
+        results = api.task.get_detailed(task_id=task_id)["results"]
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"
@@ -796,7 +799,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         """
         print("Using task: %s" % task_id)
-        api.task.get(task_id)
+        api.task.get(task_id=task_id)
         fileutils.update_globals_file("RALLY_TASK", task_id)
 
     @cliutils.args("--uuid", dest="uuid", type=str,
@@ -887,7 +890,9 @@ class TaskCommands(object):
 
         if os.path.exists(os.path.expanduser(task_file)):
             tasks_results = self._load_task_results_file(api, task_file)
-            task = api.task.import_results(deployment, tasks_results, tag=tag)
+            task = api.task.import_results(deployment=deployment,
+                                           task_results=tasks_results,
+                                           tag=tag)
             print(_("Task UUID: %s.") % task["uuid"])
         else:
             print(_("ERROR: Invalid file name passed: %s"

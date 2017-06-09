@@ -49,13 +49,22 @@ FAKE_DEPLOYMENT_CONFIG = {
 }
 
 
+class APIGroupTestCase(test.TestCase):
+    def setUp(self):
+        super(APIGroupTestCase, self).setUp()
+        mock_api = mock.Mock()
+        self.apiGroup = api.APIGroup(mock_api)
+
+
 @ddt.ddt
 class TaskAPITestCase(test.TestCase):
     def setUp(self):
         super(TaskAPITestCase, self).setUp()
         self.task_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"
         self.task = {"uuid": self.task_uuid}
-        self.task_inst = api._Task(mock.Mock())
+        mock_api = mock.Mock()
+        mock_api.endpoint_url = None
+        self.task_inst = api._Task(mock_api)
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -68,7 +77,8 @@ class TaskAPITestCase(test.TestCase):
         #######################################################################
         # The case #1 -- create temporary task
         #######################################################################
-        self.task_inst.validate(fake_deployment["uuid"], "config")
+        self.task_inst.validate(deployment=fake_deployment["uuid"],
+                                config="config")
 
         mock_task_engine.assert_called_once_with(
             "config", mock_task.return_value, fake_deployment),
@@ -91,7 +101,8 @@ class TaskAPITestCase(test.TestCase):
 
         task_uuid = "task-id"
 
-        self.task_inst.validate(fake_deployment["uuid"], "config",
+        self.task_inst.validate(deployment=fake_deployment["uuid"],
+                                config="config",
                                 task=task_uuid)
 
         mock_task_engine.assert_called_once_with("config", fake_task,
@@ -114,7 +125,8 @@ class TaskAPITestCase(test.TestCase):
 
         task_instance = fakes.FakeTask(uuid="task-id")
 
-        self.task_inst.validate(fake_deployment["uuid"], "config",
+        self.task_inst.validate(deployment=fake_deployment["uuid"],
+                                config="config",
                                 task_instance=task_instance)
 
         mock_task_engine.assert_called_once_with("config", fake_task,
@@ -138,38 +150,45 @@ class TaskAPITestCase(test.TestCase):
         mock_task_engine.return_value.validate.side_effect = excpt
         self.assertRaises(exceptions.InvalidTaskException,
                           self.task_inst.validate,
-                          mock_deployment.return_value["uuid"], "config")
+                          deployment=mock_deployment.return_value["uuid"],
+                          config="config")
 
     def test_render_template(self):
         self.assertEqual(
             "3 = 3",
             self.task_inst.render_template(
-                "{{a + b}} = {{c}}", a=1, b=2, c=3))
+                task_template="{{a + b}} = {{c}}", a=1, b=2, c=3))
 
     def test_render_template_default_values(self):
         template = "{% set a = a or 1 %}{{a + b}} = {{c}}"
 
         self.assertEqual("3 = 3",
-                         self.task_inst.render_template(template, b=2, c=3))
+                         self.task_inst.render_template(
+                             task_template=template, b=2, c=3))
 
         self.assertEqual("5 = 5",
                          self.task_inst.render_template(
-                             template, a=2, b=3, c=5))
+                             task_template=template, a=2, b=3, c=5))
 
     def test_render_template_default_filter(self):
         template = "{{ c | default(3) }}"
 
-        self.assertEqual("3", self.task_inst.render_template(template))
-        self.assertEqual("5", self.task_inst.render_template(template, c=5))
+        self.assertEqual("3", self.task_inst.render_template(
+            task_template=template))
+        self.assertEqual("5", self.task_inst.render_template(
+            task_template=template, c=5))
 
     def test_render_template_builtin(self):
         template = "{% for i in range(4) %}{{i}}{% endfor %}"
 
-        self.assertEqual("0123", self.task_inst.render_template(template))
+        self.assertEqual("0123", self.task_inst.render_template(
+            task_template=template))
 
     def test_render_template_missing_args(self):
 
-        self.assertRaises(TypeError, self.task_inst.render_template, "{{a}}")
+        self.assertRaises(exceptions.RallyException,
+                          self.task_inst.render_template,
+                          task_template="{{a}}")
 
     def test_render_template_include_other_template(self):
         other_template_path = os.path.join(
@@ -179,26 +198,31 @@ class TaskAPITestCase(test.TestCase):
             other_template_path)
         with open(other_template_path) as f:
             other_template = f.read()
-        expect = self.task_inst.render_template(other_template)
+        expect = self.task_inst.render_template(task_template=other_template)
         actual = self.task_inst.render_template(
-            template, os.path.dirname(other_template_path))
+            task_template=template,
+            template_dir=os.path.dirname(other_template_path))
         self.assertEqual(expect, actual)
 
     def test_render_template_min(self):
         template = "{{ min(1, 2)}}"
-        self.assertEqual("1", self.task_inst.render_template(template))
+        self.assertEqual("1", self.task_inst.render_template(
+            task_template=template))
 
     def test_render_template_max(self):
         template = "{{ max(1, 2)}}"
-        self.assertEqual("2", self.task_inst.render_template(template))
+        self.assertEqual("2", self.task_inst.render_template(
+            task_template=template))
 
     def test_render_template_ceil(self):
         template = "{{ ceil(2.2)}}"
-        self.assertEqual("3", self.task_inst.render_template(template))
+        self.assertEqual("3", self.task_inst.render_template(
+            task_template=template))
 
     def test_render_template_round(self):
         template = "{{ round(2.2)}}"
-        self.assertEqual("2", self.task_inst.render_template(template))
+        self.assertEqual("2", self.task_inst.render_template(
+            task_template=template))
 
     @mock.patch("rally.common.objects.Deployment.get",
                 return_value={
@@ -207,7 +231,8 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.common.objects.Task")
     def test_create(self, mock_task, mock_deployment_get):
         tag = "a"
-        self.task_inst.create(mock_deployment_get.return_value["uuid"], tag)
+        self.task_inst.create(
+            deployment=mock_deployment_get.return_value["uuid"], tag=tag)
         mock_task.assert_called_once_with(
             deployment_uuid=mock_deployment_get.return_value["uuid"], tag=tag)
 
@@ -220,7 +245,8 @@ class TaskAPITestCase(test.TestCase):
         deployment_id = mock_deployment_get.return_value["uuid"]
         tag = "a"
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
-                          self.task_inst.create, deployment_id, tag)
+                          self.task_inst.create, deployment=deployment_id,
+                          tag=tag)
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -237,7 +263,8 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual(
             (fake_task["uuid"], fake_task.get_status.return_value),
             self.task_inst.start(
-                mock_deployment_get.return_value["uuid"], "config")
+                deployment=mock_deployment_get.return_value["uuid"],
+                config="config")
         )
 
         mock_task_engine.assert_has_calls([
@@ -263,8 +290,10 @@ class TaskAPITestCase(test.TestCase):
         fake_task = objects.Task(task={"deployment_uuid": "deployment_uuid",
                                        "uuid": "some_uuid"}, temporary=True)
 
-        self.assertRaises(ValueError, self.task_inst.start,
-                          fake_deployment, "config", task=fake_task)
+        self.assertRaises(exceptions.RallyException,
+                          self.task_inst.start,
+                          deployment=fake_deployment,
+                          config="config", task=fake_task)
 
     @mock.patch("rally.api.objects.task.db.task_get")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -282,7 +311,9 @@ class TaskAPITestCase(test.TestCase):
         mock_task_get.return_value = fake_task_dict
 
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
-                          self.task_inst.start, deployment_uuid, "config",
+                          self.task_inst.start,
+                          deployment=deployment_uuid,
+                          config="config",
                           task=fake_task)
 
     @mock.patch("rally.api.objects.Task")
@@ -297,8 +328,8 @@ class TaskAPITestCase(test.TestCase):
         mock_deployment_get.return_value = fake_deployment
         mock_task.return_value.is_temporary = False
         mock_task_engine.return_value.run.side_effect = TypeError
-        self.assertRaises(TypeError, self.task_inst.start,
-                          "deployment_uuid", "config")
+        self.assertRaises(exceptions.RallyException, self.task_inst.start,
+                          deployment="deployment_uuid", config="config")
         fake_deployment.update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
 
@@ -316,7 +347,7 @@ class TaskAPITestCase(test.TestCase):
 
         some_uuid = "ca441749-0eb9-4fcc-b2f6-76d314c55404"
 
-        self.task_inst.abort(some_uuid, soft=soft, async=False)
+        self.task_inst.abort(task_uuid=some_uuid, soft=soft, async=False)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
@@ -330,7 +361,7 @@ class TaskAPITestCase(test.TestCase):
     def test_abort_async(self, soft, mock_task, mock_time):
         some_uuid = "133695fb-400d-4988-859c-30bfaa0488ce"
 
-        self.task_inst.abort(some_uuid, soft=soft, async=True)
+        self.task_inst.abort(task_uuid=some_uuid, soft=soft, async=True)
 
         mock_task.get.assert_called_once_with(some_uuid)
         mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
@@ -379,7 +410,7 @@ class TaskAPITestCase(test.TestCase):
     def test_delete(self, mock_task_delete_by_uuid, mock_task_get_status,
                     task_status, expected_status, force=False, raises=None):
         mock_task_get_status.return_value = task_status
-        self.task_inst.delete(self.task_uuid, force=force)
+        self.task_inst.delete(task_uuid=self.task_uuid, force=force)
         if force:
             self.assertFalse(mock_task_get_status.called)
         else:
@@ -392,7 +423,7 @@ class TaskAPITestCase(test.TestCase):
     def test_get_detailed(self, mock_task):
         mock_task.get_detailed.return_value = "detailed_task_data"
         self.assertEqual("detailed_task_data",
-                         self.task_inst.get_detailed("task_uuid"))
+                         self.task_inst.get_detailed(task_id="task_uuid"))
         mock_task.get_detailed.assert_called_once_with("task_uuid")
 
     @mock.patch("rally.api.objects.Task")
@@ -410,7 +441,7 @@ class TaskAPITestCase(test.TestCase):
         mock_task.extend_results.return_value = "extended_results"
 
         self.assertEqual({"uuid": "foo_uuid", "results": "extended_results"},
-                         self.task_inst.get_detailed("foo_uuid",
+                         self.task_inst.get_detailed(task_id="foo_uuid",
                                                      extended_results=True))
         mock_task.get_detailed.assert_called_once_with("foo_uuid")
         mock_task.extend_results.assert_called_once_with("raw_results")
@@ -428,7 +459,8 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual(
             mock_task.return_value.to_dict(),
             self.task_inst.import_results(
-                mock_deployment_get.return_value["uuid"], task_results)
+                deployment=mock_deployment_get.return_value["uuid"],
+                task_results=task_results)
         )
 
         mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
@@ -474,7 +506,8 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual(
             mock_task.return_value.to_dict(),
             self.task_inst.import_results(
-                mock_deployment_get.return_value["uuid"], task_results)
+                deployment=mock_deployment_get.return_value["uuid"],
+                task_results=task_results)
         )
 
         mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
@@ -515,13 +548,17 @@ class TaskAPITestCase(test.TestCase):
 
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
                           self.task_inst.import_results,
-                          "deployment_uuid", [], tag="tag")
+                          deployment="deployment_uuid",
+                          task_results=[],
+                          tag="tag")
 
 
 class BaseDeploymentTestCase(test.TestCase):
     def setUp(self):
         super(BaseDeploymentTestCase, self).setUp()
-        self.deployment_inst = api._Deployment(mock.Mock())
+        mock_api = mock.Mock()
+        mock_api.endpoint_url = None
+        self.deployment_inst = api._Deployment(mock_api)
         self.deployment_config = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
         self.deployment_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
         admin_credential = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
@@ -548,8 +585,8 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        dep = self.deployment_inst.create(self.deployment_config,
-                                          "fake_deployment")
+        dep = self.deployment_inst.create(config=self.deployment_config,
+                                          name="fake_deployment")
         self.assertIsInstance(dep, dict)
         mock_deployment_create.assert_called_once_with({
             "name": "fake_deployment",
@@ -569,9 +606,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             self, mock_existing_cloud_validate, mock_deployment_create,
             mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
-        self.assertRaises(jsonschema.ValidationError,
+        self.assertRaises(exceptions.RallyException,
                           self.deployment_inst.create,
-                          self.deployment_config, "fake_deployment")
+                          config=self.deployment_config,
+                          name="fake_deployment")
         mock_deployment_update.assert_called_once_with(
             self.deployment_uuid,
             {"status": consts.DeployStatus.DEPLOY_FAILED})
@@ -582,8 +620,9 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                     deployment="fake_deploy"))
     def test_create_duplication_error(self, mock_deployment_create, mock_log):
         self.assertRaises(exceptions.DeploymentNameExists,
-                          self.deployment_inst.create, self.deployment_config,
-                          "fake_deployment")
+                          self.deployment_inst.create,
+                          config=self.deployment_config,
+                          name="fake_deployment")
 
     @mock.patch("rally.common.objects.deploy.db.deployment_delete")
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
@@ -596,13 +635,15 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         list_verifiers = [mock.Mock(), mock.Mock()]
         self.deployment_inst.api.verifier.list.return_value = list_verifiers
 
-        self.deployment_inst.destroy(self.deployment_uuid)
+        self.deployment_inst.destroy(deployment=self.deployment_uuid)
 
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
         self.deployment_inst.api.verifier.list.assert_called_once_with()
         self.assertEqual(
-            [mock.call(m.name, self.deployment["name"], force=True)
+            [mock.call(verifier_id=m.name,
+                       deployment_id=self.deployment["name"],
+                       force=True)
              for m in list_verifiers],
             self.deployment_inst.api.verifier.delete.call_args_list)
 
@@ -611,7 +652,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
     def test_recreate(self, mock_deployment_get, mock_deployment_update):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
-        self.deployment_inst.recreate(self.deployment_uuid)
+        self.deployment_inst.recreate(deployment=self.deployment_uuid)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
             mock.call(
@@ -635,7 +676,8 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                             "password": "pass2",
                             "tenant_name": "demo"}]
 
-        self.deployment_inst.recreate(self.deployment_uuid, config)
+        self.deployment_inst.recreate(deployment=self.deployment_uuid,
+                                      config=config)
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_update.assert_has_calls([
             mock.call(self.deployment_uuid, {"config": config}),
@@ -650,9 +692,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         config = copy.deepcopy(self.deployment_config)
         config["admin"] = {"foo": "bar"}
 
-        self.assertRaises(jsonschema.ValidationError,
+        self.assertRaises(exceptions.RallyException,
                           self.deployment_inst.recreate,
-                          self.deployment_uuid, config)
+                          deployment=self.deployment_uuid,
+                          config=config)
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
@@ -665,13 +708,14 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
         self.assertRaises(exceptions.RallyException,
                           self.deployment_inst.recreate,
-                          self.deployment_uuid, config)
+                          deployment=self.deployment_uuid,
+                          config=config)
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):
         deployment_id = "aaaa-bbbb-cccc-dddd"
         mock_deployment_get.return_value = self.deployment
-        ret = self.deployment_inst.get(deployment_id)
+        ret = self.deployment_inst.get(deployment=deployment_id)
         for key in self.deployment:
             self.assertEqual(ret[key], self.deployment[key])
 
@@ -694,7 +738,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         self.assertEqual(
             {"openstack": [
                 {"services": fake_credential1.list_services.return_value}]},
-            self.deployment_inst.check("uuid"))
+            self.deployment_inst.check(deployment="uuid"))
 
         fake_credential1.verify_connection.assert_called_once_with()
         fake_credential2.verify_connection.assert_called_once_with()
@@ -712,7 +756,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         self.assertEqual(
             {"openstack": [
                 {"services": fake_credential1.list_services.return_value}]},
-            self.deployment_inst.check("uuid"))
+            self.deployment_inst.check(deployment="uuid"))
 
         fake_credential1.verify_connection.assert_called_once_with()
         fake_credential1.list_services.assert_called_once_with()
@@ -732,7 +776,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         self.assertEqual(
             {"openstack": [
                 {"services": fake_credential2.list_services.return_value}]},
-            self.deployment_inst.check("uuid"))
+            self.deployment_inst.check(deployment="uuid"))
 
         fake_credential2.verify_connection.assert_called_once_with()
         fake_credential2.list_services.assert_called_once_with()
@@ -762,7 +806,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                  "user_error": {
                      "etype": "TypeError", "msg": "ooooops",
                      "trace": "Trace2"}}]},
-            self.deployment_inst.check("uuid"))
+            self.deployment_inst.check(deployment="uuid"))
 
         fake_credential1.verify_connection.assert_called_once_with()
         fake_credential2.verify_connection.assert_called_once_with()
@@ -774,7 +818,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         deployment = mock.Mock(spec=objects.Deployment)
         deployment.get_credentials_for.return_value = {
             "admin": fake_credential, "users": []}
-        result = self.deployment_inst.service_list(deployment)
+        result = self.deployment_inst.service_list(deployment=deployment)
         self.assertEqual(fake_credential.list_services.return_value, result)
 
 
@@ -892,12 +936,36 @@ class APITestCase(test.TestCase):
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
-    def test_init_rally_endpoint(self):
+    @mock.patch("rally.api.API.check_db_revision")
+    def test_init_rally_endpoint(self, mock_api_check_db_revision):
         self.assertRaises(NotImplementedError, api.API, rally_endpoint="foo")
 
     def test_version(self):
         api_inst = api.API(skip_db_check=True)
         self.assertEqual(1, api_inst.version)
+
+    @mock.patch("requests.request")
+    def test__request(self, mock_request):
+        api_inst = api.API(skip_db_check=True)
+        method = "test"
+        path = "path"
+        response = mock_request.return_value
+        response.status_code = 200
+        response.json.return_value = {"result": "test"}
+        self.assertEqual("test", api_inst._request(path=path, method=method))
+
+    @mock.patch("requests.request")
+    @mock.patch("rally.exceptions.find_exception")
+    def test__request_fail(self, mock_find_exception, mock_request):
+        api_inst = api.API(skip_db_check=True)
+        method = "test"
+        path = "path"
+        response = mock_request.return_value
+        mock_find_exception.return_value = exceptions.RallyException()
+        response.status_code = 201
+        response.json.return_value = {"result": "test"}
+        self.assertRaises(exceptions.RallyException,
+                          api_inst._request, path=path, method=method)
 
 
 class FakeVerifierManager(object):
@@ -922,7 +990,9 @@ class VerifierAPITestCase(test.TestCase):
 
     def setUp(self):
         super(VerifierAPITestCase, self).setUp()
-        self.verifier_inst = api._Verifier(mock.Mock())
+        mock_api = mock.Mock()
+        mock_api.endpoint_url = None
+        self.verifier_inst = api._Verifier(mock_api)
 
     @mock.patch("rally.api.vmanager.VerifierManager.get_all")
     def test_list_plugins(self, mock_verifier_manager_get_all):
@@ -935,7 +1005,7 @@ class VerifierAPITestCase(test.TestCase):
               "description": FakeVerifierManager.TITLE,
               "location": "%s.%s" % (FakeVerifierManager.__module__,
                                      FakeVerifierManager.__name__)}],
-            self.verifier_inst.list_plugins(namespace))
+            self.verifier_inst.list_plugins(namespace=namespace))
         mock_verifier_manager_get_all.assert_called_once_with(
             namespace=namespace)
 
@@ -944,7 +1014,7 @@ class VerifierAPITestCase(test.TestCase):
         uuid = "some"
 
         self.assertEqual(mock_verifier_get.return_value.to_dict(),
-                         self.verifier_inst.get(uuid))
+                         self.verifier_inst.get(verifier_id=uuid))
 
         mock_verifier_get.assert_called_once_with(uuid)
 
@@ -955,7 +1025,7 @@ class VerifierAPITestCase(test.TestCase):
 
         self.assertEqual(
             [i.to_dict() for i in mock_verifier_list.return_value],
-            self.verifier_inst.list(status))
+            self.verifier_inst.list(status=status))
 
         mock_verifier_list.assert_called_once_with(status)
 
@@ -978,8 +1048,8 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.manager._meta_get.side_effect = [namespace, source]
 
         verifier_uuid = self.verifier_inst.create(
-            name, vtype=vtype, version=version, system_wide=system_wide,
-            extra_settings=extra_settings)
+            name=name, vtype=vtype, version=version,
+            system_wide=system_wide, extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
                                                           namespace=None)
@@ -1040,7 +1110,8 @@ class VerifierAPITestCase(test.TestCase):
         system_wide = True
         extra_settings = {"verifier_specific_option": "value_for_it"}
 
-        self.assertRaises(RuntimeError, self.verifier_inst.create,
+        self.assertRaises(exceptions.RallyException,
+                          self.verifier_inst.create,
                           name=name, vtype=vtype, namespace=namespace,
                           source=source, version=version,
                           system_wide=system_wide,
@@ -1070,11 +1141,12 @@ class VerifierAPITestCase(test.TestCase):
         deployment_id = "deployment"
 
         # remove just deployment specific data
-        self.verifier_inst.delete(verifier_id, deployment_id=deployment_id)
+        self.verifier_inst.delete(verifier_id=verifier_id,
+                                  deployment_id=deployment_id)
 
         self.assertFalse(mock_verifier_delete.called)
         self.verifier_inst.api.verification.list.assert_called_once_with(
-            verifier_id, deployment_id)
+            verifier_id=verifier_id, deployment_id=deployment_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.uninstall.assert_called_once_with()
 
@@ -1084,10 +1156,10 @@ class VerifierAPITestCase(test.TestCase):
         self.verifier_inst.api.verification.list.reset_mock()
 
         # remove the whole verifier
-        self.verifier_inst.delete(verifier_id)
+        self.verifier_inst.delete(verifier_id=verifier_id)
 
         self.verifier_inst.api.verification.list.assert_called_once_with(
-            verifier_id, None)
+            verifier_id=verifier_id, deployment_id=None)
         self.assertFalse(verifier_obj.set_deployment.called)
         verifier_obj.manager.uninstall.assert_called_once_with(full=True)
         mock_verifier_delete.assert_called_once_with(verifier_id)
@@ -1102,20 +1174,20 @@ class VerifierAPITestCase(test.TestCase):
 
         self.assertRaises(exceptions.RallyException,
                           self.verifier_inst.delete,
-                          verifier_id)
+                          verifier_id=verifier_id)
 
         self.verifier_inst.api.verification.list.assert_called_once_with(
-            verifier_id, None)
+            verifier_id=verifier_id, deployment_id=None)
         self.assertFalse(self.verifier_inst.api.verification.delete.called)
 
         self.verifier_inst.api.reset_mock()
         self.verifier_inst.api.verification.list.return_value = verifications
 
-        self.verifier_inst.delete(verifier_id, force=True)
+        self.verifier_inst.delete(verifier_id=verifier_id, force=True)
         self.verifier_inst.api.verification.list.assert_called_once_with(
-            verifier_id, None)
+            verifier_id=verifier_id, deployment_id=None)
         self.assertEqual(
-            [mock.call(v["uuid"]) for v in verifications],
+            [mock.call(verification_uuid=v["uuid"]) for v in verifications],
             self.verifier_inst.api.verification.delete.call_args_list)
 
     @mock.patch("rally.api.utils.BackupHelper")
@@ -1126,7 +1198,7 @@ class VerifierAPITestCase(test.TestCase):
         uuid = "uuuuiiiidddd"
         e = self.assertRaises(exceptions.RallyException,
                               self.verifier_inst.update,
-                              uuid)
+                              verifier_id=uuid)
         self.assertIn("At least one of the following parameters should be",
                       "%s" % e)
         for status in consts.VerifierStatus:
@@ -1134,7 +1206,7 @@ class VerifierAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verifier_inst.update,
-                                      uuid, system_wide=True)
+                                      verifier_id=uuid, system_wide=True)
                 self.assertIn("because verifier is in '%s' status" % status,
                               "%s" % e)
 
@@ -1142,12 +1214,14 @@ class VerifierAPITestCase(test.TestCase):
         msg = "It is impossible to update the virtual environment for verifier"
         e = self.assertRaises(exceptions.RallyException,
                               self.verifier_inst.update,
-                              uuid, system_wide=True, update_venv=True)
+                              verifier_id=uuid,
+                              system_wide=True,
+                              update_venv=True)
         self.assertIn(msg, "%s" % e)
         verifier_obj.system_wide = True
         e = self.assertRaises(exceptions.RallyException,
                               self.verifier_inst.update,
-                              uuid, update_venv=True)
+                              verifier_id=uuid, update_venv=True)
         self.assertIn(msg, "%s" % e)
 
     @mock.patch("rally.api.utils.BackupHelper")
@@ -1160,7 +1234,7 @@ class VerifierAPITestCase(test.TestCase):
         version = "3.1415"
 
         # check updating just version
-        self.verifier_inst.update(uuid, version=version)
+        self.verifier_inst.update(verifier_id=uuid, version=version)
         verifier_obj.manager.checkout.assert_called_once_with(version)
         self.assertFalse(verifier_obj.manager.check_system_wide.called)
         verifier_obj.update_properties.assert_called_once_with(
@@ -1175,7 +1249,8 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.update_status.reset_mock()
 
         # check system_wide
-        self.verifier_inst.update(uuid, version=version, system_wide=True)
+        self.verifier_inst.update(verifier_id=uuid,
+                                  version=version, system_wide=True)
 
         verifier_obj.manager.checkout.assert_called_once_with(version)
         verifier_obj.manager.check_system_wide.assert_called_once_with()
@@ -1193,7 +1268,7 @@ class VerifierAPITestCase(test.TestCase):
         # check switching from system-wide to virtual environment
         verifier_obj.system_wide = True
 
-        self.verifier_inst.update(uuid, system_wide=False)
+        self.verifier_inst.update(verifier_id=uuid, system_wide=False)
         verifier_obj.manager.install_venv.assert_called_once_with()
         self.assertFalse(verifier_obj.manager.check_system_wide.called)
         verifier_obj.update_status.assert_called_once_with(
@@ -1209,7 +1284,7 @@ class VerifierAPITestCase(test.TestCase):
         # check updating virtual environment
         verifier_obj.system_wide = False
 
-        self.verifier_inst.update(uuid, update_venv=True)
+        self.verifier_inst.update(verifier_id=uuid, update_venv=True)
         verifier_obj.manager.install_venv.assert_called_once_with()
         self.assertFalse(verifier_obj.manager.check_system_wide.called)
         verifier_obj.update_status.assert_called_once_with(
@@ -1225,7 +1300,7 @@ class VerifierAPITestCase(test.TestCase):
         # check switching from virtual environment to system-wide
         verifier_obj.system_wide = False
 
-        self.verifier_inst.update(uuid, system_wide=True)
+        self.verifier_inst.update(verifier_id=uuid, system_wide=True)
         self.assertFalse(verifier_obj.manager.install_venv.called)
         verifier_obj.manager.check_system_wide.assert_called_once_with()
         verifier_obj.update_status.assert_called_once_with(
@@ -1236,7 +1311,7 @@ class VerifierAPITestCase(test.TestCase):
         # check switching from system-wide to system-wide
         verifier_obj.system_wide = True
         expected_calls = len(verifier_obj.update_status.call_args())
-        self.verifier_inst.update(uuid, system_wide=True)
+        self.verifier_inst.update(verifier_id=uuid, system_wide=True)
         self.assertTrue(expected_calls,
                         len(verifier_obj.update_status.call_args()))
         self.assertFalse(verifier_obj.manager.install_venv.called)
@@ -1252,7 +1327,8 @@ class VerifierAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verifier_inst.configure,
-                                      verifier_id, deployment_id)
+                                      verifier=verifier_id,
+                                      deployment_id=deployment_id)
                 self.assertIn("because verifier is in '%s' status" % status,
                               "%s" % e)
 
@@ -1274,7 +1350,9 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate and no extra options
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id, reconfigure=False))
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
+                             reconfigure=False))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
         self.assertFalse(verifier_obj.manager.configure.called)
         self.assertFalse(verifier_obj.update_status.called)
@@ -1282,7 +1360,9 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate, just extend existing configuration
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id, reconfigure=False,
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
+                             reconfigure=False,
                              extra_options=extra))
         verifier_obj.manager.extend_configuration.assert_called_once_with(
             extra)
@@ -1294,7 +1374,8 @@ class VerifierAPITestCase(test.TestCase):
         # recreate with extra options
         self.assertEqual(verifier_obj.manager.configure.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id,
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
                              reconfigure=True,
                              extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
@@ -1320,7 +1401,9 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate and no extra options
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id, reconfigure=False))
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
+                             reconfigure=False))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
         self.assertFalse(verifier_obj.manager.configure.called)
         self.assertFalse(verifier_obj.update_status.called)
@@ -1328,7 +1411,8 @@ class VerifierAPITestCase(test.TestCase):
         # no recreate, just extend existing configuration
         self.assertEqual(verifier_obj.manager.get_configuration.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id,
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
                              reconfigure=False,
                              extra_options=extra))
         verifier_obj.manager.extend_configuration.assert_called_once_with(
@@ -1341,7 +1425,8 @@ class VerifierAPITestCase(test.TestCase):
         # recreate with extra options
         self.assertEqual(verifier_obj.manager.configure.return_value,
                          self.verifier_inst.configure(
-                             verifier_id, deployment_id,
+                             verifier=verifier_id,
+                             deployment_id=deployment_id,
                              reconfigure=True,
                              extra_options=extra))
         self.assertFalse(verifier_obj.manager.extend_configuration.called)
@@ -1365,7 +1450,8 @@ class VerifierAPITestCase(test.TestCase):
                 e = self.assertRaises(
                     exceptions.RallyException,
                     self.verifier_inst.override_configuration,
-                    verifier_id, deployment_id, new_content)
+                    verifier_id=verifier_id, deployment_id=deployment_id,
+                    new_configuration=new_content)
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
 
@@ -1380,7 +1466,8 @@ class VerifierAPITestCase(test.TestCase):
         new_config = {"key": "value"}
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         self.verifier_inst.override_configuration(
-            verifier_id, deployment_id, new_configuration=new_config)
+            verifier_id=verifier_id, deployment_id=deployment_id,
+            new_configuration=new_config)
         verifier_obj.manager.override_configuration.assert_called_once_with(
             new_config)
 
@@ -1393,7 +1480,7 @@ class VerifierAPITestCase(test.TestCase):
 
         e = self.assertRaises(exceptions.RallyException,
                               self.verifier_inst.list_tests,
-                              verifier_id,
+                              verifier_id=verifier_id,
                               pattern=pattern)
         self.assertIn("because verifier %s is in '%s' status"
                       % (verifier_obj, verifier_obj.status), "%s" % e)
@@ -1402,7 +1489,8 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         self.assertEqual(
             verifier_obj.manager.list_tests.return_value,
-            self.verifier_inst.list_tests(verifier_id, pattern))
+            self.verifier_inst.list_tests(verifier_id=verifier_id,
+                                          pattern=pattern))
         verifier_obj.manager.list_tests.assert_called_once_with(pattern)
 
     @mock.patch("rally.api._Verifier._get")
@@ -1418,14 +1506,15 @@ class VerifierAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verifier_inst.add_extension,
-                                      verifier_id, source, version=version,
+                                      verifier_id=verifier_id,
+                                      source=source, version=version,
                                       extra_settings=extra_settings)
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         self.verifier_inst.add_extension(
-            verifier_id, source, version=version,
+            verifier_id=verifier_id, source=source, version=version,
             extra_settings=extra_settings)
         verifier_obj.manager.install_extension.assert_called_once_with(
             source, version=version, extra_settings=extra_settings)
@@ -1437,9 +1526,10 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.update_status.reset_mock()
 
         verifier_obj.manager.install_extension.side_effect = RuntimeError
-        self.assertRaises(RuntimeError,
+        self.assertRaises(exceptions.RallyException,
                           self.verifier_inst.add_extension,
-                          verifier_id, source, version=version,
+                          verifier_id=verifier_id,
+                          source=source, version=version,
                           extra_settings=extra_settings)
         self.assertEqual([mock.call(consts.VerifierStatus.EXTENDING),
                           mock.call(verifier_obj.status)],
@@ -1455,14 +1545,15 @@ class VerifierAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verifier_inst.list_extensions,
-                                      verifier_id)
+                                      verifier_id=verifier_id)
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
                 self.assertFalse(verifier_obj.manager.list_extensions.called)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
         self.assertEqual(verifier_obj.manager.list_extensions.return_value,
-                         self.verifier_inst.list_extensions(verifier_id))
+                         self.verifier_inst.list_extensions(
+                             verifier_id=verifier_id))
         verifier_obj.manager.list_extensions.assert_called_once_with()
 
     @mock.patch("rally.api._Verifier._get")
@@ -1476,13 +1567,14 @@ class VerifierAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verifier_inst.delete_extension,
-                                      verifier_id, name)
+                                      verifier_id=verifier_id, name=name)
                 self.assertIn("because verifier %s is in '%s' status"
                               % (verifier_obj, status), "%s" % e)
                 self.assertFalse(verifier_obj.manager.list_tests.called)
 
         verifier_obj.status = consts.VerifierStatus.INSTALLED
-        self.verifier_inst.delete_extension(verifier_id, name)
+        self.verifier_inst.delete_extension(verifier_id=verifier_id,
+                                            name=name)
         verifier_obj.manager.uninstall_extension.assert_called_once_with(name)
 
 
@@ -1507,19 +1599,22 @@ class VerificationAPITestCase(test.TestCase):
 
     def setUp(self):
         super(VerificationAPITestCase, self).setUp()
-        self.verification_inst = api._Verification(mock.Mock())
+        mock_api = mock.Mock()
+        mock_api.endpoint_url = None
+        self.verification_inst = api._Verification(mock_api)
 
     @mock.patch("rally.api.objects.Verification.get")
     def test_get(self, mock_verification_get):
         verification_uuid = "uuiiiidd"
         self.assertEqual(mock_verification_get.return_value.to_dict(),
-                         self.verification_inst.get(verification_uuid))
+                         self.verification_inst.get(
+                             verification_uuid=verification_uuid))
         mock_verification_get.assert_called_once_with(verification_uuid)
 
     @mock.patch("rally.api.objects.Verification.get")
     def test_delete(self, mock_verification_get):
         verification_uuid = "uuiiiidd"
-        self.verification_inst.delete(verification_uuid)
+        self.verification_inst.delete(verification_uuid=verification_uuid)
         mock_verification_get.assert_called_once_with(verification_uuid)
         mock_verification_get.return_value.delete.assert_called_once_with()
 
@@ -1534,10 +1629,11 @@ class VerificationAPITestCase(test.TestCase):
         self.assertEqual(
             [i.to_dict() for i in mock_verification_list.return_value],
             self.verification_inst.list(
-                verifier_id, deployment_id=deployment_id,
+                verifier_id=verifier_id, deployment_id=deployment_id,
                 tags=tags, status=status))
         mock_verification_list.assert_called_once_with(
-            verifier_id, deployment_id=deployment_id, tags=tags, status=status)
+            verifier_id, deployment_id=deployment_id, tags=tags,
+            status=status)
 
     @mock.patch("rally.api.vreporter.VerificationReporter")
     @mock.patch("rally.api.objects.Verification.get")
@@ -1550,7 +1646,8 @@ class VerificationAPITestCase(test.TestCase):
 
         self.assertEqual(mock_verification_reporter.make.return_value,
                          self.verification_inst.report(
-                             verifications, output_type=output_type,
+                             uuids=verifications,
+                             output_type=output_type,
                              output_dest=output_dest))
         mock_verification_reporter.get.assert_called_once_with(output_type)
 
@@ -1579,7 +1676,8 @@ class VerificationAPITestCase(test.TestCase):
             "uuid": deployment_id}
 
         results = self.verification_inst.import_results(
-            verifier_id, deployment_id=deployment_id, data=data, **run_args)
+            verifier_id=verifier_id, deployment_id=deployment_id,
+            data=data, **run_args)
 
         verification = mock_verification_create.return_value
 
@@ -1603,8 +1701,11 @@ class VerificationAPITestCase(test.TestCase):
         verification.finish.reset_mock()
 
         verifier_obj.manager.parse_results.side_effect = RuntimeError
-        self.assertRaises(RuntimeError, self.verification_inst.import_results,
-                          verifier_id, deployment_id=deployment_id, data=data,
+        self.assertRaises(exceptions.RallyException,
+                          self.verification_inst.import_results,
+                          verifier_id=verifier_id,
+                          deployment_id=deployment_id,
+                          data=data,
                           **run_args)
         self.assertFalse(verification.finish.called)
         self.assertTrue(verification.set_failed.called)
@@ -1625,7 +1726,8 @@ class VerificationAPITestCase(test.TestCase):
                 verifier_obj.status = status
                 e = self.assertRaises(exceptions.RallyException,
                                       self.verification_inst.start,
-                                      verifier_id, deployment_id)
+                                      verifier_id=verifier_id,
+                                      deployment_id=deployment_id)
                 self.assertIn(
                     "Failed to start verification because verifier %s is in "
                     "'%s' status" % (verifier_obj, verifier_obj.status),
@@ -1650,7 +1752,8 @@ class VerificationAPITestCase(test.TestCase):
         verifier_obj.manager = verifier_manager
         verifier_manager._meta_get.return_value = {}
 
-        self.verification_inst.start(verifier_id, deployment_id)
+        self.verification_inst.start(verifier_id=verifier_id,
+                                     deployment_id=deployment_id)
         mock_deployment_get.assert_called_once_with(deployment_id)
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
 
@@ -1673,7 +1776,9 @@ class VerificationAPITestCase(test.TestCase):
                                    "uuid": deployment_id}
         verifier_obj.manager._meta_get.return_value = {}
 
-        self.verification_inst.start(verifier_id, deployment_id, tags=tags,
+        self.verification_inst.start(verifier_id=verifier_id,
+                                     deployment_id=deployment_id,
+                                     tags=tags,
                                      **run_args)
 
         mock_deployment_get.assert_called_once_with(deployment_id)
@@ -1709,8 +1814,10 @@ class VerificationAPITestCase(test.TestCase):
         tags = ["foo", "bar"]
         run_args = {"arg": "value"}
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
-                          self.verification_inst.start, verifier_id,
-                          deployment_id, tags=tags, **run_args)
+                          self.verification_inst.start,
+                          verifier_id=verifier_id,
+                          deployment_id=deployment_id,
+                          tags=tags, **run_args)
 
     @mock.patch("rally.api.objects.Verification.create")
     @mock.patch("rally.api.objects.Deployment.get",
@@ -1733,8 +1840,11 @@ class VerificationAPITestCase(test.TestCase):
         verifier_manager._meta_get.return_value = {}
         verifier_obj.manager.run.side_effect = RuntimeError
 
-        self.assertRaises(RuntimeError, self.verification_inst.start,
-                          verifier_id, deployment_id, tags=tags, **run_args)
+        self.assertRaises(exceptions.RallyException,
+                          self.verification_inst.start,
+                          verifier_id=verifier_id,
+                          deployment_id=deployment_id,
+                          tags=tags, **run_args)
 
         verifier_obj.set_deployment.assert_called_once_with(deployment_id)
         verifier_obj.manager.validate.assert_called_once_with(run_args)
@@ -1776,7 +1886,8 @@ class VerificationAPITestCase(test.TestCase):
             mock.Mock(totals=self.results_data["totals"],
                       tests=self.results_data["tests"]))
 
-        self.verification_inst.rerun("uuid", concurrency=1)
+        self.verification_inst.rerun(verification_uuid="uuid",
+                                     concurrency=1)
         mock_start.assert_called_once_with(
             "v_uuid", "d_uuid", load_list=tests.keys(),
             tags=None, concurrency=1)
@@ -1800,7 +1911,7 @@ class VerificationAPITestCase(test.TestCase):
             "uuid": "deployment_uuid",
         }
         expected_tests = [t for t, r in tests.items() if r["status"] == "fail"]
-        self.verification_inst.rerun("uuid", failed=True)
+        self.verification_inst.rerun(verification_uuid="uuid", failed=True)
         mock_start.assert_called_once_with(
             "v_uuid", "deployment_uuid", load_list=expected_tests, tags=None)
 
@@ -1815,7 +1926,8 @@ class VerificationAPITestCase(test.TestCase):
             tests=tests)
 
         e = self.assertRaises(exceptions.RallyException,
-                              self.verification_inst.rerun, "uuid",
+                              self.verification_inst.rerun,
+                              verification_uuid="uuid",
                               failed=True)
         self.assertEqual("There are no failed tests from verification "
                          "(UUID=uuid).", "%s" % e)

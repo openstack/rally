@@ -55,7 +55,7 @@ class FileExporterTestCase(test.TestCase):
         exporter.export("fake_uuid")
 
         mock_open().__enter__().write.assert_called_once_with("fake_results")
-        rapi.task.get_detailed.assert_called_once_with("fake_uuid")
+        rapi.task.get_detailed.assert_called_once_with(task_id="fake_uuid")
         expected_dict = [
             {
                 "load_duration": "foo_load_duration",

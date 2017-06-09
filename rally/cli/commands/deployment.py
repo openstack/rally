@@ -100,7 +100,7 @@ class DeploymentCommands(object):
                 config = yaml.safe_load(deploy_file.read())
 
         try:
-            deployment = api.deployment.create(config, name)
+            deployment = api.deployment.create(config=config, name=name)
         except jsonschema.ValidationError:
             print(_("Config schema validation error: %s.") % sys.exc_info()[1])
             return 1
@@ -132,7 +132,7 @@ class DeploymentCommands(object):
             with open(filename, "rb") as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
 
-        api.deployment.recreate(deployment, config)
+        api.deployment.recreate(deployment=deployment, config=config)
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -149,7 +149,7 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        api.deployment.destroy(deployment)
+        api.deployment.destroy(deployment=deployment)
 
     def list(self, api, deployment_list=None):
         """List existing deployments."""
@@ -184,7 +184,7 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of the deployment
         """
-        deploy = api.deployment.get(deployment)
+        deploy = api.deployment.get(deployment=deployment)
         result = deploy["config"]
         print(json.dumps(result, sort_keys=True, indent=4))
 
@@ -204,7 +204,7 @@ class DeploymentCommands(object):
                    "region_name", "endpoint_type"]
         table_rows = []
 
-        deployment = api.deployment.get(deployment)
+        deployment = api.deployment.get(deployment=deployment)
 
         creds = deployment["credentials"]["openstack"][0]
         users = creds["users"]
@@ -239,7 +239,7 @@ class DeploymentCommands(object):
 
         exit_code = 0
 
-        info = api.deployment.check(deployment)
+        info = api.deployment.check(deployment=deployment)
         for platform in info:
             for i, credentials in enumerate(info[platform]):
                 failed = False
@@ -327,7 +327,7 @@ class DeploymentCommands(object):
         # TODO(astudenov): make this method platform independent
         try:
             if not isinstance(deployment, dict):
-                deployment = api.deployment.get(deployment)
+                deployment = api.deployment.get(deployment=deployment)
         except exceptions.DeploymentNotFound:
             print("Deployment %s is not found." % deployment)
             return 1

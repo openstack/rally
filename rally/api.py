@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import os
 import re
 import sys
@@ -23,6 +24,7 @@ import jinja2
 import jinja2.meta
 import jsonschema
 from oslo_config import cfg
+import requests
 from requests.packages import urllib3
 
 from rally.common import opts
@@ -43,6 +45,7 @@ from rally.verification import reporter as vreporter
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
+API_REQUEST_PREFIX = "/api"
 
 
 class APIGroup(object):
@@ -52,6 +55,30 @@ class APIGroup(object):
         :param api: an instance of rally.api.API object
         """
         self.api = api
+
+
+def api_wrapper(path, method):
+    def decorator(func):
+        def inner(self, *args, **kwargs):
+            if args:
+                raise TypeError("It is restricted to use positional"
+                                " argument for API calls")
+
+            if self.api.endpoint_url:
+                # it's a call to the remote Rally instance
+                return self.api._request(self.api.endpoint_url + path,
+                                         method, **kwargs)
+            else:
+                try:
+                    return func(self, *args, **kwargs)
+                except Exception as e:
+                    raise exceptions.make_exception(e)
+
+        inner.path = path
+        inner.method = method
+
+        return inner
+    return decorator
 
 
 class _Deployment(APIGroup):
@@ -86,9 +113,13 @@ class _Deployment(APIGroup):
             deployment.update_credentials(credentials)
             return deployment
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/create",
+                 method="POST")
     def create(self, config, name):
         return self._create(config, name).to_dict()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/destroy",
+                 method="DELETE")
     def destroy(self, deployment):
         """Destroy the deployment.
 
@@ -109,11 +140,14 @@ class _Deployment(APIGroup):
                      % deployment["uuid"])
 
         for verifier in self.api.verifier.list():
-            self.api.verifier.delete(verifier.name, deployment["name"],
+            self.api.verifier.delete(verifier_id=verifier.name,
+                                     deployment_id=deployment["name"],
                                      force=True)
 
         deployment.delete()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/recreate",
+                 method="POST")
     def recreate(self, deployment, config=None):
         """Performs a cleanup and then makes a deployment again.
 
@@ -152,9 +186,13 @@ class _Deployment(APIGroup):
         """
         return objects.Deployment.get(deployment)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/get",
+                 method="GET")
     def get(self, deployment):
         return self._get(deployment).to_dict()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/service_list",
+                 method="GET")
     def service_list(self, deployment):
         """Get the services list.
 
@@ -165,6 +203,8 @@ class _Deployment(APIGroup):
         admin = deployment.get_credentials_for("openstack")["admin"]
         return admin.list_services()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/list",
+                 method="GET")
     def list(self, status=None, parent_uuid=None, name=None):
         """Get the deployments list.
 
@@ -172,6 +212,8 @@ class _Deployment(APIGroup):
         """
         return objects.Deployment.list(status, parent_uuid, name)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/check",
+                 method="GET")
     def check(self, deployment):
         """Check keystone authentication and list all available services.
 
@@ -219,15 +261,21 @@ class _Task(APIGroup):
 
     TASK_RESULT_SCHEMA = objects.task.TASK_RESULT_SCHEMA
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/list",
+                 method="GET")
     def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
 
     def _get(self, task_id):
         return objects.Task.get(task_id)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/get",
+                 method="GET")
     def get(self, task_id):
         return self._get(task_id).to_dict()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/get_detailed",
+                 method="GET")
     def get_detailed(self, task_id, extended_results=False):
         """Get detailed task data.
 
@@ -244,6 +292,8 @@ class _Task(APIGroup):
         return task
 
     # TODO(andreykurilin): move it to some kind of utils
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/render_template",
+                 method="GET")
     def render_template(self, task_template, template_dir="./", **kwargs):
         """Render jinja2 task template to Rally input task.
 
@@ -307,6 +357,8 @@ class _Task(APIGroup):
         render_template = env.from_string(task_template).render(**kwargs)
         return render_template
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/create_template_functions",
+                 method="POST")
     def create_template_functions(self):
 
         def template_min(int1, int2):
@@ -325,6 +377,8 @@ class _Task(APIGroup):
         return {"min": template_min, "max": template_max,
                 "ceil": template_ceil, "round": template_round}
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/create",
+                 method="POST")
     def create(self, deployment, tag):
         """Create a task without starting it.
 
@@ -345,6 +399,8 @@ class _Task(APIGroup):
         return objects.Task(deployment_uuid=deployment["uuid"],
                             tag=tag).to_dict()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/validate",
+                 method="GET")
     def validate(self, deployment, config, task_instance=None, task=None):
         """Validate a task config against specified deployment.
 
@@ -371,6 +427,7 @@ class _Task(APIGroup):
         benchmark_engine = engine.TaskEngine(config, task, deployment)
         benchmark_engine.validate()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/start", method="POST")
     def start(self, deployment, config, task=None, abort_on_sla_failure=False):
         """Validate and start a task.
 
@@ -431,6 +488,7 @@ class _Task(APIGroup):
 
         return task["uuid"], task.get_status(task["uuid"])
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/abort", method="PUT")
     def abort(self, task_uuid, soft=False, async=True):
         """Abort running task.
 
@@ -464,6 +522,7 @@ class _Task(APIGroup):
             while objects.Task.get_status(task_uuid) not in finished_stages:
                 time.sleep(1)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/delete", method="DELETE")
     def delete(self, task_uuid, force=False):
         """Delete the task.
 
@@ -485,6 +544,8 @@ class _Task(APIGroup):
             objects.Task.delete_by_uuid(
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/import_results",
+                 method="POST")
     def import_results(self, deployment, task_results, tag=None):
         """Import json results of a test into rally database"""
         deployment = objects.Deployment.get(deployment)
@@ -521,6 +582,8 @@ class _Task(APIGroup):
 
 class _Verifier(APIGroup):
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/list_plugins",
+                 method="GET")
     def list_plugins(self, namespace=None):
         """List all plugins for verifiers management.
 
@@ -532,6 +595,7 @@ class _Verifier(APIGroup):
                  "location": "%s.%s" % (p.__module__, p.__name__)}
                 for p in vmanager.VerifierManager.get_all(namespace=namespace)]
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/create", method="POST")
     def create(self, name, vtype, namespace=None, source=None, version=None,
                system_wide=False, extra_settings=None):
         """Create a verifier.
@@ -597,6 +661,7 @@ class _Verifier(APIGroup):
         """
         return objects.Verifier.get(verifier_id)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/get", method="GET")
     def get(self, verifier_id):
         return self._get(verifier_id).to_dict()
 
@@ -607,9 +672,11 @@ class _Verifier(APIGroup):
         """
         return objects.Verifier.list(status)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/list", method="GET")
     def list(self, status=None):
         return [item.to_dict() for item in self._list(status)]
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/delete", method="DELETE")
     def delete(self, verifier_id, deployment_id=None, force=False):
         """Delete a verifier.
 
@@ -622,7 +689,9 @@ class _Verifier(APIGroup):
                       deployment will be deleted
         """
         verifier = self._get(verifier_id)
-        verifications = self.api.verification.list(verifier_id, deployment_id)
+        verifications = self.api.verification.list(
+            verifier_id=verifier_id,
+            deployment_id=deployment_id)
         if verifications:
             d_msg = ((" for deployment '%s'" % deployment_id)
                      if deployment_id else "")
@@ -630,7 +699,8 @@ class _Verifier(APIGroup):
                 LOG.info("Deleting all verifications created by verifier "
                          "%s%s.", verifier, d_msg)
                 for verification in verifications:
-                    self.api.verification.delete(verification["uuid"])
+                    self.api.verification.delete(
+                        verification_uuid=verification["uuid"])
             else:
                 raise exceptions.RallyException(
                     "Failed to delete verifier {0} because there are stored "
@@ -651,6 +721,7 @@ class _Verifier(APIGroup):
             objects.Verifier.delete(verifier_id)
             LOG.info("Verifier has been successfully deleted!")
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/update", method="PUT")
     def update(self, verifier_id, system_wide=None, version=None,
                update_venv=False):
         """Update a verifier.
@@ -739,6 +810,7 @@ class _Verifier(APIGroup):
 
         return verifier.uuid
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/configure", method="PUT")
     def configure(self, verifier, deployment_id, extra_options=None,
                   reconfigure=False):
         """Configure a verifier.
@@ -792,6 +864,8 @@ class _Verifier(APIGroup):
 
         return raw_config
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/override_configuration",
+                 method="PUT")
     def override_configuration(self, verifier_id, deployment_id,
                                new_configuration):
         """Override verifier configuration (e.g., rewrite the config file).
@@ -819,6 +893,8 @@ class _Verifier(APIGroup):
                  "overridden for deployment '%s' (UUID=%s)!", verifier,
                  verifier.deployment["name"], verifier.deployment["uuid"])
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/list_tests",
+                 method="GET")
     def list_tests(self, verifier_id, pattern=""):
         """List all verifier tests.
 
@@ -838,6 +914,8 @@ class _Verifier(APIGroup):
 
         return verifier.manager.list_tests(pattern)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/add_extension",
+                 method="POST")
     def add_extension(self, verifier_id, source, version=None,
                       extra_settings=None):
         """Add a verifier extension.
@@ -871,6 +949,8 @@ class _Verifier(APIGroup):
         LOG.info("Extension for verifier %s has been successfully added!",
                  verifier)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/list_extensions",
+                 method="GET")
     def list_extensions(self, verifier_id):
         """List all verifier extensions.
 
@@ -886,6 +966,8 @@ class _Verifier(APIGroup):
 
         return verifier.manager.list_extensions()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/delete_extension",
+                 method="DELETE")
     def delete_extension(self, verifier_id, name):
         """Delete a verifier extension.
 
@@ -908,6 +990,8 @@ class _Verifier(APIGroup):
 
 class _Verification(APIGroup):
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/start",
+                 method="POST")
     def start(self, verifier_id, deployment_id, tags=None, **run_args):
         """Start a verification.
 
@@ -939,7 +1023,8 @@ class _Verification(APIGroup):
 
         verifier.set_deployment(deployment_id)
         if not verifier.manager.is_configured():
-            self.api.verifier.configure(verifier, deployment_id)
+            self.api.verifier.configure(verifier=verifier,
+                                        deployment_id=deployment_id)
 
         # TODO(andreykurilin): save validation results to db
         verifier.manager.validate(run_args)
@@ -977,6 +1062,8 @@ class _Verification(APIGroup):
                 "totals": results.totals,
                 "tests": results.tests}
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/rerun",
+                 method="POST")
     def rerun(self, verification_uuid, deployment_id=None, failed=False,
               tags=None, concurrency=0):
         """Rerun tests from a verification.
@@ -1006,8 +1093,9 @@ class _Verification(APIGroup):
         else:
             tests = tests.keys()
 
-        deployment = self.api.deployment.get(deployment_id or
-                                             verification.deployment_uuid)
+        deployment = (deployment_id if deployment_id
+                      else verification.deployment_uuid)
+        deployment = self.api.deployment.get(deployment=deployment)
         LOG.info("Re-running %stests from verification (UUID=%s) for "
                  "deployment '%s' (UUID=%s).", "failed " if failed else "",
                  verification.uuid, deployment["name"], deployment["uuid"])
@@ -1022,9 +1110,12 @@ class _Verification(APIGroup):
         """
         return objects.Verification.get(verification_uuid)
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/get", method="GET")
     def get(self, verification_uuid):
         return self._get(verification_uuid).to_dict()
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/list",
+                 method="GET")
     def list(self, verifier_id=None, deployment_id=None,
              tags=None, status=None):
         """List all verifications.
@@ -1038,6 +1129,8 @@ class _Verification(APIGroup):
             verifier_id, deployment_id=deployment_id,
             tags=tags, status=status)]
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/delete",
+                 method="DELETE")
     def delete(self, verification_uuid):
         """Delete a verification.
 
@@ -1048,6 +1141,8 @@ class _Verification(APIGroup):
         verification.delete()
         LOG.info("Verification has been successfully deleted!")
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/report",
+                 method="GET")
     def report(self, uuids, output_type, output_dest=None):
         """Generate a report for a verification or a few verifications.
 
@@ -1068,6 +1163,8 @@ class _Verification(APIGroup):
         LOG.info(_LI("The report has been successfully built."))
         return result
 
+    @api_wrapper(path=API_REQUEST_PREFIX + "/verification/import_results",
+                 method="POST")
     def import_results(self, verifier_id, deployment_id, data, **run_args):
         """Import results of a test run into Rally database.
 
@@ -1129,9 +1226,12 @@ class API(object):
         :param skip_db_check: Allows to skip db revision check
         :type skip_db_check: bool
         """
+
+        self.endpoint_url = rally_endpoint
         if rally_endpoint:
             raise NotImplementedError(_("Sorry, but Rally-as-a-Service is "
                                         "not ready yet."))
+
         try:
             config_files = ([config_file] if config_file else
                             self._default_config_file())
@@ -1220,6 +1320,19 @@ class API(object):
                 "Database seems to be outdated. Run upgrade from "
                 "revision %(revision)s to %(current_head)s by command "
                 "`rally-manage db upgrade'") % rev)
+
+    def _request(self, path, method, **kwargs):
+        headers = {
+            "RALLY-CLIENT-VERSION": rally_version.version_string(),
+            "RALLY-API": "1.0"
+        }
+        response = requests.request(method, path,
+                                    json=kwargs, headers=headers)
+        if response.status_code != 200:
+            raise exceptions.find_exception(response)
+
+        return response.json(
+            object_pairs_hook=collections.OrderedDict)["result"]
 
     @property
     def deployment(self):
