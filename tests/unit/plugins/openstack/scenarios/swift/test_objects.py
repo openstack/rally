@@ -36,9 +36,6 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
         self.assertEqual(5, scenario._upload_object.call_count)
         scenario._list_objects.assert_called_once_with("AA")
 
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_5_objects")
-
     def test_create_container_and_object_then_delete_all(self):
         scenario = objects.CreateContainerAndObjectThenDeleteAll(self.context)
         scenario._create_container = mock.MagicMock(return_value="BB")
@@ -52,14 +49,8 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
         self.assertEqual(1, scenario._create_container.call_count)
         self.assertEqual(3, scenario._upload_object.call_count)
         scenario._delete_object.assert_has_calls(
-            [mock.call("BB", "ooobj_%i" % i,
-                       atomic_action=False) for i in range(3)])
+            [mock.call("BB", "ooobj_%i" % i) for i in range(3)])
         scenario._delete_container.assert_called_once_with("BB")
-
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_3_objects")
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.delete_3_objects")
 
     def test_create_container_and_object_then_download_object(self):
         scenario = objects.CreateContainerAndObjectThenDownloadObject(
@@ -75,13 +66,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
         self.assertEqual(1, scenario._create_container.call_count)
         self.assertEqual(2, scenario._upload_object.call_count)
         scenario._download_object.assert_has_calls(
-            [mock.call("CC", "obbbj_%i" % i,
-                       atomic_action=False) for i in range(2)])
-
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_2_objects")
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.download_2_objects")
+            [mock.call("CC", "obbbj_%i" % i) for i in range(2)])
 
     @ddt.data(1, 5)
     def test_list_objects_in_containers(self, num_cons):
@@ -93,7 +78,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
 
         scenario.run()
         scenario._list_containers.assert_called_once_with()
-        con_calls = [mock.call(container["name"], atomic_action=False)
+        con_calls = [mock.call(container["name"])
                      for container in con_list]
         scenario._list_objects.assert_has_calls(con_calls)
 
@@ -117,14 +102,13 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
 
         scenario.run()
         scenario._list_containers.assert_called_once_with()
-        con_calls = [mock.call(container["name"], atomic_action=False)
+        con_calls = [mock.call(container["name"])
                      for container in con_list]
         scenario._list_objects.assert_has_calls(con_calls)
         obj_calls = []
         for container in con_list:
             for obj in obj_list:
-                obj_calls.append(mock.call(container["name"], obj["name"],
-                                           atomic_action=False))
+                obj_calls.append(mock.call(container["name"], obj["name"]))
         scenario._download_object.assert_has_calls(obj_calls, any_order=True)
 
         list_key_suffix = "container"
@@ -152,9 +136,6 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
 
         scenario._list_objects.assert_called_once_with("AA")
 
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_3_objects")
-
     def test_functional_create_container_and_object_then_delete_all(self):
         names_list = ["111", "222", "333", "444", "555"]
 
@@ -166,14 +147,8 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
         scenario.run(objects_per_container=4, object_size=240)
 
         scenario._delete_object.assert_has_calls(
-            [mock.call("111", name,
-                       atomic_action=False) for name in names_list[1:]])
+            [mock.call("111", name) for name in names_list[1:]])
         scenario._delete_container.assert_called_once_with("111")
-
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_4_objects")
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.delete_4_objects")
 
     def test_functional_create_container_and_object_then_download_object(self):
         names_list = ["aaa", "bbb", "ccc", "ddd", "eee", "fff"]
@@ -186,10 +161,4 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
         scenario.run(objects_per_container=5, object_size=750)
 
         scenario._download_object.assert_has_calls(
-            [mock.call("aaa", name,
-                       atomic_action=False) for name in names_list[1:]])
-
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.create_5_objects")
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.download_5_objects")
+            [mock.call("aaa", name) for name in names_list[1:]])

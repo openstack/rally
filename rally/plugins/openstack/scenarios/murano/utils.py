@@ -70,7 +70,7 @@ class MuranoScenario(scenario.OpenStackScenario):
         """
         return self.clients("murano").sessions.configure(environment_id)
 
-    @atomic.optional_action_timer("murano.create_service")
+    @atomic.action_timer("murano.create_service")
     def _create_service(self, environment, session, full_package_name,
                         image_name=None, flavor_name=None):
         """Create Murano service.
@@ -80,9 +80,6 @@ class MuranoScenario(scenario.OpenStackScenario):
         :param full_package_name: full name of the Murano package
         :param image_name: Image name
         :param flavor_name: Flavor name
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator
         :returns: Service instance
         """
         app_id = str(uuid.uuid4())

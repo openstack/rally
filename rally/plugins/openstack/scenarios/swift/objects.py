@@ -39,20 +39,14 @@ class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
         :param object_size: int, temporary local object size
         :param kwargs: dict, optional parameters to create container
         """
-        key_suffix = "object"
-        if objects_per_container > 1:
-            key_suffix = "%i_objects" % objects_per_container
 
-        container_name = None
         with tempfile.TemporaryFile() as dummy_file:
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
-                for i in range(objects_per_container):
-                    dummy_file.seek(0)
-                    self._upload_object(container_name, dummy_file,
-                                        atomic_action=False)
+            for i in range(objects_per_container):
+                dummy_file.seek(0)
+                self._upload_object(container_name, dummy_file)
         self._list_objects(container_name)
 
 
@@ -70,28 +64,20 @@ class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
         :param object_size: int, temporary local object size
         :param kwargs: dict, optional parameters to create container
         """
-        key_suffix = "object"
-        if objects_per_container > 1:
-            key_suffix = "%i_objects" % objects_per_container
-
         container_name = None
         objects_list = []
         with tempfile.TemporaryFile() as dummy_file:
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
-                for i in range(objects_per_container):
-                    dummy_file.seek(0)
-                    object_name = self._upload_object(container_name,
-                                                      dummy_file,
-                                                      atomic_action=False)[1]
-                    objects_list.append(object_name)
+            for i in range(objects_per_container):
+                dummy_file.seek(0)
+                object_name = self._upload_object(container_name,
+                                                  dummy_file)[1]
+                objects_list.append(object_name)
 
-        with atomic.ActionTimer(self, "swift.delete_%s" % key_suffix):
-            for object_name in objects_list:
-                self._delete_object(container_name, object_name,
-                                    atomic_action=False)
+        for object_name in objects_list:
+            self._delete_object(container_name, object_name)
         self._delete_container(container_name)
 
 
@@ -109,28 +95,20 @@ class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
         :param object_size: int, temporary local object size
         :param kwargs: dict, optional parameters to create container
         """
-        key_suffix = "object"
-        if objects_per_container > 1:
-            key_suffix = "%i_objects" % objects_per_container
-
         container_name = None
         objects_list = []
         with tempfile.TemporaryFile() as dummy_file:
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
-                for i in range(objects_per_container):
-                    dummy_file.seek(0)
-                    object_name = self._upload_object(container_name,
-                                                      dummy_file,
-                                                      atomic_action=False)[1]
-                    objects_list.append(object_name)
+            for i in range(objects_per_container):
+                dummy_file.seek(0)
+                object_name = self._upload_object(container_name,
+                                                  dummy_file)[1]
+                objects_list.append(object_name)
 
-        with atomic.ActionTimer(self, "swift.download_%s" % key_suffix):
-            for object_name in objects_list:
-                self._download_object(container_name, object_name,
-                                      atomic_action=False)
+        for object_name in objects_list:
+            self._download_object(container_name, object_name)
 
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
@@ -150,7 +128,7 @@ class ListObjectsInContainers(utils.SwiftScenario):
 
         with atomic.ActionTimer(self, "swift.list_objects_in_%s" % key_suffix):
             for container in containers:
-                self._list_objects(container["name"], atomic_action=False)
+                self._list_objects(container["name"])
 
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
@@ -175,8 +153,7 @@ class ListAndDownloadObjectsInContainers(utils.SwiftScenario):
             for container in containers:
                 container_name = container["name"]
                 objects_dict[container_name] = self._list_objects(
-                    container_name,
-                    atomic_action=False)[1]
+                    container_name)[1]
 
         objects_total = sum(map(len, objects_dict.values()))
         download_key_suffix = "object"
@@ -187,5 +164,4 @@ class ListAndDownloadObjectsInContainers(utils.SwiftScenario):
                                 "swift.download_%s" % download_key_suffix):
             for container_name, objects in objects_dict.items():
                 for obj in objects:
-                    self._download_object(container_name, obj["name"],
-                                          atomic_action=False)
+                    self._download_object(container_name, obj["name"])

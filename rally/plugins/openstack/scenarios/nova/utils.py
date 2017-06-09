@@ -577,7 +577,7 @@ class NovaScenario(scenario.OpenStackScenario):
         ) for server in servers]
         return servers
 
-    @atomic.optional_action_timer("nova.associate_floating_ip")
+    @atomic.action_timer("nova.associate_floating_ip")
     def _associate_floating_ip(self, server, address, fixed_address=None):
         """Add floating IP to an instance
 
@@ -585,9 +585,6 @@ class NovaScenario(scenario.OpenStackScenario):
         :param address: The ip address or FloatingIP to add to the instance
         :param fixed_address: The fixedIP address the FloatingIP is to be
                associated with (optional)
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         """
         server.add_floating_ip(address, fixed_address=fixed_address)
         utils.wait_for(server,
@@ -596,15 +593,12 @@ class NovaScenario(scenario.OpenStackScenario):
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 
-    @atomic.optional_action_timer("nova.dissociate_floating_ip")
+    @atomic.action_timer("nova.dissociate_floating_ip")
     def _dissociate_floating_ip(self, server, address):
         """Remove floating IP from an instance
 
         :param server: The :class:`Server` to add an IP to.
         :param address: The ip address or FloatingIP to remove
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         """
         server.remove_floating_ip(address)
         utils.wait_for(
@@ -783,16 +777,12 @@ class NovaScenario(scenario.OpenStackScenario):
                     _("Migration failed: Migration complete but instance"
                       " did not change host: %s") % host_pre_migrate)
 
-    @atomic.optional_action_timer("nova.add_server_secgroups")
+    @atomic.action_timer("nova.add_server_secgroups")
     def _add_server_secgroups(self, server, security_group,
                               atomic_action=False):
         """add security group to a server.
 
         :param server: Server object
-        :param security_groups: The name of security group to add.
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator.
         :returns: An instance of novaclient.base.DictWithMeta
         """
         return self.clients("nova").servers.add_security_group(server,
@@ -811,27 +801,21 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("nova").hypervisors.statistics()
 
-    @atomic.optional_action_timer("nova.get_hypervisor")
+    @atomic.action_timer("nova.get_hypervisor")
     def _get_hypervisor(self, hypervisor):
         """Get a specific hypervisor.
 
         :param hypervisor: Hypervisor to get.
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator.
         :returns: Hypervisor object
         """
         return self.admin_clients("nova").hypervisors.get(hypervisor)
 
-    @atomic.optional_action_timer("nova.search_hypervisors")
+    @atomic.action_timer("nova.search_hypervisors")
     def _search_hypervisors(self, hypervisor_match, servers=False):
         """List all servers belonging to specific hypervisor.
 
         :param hypervisor_match: Hypervisor's host name.
         :param servers: If True, server information is also retrieved.
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator.
         :returns: Hypervisor object
         """
         return self.admin_clients("nova").hypervisors.search(hypervisor_match,
@@ -845,14 +829,11 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.lock()
 
-    @atomic.optional_action_timer("nova.uptime_hypervisor")
-    def _uptime_hypervisor(self, hypervisor, atomic_action=False):
+    @atomic.action_timer("nova.uptime_hypervisor")
+    def _uptime_hypervisor(self, hypervisor):
         """Display the uptime of the specified hypervisor.
 
         :param hypervisor: Hypervisor to get.
-        :param atomic_action: True if this is atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator.
         :returns: Hypervisor object
         """
         return self.admin_clients("nova").hypervisors.uptime(hypervisor)
@@ -940,7 +921,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         return self.clients("nova").servers.interface_list(server)
 
-    @atomic.optional_action_timer("nova.get_host")
+    @atomic.action_timer("nova.get_host")
     def _get_host(self, host_name):
         """Describe a specific host.
 

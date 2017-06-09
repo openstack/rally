@@ -58,16 +58,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         domain["email"] = "updated@random.name"
         return self.clients("designate").domains.update(domain)
 
-    @atomic.optional_action_timer("designate.create_record")
+    @atomic.action_timer("designate.create_record")
     def _create_record(self, domain, record=None):
         """Create a record in a domain.
 
         :param domain: domain dict
         :param record: record dict
-        :param atomic_action: True if the record creation should be
-                              tracked as an atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator
         :returns: Designate record dict
         """
         record = record or {}
@@ -89,16 +85,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         return self.clients("designate").records.list(domain_id)
 
-    @atomic.optional_action_timer("designate.delete_record")
+    @atomic.action_timer("designate.delete_record")
     def _delete_record(self, domain_id, record_id):
         """Delete a domain record.
 
         :param domain_id: domain ID
         :param record_id: record ID
-        :param atomic_action: True if the record creation should be
-                              tracked as an atomic action. added and
-                              handled by the optional_action_timer()
-                              decorator
         """
         self.clients("designate").records.delete(domain_id, record_id)
 
@@ -188,15 +180,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         return self.clients("designate", version="2").recordsets.list(
             zone_id, criterion=criterion, marker=marker, limit=limit)
 
-    @atomic.optional_action_timer("designate.create_recordset")
+    @atomic.action_timer("designate.create_recordset")
     def _create_recordset(self, zone, recordset=None):
         """Create a recordset in a zone.
 
         :param zone: zone dict
         :param recordset: recordset dict
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         :returns: Designate recordset dict
         """
         recordset = recordset or {}
@@ -210,15 +199,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         return self.clients("designate", version="2").recordsets.create(
             zone["id"], **recordset)
 
-    @atomic.optional_action_timer("designate.delete_recordset")
+    @atomic.action_timer("designate.delete_recordset")
     def _delete_recordset(self, zone_id, recordset_id):
         """Delete a zone recordset.
 
         :param zone_id: Zone ID
         :param recordset_id: Recordset ID
-        :param atomic_action: True if this is an atomic action. added
-                              and handled by the
-                              optional_action_timer() decorator
         """
 
         self.clients("designate", version="2").recordsets.delete(

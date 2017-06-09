@@ -190,10 +190,8 @@ class CreateAndShowSubnets(utils.NeutronScenario):
         subnets = self._create_subnets(network, subnet_create_args,
                                        subnet_cidr_start, subnets_per_network)
 
-        with atomic.ActionTimer(self,
-                                "neutron.show_%s_subnets" % len(subnets)):
-            for subnet in subnets:
-                self._show_subnet(subnet, atomic_action=False)
+        for subnet in subnets:
+            self._show_subnet(subnet)
 
 
 @validation.add("number", param_name="subnets_per_network", minval=1,

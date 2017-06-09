@@ -45,8 +45,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self.scenario._list_networks = mock.Mock(return_value=networks)
         resultant_network_id = self.scenario._get_network_id(network)
         self.assertEqual(network_id, resultant_network_id)
-        self.scenario._list_networks.assert_called_once_with(
-            atomic_action=False)
+        self.scenario._list_networks.assert_called_once_with()
 
         self.scenario._list_networks.reset_mock()
 
@@ -54,16 +53,14 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         network = "foo-id"
         resultant_network_id = self.scenario._get_network_id(network)
         self.assertEqual(network_id, resultant_network_id)
-        self.scenario._list_networks.assert_called_once_with(
-            atomic_action=False)
+        self.scenario._list_networks.assert_called_once_with()
         self.scenario._list_networks.reset_mock()
 
         # Invalid network-name
         network = "absent-network"
         self.assertRaises(exceptions.NotFoundException,
                           self.scenario._get_network_id, network)
-        self.scenario._list_networks.assert_called_once_with(
-            atomic_action=False)
+        self.scenario._list_networks.assert_called_once_with()
 
     def test_create_network(self):
         self.clients("neutron").create_network.return_value = self.network
@@ -83,8 +80,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self.clients("neutron").list_networks.return_value = networks_dict
 
         # without atomic action
-        return_networks_list = self.scenario._list_networks(
-            atomic_action=False)
+        return_networks_list = self.scenario._list_networks()
         self.assertEqual(networks_list, return_networks_list)
 
         # with atomic action
@@ -810,12 +806,9 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             subnets = []
             [subnets.extend(net["subnets"]) for net in networks]
             self.scenario._create_lb_pool.assert_has_calls(
-                [mock.call(subnet, atomic_action=False,
+                [mock.call(subnet,
                            **pool_create_args) for subnet in subnets])
             self.assertEqual(resultant_pools, [pool] * len(subnets))
-            self._test_atomic_action_timer(
-                self.scenario.atomic_actions(),
-                "neutron.create_%s_pools" % len(subnets))
 
     @ddt.data(
         {"subnet_id": "foo-id"},
@@ -823,16 +816,10 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         {"pool_create_args": {}, "subnet_id": "foo-id"},
         {"pool_create_args": {"name": "given-name"},
          "subnet_id": "foo-id"},
-        {"subnet_id": "foo-id", "atomic_action": False},
-        {"pool_create_args": None, "subnet_id": "foo-id",
-         "atomic_action": False},
-        {"pool_create_args": {}, "subnet_id": "foo-id",
-         "atomic_action": False},
-        {"pool_create_args": {"name": "given-name"},
-         "subnet_id": "foo-id", "atomic_action": False},
+        {"subnet_id": "foo-id"}
     )
     @ddt.unpack
-    def test__create_lb_pool(self, subnet_id=None, atomic_action=True,
+    def test__create_lb_pool(self, subnet_id=None,
                              pool_create_args=None):
         pool = {"pool": {"id": "pool-id"}}
         pool_create_args = pool_create_args or {}
@@ -844,14 +831,13 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         args.update(pool_create_args)
         expected_pool_data = {"pool": args}
         resultant_pool = self.scenario._create_lb_pool(
-            subnet_id=subnet_id, atomic_action=atomic_action,
+            subnet_id=subnet_id,
             **pool_create_args)
         self.assertEqual(resultant_pool, pool)
         self.clients("neutron").create_pool.assert_called_once_with(
             expected_pool_data)
-        if atomic_action:
-            self._test_atomic_action_timer(
-                self.scenario.atomic_actions(), "neutron.create_pool")
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "neutron.create_pool")
 
     @ddt.data(
         {},
@@ -907,14 +893,9 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         {},
         {"healthmonitor_create_args": {}},
         {"healthmonitor_create_args": {"type": "TCP"}},
-        {"atomic_action": False},
-        {"atomic_action": False,
-         "healthmonitor_create_args": {"type": "TCP"}},
-        {"healthmonitor_create_args": {},
-         "atomic_action": False},
     )
     @ddt.unpack
-    def test__create_v1_healthmonitor(self, atomic_action=True,
+    def test__create_v1_healthmonitor(self,
                                       healthmonitor_create_args=None):
         hm = {"health_monitor": {"id": "hm-id"}}
         healthmonitor_create_args = healthmonitor_create_args or {}
@@ -924,14 +905,12 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         args.update(healthmonitor_create_args)
         expected_hm_data = {"health_monitor": args}
         resultant_hm = self.scenario._create_v1_healthmonitor(
-            atomic_action=atomic_action,
             **healthmonitor_create_args)
         self.assertEqual(resultant_hm, hm)
         self.clients("neutron").create_health_monitor.assert_called_once_with(
             expected_hm_data)
-        if atomic_action:
-            self._test_atomic_action_timer(self.scenario.atomic_actions(),
-                                           "neutron.create_healthmonitor")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.create_healthmonitor")
 
     def test_list_v1_healthmonitors(self):
         hm_list = []

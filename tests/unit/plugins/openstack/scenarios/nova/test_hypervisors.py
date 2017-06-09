@@ -35,8 +35,6 @@ class NovaHypervisorsTestCase(test.ScenarioTestCase):
         scenario._list_hypervisors.assert_called_once_with(False)
         for hypervisor in scenario._list_hypervisors.return_value:
             scenario._get_hypervisor.assert_called_once_with(hypervisor)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "nova.get_hypervisor")
 
     def test_statistics_hypervisors(self):
         scenario = hypervisors.StatisticsHypervisors(self.context)
@@ -53,8 +51,6 @@ class NovaHypervisorsTestCase(test.ScenarioTestCase):
         scenario._list_hypervisors.assert_called_once_with(False)
         for hypervisor in scenario._list_hypervisors.return_value:
             scenario._uptime_hypervisor.assert_called_once_with(hypervisor)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "nova.uptime_hypervisor")
 
     def test_list_and_search_hypervisors(self):
         fake_hypervisors = [mock.Mock(hypervisor_hostname="fake_hostname")]
@@ -66,6 +62,4 @@ class NovaHypervisorsTestCase(test.ScenarioTestCase):
 
         scenario._list_hypervisors.assert_called_once_with(False)
         scenario._search_hypervisors.assert_called_once_with(
-            "fake_hostname", atomic_action=False)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "nova.search_1_hypervisors")
+            "fake_hostname")

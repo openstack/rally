@@ -16,7 +16,6 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.murano import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -67,10 +66,8 @@ class CreateAndDeployEnvironment(utils.MuranoScenario):
         session = self._create_session(environment.id)
         package = self.context["tenant"]["packages"][0]
 
-        with atomic.ActionTimer(self, "murano.create_services"):
-            for i in range(packages_per_env):
-                self._create_service(environment, session,
-                                     package.fully_qualified_name,
-                                     atomic_action=False)
+        for i in range(packages_per_env):
+            self._create_service(environment, session,
+                                 package.fully_qualified_name)
 
         self._deploy_environment(environment, session)

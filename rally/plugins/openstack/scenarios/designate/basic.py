@@ -18,7 +18,6 @@ import random
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.designate import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -123,17 +122,13 @@ class CreateAndDeleteRecords(utils.DesignateScenario):
 
         records = []
 
-        key = "designate.create_%s_records" % records_per_domain
-        with atomic.ActionTimer(self, key):
-            for i in range(records_per_domain):
-                record = self._create_record(domain, atomic_action=False)
-                records.append(record)
+        for i in range(records_per_domain):
+            record = self._create_record(domain)
+            records.append(record)
 
-        key = "designate.delete_%s_records" % records_per_domain
-        with atomic.ActionTimer(self, key):
-            for record in records:
-                self._delete_record(
-                    domain["id"], record["id"], atomic_action=False)
+        for record in records:
+            self._delete_record(
+                domain["id"], record["id"])
 
 
 @validation.add("required_services",
@@ -179,12 +174,10 @@ class CreateAndListRecords(utils.DesignateScenario):
         """
         domain = self._create_domain()
 
-        key = "designate.create_%s_records" % records_per_domain
         records = []
-        with atomic.ActionTimer(self, key):
-            for i in range(records_per_domain):
-                records.append(
-                    self._create_record(domain, atomic_action=False))
+        for i in range(records_per_domain):
+            records.append(
+                self._create_record(domain))
 
         list_records = self._list_records(domain["id"])
         self.assertEqual(records, list_records)
@@ -342,17 +335,13 @@ class CreateAndDeleteRecordsets(utils.DesignateScenario):
 
         recordsets = []
 
-        key = "designate.create_%s_recordsets" % recordsets_per_zone
-        with atomic.ActionTimer(self, key):
-            for i in range(recordsets_per_zone):
-                recordset = self._create_recordset(zone, atomic_action=False)
-                recordsets.append(recordset)
+        for i in range(recordsets_per_zone):
+            recordset = self._create_recordset(zone)
+            recordsets.append(recordset)
 
-        key = "designate.delete_%s_recordsets" % recordsets_per_zone
-        with atomic.ActionTimer(self, key):
-            for recordset in recordsets:
-                self._delete_recordset(
-                    zone["id"], recordset["id"], atomic_action=False)
+        for recordset in recordsets:
+            self._delete_recordset(
+                zone["id"], recordset["id"])
 
 
 @validation.add("required_services",
@@ -376,9 +365,7 @@ class CreateAndListRecordsets(utils.DesignateScenario):
         """
         zone = random.choice(self.context["tenant"]["zones"])
 
-        key = "designate.create_%s_recordsets" % recordsets_per_zone
-        with atomic.ActionTimer(self, key):
-            for i in range(recordsets_per_zone):
-                self._create_recordset(zone, atomic_action=False)
+        for i in range(recordsets_per_zone):
+            self._create_recordset(zone)
 
         self._list_recordsets(zone["id"])
