@@ -417,7 +417,10 @@ class ActionBuilder(object):
 # we can use these wrapper to simulate new and old format.
 class WrapperForAtomicActions(list):
 
-    def __init__(self, atomic_actions):
+    def __init__(self, atomic_actions, timestamp=0):
+
+        self.timestamp = timestamp
+
         if isinstance(atomic_actions, list):
             self.__atomic_actions = atomic_actions
             self.__old_atomic_actions = self._convert_new_atomic_actions(
@@ -432,11 +435,14 @@ class WrapperForAtomicActions(list):
     def _convert_old_atomic_actions(self, old_atomic_actions):
         """Convert atomic actions to new format. """
         atomic_actions = []
+        started_at = self.timestamp
         for name, duration in old_atomic_actions.items():
+            finished_at = started_at + duration
             atomic_actions.append({"name": name,
-                                   "started_at": 0,
-                                   "finished_at": duration,
+                                   "started_at": started_at,
+                                   "finished_at": finished_at,
                                    "children": []})
+            started_at = finished_at
         return atomic_actions
 
     def _convert_new_atomic_actions(self, atomic_actions):

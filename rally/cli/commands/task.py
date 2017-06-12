@@ -563,7 +563,7 @@ class TaskCommands(object):
                     for r in result["result"]:
                         r["atomic_actions"] = list(
                             tutils.WrapperForAtomicActions(
-                                r["atomic_actions"]))
+                                r["atomic_actions"], r["timestamp"]))
                 except jsonschema.ValidationError as e:
                     raise FailedToLoadResults(source=task_id,
                                               msg=six.text_type(e))

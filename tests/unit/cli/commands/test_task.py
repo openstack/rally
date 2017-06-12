@@ -1048,15 +1048,17 @@ class TaskCommandsTestCase(test.TestCase):
                                      mock_open):
         task_file = "/tmp/task.json"
         results = [{
-            "result": [{"atomic_actions": {"foo": 1.0}},
-                       {"atomic_actions": {"bar": 1.1}}
+            "result": [{"timestamp": 0, "atomic_actions": {"foo": 1.0}},
+                       {"timestamp": 0, "atomic_actions": {"bar": 1.1}}
                        ]}]
         mock_json_load.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
         foo_wrapper = tutils.WrapperForAtomicActions({"foo": 1.0})
         bar_wrapper = tutils.WrapperForAtomicActions({"bar": 1.1})
-        expected = [{"result": [{"atomic_actions": list(foo_wrapper)},
-                                {"atomic_actions": list(bar_wrapper)}]}]
+        expected = [{"result": [{"timestamp": 0,
+                                 "atomic_actions": list(foo_wrapper)},
+                                {"timestamp": 0,
+                                 "atomic_actions": list(bar_wrapper)}]}]
         self.assertEqual(expected, ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)

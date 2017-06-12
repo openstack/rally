@@ -535,7 +535,7 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
     def test_dict_atomic(self):
         atomic_actions = collections.OrderedDict(
             [("action_1", 1), ("action_2", 2)])
-        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions)
+        atomic_wrapper = utils.WrapperForAtomicActions(atomic_actions, 1)
         self.assertEqual(1, atomic_wrapper["action_1"])
         self.assertEqual(2, atomic_wrapper["action_2"])
         self.assertEqual(atomic_actions.items(),
@@ -543,10 +543,10 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertEqual(1, atomic_wrapper.get("action_1"))
         self.assertIsNone(atomic_wrapper.get("action_3"))
         self.assertEqual(2, len(atomic_wrapper))
-        self.assertEqual([{"name": "action_1", "started_at": 0,
-                           "finished_at": 1, "children": []},
-                          {"name": "action_2", "started_at": 0,
-                           "finished_at": 2, "children": []}
+        self.assertEqual([{"name": "action_1", "started_at": 1,
+                           "finished_at": 2, "children": []},
+                          {"name": "action_2", "started_at": 2,
+                           "finished_at": 4, "children": []}
                           ], atomic_wrapper)
 
     def test_list_atomic(self):
@@ -576,8 +576,8 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertEqual(
             [{"name": "action_1", "started_at": 0,
               "finished_at": 1, "children": []},
-             {"name": "action_2", "started_at": 0,
-              "finished_at": 2, "children": []}],
+             {"name": "action_2", "started_at": 1,
+              "finished_at": 3, "children": []}],
             atomic_wrapper._convert_old_atomic_actions(atomic_actions))
 
     @ddt.data(
