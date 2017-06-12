@@ -32,14 +32,18 @@ class VMTasksTestCase(test.ScenarioTestCase):
         self.context.update({"user": {"keypair": {"name": "keypair_name"},
                                       "credential": mock.MagicMock()}})
 
+        cinder_patcher = mock.patch(
+            "rally.plugins.openstack.services.storage.block.BlockStorage")
+        self.cinder = cinder_patcher.start().return_value
+        self.cinder.create_volume.return_value = mock.Mock(id="foo_volume")
+        self.addCleanup(cinder_patcher.stop)
+
     def create_env(self, scenario):
         self.ip = {"id": "foo_id", "ip": "foo_ip", "is_floating": True}
         scenario._boot_server_with_fip = mock.Mock(
             return_value=("foo_server", self.ip))
         scenario._wait_for_ping = mock.Mock()
         scenario._delete_server_with_fip = mock.Mock()
-        scenario._create_volume = mock.Mock(
-            return_value=mock.Mock(id="foo_volume"))
         scenario._run_command = mock.MagicMock(
             return_value=(0, "{\"foo\": 42}", "foo_err"))
         scenario.add_output = mock.Mock()
@@ -60,7 +64,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
                      volume_args={"size": 16},
                      foo_arg="foo_value")
 
-        scenario._create_volume.assert_called_once_with(16, imageRef=None)
+        self.cinder.create_volume.assert_called_once_with(16, imageRef=None)
         scenario._boot_server_with_fip.assert_called_once_with(
             "foo_image", "foo_flavor", key_name="keypair_name",
             use_floating_ip="use_fip", floating_network="ext_network",
@@ -140,7 +144,8 @@ class VMTasksTestCase(test.ScenarioTestCase):
             calls = [mock.call(**kw) for kw in expected]
             scenario.add_output.assert_has_calls(calls, any_order=True)
 
-            scenario._create_volume.assert_called_once_with(16, imageRef=None)
+            self.cinder.create_volume.assert_called_once_with(
+                16, imageRef=None)
             scenario._boot_server_with_fip.assert_called_once_with(
                 "foo_image", "foo_flavor", key_name="keypair_name",
                 use_floating_ip="use_fip", floating_network="ext_network",
@@ -229,7 +234,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
                      volume_args={"size": 16},
                      foo_arg="foo_value")
 
-        scenario._create_volume.assert_called_once_with(16, imageRef=None)
+        self.cinder.create_volume.assert_called_once_with(16, imageRef=None)
         scenario._boot_server_with_fip.assert_called_once_with(
             "image_id", "foo_flavor", key_name="foo_keypair_name",
             use_floating_ip="use_fip", floating_network="ext_network",

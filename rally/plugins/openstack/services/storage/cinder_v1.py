@@ -47,21 +47,22 @@ class CinderV1Service(service.Service, cinder_common.CinderMixin):
 
         :returns: Return a new volume.
         """
-        kwargs = {"display_name": display_name or self.generate_random_name(),
-                  "display_description": display_description,
-                  "snapshot_id": snapshot_id,
-                  "source_volid": source_volid,
-                  "volume_type": volume_type,
-                  "user_id": user_id,
-                  "project_id": project_id,
-                  "availability_zone": availability_zone,
-                  "metadata": metadata,
-                  "imageRef": imageRef}
         if isinstance(size, dict):
             size = random.randint(size["min"], size["max"])
 
-        volume = (self._get_client()
-                  .volumes.create(size, **kwargs))
+        volume = self._get_client().volumes.create(
+            size,
+            display_name=(display_name or self.generate_random_name()),
+            display_description=display_description,
+            snapshot_id=snapshot_id,
+            source_volid=source_volid,
+            volume_type=volume_type,
+            user_id=user_id,
+            project_id=project_id,
+            availability_zone=availability_zone,
+            metadata=metadata,
+            imageRef=imageRef
+        )
 
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.

@@ -680,7 +680,7 @@ class NovaScenario(scenario.OpenStackScenario):
     def _detach_volume(self, server, volume, attachment=None):
         server_id = server.id
         # NOTE(chenhb): Recommend the use of attachment.The use of
-        # volume.id is retained mainly for backwoard compatible.
+        # volume.id is retained mainly for backward compatibility.
         attachment_id = attachment.id if attachment else volume.id
 
         self.clients("nova").volumes.delete_server_volume(server_id,

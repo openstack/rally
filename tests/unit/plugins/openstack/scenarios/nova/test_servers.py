@@ -345,40 +345,46 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario.run(True)
         scenario._list_servers.assert_called_once_with(True)
 
-    def test_boot_server_from_volume(self):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_from_volume(self, mock_block_storage):
         fake_server = object()
-        scenario = servers.BootServerFromVolume(self.context)
+        scenario = servers.BootServerFromVolume(
+            self.context, clients=mock.Mock())
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
 
         scenario.run("img", 0, 5, volume_type=None,
                      auto_assign_nic=False, fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img",
-                                                        volume_type=None)
+        cinder.create_volume.assert_called_once_with(5, imageRef="img",
+                                                     volume_type=None)
         scenario._boot_server.assert_called_once_with(
             None, 0, auto_assign_nic=False,
             block_device_mapping={"vda": "volume_id:::1"},
             fakearg="f")
 
-    def test_boot_server_from_volume_and_delete(self):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_from_volume_and_delete(self, mock_block_storage):
         fake_server = object()
-        scenario = servers.BootServerFromVolumeAndDelete(self.context)
+        scenario = servers.BootServerFromVolumeAndDelete(
+            self.context, clients=mock.Mock())
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
 
         scenario.run("img", 0, 5, None, 10, 20, fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img",
-                                                        volume_type=None)
+        cinder.create_volume.assert_called_once_with(5, imageRef="img",
+                                                     volume_type=None)
         scenario._boot_server.assert_called_once_with(
             None, 0,
             block_device_mapping={"vda": "volume_id:::1"},
@@ -511,24 +517,27 @@ class NovaServersTestCase(test.ScenarioTestCase):
     @ddt.data({"confirm": True, "do_delete": True},
               {"confirm": False, "do_delete": True})
     @ddt.unpack
-    def test_boot_server_attach_created_volume_and_resize(self, confirm=False,
-                                                          do_delete=False):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_attach_created_volume_and_resize(
+            self, mock_block_storage, confirm=False, do_delete=False):
         fake_volume = mock.MagicMock()
         fake_server = mock.MagicMock()
         flavor = mock.MagicMock()
         to_flavor = mock.MagicMock()
         fake_attachment = mock.MagicMock()
 
-        scenario = servers.BootServerAttachCreatedVolumeAndResize(self.context)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
+
+        scenario = servers.BootServerAttachCreatedVolumeAndResize(
+            self.context, clients=mock.Mock())
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._attach_volume = mock.MagicMock(return_value=fake_attachment)
         scenario._resize_confirm = mock.MagicMock()
         scenario._resize_revert = mock.MagicMock()
         scenario._resize = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
-        scenario._delete_volume = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
         scenario.sleep_between = mock.MagicMock()
 
@@ -537,7 +546,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
                      max_sleep=20, confirm=confirm, do_delete=do_delete)
 
         scenario._boot_server.assert_called_once_with("img", flavor)
-        scenario._create_volume.assert_called_once_with(volume_size)
+        cinder.create_volume.assert_called_once_with(volume_size)
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
@@ -555,19 +564,21 @@ class NovaServersTestCase(test.ScenarioTestCase):
             scenario._detach_volume.assert_called_once_with(fake_server,
                                                             fake_volume,
                                                             fake_attachment)
-            scenario._delete_volume.assert_called_once_with(fake_volume)
+            cinder.delete_volume.assert_called_once_with(fake_volume)
             scenario._delete_server.assert_called_once_with(fake_server,
                                                             force=False)
 
     @ddt.data({"confirm": True, "do_delete": True},
               {"confirm": False, "do_delete": True})
     @ddt.unpack
-    def test_boot_server_from_volume_and_resize(self, confirm=False,
-                                                do_delete=False):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_from_volume_and_resize(
+            self, mock_block_storage, confirm=False, do_delete=False):
         fake_server = object()
         flavor = mock.MagicMock()
         to_flavor = mock.MagicMock()
-        scenario = servers.BootServerFromVolumeAndResize(self.context)
+        scenario = servers.BootServerFromVolumeAndResize(self.context,
+                                                         clients=mock.Mock())
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._resize_confirm = mock.MagicMock()
@@ -578,13 +589,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
 
         volume_size = 10
         scenario.run("img", flavor, to_flavor, volume_size, min_sleep=10,
                      max_sleep=20, confirm=confirm, do_delete=do_delete)
 
-        scenario._create_volume.assert_called_once_with(10, imageRef="img")
+        cinder.create_volume.assert_called_once_with(10, imageRef="img")
         scenario._boot_server.assert_called_once_with(
             None, flavor,
             block_device_mapping={"vda": "volume_id:::1"})
@@ -626,10 +638,13 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                        False, False)
         scenario._delete_server.assert_called_once_with(fake_server)
 
-    def test_boot_server_from_volume_and_live_migrate(self):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_from_volume_and_live_migrate(self,
+                                                      mock_block_storage):
         fake_server = mock.MagicMock()
 
-        scenario = servers.BootServerFromVolumeAndLiveMigrate(self.context)
+        scenario = servers.BootServerFromVolumeAndLiveMigrate(
+            self.context, clients=mock.Mock())
         scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
@@ -640,13 +655,14 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
 
         scenario.run("img", 0, 5, volume_type=None,
                      min_sleep=10, max_sleep=20, fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(5, imageRef="img",
-                                                        volume_type=None)
+        cinder.create_volume.assert_called_once_with(5, imageRef="img",
+                                                     volume_type=None)
 
         scenario._boot_server.assert_called_once_with(
             None, 0,
@@ -663,13 +679,19 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
-    def test_boot_server_attach_created_volume_and_live_migrate(self):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_attach_created_volume_and_live_migrate(
+            self, mock_block_storage):
         fake_volume = mock.MagicMock()
         fake_server = mock.MagicMock()
         fake_attachment = mock.MagicMock()
 
+        clients = mock.Mock()
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
+
         scenario = servers.BootServerAttachCreatedVolumeAndLiveMigrate(
-            self.context)
+            self.context, clients=clients)
 
         scenario._attach_volume = mock.MagicMock(return_value=fake_attachment)
         scenario._detach_volume = mock.MagicMock()
@@ -682,8 +704,6 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
-        scenario._delete_volume = mock.MagicMock()
 
         image = "img"
         flavor = "flavor"
@@ -693,7 +713,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
                      boot_server_kwargs=boot_kwargs)
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       **boot_kwargs)
-        scenario._create_volume.assert_called_once_with(size)
+        cinder.create_volume.assert_called_once_with(size)
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
@@ -704,7 +724,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
                                                        "host_name",
                                                        False, False)
 
-        scenario._delete_volume.assert_called_once_with(fake_volume)
+        cinder.delete_volume.assert_called_once_with(fake_volume)
         scenario._delete_server.assert_called_once_with(fake_server)
 
     def _test_boot_and_migrate_server(self, confirm=False):
@@ -893,21 +913,26 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._attach_interface.assert_called_once_with(
             server, net_id=net["network"]["id"])
 
-    def test_boot_server_from_volume_snapshot(self):
+    @mock.patch("rally.plugins.openstack.services.storage.block.BlockStorage")
+    def test_boot_server_from_volume_snapshot(self, mock_block_storage):
         fake_volume = mock.MagicMock(id="volume_id")
         fake_snapshot = mock.MagicMock(id="snapshot_id")
 
-        scenario = servers.BootServerFromVolumeSnapshot(self.context)
+        cinder = mock_block_storage.return_value
+        cinder.create_volume.return_value = fake_volume
+        cinder.create_snapshot.return_value = fake_snapshot
+
+        scenario = servers.BootServerFromVolumeSnapshot(self.context,
+                                                        clients=mock.Mock())
         scenario._boot_server = mock.MagicMock()
-        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
-        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
 
         scenario.run("img", "flavor", 1, volume_type=None,
                      auto_assign_nic=False, fakearg="f")
 
-        scenario._create_volume.assert_called_once_with(1, imageRef="img",
-                                                        volume_type=None)
-        scenario._create_snapshot.assert_called_once_with("volume_id", False)
+        cinder.create_volume.assert_called_once_with(1, imageRef="img",
+                                                     volume_type=None)
+        cinder.create_snapshot.assert_called_once_with("volume_id",
+                                                       force=False)
         scenario._boot_server.assert_called_once_with(
             None, "flavor", auto_assign_nic=False,
             block_device_mapping={"vda": "snapshot_id:snap::1"},

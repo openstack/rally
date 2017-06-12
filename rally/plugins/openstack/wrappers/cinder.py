@@ -80,6 +80,10 @@ class CinderV2Wrapper(CinderWrapper):
 
 def wrap(client, owner):
     """Returns cinderclient wrapper based on cinder client version."""
+    LOG.warning("Method wrap from %s and whole Cinder wrappers are "
+                "deprecated since Rally 0.10.0 and will be removed soon. Use "
+                "rally.plugins.openstack.services.storage.block.BlockStorage "
+                "instead." % __file__)
     version = client.choose_version()
     if version == "1":
         return CinderV1Wrapper(client(), owner)

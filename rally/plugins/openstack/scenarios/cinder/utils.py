@@ -17,7 +17,8 @@ import random
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
+from rally.common.i18n import _, _LW
+from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.services.storage import block
@@ -27,6 +28,7 @@ from rally.task import atomic
 from rally.task import utils as bench_utils
 
 CONF = cfg.CONF
+LOG = logging.getLogger(__name__)
 
 
 class CinderBasic(scenario.OpenStackScenario):
@@ -48,6 +50,14 @@ class CinderBasic(scenario.OpenStackScenario):
 
 class CinderScenario(scenario.OpenStackScenario):
     """Base class for Cinder scenarios with basic atomic actions."""
+
+    def __init__(self, context=None, admin_clients=None, clients=None):
+        super(CinderScenario, self).__init__(context, admin_clients, clients)
+        LOG.warning(_LW(
+            "Class %s is deprecated since Rally 0.10.0 and will be removed "
+            "soon. Use "
+            "rally.plugins.openstack.services.storage.block.BlockStorage "
+            "instead.") % self.__class__)
 
     @atomic.action_timer("cinder.list_volumes")
     def _list_volumes(self, detailed=True):

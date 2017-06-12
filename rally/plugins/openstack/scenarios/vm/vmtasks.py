@@ -21,6 +21,7 @@ from rally.common import sshutils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.plugins.openstack.services import heat
 from rally.task import atomic
@@ -50,7 +51,7 @@ LOG = logging.getLogger(__name__)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
                              "keypair": {}, "allow_ssh": None},
                     name="VMTasks.boot_runcommand_delete")
-class BootRuncommandDelete(vm_utils.VMScenario):
+class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
 
     def run(self, flavor, username, password=None,
             image=None,
@@ -146,7 +147,8 @@ class BootRuncommandDelete(vm_utils.VMScenario):
                   errors: str, raw data from the script's stderr stream
         """
         if volume_args:
-            volume = self._create_volume(volume_args["size"], imageRef=None)
+            volume = self.cinder.create_volume(volume_args["size"],
+                                               imageRef=None)
             kwargs["block_device_mapping"] = {"vdrally": "%s:::1" % volume.id}
 
         if not image:
