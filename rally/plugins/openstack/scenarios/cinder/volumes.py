@@ -440,9 +440,9 @@ class CreateAndAttachVolume(cinder_utils.CinderBasic,
 
 
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
-@validation.volume_type_exists("volume_type")
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
+@validation.add("volume_type_exists", param_name="volume_type")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_snapshot_and_attach_volume")

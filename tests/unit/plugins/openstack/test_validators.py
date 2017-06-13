@@ -781,3 +781,41 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
             self.assertEqual(err_msg, result.msg)
         else:
             self.assertIsNone(result)
+
+
+@ddt.ddt
+class VolumeTypeExistsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(VolumeTypeExistsValidatorTestCase, self).setUp()
+        self.validator = validators.VolumeTypeExistsValidator("volume_type")
+        self.credentials = copy.deepcopy(credentials)
+
+    @ddt.unpack
+    @ddt.data(
+        {"context": {"args": {"volume_type": "fake_type"}},
+         "volume_type": "fake_type"},
+        {"context": {"args": {"volume_type": False}}, "volume_type": None,
+         "err_msg": "The parameter 'volume_type' is required and should "
+                    "not be empty."},
+        {"context": {"args": {"volume_type": False}},
+         "volume_type": ["fake_type"],
+         "err_msg": "The parameter 'volume_type' is required and should "
+                    "not be empty."},
+        {"context": {"args": {"volume_type": "fake_type"}}, "volume_type": [],
+         "err_msg": "Specified volume type fake_type not found for user {}. "
+                    "List of available types: [[]]"}
+    )
+    def test_volume_type_exists(self, context, volume_type, err_msg=None):
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
+        clients.cinder().volume_types.list.return_value = [mock.MagicMock()]
+        clients.cinder().volume_types.list.return_value[0].name = volume_type
+        result = self.validator.validate(context, self.credentials, None, None)
+
+        if err_msg:
+            self.assertIsNotNone(result)
+            fake_user = self.credentials["openstack"]["users"][0]
+            self.assertEqual(err_msg.format(fake_user), result.msg)
+        else:
+            self.assertIsNone(result)
