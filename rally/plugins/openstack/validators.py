@@ -345,7 +345,7 @@ class RequiredClientsValidator(validation.Validator):
             return self.fail(result.msg)
 
 
-@validation.add("required_platform", platform="openstack", admin=True)
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.configure(name="required_services", namespace="openstack")
 class RequiredServicesValidator(validation.Validator):
 
@@ -370,9 +370,10 @@ class RequiredServicesValidator(validation.Validator):
             self.services.extend(args)
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        creds = (credentials["openstack"].get("admin")
+                 or credentials["openstack"]["users"][0]["credential"])
 
-        clients = credentials["openstack"]["admin"].clients()
-        available_services = list(clients.services().values())
+        available_services = creds.clients().services().values()
         if consts.Service.NOVA_NET in self.services:
             LOG.warning("We are sorry, but Nova-network was deprecated for "
                         "a long time and latest novaclient doesn't support "

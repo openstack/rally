@@ -480,11 +480,13 @@ class TaskEngine(object):
         context_obj = {
             "task": self.task,
             "owner_id": owner_id,
-            "admin": {"credential": creds["admin"]},
             "scenario_name": name,
             "scenario_namespace": namespace,
             "config": scenario_context
         }
+
+        if creds["admin"]:
+            context_obj["admin"] = {"credential": creds["admin"]}
 
         return context_obj
 
