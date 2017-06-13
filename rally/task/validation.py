@@ -115,30 +115,6 @@ def _file_access_ok(filename, mode, param_name, required=True):
     return ValidationResult(True)
 
 
-@validator
-def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
-                required=True):
-    """Validator checks parameter is proper path to file with proper mode.
-
-    Ensure a file exists and can be accessed with the specified mode.
-    Note that path to file will be expanded before access checking.
-
-    :param param_name: Name of parameter to validate
-    :param mode: Access mode to test for. This should be one of:
-        * os.F_OK (file exists)
-        * os.R_OK (file is readable)
-        * os.W_OK (file is writable)
-        * os.X_OK (file is executable)
-
-        If multiple modes are required they can be added, eg:
-            mode=os.R_OK+os.W_OK
-    :param required: Boolean indicating whether this argument is required.
-    """
-
-    return _file_access_ok(config.get("args", {}).get(param_name), mode,
-                           param_name, required)
-
-
 def check_command_dict(command):
     """Check command-specifying dict `command', raise ValueError on error."""
 
@@ -409,3 +385,5 @@ required_param_or_context = deprecated_validator("required_param_or_context",
 volume_type_exists = deprecated_validator("volume_type_exists",
                                           "volume_type_exists",
                                           "0.10.0")
+
+file_exists = deprecated_validator("file_exists", "file_exists", "0.10.0")

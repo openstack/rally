@@ -192,17 +192,6 @@ class ValidatorsTestCase(test.TestCase):
             "foobar", os.R_OK, "p", False)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch(MODULE + "_file_access_ok")
-    def test_file_exists(self, mock__file_access_ok):
-        mock__file_access_ok.return_value = "foobar"
-        validator = self._unwrap_validator(validation.file_exists,
-                                           param_name="p",
-                                           required=False)
-        result = validator({"args": {"p": "test_file"}}, None, None)
-        self.assertEqual("foobar", result)
-        mock__file_access_ok.assert_called_once_with(
-            "test_file", os.R_OK, "p", False)
-
     @ddt.data({"raises_message": "Command must be a dictionary"},
               {"command": "foo",
                "raises_message": "Command must be a dictionary"},

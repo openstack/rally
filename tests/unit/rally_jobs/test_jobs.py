@@ -13,6 +13,8 @@
 #    under the License.
 
 import os
+import shutil
+import tempfile
 import traceback
 
 import mock
@@ -29,6 +31,22 @@ from tests.unit import test
 class RallyJobsTestCase(test.TestCase):
     rally_jobs_path = os.path.join(
         os.path.dirname(rally.__file__), "..", "rally-jobs")
+
+    def setUp(self):
+        super(RallyJobsTestCase, self).setUp()
+        self.tmp_dir = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.tmp_dir, ".rally"))
+        shutil.copytree(os.path.join(self.rally_jobs_path, "extra"),
+                        os.path.join(self.tmp_dir, ".rally", "extra"))
+
+        self.original_home = os.environ["HOME"]
+        os.environ["HOME"] = self.tmp_dir
+
+        def return_home():
+            os.environ["HOME"] = self.original_home
+        self.addCleanup(shutil.rmtree, self.tmp_dir)
+
+        self.addCleanup(return_home)
 
     def test_schema_is_valid(self):
         discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))

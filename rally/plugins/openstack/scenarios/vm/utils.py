@@ -124,8 +124,9 @@ class VMScenario(nova_utils.NovaScenario):
                                  "or list type")
             cmd.extend(remote_path)
             if command.get("local_path"):
-                ssh.put_file(command["local_path"], remote_path[-1],
-                             mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
+                ssh.put_file(os.path.expanduser(
+                    command["local_path"]), remote_path[-1],
+                    mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
 
         if command.get("script_file"):
             stdin = open(os.path.expanduser(command["script_file"]), "rb")

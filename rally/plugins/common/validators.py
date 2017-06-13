@@ -1,4 +1,3 @@
-# Copyright 2017: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -14,6 +13,7 @@
 #    under the License.
 
 import inspect
+import os
 
 import jsonschema
 import six
@@ -22,6 +22,23 @@ from rally.common import logging
 from rally.common import validation
 
 LOG = logging.getLogger(__name__)
+
+
+class ValidatorUtils(object):
+
+    @staticmethod
+    def _file_access_ok(filename, mode, param_name, required=True):
+        if not filename:
+            return validation.ValidationResult(
+                not required,
+                "Parameter %s required" % param_name)
+        if not os.access(os.path.expanduser(filename), mode):
+            return validation.ValidationResult(
+                False, "Could not open %(filename)s with mode %(mode)s "
+                       "for parameter %(param_name)s"
+                       % {"filename": filename, "mode": mode,
+                          "param_name": param_name})
+        return validation.ValidationResult(True)
 
 
 @validation.configure(name="jsonschema")
@@ -294,8 +311,7 @@ class RequiredContextsValidator(validation.Validator):
             return self.fail(msg)
 
 
-@validation.configure(name="required_param_or_context",
-                      namespace="openstack")
+@validation.configure(name="required_param_or_context")
 class RequiredParamOrContextValidator(validation.Validator):
 
     def __init__(self, param_name, ctx_name):
@@ -318,3 +334,36 @@ class RequiredParamOrContextValidator(validation.Validator):
         if self.param_name in config.get("args", {}):
             return
         return self.fail(msg)
+
+
+@validation.configure(name="file_exists")
+class FileExistsValidator(validation.Validator):
+
+    def __init__(self, param_name, mode=os.R_OK, required=True):
+        """Validator checks parameter is proper path to file with proper mode.
+
+        Ensure a file exists and can be accessed with the specified mode.
+        Note that path to file will be expanded before access checking.
+
+        :param param_name: Name of parameter to validate
+        :param mode: Access mode to test for. This should be one of:
+            * os.F_OK (file exists)
+            * os.R_OK (file is readable)
+            * os.W_OK (file is writable)
+            * os.X_OK (file is executable)
+
+            If multiple modes are required they can be added, eg:
+                mode=os.R_OK+os.W_OK
+        :param required: Boolean indicating whether this argument is required.
+        """
+        super(FileExistsValidator, self).__init__()
+
+        self.param_name = param_name
+        self.mode = mode
+        self.required = required
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+
+        return ValidatorUtils._file_access_ok(
+            config.get("args", {}).get(self.param_name),
+            self.mode, self.param_name, self.required)

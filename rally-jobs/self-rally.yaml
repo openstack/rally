@@ -255,7 +255,7 @@
           hooks:
             - name: sys_call
               description: Run script
-              args: sh /home/jenkins/.rally/extra/hook_example_script.sh
+              args: sh ~/.rally/extra/hook_example_script.sh
               trigger:
                 name: event
                 args:

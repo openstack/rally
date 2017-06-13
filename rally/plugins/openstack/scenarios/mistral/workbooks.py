@@ -38,7 +38,7 @@ class ListWorkbooks(utils.MistralScenario):
         self._list_workbooks()
 
 
-@validation.file_exists("definition")
+@validation.add("file_exists", param_name="definition")
 @types.convert(definition={"type": "file"})
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_services",
