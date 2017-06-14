@@ -648,7 +648,6 @@ class TaskCommands(object):
                out_format="html"):
         """Generate report file for specified task.
 
-        :param task_id: UUID, task identifier
         :param tasks: list, UUIDs od tasks or pathes files with tasks results
         :param out: str, output file name
         :param open_it: bool, whether to open output file in web browser
