@@ -1862,6 +1862,7 @@ class FakeTask(dict, object):
 
     def __init__(self, task=None, temporary=False, **kwargs):
         self.is_temporary = temporary
+        self.update_status = mock.Mock()
         self.set_failed = mock.Mock()
         self.set_validation_failed = mock.Mock()
         task = task or {}

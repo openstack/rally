@@ -511,8 +511,8 @@ def main():
     if args.credentials:
         config = json.load(args.credentials)
     else:
-        out = subprocess.check_output(["rally", "deployment",
-                                       "config"])
+        out = subprocess.check_output(["rally", "deployment", "config",
+                                       "--deployment", "devstack"])
         config = json.loads(out if six.PY2 else out.decode("utf-8"))
         config = config["creds"]["openstack"]
         config.update(config.pop("admin"))
