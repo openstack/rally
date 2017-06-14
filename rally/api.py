@@ -1099,9 +1099,9 @@ class _Verification(APIGroup):
         LOG.info("Re-running %stests from verification (UUID=%s) for "
                  "deployment '%s' (UUID=%s).", "failed " if failed else "",
                  verification.uuid, deployment["name"], deployment["uuid"])
-        return self.start(verification.verifier_uuid,
-                          deployment["uuid"], load_list=tests,
-                          tags=tags, **run_args)
+        return self.start(verifier_id=verification.verifier_uuid,
+                          deployment_id=deployment["uuid"],
+                          load_list=tests, tags=tags, **run_args)
 
     def _get(self, verification_uuid):
         """Get a verification.
