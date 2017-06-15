@@ -13,7 +13,9 @@
     .columns li > :first-child { display:block }
     .columns li > :nth-child(2) { display:block; position:static; left:165px; top:0; white-space:nowrap }
     .fail {color: red}
+    .error {color: red}
     .success {color: green}
+    .skip {color: #A9A9A9}
 {% endblock %}
 
 {% block css_content_wrap %}margin:0 auto; padding:0 5px{% endblock %}
@@ -37,89 +39,9 @@
 
     <h2>Steps</h2>
 
-    <span class="{{ list_plugins.status }}">[{{ list_plugins.status }}]</span>
-    <a href="{{ list_plugins.stdout_file }}">List plugins for verifiers management</a>
-    <code>$ {{ list_plugins.cmd }}</code><br>
-
-    <span class="{{ create_verifier.status }}">[{{ create_verifier.status }}]</span>
-    <a href="{{ create_verifier.stdout_file }}">Create a verifier</a>
-    <code>$ {{ create_verifier.cmd }}</code>
-    <span class="{{ show_verifier.status }}">[{{ show_verifier.status }}]</span>
-    <a href="{{ show_verifier.stdout_file }}">Show the verifier</a>
-    <code>$ {{ show_verifier.cmd }}</code>
-    <span class="{{ list_verifiers.status }}">[{{ list_verifiers.status }}]</span>
-    <a href="{{ list_verifiers.stdout_file }}">List verifiers</a>
-    <code>$ {{ list_verifiers.cmd }}</code>
-    <span class="{{ update_verifier.status }}">[{{ update_verifier.status }}]</span>
-    <a href="{{ update_verifier.stdout_file }}">Switch the verifier to the penultimate version </a>
-    <code>$ {{ update_verifier.cmd }}</code>
-    <span class="{{ configure_verifier.status }}">[{{ configure_verifier.status }}]</span>
-    <a href="{{ configure_verifier.stdout_file }}">Generate and show the verifier config file</a>
-    <code>$ {{ configure_verifier.cmd }}</code><br>
-
-    <span class="{{ add_verifier_ext.status }}">[{{ add_verifier_ext.status }}]</span>
-    <a href="{{ add_verifier_ext.stdout_file }}">Add a verifier extension</a>
-    <code>$ {{ add_verifier_ext.cmd }}</code>
-    <span class="{{ list_verifier_exts.status }}">[{{ list_verifier_exts.status }}]</span>
-    <a href="{{ list_verifier_exts.stdout_file }}">List verifier extensions</a>
-    <code>$ {{ list_verifier_exts.cmd }}</code><br>
-
-    <span class="{{ list_verifier_tests.status }}">[{{ list_verifier_tests.status }}]</span>
-    <a href="{{ list_verifier_tests.stdout_file }}">List verifier tests</a>
-    <code>$ {{ list_verifier_tests.cmd }}</code><br>
-
-{% for i in range(verifications|length) %}
-{% if verifications|length > 1 %}
-    <b>Verification # {{ i + 1}}</b><p>
-    <div style="padding-left:2em">
-{% endif %}
-    <span class="{{ verifications[i].status }}">[{{ verifications[i].status }}]</span>
-    <a href="{{ verifications[i].stdout_file }}">Start verification</a>
-    <code>$ {{ verifications[i].cmd }}</code><br>
-
-    <span class="{{ verifications[i].show.status }}">[{{ verifications[i].show.status }}]</span>
-    <a href="{{ verifications[i].show.stdout_file }}">Show verification results</a>
-    <code>$ {{ verifications[i].show.cmd }}</code>
-    <span class="{{ verifications[i].show_detailed.status }}">[{{ verifications[i].show_detailed.status }}]</span>
-    <a href="{{ verifications[i].show_detailed.stdout_file }}">Show verification results with details</a>
-    <code>$ {{ verifications[i].show_detailed.cmd }}</code><br>
-
-    <span class="{{ verifications[i].json.status }}">[{{ verifications[i].json.status }}]</span>
-    <a href="{{ verifications[i].json.output_file }}">Generate the verification report in JSON format</a> [<a href="{{ verifications[i].json.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ verifications[i].json.cmd }}</code>
-    <span class="{{ verifications[i].junit_xml.status }}">[{{ verifications[i].junit_xml.status }}]</span>
-    <a href="{{ verifications[i].junit_xml.output_file }}">Generate the verification report in JUnit-XML format</a> [<a href="{{ verifications[i].junit_xml.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ verifications[i].junit_xml.cmd }}</code>
-    <span class="{{ verifications[i].html.status }}">[{{ verifications[i].html.status }}]</span>
-    <a href="{{ verifications[i].html.output_file }}">Generate the verification report in HTML format</a> [<a href="{{ verifications[i].html.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ verifications[i].html.cmd }}</code><br>
-{% if verifications|length > 1 %}
-    </div>
-{% endif %}
+{% for step in steps %}
+    {{ step|safe }}
 {% endfor %}
-
-{% if compare %}
-    <span class="{{ compare.json.status }}">[{{ compare.json.status }}]</span>
-    <a href="{{ compare.json.output_file }}">Generate the trends report for two verifications in JSON format</a> [<a href="{{ compare.json.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ compare.json.cmd }}</code>
-    <span class="{{ compare.junit_xml.status }}">[{{ compare.junit_xml.status }}]</span>
-    <a href="{{ compare.junit_xml.output_file }}">Generate the trends report for two verifications in JUnit-XML format</a> [<a href="{{ compare.junit_xml.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ compare.junit_xml.cmd }}</code>
-    <span class="{{ compare.html.status }}">[{{ compare.html.status }}]</span>
-    <a href="{{ compare.html.output_file }}">Generate the trends report for two verifications in HTML format</a> [<a href="{{ compare.html.stdout_file }}">Output from CLI</a>]
-    <code>$ {{ compare.html.cmd }}</code><br>
-{% endif %}
-
-    <span class="{{ list.status }}">[{{ list.status }}]</span>
-    <a href="{{ list.stdout_file }}">List verifications</a>
-    <code>$ {{ list.cmd }}</code><br>
-
-    <span class="{{ delete_verifier_ext.status }}">[{{ delete_verifier_ext.status }}]</span>
-    <a href="{{ delete_verifier_ext.stdout_file }}">Delete the verifier extension</a>
-    <code>$ {{ delete_verifier_ext.cmd }}</code>
-    <span class="{{ delete_verifier.status }}">[{{ delete_verifier.status }}]</span>
-    <a href="{{ delete_verifier.stdout_file }}">Delete the verifier and all verifications</a>
-    <code>$ {{ delete_verifier.cmd }}</code>
 
     <h2>About Rally</h2>
     <p>Rally is benchmarking and verification system for OpenStack:</p>
