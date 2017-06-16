@@ -721,10 +721,12 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.common.objects.Deployment.list")
     def test_list(self, mock_deployment_list):
-        mock_deployment_list.return_value = self.deployment
+        mock_deployment = mock.Mock()
+        mock_deployment.to_dict.return_value = self.deployment
+        mock_deployment_list.return_value = [mock_deployment]
         ret = self.deployment_inst.list()
         for key in self.deployment:
-            self.assertEqual(ret[key], self.deployment[key])
+            self.assertEqual(ret[0][key], self.deployment[key])
 
     @mock.patch("rally.common.objects.Deployment.get")
     def test_deployment_check(self, mock_deployment_get):

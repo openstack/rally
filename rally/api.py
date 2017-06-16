@@ -210,7 +210,8 @@ class _Deployment(APIGroup):
 
         :returns: Deployment list
         """
-        return objects.Deployment.list(status, parent_uuid, name)
+        return [deployment.to_dict() for deployment in
+                objects.Deployment.list(status, parent_uuid, name)]
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/check",
                  method="GET")
