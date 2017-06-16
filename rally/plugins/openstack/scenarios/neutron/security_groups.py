@@ -118,7 +118,8 @@ class CreateAndUpdateSecurityGroups(utils.NeutronScenario):
                                     **security_group_update_args)
 
 
-@validation.required_services(consts.Service.NEUTRON)
+@validation.add("required_services",
+                services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["neutron"]},
                     name=("NeutronSecurityGroup"
