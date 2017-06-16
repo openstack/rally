@@ -71,24 +71,30 @@ function setUp () {
 
         DEPLOYMENT_CONFIG_FILE=~/.rally/with-existing-users-config
 
-        rally deployment config > $DEPLOYMENT_CONFIG_FILE
-        sed -i '3a    "users": [\
-          {\
-              "username": "rally-test-user-1",\
-              "password": "rally-test-password-1",\
-              "project_name": "rally-test-project-1",\
-              "user_domain_name": "Default",\
-              "project_domain_name": "Default"\
-          },\
-          {\
-              "username": "rally-test-user-2",\
-              "password": "rally-test-password-2",\
-              "project_name": "rally-test-project-2",\
-              "user_domain_name": "Default",\
-              "project_domain_name": "Default"\
-          }\
-        ],\
-    ' $DEPLOYMENT_CONFIG_FILE
+        echo '
+{
+    "type": "ExistingCloud",
+    "creds": {
+        "openstack": {
+            "users": [
+                {"username": "rally-test-user-1",
+                 "password": "rally-test-password-1",
+                 "project_name": "rally-test-project-1",
+                 "user_domain_name": "Default",
+                 "project_domain_name": "Default"
+                },
+                {"username": "rally-test-user-2",
+                 "password": "rally-test-password-2",
+                 "project_name": "rally-test-project-2",
+                 "user_domain_name": "Default",
+                 "project_domain_name": "Default"
+                }],
+            "auth_url": "'$OS_AUTH_URL'",
+            "region_name": "RegionOne"
+        }
+    }
+}
+' > $DEPLOYMENT_CONFIG_FILE
 
         rally deployment create --name devstask-with-users --filename $DEPLOYMENT_CONFIG_FILE
     fi
