@@ -16,6 +16,7 @@
 import inspect
 
 import jsonschema
+import six
 
 from rally.common import logging
 from rally.common import validation
@@ -180,16 +181,30 @@ class EnumValidator(validation.Validator):
     :param param_name: Name of parameter to validate
     :param values: List of values accepted
     :param missed: Allow to accept optional parameter
+    :param case_insensitive: Ignore case in enum values
     """
 
-    def __init__(self, param_name, values, missed=False):
+    def __init__(self, param_name, values, missed=False,
+                 case_insensitive=False):
         self.param_name = param_name
-        self.values = values
         self.missed = missed
+        self.case_insensitive = case_insensitive
+        if self.case_insensitive:
+            self.values = []
+            for value in values:
+                if isinstance(value, (six.text_type, six.string_types)):
+                    value = value.lower()
+                self.values.append(value)
+        else:
+            self.values = values
 
     def validate(self, credentials, config, plugin_cls, plugin_cfg):
         value = config.get("args", {}).get(self.param_name)
         if value:
+            if self.case_insensitive:
+                if isinstance(value, (six.text_type, six.string_types)):
+                    value = value.lower()
+
             if value not in self.values:
                 return self.fail("%(name)s is %(val)s which is not a "
                                  "valid value from %(list)s"

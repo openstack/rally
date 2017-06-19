@@ -181,9 +181,10 @@ class NumberValidatorTestCase(test.TestCase):
 class EnumValidatorTestCase(test.TestCase):
 
     @staticmethod
-    def get_validator(values, missed=False):
+    def get_validator(values, missed=False, case_insensitive=False):
         validator_cls = validation.Validator.get("enum")
-        return validator_cls("foo", values=values, missed=missed)
+        return validator_cls("foo", values=values, missed=missed,
+                             case_insensitive=case_insensitive)
 
     def test_param_defined(self):
         validator = self.get_validator(values=["a", "b"])
@@ -201,6 +202,24 @@ class EnumValidatorTestCase(test.TestCase):
         self.assertFalse(result.is_valid)
         self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
                          "%s" % result)
+
+    def test_case_insensitive(self):
+        validator = self.get_validator(values=["A", "B"],
+                                       case_insensitive=True)
+
+        good_result = validator.validate(
+            {}, {"args": {validator.param_name: "a"}}, None, None
+        )
+        bad_result = validator.validate(
+            {}, {"args": {validator.param_name: "C"}}, None, None
+        )
+
+        self.assertIsNone(good_result)
+
+        self.assertIsNotNone(bad_result)
+        self.assertFalse(bad_result.is_valid)
+        self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
+                         "%s" % bad_result)
 
 
 @ddt.ddt
