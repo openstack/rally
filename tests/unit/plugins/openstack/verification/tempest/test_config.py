@@ -17,6 +17,7 @@ import ddt
 import mock
 from oslo_config import cfg
 
+from rally import osclients
 from rally.plugins.openstack.verification.tempest import config
 from tests.unit import fakes
 from tests.unit import test
@@ -80,21 +81,79 @@ class TempestConfigfileManagerTestCase(test.TestCase):
             self.tempest.conf.get(
                 "data-processing", "catalog_type"), service_type)
 
-    def test__configure_identity(self):
+    @ddt.data(
+        # The prefix "ex_" is abbreviation of "expected"
+        # case #1: both versions are discoverable; version is in the auth_url
+        {"auth_url": "http://example.com/v2.0",
+         "data": [{"version": (3, 0), "url": "foo3.com"},
+                  {"version": (2, 0), "url": "foo2.com"}],
+         "ex_uri": "http://example.com/v2.0", "ex_auth_version": "v2",
+         "ex_uri_v3": "http://example.com/v3"},
+        # case #2: the same case, but v3 is in the url
+        {"auth_url": "http://example.com/v3",
+         "data": [{"version": (3, 0), "url": "foo3.com"},
+                  {"version": (2, 0), "url": "foo2.com"}],
+         "ex_uri": "http://example.com/v2.0", "ex_auth_version": "v3",
+         "ex_uri_v3": "http://example.com/v3"},
+        # case #3: both versions are discoverable; version is not in auth_url
+        {"auth_url": "http://example.com",
+         "data": [{"version": (3, 0), "url": "foo3.com"},
+                  {"version": (2, 0), "url": "foo2.com"}],
+         "ex_uri": "foo2.com", "ex_uri_v3": "foo3.com",
+         "ex_auth_version": "v3"},
+        # case #4: the same case, but data in the another sort.
+        {"auth_url": "http://example.com",
+         "data": [{"version": (2, 0), "url": "foo2.com"},
+                  {"version": (3, 0), "url": "foo3.com"}],
+         "ex_uri": "foo2.com", "ex_uri_v3": "foo3.com",
+         "ex_auth_version": "v3"},
+        # case #5: only one version is discoverable;
+        {"auth_url": "http://example.com",
+         "data": [{"version": (2, 0), "url": "foo2.com"}],
+         "ex_uri": "foo2.com", "ex_auth_version": "v2",
+         "ex_uri_v3": "http://example.com/v3"},
+        # case #6: the same case, but keystone v3 is discoverable
+        {"auth_url": "http://example.com",
+         "data": [{"version": (3, 0), "url": "foo3.com"}],
+         "ex_uri": "http://example.com/v2.0", "ex_auth_version": "v3",
+         "ex_uri_v3": "foo3.com",
+         "ex_v2_off": True}
+    )
+    @ddt.unpack
+    def test__configure_identity(self, auth_url, data, ex_uri,
+                                 ex_uri_v3, ex_auth_version, ex_v2_off=False):
+        self.tempest.conf.add_section("identity-feature-enabled")
         self.tempest.conf.add_section("identity")
-        self.tempest._configure_identity()
+        self.tempest.credential["auth_url"] = auth_url
 
-        expected = (
-            ("region", CREDS["admin"]["region_name"]),
-            ("auth_version", "v2"),
-            ("uri", CREDS["admin"]["auth_url"][:-1]),
-            ("uri_v3", CREDS["admin"]["auth_url"].replace("/v2.0/", "/v3")),
-            ("disable_ssl_certificate_validation",
-             str(CREDS["admin"]["https_insecure"])),
-            ("ca_certificates_file", CREDS["admin"]["https_cacert"]))
-        result = self.tempest.conf.items("identity")
-        for item in expected:
-            self.assertIn(item, result)
+        creds_obj = osclients.objects.Credential(**self.tempest.credential)
+        process_url = osclients.Keystone(
+            creds_obj, 0, 0)._remove_url_version
+        self.tempest.clients.keystone._remove_url_version = process_url
+
+        from keystoneauth1 import discover
+        from keystoneauth1 import session
+
+        with mock.patch.object(discover, "Discover") as mock_discover:
+            with mock.patch.object(session, "Session") as mock_session:
+                mock_discover.return_value.version_data.return_value = data
+
+                self.tempest._configure_identity()
+
+                mock_discover.assert_called_once_with(
+                    mock_session.return_value, auth_url)
+
+        expected = {"region": CREDS["admin"]["region_name"],
+                    "auth_version": ex_auth_version,
+                    "uri": ex_uri, "uri_v3": ex_uri_v3,
+                    "disable_ssl_certificate_validation": str(
+                        CREDS["admin"]["https_insecure"]),
+                    "ca_certificates_file": CREDS["admin"]["https_cacert"]}
+        self.assertEqual(expected, dict(self.tempest.conf.items("identity")))
+        if ex_v2_off:
+            self.assertEqual(
+                "False",
+                self.tempest.conf.get("identity-feature-enabled", "api_v2"))
 
     def test__configure_network_if_neutron(self):
         self.tempest.available_services = ["neutron"]
