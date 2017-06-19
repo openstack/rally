@@ -20,6 +20,7 @@ import re
 
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
+from rally.common import validation
 from rally import plugins
 import utils
 
@@ -276,6 +277,30 @@ class PluginsReferenceDirective(rst.Directive):
             else:
                 raise Exception("Failed to display provided schema: %s" %
                                 info["schema"])
+
+        if issubclass(plugin_cls, validation.ValidatablePluginMixin):
+            validators = plugin_cls._meta_get("validators", default=[])
+            platforms = [kwargs for name, args, kwargs in validators
+                         if name == "required_platform"]
+            if platforms:
+                section_obj.append(
+                    utils.paragraph("**Requires platform(s)**:"))
+                section = ""
+                for p in platforms:
+                    section += "* %s" % p["platform"]
+                    admin_msg = "credentials for admin user"
+                    user_msg = ("regular users (temporary users can be created"
+                                " via the 'users' context if admin user is "
+                                "specified for the platform)")
+                    if p.get("admin", False) and p.get("users", False):
+                        section += " with %s and %s." % (admin_msg, user_msg)
+                    elif p.get("admin", False):
+                        section += " with %s." % admin_msg
+                    elif p.get("users", False):
+                        section += " with %s." % user_msg
+                    section += "\n"
+
+                section_obj.extend(utils.parse_text(section))
 
         filename = info["module"].replace(".", "/")
         ref = "https://github.com/openstack/rally/blob/master/%s.py" % filename
