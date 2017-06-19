@@ -24,7 +24,6 @@ import six
 from rally.common.i18n import _
 from rally.common import logging
 from rally.common import sshutils
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import atomic
@@ -82,7 +81,7 @@ class Host(object):
         return not self.__eq__(other)
 
 
-class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
+class VMScenario(nova_utils.NovaScenario):
     """Base class for VM scenarios with basic atomic actions.
 
     VM scenarios are scenarios executed inside some launched VM instance.

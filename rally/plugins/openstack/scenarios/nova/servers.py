@@ -41,7 +41,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_list_server")
-class BootAndListServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndListServer(utils.NovaScenario):
 
     def run(self, image, flavor, detailed=True, **kwargs):
         """Boot a server from an image and then list all servers.
@@ -75,7 +75,7 @@ class BootAndListServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.list_servers")
-class ListServers(utils.NovaScenario, cinder_utils.CinderScenario):
+class ListServers(utils.NovaScenario):
 
     def run(self, detailed=True):
         """List all servers.
@@ -97,7 +97,7 @@ class ListServers(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_delete_server")
-class BootAndDeleteServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndDeleteServer(utils.NovaScenario):
 
     def run(self, image, flavor, min_sleep=0, max_sleep=0,
             force_delete=False, **kwargs):
@@ -128,8 +128,7 @@ class BootAndDeleteServer(utils.NovaScenario, cinder_utils.CinderScenario):
                 admin=True, users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_delete_multiple_servers")
-class BootAndDeleteMultipleServers(utils.NovaScenario,
-                                   cinder_utils.CinderScenario):
+class BootAndDeleteMultipleServers(utils.NovaScenario):
 
     def run(self, image, flavor, count=2, min_sleep=0,
             max_sleep=0, force_delete=False, **kwargs):
@@ -162,7 +161,7 @@ class BootAndDeleteMultipleServers(utils.NovaScenario,
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_and_delete")
 class BootServerFromVolumeAndDelete(utils.NovaScenario,
-                                    cinder_utils.CinderScenario):
+                                    cinder_utils.CinderBasic):
 
     def run(self, image, flavor, volume_size, volume_type=None,
             min_sleep=0, max_sleep=0, force_delete=False, **kwargs):
@@ -183,8 +182,8 @@ class BootServerFromVolumeAndDelete(utils.NovaScenario,
         :param force_delete: True if force_delete should be used
         :param kwargs: Optional additional arguments for server creation
         """
-        volume = self._create_volume(volume_size, imageRef=image,
-                                     volume_type=volume_type)
+        volume = self.cinder.create_volume(volume_size, imageRef=image,
+                                           volume_type=volume_type)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
         server = self._boot_server(None, flavor,
                                    block_device_mapping=block_device_mapping,
@@ -201,7 +200,7 @@ class BootServerFromVolumeAndDelete(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_bounce_server")
-class BootAndBounceServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndBounceServer(utils.NovaScenario):
 
     def run(self, image, flavor, force_delete=False, actions=None, **kwargs):
         """Boot a server and run specified actions against it.
@@ -242,7 +241,7 @@ class BootAndBounceServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_lock_unlock_and_delete")
-class BootLockUnlockAndDelete(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootLockUnlockAndDelete(utils.NovaScenario):
 
     def run(self, image, flavor, min_sleep=0,
             max_sleep=0, force_delete=False, **kwargs):
@@ -277,7 +276,7 @@ class BootLockUnlockAndDelete(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "glance"]},
                     name="NovaServers.snapshot_server")
-class SnapshotServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class SnapshotServer(utils.NovaScenario):
 
     def run(self, image, flavor, force_delete=False, **kwargs):
         """Boot a server, make its snapshot and delete both.
@@ -305,7 +304,7 @@ class SnapshotServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_server")
-class BootServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootServer(utils.NovaScenario):
 
     def run(self, image, flavor, auto_assign_nic=False, **kwargs):
         """Boot a server.
@@ -330,7 +329,7 @@ class BootServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume")
-class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderBasic):
 
     def run(self, image, flavor, volume_size,
             volume_type=None, auto_assign_nic=False, **kwargs):
@@ -347,8 +346,8 @@ class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderScenario):
         :param auto_assign_nic: True if NICs should be assigned
         :param kwargs: Optional additional arguments for server creation
         """
-        volume = self._create_volume(volume_size, imageRef=image,
-                                     volume_type=volume_type)
+        volume = self.cinder.create_volume(volume_size, imageRef=image,
+                                           volume_type=volume_type)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
         self._boot_server(None, flavor, auto_assign_nic=auto_assign_nic,
                           block_device_mapping=block_device_mapping,
@@ -364,7 +363,7 @@ class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.resize_server")
-class ResizeServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class ResizeServer(utils.NovaScenario):
 
     def run(self, image, flavor, to_flavor, force_delete=False, **kwargs):
         """Boot a server, then resize and delete it.
@@ -434,10 +433,10 @@ class ResizeShutoffServer(utils.NovaScenario):
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
-                    name=("NovaServers.boot_server"
-                          "_attach_created_volume_and_resize"))
+                    name=("NovaServers."
+                          "boot_server_attach_created_volume_and_resize"))
 class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
-                                             cinder_utils.CinderScenario):
+                                             cinder_utils.CinderBasic):
 
     def run(self, image, flavor, to_flavor, volume_size, min_sleep=0,
             max_sleep=0, force_delete=False, confirm=True, do_delete=True,
@@ -466,7 +465,7 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
         create_volume_kwargs = create_volume_kwargs or {}
 
         server = self._boot_server(image, flavor, **boot_server_kwargs)
-        volume = self._create_volume(volume_size, **create_volume_kwargs)
+        volume = self.cinder.create_volume(volume_size, **create_volume_kwargs)
 
         attachment = self._attach_volume(server, volume)
         self.sleep_between(min_sleep, max_sleep)
@@ -479,7 +478,7 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
 
         if do_delete:
             self._detach_volume(server, volume, attachment)
-            self._delete_volume(volume)
+            self.cinder.delete_volume(volume)
             self._delete_server(server, force=force_delete)
 
 
@@ -494,7 +493,7 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_and_resize")
 class BootServerFromVolumeAndResize(utils.NovaScenario,
-                                    cinder_utils.CinderScenario):
+                                    cinder_utils.CinderBasic):
 
     def run(self, image, flavor, to_flavor, volume_size, min_sleep=0,
             max_sleep=0, force_delete=False, confirm=True, do_delete=True,
@@ -528,8 +527,8 @@ class BootServerFromVolumeAndResize(utils.NovaScenario,
         if boot_server_kwargs.get("block_device_mapping"):
             LOG.warning("Using already existing volume is not permitted.")
 
-        volume = self._create_volume(volume_size, imageRef=image,
-                                     **create_volume_kwargs)
+        volume = self.cinder.create_volume(volume_size, imageRef=image,
+                                           **create_volume_kwargs)
         boot_server_kwargs["block_device_mapping"] = {
             "vda": "%s:::1" % volume.id}
 
@@ -554,7 +553,7 @@ class BootServerFromVolumeAndResize(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.suspend_and_resume_server")
-class SuspendAndResumeServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class SuspendAndResumeServer(utils.NovaScenario):
 
     def run(self, image, flavor, force_delete=False, **kwargs):
         """Create a server, suspend, resume and then delete it
@@ -578,8 +577,7 @@ class SuspendAndResumeServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.pause_and_unpause_server")
-class PauseAndUnpauseServer(utils.NovaScenario,
-                            cinder_utils.CinderScenario):
+class PauseAndUnpauseServer(utils.NovaScenario):
 
     def run(self, image, flavor, force_delete=False, **kwargs):
         """Create a server, pause, unpause and then delete it
@@ -603,8 +601,7 @@ class PauseAndUnpauseServer(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.shelve_and_unshelve_server")
-class ShelveAndUnshelveServer(utils.NovaScenario,
-                              cinder_utils.CinderScenario):
+class ShelveAndUnshelveServer(utils.NovaScenario):
 
     def run(self, image, flavor, force_delete=False, **kwargs):
         """Create a server, shelve, unshelve and then delete it
@@ -629,8 +626,7 @@ class ShelveAndUnshelveServer(utils.NovaScenario,
                 admin=True, users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_live_migrate_server")
-class BootAndLiveMigrateServer(utils.NovaScenario,
-                               cinder_utils.CinderScenario):
+class BootAndLiveMigrateServer(utils.NovaScenario):
 
     def run(self, image, flavor, block_migration=False, disk_over_commit=False,
             min_sleep=0, max_sleep=0, **kwargs):
@@ -675,7 +671,7 @@ class BootAndLiveMigrateServer(utils.NovaScenario,
                     name=("NovaServers.boot_server_from_volume"
                           "_and_live_migrate"))
 class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
-                                         cinder_utils.CinderScenario):
+                                         cinder_utils.CinderBasic):
 
     def run(self, image, flavor, volume_size, volume_type=None,
             block_migration=False, disk_over_commit=False, force_delete=False,
@@ -704,8 +700,8 @@ class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
         :param max_sleep: Maximum sleep time in seconds (non-negative)
         :param kwargs: Optional additional arguments for server creation
         """
-        volume = self._create_volume(volume_size, imageRef=image,
-                                     volume_type=volume_type)
+        volume = self.cinder.create_volume(volume_size, imageRef=image,
+                                           volume_type=volume_type)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
         server = self._boot_server(None, flavor,
                                    block_device_mapping=block_device_mapping,
@@ -731,7 +727,7 @@ class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
                     name=("NovaServers.boot_server_attach_created_volume"
                           "_and_live_migrate"))
 class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
-                                                  cinder_utils.CinderScenario):
+                                                  cinder_utils.CinderBasic):
 
     def run(self, image, flavor, size, block_migration=False,
             disk_over_commit=False, boot_server_kwargs=None,
@@ -763,7 +759,7 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
             create_volume_kwargs = {}
 
         server = self._boot_server(image, flavor, **boot_server_kwargs)
-        volume = self._create_volume(size, **create_volume_kwargs)
+        volume = self.cinder.create_volume(size, **create_volume_kwargs)
 
         attachment = self._attach_volume(server, volume)
 
@@ -775,7 +771,7 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
 
         self._detach_volume(server, volume, attachment)
 
-        self._delete_volume(volume)
+        self.cinder.delete_volume(volume)
         self._delete_server(server)
 
 
@@ -788,7 +784,7 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
                 admin=True, users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_migrate_server")
-class BootAndMigrateServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndMigrateServer(utils.NovaScenario):
 
     def run(self, image, flavor, **kwargs):
         """Migrate a server.
@@ -825,7 +821,7 @@ class BootAndMigrateServer(utils.NovaScenario, cinder_utils.CinderScenario):
                 admin=True, users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_rebuild_server")
-class BootAndRebuildServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndRebuildServer(utils.NovaScenario):
 
     def run(self, from_image, to_image, flavor, **kwargs):
         """Rebuild a server.
@@ -852,8 +848,7 @@ class BootAndRebuildServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
                     name="NovaServers.boot_and_associate_floating_ip")
-class BootAndAssociateFloatingIp(utils.NovaScenario,
-                                 cinder_utils.CinderScenario):
+class BootAndAssociateFloatingIp(utils.NovaScenario):
 
     def run(self, image, flavor, **kwargs):
         """Boot a server and associate a floating IP to it.
@@ -910,7 +905,7 @@ class BootServerAndAttachInterface(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_show_server")
-class BootAndShowServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndShowServer(utils.NovaScenario):
 
     def run(self, image, flavor, **kwargs):
         """Show server details.
@@ -935,7 +930,7 @@ class BootAndShowServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_get_console_output")
-class BootAndGetConsoleOutput(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndGetConsoleOutput(utils.NovaScenario):
 
     def run(self, image, flavor, length=None, **kwargs):
         """Get text console output from server.
@@ -962,7 +957,7 @@ class BootAndGetConsoleOutput(utils.NovaScenario, cinder_utils.CinderScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
                     name="NovaServers.boot_and_update_server")
-class BootAndUpdateServer(utils.NovaScenario, cinder_utils.CinderScenario):
+class BootAndUpdateServer(utils.NovaScenario):
 
     def run(self, image, flavor, description=None, **kwargs):
         """Boot a server, then update its name and description.
@@ -989,7 +984,7 @@ class BootAndUpdateServer(utils.NovaScenario, cinder_utils.CinderScenario):
 @scenario.configure(context={"cleanup": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_snapshot")
 class BootServerFromVolumeSnapshot(utils.NovaScenario,
-                                   cinder_utils.CinderScenario):
+                                   cinder_utils.CinderBasic):
 
     def run(self, image, flavor, volume_size, volume_type=None,
             auto_assign_nic=False, **kwargs):
@@ -1008,9 +1003,9 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
         :param auto_assign_nic: True if NICs should be assigned
         :param kwargs: Optional additional arguments for server creation
         """
-        volume = self._create_volume(volume_size, imageRef=image,
-                                     volume_type=volume_type)
-        snapshot = self._create_snapshot(volume.id, False)
+        volume = self.cinder.create_volume(volume_size, imageRef=image,
+                                           volume_type=volume_type)
+        snapshot = self.cinder.create_snapshot(volume.id, force=False)
         block_device_mapping = {"vda": "%s:snap::1" % snapshot.id}
         self._boot_server(None, flavor, auto_assign_nic=auto_assign_nic,
                           block_device_mapping=block_device_mapping,
