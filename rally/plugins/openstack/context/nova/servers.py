@@ -91,7 +91,7 @@ class ServerGenerator(context.Context):
         if self.config.get("nics"):
             if isinstance(self.config["nics"][0], dict):
                 # it is a format that Nova API expects
-                kwargs["nics"] = self.config["nics"]
+                kwargs["nics"] = list(self.config["nics"])
             else:
                 kwargs["nics"] = [{"net-id": nic}
                                   for nic in self.config["nics"]]
