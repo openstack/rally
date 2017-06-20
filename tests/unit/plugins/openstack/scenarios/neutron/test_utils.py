@@ -830,6 +830,15 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.list_security_group_rules")
 
+    def test_show_security_group_rule(self):
+        return_rule = self.scenario._show_security_group_rule(1)
+        self.assertEqual(
+            self.clients("neutron").show_security_group_rule.return_value,
+            return_rule)
+
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.show_security_group_rule")
+
     @ddt.data(
         {"networks": [{"subnets": "subnet-id"}]},
         {"pool_create_args": None, "networks": [{"subnets": ["subnet-id"]}]},
