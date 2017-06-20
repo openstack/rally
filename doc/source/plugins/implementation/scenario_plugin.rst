@@ -24,18 +24,23 @@ Let's create a simple scenario plugin that list flavors.
 Creation
 ^^^^^^^^
 
-Inherit a class for your plugin from the base *Scenario* class and
+Inherit a class for your plugin from the base *OpenStackScenario* class and
 implement a scenario method inside it. In our scenario, we'll first
 list flavors as an ordinary user, and then repeat the same using admin
 clients:
 
 .. code-block:: python
 
+    from rally import consts
+    from rally.plugins.openstack import scenario
     from rally.task import atomic
-    from rally.task import scenario
+    from rally.task import validation
 
 
-    class ScenarioPlugin(scenario.Scenario):
+    @validation.add("required_services", services=[consts.Service.NOVA])
+    @validation.add("required_platform", platform="openstack", users=True)
+    @scenario.configure(name="ScenarioPlugin.list_flavors_useless")
+    class ListFlavors(scenario.OpenStackScenario):
         """Sample plugin which lists flavors."""
 
         @atomic.action_timer("list_flavors")
@@ -51,8 +56,7 @@ clients:
             """The same with admin clients"""
             self.admin_clients("nova").flavors.list()
 
-        @scenario.configure()
-        def list_flavors(self):
+        def run(self):
             """List flavors."""
             self._list_flavors()
             self._list_flavors_as_admin()
