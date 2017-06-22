@@ -26,7 +26,7 @@ import uuid
 from rally import api
 from rally.ui import utils
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("verify-job")
 LOG.setLevel(logging.DEBUG)
 
 # NOTE(andreykurilin): this variable is used to generate output file names
@@ -125,7 +125,7 @@ class Step(object):
     def call_rally(command):
         """Execute a Rally verify command."""
         try:
-            LOG.info("Try to execute `%s`." % command)
+            LOG.info("Start `%s` command." % command)
             stdout = subprocess.check_output(command.split(),
                                              stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
@@ -506,8 +506,8 @@ def main():
     with open(os.path.join(Step.BASE_DIR, "extra/index.html"), "w") as f:
         f.write(template.render(steps=results))
 
-    if len([None for step in steps if step.result["status"] in (
-            Status.PASS, Status.FAILURE)]) == len(steps):
+    if len([None for step in steps
+            if step.result["status"] == Status.PASS]) == len(steps):
         return 0
     return 1
 

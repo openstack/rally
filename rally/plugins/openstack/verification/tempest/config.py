@@ -21,10 +21,13 @@ import six
 from six.moves import configparser
 from six.moves.urllib import parse
 
+from rally.common import logging
+from rally import exceptions
 from rally.verification import utils
 
 
 CONF = cfg.CONF
+LOG = logging.getLogger(__name__)
 
 
 class TempestConfigfileManager(object):
@@ -65,19 +68,63 @@ class TempestConfigfileManager(object):
     def _configure_identity(self, section_name="identity"):
         self.conf.set(section_name, "region",
                       self.credential.region_name)
+        # discover keystone versions
 
-        auth_url = self.credential.auth_url
-        if "/v2" not in auth_url and "/v3" not in auth_url:
-            auth_version = "v2"
-            auth_url_v2 = parse.urljoin(auth_url, "/v2.0")
+        def get_versions(auth_url):
+            from keystoneauth1 import discover
+            from keystoneauth1 import session
+
+            temp_session = session.Session(
+                verify=(self.credential.https_cacert or
+                        not self.credential.https_insecure),
+                timeout=CONF.openstack_client_http_timeout)
+            data = discover.Discover(temp_session, auth_url).version_data()
+            return dict([(v["version"][0], v["url"]) for v in data])
+
+        # check the original auth_url without cropping versioning to identify
+        # the default version
+
+        versions = get_versions(self.credential.auth_url)
+        cropped_auth_url = self.clients.keystone._remove_url_version()
+        if cropped_auth_url == self.credential.auth_url:
+            # the given auth_url doesn't contain version
+            if set(versions.keys()) == {2, 3}:
+                # ok, both versions of keystone are enabled, we can take urls
+                # there
+                uri = versions[2]
+                uri_v3 = versions[3]
+                target_version = 3
+            elif set(versions.keys()) == {2} or set(versions.keys()) == {3}:
+                # only one version is available while discovering, let's just
+                # guess the second auth_url (it should not be used)
+
+                # get the most recent version
+                target_version = sorted(versions.keys())[-1]
+                if target_version == 2:
+                    uri = self.credential.auth_url
+                    uri_v3 = parse.urljoin(uri, "/v3")
+                else:
+                    uri_v3 = self.credential.auth_url
+                    uri = parse.urljoin(uri_v3, "/v2.0")
+            else:
+                # Does Keystone released new version of API ?!
+                LOG.debug("Discovered keystone versions: %s" % versions)
+                raise exceptions.RallyException("Failed to discover keystone "
+                                                "auth urls.")
+
         else:
-            url_path = parse.urlparse(auth_url).path
-            auth_version = [v for v in url_path.split("/") if v][-1][:2]
-            auth_url_v2 = auth_url.replace(url_path, "/v2.0")
-        self.conf.set(section_name, "auth_version", auth_version)
-        self.conf.set(section_name, "uri", auth_url_v2)
-        self.conf.set(section_name, "uri_v3",
-                      auth_url_v2.replace("/v2.0", "/v3"))
+            if self.credential.auth_url.rstrip("/").endswith("v2.0"):
+                uri = self.credential.auth_url
+                uri_v3 = uri.replace("/v2.0", "/v3")
+                target_version = 2
+            else:
+                uri_v3 = self.credential.auth_url
+                uri = uri_v3.replace("/v3", "/v2.0")
+                target_version = 3
+
+        self.conf.set(section_name, "auth_version", "v%s" % target_version)
+        self.conf.set(section_name, "uri", uri)
+        self.conf.set(section_name, "uri_v3", uri_v3)
 
         self.conf.set(section_name, "disable_ssl_certificate_validation",
                       str(self.credential.https_insecure))
