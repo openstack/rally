@@ -69,6 +69,92 @@ class ListShares(utils.ManilaScenario):
         self._list_shares(detailed=detailed, search_opts=search_opts)
 
 
+@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs"
+                "cifs", "glusterfs", "hdfs"], missed=False,
+                case_insensitive=True)
+@validation.add("required_services", services=[consts.Service.MANILA])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_and_extend_share")
+class CreateAndExtendShare(utils.ManilaScenario):
+    def run(self, share_proto, size=1, new_size=2, snapshot_id=None,
+            description=None, metadata=None, share_network=None,
+            share_type=None, is_public=False, availability_zone=None,
+            share_group_id=None):
+        """Create and extend a share
+
+        :param share_proto: share protocol for new share
+            available values are NFS, CIFS, CephFS, GlusterFS and HDFS.
+        :param size: size in GiB
+        :param new_size: new size of the share in GiB
+        :param snapshot_id: ID of the snapshot
+        :param description: description of a share
+        :param metadata: optional metadata to set on share creation
+        :param share_network: either instance of ShareNetwork or text with ID
+        :param share_type: either instance of ShareType or text with ID
+        :param is_public: whether to set share as public or not.
+        :param availability_zone: availability zone of the share
+        :param share_group_id: ID of the share group to which the share
+            should belong
+        """
+        share = self._create_share(
+            share_proto=share_proto,
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        self._extend_share(share, new_size)
+
+
+@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs"
+                "cifs", "glusterfs", "hdfs"], missed=False,
+                case_insensitive=True)
+@validation.add("required_services", services=[consts.Service.MANILA])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.create_and_shrink_share")
+class CreateAndShrinkShare(utils.ManilaScenario):
+    def run(self, share_proto, size=2, new_size=1, snapshot_id=None,
+            description=None, metadata=None, share_network=None,
+            share_type=None, is_public=False, availability_zone=None,
+            share_group_id=None):
+        """Create and shrink a share
+
+        :param share_proto: share protocol for new share
+            available values are NFS, CIFS, CephFS, GlusterFS and HDFS.
+        :param size: size in GiB
+        :param new_size: new size of the share in GiB
+        :param snapshot_id: ID of the snapshot
+        :param description: description of a share
+        :param metadata: optional metadata to set on share creation
+        :param share_network: either instance of ShareNetwork or text with ID
+        :param share_type: either instance of ShareType or text with ID
+        :param is_public: whether to set share as public or not.
+        :param availability_zone: availability zone of the share
+        :param share_group_id: ID of the share group to which the share
+            should belong
+        """
+        share = self._create_share(
+            share_proto=share_proto,
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        self._shrink_share(share, new_size)
+
+
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},

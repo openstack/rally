@@ -98,6 +98,36 @@ class ManilaScenario(scenario.OpenStackScenario):
         return self.clients("manila").shares.list(
             detailed=detailed, search_opts=search_opts)
 
+    @atomic.action_timer("manila.extend_share")
+    def _extend_share(self, share, new_size):
+        """Extend the given share
+
+        :param share: :class:`Share`
+        :param new_size: new size of the share
+        """
+        share.extend(new_size)
+        utils.wait_for_status(
+            share,
+            ready_statuses=["available"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.manila_share_create_timeout,
+            check_interval=CONF.benchmark.manila_share_create_poll_interval)
+
+    @atomic.action_timer("manila.shrink_share")
+    def _shrink_share(self, share, new_size):
+        """Shrink the given share
+
+        :param share: :class:`Share`
+        :param new_size: new size of the share
+        """
+        share.shrink(new_size)
+        utils.wait_for_status(
+            share,
+            ready_statuses=["available"],
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.manila_share_create_timeout,
+            check_interval=CONF.benchmark.manila_share_create_poll_interval)
+
     @atomic.action_timer("manila.create_share_network")
     def _create_share_network(self, neutron_net_id=None,
                               neutron_subnet_id=None,

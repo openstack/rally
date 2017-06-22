@@ -93,6 +93,42 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             detailed=params.get("detailed", True),
             search_opts=params.get("search_opts"))
 
+    @ddt.data(
+        {"new_size": 5},
+        {"new_size": 10}
+    )
+    def test__extend_share(self, new_size):
+        fake_share = mock.MagicMock()
+
+        self.scenario._extend_share(fake_share, new_size)
+
+        fake_share.extend.assert_called_with(new_size)
+
+        self.mock_wait_for_status.mock.assert_called_once_with(
+            fake_share,
+            ready_statuses=["available"],
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=300, check_interval=3)
+        self.mock_get_from_manager.mock.assert_called_once_with()
+
+    @ddt.data(
+        {"new_size": 5},
+        {"new_size": 10}
+    )
+    def test__shrink_share(self, new_size):
+        fake_share = mock.MagicMock()
+
+        self.scenario._shrink_share(fake_share, new_size)
+
+        fake_share.shrink.assert_called_with(new_size)
+
+        self.mock_wait_for_status.mock.assert_called_once_with(
+            fake_share,
+            ready_statuses=["available"],
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=300, check_interval=3)
+        self.mock_get_from_manager.mock.assert_called_once_with()
+
     def test__create_share_network(self):
         fake_sn = mock.Mock()
         self.scenario.generate_random_name = mock.Mock()
