@@ -17,10 +17,12 @@ import random
 import string
 import time
 
-import k8sclient.client as k8s_client
 from oslo_config import cfg
 
-from k8sclient.client.rest import ApiException
+from kubernetes import client as k8s_config
+from kubernetes.client import api_client
+from kubernetes.client.apis import core_v1_api
+from kubernetes.client.rest import ApiException
 from rally.common import utils as common_utils
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -159,12 +161,13 @@ class MagnumScenario(scenario.OpenStackScenario):
             cert_file = os.path.join(dir, cert_file)
             ca_certs = cluster_uuid + "_ca.crt"
             ca_certs = os.path.join(dir, ca_certs)
-        client = k8s_client.api_client.ApiClient(
-            cluster.api_address,
-            key_file=key_file,
-            cert_file=cert_file,
-            ca_certs=ca_certs)
-        return k8s_client.apis.apiv_api.ApivApi(client)
+        config = k8s_config.ConfigurationObject()
+        config.host = cluster.api_address
+        config.ssl_ca_cert = ca_certs
+        config.cert_file = cert_file
+        config.key_file = key_file
+        client = api_client.ApiClient(config=config)
+        return core_v1_api.CoreV1Api(client)
 
     @atomic.action_timer("magnum.k8s_list_v1pods")
     def _list_v1pods(self):
@@ -172,7 +175,7 @@ class MagnumScenario(scenario.OpenStackScenario):
 
         """
         k8s_api = self._get_k8s_api_client()
-        return k8s_api.list_namespaced_pod(namespace="default")
+        return k8s_api.list_node(namespace="default")
 
     @atomic.action_timer("magnum.k8s_create_v1pod")
     def _create_v1pod(self, manifest):
@@ -207,8 +210,7 @@ class MagnumScenario(scenario.OpenStackScenario):
                        condition.status.lower() == "true":
                         return resp
 
-            if (time.time() - start
-                    > CONF.benchmark.k8s_pod_create_timeout):
+            if (time.time() - start > CONF.benchmark.k8s_pod_create_timeout):
                 raise exceptions.TimeoutException(
                     desired_status="Ready",
                     resource_name=podname,
