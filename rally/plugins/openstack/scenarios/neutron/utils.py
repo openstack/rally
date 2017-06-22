@@ -810,3 +810,14 @@ class NeutronScenario(scenario.OpenStackScenario):
         :return: list of security group rules
         """
         return self.clients("neutron").list_security_group_rules(**kwargs)
+
+    @atomic.action_timer("neutron.show_security_group_rule")
+    def _show_security_group_rule(self, security_group_rule, **kwargs):
+        """Show information of a given security group rule.
+
+        :param security_group_rule: id of security group rule
+        :param kwargs: Optional additional arguments for roles list
+        :return: details of security group rule
+        """
+        return self.clients("neutron").show_security_group_rule(
+            security_group_rule, **kwargs)
