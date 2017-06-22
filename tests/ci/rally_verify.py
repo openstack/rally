@@ -89,7 +89,7 @@ class Step(object):
         """Execute step. The default action - execute the command"""
         self.setUp()
 
-        cmd = "rally --rally-debug verify %s" % (self.COMMAND % self.CALL_ARGS)
+        cmd = "rally --rally-debug %s" % (self.COMMAND % self.CALL_ARGS)
         self.result["cmd"] = cmd
         self.result["status"], self.result["output"] = self.call_rally(cmd)
 
@@ -217,14 +217,14 @@ class SetUpStep(Step):
 class ListPlugins(Step):
     """List plugins for verifiers management."""
 
-    COMMAND = "list-plugins"
+    COMMAND = "verify list-plugins"
     DEPENDS_ON = SetUpStep
 
 
 class CreateVerifier(Step):
     """Create a Tempest verifier."""
 
-    COMMAND = ("create-verifier --type %(type)s --name %(name)s "
+    COMMAND = ("verify create-verifier --type %(type)s --name %(name)s "
                "--source %(source)s")
     DEPENDS_ON = ListPlugins
     CALL_ARGS = {"type": "tempest",
@@ -235,21 +235,21 @@ class CreateVerifier(Step):
 class ShowVerifier(Step):
     """Show information about the created verifier."""
 
-    COMMAND = "show-verifier"
+    COMMAND = "verify show-verifier"
     DEPENDS_ON = CreateVerifier
 
 
 class ListVerifiers(Step):
     """List all installed verifiers."""
 
-    COMMAND = "list-verifiers"
+    COMMAND = "verify list-verifiers"
     DEPENDS_ON = CreateVerifier
 
 
 class UpdateVerifier(Step):
     """Switch the verifier to the penultimate version."""
 
-    COMMAND = "update-verifier --version %(version)s --update-venv"
+    COMMAND = "verify update-verifier --version %(version)s --update-venv"
     DEPENDS_ON = CreateVerifier
 
     def setUp(self):
@@ -268,14 +268,14 @@ class UpdateVerifier(Step):
 class ConfigureVerifier(Step):
     """Generate and show the verifier config file."""
 
-    COMMAND = "configure-verifier --show"
+    COMMAND = "verify configure-verifier --show"
     DEPENDS_ON = CreateVerifier
 
 
 class ExtendVerifier(Step):
     """Extend verifier with keystone integration tests."""
 
-    COMMAND = "add-verifier-ext --source %(source)s"
+    COMMAND = "verify add-verifier-ext --source %(source)s"
     DEPENDS_ON = CreateVerifier
     CALL_ARGS = {"source": "https://git.openstack.org/openstack/keystone"}
 
@@ -283,14 +283,14 @@ class ExtendVerifier(Step):
 class ListVerifierExtensions(Step):
     """List all extensions of verifier."""
 
-    COMMAND = "list-verifier-exts"
+    COMMAND = "verify list-verifier-exts"
     DEPENDS_ON = ExtendVerifier
 
 
 class ListVerifierTests(Step):
     """List all tests of specific verifier."""
 
-    COMMAND = "list-verifier-tests"
+    COMMAND = "verify list-verifier-tests"
     DEPENDS_ON = CreateVerifier
 
 
@@ -298,7 +298,7 @@ class RunVerification(Step):
     """Run a verification."""
 
     DEPENDS_ON = ConfigureVerifier
-    COMMAND = ("start --pattern set=%(set)s --skip-list %(skip_tests)s "
+    COMMAND = ("verify start --pattern set=%(set)s --skip-list %(skip_tests)s "
                "--xfail-list %(xfail_tests)s --tag %(tag)s %(set)s-set "
                "--detailed")
     SKIP_TESTS = {
@@ -331,7 +331,7 @@ class RunVerification(Step):
 class ReRunVerification(RunVerification):
     """Re-Run previous verification."""
 
-    COMMAND = "rerun --tag one-more-attempt"
+    COMMAND = "verify rerun --tag one-more-attempt"
 
     def run(self):
         super(RunVerification, self).run()
@@ -342,7 +342,7 @@ class ReRunVerification(RunVerification):
 class ShowVerification(Step):
     """Show results of verification."""
 
-    COMMAND = "show"
+    COMMAND = "verify show"
     DEPENDS_ON = RunVerification
 
 
@@ -355,7 +355,7 @@ class ShowSecondVerification(ShowVerification):
 class ShowDetailedVerification(Step):
     """Show detailed results of verification."""
 
-    COMMAND = "show --detailed"
+    COMMAND = "verify show --detailed"
     DEPENDS_ON = RunVerification
 
 
@@ -368,7 +368,7 @@ class ShowDetailedSecondVerification(ShowDetailedVerification):
 class ReportVerificationMixin(Step):
     """Mixin for obtaining reports of verifications."""
 
-    COMMAND = "report --uuid %(uuids)s --type %(type)s --to %(out)s"
+    COMMAND = "verify report --uuid %(uuids)s --type %(type)s --to %(out)s"
 
     HTML_TEMPLATE = ("<span class=\"%(status)s\">[%(status)s]</span>\n"
                      "<a href=\"%(out)s\">%(doc)s</a> "
@@ -420,24 +420,35 @@ class JunitVerificationReport(ReportVerificationMixin):
 class ListVerifications(Step):
     """List all verifications."""
 
-    COMMAND = "list"
+    COMMAND = "verify list"
     DEPENDS_ON = CreateVerifier
 
 
 class DeleteVerifierExtension(Step):
     """Delete keystone extension."""
 
-    COMMAND = "delete-verifier-ext --name %(name)s"
+    COMMAND = "verify delete-verifier-ext --name %(name)s"
     CALL_ARGS = {"name": "keystone_tests"}
     DEPENDS_ON = ExtendVerifier
 
 
 class DeleteVerifier(Step):
-    """Delete Tempest verifier and all verifications."""
+    """Delete only Tempest verifier.
 
-    COMMAND = "delete-verifier --id %(id)s --force"
+    all verifications will be delete when destroy deployment.
+
+    """
+    COMMAND = "verify delete-verifier --id %(id)s --force"
     CALL_ARGS = {"id": CreateVerifier.CALL_ARGS["name"]}
     DEPENDS_ON = CreateVerifier
+
+
+class DestroyDeployment(Step):
+    """Delete the deployment, and verifications of this deployment."""
+
+    COMMAND = "deployment destroy --deployment %(id)s"
+    CALL_ARGS = {"id": SetUpStep.DEPLOYMENT_NAME}
+    DEPENDS_ON = SetUpStep
 
 
 def run(args):
@@ -460,6 +471,7 @@ def run(args):
              JunitVerificationReport,
              ListVerifications,
              DeleteVerifierExtension,
+             DestroyDeployment,
              DeleteVerifier]
 
     if args.compare:

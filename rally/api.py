@@ -140,7 +140,7 @@ class _Deployment(APIGroup):
                      % deployment["uuid"])
 
         for verifier in self.api.verifier.list():
-            self.api.verifier.delete(verifier_id=verifier.name,
+            self.api.verifier.delete(verifier_id=verifier["name"],
                                      deployment_id=deployment["name"],
                                      force=True)
 
