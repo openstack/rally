@@ -485,6 +485,7 @@ class TaskAPITestCase(test.TestCase):
                     "description": "scen-description",
                     "full_duration": 3,
                     "load_duration": 1,
+                    "start_time": 23.77,
                     "position": 77,
                     "runner": "runner-config",
                     "context": "ctx-config",
@@ -526,10 +527,10 @@ class TaskAPITestCase(test.TestCase):
         work_load.add_workload_data.assert_called_once_with(
             0, {"raw": workload["data"]})
         work_load.set_results.assert_called_once_with(
-            {"full_duration": workload["full_duration"],
-             "load_duration": workload["load_duration"],
-             "sla": workload["sla_results"]["sla"],
-             "hooks": workload["hooks"]})
+            full_duration=workload["full_duration"],
+            load_duration=workload["load_duration"],
+            sla_results=workload["sla_results"]["sla"],
+            hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -545,6 +546,7 @@ class TaskAPITestCase(test.TestCase):
                     "description": "scen-description",
                     "full_duration": 3,
                     "load_duration": 1,
+                    "start_time": 23.77,
                     "position": 77,
                     "runner": "runner-config",
                     "context": "ctx-config",
@@ -589,10 +591,10 @@ class TaskAPITestCase(test.TestCase):
              mock.call(1, {"raw": [{"timestamp": 3}]})],
             work_load.add_workload_data.call_args_list)
         work_load.set_results.assert_called_once_with(
-            {"full_duration": workload["full_duration"],
-             "load_duration": workload["load_duration"],
-             "sla": workload["sla_results"]["sla"],
-             "hooks": workload["hooks"]})
+            full_duration=workload["full_duration"],
+            load_duration=workload["load_duration"],
+            sla_results=workload["sla_results"]["sla"],
+            hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Deployment.get")
     def test_import_results_with_inconsistent_deployment(

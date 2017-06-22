@@ -294,19 +294,30 @@ def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
                                            chunk_order, data)
 
 
-def workload_set_results(workload_uuid, subtask_uuid, task_uuid, data):
+def workload_set_results(workload_uuid, subtask_uuid, task_uuid, load_duration,
+                         full_duration, start_time, sla_results,
+                         hooks_results=None):
     """Set workload results.
 
     :param workload_uuid: string with UUID of Workload instance.
     :param subtask_uuid: string with UUID of Workload's parent Subtask.
     :param task_uuid: string with UUID of Workload's parent Task.
-    :param data: dict with workload results.
+    :param load_duration: float value of Workload's load duration
+    :param full_duration: float value of Workload's full duration (
+        generating load, executing contexts and etc)
+    :param start_time: a timestamp of load start
+    :param sla_results: a list with Workload's SLA results
+    :param hooks_results: a list with Workload's Hooks results
     :returns: a dict with data on the workload.
     """
     return get_impl().workload_set_results(workload_uuid=workload_uuid,
                                            subtask_uuid=subtask_uuid,
                                            task_uuid=task_uuid,
-                                           data=data)
+                                           load_duration=load_duration,
+                                           full_duration=full_duration,
+                                           start_time=start_time,
+                                           sla_results=sla_results,
+                                           hooks_results=hooks_results)
 
 
 def deployment_create(values):

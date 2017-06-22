@@ -265,10 +265,9 @@ class TasksTestCase(test.DBTestCase):
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
                                 task_uuid=workload["task_uuid"],
-                                data={"sla": [{"success": True}],
-                                      "load_duration": 13,
-                                      "full_duration": 42,
-                                      "hooks": []})
+                                sla_results=[{"success": True}],
+                                load_duration=13, full_duration=42,
+                                start_time=77.33)
 
         task = db.task_get(task_id, detailed=True)
         self.assertEqual(1, len(task["subtasks"]))
@@ -314,6 +313,7 @@ class TasksTestCase(test.DBTestCase):
         ]
         w_load_duration = 13.0
         w_full_duration = 42.0
+        w_start_time = 33.77
         w_hooks = []
 
         subtask = db.subtask_create(task1["uuid"], title="foo")
@@ -328,9 +328,10 @@ class TasksTestCase(test.DBTestCase):
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
                                 task_uuid=workload["task_uuid"],
-                                data={"sla": sla_results,
-                                      "load_duration": w_load_duration,
-                                      "full_duration": w_full_duration})
+                                sla_results=sla_results,
+                                load_duration=w_load_duration,
+                                full_duration=w_full_duration,
+                                start_time=w_start_time)
 
         task1_full = db.task_get(task1["uuid"], detailed=True)
         self.assertEqual(validation_result, task1_full["validation_result"])
@@ -338,7 +339,6 @@ class TasksTestCase(test.DBTestCase):
         workloads = task1_full["subtasks"][0]["workloads"]
         self.assertEqual(1, len(workloads))
         workloads[0].pop("uuid")
-        workloads[0].pop("start_time")
         workloads[0].pop("created_at")
         workloads[0].pop("updated_at")
 
@@ -352,6 +352,7 @@ class TasksTestCase(test.DBTestCase):
              "runner": w_runner, "runner_type": w_runner_type,
              "full_duration": w_full_duration,
              "load_duration": w_load_duration,
+             "start_time": w_start_time,
              "max_duration": 0.0, "min_duration": 0.0,
              "failed_iteration_count": 0, "total_iteration_count": 0,
              "pass_sla": True, "sla": w_sla,
@@ -369,11 +370,11 @@ class TasksTestCase(test.DBTestCase):
             "raw": [
                 {"error": "anError", "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 1, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 1, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 2, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 2, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 3, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 3, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
             ],
         })
@@ -382,30 +383,38 @@ class TasksTestCase(test.DBTestCase):
             "raw": [
                 {"error": "anError2", "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 6, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 6, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 5, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 5, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 4, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 4, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
             ],
         })
 
         db.workload_data_create(task_id, workload["uuid"], 2, {
             "raw": [
-                {"duration": 7, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 7, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
-                {"duration": 8, "timestamp": 10, "duration": 1,
+                {"error": None, "duration": 8, "timestamp": 10, "duration": 1,
                  "atomic_actions": []},
             ],
         })
 
+        sla_results = [{"s": "S", "success": True},
+                       {"1": "2", "success": True},
+                       {"a": "A", "success": True}]
+        load_duration = 13
+        full_duration = 42
+        start_time = 33.33
+
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=workload["subtask_uuid"],
                                 task_uuid=workload["task_uuid"],
-                                data={"sla": [{"success": True}],
-                                      "load_duration": 13,
-                                      "full_duration": 42})
+                                load_duration=load_duration,
+                                full_duration=full_duration,
+                                start_time=start_time,
+                                sla_results=sla_results)
 
         detailed_task = db.task_get(task_id, detailed=True)
         self.assertEqual(len(detailed_task["subtasks"]), 1)
@@ -414,27 +423,29 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual([
             {"error": "anError", "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 1, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 1, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 2, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 2, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 3, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 3, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
             {"error": "anError2", "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 6, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 6, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 5, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 5, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 4, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 4, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 7, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 7, "timestamp": 10, "duration": 1,
              "atomic_actions": []},
-            {"duration": 8, "timestamp": 10, "duration": 1,
+            {"error": None, "duration": 8, "timestamp": 10, "duration": 1,
              "atomic_actions": []}], workload["data"])
         self.assertTrue(workload["pass_sla"])
-        self.assertEqual(13, workload["load_duration"])
-        self.assertEqual(42, workload["full_duration"])
+        self.assertEqual(sla_results, workload["sla_results"]["sla"])
+        self.assertEqual(load_duration, workload["load_duration"])
+        self.assertEqual(full_duration, workload["full_duration"])
+        self.assertEqual(start_time, workload["start_time"])
         self.assertEqual(2, workload["failed_iteration_count"])
         self.assertEqual(10, workload["total_iteration_count"])
 
@@ -517,27 +528,32 @@ class WorkloadTestCase(test.DBTestCase):
                                       runner_type="foo")
         raw_data = {
             "raw": [
-                {"error": "anError", "duration": 0, "timestamp": 1,
-                 "atomic_actions": []},
-                {"duration": 1, "timestamp": 1, "atomic_actions": []},
-                {"duration": 2, "timestamp": 2, "atomic_actions": []}
+                {"error": "anError", "duration": 1, "timestamp": 1,
+                 "atomic_actions": [
+                     {"name": "foo", "started_at": 1, "finished_at": 3}]},
+                {"error": None, "duration": 2, "timestamp": 1,
+                 "atomic_actions": [
+                     {"name": "foo", "started_at": 1, "finished_at": 2}]},
+                {"error": None, "duration": 0, "timestamp": 2,
+                 "atomic_actions": [
+                     {"name": "foo", "started_at": 1, "finished_at": 10}]}
             ],
         }
-        data = {
-            "sla": [
-                {"s": "S", "success": True},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42
-        }
+        sla_results = [{"s": "S", "success": True},
+                       {"1": "2", "success": True},
+                       {"a": "A", "success": True}]
+        load_duration = 13
+        full_duration = 42
+        start_time = 33.33
 
         db.workload_data_create(self.task_uuid, workload["uuid"], 0, raw_data)
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=self.subtask_uuid,
                                 task_uuid=self.task_uuid,
-                                data=data)
+                                load_duration=load_duration,
+                                full_duration=full_duration,
+                                start_time=start_time,
+                                sla_results=sla_results)
         workload = db.workload_get(workload["uuid"])
 
         self.assertEqual(13, workload["load_duration"])
@@ -548,7 +564,10 @@ class WorkloadTestCase(test.DBTestCase):
         self.assertEqual(1, workload["failed_iteration_count"])
         self.assertTrue(workload["pass_sla"])
         self.assertEqual([], workload["hooks"])
-        self.assertEqual(data["sla"], workload["sla_results"]["sla"])
+        self.assertEqual(sla_results, workload["sla_results"]["sla"])
+        self.assertEqual(load_duration, workload["load_duration"])
+        self.assertEqual(full_duration, workload["full_duration"])
+        self.assertEqual(start_time, workload["start_time"])
         self.assertEqual(self.task_uuid, workload["task_uuid"])
         self.assertEqual(self.subtask_uuid, workload["subtask_uuid"])
 
@@ -559,29 +578,30 @@ class WorkloadTestCase(test.DBTestCase):
                                       context={}, sla={},
                                       hooks=[], runner={},
                                       runner_type="foo")
-        data = {
-            "sla": [
-                {"s": "S", "success": False},
-                {"1": "2", "success": True},
-                {"a": "A", "success": True}
-            ],
-            "load_duration": 13,
-            "full_duration": 42
-        }
+        sla_results = [{"s": "S", "success": False},
+                       {"1": "2", "success": True},
+                       {"a": "A", "success": True}]
+        load_duration = 13
+        full_duration = 42
+        start_time = 33.33
 
         db.workload_set_results(workload_uuid=workload["uuid"],
                                 subtask_uuid=self.subtask_uuid,
                                 task_uuid=self.task_uuid,
-                                data=data)
+                                load_duration=load_duration,
+                                full_duration=full_duration,
+                                start_time=start_time,
+                                sla_results=sla_results)
         workload = db.workload_get(workload["uuid"])
-        self.assertEqual(13, workload["load_duration"])
-        self.assertEqual(42, workload["full_duration"])
         self.assertEqual(0, workload["min_duration"])
         self.assertEqual(0, workload["max_duration"])
         self.assertEqual(0, workload["total_iteration_count"])
         self.assertEqual(0, workload["failed_iteration_count"])
         self.assertFalse(workload["pass_sla"])
-        self.assertEqual(data["sla"], workload["sla_results"]["sla"])
+        self.assertEqual(sla_results, workload["sla_results"]["sla"])
+        self.assertEqual(load_duration, workload["load_duration"])
+        self.assertEqual(full_duration, workload["full_duration"])
+        self.assertEqual(start_time, workload["start_time"])
         self.assertEqual(self.task_uuid, workload["task_uuid"])
         self.assertEqual(self.subtask_uuid, workload["subtask_uuid"])
 

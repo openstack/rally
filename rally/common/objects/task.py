@@ -629,11 +629,16 @@ class Workload(object):
                                 self.workload["uuid"], chunk_order,
                                 workload_data)
 
-    def set_results(self, data):
+    def set_results(self, load_duration, full_duration, start_time,
+                    sla_results, hooks_results=None):
         db.workload_set_results(workload_uuid=self.workload["uuid"],
                                 subtask_uuid=self.workload["subtask_uuid"],
                                 task_uuid=self.workload["task_uuid"],
-                                data=data)
+                                load_duration=load_duration,
+                                full_duration=full_duration,
+                                start_time=start_time,
+                                sla_results=sla_results,
+                                hooks_results=hooks_results)
 
     @classmethod
     def format_workload_config(cls, workload):
