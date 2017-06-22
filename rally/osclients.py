@@ -231,9 +231,23 @@ class Keystone(OSClient):
 
     @property
     def auth_ref(self):
-        if "keystone_auth_ref" not in self.cache:
-            sess, plugin = self.get_session()
-            self.cache["keystone_auth_ref"] = plugin.get_access(sess)
+        try:
+            if "keystone_auth_ref" not in self.cache:
+                sess, plugin = self.get_session()
+                self.cache["keystone_auth_ref"] = plugin.get_access(sess)
+        except Exception as e:
+            if logging.is_debug():
+                LOG.exception("Unable to authenticate for user"
+                              " %(username)s in project"
+                              " %(tenant_name)s" %
+                              {"username": self.credential.username,
+                               "tenant_name": self.credential.tenant_name})
+            raise exceptions.AuthenticationFailed(
+                username=self.credential.username,
+                project=self.credential.tenant_name,
+                url=self.credential.auth_url,
+                etype=e.__class__.__name__,
+                error=str(e))
         return self.cache["keystone_auth_ref"]
 
     def get_session(self, version=None):
@@ -272,7 +286,7 @@ class Keystone(OSClient):
                 password_args.update({
                     "user_domain_name": self.credential.user_domain_name,
                     "domain_name": self.credential.domain_name,
-                    "project_domain_name": self.credential.project_domain_name,
+                    "project_domain_name": self.credential.project_domain_name
                 })
             identity_plugin = identity.Password(**password_args)
             sess = session.Session(
@@ -327,6 +341,14 @@ class Keystone(OSClient):
             kw["auth_url"] = sess.get_endpoint(interface=plugin.AUTH_INTERFACE)
         if self.credential.endpoint_type:
             kw["interface"] = self.credential.endpoint_type
+
+        # NOTE(amyge):
+        # In auth_ref(), plugin.get_access(sess) only returns a auth_ref object
+        # and won't check the authentication access until it is actually being
+        # called. To catch the authentication failure in auth_ref(), we will
+        # have to call self.auth_ref.auth_token here to actually use auth_ref.
+        self.auth_ref   # noqa
+
         return client.Client(**kw)
 
 
@@ -806,18 +828,11 @@ class Clients(object):
 
         :returns: Keystone Client
         """
-        from keystoneclient import exceptions as keystone_exceptions
-        try:
-            # Ensure that user is admin
-            if "admin" not in [role.lower() for role in
-                               self.keystone.auth_ref.role_names]:
-                raise exceptions.InvalidAdminException(
-                    username=self.credential.username)
-        except keystone_exceptions.Unauthorized:
-            raise exceptions.InvalidEndpointsException()
-        except keystone_exceptions.AuthorizationFailure:
-            raise exceptions.HostUnreachableException(
-                url=self.credential.auth_url)
+        # Ensure that user is admin
+        if "admin" not in [role.lower() for role in
+                           self.keystone.auth_ref.role_names]:
+            raise exceptions.InvalidAdminException(
+                username=self.credential.username)
         return self.keystone()
 
     def services(self):

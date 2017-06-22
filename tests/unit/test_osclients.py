@@ -14,7 +14,6 @@
 #    under the License.
 
 import ddt
-from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
 
@@ -187,7 +186,11 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
             "auth_url": "http://auth_url/",
             "session": self.ksa_session,
             "timeout": 180.0})
-        keystone.get_session.assert_called_once_with(version="3")
+        keystone.get_session.assert_called_with()
+        called_with = self.ksc_client.Client.call_args_list[0][1]
+        self.assertEqual(
+            {"session": self.ksa_session, "timeout": 180.0, "version": "3"},
+            called_with)
         self.ksc_client.Client.assert_called_once_with(
             session=self.ksa_session, timeout=180.0, version="3")
         self.assertIs(client, self.ksc_client.Client())
@@ -278,6 +281,39 @@ class TestCreateKeystoneClient(test.TestCase, OSClientTestCaseUtils):
         keystone.auth_ref
         mock_keystone_get_session.assert_called_once_with()
 
+    @mock.patch("keystoneauth1.identity.base.BaseIdentityPlugin.get_access")
+    def test_auth_ref_fails(self, mock_get_access):
+        mock_get_access.side_effect = Exception
+        keystone = osclients.Keystone(self.credential, {}, {})
+
+        try:
+            keystone.auth_ref
+        except exceptions.AuthenticationFailed:
+            pass
+        else:
+            self.fail("keystone.auth_ref didn't raise"
+                      " exceptions.AuthenticationFailed")
+
+    @mock.patch("rally.osclients.LOG.exception")
+    @mock.patch("rally.osclients.logging.is_debug")
+    @mock.patch("keystoneauth1.identity.base.BaseIdentityPlugin.get_access")
+    def test_auth_ref_debug(self, mock_get_access,
+                            mock_is_debug, mock_log_exception):
+        mock_is_debug.return_value = True
+        mock_get_access.side_effect = Exception
+        keystone = osclients.Keystone(self.credential, {}, {})
+
+        try:
+            keystone.auth_ref
+        except exceptions.AuthenticationFailed:
+            pass
+        else:
+            self.fail("keystone.auth_ref didn't raise"
+                      " exceptions.AuthenticationFailed")
+
+        mock_log_exception.assert_called_once_with(mock.ANY)
+        mock_is_debug.assert_called_once_with()
+
 
 @ddt.ddt
 class OSClientsTestCase(test.TestCase):
@@ -346,21 +382,18 @@ class OSClientsTestCase(test.TestCase):
                           self.clients.verified_keystone)
 
     @mock.patch("rally.osclients.Keystone.get_session")
-    def test_verified_keystone_unauthorized(self, mock_keystone_get_session):
+    def test_verified_keystone_authentication_fails(self,
+                                                    mock_keystone_get_session):
         self.auth_ref_patcher.stop()
         mock_keystone_get_session.side_effect = (
-            keystone_exceptions.Unauthorized
+            exceptions.AuthenticationFailed(
+                username=self.credential.username,
+                project=self.credential.tenant_name,
+                url=self.credential.auth_url,
+                etype=KeyError,
+                error="oops")
         )
-        self.assertRaises(exceptions.InvalidEndpointsException,
-                          self.clients.verified_keystone)
-
-    @mock.patch("rally.osclients.Keystone.get_session")
-    def test_verified_keystone_unreachable(self, mock_keystone_get_session):
-        self.auth_ref_patcher.stop()
-        mock_keystone_get_session.side_effect = (
-            keystone_exceptions.AuthorizationFailure
-        )
-        self.assertRaises(exceptions.HostUnreachableException,
+        self.assertRaises(exceptions.AuthenticationFailed,
                           self.clients.verified_keystone)
 
     @mock.patch("rally.osclients.Nova._get_endpoint")

@@ -80,6 +80,40 @@ class DeploymentTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCliError, self.rally,
                           ("deployment check"))
 
+    def test_check_debug(self):
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
+        config = json.loads(self.rally("deployment config"))
+        config["creds"]["openstack"]["admin"]["password"] = "fakepassword"
+        file = utils.JsonTempFile(config)
+        self.rally("deployment create --name t_create_file_debug "
+                   "--filename %s" % file.filename)
+        self.assertIn("t_create_file_debug", self.rally("deployment list"))
+        self.assertEqual(config,
+                         json.loads(self.rally("deployment config")))
+        self.assertRaises(utils.RallyCliError, self.rally,
+                          ("deployment check"))
+
+        try:
+            self.rally("--debug deployment check")
+        except utils.RallyCliError as e:
+            self.assertIn(
+                "[-] Unable to authenticate for user %(username)s in"
+                " project %(tenant_name)s" %
+                {"username": utils.TEST_ENV["OS_USERNAME"],
+                 "tenant_name": utils.TEST_ENV["OS_TENANT_NAME"]},
+                str(e))
+            self.assertIn(
+                "AuthenticationFailed: Failed to authenticate to %(auth_url)s"
+                " for user '%(username)s' in project '%(tenant_name)s'" %
+                {"auth_url": utils.TEST_ENV["OS_AUTH_URL"],
+                 "username": utils.TEST_ENV["OS_USERNAME"],
+                 "tenant_name": utils.TEST_ENV["OS_TENANT_NAME"]},
+                str(e))
+        else:
+            self.fail("rally deployment fails to raise error for wrong"
+                      " authentication info")
+
     def test_recreate(self):
         self.rally.env.update(utils.TEST_ENV)
         self.rally("deployment create --name t_create_env --fromenv")

@@ -16,7 +16,6 @@
 from rally.common import logging
 from rally import consts
 from rally.deployment import credential
-from rally import exceptions
 from rally import osclients
 
 LOG = logging.getLogger(__file__)
@@ -82,18 +81,10 @@ class OpenStackCredential(credential.Credential):
                 "profiler_hmac_key": self.profiler_hmac_key}
 
     def verify_connection(self):
-        from keystoneclient import exceptions as keystone_exceptions
-
-        try:
-            if self.permission == consts.EndpointPermission.ADMIN:
-                self.clients().verified_keystone()
-            else:
-                self.clients().keystone()
-        except keystone_exceptions.ConnectionRefused as e:
-            if logging.is_debug():
-                LOG.exception(e)
-            raise exceptions.RallyException("Unable to connect %s." %
-                                            self.auth_url)
+        if self.permission == consts.EndpointPermission.ADMIN:
+            self.clients().verified_keystone()
+        else:
+            self.clients().keystone()
 
     def list_services(self):
         return sorted([{"type": stype, "name": sname}

@@ -187,15 +187,10 @@ class InvalidAdminException(InvalidArgumentsException):
     msg_fmt = _("user '%(username)s' doesn't have 'admin' role")
 
 
-class InvalidEndpointsException(InvalidArgumentsException):
-    error_code = 522
-    msg_fmt = _("wrong keystone credentials specified in your endpoint"
-                " properties. (HTTP 401)")
-
-
-class HostUnreachableException(InvalidArgumentsException):
-    error_code = 523
-    msg_fmt = _("unable to establish connection to the remote host: %(url)s")
+class AuthenticationFailed(InvalidArgumentsException):
+    error_code = 401
+    msg_fmt = _("Failed to authenticate to %(url)s for user '%(username)s'"
+                " in project '%(project)s': %(etype)s: %(error)s")
 
 
 class InvalidScenarioArgument(RallyException):
