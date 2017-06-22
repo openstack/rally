@@ -41,6 +41,33 @@ class IterSubclassesTestCase(test.TestCase):
 
         self.assertEqual([B, C, D], list(discover.itersubclasses(A)))
 
+    def test_itersubclasses_with_multiple_inheritance(self):
+        class A(object):
+            pass
+
+        class B(A):
+            pass
+
+        class C(A):
+            pass
+
+        class D(B, C):
+            pass
+
+        self.assertEqual([B, D, C], list(discover.itersubclasses(A)))
+
+    def test_itersubclasses_with_type(self):
+        class A(type):
+            pass
+
+        class B(A):
+            pass
+
+        class C(B):
+            pass
+
+        self.assertEqual([B, C], list(discover.itersubclasses(A)))
+
 
 class LoadExtraModulesTestCase(test.TestCase):
 

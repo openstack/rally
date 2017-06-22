@@ -31,7 +31,11 @@ LOG = logging.getLogger(__name__)
 
 
 def itersubclasses(cls, seen=None):
-    """Generator over all subclasses of a given class in depth first order."""
+    """Generator over all subclasses of a given class in depth first order.
+
+    NOTE: Use 'seen' to exclude cls which was reduplicated found, because
+    cls maybe has multiple super classes of the same plugin.
+    """
 
     seen = seen or set()
     try:
