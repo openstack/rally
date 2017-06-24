@@ -268,29 +268,15 @@ class _Task(APIGroup):
     def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
 
-    def _get(self, task_id, detailed=False):
-        return objects.Task.get(task_id, detailed=detailed)
+    @api_wrapper(path=API_REQUEST_PREFIX + "/task/get", method="GET")
+    def get(self, task_id, detailed=False):
+        """Get task data
 
-    @api_wrapper(path=API_REQUEST_PREFIX + "/task/get",
-                 method="GET")
-    def get(self, task_id):
-        return self._get(task_id).to_dict()
-
-    @api_wrapper(path=API_REQUEST_PREFIX + "/task/get_detailed",
-                 method="GET")
-    def get_detailed(self, task_id, extended_results=False):
-        """Get detailed task data.
-
-        :param task_id: str task UUID
-        :param extended_results: whether to return task data as dict
-                                 with extended results
-        :returns: rally.common.db.sqlalchemy.models.Task
-        :returns: dict
+        :param task_id: Task UUID
+        :param detailed: whether return detailed information(including
+            subtasks and workloads) or not.
         """
-        task = self._get(task_id, detailed=True)
-        if extended_results:
-            task.extend_results()
-        return task.to_dict()
+        return objects.Task.get(task_id, detailed=detailed).to_dict()
 
     # TODO(andreykurilin): move it to some kind of utils
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/render_template",
@@ -603,7 +589,7 @@ class _Task(APIGroup):
 
         tasks_results = []
         for task_uuid in tasks_uuids:
-            tasks_results.append(self.get_detailed(task_id=task_uuid))
+            tasks_results.append(self.get(task_id=task_uuid, detailed=True))
 
         reporter_cls = texporter.TaskExporter.get(output_type)
         reporter_cls.validate(output_dest)

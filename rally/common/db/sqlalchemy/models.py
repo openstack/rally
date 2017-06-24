@@ -169,7 +169,7 @@ class Task(BASE, RallyBase):
 
     validation_duration = sa.Column(sa.Float)
     task_duration = sa.Column(sa.Float, default=0.0)
-    pass_sla = sa.Column(sa.Boolean)
+    pass_sla = sa.Column(sa.Boolean, default=True)
     status = sa.Column(sa.String(36), default=consts.TaskStatus.INIT)
 
 
@@ -207,7 +207,7 @@ class Subtask(BASE, RallyBase):
 
     run_in_parallel = sa.Column(sa.Boolean, default=False, nullable=False)
     duration = sa.Column(sa.Float, default=0.0)
-    pass_sla = sa.Column(sa.Boolean)
+    pass_sla = sa.Column(sa.Boolean, default=True)
     status = sa.Column(sa.String(36), default=consts.SubtaskStatus.RUNNING)
 
 
@@ -278,7 +278,7 @@ class Workload(BASE, RallyBase):
     statistics = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
-    pass_sla = sa.Column(sa.Boolean)
+    pass_sla = sa.Column(sa.Boolean, default=True)
     _profiling_data = sa.Column(sa.Text, default="")
 
 

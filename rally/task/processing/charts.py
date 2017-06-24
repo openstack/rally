@@ -38,17 +38,15 @@ class Chart(plugin.Plugin):
     def widget(self):
         """Widget name to display this chart by JavaScript."""
 
-    def __init__(self, workload_info, zipped_size=1000):
+    def __init__(self, workload, zipped_size=1000):
         """Setup initial values.
 
-        :param workload_info: dict, generalized info about iterations.
-                               The most important value is `iterations_count'
-                               that should have int value of total data size
+        :param workload: dict, detailed info about the Workload
         :param zipped_size: int maximum number of points on scale
         """
         self._data = collections.OrderedDict()  # Container for results
-        self._workload_info = workload_info
-        self.base_size = workload_info.get("iterations_count", 0)
+        self._workload = workload
+        self.base_size = self._workload["total_iteration_count"]
         self.zipped_size = zipped_size
 
     def add_iteration(self, iteration):
@@ -82,11 +80,13 @@ class Chart(plugin.Plugin):
         return atomic_actions
 
     def _get_atomic_names(self):
-        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
+        atomic_merger = utils.AtomicMerger(
+            self._workload["statistics"]["atomics"])
         return atomic_merger.get_merged_names()
 
     def _merge_atomic_actions(self, atomic_actions):
-        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
+        atomic_merger = utils.AtomicMerger(
+            self._workload["statistics"]["atomics"])
         return atomic_merger.merge_atomic_actions(
             atomic_actions)
 
@@ -102,14 +102,14 @@ class MainStackedAreaChart(Chart):
     def _map_iteration_values(self, iteration):
         if iteration["error"]:
             result = [("duration", 0), ("idle_duration", 0)]
-            if self._workload_info["iterations_failed"]:
+            if self._workload["failed_iteration_count"]:
                 result.append(
                     ("failed_duration",
                      iteration["duration"] + iteration["idle_duration"]))
         else:
             result = [("duration", iteration["duration"]),
                       ("idle_duration", iteration["idle_duration"])]
-            if self._workload_info["iterations_failed"]:
+            if self._workload["failed_iteration_count"]:
                 result.append(("failed_duration", 0))
         return result
 
@@ -123,7 +123,7 @@ class AtomicStackedAreaChart(Chart):
             iteration["atomic_actions"])
         atomic_actions = self._fix_atomic_actions(atomic_actions)
         atomics = list(atomic_actions.items())
-        if self._workload_info["iterations_failed"]:
+        if self._workload["failed_iteration_count"]:
             if iteration["error"]:
                 failed_duration = (
                     iteration["duration"] + iteration["idle_duration"]
@@ -163,20 +163,19 @@ class LoadProfileChart(Chart):
 
     widget = "StackedArea"
 
-    def __init__(self, workload_info, name="parallel iterations",
+    def __init__(self, workload, name="parallel iterations",
                  scale=100):
         """Setup chart with graph name and scale.
 
-        :workload_info:  dict, generalized info about iterations
+        :param workload:  dict, detailed information about Workload
         :param name: str name for X axis
         :param scale: int number of X points
         """
-        super(LoadProfileChart, self).__init__(workload_info)
+        super(LoadProfileChart, self).__init__(workload)
         self._name = name
         # NOTE(boris-42): Add 2 points at the end of graph so at the end of
         #                 graph there will be point with 0 running iterations.
-        self._duration = workload_info["load_duration"] * (1 + 2.0 / scale)
-        self._tstamp_start = workload_info["tstamp_start"]
+        self._duration = self._workload["load_duration"] * (1 + 2.0 / scale)
 
         self.step = self._duration / float(scale)
         self._time_axis = [self.step * x
@@ -184,9 +183,13 @@ class LoadProfileChart(Chart):
                            if (self.step * x) < self._duration]
         self._time_axis.append(self._duration)
         self._running = [0] * len(self._time_axis)
+        # NOTE(andreykurilin): There is a "start_time" field in workload
+        #   object, but due to transformations in database layer, the
+        #   microseconds can be not accurate enough.
+        self._tstamp_start = self._workload["data"][0]["timestamp"]
 
     def _map_iteration_values(self, iteration):
-        return (iteration["timestamp"], iteration["duration"])
+        return iteration["timestamp"], iteration["duration"]
 
     def add_iteration(self, iteration):
         timestamp, duration = self._map_iteration_values(iteration)
@@ -270,8 +273,8 @@ class MainHistogramChart(HistogramChart):
 
     def __init__(self, workload_info):
         super(MainHistogramChart, self).__init__(workload_info)
-        views = self._init_views(self._workload_info["min_duration"],
-                                 self._workload_info["max_duration"])
+        views = self._init_views(self._workload["min_duration"],
+                                 self._workload["max_duration"])
         self._data["task"] = {"views": views, "disabled": None}
 
     def _map_iteration_values(self, iteration):
@@ -282,9 +285,10 @@ class AtomicHistogramChart(HistogramChart):
 
     def __init__(self, workload_info):
         super(AtomicHistogramChart, self).__init__(workload_info)
-        atomic_merger = utils.AtomicMerger(self._workload_info["atomic"])
-        for i, name in enumerate(self._workload_info["atomic"]):
-            value = self._workload_info["atomic"][name]
+        atomics = self._workload["statistics"]["atomics"]
+        atomic_merger = utils.AtomicMerger(atomics)
+        for i, name in enumerate(atomics):
+            value = atomics[name]
             self._data[atomic_merger.get_merged_name(name)] = {
                 "views": self._init_views(value["min_duration"],
                                           value["max_duration"]),
@@ -372,7 +376,7 @@ class MainStatsTable(Table):
 
     def __init__(self, *args, **kwargs):
         super(MainStatsTable, self).__init__(*args, **kwargs)
-        iters_num = self._workload_info["iterations_count"]
+        iters_num = self._workload["total_iteration_count"]
         for name in (self._get_atomic_names() + ["total"]):
             self._data[name] = [
                 [streaming.MinComputation(), None],
@@ -595,7 +599,7 @@ class OutputStatsTable(OutputTable):
     def add_iteration(self, iteration):
         for name, value in self._map_iteration_values(iteration):
             if name not in self._data:
-                iters_num = self._workload_info["iterations_count"]
+                iters_num = self._workload["total_iteration_count"]
                 self._data[name] = [
                     [streaming.MinComputation(), None],
                     [streaming.PercentileComputation(0.5, iters_num), None],

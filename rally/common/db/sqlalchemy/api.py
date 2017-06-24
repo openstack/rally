@@ -527,7 +527,8 @@ class Connection(object):
                             atomics[name]["max_duration"] = duration
 
             durations_stat = charts.MainStatsTable(
-                {"iterations_count": iter_count, "atomic": atomics})
+                {"total_iteration_count": iter_count,
+                 "statistics": {"atomics": atomics}})
 
             for itr in workload_results:
                 durations_stat.add_iteration(itr)

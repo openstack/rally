@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import datetime as dt
-import itertools
 import uuid
 
 from rally.common import db
@@ -23,7 +21,6 @@ from rally.common.i18n import _LE
 from rally.common import logging
 from rally import consts
 from rally import exceptions
-from rally.task.processing import charts
 
 
 LOG = logging.getLogger(__name__)
@@ -367,29 +364,14 @@ class Task(object):
 
     def to_dict(self):
         db_task = self.task
-        if "deployment_uuid" in self.task:
-            # TODO(andreykurilin): remove the check and do following actions
-            #   in all cases as soon as we get rid of extend_results method.
-            # NOTE(andreykurilin): Yes, it is a dirty hack:) It happened that
-            #   we do not provide a way to obtain the "detailed" data for
-            #   task to the end user (will be fixed soon) and the json result
-            #   includes data only about workloads. In case when user transmits
-            #   such json into `rally task report` to built a report, our
-            #   reporting mechanism will try to extend the results (with some
-            #   statistics) and we will have a task object constructed from
-            #   json file where there is no info about deployment.
-            #   As for created_at and updated_at, it is the same case. We can
-            #   guess them by min and max values of created_at and updated_at
-            #   fields of workloads, but anyway those values are not used
-            #   while making reports
-            deployment_name = db.deployment_get(
-                self.task["deployment_uuid"])["name"]
-            db_task["deployment_name"] = deployment_name
-            self._serialize_dt(db_task)
-            for subtask in db_task.get("subtasks", []):
-                self._serialize_dt(subtask)
-                for workload in subtask["workloads"]:
-                    self._serialize_dt(workload)
+        deployment_name = db.deployment_get(
+            self.task["deployment_uuid"])["name"]
+        db_task["deployment_name"] = deployment_name
+        self._serialize_dt(db_task)
+        for subtask in db_task.get("subtasks", []):
+            self._serialize_dt(subtask)
+            for workload in subtask["workloads"]:
+                self._serialize_dt(workload)
         return db_task
 
     @classmethod
@@ -432,133 +414,6 @@ class Task(object):
 
     def add_subtask(self, **subtask):
         return Subtask(self.task["uuid"], **subtask)
-
-    def extend_results(self, serializable=False):
-        """Modify and extend results with aggregated data.
-
-        This is a workaround method that tries to adapt task results
-        to schema of planned DB refactoring, so this method is expected
-        to be simplified after DB refactoring since all the data should
-        be taken as-is directly from the database.
-
-        Each scenario results have extra `info' with aggregated data,
-        and iterations data is represented by iterator - this simplifies
-        its future implementation as generator and gives ability to process
-        arbitrary number of iterations with low memory usage.
-
-        :param serializable: bool, whether to convert json non-serializable
-                             types (like datetime) to serializable ones
-        :returns: list of dicts, each dict represents scenario results:
-                  key - dict, scenario input data
-                  sla - list, SLA results
-                  iterations - if serializable, then iterator with
-                               iterations data, otherwise a list
-                  created_at - str datetime,
-                  updated_at - str datetime,
-                  info:
-                      atomic - dict where key is one of atomic action names
-                               and value is dict {min_duration: number,
-                                                  max_duration: number}
-                      iterations_count - int number of iterations
-                      iterations_failed - int number of iterations with errors
-                      min_duration - float minimum iteration duration
-                      max_duration - float maximum iteration duration
-                      tstamp_start - float timestamp of the first iteration
-                      full_duration - float full scenario duration
-                      load_duration - float load scenario duration
-        """
-
-        def _merge_atomic(atomic_actions):
-            merged_atomic = collections.OrderedDict()
-            for action in atomic_actions:
-                name = action["name"]
-                duration = action["finished_at"] - action["started_at"]
-                if name not in merged_atomic:
-                    merged_atomic[name] = {"duration": duration, "count": 1}
-                else:
-                    merged_atomic[name]["duration"] += duration
-                    merged_atomic[name]["count"] += 1
-            return merged_atomic
-
-        for workload in itertools.chain(
-                *[s["workloads"] for s in self.task.get("subtasks", [])]):
-            tstamp_start = 0
-            min_duration = 0
-            max_duration = 0
-            iterations_failed = 0
-            atomic = collections.OrderedDict()
-
-            for itr in workload["data"]:
-                merged_atomic = _merge_atomic(itr["atomic_actions"])
-                for name, value in merged_atomic.items():
-                    duration = value["duration"]
-                    count = value["count"]
-                    if name not in atomic or count > atomic[name]["count"]:
-                        atomic[name] = {"min_duration": duration,
-                                        "max_duration": duration,
-                                        "count": count}
-                    elif count == atomic[name]["count"]:
-                        if duration < atomic[name]["min_duration"]:
-                            atomic[name]["min_duration"] = duration
-                        if duration > atomic[name]["max_duration"]:
-                            atomic[name]["max_duration"] = duration
-
-                if not tstamp_start or itr["timestamp"] < tstamp_start:
-                    tstamp_start = itr["timestamp"]
-
-                if "output" not in itr:
-                    itr["output"] = {"additive": [], "complete": []}
-
-                    # NOTE(amaretskiy): Deprecated "scenario_output"
-                    #     is supported for backward compatibility
-                    if ("scenario_output" in itr and
-                            itr["scenario_output"]["data"]):
-                        itr["output"]["additive"].append(
-                            {"items": itr["scenario_output"]["data"].items(),
-                             "title": "Scenario output",
-                             "description": "",
-                             "chart": "OutputStackedAreaChart"})
-                        del itr["scenario_output"]
-
-                if itr["error"]:
-                    iterations_failed += 1
-                else:
-                    duration = itr["duration"] or 0
-                    if not min_duration or duration < min_duration:
-                        min_duration = duration
-                    if not max_duration or duration > max_duration:
-                        max_duration = duration
-
-            for k in "created_at", "updated_at":
-                if workload[k] and isinstance(workload[k], dt.datetime):
-                    workload[k] = workload[k].strftime("%Y-%d-%m %H:%M:%S")
-
-            durations_stat = charts.MainStatsTable(
-                {"iterations_count": len(workload["data"]),
-                 "atomic": atomic})
-
-            for itr in workload["data"]:
-                durations_stat.add_iteration(itr)
-
-            workload["info"] = {
-                "stat": durations_stat.render(),
-                "atomic": atomic,
-                "iterations_count": len(workload["data"]),
-                "iterations_failed": iterations_failed,
-                "min_duration": min_duration,
-                "max_duration": max_duration,
-                "tstamp_start": tstamp_start,
-                "full_duration": workload["full_duration"],
-                "load_duration": workload["load_duration"]}
-            iterations = sorted(workload["data"],
-                                key=lambda itr: itr["timestamp"])
-            if serializable:
-                workload["iterations"] = list(iterations)
-            else:
-                workload["iterations"] = iter(iterations)
-            workload["sla"] = workload["sla"]
-            workload["hooks"] = workload.get("hooks", [])
-        return self
 
     def delete(self, status=None):
         db.task_delete(self.task["uuid"], status=status)

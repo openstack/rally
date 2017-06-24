@@ -111,8 +111,8 @@ def upgrade():
                         atomics[name]["max_duration"] = duration
 
         durations_stat = charts.MainStatsTable(
-            {"iterations_count": len(workloads[workload.uuid]),
-             "atomic": atomics})
+            {"total_iteration_count": len(workloads[workload.uuid]),
+             "statistics": {"atomics": atomics}})
 
         for itr in workloads[workload.uuid]:
             durations_stat.add_iteration(itr)

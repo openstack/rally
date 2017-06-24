@@ -69,7 +69,7 @@ def _process_hooks(hooks):
             first = hook_ctx["additive"][i][0]
             descr = first.get("description", "")
             axis_label = first.get("axis_label", "")
-            chart = chart_cls({"iterations_count": iters_count},
+            chart = chart_cls({"total_iteration_count": iters_count},
                               title=first["title"],
                               description=descr,
                               label=first.get("label", ""),
@@ -84,19 +84,19 @@ def _process_hooks(hooks):
 
 
 def _process_workload(workload, workload_cfg, pos):
-    main_area = charts.MainStackedAreaChart(workload["info"])
-    main_hist = charts.MainHistogramChart(workload["info"])
-    main_stat = charts.MainStatsTable(workload["info"])
-    load_profile = charts.LoadProfileChart(workload["info"])
-    atomic_pie = charts.AtomicAvgChart(workload["info"])
-    atomic_area = charts.AtomicStackedAreaChart(workload["info"])
-    atomic_hist = charts.AtomicHistogramChart(workload["info"])
+    main_area = charts.MainStackedAreaChart(workload)
+    main_hist = charts.MainHistogramChart(workload)
+    main_stat = charts.MainStatsTable(workload)
+    load_profile = charts.LoadProfileChart(workload)
+    atomic_pie = charts.AtomicAvgChart(workload)
+    atomic_area = charts.AtomicStackedAreaChart(workload)
+    atomic_hist = charts.AtomicHistogramChart(workload)
 
     errors = []
     output_errors = []
     additive_output_charts = []
     complete_output = []
-    for idx, itr in enumerate(workload["iterations"], 1):
+    for idx, itr in enumerate(workload["data"], 1):
         if itr["error"]:
             typ, msg, trace = itr["error"]
             errors.append({"iteration": idx,
@@ -108,7 +108,7 @@ def _process_workload(workload, workload_cfg, pos):
             except IndexError:
                 chart_cls = plugin.Plugin.get(additive["chart_plugin"])
                 chart = chart_cls(
-                    workload["info"], title=additive["title"],
+                    workload, title=additive["title"],
                     description=additive.get("description", ""),
                     label=additive.get("label", ""),
                     axis_label=additive.get("axis_label",
@@ -130,7 +130,6 @@ def _process_workload(workload, workload_cfg, pos):
 
     cls, method = workload["name"].split(".")
     additive_output = [chart.render() for chart in additive_output_charts]
-    iterations_count = workload["info"]["iterations_count"]
 
     return {
         "cls": cls,
@@ -143,7 +142,7 @@ def _process_workload(workload, workload_cfg, pos):
         "description": workload.get("description", ""),
         "iterations": {
             "iter": main_area.render(),
-            "pie": [("success", (workload["info"]["iterations_count"]
+            "pie": [("success", (workload["total_iteration_count"]
                                  - len(errors))),
                     ("errors", len(errors))],
             "histogram": main_hist.render()},
@@ -157,12 +156,12 @@ def _process_workload(workload, workload_cfg, pos):
         "has_output": any(additive_output) or any(complete_output),
         "output_errors": output_errors,
         "errors": errors,
-        "load_duration": workload["info"]["load_duration"],
-        "full_duration": workload["info"]["full_duration"],
+        "load_duration": workload["load_duration"],
+        "full_duration": workload["full_duration"],
         "created_at": workload["created_at"],
         "sla": workload["sla"],
         "sla_success": workload["pass_sla"],
-        "iterations_count": iterations_count,
+        "iterations_count": workload["total_iteration_count"],
     }
 
 
@@ -189,7 +188,7 @@ def plot(tasks_results, include_libs=False):
     subtasks = []
     workloads = []
     for task in tasks_results:
-        tasks.append(objects.Task(task).extend_results().to_dict())
+        tasks.append(task)
 
         for subtask in tasks[-1]["subtasks"]:
             workloads.extend(subtask.pop("workloads"))
@@ -206,7 +205,6 @@ def plot(tasks_results, include_libs=False):
 def trends(tasks):
     trends = Trends()
     for task in tasks:
-        task = objects.Task(task).extend_results().to_dict()
         for workload in itertools.chain(
                 *[s["workloads"] for s in task["subtasks"]]):
             workload_cfg = objects.Workload.format_workload_config(workload)
@@ -256,38 +254,32 @@ class Trends(object):
 
         self._data[key]["sla_failures"] += not workload["pass_sla"]
 
-        stat = {row[0]: dict(zip(workload["info"]["stat"]["cols"], row))
-                for row in workload["info"]["stat"]["rows"]}
-        ts = int(workload["info"]["tstamp_start"] * 1000)
+        duration_stats = workload["statistics"]["durations"]
+        ts = int(workload["start_time"] * 1000)
 
-        for action in stat:
+        for action in itertools.chain(duration_stats["atomics"],
+                                      [duration_stats["total"]]):
             # NOTE(amaretskiy): some atomic actions can be missed due to
             #   failures. We can ignore that because we use NVD3 lineChart()
             #   for displaying trends, which is safe for missed points
-            if action not in self._data[key]["actions"]:
-                self._data[key]["actions"][action] = {
+            if action["name"] not in self._data[key]["actions"]:
+                self._data[key]["actions"][action["name"]] = {
                     "durations": {"min": [], "median": [], "90%ile": [],
                                   "95%ile": [], "max": [], "avg": []},
                     "success": []}
 
             try:
-                success = float(stat[action]["Success"].rstrip("%"))
+                success = float(action["success"].rstrip("%"))
             except ValueError:
                 # Got "n/a" for some reason
                 success = 0
 
-            self._data[key]["actions"][action]["success"].append(
+            self._data[key]["actions"][action["name"]]["success"].append(
                 (ts, success))
 
-            for tgt, src in (("min", "Min (sec)"),
-                             ("median", "Median (sec)"),
-                             ("90%ile", "90%ile (sec)"),
-                             ("95%ile", "95%ile (sec)"),
-                             ("max", "Max (sec)"),
-                             ("avg", "Avg (sec)")):
-
-                self._data[key]["actions"][action]["durations"][tgt].append(
-                    (ts, stat[action][src]))
+            for tgt in ("min", "median", "90%ile", "95%ile", "max", "avg"):
+                d = self._data[key]["actions"][action["name"]]["durations"]
+                d[tgt].append((ts, action[tgt]))
 
     def get_data(self):
         trends = []

@@ -449,8 +449,9 @@ class TaskAPITestCase(test.TestCase):
     def test_get_detailed(self, mock_task):
         mock_task.get.return_value = mock.Mock()
         task = mock_task.get.return_value
-        self.assertEqual(task.to_dict.return_value,
-                         self.task_inst.get_detailed(task_id="task_uuid"))
+        self.assertEqual(
+            task.to_dict.return_value,
+            self.task_inst.get(task_id="task_uuid", detailed=True))
         mock_task.get.assert_called_once_with("task_uuid", detailed=True)
         self.assertFalse(task.extend_results.called)
         task.to_dict.assert_called_once_with()
@@ -462,17 +463,6 @@ class TaskAPITestCase(test.TestCase):
         mock_task.list.return_value = [task]
         tasks = self.task_inst.list()
         self.assertEqual([self.task], tasks)
-
-    @mock.patch("rally.api.objects.Task")
-    def test_get_detailed_with_extended_results(self, mock_task):
-        mock_task.get.return_value = mock.Mock()
-        task = mock_task.get.return_value
-        self.assertEqual(task.to_dict.return_value,
-                         self.task_inst.get_detailed(task_id="task_uuid",
-                                                     extended_results=True))
-        mock_task.get.assert_called_once_with("task_uuid", detailed=True)
-        task.extend_results.assert_called_once_with()
-        task.to_dict.assert_called_once_with()
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
