@@ -657,7 +657,8 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
 
-        list_verifiers = [mock.Mock(), mock.Mock()]
+        list_verifiers = [{"name": "f1", "uuid": "1"},
+                          {"name": "f2", "uuid": "2"}]
         self.deployment_inst.api.verifier.list.return_value = list_verifiers
 
         self.deployment_inst.destroy(deployment=self.deployment_uuid)
@@ -666,7 +667,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
         self.deployment_inst.api.verifier.list.assert_called_once_with()
         self.assertEqual(
-            [mock.call(verifier_id=m.name,
+            [mock.call(verifier_id=m["name"],
                        deployment_id=self.deployment["name"],
                        force=True)
              for m in list_verifiers],
