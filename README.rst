@@ -53,7 +53,7 @@ Who Is Using Rally
 Documentation
 =============
 
-`Rally documentation on ReadTheDocs <https://rally.readthedocs.org/en/latest/>`_ is a perfect place to start learning about Rally. It provides you with an **easy** and **illustrative** guidance through this benchmarking tool. For example, check out the `Rally step-by-step tutorial <https://rally.readthedocs.org/en/latest/tutorial.html>`_ that explains, in a series of lessons, how to explore the power of Rally in benchmarking your OpenStack clouds.
+`Rally documentation on ReadTheDocs <https://rally.readthedocs.org/en/latest/>`_ is a perfect place to start learning about Rally. It provides you with an **easy** and **illustrative** guidance through this benchmarking tool. For example, check out the `Rally step-by-step tutorial <https://rally.readthedocs.io/en/latest/quick_start/tutorial.html>`_ that explains, in a series of lessons, how to explore the power of Rally in benchmarking your OpenStack clouds.
 
 
 Architecture
@@ -95,7 +95,7 @@ Links
 * Documentation: https://rally.readthedocs.org/en/latest/
 * Source: https://git.openstack.org/cgit/openstack/rally
 * Bugs: https://bugs.launchpad.net/rally
-* Step-by-step tutorial: https://rally.readthedocs.org/en/latest/tutorial.html
+* Step-by-step tutorial: https://rally.readthedocs.io/en/latest/quick_start/tutorial.html
 * RoadMap: https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g
 * Launchpad page: https://launchpad.net/rally
 * Gitter chat: https://gitter.im/rally-dev/Lobby
