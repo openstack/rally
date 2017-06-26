@@ -22,7 +22,6 @@ from rally.task import validation
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_list_qos")
@@ -50,7 +49,6 @@ class CreateAndListQos(cinder_utils.CinderBasic):
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])
-@validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
                     name="CinderQos.create_and_get_qos")
