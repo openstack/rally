@@ -754,8 +754,9 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
             "credential"].clients()
 
         clients.nova.choose_version.return_value = nova
+        config = {"context": {"api_versions": {}}}
 
-        result = validator.validate(self.config, self.credentials, None, None)
+        result = validator.validate(config, self.credentials, None, None)
 
         if err_msg:
             self.assertIsNotNone(result)
