@@ -122,12 +122,12 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(db_task["status"], consts.TaskStatus.INIT)
 
     def test_task_create_with_tag(self):
-        task = self._create_task(values={"tag": "test_tag"})
+        task = self._create_task(values={"tags": ["test_tag"]})
         db_task = self._get_task(task["uuid"])
         self.assertIsNotNone(db_task["uuid"])
         self.assertIsNotNone(db_task["id"])
         self.assertEqual(db_task["status"], consts.TaskStatus.INIT)
-        self.assertEqual(db_task["tag"], "test_tag")
+        self.assertEqual(db_task["tags"], ["test_tag"])
 
     def test_task_create_without_uuid(self):
         _uuid = "19be8589-48b0-4af1-a369-9bebaaa563ab"
@@ -145,11 +145,11 @@ class TasksTestCase(test.DBTestCase):
         task = self._create_task({})
         db.task_update(task["uuid"], {
             "status": consts.TaskStatus.CRASHED,
-            "tag": "test_tag"
+            "tags": ["test_tag"]
         })
         db_task = self._get_task(task["uuid"])
         self.assertEqual(db_task["status"], consts.TaskStatus.CRASHED)
-        self.assertEqual(db_task["tag"], "test_tag")
+        self.assertEqual(db_task["tags"], ["test_tag"])
 
     def test_task_update_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
@@ -375,7 +375,7 @@ class TasksTestCase(test.DBTestCase):
             "trace": "foo t/b",
         }
         task1 = self._create_task({"validation_result": validation_result,
-                                   "tag": "bar"})
+                                   "tags": ["bar"]})
         key = {
             "name": "atata",
             "description": "tatata",
@@ -408,7 +408,7 @@ class TasksTestCase(test.DBTestCase):
         task1_full = db.task_get_detailed(task1["uuid"])
         self.assertEqual(validation_result,
                          json.loads(task1_full["verification_log"]))
-        self.assertEqual("bar", task1_full["tag"])
+        self.assertEqual(["bar"], task1_full["tags"])
         results = task1_full["results"]
         self.assertEqual(1, len(results))
         self.assertEqual(key, results[0]["key"])

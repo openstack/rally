@@ -224,17 +224,18 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual("2", self.task_inst.render_template(
             task_template=template))
 
-    @mock.patch("rally.common.objects.Deployment.get",
-                return_value={
-                    "uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257",
-                    "status": consts.DeployStatus.DEPLOY_FINISHED})
+    @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.common.objects.Task")
     def test_create(self, mock_task, mock_deployment_get):
-        tag = "a"
+        mock_deployment_get.return_value = {
+            "uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257",
+            "status": consts.DeployStatus.DEPLOY_FINISHED}
+        tags = ["a"]
         self.task_inst.create(
-            deployment=mock_deployment_get.return_value["uuid"], tag=tag)
+            deployment=mock_deployment_get.return_value["uuid"], tags=tags)
         mock_task.assert_called_once_with(
-            deployment_uuid=mock_deployment_get.return_value["uuid"], tag=tag)
+            deployment_uuid=mock_deployment_get.return_value["uuid"],
+            tags=tags)
 
     @mock.patch("rally.common.objects.Deployment.get",
                 return_value={
@@ -243,10 +244,9 @@ class TaskAPITestCase(test.TestCase):
                     "status": consts.DeployStatus.DEPLOY_INIT})
     def test_create_on_unfinished_deployment(self, mock_deployment_get):
         deployment_id = mock_deployment_get.return_value["uuid"]
-        tag = "a"
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
                           self.task_inst.create, deployment=deployment_id,
-                          tag=tag)
+                          tags=["a"])
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
@@ -489,7 +489,7 @@ class TaskAPITestCase(test.TestCase):
         )
 
         mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
-                                          tag=None)
+                                          tags=None)
         mock_task.return_value.update_status.assert_has_calls(
             [mock.call(consts.TaskStatus.RUNNING),
              mock.call(consts.SubtaskStatus.FINISHED)]
@@ -536,7 +536,7 @@ class TaskAPITestCase(test.TestCase):
         )
 
         mock_task.assert_called_once_with(deployment_uuid="deployment_uuid",
-                                          tag=None)
+                                          tags=None)
         mock_task.return_value.update_status.assert_has_calls(
             [mock.call(consts.TaskStatus.RUNNING),
              mock.call(consts.SubtaskStatus.FINISHED)]
@@ -575,7 +575,7 @@ class TaskAPITestCase(test.TestCase):
                           self.task_inst.import_results,
                           deployment="deployment_uuid",
                           task_results=[],
-                          tag="tag")
+                          tags=["tag"])
 
 
 class BaseDeploymentTestCase(test.TestCase):
