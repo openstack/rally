@@ -266,6 +266,44 @@ class NeutronSecurityGroup(test.TestCase):
         {"security_group_args": {}},
         {"security_group_args": {"description": "fake-description"}},
         {"security_group_rule_args": {}},
+        {"security_group_rule_args": {"description": "fake-rule-descr"}}
+    )
+    @ddt.unpack
+    def test_create_and_delete_security_group_rule(
+            self, security_group_args=None,
+            security_group_rule_args=None):
+        scenario = security_groups.CreateAndDeleteSecurityGroupRule()
+
+        security_group_data = security_group_args or {}
+        security_group_rule_data = security_group_rule_args or {}
+        security_group = mock.MagicMock()
+        security_group_rule = {"security_group_rule": {"id": 1, "name": "f1"}}
+        scenario._create_security_group = mock.MagicMock()
+        scenario._create_security_group_rule = mock.MagicMock()
+        scenario._delete_security_group_rule = mock.MagicMock()
+        scenario._delete_security_group = mock.MagicMock()
+
+        # Positive case
+        scenario._create_security_group.return_value = security_group
+        scenario._create_security_group_rule.return_value = security_group_rule
+        scenario.run(security_group_args=security_group_data,
+                     security_group_rule_args=security_group_rule_data)
+
+        scenario._create_security_group.assert_called_once_with(
+            **security_group_data)
+        scenario._create_security_group_rule.assert_called_once_with(
+            security_group["security_group"]["id"],
+            **security_group_rule_data)
+        scenario._delete_security_group_rule.assert_called_once_with(
+            security_group_rule["security_group_rule"]["id"])
+        scenario._delete_security_group.assert_called_once_with(
+            security_group)
+
+    @ddt.data(
+        {},
+        {"security_group_args": {}},
+        {"security_group_args": {"description": "fake-description"}},
+        {"security_group_rule_args": {}},
         {"security_group_rule_args": {"description": "fake-rule-descr"}},
     )
     @ddt.unpack

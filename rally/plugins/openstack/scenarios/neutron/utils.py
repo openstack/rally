@@ -855,3 +855,12 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").show_security_group_rule(
             security_group_rule, **kwargs)
+
+    @atomic.action_timer("neutron.delete_security_group_rule")
+    def _delete_security_group_rule(self, security_group_rule):
+        """Delete a given security group rule.
+
+        :param security_group_rule: id of security group rule
+        """
+        self.clients("neutron").delete_security_group_rule(
+            security_group_rule)
