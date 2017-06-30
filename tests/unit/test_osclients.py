@@ -355,7 +355,7 @@ class OSClientsTestCase(test.TestCase):
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
-        self.assertEqual(client, self.fake_keystone)
+        self.assertEqual(self.fake_keystone, client)
         credential = {"timeout": cfg.CONF.openstack_client_http_timeout,
                       "insecure": False, "cacert": None}
         kwargs = self.credential.to_dict()
@@ -760,7 +760,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertNotIn("swift", self.clients.cache)
         with mock.patch.dict("sys.modules", {"swiftclient": mock_swift}):
             client = self.clients.swift()
-            self.assertEqual(client, fake_swift)
+            self.assertEqual(fake_swift, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="object-store",
                 region_name=self.credential.region_name)
@@ -773,7 +773,7 @@ class OSClientsTestCase(test.TestCase):
                   "tenant_name": self.credential.tenant_name,
                   }
             mock_swift.client.Connection.assert_called_once_with(**kw)
-            self.assertEqual(self.clients.cache["swift"], fake_swift)
+            self.assertEqual(fake_swift, self.clients.cache["swift"])
 
     @mock.patch("rally.osclients.EC2._get_endpoint")
     def test_ec2(self, mock_ec2__get_endpoint):

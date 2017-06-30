@@ -124,13 +124,11 @@ class AtomicActionTestCase(test.TestCase):
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.some_func(2, 3, atomic_action=False))
-        self.assertEqual([],
-                         inst.atomic_actions())
+        self.assertEqual([], inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3))
-        self.assertEqual([],
-                         inst.atomic_actions())
+        self.assertEqual([], inst.atomic_actions())
 
         inst = TestAtomicTimer()
         self.assertEqual(5, inst.other_func(2, 3, foo=True))

@@ -42,14 +42,14 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "error": mock_format_exc.return_value
         }
 
-        self.assertEqual(runner.format_result_on_timeout(mock_exc, 100),
-                         expected)
+        self.assertEqual(expected,
+                         runner.format_result_on_timeout(mock_exc, 100))
         mock_format_exc.assert_called_once_with(mock_exc)
 
     def test_get_scenario_context(self):
         context_obj = {"foo": "bar"}
         result = runner._get_scenario_context(13, context_obj)
-        self.assertEqual(result, {"foo": "bar", "iteration": 14})
+        self.assertEqual({"foo": "bar", "iteration": 14}, result)
 
     def test_run_scenario_once_internal_logic(self):
         context = runner._get_scenario_context(

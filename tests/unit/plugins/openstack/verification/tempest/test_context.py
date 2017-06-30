@@ -136,9 +136,9 @@ class TempestContextTestCase(test.TestCase):
         glanceclient = self.context.clients.glance()
         novaclient = self.context.clients.nova()
 
-        self.assertEqual(glanceclient.images.create.call_count, 0)
-        self.assertEqual(novaclient.flavors.create.call_count, 0)
-        self.assertEqual(mock_neutron_wrapper_create_network.call_count, 0)
+        self.assertEqual(0, glanceclient.images.create.call_count)
+        self.assertEqual(0, novaclient.flavors.create.call_count)
+        self.assertEqual(0, mock_neutron_wrapper_create_network.call_count)
 
     def test__create_tempest_roles(self):
         role1 = CONF.tempest.swift_operator_role
@@ -153,7 +153,7 @@ class TempestContextTestCase(test.TestCase):
                                            fakes.FakeFlavor(name=role4)]
 
         self.context._create_tempest_roles()
-        self.assertEqual(client.roles.create.call_count, 2)
+        self.assertEqual(2, client.roles.create.call_count)
 
         created_roles = [role.name for role in self.context._created_roles]
         self.assertIn(role3, created_roles)
@@ -201,7 +201,7 @@ class TempestContextTestCase(test.TestCase):
         self.context.conf.set("compute", "flavor_ref", "")
         self.context._configure_option("compute", "flavor_ref",
                                        helper_method=helper_method, flv_ram=64)
-        self.assertEqual(helper_method.call_count, 1)
+        self.assertEqual(1, helper_method.call_count)
 
         result = self.context.conf.get("compute", "flavor_ref")
         self.assertEqual("id1", result)
@@ -274,7 +274,7 @@ class TempestContextTestCase(test.TestCase):
 
         self.context._cleanup_tempest_roles()
         client = self.context.clients.keystone()
-        self.assertEqual(client.roles.delete.call_count, 2)
+        self.assertEqual(2, client.roles.delete.call_count)
 
     @mock.patch("rally.plugins.openstack.services.image.image.Image")
     def test__cleanup_images(self, mock_image):
@@ -309,7 +309,7 @@ class TempestContextTestCase(test.TestCase):
 
         self.context._cleanup_flavors()
         client = self.context.clients.nova()
-        self.assertEqual(client.flavors.delete.call_count, 3)
+        self.assertEqual(3, client.flavors.delete.call_count)
 
         self.assertEqual("", self.context.conf.get("compute", "flavor_ref"))
         self.assertEqual("", self.context.conf.get("compute",
@@ -325,7 +325,7 @@ class TempestContextTestCase(test.TestCase):
         self.context.conf.set("compute", "fixed_network_name", "net-12345")
 
         self.context._cleanup_network_resources()
-        self.assertEqual(mock_neutron_wrapper_delete_network.call_count, 1)
+        self.assertEqual(1, mock_neutron_wrapper_delete_network.call_count)
         self.assertEqual("", self.context.conf.get("compute",
                                                    "fixed_network_name"))
 

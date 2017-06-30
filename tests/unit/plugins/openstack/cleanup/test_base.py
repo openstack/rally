@@ -30,8 +30,8 @@ class ResourceDecoratorTestCase(test.TestCase):
         class Fake(object):
             pass
 
-        self.assertEqual(Fake._service, "service")
-        self.assertEqual(Fake._resource, "res")
+        self.assertEqual("service", Fake._service)
+        self.assertEqual("res", Fake._resource)
 
 
 class ResourceManagerTestCase(test.TestCase):
@@ -86,7 +86,7 @@ class ResourceManagerTestCase(test.TestCase):
 
         mock_resource_manager__manager.assert_has_calls(
             [mock.call(), mock.call().get(resource.id)] * 3)
-        self.assertEqual(mock_resource_manager__manager.call_count, 3)
+        self.assertEqual(3, mock_resource_manager__manager.call_count)
 
     @mock.patch("%s.ResourceManager._manager" % BASE)
     def test_is_deleted_exceptions(self, mock_resource_manager__manager):

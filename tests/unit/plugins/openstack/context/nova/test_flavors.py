@@ -59,8 +59,8 @@ class FlavorsGeneratorTestCase(test.TestCase):
         flavors_ctx.setup()
 
         # Assertions
-        self.assertEqual(flavors_ctx.context["flavors"],
-                         {"flavor_name": {"flavor_key": "flavor_value"}})
+        self.assertEqual({"flavor_name": {"flavor_key": "flavor_value"}},
+                         flavors_ctx.context["flavors"])
 
         mock_clients.assert_called_with(self.context["admin"]["credential"])
 

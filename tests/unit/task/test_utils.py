@@ -87,14 +87,14 @@ class BenchmarkUtilsTestCase(test.TestCase):
         manager = fakes.FakeManager()
         resource = fakes.FakeResource(manager=manager)
         manager._cache(resource)
-        self.assertEqual(get_from_manager(resource), resource)
+        self.assertEqual(resource, get_from_manager(resource))
 
     def test_get_from_manager_with_uuid_field(self):
         get_from_manager = utils.get_from_manager()
         manager = fakes.FakeManager()
         resource = fakes.FakeResource(manager=manager)
         manager._cache(resource)
-        self.assertEqual(get_from_manager(resource, id_attr="uuid"), resource)
+        self.assertEqual(resource, get_from_manager(resource, id_attr="uuid"))
 
     def test_get_from_manager_in_error_state(self):
         get_from_manager = utils.get_from_manager()
@@ -238,10 +238,10 @@ class WaitForTestCase(test.TestCase):
             update_resource=self.fake_updater, timeout=self.load_secs,
             check_interval=self.load_secs / 3)
 
-        self.assertEqual(exc.kwargs["resource_name"], "fake_name")
-        self.assertEqual(exc.kwargs["resource_id"], "fake_id")
-        self.assertEqual(exc.kwargs["desired_status"], "fake_new_status")
-        self.assertEqual(exc.kwargs["resource_status"], "FAKE_STALE_STATUS")
+        self.assertEqual("fake_name", exc.kwargs["resource_name"])
+        self.assertEqual("fake_id", exc.kwargs["resource_id"])
+        self.assertEqual("fake_new_status", exc.kwargs["desired_status"])
+        self.assertEqual("FAKE_STALE_STATUS", exc.kwargs["resource_status"])
 
         self.assertIn("FakeResource", str(exc))
         self.assertIn("fake_new_status", str(exc))

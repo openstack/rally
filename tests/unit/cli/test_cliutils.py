@@ -149,7 +149,7 @@ class CliUtilsTestCase(test.TestCase):
 
     def test_make_header(self):
         h1 = cliutils.make_header("msg", size=4, symbol="=")
-        self.assertEqual(h1, "====\nmsg\n====\n")
+        self.assertEqual("====\nmsg\n====\n", h1)
 
     def test_make_table_header(self):
         actual = cliutils.make_table_header("Response Times (sec)", 40)
@@ -253,7 +253,7 @@ class CliUtilsTestCase(test.TestCase):
                 pass
         mock_obj = fake_class()
         result = cliutils._methods_of(mock_obj)
-        self.assertEqual(result, [])
+        self.assertEqual([], result)
 
     def _unregister_opts(self):
         CONF.reset()
@@ -267,19 +267,19 @@ class CliUtilsTestCase(test.TestCase):
                 side_effect=exceptions.RallyException("config_file"))
     def test_run_fails(self, mock_rally_api_api):
         ret = cliutils.run(["rally", "version"], self.categories)
-        self.assertEqual(ret, 2)
+        self.assertEqual(2, ret)
         mock_rally_api_api.assert_called_once_with(
             config_args=["version"], skip_db_check=True)
 
     @mock.patch("rally.api.API.check_db_revision")
     def test_run_version(self, mock_api_check_db_revision):
         ret = cliutils.run(["rally", "version"], self.categories)
-        self.assertEqual(ret, 0)
+        self.assertEqual(0, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     def test_run_bash_completion(self, mock_api_check_db_revision):
         ret = cliutils.run(["rally", "bash-completion"], self.categories)
-        self.assertEqual(ret, 0)
+        self.assertEqual(0, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     @mock.patch("rally.common.db.api.task_get",
@@ -289,7 +289,7 @@ class CliUtilsTestCase(test.TestCase):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_task_get.called)
-        self.assertEqual(ret, 1)
+        self.assertEqual(1, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     @mock.patch("rally.cli.cliutils.validate_args",
@@ -299,7 +299,7 @@ class CliUtilsTestCase(test.TestCase):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
         self.assertTrue(mock_validate_args.called)
-        self.assertEqual(ret, 1)
+        self.assertEqual(1, ret)
 
     @mock.patch("rally.api.API.check_db_revision")
     def test_run_failed_to_open_file(self, mock_api_check_db_revision):
@@ -940,7 +940,7 @@ class ValidateArgsTest(test.TestCase):
         alias_fn = mock.Mock(name="alias_fn")
         cmd_name = "test-command"
         wrapped = cliutils.alias(cmd_name)
-        self.assertEqual(wrapped(alias_fn).alias, cmd_name)
+        self.assertEqual(cmd_name, wrapped(alias_fn).alias)
 
 
 class CategoryParserTestCase(test.TestCase):

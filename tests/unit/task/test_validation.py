@@ -301,7 +301,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor({"args": {"a": "test"}},
                                                   clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], "flavor")
+        self.assertEqual("flavor", result[1])
         mock_flavor_transform.assert_called_once_with(
             clients=clients, resource_config="test")
         clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")

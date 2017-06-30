@@ -109,11 +109,11 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
 
         self.scenario._set_metadata(volume, sets=2, set_size=4)
         calls = self.clients("cinder").volumes.set_metadata.call_args_list
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(2, len(calls))
         for call in calls:
             call_volume, metadata = call[0]
-            self.assertEqual(call_volume, volume)
-            self.assertEqual(len(metadata), 4)
+            self.assertEqual(volume, call_volume)
+            self.assertEqual(4, len(metadata))
 
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.set_4_metadatas_2_times")
@@ -124,12 +124,12 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         keys = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]
         self.scenario._delete_metadata(volume, keys, deletes=3, delete_size=4)
         calls = self.clients("cinder").volumes.delete_metadata.call_args_list
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(3, len(calls))
         all_deleted = []
         for call in calls:
             call_volume, del_keys = call[0]
-            self.assertEqual(call_volume, volume)
-            self.assertEqual(len(del_keys), 4)
+            self.assertEqual(volume, call_volume)
+            self.assertEqual(4, len(del_keys))
             for key in del_keys:
                 self.assertIn(key, keys)
                 self.assertNotIn(key, all_deleted)

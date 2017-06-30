@@ -89,7 +89,7 @@ class SecurityServicesTestCase(test.ScenarioTestCase):
 
         inst = manila_security_services.SecurityServices(context)
 
-        self.assertEqual(inst.config.get("foo"), "bar")
+        self.assertEqual("bar", inst.config.get("foo"))
         self.assertFalse(inst.config.get("security_services"))
         self.assertEqual(445, inst.get_order())
         self.assertEqual(CONTEXT_NAME, inst.get_name())

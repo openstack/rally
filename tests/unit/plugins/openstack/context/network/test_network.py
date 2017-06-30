@@ -41,9 +41,9 @@ class NetworkTestCase(test.TestCase):
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__default(self, mock_wrap, mock_clients):
         context = network_context.Network(self.get_context())
-        self.assertEqual(context.config["networks_per_tenant"], 1)
-        self.assertEqual(context.config["start_cidr"],
-                         network_context.Network.DEFAULT_CONFIG["start_cidr"])
+        self.assertEqual(1, context.config["networks_per_tenant"])
+        self.assertEqual(network_context.Network.DEFAULT_CONFIG["start_cidr"],
+                         context.config["start_cidr"])
         self.assertIsNone(context.config["dns_nameservers"])
 
     @mock.patch("rally.osclients.Clients")
@@ -53,12 +53,12 @@ class NetworkTestCase(test.TestCase):
             self.get_context(start_cidr="foo_cidr", networks_per_tenant=42,
                              network_create_args={"fakearg": "fake"},
                              dns_nameservers=["1.2.3.4", "5.6.7.8"]))
-        self.assertEqual(context.config["networks_per_tenant"], 42)
-        self.assertEqual(context.config["start_cidr"], "foo_cidr")
-        self.assertEqual(context.config["network_create_args"],
-                         {"fakearg": "fake"})
-        self.assertEqual(context.config["dns_nameservers"],
-                         ("1.2.3.4", "5.6.7.8"))
+        self.assertEqual(42, context.config["networks_per_tenant"])
+        self.assertEqual("foo_cidr", context.config["start_cidr"])
+        self.assertEqual({"fakearg": "fake"},
+                         context.config["network_create_args"])
+        self.assertEqual(("1.2.3.4", "5.6.7.8"),
+                         context.config["dns_nameservers"])
 
     @ddt.data({},
               {"dns_nameservers": []},

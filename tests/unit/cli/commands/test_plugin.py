@@ -112,7 +112,7 @@ class PluginCommandsTestCase(test.TestCase):
     def test_show_not_found(self, name, namespace, text):
         with utils.StdOutCapture() as out:
             plugin_cmd.PluginCommands().show(None, name, namespace)
-            self.assertEqual(out.getvalue(), text)
+            self.assertEqual(text, out.getvalue())
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
     def test_show_many(self, mock_plugin_commands__print_plugins_list):
@@ -121,7 +121,7 @@ class PluginCommandsTestCase(test.TestCase):
                             "get_all") as mock_plugin_get_all:
                 mock_plugin_get_all.return_value = [self.Plugin2, self.Plugin3]
                 plugin_cmd.PluginCommands().show(None, "p", "p2_ns")
-                self.assertEqual(out.getvalue(), "Multiple plugins found:\n")
+                self.assertEqual("Multiple plugins found:\n", out.getvalue())
                 mock_plugin_get_all.assert_called_once_with(platform="p2_ns")
 
         mock_plugin_commands__print_plugins_list.assert_called_once_with([
@@ -144,7 +144,7 @@ class PluginCommandsTestCase(test.TestCase):
 
         with utils.StdOutCapture() as out:
             plugin_cmd.PluginCommands().list(None, name, namespace)
-            self.assertEqual(out.getvalue(), text)
+            self.assertEqual(text, out.getvalue())
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
     def test_list(self, mock_plugin_commands__print_plugins_list):

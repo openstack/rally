@@ -156,8 +156,8 @@ class HackingTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_assert_equal_type(self, line, result):
-        self.assertEqual(
-            len(list(checks.assert_equal_type(line, line, "f"))), result)
+        self.assertEqual(result,
+                         len(list(checks.assert_equal_type(line, line, "f"))))
 
     @ddt.data(
         {"line": "self.assertEqual(A, None)", "result": 1},
@@ -167,8 +167,8 @@ class HackingTestCase(test.TestCase):
     @ddt.unpack
     def test_assert_equal_none(self, line, result):
 
-        self.assertEqual(
-            len(list(checks.assert_equal_none(line, line, "f"))), result)
+        self.assertEqual(result,
+                         len(list(checks.assert_equal_none(line, line, "f"))))
 
     @ddt.data(
         {"line": "self.assertNotEqual(A, None)", "result": 1},
@@ -178,8 +178,9 @@ class HackingTestCase(test.TestCase):
     @ddt.unpack
     def test_assert_not_equal_none(self, line, result):
 
-        self.assertEqual(
-            len(list(checks.assert_not_equal_none(line, line, "f"))), result)
+        self.assertEqual(result,
+                         len(list(checks.assert_not_equal_none(line,
+                                                               line, "f"))))
 
     def test_assert_true_or_false_with_in_or_not_in(self):
         good_lines = [

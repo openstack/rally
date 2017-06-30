@@ -625,7 +625,7 @@ class TaskEngineTestCase(test.TestCase):
             "scenario_namespace": "openstack",
             "config": {"a": 1, "b": 3, "c": 4, "users": {}}
         }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(expected_result, result)
         mock_scenario_get.assert_called_once_with(name)
 
 

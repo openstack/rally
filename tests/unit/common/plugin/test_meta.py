@@ -66,7 +66,7 @@ class TestMetaMixinTestCase(test.TestCase):
 
         Meta._meta_init()
         Meta._meta_set("aaa", 42)
-        self.assertEqual(Meta._meta_get("aaa"), 42)
+        self.assertEqual(42, Meta._meta_get("aaa"))
 
     def test_meta_get_default(self):
 
@@ -74,7 +74,7 @@ class TestMetaMixinTestCase(test.TestCase):
             pass
 
         Meta._meta_init()
-        self.assertEqual(Meta._meta_get("b", 42), 42)
+        self.assertEqual(42, Meta._meta_get("b", 42))
 
     def test_meta_get_if_is_not_inited(self):
 

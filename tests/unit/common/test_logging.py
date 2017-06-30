@@ -224,14 +224,14 @@ class LogTestCase(test.TestCase):
                 return x + y
 
         t = TaskLog()
-        self.assertEqual(t.some_method.__name__, "some_method")
-        self.assertEqual(t.some_method(2, 2), 4)
+        self.assertEqual("some_method", t.some_method.__name__)
+        self.assertEqual(4, t.some_method(2, 2))
         params = {"msg": msg % {"a": 10, "b": 20}, "uuid": t.task["uuid"]}
         expected = [
             mock.call(_("Task %(uuid)s | Starting:  %(msg)s") % params),
             mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
         ]
-        self.assertEqual(mock_log.mock_calls, expected)
+        self.assertEqual(expected, mock_log.mock_calls)
 
     def test_log_deprecated(self):
         mock_log = mock.MagicMock()
@@ -240,7 +240,7 @@ class LogTestCase(test.TestCase):
         def some_method(x, y):
             return x + y
 
-        self.assertEqual(some_method(2, 2), 4)
+        self.assertEqual(4, some_method(2, 2))
         self.assertIn("some_method()", mock_log.call_args[0][0])
         self.assertIn("depr42", mock_log.call_args[0][0])
         self.assertIn("1.1.1", mock_log.call_args[0][0])
@@ -253,13 +253,13 @@ class LogTestCase(test.TestCase):
         def some_method(x, y, z):
             return x + y + z
 
-        self.assertEqual(some_method(2, 2, z=3), 7)
+        self.assertEqual(7, some_method(2, 2, z=3))
         self.assertIn("ABC42", mock_log.call_args[0][0])
         self.assertIn("`z' of `some_method()'", mock_log.call_args[0][0])
         self.assertIn("0.0.1", mock_log.call_args[0][0])
 
         mock_log.reset_mock()
-        self.assertEqual(some_method(2, 2, z=3), 7)
+        self.assertEqual(7, some_method(2, 2, z=3))
         self.assertFalse(mock_log.called)
 
         @rally_logging.log_deprecated_args("CBA42", "0.0.1", ("z",),
@@ -267,9 +267,9 @@ class LogTestCase(test.TestCase):
         def some_method(x, y, z):
             return x + y + z
 
-        self.assertEqual(some_method(2, 2, z=3), 7)
+        self.assertEqual(7, some_method(2, 2, z=3))
         self.assertIn("CBA42", mock_log.call_args[0][0])
 
         mock_log.reset_mock()
-        self.assertEqual(some_method(2, 2, z=3), 7)
+        self.assertEqual(7, some_method(2, 2, z=3))
         self.assertIn("CBA42", mock_log.call_args[0][0])

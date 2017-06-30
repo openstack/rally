@@ -376,7 +376,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
-        self.assertEqual(len(user_generator.context["tenants"]), 0)
+        self.assertEqual(0, len(user_generator.context["tenants"]))
 
     @mock.patch("%s.identity" % CTX)
     def test__delete_tenants_failure(self, mock_identity):
@@ -386,7 +386,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
-        self.assertEqual(len(user_generator.context["tenants"]), 0)
+        self.assertEqual(0, len(user_generator.context["tenants"]))
 
     @mock.patch("%s.identity" % CTX)
     def test__delete_users(self, mock_identity):
@@ -395,7 +395,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         user2 = mock.MagicMock()
         user_generator.context["users"] = [user1, user2]
         user_generator._delete_users()
-        self.assertEqual(len(user_generator.context["users"]), 0)
+        self.assertEqual(0, len(user_generator.context["users"]))
 
     @mock.patch("%s.identity" % CTX)
     def test__delete_users_failure(self, mock_identity):
@@ -406,7 +406,7 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
         user2 = mock.MagicMock()
         user_generator.context["users"] = [user1, user2]
         user_generator._delete_users()
-        self.assertEqual(len(user_generator.context["users"]), 0)
+        self.assertEqual(0, len(user_generator.context["users"]))
 
     @mock.patch("%s.identity" % CTX)
     def test_setup_and_cleanup(self, mock_identity):
@@ -414,16 +414,16 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
 
             ctx.setup()
 
-            self.assertEqual(len(ctx.context["users"]),
-                             self.users_num)
-            self.assertEqual(len(ctx.context["tenants"]),
-                             self.tenants_num)
+            self.assertEqual(self.users_num,
+                             len(ctx.context["users"]))
+            self.assertEqual(self.tenants_num,
+                             len(ctx.context["tenants"]))
 
             self.assertEqual("random", ctx.context["user_choice_method"])
 
         # Cleanup (called by content manager)
-        self.assertEqual(len(ctx.context["users"]), 0)
-        self.assertEqual(len(ctx.context["tenants"]), 0)
+        self.assertEqual(0, len(ctx.context["users"]))
+        self.assertEqual(0, len(ctx.context["tenants"]))
 
     @mock.patch("rally.common.broker.LOG.warning")
     @mock.patch("%s.identity" % CTX)
@@ -488,8 +488,8 @@ class UserGeneratorForNewUsersTestCase(test.ScenarioTestCase):
 
             for (user, tenant_id, orig_user) in zip(ctx.context["users"],
                                                     tenants_ids, user_list):
-                self.assertEqual(user["id"], orig_user.id)
-                self.assertEqual(user["tenant_id"], tenant_id)
+                self.assertEqual(orig_user.id, user["id"])
+                self.assertEqual(tenant_id, user["tenant_id"])
 
     @mock.patch("%s.identity" % CTX)
     def test_users_contains_correct_endpoint_type(self, mock_identity):

@@ -72,9 +72,9 @@ class TempestConfigfileManagerTestCase(test.TestCase):
             service_type: "sahara"}
         self.tempest.conf.add_section("data-processing")
         self.tempest._configure_data_processing()
-        self.assertEqual(
-            self.tempest.conf.get(
-                "data-processing", "catalog_type"), service_type)
+        self.assertEqual(service_type,
+                         self.tempest.conf.get("data-processing",
+                                               "catalog_type"))
 
     @ddt.data(
         # The prefix "ex_" is abbreviation of "expected"
@@ -158,11 +158,11 @@ class TempestConfigfileManagerTestCase(test.TestCase):
 
         self.tempest.conf.add_section("network")
         self.tempest._configure_network()
-        self.assertEqual(self.tempest.conf.get("network", "public_network_id"),
-                         "test_id")
-        self.assertEqual(self.tempest.conf.get("network",
-                                               "floating_network_name"),
-                         "test_name")
+        self.assertEqual("test_id",
+                         self.tempest.conf.get("network", "public_network_id"))
+        self.assertEqual("test_name",
+                         self.tempest.conf.get("network",
+                                               "floating_network_name"))
 
     def test__configure_network_if_nova(self):
         self.tempest.available_services = ["nova"]
@@ -195,9 +195,9 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         self.tempest._configure_network_feature_enabled()
         client.list_ext.assert_called_once_with("extensions", "/extensions",
                                                 retrieve_all=True)
-        self.assertEqual(self.tempest.conf.get(
-            "network-feature-enabled", "api_extensions"),
-            "dvr,extra_dhcp_opt,extraroute")
+        self.assertEqual("dvr,extra_dhcp_opt,extraroute",
+                         self.tempest.conf.get("network-feature-enabled",
+                                               "api_extensions"))
 
     def test__configure_object_storage(self):
         self.tempest.conf.add_section("object-storage")
@@ -262,7 +262,7 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         fake_extra_conf = {"section2": {"option2": "value2"}}
         self.tempest.create("/path/to/fake/conf", fake_extra_conf)
 
-        self.assertEqual(configure_something_method.call_count, 1)
+        self.assertEqual(1, configure_something_method.call_count)
         self.assertIn(("option2", "value2"),
                       self.tempest.conf.items("section2"))
         mock_open.assert_called_once_with("/path/to/fake/conf", "w")

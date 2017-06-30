@@ -36,8 +36,8 @@ class EnvUtilsTestCase(test.TestCase):
         with mock.patch("sys.stdout",
                         new_callable=moves.StringIO) as mock_stdout:
             test_function()
-            self.assertEqual(mock_stdout.getvalue(),
-                             "Missing argument: --test_missing_arg\n")
+            self.assertEqual("Missing argument: --test_missing_arg\n",
+                             mock_stdout.getvalue())
 
     @mock.patch.dict(os.environ,
                      values={envutils.ENV_DEPLOYMENT: "my_deployment_id"},
@@ -91,7 +91,7 @@ class EnvUtilsTestCase(test.TestCase):
         envutils.clear_global(envutils.ENV_DEPLOYMENT)
         mock_update_env_file.assert_called_once_with(os.path.expanduser(
             "~/.rally/globals"), envutils.ENV_DEPLOYMENT, "\n")
-        self.assertEqual(os.environ, {})
+        self.assertEqual({}, os.environ)
 
     @mock.patch.dict(os.environ,
                      values={envutils.ENV_DEPLOYMENT: "test_deployment_id",
@@ -102,7 +102,7 @@ class EnvUtilsTestCase(test.TestCase):
                 return_value=True)
     def test_clear_env(self, mock_update_env_file, mock_path_exists):
         envutils.clear_env()
-        self.assertEqual(os.environ, {})
+        self.assertEqual({}, os.environ)
 
     @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
                                   "OS_USERNAME": "fake_username",
