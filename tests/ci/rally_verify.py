@@ -277,7 +277,8 @@ class ExtendVerifier(Step):
 
     COMMAND = "verify add-verifier-ext --source %(source)s"
     DEPENDS_ON = CreateVerifier
-    CALL_ARGS = {"source": "https://git.openstack.org/openstack/keystone"}
+    CALL_ARGS = {"source": "https://git.openstack.org/openstack/"
+                           "keystone-tempest-plugin"}
 
 
 class ListVerifierExtensions(Step):

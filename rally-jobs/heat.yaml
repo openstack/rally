@@ -192,22 +192,22 @@
         failure_rate:
           max: 0
 
-  HeatStacks.list_stacks_and_resources:
-    -
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-        stacks:
-          stacks_per_tenant: 2
-          resources_per_stack: 10
-      sla:
-        failure_rate:
-          max: 0
+ # HeatStacks.list_stacks_and_resources:
+ #   -
+ #     runner:
+ #       type: "constant"
+ #       times: 6
+ #       concurrency: 3
+ #     context:
+ #       users:
+ #         tenants: 2
+ #         users_per_tenant: 3
+ #       stacks:
+ #         stacks_per_tenant: 2
+ #         resources_per_stack: 10
+ #     sla:
+ #       failure_rate:
+ #         max: 0
 
   HeatStacks.create_suspend_resume_delete_stack:
     -
@@ -225,22 +225,22 @@
         failure_rate:
           max: 0
 
-  HeatStacks.list_stacks_and_events:
-    -
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-        stacks:
-          stacks_per_tenant: 2
-          resources_per_stack: 10
-      sla:
-        failure_rate:
-          max: 0
+  #HeatStacks.list_stacks_and_events:
+  #  -
+  #    runner:
+  #      type: "constant"
+  #      times: 6
+  #      concurrency: 3
+  #    context:
+  #      users:
+  #        tenants: 2
+  #        users_per_tenant: 3
+  #      stacks:
+  #        stacks_per_tenant: 2
+  #        resources_per_stack: 10
+  #    sla:
+  #      failure_rate:
+  #        max: 0
 
   HeatStacks.create_snapshot_restore_delete_stack:
     -

@@ -26,7 +26,6 @@ PYTEST_ARGUMENTS = ("py.test"  # base command
                     " --self-contained-html"  # embedded css
                     " --durations=10"  # get a list of the slowest 10 tests
                     " -n auto"  # launch tests in parallel
-                    " --timeout=%(timeout)s"  # timeout for individual test
                     " %(path)s"
                     )
 
