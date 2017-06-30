@@ -69,7 +69,7 @@ class ListShares(utils.ManilaScenario):
         self._list_shares(detailed=detailed, search_opts=search_opts)
 
 
-@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs"
+@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
                 "cifs", "glusterfs", "hdfs"], missed=False,
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
@@ -112,7 +112,7 @@ class CreateAndExtendShare(utils.ManilaScenario):
         self._extend_share(share, new_size)
 
 
-@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs"
+@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
                 "cifs", "glusterfs", "hdfs"], missed=False,
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
