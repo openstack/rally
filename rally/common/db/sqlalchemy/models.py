@@ -168,7 +168,7 @@ class Task(BASE, RallyBase):
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     validation_duration = sa.Column(sa.Float)
-    task_duration = sa.Column(sa.Float)
+    task_duration = sa.Column(sa.Float, default=0.0)
     pass_sla = sa.Column(sa.Boolean)
     status = sa.Column(sa.String(36), default=consts.TaskStatus.INIT)
 
@@ -206,7 +206,7 @@ class Subtask(BASE, RallyBase):
         sa_types.JSONEncodedDict, default={}, nullable=False)
 
     run_in_parallel = sa.Column(sa.Boolean, default=False, nullable=False)
-    duration = sa.Column(sa.Float)
+    duration = sa.Column(sa.Float, default=0.0)
     pass_sla = sa.Column(sa.Boolean)
     status = sa.Column(sa.String(36), default=consts.SubtaskStatus.RUNNING)
 
@@ -266,7 +266,7 @@ class Workload(BASE, RallyBase):
     context_execution = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
-    start_time = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow())
+    start_time = sa.Column(sa_types.TimeStamp)
 
     load_duration = sa.Column(sa.Float, default=0)
     full_duration = sa.Column(sa.Float, default=0)

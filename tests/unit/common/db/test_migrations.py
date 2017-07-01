@@ -1417,3 +1417,134 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 conn.execute(
                     deployment_table.delete().where(
                         deployment_table.c.uuid == deployment))
+
+    def _pre_upgrade_35fe16d4ab1c(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        deployment_uuid = str(uuid.uuid4())
+        self._35fe16d4ab1c_task_uuid = str(uuid.uuid4())
+        self._35fe16d4ab1c_subtasks = {
+            str(uuid.uuid4()): [
+                {"uuid": str(uuid.uuid4()),
+                 "pass_sla": False,
+                 "load_duration": 1},
+                {"uuid": str(uuid.uuid4()),
+                 "pass_sla": False,
+                 "load_duration": 2.6}
+            ],
+            str(uuid.uuid4()): [
+                {"uuid": str(uuid.uuid4()),
+                 "pass_sla": True,
+                 "load_duration": 3},
+                {"uuid": str(uuid.uuid4()),
+                 "pass_sla": False,
+                 "load_duration": 7}
+            ]
+        }
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": deployment_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": "{}",
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": self._35fe16d4ab1c_task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "validation_result": six.b(json.dumps({})),
+                    "deployment_uuid": deployment_uuid
+                }]
+            )
+
+            for subtask_id, workloads in self._35fe16d4ab1c_subtasks.items():
+                conn.execute(
+                    subtask_table.insert(),
+                    [{
+                        "uuid": subtask_id,
+                        "created_at": timeutils.utcnow(),
+                        "updated_at": timeutils.utcnow(),
+                        "task_uuid": self._35fe16d4ab1c_task_uuid,
+                        "context": six.b(json.dumps([])),
+                        "sla": six.b(json.dumps([])),
+                        "run_in_parallel": False
+                    }]
+                )
+                for workload in workloads:
+                    conn.execute(
+                        workload_table.insert(),
+                        [{
+                            "uuid": workload["uuid"],
+                            "name": "foo",
+                            "task_uuid": self._35fe16d4ab1c_task_uuid,
+                            "subtask_uuid": subtask_id,
+                            "created_at": timeutils.utcnow(),
+                            "updated_at": timeutils.utcnow(),
+                            "position": 0,
+                            "runner": "",
+                            "runner_type": "",
+                            "context": "",
+                            "context_execution": "",
+                            "statistics": "",
+                            "hooks": "",
+                            "sla": "",
+                            "sla_results": "",
+                            "args": "",
+                            "load_duration": workload["load_duration"],
+                            "pass_sla": workload["pass_sla"]
+                        }]
+                    )
+
+    def _check_35fe16d4ab1c(self, engine, data):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        with engine.connect() as conn:
+            task_id = self._35fe16d4ab1c_task_uuid
+            task_obj = conn.execute(
+                task_table.select().where(
+                    task_table.c.uuid == task_id)).fetchone()
+            self.assertFalse(task_obj.pass_sla)
+            subtask_duration = dict(
+                [(k, sum([w["load_duration"] for w in v]))
+                 for k, v in self._35fe16d4ab1c_subtasks.items()])
+            self.assertEqual(sum(subtask_duration.values()),
+                             task_obj.task_duration)
+
+            for subtask_id, workloads in self._35fe16d4ab1c_subtasks.items():
+                subtask_obj = conn.execute(
+                    subtask_table.select().where(
+                        subtask_table.c.uuid == subtask_id)).fetchone()
+                self.assertFalse(subtask_obj.pass_sla)
+                self.assertEqual(sum([w["load_duration"] for w in workloads]),
+                                 subtask_obj.duration)
+
+                conn.execute(
+                    workload_table.delete().where(
+                        workload_table.c.subtask_uuid == subtask_id))
+                conn.execute(
+                    subtask_table.delete().where(
+                        subtask_table.c.uuid == subtask_id))
+
+            conn.execute(
+                task_table.delete().where(
+                    task_table.c.uuid == task_obj.uuid))
+
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == task_obj.deployment_uuid))

@@ -270,6 +270,15 @@ def workload_create(task_uuid, subtask_uuid, key):
     return get_impl().workload_create(task_uuid, subtask_uuid, key)
 
 
+def workload_get(workload_uuid):
+    """Get a workload.
+
+    :param workload_uuid: string with UUID of Workload to fetch.
+    :returns: a dict with data on the workload.
+    """
+    return get_impl().workload_get(workload_uuid)
+
+
 def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
     """Create a workload data.
 
@@ -283,14 +292,19 @@ def workload_data_create(task_uuid, workload_uuid, chunk_order, data):
                                            chunk_order, data)
 
 
-def workload_set_results(workload_uuid, data):
+def workload_set_results(workload_uuid, subtask_uuid, task_uuid, data):
     """Set workload results.
 
     :param workload_uuid: string with UUID of Workload instance.
+    :param subtask_uuid: string with UUID of Workload's parent Subtask.
+    :param task_uuid: string with UUID of Workload's parent Task.
     :param data: dict with workload results.
     :returns: a dict with data on the workload.
     """
-    return get_impl().workload_set_results(workload_uuid, data)
+    return get_impl().workload_set_results(workload_uuid=workload_uuid,
+                                           subtask_uuid=subtask_uuid,
+                                           task_uuid=task_uuid,
+                                           data=data)
 
 
 def deployment_create(values):

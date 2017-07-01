@@ -453,6 +453,11 @@ class Connection(object):
         return subtask
 
     @db_api.serialize
+    def workload_get(self, workload_uuid):
+        return self.model_query(models.Workload).filter_by(
+            uuid=workload_uuid).first()
+
+    @db_api.serialize
     def workload_create(self, task_uuid, subtask_uuid, key):
         workload = models.Workload(task_uuid=task_uuid,
                                    subtask_uuid=subtask_uuid)
@@ -521,73 +526,65 @@ class Connection(object):
         return workload_data
 
     @db_api.serialize
-    def workload_set_results(self, workload_uuid, data):
-        workload = self.model_query(models.Workload).filter_by(
-            uuid=workload_uuid).first()
+    def workload_set_results(self, workload_uuid, subtask_uuid, task_uuid,
+                             data):
+        session = get_session()
+        with session.begin():
+            workload_data_list = self._task_workload_data_get_all(
+                workload_uuid)
 
-        workload_data_list = self._task_workload_data_get_all(workload.uuid)
+            raw_data = [raw
+                        for workload_data in workload_data_list
+                        for raw in workload_data.chunk_data["raw"]]
+            iter_count = len(raw_data)
 
-        raw_data = [raw
-                    for workload_data in workload_data_list
-                    for raw in workload_data.chunk_data["raw"]]
-        iter_count = len(raw_data)
+            failed_iter_count = 0
+            max_duration = 0
+            min_duration = 0
 
-        failed_iter_count = 0
-        max_duration = 0
-        min_duration = 0
+            for d in raw_data:
+                if d.get("error"):
+                    failed_iter_count += 1
 
-        success = True
+                duration = d.get("duration", 0)
 
-        for d in raw_data:
-            if d.get("error"):
-                failed_iter_count += 1
+                if duration > max_duration:
+                    max_duration = duration
 
-            duration = d.get("duration", 0)
+                if min_duration and min_duration > duration:
+                    min_duration = duration
 
-            if duration > max_duration:
-                max_duration = duration
+            sla = data.get("sla", [])
+            # NOTE(ikhudoshyn): we call it 'pass_sla'
+            # for the sake of consistency with other models
+            # so if no SLAs were specified, then we assume pass_sla == True
+            success = all([s.get("success") for s in sla])
 
-            if min_duration and min_duration > duration:
-                min_duration = duration
+            load_duration = data.get("load_duration", 0)
 
-        sla = data.get("sla", [])
-        # TODO(ikhudoshyn): if no SLA was specified and there are
-        # failed iterations is it success?
-        # NOTE(ikhudoshyn): we call it 'pass_sla'
-        # for the sake of consistency with other models
-        # so if no SLAs were specified, then we assume pass_sla == True
-        success = all([s.get("success") for s in sla])
+            session.query(models.Workload).filter_by(
+                uuid=workload_uuid).update(
+                {
+                    "sla_results": {"sla": sla},
+                    "context_execution": {},
+                    "hooks": data.get("hooks", []),
+                    "load_duration": load_duration,
+                    "full_duration": data.get("full_duration", 0),
+                    "min_duration": min_duration,
+                    "max_duration": max_duration,
+                    "total_iteration_count": iter_count,
+                    "failed_iteration_count": failed_iter_count,
+                    "statistics": {},
+                    "pass_sla": success}
+            )
 
-        now = timeutils.utcnow()
-        delta = dt.timedelta(seconds=data.get("full_duration", 0))
-        start = now - delta
+            session.query(models.Task).filter_by(uuid=task_uuid).update(
+                {"task_duration": models.Task.task_duration + load_duration,
+                 "pass_sla": success})
 
-        workload.update({
-            "task_uuid": workload.task_uuid,
-            "subtask_uuid": workload.subtask_uuid,
-            "sla_results": {"sla": sla},
-            "context_execution": {},
-            "hooks": data.get("hooks", []),
-            "load_duration": data.get("load_duration", 0),
-            "full_duration": data.get("full_duration", 0),
-            "min_duration": min_duration,
-            "max_duration": max_duration,
-            "total_iteration_count": iter_count,
-            "failed_iteration_count": failed_iter_count,
-            # TODO(ikhudoshyn)
-            "start_time": start,
-            "statistics": {},
-            "pass_sla": success
-        })
-
-        # TODO(ikhudoshyn): if pass_sla is False,
-        # then update task's and subtask's pass_sla
-
-        # TODO(ikhudoshyn): update task.task_duration
-        # and subtask.duration
-
-        workload.save()
-        return workload
+            session.query(models.Subtask).filter_by(uuid=subtask_uuid).update(
+                {"duration": models.Subtask.duration + load_duration,
+                 "pass_sla": success})
 
     def _deployment_get(self, deployment, session=None):
         stored_deployment = self.model_query(

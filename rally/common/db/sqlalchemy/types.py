@@ -21,6 +21,33 @@ from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
 
 
+class TimeStamp(sa_types.TypeDecorator):
+    """Represents datetime/time timestamp object as a bigint value.
+
+    Despite the fact that timestamp objects are represented by float value in
+    python, the Float column cannot be used for storing such values, since
+    timestamps values can be bigger than the limit of Float columns at some
+    back-ends (the value will be cropped in such case). Also, using Datetime
+    type is not convenient too, since it do not accurate with microseconds.
+    """
+
+    impl = sa_types.BigInteger
+    _coefficient = 1000000.0
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return value * self._coefficient
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return value / self._coefficient
+
+    def compare_against_backend(self, dialect, conn_type):
+        return isinstance(conn_type, sa_types.BIGINT)
+
+
 class LongText(sa_types.TypeDecorator):
     """Represents an immutable structure as a json-encoded string.
 
