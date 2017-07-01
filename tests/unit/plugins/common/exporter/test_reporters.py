@@ -24,22 +24,55 @@ PATH = "rally.plugins.common.exporter.reporters"
 
 def get_tasks_results():
     task_id = "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8"
-    workload = {"created_at": "2017-06-04T05:14:44",
+    workload = {"uuid": "uuid",
+                "name": "CinderVolumes.list_volumes",
+                "description": "List all volumes.",
+                "created_at": "2017-06-04T05:14:44",
                 "updated_at": "2017-06-04T05:15:14",
                 "task_uuid": task_id,
                 "position": 0,
-                "name": "CinderVolumes.list_volumes",
-                "description": "List all volumes.",
                 "data": {"raw": []},
                 "full_duration": 29.969523191452026,
-                "sla": {},
-                "sla_results": {"sla": []},
                 "load_duration": 2.03029203414917,
                 "hooks": [],
-                "id": 3}
-    task = {"subtasks": [
-        {"task_uuid": task_id,
-         "workloads": [workload]}]}
+                "runner": {},
+                "runner_type": "runner_type",
+                "args": {},
+                "context": {},
+                "min_duration": 0.0,
+                "max_duration": 1.0,
+                "start_time": 0,
+                "statistics": {},
+                "failed_iteration_count": 0,
+                "total_iteration_count": 10,
+                "sla": {},
+                "sla_results": {"sla": []},
+                "pass_sla": True
+                }
+    task = {
+        "uuid": task_id,
+        "title": "task",
+        "description": "description",
+        "status": "finished",
+        "tags": [],
+        "created_at": "2017-06-04T05:14:44",
+        "updated_at": "2017-06-04T05:15:14",
+        "pass_sla": True,
+        "task_duration": 2.0,
+        "subtasks": [
+            {"uuid": "subtask_uuid",
+             "title": "subtask",
+             "description": "description",
+             "status": "finished",
+             "run_in_parallel": True,
+             "created_at": "2017-06-04T05:14:44",
+             "updated_at": "2017-06-04T05:15:14",
+             "sla": {},
+             "context": {},
+             "duration": 29.969523191452026,
+             "task_uuid": task_id,
+             "workloads": [workload]}
+        ]}
     return [task]
 
 
@@ -50,41 +83,13 @@ class HTMLExporterTestCase(test.TestCase):
         tasks_results = get_tasks_results()
         tasks_results.extend(get_tasks_results())
         reporter = reporters.HTMLExporter(tasks_results, None)
+        reporter._generate_results = mock.MagicMock()
 
         self.assertEqual({"print": "html"}, reporter.generate())
 
+        reporter._generate_results.assert_called_once_with()
         mock_plot.assert_called_once_with(
-            [
-                {"subtasks": [
-                    {"task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
-                     "workloads": [
-                         {"id": 3,
-                          "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
-                          "name": "CinderVolumes.list_volumes",
-                          "description": "List all volumes.",
-                          "created_at": "2017-06-04T05:14:44",
-                          "updated_at": "2017-06-04T05:15:14",
-                          "hooks": [],
-                          "sla_results": {"sla": []},
-                          "load_duration": 2.03029203414917,
-                          "full_duration": 29.969523191452026,
-                          "data": {"raw": []},
-                          "position": 0, "sla": {}}]}]},
-                {"subtasks": [
-                    {"task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
-                     "workloads": [
-                         {"id": 3,
-                          "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
-                          "name": "CinderVolumes.list_volumes",
-                          "description": "List all volumes.",
-                          "created_at": "2017-06-04T05:14:44",
-                          "updated_at": "2017-06-04T05:15:14",
-                          "hooks": [],
-                          "sla_results": {"sla": []},
-                          "load_duration": 2.03029203414917,
-                          "full_duration": 29.969523191452026,
-                          "data": {"raw": []},
-                          "position": 1, "sla": {}}]}]}],
+            reporter._generate_results.return_value,
             include_libs=False)
 
         reporter = reporters.HTMLExporter(tasks_results,
@@ -92,6 +97,50 @@ class HTMLExporterTestCase(test.TestCase):
         self.assertEqual({"files": {"path": "html"},
                           "open": "file://" + os.path.abspath("path")},
                          reporter.generate())
+
+    def test__generate_results(self):
+        tasks_results = [{
+            "uuid": "task_id",
+            "subtasks": [
+                {"uuid": "subtask_id",
+                 "workloads": [
+                     {
+                         "uuid": "workload_id",
+                         "name": "scenario_name",
+                         "position": 0
+                     },
+                     {
+                         "uuid": "workload_id",
+                         "name": "scenario_name",
+                         "position": 0
+                     },
+                 ]}
+            ]
+        }]
+
+        reporter = reporters.HTMLExporter(tasks_results, None)
+
+        self.assertEqual(
+            [{
+                "uuid": "task_id",
+                "subtasks": [
+                    {"uuid": "subtask_id",
+                     "workloads": [
+                         {
+                             "uuid": "workload_id",
+                             "name": "scenario_name",
+                             "position": 0
+                         },
+                         {
+                             "uuid": "workload_id",
+                             "name": "scenario_name",
+                             "position": 1
+                         },
+                     ]}
+                ]
+            }],
+            reporter._generate_results()
+        )
 
 
 class JUnitXMLExporterTestCase(test.TestCase):

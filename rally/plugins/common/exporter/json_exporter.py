@@ -1,0 +1,111 @@
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import collections
+import datetime as dt
+import json
+
+from oslo_utils import timeutils
+
+from rally.common import version as rally_version
+from rally.task import exporter
+
+TIMEFORMAT = "%Y-%m-%dT%H:%M:%S"
+
+
+@exporter.configure("json")
+class JSONExporter(exporter.TaskExporter):
+    """Generates task report in JSON format."""
+
+    def _generate_tasks(self):
+        tasks = []
+        for task in self.tasks_results:
+            subtasks = []
+            for subtask in task["subtasks"]:
+                workloads = []
+                for workload in subtask["workloads"]:
+                    workloads.append(
+                        collections.OrderedDict(
+                            [("uuid", workload["uuid"]),
+                             ("name", workload["name"]),
+                             ("description", workload["description"]),
+                             ("runner",
+                              {workload["runner_type"]: workload["runner"]}),
+                             ("hooks", [{"action": dict([h["action"]]),
+                                         "trigger": dict([h["trigger"]])}
+                                        for h in workload["hooks"]]),
+                             ("args", workload["args"]),
+                             ("min_duration", workload["min_duration"]),
+                             ("max_duration", workload["max_duration"]),
+                             ("start_time", workload["start_time"]),
+                             ("load_duration", workload["load_duration"]),
+                             ("full_duration", workload["full_duration"]),
+                             ("statistics", workload["statistics"]),
+                             ("data", workload["data"]),
+                             ("failed_iteration_count",
+                              workload["failed_iteration_count"]),
+                             ("total_iteration_count",
+                              workload["total_iteration_count"]),
+                             ("created_at", workload["created_at"]),
+                             ("updated_at", workload["updated_at"]),
+                             ("contexts", workload["context"]),
+                             ("position", workload["position"]),
+                             ("pass_sla", workload["pass_sla"]),
+                             ("sla_results", workload["sla_results"]),
+                             ("sla", workload["sla"])]
+                        )
+                    )
+                subtasks.append(
+                    collections.OrderedDict(
+                        [("uuid", subtask["uuid"]),
+                         ("title", subtask["title"]),
+                         ("description", subtask["description"]),
+                         ("status", subtask["status"]),
+                         ("created_at", subtask["created_at"]),
+                         ("updated_at", subtask["updated_at"]),
+                         ("sla", subtask["sla"]),
+                         ("duration", subtask["duration"]),
+                         ("workloads", workloads)]
+                    )
+                )
+            tasks.append(
+                collections.OrderedDict(
+                    [("uuid", task["uuid"]),
+                     ("title", task["title"]),
+                     ("description", task["description"]),
+                     ("status", task["status"]),
+                     ("tags", task["tags"]),
+                     ("created_at", task["created_at"]),
+                     ("updated_at", task["updated_at"]),
+                     ("pass_sla", task["pass_sla"]),
+                     ("task_duration", task["task_duration"]),
+                     ("subtasks", subtasks)]
+                )
+            )
+        return tasks
+
+    def generate(self):
+        results = {"info": {"rally_version": rally_version.version_string(),
+                            "generated_at": dt.datetime.strftime(
+                                timeutils.utcnow(), TIMEFORMAT),
+                            "format_version": "1"},
+                   "tasks": self._generate_tasks()}
+
+        results = json.dumps(results, sort_keys=False, indent=4)
+
+        if self.output_destination:
+            return {"files": {self.output_destination: results},
+                    "open": "file://" + self.output_destination}
+        else:
+            return {"print": results}

@@ -134,6 +134,8 @@ function run () {
     gzip -9 rally-plot/detailed_with_iterations.txt
     rally task report --html-static --out rally-plot/results.html
     gzip -9 rally-plot/results.html
+    rally task report --json --out rally-plot/new_results.json
+    gzip -9 rally-plot/new_results.json
     rally task export --type junit-xml --to rally-plot/junit.xml
     gzip -9 rally-plot/junit.xml
 
