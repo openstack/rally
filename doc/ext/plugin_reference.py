@@ -76,27 +76,25 @@ def process_jsonschema(schema):
                                 "described below:\n\n")
 
                 items = schema["items"]
+                itype = None
                 if "type" in items:
                     itype = JSON_SCHEMA_TYPES_MAP.get(items["type"],
                                                       items["type"])
                     info["doc"] += "- Type: %s. " % itype
-                    if "description" in items:
-                        # add indention
-                        desc = items["description"].split("\n")
-                        info["doc"] += "\n  ".join(desc)
+                if "description" in items:
+                    # add indention
+                    desc = items["description"].split("\n")
+                    info["doc"] += "\n  ".join(desc)
 
-                    if itype in ("list", "dict"):
-                        new_schema = copy.copy(items)
-                        new_schema.pop("description", None)
-                        new_schema = json.dumps(new_schema, indent=4)
-                        new_schema = "\n     ".join(
-                            new_schema.split("\n"))
+                new_schema = copy.copy(items)
+                new_schema.pop("description", None)
+                new_schema = json.dumps(new_schema, indent=4)
+                new_schema = "\n     ".join(
+                    new_schema.split("\n"))
 
-                        info["doc"] += ("\n  Format:\n\n"
-                                        "    .. code-block:: json\n\n"
-                                        "      %s\n" % new_schema)
-                else:
-                    info["doc"] += " - ``%s`` " % items
+                info["doc"] += ("\n  Format:\n\n"
+                                "    .. code-block:: json\n\n"
+                                "      %s\n" % new_schema)
             return info
 
         elif isinstance(schema["type"], list):
