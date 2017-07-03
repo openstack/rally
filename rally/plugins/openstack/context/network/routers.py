@@ -103,7 +103,8 @@ class Router(context.Context):
                 self.context.get("users", []))):
             self.context["tenants"][tenant_id]["routers"] = []
             scenario = neutron_utils.NeutronScenario(
-                context={"user": user, "task": self.context["task"]}
+                context={"user": user, "task": self.context["task"],
+                         "owner_id": self.context["owner_id"]}
             )
             for i in range(self.config["routers_per_tenant"]):
                 router = scenario._create_router(kwargs)
