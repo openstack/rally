@@ -565,7 +565,7 @@ class WrapperForAtomicActionsTestCase(test.TestCase):
         self.assertEqual(atomic_actions[0], atomic_wrapper[0])
         self.assertEqual(atomic_actions[1], atomic_wrapper[1])
         self.assertEqual(1, atomic_wrapper.get("action_1"))
-        self.assertIsNone(None, atomic_wrapper.get("action_3"))
+        self.assertIsNone(atomic_wrapper.get("action_3"))
         self.assertEqual(2, len(atomic_wrapper))
         self.assertEqual(atomic_actions[0], six.next(iter(atomic_wrapper)))
 
