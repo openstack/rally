@@ -18,6 +18,7 @@
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 
@@ -529,7 +530,8 @@ def main():
         changes = resources.compare(with_list=given_list)
         removed, added = changes
 
-        # Cinder has a feature - cache images. let's filter such volumes
+        # Cinder has a feature - cache images for speeding-up time of creating
+        # volumes from images. let's put such cache-volumes into expected list
         volume_names = [
             "image-%s" % i["id"]["id"] for i in given_list
             if i["cls"] == "glance" and i["resource_name"] == "image"]
@@ -537,15 +539,20 @@ def main():
         # filter out expected additions
         expected = []
         for resource in added:
-            if ((resource["cls"] == "keystone" and
-                 resource["resource_name"] == "role" and
-                 resource["id"].get("name") == "_member_") or
-                (resource["cls"] == "neutron" and
-                 resource["resource_name"] == "security_group" and
-                 resource["id"].get("name") == "default") or
-                (resource["cls"] == "cinder" and
-                 resource["resource_name"] == "volume" and
-                 resource["id"].get("name") in volume_names)):
+            if (
+                    (resource["cls"] == "keystone" and
+                     resource["resource_name"] == "role" and
+                     resource["id"].get("name") == "_member_") or
+
+                    (resource["cls"] == "neutron" and
+                     resource["resource_name"] == "security_group" and
+                     resource["id"].get("name") == "default") or
+
+                    (resource["cls"] == "cinder" and
+                     resource["resource_name"] == "volume" and
+                     resource["id"].get("name") in volume_names) or
+
+                    resource["cls"] == "murano"):
                 expected.append(resource)
 
         for resource in expected:
@@ -561,7 +568,14 @@ def main():
             _print_tabular_resources(expected, "Added resources (expected)")
 
         if any(changes):
-            return 0  # `1' will fail gate job
+            # NOTE(andreykurilin): '1' return value will fail gate job. It is
+            #     ok for changes to Rally project, but changes to other
+            #     projects, which have rally job, should not be affected by
+            #     this check, since in most cases resources are left due
+            #     to wrong cleanup of a particular scenario.
+            if os.environ.get("ZUUL_PROJECT") == "openstack/rally":
+                return 1
+            return 0
     return 0
 
 
