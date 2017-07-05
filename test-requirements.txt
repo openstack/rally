@@ -2,15 +2,15 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
-hacking>=0.12.0,!=0.13.0,<0.14                         # Apache Software License
+hacking>=0.12.0,!=0.13.0,<=0.13.0                      # Apache Software License
 
-pytest>=2.7,<=3.0.7                                    # MIT
+pytest>=2.7,<=3.1.3                                    # MIT
 # py.test plugin for measuring coverage.
 pytest-cov>=2.2.1,<=2.5.1                              # MIT
 # py.test plugin for generating HTML reports
-pytest-html>=1.10.0,<=1.14.2                           # Mozilla Public License 2.0 (MPL 2.0)
+pytest-html>=1.10.0,<=1.15.1                           # Mozilla Public License 2.0 (MPL 2.0)
 # py.test xdist plugin for distributed testing and loop-on-failing modes
-pytest-xdist<=1.15.0                                   # MIT
+pytest-xdist<=1.18.0                                   # MIT
 
 coverage>=4.0,!=4.4,<=4.4.1                            # Apache License, Version 2.0
 ddt>=1.0.1,<=1.1.1
@@ -18,8 +18,8 @@ mock>=2.0,<=2.0.0
 python-dateutil>=2.4.2,<=2.6.0                         # Simplified BSD
 testtools>=1.4.0,<=2.3.0
 
-oslosphinx>=4.7.0,<=4.12.0                             # Apache Software License
-oslotest>=1.10.0,<=2.15.0                              # Apache Software License
+oslosphinx>=4.7.0,<=4.15.0                             # Apache Software License
+oslotest>=1.10.0,<=2.16.0                              # Apache Software License
 
 testresources>=0.2.4,<=2.0.1
 testscenarios>=0.4,<=0.5.0
