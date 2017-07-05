@@ -145,13 +145,13 @@ New format JSON schema:
                                 "properties": {
                                     "scenario": {"type": "object"},
                                     "runner": {"type": "object"}
-                                    "slas": {"type": "object"},
+                                    "sla": {"type": "object"},
                                     "contexts": {"type": "object"}
                                 },
                                 "required": ["scenario", "runner"]
                             }
                         },
-                        "context": {"type": "object"}
+                        "contexts": {"type": "object"}
                     },
                     "required": ["title", "workloads"]
                 }
@@ -171,7 +171,7 @@ New format sample:
       # Keeping the schema of format more or less same for end users.
 
       # Version of format
-      version: 1
+      version: 2
 
       # Allows to set title of report. Which allows end users to understand
       # what they can find in task report.
@@ -226,7 +226,7 @@ New format sample:
                 times: 100
                 concurrency: 10
             # Subtask success of criteria based on results
-            slas:
+            sla:
               # Every key means SLA plugin name, values are config of plugin
               # Only if all criteria pass task is marked as passed
               failure_rate:
@@ -277,7 +277,7 @@ New format sample:
               rps:
                 rps: 1
                 times: 1000
-            slas:
+            sla:
               max_seconds_per_iteration: 10
           -
             scenario:
@@ -289,7 +289,7 @@ New format sample:
               rps:
                 rps: 10
                 times: 10
-            slas:
+            sla:
               max_seconds_per_iteration: 100
             # This scenario is called in own independent and isolated context
             contexts: {}
