@@ -59,33 +59,34 @@ db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite")
 IMPL = None
 
 
+def serialize_data(data):
+    if data is None:
+        return None
+    if isinstance(data, (six.integer_types,
+                         six.string_types,
+                         six.text_type,
+                         dt.date,
+                         dt.time,
+                         float,
+                         )):
+        return data
+    if isinstance(data, dict):
+        return {k: serialize_data(v) for k, v in data.items()}
+    if isinstance(data, (list, tuple)):
+        return [serialize_data(i) for i in data]
+    if hasattr(data, "_as_dict"):
+        result = data._as_dict()
+        for k, v in result.items():
+            result[k] = serialize_data(v)
+        return result
+
+    raise ValueError(_("Can not serialize %s") % data)
+
+
 def serialize(fn):
-    def conv(data):
-        if data is None:
-            return None
-        if isinstance(data, (six.integer_types,
-                             six.string_types,
-                             six.text_type,
-                             dt.date,
-                             dt.time,
-                             float,
-                             )):
-            return data
-        if isinstance(data, dict):
-            return {k: conv(v) for k, v in data.items()}
-        if isinstance(data, (list, tuple)):
-            return [conv(i) for i in data]
-        if hasattr(data, "_as_dict"):
-            result = data._as_dict()
-            for k, v in result.items():
-                result[k] = conv(v)
-            return result
-
-        raise ValueError(_("Can not serialize %s") % data)
-
     def wrapper(*args, **kwargs):
         result = fn(*args, **kwargs)
-        return conv(result)
+        return serialize_data(result)
     return wrapper
 
 
@@ -129,14 +130,22 @@ def schema_stamp(revision):
     return get_impl().schema_stamp(revision)
 
 
-def task_get(uuid):
+def task_get(uuid, detailed=False):
     """Returns task by uuid.
 
     :param uuid: UUID of the task.
+    :param detailed: whether return results of task or not (Defaults to False).
     :raises TaskNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
-    return get_impl().task_get(uuid)
+    task = get_impl().task_get(uuid, detailed=detailed)
+    if detailed:
+        for subtask in task["subtasks"]:
+            for workload in subtask["workloads"]:
+                del workload["statistics"]
+                del workload["context_execution"]
+                del workload["_profiling_data"]
+    return task
 
 
 def task_get_status(uuid):
@@ -147,20 +156,6 @@ def task_get_status(uuid):
     :returns: task dict with data on the task.
     """
     return get_impl().task_get_status(uuid)
-
-
-def task_get_detailed_last():
-    """Returns the most recently created task."""
-    return get_impl().task_get_detailed_last()
-
-
-def task_get_detailed(uuid):
-    """Returns task with results by uuid.
-
-    :param uuid: UUID of the task.
-    :returns: task dict with data on the task and its results.
-    """
-    return get_impl().task_get_detailed(uuid)
 
 
 def task_create(values):
@@ -228,15 +223,6 @@ def task_delete(uuid, status=None):
     return get_impl().task_delete(uuid, status=status)
 
 
-def task_result_get_all_by_uuid(task_uuid):
-    """Get list of task results.
-
-    :param task_uuid: string with UUID of Task instance.
-    :returns: list instances of TaskResult.
-    """
-    return get_impl().task_result_get_all_by_uuid(task_uuid)
-
-
 def subtask_create(task_uuid, title, description=None, context=None):
     """Create a subtask.
 
@@ -259,15 +245,31 @@ def subtask_update(subtask_uuid, values):
     return get_impl().subtask_update(subtask_uuid, values)
 
 
-def workload_create(task_uuid, subtask_uuid, key):
+def workload_create(task_uuid, subtask_uuid, name, description, position,
+                    runner, runner_type, hooks, context, sla, args,
+                    context_execution=None, statistics=None):
     """Create a workload.
 
     :param task_uuid: string with UUID of Task instance.
     :param subtask_uuid: string with UUID of Subtask instance.
-    :param key: dict with record values on the workload.
+    :param name: string with the name of Workload
+    :param description: string with the description of Workload
+    :param position: integer with an order of Workload in Subtask
+    :param runner: a dict with config of Workload runner
+    :param runner_type: a type of Workload runner
+    :param hooks: a list with Workload hooks config and results
+    :param context: a dict with config of Workload context
+    :param sla: a dict with config of Workload sla
+    :param args: a dict with arguments of Workload
+    :param context_execution: reserved for further refactoring
+    :param statistics: reserved for further refactoring
     :returns: a dict with data on the workload.
     """
-    return get_impl().workload_create(task_uuid, subtask_uuid, key)
+    return get_impl().workload_create(
+        task_uuid, subtask_uuid, name=name, description=description,
+        position=position, runner=runner, runner_type=runner_type,
+        hooks=hooks, context=context, sla=sla, args=args,
+        context_execution=None, statistics=None)
 
 
 def workload_get(workload_uuid):

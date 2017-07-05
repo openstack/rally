@@ -23,54 +23,24 @@ PATH = "rally.plugins.common.exporter.reporters"
 
 
 def get_tasks_results():
-    return [{"created_at": "2017-06-04T05:14:44",
-             "updated_at": "2017-06-04T05:15:14",
-             "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
-             "key": {
-                 "kw": {},
-                 "pos": 0,
-                 "name": "CinderVolumes.list_volumes",
-                 "description": "List all volumes."
-             },
-             "data": {
-                 "raw": [],
-                 "full_duration": 29.969523191452026,
-                 "sla": [],
-                 "load_duration": 2.03029203414917,
-                 "hooks": []
-             },
-             "id": 3}]
-
-
-class OldJSONResultsMixinTestCase(test.TestCase):
-
-    def test__generate_tasks_results(self):
-
-        class DummyReport(reporters.OldJSONResultsMixin):
-            def __init__(self, raw_tasks_results):
-                self.tasks_results = raw_tasks_results
-
-        reporter = DummyReport(get_tasks_results())
-        results = reporter._generate_tasks_results()
-        self.assertEqual(
-            [
-                {
-                    "hooks": [],
-                    "created_at": "2017-06-04T05:14:44",
-                    "load_duration": 2.03029203414917,
-                    "result": [],
-                    "key": {
-                        "kw": {},
-                        "pos": 0,
-                        "name": "CinderVolumes.list_volumes",
-                        "description": "List all volumes."
-                    },
-                    "full_duration": 29.969523191452026,
-                    "sla": []
-                }
-            ],
-            results
-        )
+    task_id = "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8"
+    workload = {"created_at": "2017-06-04T05:14:44",
+                "updated_at": "2017-06-04T05:15:14",
+                "task_uuid": task_id,
+                "position": 0,
+                "name": "CinderVolumes.list_volumes",
+                "description": "List all volumes.",
+                "data": {"raw": []},
+                "full_duration": 29.969523191452026,
+                "sla": {},
+                "sla_results": {"sla": []},
+                "load_duration": 2.03029203414917,
+                "hooks": [],
+                "id": 3}
+    task = {"subtasks": [
+        {"task_uuid": task_id,
+         "workloads": [workload]}]}
+    return [task]
 
 
 class HTMLExporterTestCase(test.TestCase):
@@ -81,65 +51,63 @@ class HTMLExporterTestCase(test.TestCase):
         reporters.HTMLExporter.validate("")
         reporters.HTMLExporter.validate(None)
 
-    def test__generate(self):
+    @mock.patch("%s.plot.plot" % PATH, return_value="html")
+    def test_generate(self, mock_plot):
         tasks_results = get_tasks_results()
         tasks_results.extend(get_tasks_results())
         reporter = reporters.HTMLExporter(tasks_results, None)
-        results = reporter._generate()
-        self.assertEqual(
-            [
-                {
-                    "hooks": [],
-                    "created_at": "2017-06-04T05:14:44",
-                    "load_duration": 2.03029203414917,
-                    "result": [],
-                    "key": {
-                        "kw": {},
-                        "pos": 0,
-                        "name": "CinderVolumes.list_volumes",
-                        "description": "List all volumes."
-                    },
-                    "full_duration": 29.969523191452026,
-                    "sla": []
-                },
-                {
-                    "hooks": [],
-                    "created_at": "2017-06-04T05:14:44",
-                    "load_duration": 2.03029203414917,
-                    "result": [],
-                    "key": {
-                        "kw": {},
-                        "pos": 1,
-                        "name": "CinderVolumes.list_volumes",
-                        "description": "List all volumes."
-                    },
-                    "full_duration": 29.969523191452026,
-                    "sla": []
-                }], results)
 
-    @mock.patch("%s.HTMLExporter._generate" % PATH,
-                return_value="task_results")
-    @mock.patch("%s.plot.plot" % PATH, return_value="html")
-    def test_generate(self, mock_plot, mock__generate):
-        reporter = reporters.HTMLExporter([], output_destination=None)
         self.assertEqual({"print": "html"}, reporter.generate())
-        mock__generate.assert_called_once_with()
-        mock_plot.assert_called_once_with("task_results",
-                                          include_libs=False)
 
-        mock__generate.reset_mock()
-        mock_plot.reset_mock()
-        reporter = reporters.HTMLExporter([], output_destination="path")
-        reporter.INCLUDE_LIBS = True
+        mock_plot.assert_called_once_with(
+            [
+                {"subtasks": [
+                    {"task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
+                     "workloads": [
+                         {"id": 3,
+                          "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
+                          "name": "CinderVolumes.list_volumes",
+                          "description": "List all volumes.",
+                          "created_at": "2017-06-04T05:14:44",
+                          "updated_at": "2017-06-04T05:15:14",
+                          "hooks": [],
+                          "sla_results": {"sla": []},
+                          "load_duration": 2.03029203414917,
+                          "full_duration": 29.969523191452026,
+                          "data": {"raw": []},
+                          "position": 0, "sla": {}}]}]},
+                {"subtasks": [
+                    {"task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
+                     "workloads": [
+                         {"id": 3,
+                          "task_uuid": "2fa4f5ff-7d23-4bb0-9b1f-8ee235f7f1c8",
+                          "name": "CinderVolumes.list_volumes",
+                          "description": "List all volumes.",
+                          "created_at": "2017-06-04T05:14:44",
+                          "updated_at": "2017-06-04T05:15:14",
+                          "hooks": [],
+                          "sla_results": {"sla": []},
+                          "load_duration": 2.03029203414917,
+                          "full_duration": 29.969523191452026,
+                          "data": {"raw": []},
+                          "position": 1, "sla": {}}]}]}],
+            include_libs=False)
+
+        reporter = reporters.HTMLExporter(tasks_results,
+                                          output_destination="path")
         self.assertEqual({"files": {"path": "html"},
                           "open": "file://" + os.path.abspath("path")},
                          reporter.generate())
-        mock__generate.assert_called_once_with()
-        mock_plot.assert_called_once_with("task_results",
-                                          include_libs=True)
 
 
 class JUnitXMLExporterTestCase(test.TestCase):
+
+    def test_validate(self):
+        # nothing should fail
+        reporters.HTMLExporter.validate(mock.Mock())
+        reporters.HTMLExporter.validate("")
+        reporters.HTMLExporter.validate(None)
+
     def test_generate(self):
         content = ("<testsuite errors=\"0\""
                    " failures=\"0\""
@@ -163,8 +131,8 @@ class JUnitXMLExporterTestCase(test.TestCase):
 
     def test_generate_fail(self):
         tasks_results = get_tasks_results()
-        tasks_results[0]["data"]["sla"] = [{"success": False,
-                                            "detail": "error"}]
+        tasks_results[0]["subtasks"][0]["workloads"][0]["sla_results"] = {
+            "sla": [{"success": False, "detail": "error"}]}
         content = ("<testsuite errors=\"0\""
                    " failures=\"1\""
                    " name=\"Rally test suite\""

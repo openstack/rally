@@ -539,7 +539,11 @@ class TaskEngine(object):
             raise TaskAborted()
 
         key = workload.make_key()
-        workload_obj = subtask_obj.add_workload(key)
+        workload_obj = subtask_obj.add_workload(
+            name=workload.name, description=workload.description,
+            position=workload.pos, runner=workload.runner,
+            hooks=workload.hooks, context=workload.context, sla=workload.sla,
+            args=workload.args)
         LOG.info("Running benchmark with key: \n%s"
                  % json.dumps(key, indent=2))
         runner_obj = self._get_runner(workload.runner)

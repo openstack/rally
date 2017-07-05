@@ -34,7 +34,7 @@ class TaskTestCase(test.TestCase):
         self.task = {
             "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
             "status": consts.TaskStatus.INIT,
-            "verification_log": "",
+            "validation_result": {},
         }
 
     @mock.patch("rally.common.objects.task.db.task_create")
@@ -60,11 +60,12 @@ class TaskTestCase(test.TestCase):
         self.assertTrue(mock_uuid4.called)
         self.assertEqual(task["uuid"], mock_uuid4.return_value)
 
-    @mock.patch("rally.common.objects.task.db.task_get")
+    @mock.patch("rally.common.db.api.task_get")
     def test_get(self, mock_task_get):
         mock_task_get.return_value = self.task
         task = objects.Task.get(self.task["uuid"])
-        mock_task_get.assert_called_once_with(self.task["uuid"])
+        mock_task_get.assert_called_once_with(self.task["uuid"],
+                                              detailed=False)
         self.assertEqual(task["uuid"], self.task["uuid"])
 
     @mock.patch("rally.common.objects.task.db.task_get_status")
@@ -170,14 +171,16 @@ class TaskTestCase(test.TestCase):
              "validation_result": {"a": "fake"}}
         )
 
+    @mock.patch("rally.common.objects.task.db.deployment_get")
     @mock.patch("rally.common.objects.task.charts")
-    def test_extend_results(self, mock_charts):
-        self.assertRaises(TypeError, objects.Task.extend_results)
-
+    def test_extend_results(self, mock_charts, mock_deployment_get):
+        mock_deployment_get.return_value = {"name": "foo_deployment"}
         mock_stat = mock.Mock()
         mock_stat.render.return_value = "durations_stat"
         mock_charts.MainStatsTable.return_value = mock_stat
         now = dt.datetime.now()
+
+        task_uuid = "foo_uuid"
         iterations = [
             {"timestamp": i + 2, "duration": i + 5,
              "scenario_output": {"errors": "", "data": {}},
@@ -188,17 +191,30 @@ class TaskTestCase(test.TestCase):
                                  "started_at": 0, "finished_at": i + 11}
                                 ]
              } for i in range(10)]
-        obsolete = [
-            {"task_uuid": "foo_uuid", "created_at": now, "updated_at": now,
-             "id": 11, "key": {"kw": {"foo": 42},
-                               "name": "Foo.bar", "pos": 0},
-             "data": {"raw": iterations, "sla": [],
-                      "hooks": [],
-                      "full_duration": 40, "load_duration": 32}}]
+        obsolete = {
+            "uuid": task_uuid,
+            "deployment_uuid": "idd",
+            "created_at": now, "updated_at": now,
+            "subtasks": [{
+                "created_at": now, "updated_at": now,
+                "workloads": [{
+                    "id": 11, "name": "Foo.bar", "position": 0,
+                    "task_uuid": "foo_uuid",
+                    "created_at": now, "updated_at": now,
+                    "data": iterations,
+                    "sla": [],
+                    "hooks": [],
+                    "full_duration": 40, "load_duration": 32}]}]}
         expected = [
-            {"iterations": "foo_iterations", "sla": [],
+            {"iterations": mock.ANY, "sla": [],
+             "task_uuid": task_uuid,
              "hooks": [],
-             "key": {"kw": {"foo": 42}, "name": "Foo.bar", "pos": 0},
+             "data": mock.ANY,
+             "full_duration": 40,
+             "load_duration": 32,
+             "id": 11,
+             "position": mock.ANY,
+             "name": "Foo.bar",
              "info": {
                  "atomic": {"keystone.create_user": {"max_duration": 39,
                                                      "min_duration": 21,
@@ -209,70 +225,59 @@ class TaskTestCase(test.TestCase):
                  "stat": "durations_stat"}}]
 
         # serializable is default
-        results = objects.Task.extend_results(obsolete)
-        self.assertIsInstance(results[0]["iterations"], type(iter([])))
-        self.assertEqual(list(results[0]["iterations"]), iterations)
-        results[0]["iterations"] = "foo_iterations"
+        task = objects.Task(obsolete).extend_results().to_dict()
+        workloads = task["subtasks"][0]["workloads"]
+        self.assertIsInstance(workloads[0]["iterations"], type(iter([])))
+        self.assertEqual(list(workloads[0]["iterations"]), iterations)
         expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
         expected[0]["updated_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
-        self.assertEqual(expected, results)
+        self.assertEqual(expected, workloads)
 
         # serializable is False
-        results = objects.Task.extend_results(obsolete, serializable=False)
-        self.assertIsInstance(results[0]["iterations"], type(iter([])))
-        self.assertEqual(list(results[0]["iterations"]), iterations)
-        results[0]["iterations"] = "foo_iterations"
-        self.assertEqual(results, expected)
+        task = objects.Task(obsolete).extend_results(
+            serializable=False).to_dict()
+        workloads = task["subtasks"][0]["workloads"]
+        self.assertIsInstance(workloads[0]["iterations"], type(iter([])))
+        self.assertEqual(list(workloads[0]["iterations"]), iterations)
+        self.assertEqual(workloads, expected)
 
         # serializable is True
-        results = objects.Task.extend_results(obsolete, serializable=True)
-        self.assertEqual(list(results[0]["iterations"]), iterations)
-        jsonschema.validate(results[0],
+        task = objects.Task(obsolete).extend_results(
+            serializable=True).to_dict()
+        workloads = task["subtasks"][0]["workloads"]
+        self.assertEqual(list(workloads[0]["iterations"]), iterations)
+        jsonschema.validate(workloads[0],
                             objects.task.TASK_EXTENDED_RESULT_SCHEMA)
-        results[0]["iterations"] = "foo_iterations"
-        self.assertEqual(results, expected)
+        self.assertEqual(workloads, expected)
 
     @mock.patch("rally.common.objects.task.db.deployment_get")
-    @mock.patch("rally.common.objects.task.Task.get_results")
-    def test_to_dict(self, mock_get_results, mock_deployment_get):
-        results = [{"created_at": dt.datetime.now(),
-                    "updated_at": dt.datetime.now()}]
+    def test_to_dict(self, mock_deployment_get):
+        workloads = [{"created_at": dt.datetime.now(),
+                      "updated_at": dt.datetime.now()}]
         self.task.update({"deployment_uuid": "deployment_uuid",
                           "deployment_name": "deployment_name",
                           "created_at": dt.datetime.now(),
-                          "updated_at": dt.datetime.now(),
-                          "results": results})
+                          "updated_at": dt.datetime.now()})
 
-        mock_get_results.return_value = results
         mock_deployment_get.return_value = {"name": "deployment_name"}
 
         task = objects.Task(task=self.task)
         serialized_task = task.to_dict()
 
-        mock_get_results.assert_called_once_with()
         mock_deployment_get.assert_called_once_with(
             self.task["deployment_uuid"])
         self.assertEqual(self.task, serialized_task)
 
-    @mock.patch("rally.common.db.api.task_get_detailed")
-    def test_get_detailed(self, mock_task_get_detailed):
-        task = objects.Task(task=self.task)
-        mock_task_get_detailed.return_value = {"results": [{
+        self.task["subtasks"] = [{"workloads": workloads}]
+
+    @mock.patch("rally.common.db.api.task_get")
+    def test_get_detailed(self, mock_task_get):
+        mock_task_get.return_value = {"results": [{
             "created_at": dt.datetime.now(),
             "updated_at": dt.datetime.now()}]}
-
-        task_detailed = task.get_detailed(task_id="task_id")
-        mock_task_get_detailed.assert_called_once_with("task_id")
-        self.assertEqual(mock_task_get_detailed.return_value, task_detailed)
-
-    @mock.patch("rally.common.objects.task.db.task_result_get_all_by_uuid",
-                return_value="foo_results")
-    def test_get_results(self, mock_task_result_get_all_by_uuid):
-        task = objects.Task(task=self.task)
-        results = task.get_results()
-        mock_task_result_get_all_by_uuid.assert_called_once_with(
-            self.task["uuid"])
-        self.assertEqual(results, "foo_results")
+        task_detailed = objects.Task.get("task_id", detailed=True)
+        mock_task_get.assert_called_once_with("task_id", detailed=True)
+        self.assertEqual(mock_task_get.return_value, task_detailed.task)
 
     @mock.patch("rally.common.objects.task.db.task_update")
     def test_set_failed(self, mock_task_update):
@@ -382,9 +387,24 @@ class SubtaskTestCase(test.TestCase):
         mock_subtask_create.return_value = self.subtask
         subtask = objects.Subtask("bar", title="foo")
 
-        workload = subtask.add_workload({"bar": "baz"})
+        name = "w"
+        description = "descr"
+        position = 0
+        runner = {"type": "runner"}
+        context = {"users": {}}
+        sla = {"failure_rate": {"max": 0}}
+        args = {"arg": "xxx"}
+        hooks = [{"config": {"foo": "bar"}}]
+
+        workload = subtask.add_workload(name, description=description,
+                                        position=position, runner=runner,
+                                        context=context, sla=sla, args=args,
+                                        hooks=hooks)
         mock_workload.assert_called_once_with(
-            self.subtask["task_uuid"], self.subtask["uuid"], {"bar": "baz"})
+            task_uuid=self.subtask["task_uuid"],
+            subtask_uuid=self.subtask["uuid"], name=name,
+            description=description, position=position, runner=runner,
+            context=context, sla=sla, args=args, hooks=hooks)
         self.assertIs(workload, mock_workload.return_value)
 
 
@@ -401,9 +421,22 @@ class WorkloadTestCase(test.TestCase):
     @mock.patch("rally.common.objects.task.db.workload_create")
     def test_init(self, mock_workload_create):
         mock_workload_create.return_value = self.workload
-        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+        name = "w"
+        description = "descr"
+        position = 0
+        runner = {"type": "constant"}
+        context = {"users": {}}
+        sla = {"failure_rate": {"max": 0}}
+        args = {"arg": "xxx"}
+        hooks = [{"config": {"foo": "bar"}}]
+        workload = objects.Workload("uuid1", "uuid2", name=name,
+                                    description=description, position=position,
+                                    runner=runner, context=context, sla=sla,
+                                    args=args, hooks=hooks)
         mock_workload_create.assert_called_once_with(
-            "uuid1", "uuid2", {"bar": "baz"})
+            task_uuid="uuid1", subtask_uuid="uuid2", name=name, hooks=hooks,
+            description=description, position=position, runner=runner,
+            runner_type="constant", context=context, sla=sla, args=args)
         self.assertEqual(workload["uuid"], self.workload["uuid"])
 
     @mock.patch("rally.common.objects.task.db.workload_data_create")
@@ -411,9 +444,12 @@ class WorkloadTestCase(test.TestCase):
     def test_add_workload_data(self, mock_workload_create,
                                mock_workload_data_create):
         mock_workload_create.return_value = self.workload
-        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+        workload = objects.Workload("uuid1", "uuid2", name="w",
+                                    description="descr", position=0,
+                                    runner={"type": "foo"}, context=None,
+                                    sla=None, args=None, hooks=[])
 
-        workload = workload.add_workload_data(0, {"data": "foo"})
+        workload.add_workload_data(0, {"data": "foo"})
         mock_workload_data_create.assert_called_once_with(
             self.workload["task_uuid"], self.workload["uuid"],
             0, {"data": "foo"})
@@ -423,10 +459,55 @@ class WorkloadTestCase(test.TestCase):
     def test_set_results(self, mock_workload_create,
                          mock_workload_set_results):
         mock_workload_create.return_value = self.workload
-        workload = objects.Workload("uuid1", "uuid2", {"bar": "baz"})
+        name = "w"
+        description = "descr"
+        position = 0
+        runner = {"type": "constant"}
+        context = {"users": {}}
+        sla = {"failure_rate": {"max": 0}}
+        args = {"arg": "xxx"}
+        hooks = []
+        workload = objects.Workload("uuid1", "uuid2", name=name,
+                                    description=description, position=position,
+                                    runner=runner, context=context, sla=sla,
+                                    args=args, hooks=hooks)
+
         workload.set_results({"data": "foo"})
         mock_workload_set_results.assert_called_once_with(
             workload_uuid=self.workload["uuid"],
             subtask_uuid=self.workload["subtask_uuid"],
             task_uuid=self.workload["task_uuid"],
             data={"data": "foo"})
+
+    def test_format_workload_config(self):
+        workload = {
+            "id": 777,
+            "uuid": "uuiiidd",
+            "task_uuid": "task-uuid",
+            "subtask_uuid": "subtask-uuid",
+            "name": "Foo.bar",
+            "description": "Make something useful (or not).",
+            "position": 3,
+            "runner": {"type": "constant", "times": 3},
+            "context": {"users": {}},
+            "sla": {"failure_rate": {"max": 0}},
+            "args": {"key1": "value1"},
+            "hooks": [{"config": {"hook1": "xxx"}}],
+            "sla_results": {"sla": []},
+            "context_execution": {},
+            "start_time": "2997.23.12",
+            "load_duration": 42,
+            "full_duration": 37,
+            "min_duration": 1,
+            "max_duration": 2,
+            "total_iteration_count": 7,
+            "failed_iteration_count": 2,
+            "statistics": {},
+            "pass_sla": False
+        }
+        self.assertEqual({"args": {"key1": "value1"},
+                          "context": {"users": {}},
+                          "sla": {"failure_rate": {"max": 0}},
+                          "hooks": [{"hook1": "xxx"}],
+                          "runner": {"type": "constant", "times": 3}},
+                         objects.Workload.format_workload_config(workload))
