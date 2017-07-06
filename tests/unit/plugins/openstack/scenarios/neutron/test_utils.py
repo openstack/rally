@@ -1124,11 +1124,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             "id": bgpvpn_id}}
         self.clients(
             "neutron").create_bgpvpn_network_assoc.return_value = value
-        network = {"network": {"id": network_id}}
+        network = {"id": network_id}
         bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
         return_value = self.scenario._create_bgpvpn_network_assoc(bgpvpn,
                                                                   network)
-        netassoc = {"network_id": network["network"]["id"]}
+        netassoc = {"network_id": network["id"]}
         self.clients(
             "neutron").create_bgpvpn_network_assoc.assert_called_once_with(
             bgpvpn_id, {"network_association": netassoc})
@@ -1143,17 +1143,67 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             "router_id": router_id,
             "id": "asso_id"}}
         self.clients("neutron").create_bgpvpn_router_assoc.return_value = value
-        router = {"router": {"id": router_id}}
+        router = {"id": router_id}
         bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
         return_value = self.scenario._create_bgpvpn_router_assoc(bgpvpn,
                                                                  router)
-        router_assoc = {"router_id": router["router"]["id"]}
+        router_assoc = {"router_id": router["id"]}
         self.clients(
             "neutron").create_bgpvpn_router_assoc.assert_called_once_with(
             bgpvpn_id, {"router_association": router_assoc})
         self.assertEqual(return_value, value)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.create_bgpvpn_router_assoc")
+
+    def test__delete_bgpvpn_network_assoc(self):
+        bgpvpn_assoc_args = {}
+        asso_id = "aaaa-bbbb"
+        network_assoc = {"network_association": {"id": asso_id}}
+        bgpvpn = self.scenario._create_bgpvpn(**bgpvpn_assoc_args)
+        self.scenario._delete_bgpvpn_network_assoc(bgpvpn, network_assoc)
+        self.clients(
+            "neutron").delete_bgpvpn_network_assoc.assert_called_once_with(
+            bgpvpn["bgpvpn"]["id"], asso_id)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.delete_bgpvpn_network_assoc")
+
+    def test__delete_bgpvpn_router_assoc(self):
+        bgpvpn_assoc_args = {}
+        asso_id = "aaaa-bbbb"
+        router_assoc = {"router_association": {"id": asso_id}}
+        bgpvpn = self.scenario._create_bgpvpn(**bgpvpn_assoc_args)
+        self.scenario._delete_bgpvpn_router_assoc(bgpvpn, router_assoc)
+        self.clients(
+            "neutron").delete_bgpvpn_router_assoc.assert_called_once_with(
+            bgpvpn["bgpvpn"]["id"], asso_id)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.delete_bgpvpn_router_assoc")
+
+    def test__list_bgpvpn_network_assocs(self):
+        value = {"network_associations": []}
+        bgpvpn_id = "bgpvpn-id"
+        bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
+        self.clients("neutron").list_bgpvpn_network_assocs.return_value = value
+        return_asso_list = self.scenario._list_bgpvpn_network_assocs(bgpvpn)
+        self.clients(
+            "neutron").list_bgpvpn_network_assocs.assert_called_once_with(
+            bgpvpn_id)
+        self.assertEqual(value, return_asso_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.list_bgpvpn_network_assocs")
+
+    def test__list_bgpvpn_router_assocs(self):
+        value = {"router_associations": []}
+        bgpvpn_id = "bgpvpn-id"
+        bgpvpn = {"bgpvpn": {"id": bgpvpn_id}}
+        self.clients("neutron").list_bgpvpn_router_assocs.return_value = value
+        return_asso_list = self.scenario._list_bgpvpn_router_assocs(bgpvpn)
+        self.clients(
+            "neutron").list_bgpvpn_router_assocs.assert_called_once_with(
+            bgpvpn_id)
+        self.assertEqual(value, return_asso_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.list_bgpvpn_router_assocs")
 
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):

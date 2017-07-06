@@ -1,5 +1,5 @@
 ---
-  NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks:
+  NeutronBGPVPN.create_and_list_routers_associations:
     -
       args: {}
       runner:
@@ -10,7 +10,7 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        network: {}
+        router: {}
       sla:
         failure_rate:
           max: 0

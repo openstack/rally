@@ -1,19 +1,23 @@
 {
     "NeutronBGPVPN.create_and_update_bgpvpns": [
         {
-           "args":{},
+            "args":{},
             "runner": {
                 "type": "constant",
                 "times": 10,
                 "concurrency": 2
             },
-              "context": {
+            "context": {
                 "users": {
                     "tenants": 1,
                     "users_per_tenant": 1
-
                 }
-              }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
+            }
         }
     ]
 }
