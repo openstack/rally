@@ -405,7 +405,7 @@
             url: "http://www.example.com"
             method: "GET"
           -
-            url: "http://www.openstack.org"
+            url: "http://localhost"
             method: "GET"
         status_code: 200
       runner:
