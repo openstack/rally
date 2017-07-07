@@ -374,11 +374,8 @@ class TaskEngine(object):
 
                 # TODO(andreykurilin): Remove check for plugin namespace after
                 #   Rally 0.10.0
-                if scenario_cls.is_classbased:
-                    cls = scenario_cls
-                else:
-                    cls = scenario_cls._plugin
-                if (issubclass(cls, os_scenario.OpenStackScenario)
+
+                if (issubclass(scenario_cls, os_scenario.OpenStackScenario)
                         and namespace == "default"):
                     LOG.warning(
                         "Scenario '%(scen)s' is located in 'default' "

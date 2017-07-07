@@ -164,14 +164,9 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
         # NOTE(boris-42): processing @types decorators
         args = types.preprocess(name, context, args)
 
-        if scenario_plugin.is_classbased:
-            cls, method_name = scenario_plugin, "run"
-        else:
-            cls, method_name = (scenario_plugin._meta_get("cls_ref"),
-                                name.split(".", 1).pop())
-
         with rutils.Timer() as timer:
-            self._run_scenario(cls, method_name, context, args)
+            # TODO(boris-42): remove method_name argument, now it's always run
+            self._run_scenario(scenario_plugin, "run", context, args)
 
         self.run_duration = timer.duration()
 

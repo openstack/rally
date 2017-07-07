@@ -16,10 +16,9 @@
 from rally.task import scenario
 
 
+@scenario.configure(name="FakeScenarioPlugin2.list")
 class FakeScenarioPlugin2(scenario.Scenario):
-    """Sample fake plugin."""
 
-    @scenario.configure()
-    def list(self):
-        """Fake scenario."""
+    def run(self):
+        """Sample fake scenario."""
         pass

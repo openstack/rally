@@ -77,78 +77,6 @@ def configure(name, namespace="default", hidden=False):
     return decorator
 
 
-def from_func(plugin_baseclass=None):
-    """Add all plugin's methods to function object.
-
-    Rally benchmark scenarios are different from all other plugins in Rally.
-
-    Usually 1 plugin is 1 class and we can easily use Plugin() as base for
-    all of them to avoid code duplication. In case of benchmark scenarios
-    1 class can contain any amount of scenarios that are just methods
-    of this class.
-
-    To make Rally code cleaner, these methods should look/work like other
-    Plugins.
-
-    This decorator makes all dirty work for us, it creates dynamically new
-    class, adds plugin instance and aliases for all non-private methods of
-    Plugin instance to passed function.
-
-
-    For example,
-
-    @plugin.from_func()
-    def my_plugin_like_func(a, b):
-        pass
-
-
-    assert my_plugin_like_func.get_name() == "my_plugin_like_func"
-    assert my_plugin_like_func.get_all() == []
-
-
-    As a result, adding plugin behavior for benchmark scenarios fully unifies
-    work with benchmark scenarios and other kinds of plugins.
-
-    :param plugin_baseclass: if specified, subclass of this class will be used
-                             to add behavior of plugin to function else,
-                             subclass of Plugin will be used.
-    :returns: Function decorator that adds plugin behavior to function
-    """
-
-    if plugin_baseclass:
-        if not issubclass(plugin_baseclass, Plugin):
-            raise TypeError("plugin_baseclass should be subclass of %s "
-                            % Plugin)
-
-        class FuncPlugin(plugin_baseclass):
-
-            is_classbased = False
-
-    else:
-        class FuncPlugin(Plugin):
-
-            is_classbased = False
-
-    def decorator(func):
-        func._plugin = FuncPlugin
-
-        # NOTE(boris-42): This is required by Plugin.get_all method to
-        #                 return func instead of FuncPlugin that will be
-        #                 auto discovered.
-        FuncPlugin.func_ref = func
-
-        # NOTE(boris-42): Make aliases from func to all public Plugin fields
-        for field in dir(func._plugin):
-            if not field.startswith("__"):
-                obj = getattr(func._plugin, field)
-                if callable(obj):
-                    setattr(func, field, obj)
-
-        return func
-
-    return decorator
-
-
 class Plugin(meta.MetaMixin, info.InfoMixin):
     """Base class for all Plugins in Rally."""
 
@@ -278,8 +206,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
                 continue
             if not allow_hidden and p.is_hidden():
                 continue
-
-            plugins.append(getattr(p, "func_ref", p))
+            plugins.append(p)
 
         return plugins
 

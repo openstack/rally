@@ -24,6 +24,7 @@ from rally.task import scenario
 from test_relative_import import zzz
 
 
+@scenario.configure(name="FakePlugin.testplugin")
 class FakePlugin(scenario.Scenario):
     """Fake plugin with a scenario."""
 
@@ -35,8 +36,7 @@ class FakePlugin(scenario.Scenario):
     def _test2(self, factor):
         time.sleep(random.random() * factor)
 
-    @scenario.configure()
-    def testplugin(self, factor=1):
+    def run(self, factor=1):
         """Fake scenario.
 
         :param factor: influences the argument value for a time.sleep() call

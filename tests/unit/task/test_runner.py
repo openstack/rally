@@ -21,7 +21,6 @@ import mock
 
 from rally.plugins.common.runners import serial
 from rally.task import runner
-from rally.task import scenario
 from tests.unit import fakes
 from tests.unit import test
 
@@ -135,41 +134,6 @@ class ScenarioRunnerTestCase(test.TestCase):
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_timer_duration):
-        runner_obj = serial.SerialScenarioRunner(
-            mock.MagicMock(),
-            mock.MagicMock())
-
-        runner_obj._run_scenario = mock.MagicMock()
-
-        scenario_name = "NovaServers.boot_server_from_volume_and_delete"
-        config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
-
-        context_obj = {
-            "task": runner_obj.task,
-            "scenario_name": scenario_name,
-            "admin": {"credential": mock.MagicMock()},
-            "config": {
-                "cleanup": ["nova", "cinder"], "some_ctx": 2, "users": {}
-            }
-        }
-
-        result = runner_obj.run(scenario_name, context_obj, config_kwargs)
-
-        self.assertIsNone(result)
-        self.assertEqual(runner_obj.run_duration,
-                         mock_timer_duration.return_value)
-        self.assertEqual(list(runner_obj.result_queue), [])
-
-        plugin_cls, method_name = scenario.Scenario.get(scenario_name), "run"
-
-        self.assertTrue(plugin_cls.is_classbased)
-
-        expected_config_kwargs = {"image": 1, "flavor": 1}
-        runner_obj._run_scenario.assert_called_once_with(
-            plugin_cls, method_name, context_obj, expected_config_kwargs)
-
-    @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
-    def test_run_classbased(self, mock_timer_duration):
         scenario_class = fakes.FakeClassBasedScenario
         runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
