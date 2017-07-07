@@ -270,7 +270,10 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
         delete_method(self.id())
 
     def list(self):
-        resources = self._resource + "s"
+        if self._resource.endswith("y"):
+            resources = self._resource[:-1] + "ies"
+        else:
+            resources = self._resource + "s"
         list_method = getattr(self._manager(), "list_%s" % resources)
         result = list_method(tenant_id=self.tenant_uuid)[resources]
         if self.tenant_uuid:
