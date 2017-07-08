@@ -145,7 +145,8 @@ class CreateAndUpdateBgpvpns(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup": ["neutron"],
+                             "cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks")
 class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 
@@ -188,7 +189,8 @@ class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup": ["neutron"],
+                             "cleanup": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers")
 class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
 
