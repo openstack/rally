@@ -466,18 +466,26 @@ class WorkloadTestCase(test.TestCase):
         context = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
+        load_duration = 88
+        full_duration = 99
+        start_time = 1231231277.22
+        sla_results = []
         hooks = []
         workload = objects.Workload("uuid1", "uuid2", name=name,
                                     description=description, position=position,
                                     runner=runner, context=context, sla=sla,
                                     args=args, hooks=hooks)
 
-        workload.set_results({"data": "foo"})
+        workload.set_results(load_duration=load_duration,
+                             full_duration=full_duration,
+                             start_time=start_time, sla_results=sla_results)
         mock_workload_set_results.assert_called_once_with(
             workload_uuid=self.workload["uuid"],
             subtask_uuid=self.workload["subtask_uuid"],
             task_uuid=self.workload["task_uuid"],
-            data={"data": "foo"})
+            load_duration=load_duration, full_duration=full_duration,
+            start_time=start_time, sla_results=sla_results,
+            hooks_results=None)
 
     def test_format_workload_config(self):
         workload = {

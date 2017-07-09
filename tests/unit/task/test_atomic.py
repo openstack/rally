@@ -137,3 +137,13 @@ class AtomicActionTestCase(test.TestCase):
         self.assertEqual([{"name": "some", "children": [],
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
+
+    def test_merge_atomic(self):
+        expected = [("foo", {"duration": 2, "count": 1}),
+                    ("bar", {"duration": 5, "count": 2})]
+        result = atomic.merge_atomic(
+            [{"name": "foo", "started_at": 4, "finished_at": 6},
+             {"name": "bar", "started_at": 6, "finished_at": 8},
+             {"name": "bar", "started_at": 8, "finished_at": 11}])
+        result = list(result.items())
+        self.assertEqual(expected, result)

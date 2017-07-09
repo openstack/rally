@@ -591,51 +591,60 @@ class TaskCommands(object):
 
     def _load_task_results_file(self, api, task_id):
         """Load the json file which is created by `rally task results` """
-        with open(os.path.expanduser(task_id), "r") as inp_js:
+        with open(os.path.expanduser(task_id)) as inp_js:
             tasks_results = yaml.safe_load(inp_js)
-            if type(tasks_results) == list:
-                # it is an old format:
-                for result in tasks_results:
-                    try:
-                        jsonschema.validate(
-                            result,
-                            api.task.TASK_RESULT_SCHEMA)
-                        # TODO(chenhb): back compatible for atomic_actions
-                        for r in result["result"]:
-                            r["atomic_actions"] = list(
-                                tutils.WrapperForAtomicActions(
-                                    r["atomic_actions"], r["timestamp"]))
-                    except jsonschema.ValidationError as e:
-                        raise FailedToLoadResults(source=task_id,
-                                                  msg=six.text_type(e))
-            else:
-                raise FailedToLoadResults(
-                    source=task_id, msg="Wrong format")
-        task = {"subtasks": []}
-        for result in tasks_results:
-            pass_sla = all([s.get("success") for s in result["sla"]])
-            updated_at = dt.datetime.strptime(result["created_at"],
-                                              "%Y-%m-%dT%H:%M:%S")
-            updated_at += dt.timedelta(seconds=result["full_duration"])
-            updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
-            workload = {"name": result["key"]["name"],
-                        "position": result["key"]["pos"],
-                        "description": result["key"].get("description", ""),
-                        "full_duration": result["full_duration"],
-                        "load_duration": result["load_duration"],
-                        "created_at": result["created_at"],
-                        "updated_at": updated_at,
-                        "args": result["key"]["kw"]["args"],
-                        "runner": result["key"]["kw"]["runner"],
-                        "hooks": [{"config": h}
-                                  for h in result["key"]["kw"]["hooks"]],
-                        "sla": result["key"]["kw"]["sla"],
-                        "sla_results": {"sla": result["sla"]},
-                        "pass_sla": pass_sla,
-                        "context": result["key"]["kw"]["context"],
-                        "data": result["result"]}
-            task["subtasks"].append({"workloads": [workload]})
-        return task
+
+        if type(tasks_results) == list:
+            # it is an old format:
+
+            task = {"subtasks": []}
+
+            start_time = float("inf")
+
+            for result in tasks_results:
+                try:
+                    jsonschema.validate(
+                        result, api.task.TASK_RESULT_SCHEMA)
+                except jsonschema.ValidationError as e:
+                    raise FailedToLoadResults(source=task_id,
+                                              msg=six.text_type(e))
+
+                for r in result["result"]:
+                    if r["timestamp"] < start_time:
+                        start_time = r["timestamp"]
+                    # NOTE(chenhb): back compatible for atomic_actions
+                    r["atomic_actions"] = list(tutils.WrapperForAtomicActions(
+                        r["atomic_actions"], r["timestamp"]))
+
+                updated_at = dt.datetime.strptime(result["created_at"],
+                                                  "%Y-%m-%dT%H:%M:%S")
+                updated_at += dt.timedelta(seconds=result["full_duration"])
+                updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
+                pass_sla = all(s.get("success") for s in result["sla"])
+                workload = {"name": result["key"]["name"],
+                            "position": result["key"]["pos"],
+                            "description": result["key"].get("description",
+                                                             ""),
+                            "full_duration": result["full_duration"],
+                            "load_duration": result["load_duration"],
+                            "start_time": start_time,
+                            "created_at": result["created_at"],
+                            "updated_at": updated_at,
+                            "args": result["key"]["kw"]["args"],
+                            "runner": result["key"]["kw"]["runner"],
+                            "hooks": [{"config": h}
+                                      for h in result["key"]["kw"]["hooks"]],
+                            "sla": result["key"]["kw"]["sla"],
+                            "sla_results": {"sla": result["sla"]},
+                            "pass_sla": pass_sla,
+                            "context": result["key"]["kw"]["context"],
+                            "data": sorted(result["result"],
+                                           key=lambda x: x["timestamp"])}
+                task["subtasks"].append({"workloads": [workload]})
+            return task
+        else:
+            raise FailedToLoadResults(
+                source=task_id, msg="Wrong format")
 
     @cliutils.args("--out", metavar="<path>",
                    type=str, dest="out", required=False,

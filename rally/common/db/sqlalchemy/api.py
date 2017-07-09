@@ -16,6 +16,7 @@
 SQLAlchemy implementation for DB.API
 """
 
+import collections
 import copy
 import datetime as dt
 import os
@@ -38,6 +39,8 @@ from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
+from rally.task import atomic
+from rally.task.processing import charts
 
 
 CONF = cfg.CONF
@@ -232,8 +235,9 @@ class Connection(object):
                         chunk["atomic_actions"] = new_atomic_actions
                     workload_data.update({"chunk_data": chunk_data})
 
-        return [raw for workload_data in results
-                for raw in workload_data.chunk_data["raw"]]
+        return sorted([raw for workload_data in results
+                       for raw in workload_data.chunk_data["raw"]],
+                      key=lambda x: x["timestamp"])
 
     @db_api.serialize
     def task_get(self, uuid=None, detailed=False):
@@ -481,7 +485,8 @@ class Connection(object):
 
     @db_api.serialize
     def workload_set_results(self, workload_uuid, subtask_uuid, task_uuid,
-                             data):
+                             load_duration, full_duration, start_time,
+                             sla_results, hooks_results):
         session = get_session()
         with session.begin():
             workload_results = self._task_workload_data_get_all(workload_uuid)
@@ -504,37 +509,66 @@ class Connection(object):
                 if min_duration and min_duration > duration:
                     min_duration = duration
 
-            sla = data.get("sla", [])
+            atomics = collections.OrderedDict()
+
+            for itr in workload_results:
+                merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
+                for name, value in merged_atomic.items():
+                    duration = value["duration"]
+                    count = value["count"]
+                    if name not in atomics or count > atomics[name]["count"]:
+                        atomics[name] = {"min_duration": duration,
+                                         "max_duration": duration,
+                                         "count": count}
+                    elif count == atomics[name]["count"]:
+                        if duration < atomics[name]["min_duration"]:
+                            atomics[name]["min_duration"] = duration
+                        if duration > atomics[name]["max_duration"]:
+                            atomics[name]["max_duration"] = duration
+
+            durations_stat = charts.MainStatsTable(
+                {"iterations_count": iter_count, "atomic": atomics})
+
+            for itr in workload_results:
+                durations_stat.add_iteration(itr)
+
+            sla = sla_results or []
             # NOTE(ikhudoshyn): we call it 'pass_sla'
             # for the sake of consistency with other models
             # so if no SLAs were specified, then we assume pass_sla == True
             success = all([s.get("success") for s in sla])
-
-            load_duration = data.get("load_duration", 0)
 
             session.query(models.Workload).filter_by(
                 uuid=workload_uuid).update(
                 {
                     "sla_results": {"sla": sla},
                     "context_execution": {},
-                    "hooks": data.get("hooks", []),
+                    "hooks": hooks_results or [],
                     "load_duration": load_duration,
-                    "full_duration": data.get("full_duration", 0),
+                    "full_duration": full_duration,
                     "min_duration": min_duration,
                     "max_duration": max_duration,
                     "total_iteration_count": iter_count,
                     "failed_iteration_count": failed_iter_count,
-                    "statistics": {},
+                    "start_time": start_time,
+                    "statistics": {"durations": durations_stat.to_dict(),
+                                   "atomics": atomics},
                     "pass_sla": success}
             )
+            task_values = {
+                "task_duration": models.Task.task_duration + load_duration}
+            if not success:
+                task_values["pass_sla"] = False
 
+            subtask_values = {
+                "duration": models.Subtask.duration + load_duration}
+            if not success:
+                subtask_values["pass_sla"] = False
             session.query(models.Task).filter_by(uuid=task_uuid).update(
-                {"task_duration": models.Task.task_duration + load_duration,
-                 "pass_sla": success})
+                task_values)
 
             session.query(models.Subtask).filter_by(uuid=subtask_uuid).update(
-                {"duration": models.Subtask.duration + load_duration,
-                 "pass_sla": success})
+                subtask_values)
 
     def _deployment_get(self, deployment, session=None):
         stored_deployment = self.model_query(

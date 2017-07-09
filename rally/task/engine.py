@@ -166,14 +166,10 @@ class ResultConsumer(object):
         LOG.info("Full duration is: %s" % utils.format_float_to_str(
             self.finish - self.start))
 
-        results = {
-            "load_duration": load_duration,
-            "full_duration": self.finish - self.start,
-            "sla": self.sla_checker.results(),
-        }
+        results = {}
         if "hooks" in self.key["kw"]:
             self.event_thread.join()
-            results["hooks"] = self.hook_executor.results()
+            results["hooks_results"] = self.hook_executor.results()
 
         if self.results:
             # NOTE(boris-42): Sort in order of starting
@@ -182,7 +178,10 @@ class ResultConsumer(object):
             self.workload.add_workload_data(self.workload_data_count,
                                             {"raw": self.results})
 
-        self.workload.set_results(results)
+        self.workload.set_results(load_duration=load_duration,
+                                  full_duration=(self.finish - self.start),
+                                  sla_results=self.sla_checker.results(),
+                                  start_time=self.load_started_at, **results)
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):

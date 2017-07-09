@@ -1064,6 +1064,7 @@ class TaskCommandsTestCase(test.TestCase):
             "full_duration": 2, "load_duration": 1,
             "created_at": "2017-07-01T07:03:01",
             "updated_at": "2017-07-01T07:03:03",
+            "start_time": 1,
             "name": "Foo.bar", "description": "descr",
             "position": 2,
             "args": {"key1": "value1"},
@@ -1073,8 +1074,8 @@ class TaskCommandsTestCase(test.TestCase):
             "sla": {"failure_rate": {"max": 0}},
             "sla_results": {"sla": [{"success": True}]},
             "context": {"users": {}},
-            "data": [{"timestamp": 0, "atomic_actions": {"foo": 1.0}},
-                     {"timestamp": 0, "atomic_actions": {"bar": 1.1}}]
+            "data": [{"timestamp": 1, "atomic_actions": {"foo": 1.0}},
+                     {"timestamp": 2, "atomic_actions": {"bar": 1.1}}]
         }
 
         results = [

@@ -547,6 +547,47 @@ class MainStatsTableTestCase(test.TestCase):
                     "rows": expected_rows}
         self.assertEqual(expected, table.render())
 
+    def test_to_dict(self):
+        table = charts.MainStatsTable(
+            {"iterations_count": 4,
+             "atomic": collections.OrderedDict([("foo", {}),
+                                                ("bar", {})])})
+        data = [generate_iteration(1.6, True, ("foo", 1.2)),
+                generate_iteration(5.2, False, ("foo", 1.2)),
+                generate_iteration(5.0, True, ("bar", 4.8)),
+                generate_iteration(12.3, False, ("foo", 4.2), ("bar", 5.6))]
+        for el in data:
+            table.add_iteration(el)
+
+        self.assertEqual(
+            {"atomics": [{"90%ile": 3.9,
+                          "95%ile": 4.05,
+                          "avg": 2.7,
+                          "count": 3,
+                          "max": 4.2,
+                          "median": 2.7,
+                          "min": 1.2,
+                          "name": "foo",
+                          "success": "66.7%"},
+                         {"90%ile": 5.6,
+                          "95%ile": 5.6,
+                          "avg": 5.6,
+                          "count": 2,
+                          "max": 5.6,
+                          "median": 5.6,
+                          "min": 5.6,
+                          "name": "bar",
+                          "success": "50.0%"}],
+             "total": {"90%ile": 11.59,
+                       "95%ile": 11.945,
+                       "avg": 8.75,
+                       "count": 4,
+                       "max": 12.3,
+                       "median": 8.75,
+                       "min": 5.2,
+                       "name": "total",
+                       "success": "50.0%"}}, table.to_dict())
+
 
 class OutputChartTestCase(test.TestCase):
 

@@ -402,6 +402,27 @@ class MainStatsTable(Table):
                 for idx, dummy in enumerate(self._data[name][:-2]):
                     self._data[name][idx][0].add(value)
 
+    def to_dict(self):
+        stats = {"total": None, "atomics": []}
+
+        def row_to_dict(data):
+            return {"name": data[0],
+                    "min": data[1],
+                    "median": data[2],
+                    "90%ile": data[3],
+                    "95%ile": data[4],
+                    "max": data[5],
+                    "avg": data[6],
+                    "success": data[7],
+                    "count": data[8]}
+
+        for row in self.get_rows():
+            if row[0] == "total":
+                stats["total"] = row_to_dict(row)
+            else:
+                stats["atomics"].append(row_to_dict(row))
+        return stats
+
 
 class OutputChart(Chart):
     """Base class for charts related to scenario output."""

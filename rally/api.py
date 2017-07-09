@@ -548,7 +548,7 @@ class _Task(APIGroup):
     @api_wrapper(path=API_REQUEST_PREFIX + "/task/import_results",
                  method="POST")
     def import_results(self, deployment, task_results, tags=None):
-        """Import json results of a test into rally database"""
+        """Import json results of a task into rally database"""
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
             raise exceptions.DeploymentNotFinishedStatus(
@@ -579,10 +579,11 @@ class _Task(APIGroup):
             workload_obj.add_workload_data(workload_data_count,
                                            {"raw": workload["data"]})
             workload_obj.set_results(
-                {"sla": workload["sla_results"].get("sla"),
-                 "hooks": workload["hooks"],
-                 "full_duration": workload["full_duration"],
-                 "load_duration": workload["load_duration"]})
+                sla_results=workload["sla_results"].get("sla"),
+                hooks_results=workload["hooks"],
+                start_time=workload["start_time"],
+                full_duration=workload["full_duration"],
+                load_duration=workload["load_duration"])
             subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
         task_inst.update_status(consts.SubtaskStatus.FINISHED)
 

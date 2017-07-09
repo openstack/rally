@@ -1548,3 +1548,192 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid == task_obj.deployment_uuid))
+
+    def _pre_upgrade_c517b0011857(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+        wdata_table = db_utils.get_table(engine, "workloaddata")
+
+        self._c517b0011857_deployment_uuid = str(uuid.uuid4())
+        task_uuid = str(uuid.uuid4())
+        self._c517b0011857_subtask = str(uuid.uuid4())
+        self._c517b0011857_workloads = [
+            {"uuid": str(uuid.uuid4()),
+             "start_time": 0.0,
+             # deprecated output
+             "data": [{"timestamp": 0,
+                       "scenario_output": {"data": {1: 2}},
+                       "duration": 3, "error": None,
+                       "atomic_actions": [
+                           {"name": "foo", "started_at": 0,
+                            "finished_at": 3}]
+                       }],
+             "statistics": {"durations": {
+                 "rows": [["foo", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1],
+                          ["total", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1]
+                          ],
+                 "cols":
+                     ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
+                      "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success",
+                      "Count"]},
+                 "atomics": {"foo": {"count": 1, "max_duration": 3,
+                                     "min_duration": 3}}}},
+            {"uuid": str(uuid.uuid4()),
+             "start_time": 1.0,
+             "data": [{"timestamp": 1, "output": {},
+                       "duration": 5, "error": None,
+                       "atomic_actions": [
+                           {"name": "foo", "started_at": 2,
+                            "finished_at": 3},
+                           {"name": "foo", "started_at": 3,
+                            "finished_at": 5}]},
+                      {"timestamp": 6, "output": {},
+                       "duration": 4, "error": None,
+                       "atomic_actions": [
+                           {"name": "foo", "started_at": 6,
+                            "finished_at": 9},
+                           {"name": "foo", "started_at": 9,
+                            "finished_at": 10}]}],
+             "statistics": {"durations": {
+                 "cols": ["Action", "Min (sec)", "Median (sec)",
+                          "90%ile (sec)", "95%ile (sec)", "Max (sec)",
+                          "Avg (sec)", "Success", "Count"],
+                 "rows": [
+                     ["foo (x2)", 3.0, 3.5, 3.9, 3.95, 4.0, 3.5, "100.0%", 2],
+                     ["total", 4.0, 4.5, 4.9, 4.95, 5.0, 4.5, "100.0%", 2]]},
+                 "atomics": {
+                     "foo": {"count": 2, "max_duration": 4, "min_duration": 3}}
+            }}
+        ]
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": self._c517b0011857_deployment_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": "{}",
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "validation_result": six.b(json.dumps({})),
+                    "deployment_uuid": self._c517b0011857_deployment_uuid
+                }]
+            )
+
+            conn.execute(
+                subtask_table.insert(),
+                [{
+                    "uuid": self._c517b0011857_subtask,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "task_uuid": task_uuid,
+                    "context": six.b(json.dumps([])),
+                    "sla": six.b(json.dumps([])),
+                    "run_in_parallel": False
+                }]
+            )
+
+            for workload in self._c517b0011857_workloads:
+                conn.execute(
+                    workload_table.insert(),
+                    [{
+                        "uuid": workload["uuid"],
+                        "name": "foo",
+                        "task_uuid": task_uuid,
+                        "subtask_uuid": self._c517b0011857_subtask,
+                        "created_at": timeutils.utcnow(),
+                        "updated_at": timeutils.utcnow(),
+                        "position": 0,
+                        "runner": "",
+                        "runner_type": "",
+                        "context": "",
+                        "context_execution": "",
+                        "statistics": "",
+                        "hooks": "",
+                        "sla": "",
+                        "sla_results": "",
+                        "args": "",
+                        "load_duration": 0,
+                        "pass_sla": True
+                    }]
+                )
+                conn.execute(
+                    wdata_table.insert(),
+                    [{
+                        "uuid": str(uuid.uuid4()),
+                        "created_at": timeutils.utcnow(),
+                        "updated_at": timeutils.utcnow(),
+                        "started_at": timeutils.utcnow(),
+                        "finished_at": timeutils.utcnow(),
+                        "task_uuid": task_uuid,
+                        "workload_uuid": workload["uuid"],
+                        "chunk_order": 0,
+                        "iteration_count": 0,
+                        "failed_iteration_count": 0,
+                        "chunk_size": 0,
+                        "compressed_chunk_size": 0,
+                        "chunk_data": json.dumps({"raw": workload["data"]})
+                    }]
+                )
+
+    def _check_c517b0011857(self, engine, data):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+        wdata_table = db_utils.get_table(engine, "workloaddata")
+
+        task_uuid = None
+
+        with engine.connect() as conn:
+            subtask_id = self._c517b0011857_subtask
+            for workload in conn.execute(workload_table.select().where(
+                    workload_table.c.subtask_uuid == subtask_id)).fetchall():
+                if task_uuid is None:
+                    task_uuid = workload.task_uuid
+                original = [w for w in self._c517b0011857_workloads
+                            if w["uuid"] == workload.uuid][0]
+                if workload.start_time is None:
+                    start_time = None
+                else:
+                    start_time = workload.start_time / 1000000.0
+                self.assertEqual(original["start_time"], start_time)
+                self.assertEqual(original["statistics"],
+                                 json.loads(workload.statistics))
+                wuuid = workload.uuid
+                for wdata in conn.execute(wdata_table.select().where(
+                        wdata_table.c.workload_uuid == wuuid)).fetchall():
+                    for iter in json.loads(wdata.chunk_data)["raw"]:
+                        self.assertNotIn("scenario_output", iter)
+                        self.assertIn("output", iter)
+
+                conn.execute(
+                    wdata_table.delete().where(
+                        wdata_table.c.workload_uuid == workload.uuid))
+                conn.execute(
+                    workload_table.delete().where(
+                        workload_table.c.uuid == workload.uuid))
+            conn.execute(
+                subtask_table.delete().where(
+                    subtask_table.c.uuid == subtask_id))
+
+            conn.execute(
+                task_table.delete().where(task_table.c.uuid == task_uuid))
+
+            deployment_uuid = self._c517b0011857_deployment_uuid
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == deployment_uuid))

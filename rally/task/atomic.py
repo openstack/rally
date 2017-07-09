@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import functools
 
 from rally.common import logging
@@ -111,8 +112,8 @@ def optional_action_timer(name, argument_name="atomic_action", default=True):
         def func_atomic_actions(self, *args, **kwargs):
             LOG.warning("'optional_action_timer' is deprecated"
                         "since rally v0.10.0."
-                        "Please use action_timer instead,"
-                        "we have improved atomic actions,"
+                        "Please use action_timer instead, "
+                        "we have improved atomic actions, "
                         "now do not need to explicitly close "
                         "original action.")
             if kwargs.pop(argument_name, default):
@@ -123,3 +124,16 @@ def optional_action_timer(name, argument_name="atomic_action", default=True):
             return f
         return func_atomic_actions
     return wrap
+
+
+def merge_atomic(atomic_actions):
+    merged_atomic = collections.OrderedDict()
+    for action in atomic_actions:
+        name = action["name"]
+        duration = action["finished_at"] - action["started_at"]
+        if name not in merged_atomic:
+            merged_atomic[name] = {"duration": duration, "count": 1}
+        else:
+            merged_atomic[name]["duration"] += duration
+            merged_atomic[name]["count"] += 1
+    return merged_atomic

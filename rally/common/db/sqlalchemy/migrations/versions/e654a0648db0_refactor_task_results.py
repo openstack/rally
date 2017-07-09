@@ -254,7 +254,6 @@ def upgrade():
 
         sa.Column("started_at", sa.DateTime(), nullable=False),
         sa.Column("finished_at", sa.DateTime(), nullable=False),
-        # sa.Column("chunk_data", sa.Text(), nullable=False),
         sa.Column(
             "chunk_data",
             sa_types.MutableJSONEncodedDict(),
