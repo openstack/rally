@@ -38,6 +38,28 @@ class PluginModuleTestCase(test.TestCase):
 
         self.assertEqual("get_name_class_plugin", MyPlugin.get_name())
 
+    def test_configure_two_cls_with_same_names(self):
+        name = ".".join(self.id().rsplit(".", 2)[1:])
+
+        @plugin.base()
+        class FooBase(plugin.Plugin):
+            pass
+
+        @plugin.configure(name=name)
+        class MyPlugin(FooBase):
+            pass
+
+        try:
+            @plugin.configure(name=name)
+            class MyPlugin2(FooBase):
+                pass
+
+        except exceptions.PluginWithSuchNameExists:
+            self.assertEqual([MyPlugin], FooBase.get_all())
+        else:
+            self.fail("Registration two plugins with same names in one "
+                      "namespace should raise an exception.")
+
     def test_configure_different_bases(self):
         name = "test_configure_different_bases"
 

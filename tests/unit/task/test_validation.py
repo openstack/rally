@@ -40,6 +40,7 @@ class ValidationUtilsTestCase(test.TestCase):
             pass
 
         Plugin._meta_init()
+        self.addCleanup(Plugin.unregister)
         self.Plugin = Plugin
 
     def test_old_validator_admin(self):
@@ -161,6 +162,8 @@ class ValidatorsTestCase(test.TestCase):
             pass
 
         Plugin._meta_init()
+        self.addCleanup(Plugin.unregister)
+
         validator(*args, **kwargs)(Plugin)
 
         fn = Plugin._meta_get("validators")[0][1][0]

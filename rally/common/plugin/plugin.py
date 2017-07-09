@@ -70,6 +70,10 @@ def configure(name, namespace="default", hidden=False):
     """
 
     def decorator(plugin):
+        if name is None:
+            plugin_id = "%s.%s" % (plugin.__module__, plugin.__name__)
+            raise ValueError("The name of the plugin %s cannot be None." %
+                             plugin_id)
         plugin._configure(name, namespace)
         plugin._meta_set("hidden", hidden)
         return plugin
@@ -116,6 +120,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
             cls._meta_set("name", name)
             cls._meta_set("namespace", namespace)
         else:
+            cls.unregister()
             raise exceptions.PluginWithSuchNameExists(
                 name=name, namespace=existing_plugin.get_namespace(),
                 existing_path=(
