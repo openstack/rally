@@ -250,7 +250,7 @@ class MuranoPackageManager(common_utils.RandomNameGeneratorMixin):
             tmp_dir = tempfile.mkdtemp()
             pkg_dir = os.path.join(tmp_dir, "package/")
             try:
-                shutil.copytree(package_path, pkg_dir)
+                shutil.copytree(os.path.expanduser(package_path), pkg_dir)
 
                 self._change_app_fullname(pkg_dir)
                 package_path = fileutils.pack_dir(pkg_dir)
