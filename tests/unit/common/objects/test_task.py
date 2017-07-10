@@ -18,7 +18,6 @@
 import datetime as dt
 
 import ddt
-import jsonschema
 import mock
 
 from rally.common import objects
@@ -170,85 +169,6 @@ class TaskTestCase(test.TestCase):
             {"status": consts.TaskStatus.VALIDATION_FAILED,
              "validation_result": {"a": "fake"}}
         )
-
-    @mock.patch("rally.common.objects.task.db.deployment_get")
-    @mock.patch("rally.common.objects.task.charts")
-    def test_extend_results(self, mock_charts, mock_deployment_get):
-        mock_deployment_get.return_value = {"name": "foo_deployment"}
-        mock_stat = mock.Mock()
-        mock_stat.render.return_value = "durations_stat"
-        mock_charts.MainStatsTable.return_value = mock_stat
-        now = dt.datetime.now()
-
-        task_uuid = "foo_uuid"
-        iterations = [
-            {"timestamp": i + 2, "duration": i + 5,
-             "scenario_output": {"errors": "", "data": {}},
-             "error": [], "idle_duration": i,
-             "atomic_actions": [{"name": "keystone.create_user",
-                                 "started_at": 0, "finished_at": i + 10},
-                                {"name": "keystone.create_user",
-                                 "started_at": 0, "finished_at": i + 11}
-                                ]
-             } for i in range(10)]
-        obsolete = {
-            "uuid": task_uuid,
-            "deployment_uuid": "idd",
-            "created_at": now, "updated_at": now,
-            "subtasks": [{
-                "created_at": now, "updated_at": now,
-                "workloads": [{
-                    "id": 11, "name": "Foo.bar", "position": 0,
-                    "task_uuid": "foo_uuid",
-                    "created_at": now, "updated_at": now,
-                    "data": iterations,
-                    "sla": [],
-                    "hooks": [],
-                    "full_duration": 40, "load_duration": 32}]}]}
-        expected = [
-            {"iterations": mock.ANY, "sla": [],
-             "task_uuid": task_uuid,
-             "hooks": [],
-             "data": mock.ANY,
-             "full_duration": 40,
-             "load_duration": 32,
-             "id": 11,
-             "position": mock.ANY,
-             "name": "Foo.bar",
-             "info": {
-                 "atomic": {"keystone.create_user": {"max_duration": 39,
-                                                     "min_duration": 21,
-                                                     "count": 2}},
-                 "iterations_count": 10, "iterations_failed": 0,
-                 "max_duration": 14, "min_duration": 5, "tstamp_start": 2,
-                 "full_duration": 40, "load_duration": 32,
-                 "stat": "durations_stat"}}]
-
-        # serializable is default
-        task = objects.Task(obsolete).extend_results().to_dict()
-        workloads = task["subtasks"][0]["workloads"]
-        self.assertIsInstance(workloads[0]["iterations"], type(iter([])))
-        self.assertEqual(list(workloads[0]["iterations"]), iterations)
-        expected[0]["created_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
-        expected[0]["updated_at"] = now.strftime("%Y-%d-%m %H:%M:%S")
-        self.assertEqual(expected, workloads)
-
-        # serializable is False
-        task = objects.Task(obsolete).extend_results(
-            serializable=False).to_dict()
-        workloads = task["subtasks"][0]["workloads"]
-        self.assertIsInstance(workloads[0]["iterations"], type(iter([])))
-        self.assertEqual(list(workloads[0]["iterations"]), iterations)
-        self.assertEqual(workloads, expected)
-
-        # serializable is True
-        task = objects.Task(obsolete).extend_results(
-            serializable=True).to_dict()
-        workloads = task["subtasks"][0]["workloads"]
-        self.assertEqual(list(workloads[0]["iterations"]), iterations)
-        jsonschema.validate(workloads[0],
-                            objects.task.TASK_EXTENDED_RESULT_SCHEMA)
-        self.assertEqual(workloads, expected)
 
     @mock.patch("rally.common.objects.task.db.deployment_get")
     def test_to_dict(self, mock_deployment_get):

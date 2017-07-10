@@ -355,7 +355,7 @@ class TasksTestCase(test.DBTestCase):
              "start_time": w_start_time,
              "max_duration": 0.0, "min_duration": 0.0,
              "failed_iteration_count": 0, "total_iteration_count": 0,
-             "pass_sla": True, "sla": w_sla,
+             "pass_sla": True, "sla": w_sla, "statistics": mock.ANY,
              "sla_results": {"sla": sla_results}}, workloads[0])
 
     def test_task_multiple_raw_result_create(self):
@@ -516,7 +516,7 @@ class WorkloadTestCase(test.DBTestCase):
              "full_duration": 0.0, "load_duration": 0.0,
              "max_duration": 0.0, "min_duration": 0.0,
              "failed_iteration_count": 0, "total_iteration_count": 0,
-             "pass_sla": None, "sla": w_sla,
+             "pass_sla": True, "sla": w_sla,
              "sla_results": {}}, workload)
 
     def test_workload_set_results_with_raw_data(self):

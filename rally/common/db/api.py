@@ -142,7 +142,6 @@ def task_get(uuid, detailed=False):
     if detailed:
         for subtask in task["subtasks"]:
             for workload in subtask["workloads"]:
-                del workload["statistics"]
                 del workload["context_execution"]
                 del workload["_profiling_data"]
     return task

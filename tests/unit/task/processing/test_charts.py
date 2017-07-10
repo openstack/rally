@@ -36,8 +36,9 @@ class ChartTestCase(test.TestCase):
 
     @property
     def wload_info(self):
-        return {"iterations_count": 42, "atomic": collections.OrderedDict(
-            [("a", {}), ("b", {}), ("c", {})])}
+        return {"total_iteration_count": 42, "statistics": {
+            "atomics": collections.OrderedDict(
+                [("a", {}), ("b", {}), ("c", {})])}}
 
     def test___init__(self):
         self.assertRaises(TypeError, charts.Chart, self.wload_info)
@@ -96,8 +97,8 @@ class ChartTestCase(test.TestCase):
 class MainStackedAreaChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
-        chart = charts.MainStackedAreaChart({"iterations_count": 3,
-                                             "iterations_failed": 0}, 10)
+        chart = charts.MainStackedAreaChart({"total_iteration_count": 3,
+                                             "failed_iteration_count": 0}, 10)
         self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(itr) for itr in (
             {"duration": 1.1, "idle_duration": 2.2, "error": []},
@@ -108,8 +109,8 @@ class MainStackedAreaChartTestCase(test.TestCase):
         self.assertEqual(expected, chart.render())
 
     def test_add_iteration_and_render_with_failed_iterations(self):
-        chart = charts.MainStackedAreaChart({"iterations_count": 3,
-                                             "iterations_failed": 2}, 10)
+        chart = charts.MainStackedAreaChart({"total_iteration_count": 3,
+                                             "failed_iteration_count": 2}, 10)
         self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(itr) for itr in (
             {"duration": 1.1, "idle_duration": 2.2, "error": []},
@@ -140,8 +141,8 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
         expected = [("bar", [[1, 0], [2, 1.2], [3, 1.2]]),
                     ("foo", [[1, 1.1], [2, 1.1], [3, 0]])]
         chart = charts.AtomicStackedAreaChart(
-            {"iterations_count": 3, "iterations_failed": 0,
-             "atomic": {"foo": {}, "bar": {}}}, 10)
+            {"total_iteration_count": 3, "failed_iteration_count": 0,
+             "statistics": {"atomics": {"foo": {}, "bar": {}}}}, 10)
         self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(iteration) for iteration in iterations]
         self.assertEqual(expected, sorted(chart.render()))
@@ -163,8 +164,8 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
                     ("failed_duration", [[1, 0], [2, 39.7], [3, 6.8]]),
                     ("foo", [[1, 1.1], [2, 1.1], [3, 0]])]
         chart = charts.AtomicStackedAreaChart(
-            {"iterations_count": 3, "iterations_failed": 2,
-             "atomic": {"foo": {}, "bar": {}}}, 10)
+            {"total_iteration_count": 3, "failed_iteration_count": 2,
+             "statistics": {"atomics": {"foo": {}, "bar": {}}}}, 10)
         self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(iteration) for iteration in iterations]
         self.assertEqual(expected, sorted(chart.render()))
@@ -177,8 +178,9 @@ class AvgChartTestCase(test.TestCase):
             return iteration["foo"].items()
 
     def test_add_iteration_and_render(self):
-        self.assertRaises(TypeError, charts.AvgChart, {"iterations_count": 3})
-        chart = self.AvgChart({"iterations_count": 3})
+        self.assertRaises(TypeError, charts.AvgChart,
+                          {"total_iteration_count": 3})
+        chart = self.AvgChart({"total_iteration_count": 3})
         self.assertIsInstance(chart, charts.AvgChart)
         [chart.add_iteration({"foo": x}) for x in ({"a": 1.3, "b": 4.3},
                                                    {"a": 2.4, "b": 5.4},
@@ -189,9 +191,9 @@ class AvgChartTestCase(test.TestCase):
 class AtomicAvgChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
-        chart = charts.AtomicAvgChart({"iterations_count": 3,
-                                       "atomic": {"foo": {},
-                                                  "bar": {}}})
+        chart = charts.AtomicAvgChart(
+            {"total_iteration_count": 3, "statistics": {
+                "atomics": {"foo": {}, "bar": {}}}})
         self.assertIsInstance(chart, charts.AvgChart)
         [chart.add_iteration({"atomic_actions": a})
          for a in ([{"name": "foo", "started_at": 0, "finished_at": 2},
@@ -205,8 +207,8 @@ class AtomicAvgChartTestCase(test.TestCase):
 class LoadProfileChartTestCase(test.TestCase):
 
     @ddt.data(
-        {"info": {"iterations_count": 9,
-                  "tstamp_start": 0.0,
+        {"info": {"total_iteration_count": 9,
+                  "data": [{"timestamp": 0.0}],
                   "load_duration": 8.0},
          "iterations": [(0.0, 0.5), (0.5, 0.5), (2.0, 4.0), (2.0, 2.0),
                         (4.0, 2.0), (6.0, 0.5), (6.5, 0.5), (7.5, 0.5),
@@ -216,8 +218,8 @@ class LoadProfileChartTestCase(test.TestCase):
                        [(0.0, 0), (1.25, 0.8), (2.5, 0.8), (3.75, 2),
                         (5.0, 2.0), (6.25, 1.8), (7.5, 0.6000000000000001),
                         (8.75, 1.4), (10.0, 0.2)])]},
-        {"info": {"iterations_count": 6,
-                  "tstamp_start": 0.0,
+        {"info": {"total_iteration_count": 6,
+                  "data": [{"timestamp": 0.0}],
                   "load_duration": 12.0},
          "iterations": [(0.0, 0.75), (0.75, 0.75), (1.5, 0.375), (3.0, 5.0),
                         (3.75, 4.25), (10.0, 1.0)],
@@ -227,8 +229,8 @@ class LoadProfileChartTestCase(test.TestCase):
                         (5.625, 2.0), (7.5, 2), (9.375, 0.5333333333333333),
                         (11.25, 0.5333333333333333), (13.125, 0),
                         (15.0, 0)])]},
-        {"info": {"iterations_count": 2,
-                  "tstamp_start": 0.0,
+        {"info": {"total_iteration_count": 2,
+                  "data": [{"timestamp": 0.0}],
                   "load_duration": 1.0},
          "iterations": [(0.0, 0.5), (0.5, 0.5)],
          "kwargs": {"scale": 4},
@@ -262,8 +264,8 @@ class HistogramChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         self.assertRaises(TypeError, charts.HistogramChart,
-                          {"iterations_count": 3})
-        chart = self.HistogramChart({"iterations_count": 3})
+                          {"total_iteration_count": 3})
+        chart = self.HistogramChart({"total_iteration_count": 3})
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"foo": x}) for x in ({"bar": 1.2},
                                                    {"bar": 2.4},
@@ -305,7 +307,7 @@ class HistogramChartTestCase(test.TestCase):
     @ddt.unpack
     def test_views(self, base_size=None, min_value=None, max_value=None,
                    expected=None):
-        chart = self.HistogramChart({"iterations_count": base_size})
+        chart = self.HistogramChart({"total_iteration_count": base_size})
         self.assertEqual(expected, chart._init_views(min_value, max_value))
 
 
@@ -313,7 +315,7 @@ class MainHistogramChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         chart = charts.MainHistogramChart(
-            {"iterations_count": 3, "min_duration": 2, "max_duration": 7})
+            {"total_iteration_count": 3, "min_duration": 2, "max_duration": 7})
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration(itr) for itr in (
             {"duration": 1.1, "idle_duration": 2.2, "error": None},
@@ -342,10 +344,10 @@ class AtomicHistogramChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         chart = charts.AtomicHistogramChart(
-            {"iterations_count": 3,
-             "atomic": collections.OrderedDict(
-                 [("foo", {"min_duration": 1.6, "max_duration": 2.8}),
-                  ("bar", {"min_duration": 3.1, "max_duration": 5.5})])})
+            {"total_iteration_count": 3, "statistics": {
+                "atomics": collections.OrderedDict(
+                    [("foo", {"min_duration": 1.6, "max_duration": 2.8}),
+                     ("bar", {"min_duration": 3.1, "max_duration": 5.5})])}})
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"atomic_actions": a})
          for a in ([{"name": "foo", "started_at": 0, "finished_at": 1.6},
@@ -400,10 +402,11 @@ class TableTestCase(test.TestCase):
                     self._data[name][i][0].add(value)
 
     def test___init__(self):
-        self.assertRaises(TypeError, charts.Table, {"iterations_count": 42})
+        self.assertRaises(TypeError, charts.Table,
+                          {"total_iteration_count": 42})
 
     def test__round(self):
-        table = self.Table({"iterations_count": 4})
+        table = self.Table({"total_iteration_count": 4})
         streaming_ins = mock.Mock()
         streaming_ins.result.return_value = 42.424242
         self.assertRaises(TypeError, table._round, streaming_ins)
@@ -412,7 +415,7 @@ class TableTestCase(test.TestCase):
                          table._round(streaming_ins, True))
 
     def test__row_has_results(self):
-        table = self.Table({"iterations_count": 1})
+        table = self.Table({"total_iteration_count": 1})
         for st_cls in (charts.streaming.MinComputation,
                        charts.streaming.MaxComputation,
                        charts.streaming.MeanComputation):
@@ -422,7 +425,7 @@ class TableTestCase(test.TestCase):
             self.assertTrue(table._row_has_results([(st, None)]))
 
     def test__row_has_results_and_get_rows(self):
-        table = self.Table({"iterations_count": 3})
+        table = self.Table({"total_iteration_count": 3})
         self.assertFalse(table._row_has_results(table._data["foo"]))
         self.assertFalse(table._row_has_results(table._data["bar"]))
         self.assertEqual(
@@ -437,7 +440,7 @@ class TableTestCase(test.TestCase):
             table.get_rows())
 
     def test_render(self):
-        table = self.Table({"iterations_count": 42})
+        table = self.Table({"total_iteration_count": 42})
         table.get_rows = lambda: "rows data"
         self.assertEqual({"cols": ["Name", "Min", "Max", "Max rounded by 2"],
                           "rows": "rows data"},
@@ -461,9 +464,9 @@ class MainStatsTableTestCase(test.TestCase):
     @ddt.data(
         {
             "info": {
-                "iterations_count": 1,
-                "atomic": collections.OrderedDict([("foo", {}),
-                                                   ("bar", {})])
+                "total_iteration_count": 1, "statistics": {
+                    "atomics": collections.OrderedDict([("foo", {}),
+                                                        ("bar", {})])}
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
@@ -474,7 +477,8 @@ class MainStatsTableTestCase(test.TestCase):
                 ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1]]
         },
         {
-            "info": {"iterations_count": 2, "atomic": {"foo": {}}},
+            "info": {"total_iteration_count": 2, "statistics": {
+                "atomics": {"foo": {}}}},
             "data": [
                 generate_iteration(10.0, True, ("foo", 1.0)),
                 generate_iteration(10.0, True, ("foo", 2.0))
@@ -484,7 +488,8 @@ class MainStatsTableTestCase(test.TestCase):
                 ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 2]]
         },
         {
-            "info": {"iterations_count": 2, "atomic": {"foo": {}}},
+            "info": {"total_iteration_count": 2, "statistics": {
+                "atomics": {"foo": {}}}},
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0)),
                 generate_iteration(20.0, True, ("foo", 2.0))
@@ -495,9 +500,9 @@ class MainStatsTableTestCase(test.TestCase):
         },
         {
             "info": {
-                "iterations_count": 4,
-                "atomic": collections.OrderedDict([("foo", {}),
-                                                   ("bar", {})])
+                "total_iteration_count": 4,
+                "statistics": {"atomics": collections.OrderedDict(
+                    [("foo", {}), ("bar", {})])}
             },
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 4.0)),
@@ -512,17 +517,17 @@ class MainStatsTableTestCase(test.TestCase):
         },
         {
             "info": {
-                "iterations_count": 0,
-                "atomic": collections.OrderedDict()
+                "total_iteration_count": 0,
+                "statistics": {"atomics": collections.OrderedDict()}
             },
             "data": [],
             "expected_rows": [
                 ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 0]]
         },
         {
-            "info": {"iterations_count": 4,
-                     "atomic": collections.OrderedDict([("foo", {}),
-                                                        ("bar", {})])},
+            "info": {"total_iteration_count": 4, "statistics": {
+                "atomics": collections.OrderedDict([("foo", {}),
+                                                   ("bar", {})])}},
             "data": [
                 generate_iteration(1.6, True, ("foo", 1.2)),
                 generate_iteration(5.2, False, ("foo", 1.2)),
@@ -549,9 +554,9 @@ class MainStatsTableTestCase(test.TestCase):
 
     def test_to_dict(self):
         table = charts.MainStatsTable(
-            {"iterations_count": 4,
-             "atomic": collections.OrderedDict([("foo", {}),
-                                                ("bar", {})])})
+            {"total_iteration_count": 4, "statistics": {
+                "atomics": collections.OrderedDict([("foo", {}),
+                                                    ("bar", {})])}})
         data = [generate_iteration(1.6, True, ("foo", 1.2)),
                 generate_iteration(5.2, False, ("foo", 1.2)),
                 generate_iteration(5.0, True, ("bar", 4.8)),
@@ -596,23 +601,23 @@ class OutputChartTestCase(test.TestCase):
 
     def test___init__(self):
         self.assertRaises(TypeError,
-                          charts.OutputChart, {"iterations_count": 42})
+                          charts.OutputChart, {"total_iteration_count": 42})
 
-        chart = self.OutputChart({"iterations_count": 42})
+        chart = self.OutputChart({"total_iteration_count": 42})
         self.assertIsInstance(chart, charts.Chart)
 
     def test__map_iteration_values(self):
-        chart = self.OutputChart({"iterations_count": 42})
+        chart = self.OutputChart({"total_iteration_count": 42})
         self.assertEqual("foo data", chart._map_iteration_values("foo data"))
 
     def test_render(self):
-        chart = self.OutputChart({"iterations_count": 42})
+        chart = self.OutputChart({"total_iteration_count": 42})
         self.assertEqual(
             {"widget": "FooWidget", "data": [],
              "title": "", "description": "", "label": "", "axis_label": ""},
             chart.render())
 
-        chart = self.OutputChart({"iterations_count": 42},
+        chart = self.OutputChart({"total_iteration_count": 42},
                                  title="foo title", description="Test!",
                                  label="Foo label", axis_label="Axis label")
         self.assertEqual(
@@ -627,13 +632,14 @@ class OutputStackedAreaChartTestCase(test.TestCase):
     def test___init__(self):
         self.assertEqual("StackedArea", charts.OutputStackedAreaChart.widget)
 
-        chart = charts.OutputStackedAreaChart({"iterations_count": 42})
+        chart = charts.OutputStackedAreaChart({"total_iteration_count": 42})
         self.assertIsInstance(chart, charts.OutputChart)
 
     def test_render(self):
         # Explicit label
         chart = charts.OutputStackedAreaChart(
-            {"iterations_count": 2}, label="Label", axis_label="Axis label")
+            {"total_iteration_count": 2}, label="Label",
+            axis_label="Axis label")
         chart.add_iteration((("foo", 10), ("bar", 20)))
         # One iteration is transformed to Table
         self.assertEqual({"axis_label": "Axis label",
@@ -652,7 +658,7 @@ class OutputStackedAreaChartTestCase(test.TestCase):
                          chart.render())
 
         # No label
-        chart = charts.OutputStackedAreaChart({"iterations_count": 1})
+        chart = charts.OutputStackedAreaChart({"total_iteration_count": 1})
         chart.add_iteration((("foo", 10), ("bar", 20)))
         self.assertEqual({"axis_label": "",
                           "data": {"cols": ["Name", "Value"],
@@ -666,7 +672,7 @@ class OutputAvgChartTestCase(test.TestCase):
     def test___init__(self):
         self.assertEqual("Pie", charts.OutputAvgChart.widget)
 
-        chart = charts.OutputAvgChart({"iterations_count": 42})
+        chart = charts.OutputAvgChart({"total_iteration_count": 42})
         self.assertIsInstance(chart, charts.OutputChart)
         self.assertIsInstance(chart, charts.AvgChart)
 
@@ -683,8 +689,8 @@ class OutputTableTestCase(test.TestCase):
     def test___init__(self):
         self.assertEqual("Table", charts.OutputTable.widget)
         self.assertRaises(TypeError,
-                          charts.OutputTable, {"iterations_count": 42})
-        self.OutputTable({"iterations_count": 42})
+                          charts.OutputTable, {"total_iteration_count": 42})
+        self.OutputTable({"total_iteration_count": 42})
 
 
 @ddt.ddt
@@ -697,7 +703,7 @@ class OutputStatsTableTestCase(test.TestCase):
              "95%ile (sec)", "Max (sec)", "Avg (sec)", "Count"],
             charts.OutputStatsTable.columns)
 
-        table = charts.OutputStatsTable({"iterations_count": 42})
+        table = charts.OutputStatsTable({"total_iteration_count": 42})
         self.assertIsInstance(table, charts.Table)
 
     @ddt.data(
@@ -714,8 +720,9 @@ class OutputStatsTableTestCase(test.TestCase):
     @ddt.unpack
     def test_add_iteration_and_render(self, title, description, iterations,
                                       expected):
-        table = charts.OutputStatsTable({"iterations_count": len(iterations)},
-                                        title=title, description=description)
+        table = charts.OutputStatsTable(
+            {"total_iteration_count": len(iterations)},
+            title=title, description=description)
         for iteration in iterations:
             table.add_iteration(iteration)
         self.assertEqual({"title": title,

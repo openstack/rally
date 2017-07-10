@@ -46,17 +46,16 @@ class PlotTestCase(test.TestCase):
              "output": {"additive": [], "complete": []},
              "atomic_actions": {"foo_action": i + 10}} for i in range(10)]
         workload = {
-            "iterations": iterations, "sla": {}, "pass_sla": True,
+            "data": iterations, "sla": {}, "pass_sla": True,
             "position": 0,
             "name": "Foo.bar", "description": "Description!!",
             "runner": {"type": "constant"},
-            "info": {"atomic": {"foo_action": {"max_duration": 19,
-                                               "min_duration": 10}},
-                     "full_duration": 40, "load_duration": 32,
-                     "iterations_count": 10, "iterations_passed": 10,
-                     "max_duration": 14, "min_duration": 5,
-                     "output_names": [],
-                     "tstamp_end": 25, "tstamp_start": 2},
+            "statistics": {"atomics": {
+                "foo_action": {"max_duration": 19, "min_duration": 10}}},
+            "full_duration": 40, "load_duration": 32,
+            "total_iteration_count": 10,
+            "max_duration": 14, "min_duration": 5,
+            "start_time": 2,
             "created_at": "xxx_time",
             "hooks": []}
 
@@ -221,19 +220,16 @@ class PlotTestCase(test.TestCase):
               {"include_libs": True},
               {"include_libs": False})
     @ddt.unpack
-    @mock.patch(PLOT + "objects.Task")
     @mock.patch(PLOT + "_process_workloads")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch("rally.common.version.version_string", return_value="42.0")
     def test_plot(self, mock_version_string, mock_get_template,
-                  mock__process_workloads, mock_task, **ddt_kwargs):
+                  mock__process_workloads, **ddt_kwargs):
         task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
-        task = mock_task.return_value
-        task.extend_results.return_value.to_dict.return_value = task_dict
         mock__process_workloads.return_value = "source", "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
 
-        html = plot.plot(["tasks_results"], **ddt_kwargs)
+        html = plot.plot([task_dict], **ddt_kwargs)
 
         self.assertEqual(html, "tasks_html")
         mock_get_template.assert_called_once_with("task/report.html")
@@ -256,8 +252,6 @@ class PlotTestCase(test.TestCase):
     def test_trends(self, mock_version_string, mock_get_template, mock_trends,
                     mock_task, mock_format_workload_config):
         task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
-        task = mock_task.return_value
-        task.extend_results.return_value.to_dict.return_value = task_dict
 
         trends = mock.Mock()
         trends.get_data.return_value = ["foo", "bar"]
@@ -266,7 +260,7 @@ class PlotTestCase(test.TestCase):
         template.render.return_value = "trends html"
         mock_get_template.return_value = template
 
-        result = plot.trends(["tasks_results"])
+        result = plot.trends([task_dict])
 
         self.assertEqual("trends html", result)
         self.assertEqual(
@@ -324,27 +318,42 @@ class TrendsTestCase(test.TestCase):
     def _make_result(self, salt, sla_success=True, with_na=False):
         if with_na:
             atomic = {"a": "n/a", "b": "n/a"}
-            stat_rows = [
-                ["a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4],
-                ["b", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4],
-                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 4]]
+            stats = {
+                "atomics": [
+                    {"name": "a", "min": "n/a", "median": "n/a",
+                     "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
+                     "avg": "n/a", "success": "n/a", "count": 4},
+                    {"name": "b", "min": "n/a", "median": "n/a",
+                     "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
+                     "avg": "n/a", "success": "n/a", "count": 4}
+                ],
+                "total": {"name": "total", "min": "n/a", "median": "n/a",
+                          "90%ile": "n/a", "95%ile": "n/a", "max": "n/a",
+                          "avg": "n/a", "success": "n/a", "count": 4}
+            }
         else:
+            stats = {
+                "atomics": [
+                    {"name": "a", "min": 0.7, "median": 0.85, "90%ile": 0.9,
+                     "95%ile": 0.87, "max": 1.25, "avg": 0.67,
+                     "success": "100.0%", "count": 4},
+                    {"name": "b", "min": 0.5, "median": 0.75, "90%ile": 0.85,
+                     "95%ile": 0.9, "max": 1.1, "avg": 0.58,
+                     "success": "100.0%", "count": 4}],
+                "total": {"name": "total", "min": 1.2, "median": 1.55,
+                          "90%ile": 1.7, "95%ile": 1.8, "max": 1.5,
+                          "avg": 0.8, "success": "100.0%", "count": 4}}
             atomic = {"a": 123, "b": 456}
-            stat_rows = [["a", 0.7, 0.85, 0.9, 0.87, 1.25, 0.67, "100.0%", 4],
-                         ["b", 0.5, 0.75, 0.85, 0.9, 1.1, 0.58, "100.0%", 4],
-                         ["total", 1.2, 1.55, 1.7, 1.8, 1.5, 0.8, "100.0%", 4]]
         return {
             "name": "Scenario.name_%d" % salt,
             "pass_sla": sla_success,
             "sla": [{"success": sla_success}],
-            "info": {"iterations_count": 4, "atomic": atomic,
-                     "tstamp_start": 123456.789 + salt,
-                     "stat": {"rows": stat_rows,
-                              "cols": ["Action", "Min (sec)", "Median (sec)",
-                                       "90%ile (sec)", "95%ile (sec)",
-                                       "Max (sec)", "Avg (sec)", "Success",
-                                       "Count"]}},
-            "iterations": ["<iter-0>", "<iter-1>", "<iter-2>", "<iter-3>"]}
+            "total_iteration_count": 4,
+            "start_time": 123456.789 + salt,
+            "statistics": {
+                "atomics": atomic,
+                "durations": stats},
+            "data": ["<iter-0>", "<iter-1>", "<iter-2>", "<iter-3>"]}
 
     def _sort_trends(self, trends_result):
         for idx in range(len(trends_result)):

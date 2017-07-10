@@ -40,6 +40,8 @@ from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
 from rally import plugins
+from rally.task import atomic
+from rally.task.processing import charts
 from rally.task.processing import plot
 from rally.task.processing import utils as putils
 from rally.task import utils as tutils
@@ -308,7 +310,7 @@ class TaskCommands(object):
         :param task_id: str, task uuid
         :param iterations_data: bool, include results for each iteration
         """
-        task = api.task.get_detailed(task_id=task_id, extended_results=True)
+        task = api.task.get(task_id=task_id, detailed=True)
 
         if not task:
             print("The task %s can not be found" % task_id)
@@ -361,14 +363,15 @@ class TaskCommands(object):
             output = []
             task_errors = []
             if iterations_data:
-                atomic_merger = putils.AtomicMerger(workload["info"]["atomic"])
+                atomic_merger = putils.AtomicMerger(
+                    workload["statistics"]["atomics"])
                 atomic_names = atomic_merger.get_merged_names()
                 for i, atomic_name in enumerate(atomic_names, 1):
                     action = "%i. %s" % (i, atomic_name)
                     iterations_headers.append(action)
                     iterations_actions.append((atomic_name, action))
 
-            for idx, itr in enumerate(workload["iterations"], 1):
+            for idx, itr in enumerate(workload["data"], 1):
 
                 if iterations_data:
                     row = {"iteration": idx, "duration": itr["duration"]}
@@ -397,7 +400,7 @@ class TaskCommands(object):
                 for idx, additive in enumerate(iteration_output["additive"]):
                     if len(output) <= idx + 1:
                         output_table = plot.charts.OutputStatsTable(
-                            workload["info"], title=additive["title"])
+                            workload, title=additive["title"])
                         output.append(output_table)
                     output[idx].add_iteration(additive["data"])
 
@@ -407,15 +410,22 @@ class TaskCommands(object):
             self._print_task_errors(task_id, task_errors)
 
             cols = plot.charts.MainStatsTable.columns
-            float_cols = workload["info"]["stat"]["cols"][1:7]
-            formatters = dict(zip(float_cols,
-                                  [cliutils.pretty_float_formatter(col, 3)
-                                   for col in float_cols]))
-            rows = [dict(zip(cols, r))
-                    for r in workload["info"]["stat"]["rows"]]
+            duration_stats = workload["statistics"]["durations"]
+            formatters = {
+                "Action": lambda x: x["name"],
+                "Min (sec)": cliutils.pretty_float_formatter("min", 3),
+                "Median (sec)": cliutils.pretty_float_formatter("median", 3),
+                "90%ile (sec)": cliutils.pretty_float_formatter("90%ile", 3),
+                "95%ile (sec)": cliutils.pretty_float_formatter("95%ile", 3),
+                "Max (sec)": cliutils.pretty_float_formatter("max", 3),
+                "Avg (sec)": cliutils.pretty_float_formatter("avg", 3)
+            }
+            rows = duration_stats["atomics"]
+            rows.append(duration_stats["total"])
             cliutils.print_list(rows,
                                 fields=cols,
                                 formatters=formatters,
+                                normalize_field_names=True,
                                 table_label="Response Times (sec)",
                                 sortby_index=None)
             print()
@@ -449,9 +459,9 @@ class TaskCommands(object):
                         print()
 
             print(_("Load duration: %s") % rutils.format_float_to_str(
-                workload["info"]["load_duration"]))
+                workload["load_duration"]))
             print(_("Full duration: %s") % rutils.format_float_to_str(
-                workload["info"]["full_duration"]))
+                workload["full_duration"]))
 
             print("\nHINTS:")
             print(_("* To plot HTML graphics with this data, run:"))
@@ -472,7 +482,7 @@ class TaskCommands(object):
 
         :param task_id: Task uuid
         """
-        task = api.task.get_detailed(task_id=task_id)
+        task = api.task.get(task_id=task_id, detailed=True)
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
         if task["status"] not in finished_statuses:
@@ -609,12 +619,53 @@ class TaskCommands(object):
                     raise FailedToLoadResults(source=task_id,
                                               msg=six.text_type(e))
 
-                for r in result["result"]:
-                    if r["timestamp"] < start_time:
-                        start_time = r["timestamp"]
+                iter_count = 0
+                failed_iter_count = 0
+                min_duration = float("inf")
+                max_duration = 0
+
+                atomics = collections.OrderedDict()
+
+                for itr in result["result"]:
+                    if itr["timestamp"] < start_time:
+                        start_time = itr["timestamp"]
                     # NOTE(chenhb): back compatible for atomic_actions
-                    r["atomic_actions"] = list(tutils.WrapperForAtomicActions(
-                        r["atomic_actions"], r["timestamp"]))
+                    itr["atomic_actions"] = list(
+                        tutils.WrapperForAtomicActions(itr["atomic_actions"],
+                                                       itr["timestamp"]))
+
+                    iter_count += 1
+                    if itr.get("error"):
+                        failed_iter_count += 1
+
+                    duration = itr.get("duration", 0)
+
+                    if duration > max_duration:
+                        max_duration = duration
+
+                    if min_duration and min_duration > duration:
+                        min_duration = duration
+
+                    merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
+                    for key, value in merged_atomic.items():
+                        duration = value["duration"]
+                        count = value["count"]
+                        if key not in atomics or count > atomics[key]["count"]:
+                            atomics[key] = {"min_duration": duration,
+                                            "max_duration": duration,
+                                            "count": count}
+                        elif count == atomics[key]["count"]:
+                            if duration < atomics[key]["min_duration"]:
+                                atomics[key]["min_duration"] = duration
+                            if duration > atomics[key]["max_duration"]:
+                                atomics[key]["max_duration"] = duration
+
+                durations_stat = charts.MainStatsTable(
+                    {"total_iteration_count": iter_count,
+                     "statistics": {"atomics": atomics}})
+
+                for itr in result["result"]:
+                    durations_stat.add_iteration(itr)
 
                 updated_at = dt.datetime.strptime(result["created_at"],
                                                   "%Y-%m-%dT%H:%M:%S")
@@ -627,6 +678,10 @@ class TaskCommands(object):
                                                              ""),
                             "full_duration": result["full_duration"],
                             "load_duration": result["load_duration"],
+                            "total_iteration_count": iter_count,
+                            "failed_iteration_count": failed_iter_count,
+                            "min_duration": min_duration,
+                            "max_duration": max_duration,
                             "start_time": start_time,
                             "created_at": result["created_at"],
                             "updated_at": updated_at,
@@ -639,7 +694,11 @@ class TaskCommands(object):
                             "pass_sla": pass_sla,
                             "context": result["key"]["kw"]["context"],
                             "data": sorted(result["result"],
-                                           key=lambda x: x["timestamp"])}
+                                           key=lambda x: x["timestamp"]),
+                            "statistics": {
+                                "durations": durations_stat.to_dict(),
+                                "atomics": atomics},
+                            }
                 task["subtasks"].append({"workloads": [workload]})
             return task
         else:
@@ -668,7 +727,7 @@ class TaskCommands(object):
             if os.path.exists(os.path.expanduser(task_id)):
                 task_results = self._load_task_results_file(api, task_id)
             elif uuidutils.is_uuid_like(task_id):
-                task_results = api.task.get_detailed(task_id=task_id)
+                task_results = api.task.get(task_id=task_id, detailed=True)
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s")
                       % task_id, file=sys.stderr)
@@ -744,7 +803,7 @@ class TaskCommands(object):
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
                 task = self._load_task_results_file(api, task_file_or_uuid)
             elif uuidutils.is_uuid_like(task_file_or_uuid):
-                task = api.task.get_detailed(task_id=task_file_or_uuid)
+                task = api.task.get(task_id=task_file_or_uuid, detailed=True)
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
                         ) % task_file_or_uuid,
@@ -841,7 +900,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        task = api.task.get_detailed(task_id=task_id)
+        task = api.task.get(task_id=task_id, detailed=True)
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"

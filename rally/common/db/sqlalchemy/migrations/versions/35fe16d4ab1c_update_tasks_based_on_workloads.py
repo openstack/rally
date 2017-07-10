@@ -23,8 +23,6 @@ Create Date: 2017-06-07 19:50:03.572493
 
 """
 
-import uuid
-
 from alembic import op
 import sqlalchemy as sa
 
@@ -38,15 +36,11 @@ branch_labels = None
 depends_on = None
 
 
-def UUID():
-    return str(uuid.uuid4())
-
-
 task_helper = sa.Table(
     "tasks",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+    sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("task_duration", sa.Float()),
     sa.Column("pass_sla", sa.Boolean())
 )
@@ -55,7 +49,7 @@ subtask_helper = sa.Table(
     "subtasks",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+    sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("duration", sa.Float()),
     sa.Column("pass_sla", sa.Boolean())
 )
@@ -64,7 +58,7 @@ workload_helper = sa.Table(
     "workloads",
     sa.MetaData(),
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
-    sa.Column("uuid", sa.String(36), default=UUID, nullable=False),
+    sa.Column("uuid", sa.String(36), nullable=False),
     sa.Column("task_uuid", sa.String(length=36), nullable=False),
     sa.Column("subtask_uuid", sa.String(length=36), nullable=False),
     sa.Column("load_duration", sa.Float()),
