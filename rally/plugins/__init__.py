@@ -29,7 +29,13 @@ def load():
     if not PLUGINS_LOADED:
         discover.import_modules_from_package("rally.deployment.engines")
         discover.import_modules_from_package("rally.deployment.serverprovider")
-        discover.import_modules_from_package("rally.plugins")
+        discover.import_modules_from_package("rally.plugins.common")
+        try:
+            import rally_openstack  # noqa
+        except ImportError:
+            # print warnings when rally_openstack will be released
+            discover.import_modules_from_package("rally.plugins.openstack")
+            discover.import_modules_from_package("rally.plugins.workload")
 
         discover.import_modules_by_entry_point()
 
