@@ -1063,3 +1063,33 @@ class BootServerAndListInterfaces(utils.NovaScenario):
         """
         server = self._boot_server(image, flavor, **kwargs)
         self._list_interfaces(server)
+
+
+@validation.add(
+    "enum", param_name="console_type",
+    values=["novnc", "xvpvnc", "spice-html5", "rdp-html5", "serial", "webmks"])
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
+@validation.add("required_services", services=[consts.Service.NOVA])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["nova"]},
+                    name="NovaServers.boot_and_get_console_url")
+class BootAndGetConsoleUrl(utils.NovaScenario):
+
+    def run(self, image, flavor, console_type, **kwargs):
+        """Retrieve a console url of a server.
+
+        This simple scenario tests retrieving the console url of a server.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param console_type: type can be novnc/xvpvnc for protocol vnc;
+                             spice-html5 for protocol spice; rdp-html5 for
+                             protocol rdp; serial for protocol serial.
+                             webmks for protocol mks (since version 2.8).
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._get_console_url_server(server, console_type)
