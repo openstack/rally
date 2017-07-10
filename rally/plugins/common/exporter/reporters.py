@@ -100,12 +100,11 @@ class JUnitXMLExporter(exporter.TaskExporter):
                     *[s["workloads"] for s in task["subtasks"]]):
                 w_sla = workload["sla_results"].get("sla", [])
 
-                if w_sla:
-                    message = ",".join([sla["detail"] for sla in w_sla
-                                        if not sla["success"]])
+                message = ",".join([sla["detail"] for sla in w_sla
+                                    if not sla["success"]])
+                if message:
                     outcome = junit.JUnit.FAILURE
                 else:
-                    message = ""
                     outcome = junit.JUnit.SUCCESS
                 test_suite.add_test(workload["name"],
                                     workload["full_duration"], outcome,
