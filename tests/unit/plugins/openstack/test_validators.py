@@ -788,20 +788,38 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
 
     def setUp(self):
         super(VolumeTypeExistsValidatorTestCase, self).setUp()
-        self.validator = validators.VolumeTypeExistsValidator("volume_type")
+        self.validator = validators.VolumeTypeExistsValidator("volume_type",
+                                                              True)
+        self.config = copy.deepcopy(config)
         self.credentials = copy.deepcopy(credentials)
+
+    @ddt.unpack
+    @ddt.data(
+        {"param_name": "fake_param", "nullable": True, "err_msg": None},
+        {"param_name": "fake_param", "nullable": False,
+         "err_msg": "The parameter 'fake_param' is required and should"
+                    " not be empty."}
+    )
+    def test_validator(self, param_name, nullable, err_msg):
+        validator = validators.VolumeTypeExistsValidator(param_name,
+                                                         nullable)
+
+        clients = self.credentials["openstack"]["users"][0][
+            "credential"].clients()
+
+        clients.cinder().volume_types.list.return_value = [mock.MagicMock()]
+
+        result = validator.validate(self.config, self.credentials, None, None)
+
+        if err_msg:
+            self.assertEqual(err_msg, result.msg)
+        else:
+            self.assertIsNone(result, "Unexpected result")
 
     @ddt.unpack
     @ddt.data(
         {"context": {"args": {"volume_type": "fake_type"}},
          "volume_type": "fake_type"},
-        {"context": {"args": {"volume_type": False}}, "volume_type": None,
-         "err_msg": "The parameter 'volume_type' is required and should "
-                    "not be empty."},
-        {"context": {"args": {"volume_type": False}},
-         "volume_type": ["fake_type"],
-         "err_msg": "The parameter 'volume_type' is required and should "
-                    "not be empty."},
         {"context": {"args": {"volume_type": "fake_type"}}, "volume_type": [],
          "err_msg": "Specified volume type fake_type not found for user {}. "
                     "List of available types: [[]]"}

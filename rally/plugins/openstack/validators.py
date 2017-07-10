@@ -525,18 +525,24 @@ class RequiredAPIVersionsValidator(validation.Validator):
 @validation.configure(name="volume_type_exists", namespace="openstack")
 class VolumeTypeExistsValidator(validation.Validator):
 
-    def __init__(self, param_name):
+    def __init__(self, param_name, nullable=True):
         """Returns validator for volume types.
 
         :param param_name: defines variable to be used as the flag to
                            determine if volume types should be checked for
                            existence.
+        :param nullable: defines volume_type param is required
         """
         super(VolumeTypeExistsValidator, self).__init__()
         self.param = param_name
+        self.nullable = nullable
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
         volume_type = config.get("args", {}).get(self.param, False)
+
+        if not volume_type and self.nullable:
+            return
+
         if volume_type:
             for user in credentials["openstack"]["users"]:
                 clients = user["credential"].clients()
