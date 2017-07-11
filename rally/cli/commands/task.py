@@ -554,8 +554,8 @@ class TaskCommands(object):
         """
 
         filters = {}
-        headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "tags"]
+        headers = ["UUID", "Deployment name", "Created at", "Load duration",
+                   "Status", "Tag(s)"]
 
         if status in consts.TaskStatus:
             filters["status"] = status
@@ -576,20 +576,24 @@ class TaskCommands(object):
 
         if uuids_only:
             if task_list:
-                cliutils.print_list(task_list, ["uuid"],
-                                    print_header=False,
-                                    print_border=False)
+                print("\n".join([t["uuid"] for t in task_list]))
         elif task_list:
             def tags_formatter(t):
                 if not t["tags"]:
                     return ""
                 return "'%s'" % "', '".join(t["tags"])
 
+            formatters = {
+                "Tag(s)": tags_formatter,
+                "Load duration": cliutils.pretty_float_formatter(
+                    "task_duration", 3),
+                "Created at": lambda t: t["created_at"].replace("T", " ")
+            }
+
             cliutils.print_list(
-                task_list,
-                headers,
-                sortby_index=headers.index("created_at"),
-                formatters={"tags": tags_formatter})
+                task_list, fields=headers, normalize_field_names=True,
+                sortby_index=headers.index("Created at"),
+                formatters=formatters)
         else:
             if status:
                 print(_("There are no tasks in '%s' status. "

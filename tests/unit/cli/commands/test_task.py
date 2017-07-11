@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime as dt
 import json
 import os.path
+import sys
 
 import ddt
 import mock
@@ -775,43 +775,43 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="123456789")
     def test_list(self, mock_get_global, mock_print_list):
         self.fake_api.task.list.return_value = [
-            fakes.FakeTask(uuid="a",
-                           created_at=dt.datetime.now(),
-                           updated_at=dt.datetime.now(),
-                           status="c",
-                           tags=["d"],
-                           deployment_name="some_name")]
+            {"uuid": "a",
+             "created_at": "2007-01-01T00:00:01",
+             "updated_at": "2007-01-01T00:00:03",
+             "status": consts.TaskStatus.RUNNING,
+             "tags": ["d"],
+             "deployment_name": "some_name"}]
         self.task.list(self.fake_api, status="running")
         self.fake_api.task.list.assert_called_once_with(
             deployment=mock_get_global.return_value,
             status=consts.TaskStatus.RUNNING)
 
-        headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "tags"]
+        headers = ["UUID", "Deployment name", "Created at", "Load duration",
+                   "Status", "Tag(s)"]
 
         mock_print_list.assert_called_once_with(
-            self.fake_api.task.list.return_value, headers,
-            sortby_index=headers.index("created_at"),
+            self.fake_api.task.list.return_value, fields=headers,
+            normalize_field_names=True,
+            sortby_index=headers.index("Created at"),
             formatters=mock.ANY)
 
-    @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",
                 return_value="123456789")
-    def test_list_uuids_only(self, mock_get_global, mock_print_list):
+    def test_list_uuids_only(self, mock_get_global):
         self.fake_api.task.list.return_value = [
-            fakes.FakeTask(uuid="a",
-                           created_at=dt.datetime.now(),
-                           updated_at=dt.datetime.now(),
-                           status="c",
-                           tag="d",
-                           deployment_name="some_name")]
-        self.task.list(self.fake_api, status="running", uuids_only=True)
+            {"uuid": "a",
+             "created_at": "2007-01-01T00:00:01",
+             "updated_at": "2007-01-01T00:00:03",
+             "status": consts.TaskStatus.RUNNING,
+             "tags": ["d"],
+             "deployment_name": "some_name"}]
+        out = six.StringIO()
+        with mock.patch.object(sys, "stdout", new=out):
+            self.task.list(self.fake_api, status="running", uuids_only=True)
+            self.assertEqual("a\n", out.getvalue())
         self.fake_api.task.list.assert_called_once_with(
             deployment=mock_get_global.return_value,
             status=consts.TaskStatus.RUNNING)
-        mock_print_list.assert_called_once_with(
-            self.fake_api.task.list.return_value, ["uuid"],
-            print_header=False, print_border=False)
 
     def test_list_wrong_status(self):
         self.assertEqual(1, self.task.list(self.fake_api, deployment="fake",
@@ -833,18 +833,18 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="123456789")
     def test_list_output(self, mock_get_global):
         self.fake_api.task.list.return_value = [
-            fakes.FakeTask(uuid="UUID-1",
-                           created_at="2007-01-01T00:00:01",
-                           duration="0:00:00.000009",
-                           status="init",
-                           tags=[],
-                           deployment_name="some_name"),
-            fakes.FakeTask(uuid="UUID-2",
-                           created_at="2007-02-01T00:00:01",
-                           duration="0:00:00.000010",
-                           status="finished",
-                           tags=["tag-1", "tag-2"],
-                           deployment_name="some_name")]
+            {"uuid": "UUID-1",
+             "created_at": "2007-01-01T00:00:01",
+             "task_duration": 0.0000009,
+             "status": consts.TaskStatus.INIT,
+             "tags": [],
+             "deployment_name": "some_name"},
+            {"uuid": "UUID-2",
+             "created_at": "2007-02-01T00:00:01",
+             "task_duration": 123.99992,
+             "status": consts.TaskStatus.FINISHED,
+             "tags": ["tag-1", "tag-2"],
+             "deployment_name": "some_name"}]
 
         # It is a hard task to mock default value of function argument, so we
         # need to apply this workaround
@@ -864,17 +864,17 @@ class TaskCommandsTestCase(test.TestCase):
 
         self.assertEqual(
             "+--------+-----------------+---------------------"
-            "+----------------+----------+------------------+\n"
-            "| uuid   | deployment_name | created_at          "
-            "| duration       | status   | tags             |\n"
+            "+---------------+----------+------------------+\n"
+            "| UUID   | Deployment name | Created at          "
+            "| Load duration | Status   | Tag(s)           |\n"
             "+--------+-----------------+---------------------"
-            "+----------------+----------+------------------+\n"
-            "| UUID-1 | some_name       | 2007-01-01T00:00:01 "
-            "| 0:00:00.000009 | init     |                  |\n"
-            "| UUID-2 | some_name       | 2007-02-01T00:00:01 "
-            "| 0:00:00.000010 | finished | 'tag-1', 'tag-2' |\n"
+            "+---------------+----------+------------------+\n"
+            "| UUID-1 | some_name       | 2007-01-01 00:00:01 "
+            "| 0.0           | init     |                  |\n"
+            "| UUID-2 | some_name       | 2007-02-01 00:00:01 "
+            "| 124.0         | finished | 'tag-1', 'tag-2' |\n"
             "+--------+-----------------+---------------------"
-            "+----------------+----------+------------------+\n",
+            "+---------------+----------+------------------+\n",
             print_list_calls[0].getvalue())
 
     def test_delete(self):

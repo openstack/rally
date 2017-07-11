@@ -22,6 +22,7 @@ import unittest
 
 import mock
 
+from rally import api
 from tests.functional import utils
 
 
@@ -91,6 +92,11 @@ class TaskTestCase(unittest.TestCase):
     def _get_deployment_uuid(self, output):
         return re.search(
             r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
+            output).group("uuid")
+
+    def _get_task_uuid(self, output):
+        return re.search(
+            r"\trally task results (?P<uuid>[0-9a-f\-]{36})",
             output).group("uuid")
 
     def test_status(self):
@@ -404,9 +410,37 @@ class TaskTestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        rally("task start --task %s" % config.filename)
+        output = rally("task start --task %s --tag foo" % config.filename)
+        task_uuid = self._get_task_uuid(output)
+        # obtain the task object from the database, to check that CLI prints
+        # everything right
+        rapi = api.API(config_file=rally.config_filename)
+        task = rapi.task.get(task_id=task_uuid)
 
-        self.assertIn("finished", rally("task list --deployment MAIN"))
+        actual = rally("task list --deployment MAIN")
+        duration = "%s" % round(task["task_duration"], 3)
+        duration += " " * (13 - len(duration))
+        expected = (
+            "+--------------------------------------+-----------------+"
+            "---------------------+---------------+----------+--------+\n"
+            "| UUID                                 | Deployment name "
+            "| Created at          | Load duration | Status   | Tag(s) |\n"
+            "+--------------------------------------+-----------------+"
+            "---------------------+---------------+----------+--------+\n"
+            "| %(uuid)s | MAIN            | %(created_at)s "
+            "| %(duration)s | finished | 'foo'  |\n"
+            "+--------------------------------------+-----------------+"
+            "---------------------+---------------+----------+--------+\n" % {
+                "uuid": task_uuid,
+                "created_at": task["created_at"].replace("T", " "),
+                "duration": duration})
+
+        # self.assertEqual is not used here, since it doesn't show a big diff
+        # and error message become useless
+        if expected != actual:
+            self.fail("AssertionError: Expected output is not equal to actual."
+                      "\nExpected:\"\"\"\n%s\n\"\"\""
+                      "\nActual:\"\"\"\n%s\n\"\"\"" % (expected, actual))
 
         self.assertIn("There are no tasks",
                       rally("task list --status crashed"))
@@ -414,7 +448,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("finished", rally("task list --status finished"))
 
         self.assertIn(
-            "deployment_name", rally("task list --all-deployments"))
+            "Deployment name", rally("task list --all-deployments"))
 
         self.assertRaises(utils.RallyCliError,
                           rally, "task list --status not_existing_status")
@@ -428,26 +462,26 @@ class TaskTestCase(unittest.TestCase):
         self.assertEqual("", rally("task list --uuids-only"))
 
         # Validate against a single task
-        res = rally("task start --task %s" % config.filename)
-        task_uuids = []
-        for line in res.splitlines():
-            if "finished" in line:
-                task_uuids.append(line.split(" ")[1][:-1])
-        self.assertGreater(len(task_uuids), 0)
-        self.assertIn(task_uuids[0],
-                      rally("task list --uuids-only --deployment MAIN"))
+        res = rally("task start --task %s --tag " % config.filename)
+        task_uuid = self._get_task_uuid(res)
+        self.assertEqual(
+            task_uuid,
+            rally("task list --uuids-only --deployment MAIN").strip())
+        self.assertIn("finished", rally("task status --uuid %s" % task_uuid))
 
         # Validate against multiple tasks
+        task_uuids = [task_uuid]
         for i in range(2):
-            rally("task start --task %s" % config.filename)
-            self.assertIn("finished", rally("task list --deployment MAIN"))
+            out = rally("task start --task %s" % config.filename)
+            task_uuid = self._get_task_uuid(out)
+            task_uuids.append(task_uuid)
+            self.assertIn("finished",
+                          rally("task status --uuid %s" % task_uuid))
         res = rally("task list --uuids-only --deployment MAIN")
-        task_uuids = res.split()
-        self.assertEqual(3, len(task_uuids))
-        res = rally("task list --uuids-only --deployment MAIN "
-                    "--status finished")
-        for uuid in task_uuids:
-            self.assertIn(uuid, res)
+        self.assertEqual(set(task_uuids), set(res.strip().split("\n")))
+        res2 = rally("task list --uuids-only --deployment MAIN "
+                     "--status finished")
+        self.assertEqual(res, res2)
 
     def test_validate_is_valid(self):
         rally = utils.Rally()
