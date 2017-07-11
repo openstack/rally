@@ -30,7 +30,7 @@ from rally.task.processing import charts
 LOG = logging.getLogger(__name__)
 
 
-def configure(name=None, namespace="default", context=None):
+def configure(name, namespace="default", context=None):
     """Configure scenario by setting proper meta data.
 
     This can also transform plain function into scenario plugin, however
@@ -45,10 +45,9 @@ def configure(name=None, namespace="default", context=None):
     """
     def wrapper(cls):
         # TODO(boris-42): Drop this check as soon as we refactor rally report
-        if name:
-            if "." not in name.strip("."):
-                msg = (_("Scenario name must include a dot: '%s'") % name)
-                raise exceptions.RallyException(msg)
+        if "." not in name.strip("."):
+            msg = (_("Scenario name must include a dot: '%s'") % name)
+            raise exceptions.RallyException(msg)
 
         cls = plugin.configure(name=name, namespace=namespace)(cls)
         cls._meta_set("default_context", context or {})
