@@ -186,7 +186,10 @@ class LoadProfileChart(Chart):
         # NOTE(andreykurilin): There is a "start_time" field in workload
         #   object, but due to transformations in database layer, the
         #   microseconds can be not accurate enough.
-        self._tstamp_start = self._workload["data"][0]["timestamp"]
+        if self._workload["data"]:
+            self._tstamp_start = self._workload["data"][0]["timestamp"]
+        else:
+            self._tstamp_start = self._workload["start_time"]
 
     def _map_iteration_values(self, iteration):
         return iteration["timestamp"], iteration["duration"]

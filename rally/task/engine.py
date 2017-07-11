@@ -177,11 +177,12 @@ class ResultConsumer(object):
             self.results.sort(key=lambda x: x["timestamp"])
             self.workload.add_workload_data(self.workload_data_count,
                                             {"raw": self.results})
-
+        start_time = (self.load_started_at
+                      if self.load_started_at != float("inf") else None)
         self.workload.set_results(load_duration=load_duration,
                                   full_duration=(self.finish - self.start),
                                   sla_results=self.sla_checker.results(),
-                                  start_time=self.load_started_at, **results)
+                                  start_time=start_time, **results)
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):
