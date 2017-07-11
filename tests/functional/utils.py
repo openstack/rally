@@ -83,7 +83,8 @@ class Rally(object):
 
     def __init__(self, fake=False, force_new_db=False):
         if not os.path.exists(DEPLOYMENT_FILE):
-            subprocess.call(["rally", "deployment", "config"],
+            subprocess.call(["rally", "--log-file", "/dev/null",
+                             "deployment", "config"],
                             stdout=open(DEPLOYMENT_FILE, "w"))
 
         # NOTE(sskripnick): we should change home dir to avoid races
@@ -112,7 +113,6 @@ class Rally(object):
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
         self._created_files = []
-
         self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE,
              write_report=False)
 
@@ -190,8 +190,13 @@ class Rally(object):
         if not isinstance(cmd, list):
             cmd = cmd.split(" ")
         try:
+            if getjson:
+                cmd = self.args + ["--log-file", "/dev/null"] + cmd
+            else:
+                cmd = self.args + cmd
+
             output = encodeutils.safe_decode(subprocess.check_output(
-                self.args + cmd, stderr=subprocess.STDOUT, env=self.env))
+                cmd, stderr=subprocess.STDOUT, env=self.env))
 
             if write_report:
                 if not report_path:
