@@ -726,7 +726,7 @@ class ResultConsumerTestCase(test.TestCase):
         self.assertFalse(workload.add_workload_data.called)
         workload.set_results.assert_called_once_with(
             full_duration=1, sla_results=mock_sla_results, load_duration=0,
-            start_time=float("inf"))
+            start_time=None)
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
@@ -946,7 +946,7 @@ class ResultConsumerTestCase(test.TestCase):
             load_duration=0,
             sla_results=mock_sla_results,
             hooks_results=mock_hook_results,
-            start_time=float("inf"))
+            start_time=None)
 
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")

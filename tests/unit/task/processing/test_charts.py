@@ -236,6 +236,15 @@ class LoadProfileChartTestCase(test.TestCase):
          "kwargs": {"scale": 4},
          "expected": [("parallel iterations",
                        [(0.0, 0), (0.375, 1.0), (0.75, 1.0),
+                        (1.125, 0.6666666666666666), (1.5, 0)])]},
+        {"info": {"total_iteration_count": 2,
+                  "data": [],
+                  "load_duration": 1.0,
+                  "start_time": 0.0},
+         "iterations": [(0.0, 0.5), (0.5, 0.5)],
+         "kwargs": {"scale": 4},
+         "expected": [("parallel iterations",
+                       [(0.0, 0), (0.375, 1.0), (0.75, 1.0),
                         (1.125, 0.6666666666666666), (1.5, 0)])]})
     @ddt.unpack
     def test_add_iteration_and_render(self, info, iterations, kwargs,
