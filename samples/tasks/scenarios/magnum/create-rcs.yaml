@@ -23,6 +23,9 @@
           node_count: 2
         ca_certs:
           directory: "/home/stack"
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         manifests: ["artifacts/rc_nginx.yaml.k8s"]
@@ -45,3 +48,6 @@
           tls_disabled: True
         clusters:
           node_count: 2
+      sla:
+        failure_rate:
+          max: 0

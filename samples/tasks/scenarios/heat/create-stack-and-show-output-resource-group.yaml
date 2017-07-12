@@ -12,6 +12,9 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
 
   HeatStacks.create_stack_and_show_output_via_API:
     -
@@ -26,3 +29,6 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0

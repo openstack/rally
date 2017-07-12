@@ -21,6 +21,9 @@
           flavor:
             name: "{{flavor_name}}"
           servers_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
           volume_type: "test"
@@ -43,3 +46,6 @@
           servers_per_tenant: 2
         volume_types:
           - "test"
+      sla:
+        failure_rate:
+          max: 0

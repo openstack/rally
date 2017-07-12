@@ -35,6 +35,11 @@
                 "metadata_query": {"status": "terminated"},
                 "period": 300,
                 "groupby": "resource_id"
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

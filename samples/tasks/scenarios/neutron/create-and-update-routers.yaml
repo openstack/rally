@@ -24,3 +24,6 @@
             network: -1
             subnet: -1
             router: -1
+      sla:
+        failure_rate:
+          max: 0

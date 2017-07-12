@@ -17,3 +17,6 @@
                   name: "dummy"
               strategy:
                   name: "dummy"
+      sla:
+        failure_rate:
+          max: 0

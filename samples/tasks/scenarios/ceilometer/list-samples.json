@@ -33,6 +33,11 @@
             "args":{
                 "limit": 50,
                 "metadata_query": {"status": "not_active"}
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

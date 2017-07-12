@@ -19,6 +19,9 @@
           coe: "kubernetes"
         clusters:
           node_count: 2
+      sla:
+        failure_rate:
+          max: 0
     -
       runner:
         type: "constant"
@@ -38,6 +41,9 @@
           coe: "swarm"
         clusters:
           node_count: 2
+      sla:
+        failure_rate:
+          max: 0
     -
       runner:
         type: "constant"
@@ -56,3 +62,6 @@
           coe: "mesos"
         clusters:
           node_count: 2
+      sla:
+        failure_rate:
+          max: 0

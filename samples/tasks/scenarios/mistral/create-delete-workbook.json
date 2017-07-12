@@ -15,6 +15,11 @@
                     "tenants": 1,
                     "users_per_tenant": 1
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

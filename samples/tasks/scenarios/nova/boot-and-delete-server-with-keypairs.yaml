@@ -18,3 +18,6 @@
           users_per_tenant: 1
         network:
           start_cidr: "100.1.0.0/26"
+      sla:
+        failure_rate:
+          max: 0

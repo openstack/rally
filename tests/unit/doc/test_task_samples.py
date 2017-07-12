@@ -42,6 +42,28 @@ class TaskSampleTestCase(test.TestCase):
         with mock.patch("rally.api.API.check_db_revision"):
             self.rapi = api.API()
 
+    def _check_missing_sla_section(self, raw, filename):
+        re_sla_section = re.compile(r"\"?failure_rate\"?:")
+        matches = re_sla_section.findall(raw)
+        self.assertTrue(
+            len(matches),
+            "sla section is required in %s." % filename)
+
+    def test_check_missing_sla_section(self):
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
+            for filename in filenames:
+                full_path = os.path.join(dirname, filename)
+
+                if not full_path.startswith("./samples/tasks/scenarios/"):
+                    continue
+
+                if not re.search("\.(ya?ml|json)$", filename, flags=re.I):
+                    continue
+
+                with open(full_path) as task_file:
+                    data = task_file.read()
+                    self._check_missing_sla_section(data, task_file)
+
     def test_schema_is_valid(self):
         scenarios = set()
 

@@ -17,6 +17,11 @@
                     "container_format": "bare",
                     "images_per_tenant": 4
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

@@ -8,6 +8,11 @@
               "type": "constant",
               "times": 50,
               "concurrency": 5
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

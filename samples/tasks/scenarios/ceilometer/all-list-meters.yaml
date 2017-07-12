@@ -30,3 +30,6 @@
         limit: 50
         metadata_query:
           status: "terminated"
+      sla:
+        failure_rate:
+          max: 0

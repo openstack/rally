@@ -21,6 +21,11 @@
           "tenants": 1
         },
         "network": {}
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
+        }
       }
     }
   ]

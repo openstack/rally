@@ -16,7 +16,9 @@
         users:
           tenants: 3
           users_per_tenant: 2
-
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         flavor:
@@ -35,3 +37,6 @@
         network:
           start_cidr: "10.2.0.0/24"
           networks_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0

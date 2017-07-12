@@ -31,6 +31,11 @@
                     "hadoop_version": "2.3.0"
                 },
                 "network": {}
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

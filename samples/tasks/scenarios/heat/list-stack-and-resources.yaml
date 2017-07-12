@@ -12,3 +12,6 @@
         stacks:
           stacks_per_tenant: 2
           resources_per_stack: 10
+      sla:
+        failure_rate:
+          max: 0

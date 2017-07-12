@@ -28,6 +28,11 @@
                     },
                     "servers_per_tenant": 2
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         },
         {
@@ -58,8 +63,12 @@
                     "servers_per_tenant": 2
                 },
                 "volume_types": ["test"]
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
-
     ]
 }
