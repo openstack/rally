@@ -179,16 +179,16 @@ $GREEN  -R, --no-recreate     $NO_COLOR Do not remove target directory if it alr
 $GREEN  -y, --yes             $NO_COLOR Do not ask for confirmation: assume a 'yes' reply
                          to every question.
 $GREEN  -D, --dbtype TYPE     $NO_COLOR Select the database type. TYPE can be one of
-                         'sqlite', 'mysql', 'postgres'.
+                         'sqlite', 'mysql', 'postgresql'.
                          Default: sqlite
 $GREEN  --db-user USER        $NO_COLOR Database user to use. Only used when --dbtype
-                         is either 'mysql' or 'postgres'.
+                         is either 'mysql' or 'postgresql'.
 $GREEN  --db-password PASSWORD$NO_COLOR Password of the database user. Only used when
-                         --dbtype is either 'mysql' or 'postgres'.
+                         --dbtype is either 'mysql' or 'postgresql'.
 $GREEN  --db-host HOST        $NO_COLOR Database host. Only used when --dbtype is
-                         either 'mysql' or 'postgres'
+                         either 'mysql' or 'postgresql'
 $GREEN  --db-name NAME        $NO_COLOR Name of the database. Only used when --dbtype is
-                         either 'mysql' or 'postgres'
+                         either 'mysql' or 'postgresql'
 $GREEN  -p, --python EXE      $NO_COLOR The python interpreter to use. Default: $PYTHON
 $GREEN  --develop             $NO_COLOR Install Rally with editable source code try.
                          (Default: false)
@@ -398,7 +398,7 @@ install_db_connector () {
         mysql)
             pip install pymysql
             ;;
-        postgres)
+        postgresql)
             pip install psycopg2
             ;;
     esac
@@ -536,7 +536,7 @@ do
             shift
             DBTYPE=$1
             case $DBTYPE in
-                sqlite|mysql|postgres);;
+                sqlite|mysql|postgresql);;
                 *)
                     print_usage | die $EX_USAGE \
                         "An invalid option has been detected."
@@ -638,6 +638,8 @@ __EOF__
     DBAUTH="$DBUSER:$DBPASSWORD@$DBHOST"
     if [ "$DBTYPE" = 'mysql' ]; then
         DBCONNSTRING="$DBTYPE+pymysql://$DBAUTH/$DBNAME"
+    elif  [ "$DBTYPE" = 'postgresql' ]; then
+        DBCONNSTRING="$DBTYPE+psycopg2://$DBAUTH/$DBNAME"
     else
         DBCONNSTRING="$DBTYPE://$DBAUTH/$DBNAME"
     fi
