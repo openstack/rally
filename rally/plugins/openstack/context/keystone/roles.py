@@ -86,7 +86,7 @@ class RoleGenerator(context.Context):
                 role = self._get_role_object(context_role)
                 roles_dict[role.id] = role.name
                 LOG.debug("Adding role %(role_name)s having ID %(role_id)s "
-                          "to all users using %(threads)s threads" %
+                          "to all users using %(threads)s threads",
                           {"role_name": role.name,
                            "role_id": role.id,
                            "threads": threads})
@@ -104,7 +104,7 @@ class RoleGenerator(context.Context):
 
         def publish(queue):
             for role_id in self.context["roles"]:
-                LOG.debug("Removing role %s from all users" % role_id)
+                LOG.debug("Removing role %s from all users", role_id)
                 for user in self.context["users"]:
                     args = (role_id, user["id"], user["tenant_id"])
                     queue.append(args)

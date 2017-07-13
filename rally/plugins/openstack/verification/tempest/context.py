@@ -130,7 +130,7 @@ class TempestContext(context.VerifierContext):
 
         for role in roles:
             if role not in existing_roles:
-                LOG.debug("Creating role '%s'." % role)
+                LOG.debug("Creating role '%s'.", role)
                 self._created_roles.append(keystoneclient.roles.create(role))
 
     def _configure_option(self, section, option, value=None,
@@ -138,12 +138,12 @@ class TempestContext(context.VerifierContext):
         option_value = self.conf.get(section, option)
         if not option_value:
             LOG.debug("Option '%s' from '%s' section "
-                      "is not configured." % (option, section))
+                      "is not configured.", (option, section))
             if helper_method:
                 res = helper_method(*args, **kwargs)
                 if res:
                     value = res["name"] if "network" in option else res.id
-            LOG.debug("Setting value '%s' to option '%s'." % (value, option))
+            LOG.debug("Setting value '%s' to option '%s'.", (value, option))
             self.conf.set(section, option, value)
             LOG.debug("Option '{opt}' is configured. "
                       "{opt} = {value}".format(opt=option, value=value))
@@ -155,7 +155,7 @@ class TempestContext(context.VerifierContext):
     def _discover_image(self):
         LOG.debug("Trying to discover a public image with name matching "
                   "regular expression '%s'. Note that case insensitive "
-                  "matching is performed." % conf.CONF.tempest.img_name_regex)
+                  "matching is performed.", conf.CONF.tempest.img_name_regex)
         image_service = image.Image(self.clients)
         images = image_service.list_images(status="active",
                                            visibility="public")
@@ -163,22 +163,22 @@ class TempestContext(context.VerifierContext):
             if image_obj.name and re.match(conf.CONF.tempest.img_name_regex,
                                            image_obj.name, re.IGNORECASE):
                 LOG.debug("The following public "
-                          "image discovered: '%s'." % image_obj.name)
+                          "image discovered: '%s'.", image_obj.name)
                 return image_obj
 
         LOG.debug("There is no public image with name matching regular "
-                  "expression '%s'." % conf.CONF.tempest.img_name_regex)
+                  "expression '%s'.", conf.CONF.tempest.img_name_regex)
 
     def _download_image_from_source(self, target_path, image=None):
         if image:
             LOG.debug("Downloading image '%s' "
-                      "from Glance to %s." % (image.name, target_path))
+                      "from Glance to %s.", (image.name, target_path))
             with open(target_path, "wb") as image_file:
                 for chunk in self.clients.glance().images.data(image.id):
                     image_file.write(chunk)
         else:
             LOG.debug("Downloading image from %s "
-                      "to %s." % (conf.CONF.tempest.img_url, target_path))
+                      "to %s.", (conf.CONF.tempest.img_url, target_path))
             try:
                 response = requests.get(conf.CONF.tempest.img_url, stream=True)
             except requests.ConnectionError as err:
@@ -206,7 +206,7 @@ class TempestContext(context.VerifierContext):
     def _download_image(self):
         image_path = os.path.join(self.data_dir, self.image_name)
         if os.path.isfile(image_path):
-            LOG.debug("Image is already downloaded to %s." % image_path)
+            LOG.debug("Image is already downloaded to %s.", image_path)
             return
 
         if conf.CONF.tempest.img_name_regex:
@@ -221,7 +221,7 @@ class TempestContext(context.VerifierContext):
             image_obj = self._discover_image()
             if image_obj:
                 LOG.debug("Using image '%s' (ID = %s) "
-                          "for the tests." % (image_obj.name, image_obj.id))
+                          "for the tests.", (image_obj.name, image_obj.id))
                 return image_obj
 
         params = {
@@ -235,7 +235,7 @@ class TempestContext(context.VerifierContext):
         image_service = image.Image(self.clients)
         image_obj = image_service.create_image(**params)
         LOG.debug("Image '%s' (ID = %s) has been "
-                  "successfully created!" % (image_obj.name, image_obj.id))
+                  "successfully created!", (image_obj.name, image_obj.id))
         self._created_images.append(image_obj)
 
         return image_obj
@@ -244,7 +244,7 @@ class TempestContext(context.VerifierContext):
         novaclient = self.clients.nova()
 
         LOG.debug("Trying to discover a flavor with the following "
-                  "properties: RAM = %dMB, VCPUs = 1, disk = 0GB." % flv_ram)
+                  "properties: RAM = %dMB, VCPUs = 1, disk = 0GB.", flv_ram)
         for flavor in novaclient.flavors.list():
             if (flavor.ram == flv_ram and
                     flavor.vcpus == 1 and flavor.disk == 0):
@@ -262,10 +262,10 @@ class TempestContext(context.VerifierContext):
             "disk": 0
         }
         LOG.debug("Creating flavor '%s' with the following properties: RAM "
-                  "= %dMB, VCPUs = 1, disk = 0GB." % (params["name"], flv_ram))
+                  "= %dMB, VCPUs = 1, disk = 0GB.", (params["name"], flv_ram))
         flavor = novaclient.flavors.create(**params)
         LOG.debug("Flavor '%s' (ID = %s) has been "
-                  "successfully created!" % (flavor.name, flavor.id))
+                  "successfully created!", (flavor.name, flavor.id))
         self._created_flavors.append(flavor)
 
         return flavor
@@ -285,14 +285,14 @@ class TempestContext(context.VerifierContext):
     def _cleanup_tempest_roles(self):
         keystoneclient = self.clients.keystone()
         for role in self._created_roles:
-            LOG.debug("Deleting role '%s'." % role.name)
+            LOG.debug("Deleting role '%s'.", role.name)
             keystoneclient.roles.delete(role.id)
-            LOG.debug("Role '%s' has been deleted." % role.name)
+            LOG.debug("Role '%s' has been deleted.", role.name)
 
     def _cleanup_images(self):
         image_service = image.Image(self.clients)
         for image_obj in self._created_images:
-            LOG.debug("Deleting image '%s'." % image_obj.name)
+            LOG.debug("Deleting image '%s'.", image_obj.name)
             self.clients.glance().images.delete(image_obj.id)
             task_utils.wait_for_status(
                 image_obj, ["deleted", "pending_delete"],
@@ -301,15 +301,15 @@ class TempestContext(context.VerifierContext):
                 timeout=conf.CONF.benchmark.glance_image_delete_timeout,
                 check_interval=conf.CONF.benchmark.
                 glance_image_delete_poll_interval)
-            LOG.debug("Image '%s' has been deleted." % image_obj.name)
+            LOG.debug("Image '%s' has been deleted.", image_obj.name)
             self._remove_opt_value_from_config("compute", image_obj.id)
 
     def _cleanup_flavors(self):
         novaclient = self.clients.nova()
         for flavor in self._created_flavors:
-            LOG.debug("Deleting flavor '%s'." % flavor.name)
+            LOG.debug("Deleting flavor '%s'.", flavor.name)
             novaclient.flavors.delete(flavor.id)
-            LOG.debug("Flavor '%s' has been deleted." % flavor.name)
+            LOG.debug("Flavor '%s' has been deleted.", flavor.name)
             self._remove_opt_value_from_config("compute", flavor.id)
             self._remove_opt_value_from_config("orchestration", flavor.id)
 
@@ -325,6 +325,6 @@ class TempestContext(context.VerifierContext):
         for option, value in self.conf.items(section):
             if opt_value == value:
                 LOG.debug("Removing value '%s' of option '%s' "
-                          "from Tempest config file." % (opt_value, option))
+                          "from Tempest config file.", (opt_value, option))
                 self.conf.set(section, option, "")
-                LOG.debug("Value '%s' has been removed." % opt_value)
+                LOG.debug("Value '%s' has been removed.", opt_value)

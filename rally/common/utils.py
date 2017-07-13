@@ -284,14 +284,14 @@ class RandomNameGeneratorMixin(object):
 
         if len(task_id_part) < length:
             LOG.debug("Task ID %(task_id)s cannot be included in a random "
-                      "name because it is too short. Format: %(format)s" %
+                      "name because it is too short. Format: %(format)s",
                       {"task_id": task_id,
                        "format": cls.RESOURCE_NAME_FORMAT})
         elif any(char not in cls.RESOURCE_NAME_ALLOWED_CHARACTERS
                  for char in task_id_part):
             LOG.debug("Task ID %(task_id)s cannot be included in a random "
                       "name because it includes disallowed characters. "
-                      "Allowed characters are: %(chars)s" %
+                      "Allowed characters are: %(chars)s",
                       {"task_id": task_id,
                        "chars": cls.RESOURCE_NAME_ALLOWED_CHARACTERS})
         else:
@@ -771,7 +771,7 @@ class BackupHelper(object):
                 _LE("Failed to back up %s since it was already stored.") %
                 original_path)
         backup_path = generate_random_path(self._tempdir)
-        LOG.debug("Creating backup of %s in %s" % (original_path, backup_path))
+        LOG.debug("Creating backup of %s in %s", (original_path, backup_path))
         try:
             shutil.copytree(original_path, backup_path, symlinks=True)
         except Exception:
@@ -809,5 +809,5 @@ class BackupHelper(object):
     def __del__(self):
         for path in self._stored_data.values():
             if os.path.exists(path):
-                LOG.debug("Deleting %s" % path)
+                LOG.debug("Deleting %s", path)
                 shutil.rmtree(path)

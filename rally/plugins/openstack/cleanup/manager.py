@@ -79,7 +79,7 @@ class SeekAndDestroy(object):
         }
 
         LOG.debug(
-            "Deleting %(service)s %(resource)s object %(name)s (%(uuid)s)" %
+            "Deleting %(service)s %(resource)s object %(name)s (%(uuid)s)",
             msg_kw)
 
         try:
@@ -280,7 +280,7 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
                                            rutils.RandomNameGeneratorMixin):
         resource_classes.append(superclass)
     for manager in find_resource_managers(names, admin_required):
-        LOG.debug("Cleaning up %(service)s %(resource)s objects" %
+        LOG.debug("Cleaning up %(service)s %(resource)s objects",
                   {"service": manager._service,
                    "resource": manager._resource})
         SeekAndDestroy(manager, admin, users,

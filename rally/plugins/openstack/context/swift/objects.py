@@ -66,8 +66,8 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
 
         containers_per_tenant = self.config["containers_per_tenant"]
         containers_num = len(self.context["tenants"]) * containers_per_tenant
-        LOG.debug("Creating %d containers using %d threads." % (containers_num,
-                                                                threads))
+        LOG.debug("Creating %d containers using %d threads.", (containers_num,
+                                                               threads))
         containers_count = len(self._create_containers(self.context,
                                                        containers_per_tenant,
                                                        threads))
@@ -80,8 +80,8 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
 
         objects_per_container = self.config["objects_per_container"]
         objects_num = containers_num * objects_per_container
-        LOG.debug("Creating %d objects using %d threads." % (objects_num,
-                                                             threads))
+        LOG.debug("Creating %d objects using %d threads.", (objects_num,
+                                                            threads))
         objects_count = len(self._create_objects(self.context,
                                                  objects_per_container,
                                                  self.config["object_size"],

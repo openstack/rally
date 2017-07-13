@@ -101,7 +101,7 @@ def _log_worker_info(**info):
     """
     info_message = "\n\t".join(["%s: %s" % (k, v)
                                 for k, v in info.items()])
-    LOG.debug("Starting a worker.\n\t%s" % info_message)
+    LOG.debug("Starting a worker.\n\t%s", info_message)
 
 
 @validation.add_default("jsonschema")
@@ -352,7 +352,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
         info_message = "\n\t".join(["%s: %s" % (k, v)
                                     for k, v in info.items()])
         LOG.debug("Starting the %(name)s runner (task UUID: %(task)s)."
-                  "\n\t%(info)s" %
+                  "\n\t%(info)s",
                   {"name": self._meta_get("name"),
                    "task": self.task["uuid"],
                    "info": info_message})

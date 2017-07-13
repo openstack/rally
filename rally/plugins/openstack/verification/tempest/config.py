@@ -108,7 +108,7 @@ class TempestConfigfileManager(object):
                     uri = parse.urljoin(uri_v3, "/v2.0")
             else:
                 # Does Keystone released new version of API ?!
-                LOG.debug("Discovered keystone versions: %s" % versions)
+                LOG.debug("Discovered keystone versions: %s", versions)
                 raise exceptions.RallyException("Failed to discover keystone "
                                                 "auth urls.")
 

@@ -59,7 +59,7 @@ def check_output(*args, **kwargs):
         raise
 
     if output and debug_output:
-        LOG.debug("Subprocess output: '%s'" % encodeutils.safe_decode(output))
+        LOG.debug("Subprocess output: '%s'", encodeutils.safe_decode(output))
 
     return output
 

@@ -167,7 +167,7 @@ class SaharaScenario(scenario.OpenStackScenario):
                 floating_ip_pool)
 
         if floating_ip_pool_value:
-            LOG.debug("Using floating ip pool %s." % floating_ip_pool_value)
+            LOG.debug("Using floating ip pool %s.", floating_ip_pool_value)
             # If the pool is set by any means assign it to all node groups.
             # If the proxy node feature is enabled, Master Node Group and
             # Proxy Workers should have a floating ip pool set up
@@ -233,7 +233,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         replication_value = min(workers_count, 3)
         # 3 is a default Hadoop replication
         conf = sahara_consts.REPLICATION_CONFIGS[plugin_name][hadoop_version]
-        LOG.debug("Using replication factor: %s" % replication_value)
+        LOG.debug("Using replication factor: %s", replication_value)
         replication_config = {
             conf["target"]: {
                 conf["config_name"]: replication_value
@@ -394,7 +394,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         )
 
         if wait_active:
-            LOG.debug("Starting cluster `%s`" % name)
+            LOG.debug("Starting cluster `%s`", name)
             self._wait_active(cluster_object)
 
         return self.clients("sahara").clusters.get(cluster_object.id)
@@ -454,7 +454,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         :param cluster: cluster to delete
         """
 
-        LOG.debug("Deleting cluster `%s`" % cluster.name)
+        LOG.debug("Deleting cluster `%s`", cluster.name)
         self.clients("sahara").clusters.delete(cluster.id)
 
         utils.wait_for(
@@ -464,7 +464,7 @@ class SaharaScenario(scenario.OpenStackScenario):
             is_ready=self._is_cluster_deleted)
 
     def _is_cluster_deleted(self, cluster):
-        LOG.debug("Checking cluster `%s` to be deleted. Status: `%s`" %
+        LOG.debug("Checking cluster `%s` to be deleted. Status: `%s`",
                   (cluster.name, cluster.status))
         try:
             self.clients("sahara").clusters.get(cluster.id)
@@ -534,7 +534,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         status = self.clients("sahara").job_executions.get(je_id).info[
             "status"].lower()
 
-        LOG.debug("Checking for Job Execution %s to complete. Status: %s" %
+        LOG.debug("Checking for Job Execution %s to complete. Status: %s",
                   (je_id, status))
         if status in ("success", "succeeded"):
             return True
@@ -574,8 +574,8 @@ class SaharaScenario(scenario.OpenStackScenario):
         # Taking net id from context.
         net = self.context["tenant"]["networks"][0]
         neutron_net_id = net["id"]
-        LOG.debug("Using neutron network %s." % neutron_net_id)
-        LOG.debug("Using neutron router %s." % net["router_id"])
+        LOG.debug("Using neutron network %s.", neutron_net_id)
+        LOG.debug("Using neutron router %s.", net["router_id"])
 
         return neutron_net_id
 

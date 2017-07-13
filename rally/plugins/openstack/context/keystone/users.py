@@ -136,7 +136,7 @@ class UserGenerator(context.Context):
         use_sg, msg = network.wrap(clients, self).supports_extension(
             "security-group")
         if not use_sg:
-            LOG.debug("Security group context is disabled: %s" % msg)
+            LOG.debug("Security group context is disabled: %s", msg)
             return
 
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -261,7 +261,7 @@ class UserGenerator(context.Context):
         """Create tenants and users, using the broker pattern."""
         threads = self.config["resource_management_workers"]
 
-        LOG.debug("Creating %(tenants)d tenants using %(threads)s threads" %
+        LOG.debug("Creating %(tenants)d tenants using %(threads)s threads",
                   {"tenants": self.config["tenants"], "threads": threads})
         self.context["tenants"] = self._create_tenants()
 
@@ -271,7 +271,7 @@ class UserGenerator(context.Context):
                 msg=_("Failed to create the requested number of tenants."))
 
         users_num = self.config["users_per_tenant"] * self.config["tenants"]
-        LOG.debug("Creating %(users)d users using %(threads)s threads" %
+        LOG.debug("Creating %(users)d users using %(threads)s threads",
                   {"users": users_num, "threads": threads})
         self.context["users"] = self._create_users()
         for user in self.context["users"]:

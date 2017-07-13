@@ -227,7 +227,7 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
             delta = current_time - latest_status_update
             LOG.debug(
                 "Waiting for resource %(resource)s. Status changed: "
-                "%(latest)s => %(current)s in %(delta)s" %
+                "%(latest)s => %(current)s in %(delta)s",
                 {"resource": resource_repr, "latest": latest_status,
                  "current": status, "delta": delta})
 

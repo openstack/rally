@@ -97,7 +97,7 @@ class FlavorsGenerator(context.Context):
                 flavor.set_keys(extra_specs)
 
             self.context["flavors"][flavor_config["name"]] = flavor.to_dict()
-            LOG.debug("Created flavor with id '%s'" % flavor.id)
+            LOG.debug("Created flavor with id '%s'", flavor.id)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
     def cleanup(self):

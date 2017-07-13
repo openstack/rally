@@ -292,7 +292,7 @@ class HeatScenario(scenario.OpenStackScenario):
         """
         num_instances = self._count_instances(stack)
         expected_instances = num_instances + delta
-        LOG.debug("Scaling stack %s from %s to %s instances with %s" %
+        LOG.debug("Scaling stack %s from %s to %s instances with %s",
                   (stack.id, num_instances, expected_instances, output_key))
         with atomic.ActionTimer(self, "heat.scale_with_%s" % output_key):
             self._stack_webhook(stack, output_key)

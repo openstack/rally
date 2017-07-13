@@ -84,7 +84,7 @@ implement the Context API: the *setup()* method that creates a flavor and the
                     ram=self.config.get("ram", 1),
                     vcpus=self.config.get("vcpus", 1),
                     disk=self.config.get("disk", 1)).to_dict()
-                LOG.debug("Flavor with id '%s'" % self.context["flavor"]["id"])
+                LOG.debug("Flavor with id '%s'", self.context["flavor"]["id"])
             except Exception as e:
                 msg = "Can't create flavor: %s" % e.message
                 if logging.is_debug():
@@ -97,7 +97,7 @@ implement the Context API: the *setup()* method that creates a flavor and the
             try:
                 nova = osclients.Clients(self.context["admin"]["credential"]).nova()
                 nova.flavors.delete(self.context["flavor"]["id"])
-                LOG.debug("Flavor '%s' deleted" % self.context["flavor"]["id"])
+                LOG.debug("Flavor '%s' deleted", self.context["flavor"]["id"])
             except Exception as e:
                 msg = "Can't delete flavor: %s" % e.message
                 if logging.is_debug():

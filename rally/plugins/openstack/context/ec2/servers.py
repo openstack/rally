@@ -73,8 +73,8 @@ class EC2ServerGenerator(context.Context):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            LOG.debug("Booting servers for tenant %s "
-                      % (user["tenant_id"]))
+            LOG.debug("Booting servers for tenant %s ",
+                      (user["tenant_id"]))
             ec2_scenario = ec2_utils.EC2Scenario({
                 "user": user,
                 "task": self.context["task"],

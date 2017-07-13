@@ -44,7 +44,7 @@ def generate_cidr(start_cidr="10.2.0.0/24"):
     :returns: next available CIDR str
     """
     cidr = str(netaddr.IPNetwork(start_cidr).next(next(cidr_incr)))
-    LOG.debug("CIDR generated: %s" % cidr)
+    LOG.debug("CIDR generated: %s", cidr)
     return cidr
 
 

@@ -243,7 +243,7 @@ def _read_requirements():
     """Read all rally requirements."""
     LOG.info("Reading rally requirements...")
     for file_name in RALLY_REQUIREMENTS_FILES:
-        LOG.debug("Try to read '%s'." % file_name)
+        LOG.debug("Try to read '%s'.", file_name)
         with open(file_name) as f:
             data = f.read()
         LOG.info("Parsing requirements from %s." % file_name)
@@ -263,7 +263,7 @@ def _sync():
     LOG.info("Obtaining global-requirements...")
     for i in range(0, len(GLOBAL_REQUIREMENTS_LOCATIONS)):
         url = GLOBAL_REQUIREMENTS_LOCATIONS[i] + GLOBAL_REQUIREMENTS_FILENAME
-        LOG.debug("Try to obtain global-requirements from %s" % url)
+        LOG.debug("Try to obtain global-requirements from %s", url)
         try:
             raw_gr = requests.get(url).text
         except requests.ConnectionError as e:
@@ -309,7 +309,7 @@ def format_requirements():
 def add_uppers():
     """Obtains latest version of packages and put them to requirements."""
     for filename, requirements in _sync():
-        LOG.info("Obtaining latest versions of packages for %s." % filename)
+        LOG.info("Obtaining latest versions of packages for %s.", filename)
         for req in requirements:
             if isinstance(req, Requirement):
                 if isinstance(req.version, dict) and not req.version["max"]:

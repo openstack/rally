@@ -63,8 +63,8 @@ class Host(object):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         proc.wait()
-        LOG.debug("Host %s is ICMP %s"
-                  % (server.ip.format(), proc.returncode and "down" or "up"))
+        LOG.debug("Host %s is ICMP %s",
+                  (server.ip.format(), proc.returncode and "down" or "up"))
         if proc.returncode == 0:
             server.status = cls.ICMP_UP_STATUS
         else:

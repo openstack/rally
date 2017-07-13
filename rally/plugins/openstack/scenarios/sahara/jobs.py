@@ -95,7 +95,7 @@ class CreateLaunchJobSequence(utils.SaharaScenario):
         launch_job = CreateLaunchJob(self.context)
 
         for idx, job in enumerate(jobs):
-            LOG.debug("Launching Job. Sequence #%d" % idx)
+            LOG.debug("Launching Job. Sequence #%d", idx)
             launch_job.run(job["job_type"], job["configs"], idx)
 
 
@@ -130,7 +130,7 @@ class CreateLaunchJobSequenceWithScaling(utils.SaharaScenario,):
             # correct 'count' values.
             cluster = self.clients("sahara").clusters.get(cluster_id)
 
-            LOG.debug("Scaling cluster %s with delta %d" %
+            LOG.debug("Scaling cluster %s with delta %d",
                       (cluster.name, delta))
             if delta == 0:
                 # Zero scaling makes no sense.
