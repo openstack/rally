@@ -26,6 +26,7 @@ import jsonschema
 from oslo_config import cfg
 import requests
 from requests.packages import urllib3
+import six
 
 from rally.common import opts
 from rally.common.i18n import _, _LI, _LE
@@ -73,7 +74,9 @@ def api_wrapper(path, method):
                 try:
                     return func(self, *args, **kwargs)
                 except Exception as e:
-                    raise exceptions.make_exception(e)
+                    six.reraise(exceptions.RallyException,
+                                exceptions.make_exception(e),
+                                sys.exc_info()[2])
 
         inner.path = path
         inner.method = method
