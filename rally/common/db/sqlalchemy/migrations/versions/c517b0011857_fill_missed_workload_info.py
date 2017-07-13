@@ -77,6 +77,18 @@ def upgrade():
                          "chart": "OutputStackedAreaChart"})
                     del itr["scenario_output"]
                 require_updating = True
+            if isinstance(itr["atomic_actions"], dict):
+                new_atomic_actions = []
+                started_at = itr["timestamp"]
+                for name, d in itr["atomic_actions"].items():
+                    finished_at = started_at + d
+                    new_atomic_actions.append(
+                        {"name": name, "children": [],
+                         "started_at": started_at,
+                         "finished_at": finished_at})
+                    started_at = finished_at
+                itr["atomic_actions"] = new_atomic_actions
+                require_updating = True
 
         if require_updating:
             connection.execute(workload_data_helper.update().where(

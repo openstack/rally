@@ -15,7 +15,6 @@
 
 """Tests for db.api layer."""
 
-import collections
 import copy
 import datetime as dt
 
@@ -181,65 +180,6 @@ class TasksTestCase(test.DBTestCase):
                           db.task_delete,
                           "fcd0483f-a405-44c4-b712-99c9e52254eb",
                           status=consts.TaskStatus.FINISHED)
-
-    def test_task_get_detailed__transform_atomics(self):
-        task_id = self._create_task()["uuid"]
-        subtask = db.subtask_create(task_id, title="foo")
-
-        workload = db.workload_create(
-            task_id, subtask["uuid"], name="atata", description="foo",
-            position=0, args={}, context={}, sla={}, runner={},
-            runner_type="r", hooks=[])
-
-        workloads_data = [
-            {"raw": [
-                {"duration": 1, "timestamp": 1, "idle_duration": 1,
-                 "error": None, "output": None,
-                 "atomic_actions": collections.OrderedDict(
-                     [("foo", 1), ("bar", 2)])},
-                {"duration": 1, "timestamp": 1, "idle_duration": 1,
-                 "error": None, "output": None,
-                 "atomic_actions": collections.OrderedDict(
-                     [("xxx", 1), ("yyy", 2)])},
-            ]},
-            {"raw": [
-                {"duration": 1, "timestamp": 1, "idle_duration": 1,
-                 "error": None, "output": None,
-                 "atomic_actions": collections.OrderedDict(
-                     [("xxx", 1), ("yyy", 2), ("zzz", 2)])}
-            ]}
-        ]
-
-        for i, data in enumerate(workloads_data):
-            db.workload_data_create(task_id, workload["uuid"], i, data)
-
-        db.workload_set_results(workload_uuid=workload["uuid"],
-                                subtask_uuid=workload["subtask_uuid"],
-                                task_uuid=workload["task_uuid"],
-                                sla_results=[{"success": True}],
-                                load_duration=13, full_duration=42,
-                                start_time=77.33)
-
-        task = db.task_get(task_id, detailed=True)
-        self.assertEqual(1, len(task["subtasks"]))
-        self.assertEqual(1, len(task["subtasks"][0]["workloads"]))
-        workload = task["subtasks"][0]["workloads"][0]
-        self.assertEqual(
-            [[{"started_at": 1, "finished_at": 2, "children": [],
-               "name": "foo"},
-              {"started_at": 2, "finished_at": 4, "children": [],
-               "name": "bar"}],
-             [{"started_at": 1, "finished_at": 2, "children": [],
-               "name": "xxx"},
-              {"started_at": 2, "finished_at": 4, "children": [],
-               "name": "yyy"}],
-             [{"started_at": 1, "finished_at": 2, "children": [],
-               "name": "xxx"},
-              {"started_at": 2, "finished_at": 4, "children": [],
-               "name": "yyy"},
-              {"started_at": 4, "finished_at": 6, "children": [],
-               "name": "zzz"}]],
-            [w["atomic_actions"] for w in workload["data"]])
 
     def test_task_create_and_get_detailed(self):
         validation_result = {
