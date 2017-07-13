@@ -90,7 +90,7 @@
             concurrency: 1
           sla:
             failure_rate:
-              max: 0
+              max: 100
     -
       title: Test main Neutron actions
       workloads:

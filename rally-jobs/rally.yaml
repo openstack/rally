@@ -433,7 +433,7 @@
           images_per_tenant: 1
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
     -
       runner:
@@ -451,7 +451,7 @@
           images_per_tenant: 1
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
   GlanceImages.create_and_get_image:
     -
@@ -472,7 +472,7 @@
             version: 2
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
   GlanceImages.create_and_delete_image:
 #    -
@@ -514,7 +514,7 @@
             version: 2
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
 #
 #    -
@@ -579,7 +579,7 @@
             version: 2
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
   GlanceImages.create_image_and_boot_instances:
     -
@@ -600,7 +600,7 @@
           users_per_tenant: 1
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
   GlanceImages.create_and_update_image:
     -
@@ -618,7 +618,7 @@
           users_per_tenant: 2
       sla:
         failure_rate:
-          max: 0
+          max: 100
 
   SwiftObjects.create_container_and_object_then_list_objects:
     -
