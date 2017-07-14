@@ -442,8 +442,8 @@ class CreateAndAttachVolume(cinder_utils.CinderBasic,
         server = self._boot_server(image, flavor, **create_vm_params)
         volume = self.cinder.create_volume(size, **create_volume_params)
 
-        attachment = self._attach_volume(server, volume)
-        self._detach_volume(server, volume, attachment)
+        self._attach_volume(server, volume)
+        self._detach_volume(server, volume)
 
         self.cinder.delete_volume(volume)
         self._delete_server(server)
@@ -480,8 +480,8 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
 
         server = self.get_random_server()
 
-        attachment = self._attach_volume(server, volume)
-        self._detach_volume(server, volume, attachment)
+        self._attach_volume(server, volume)
+        self._detach_volume(server, volume)
 
         self.cinder.delete_snapshot(snapshot)
         self.cinder.delete_volume(volume)
@@ -553,7 +553,7 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
 
         nes_objs.reverse()
         for server, volume, snapshot, attachment in nes_objs:
-            self._detach_volume(server, volume, attachment)
+            self._detach_volume(server, volume)
             self.cinder.delete_snapshot(snapshot)
             self.cinder.delete_volume(volume)
 

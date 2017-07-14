@@ -229,8 +229,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(
             fake_server, mock_service.create_volume.return_value)
         scenario._detach_volume.assert_called_once_with(
-            fake_server, mock_service.create_volume.return_value,
-            scenario._attach_volume.return_value)
+            fake_server, mock_service.create_volume.return_value)
 
         mock_service.delete_volume.assert_called_once_with(
             mock_service.create_volume.return_value)
@@ -283,8 +282,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(
             scenario.get_random_server.return_value, volume)
         scenario._detach_volume.assert_called_once_with(
-            scenario.get_random_server.return_value, volume,
-            scenario._attach_volume.return_value)
+            scenario.get_random_server.return_value, volume)
         mock_service.delete_volume.assert_called_once_with(volume)
 
     @mock.patch("random.choice")
@@ -299,7 +297,6 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario.run(volume_type="type")
 
         fake_volume = mock_service.create_volume.return_value
-        fake_attach = scenario._attach_volume.return_value
         fake_server = scenario.get_random_server.return_value
         fake_snapshot = mock_service.create_snapshot.return_value
 
@@ -311,8 +308,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
-                                                        fake_volume,
-                                                        fake_attach)
+                                                        fake_volume)
         mock_service.delete_volume.assert_called_once_with(fake_volume)
 
     @mock.patch("random.randint")
@@ -343,8 +339,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
             mock_service.create_snapshot.return_value)
         scenario._detach_volume.assert_called_once_with(
             scenario.get_random_server.return_value,
-            mock_service.create_volume.return_value,
-            scenario._attach_volume.return_value)
+            mock_service.create_volume.return_value)
 
     @mock.patch("random.randint")
     def test_create_nested_snapshots_and_attach_volume_2(self, mock_randint):
@@ -393,7 +388,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
             [mock.call(snapshot) for snapshot in fake_snapshots])
         scenario._detach_volume.assert_has_calls(
             [mock.call(scenario.get_random_server.return_value,
-                       fake_volumes[i], fake_attachs[i])
+                       fake_volumes[i])
              for i in range(len(fake_volumes))])
 
     def test_create_volume_backup(self):

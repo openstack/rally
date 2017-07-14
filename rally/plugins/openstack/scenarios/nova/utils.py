@@ -714,13 +714,21 @@ class NovaScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("nova.detach_volume")
     def _detach_volume(self, server, volume, attachment=None):
+        """Detach volume from the server.
+
+        :param server: A server object to detach volume from.
+        :param volume: A volume object to detach from the server.
+        :param attachment: DEPRECATED
+        """
+        if attachment:
+            LOG.warning("An argument `attachment` of `_detach_volume` is "
+                        "deprecated in favor of `volume` argument since "
+                        "Rally 0.10.0")
+
         server_id = server.id
-        # NOTE(chenhb): Recommend the use of attachment.The use of
-        # volume.id is retained mainly for backward compatibility.
-        attachment_id = attachment.id if attachment else volume.id
 
         self.clients("nova").volumes.delete_server_volume(server_id,
-                                                          attachment_id)
+                                                          volume.id)
         utils.wait_for_status(
             volume,
             ready_statuses=["available"],

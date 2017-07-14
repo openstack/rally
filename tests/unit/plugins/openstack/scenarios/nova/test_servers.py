@@ -550,8 +550,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
-                                                        fake_volume,
-                                                        fake_attachment)
+                                                        fake_volume)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._resize.assert_called_once_with(fake_server, to_flavor)
 
@@ -562,8 +561,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
         if do_delete:
             scenario._detach_volume.assert_called_once_with(fake_server,
-                                                            fake_volume,
-                                                            fake_attachment)
+                                                            fake_volume)
             cinder.delete_volume.assert_called_once_with(fake_volume)
             scenario._delete_server.assert_called_once_with(fake_server,
                                                             force=False)
@@ -805,8 +803,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
-                                                        fake_volume,
-                                                        fake_attachment)
+                                                        fake_volume)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._live_migrate.assert_called_once_with(fake_server,
                                                        "host_name",

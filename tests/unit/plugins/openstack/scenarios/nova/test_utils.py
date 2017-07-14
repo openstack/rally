@@ -635,7 +635,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._detach_volume(self.server, self.volume, attach)
         (self.clients("nova").volumes.delete_server_volume
-         .assert_called_once_with(self.server.id, attach.id))
+         .assert_called_once_with(self.server.id, self.volume.id))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.detach_volume")
 
