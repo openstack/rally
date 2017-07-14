@@ -65,6 +65,22 @@ class FileType(types.ResourceType):
             return f.read()
 
 
+@plugin.configure(name="expand_user_path")
+class ExpandUserPath(types.ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Return content of the file by its path.
+
+        :param clients: openstack admin client handles
+        :param resource_config: path to file
+
+        :returns: content of the file
+        """
+
+        return os.path.expanduser(resource_config)
+
+
 @plugin.configure(name="file_dict")
 class FileTypeDict(types.ResourceType):
 
