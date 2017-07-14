@@ -198,20 +198,23 @@ class Rally(object):
             output = encodeutils.safe_decode(subprocess.check_output(
                 cmd, stderr=subprocess.STDOUT, env=self.env))
 
+            if getjson:
+                return json.loads(output)
+
+            return output
+
+        except subprocess.CalledProcessError as e:
+            output = e.output
+            raise RallyCliError(cmd, e.returncode, e.output)
+        finally:
             if write_report:
                 if not report_path:
                     report_path = self.gen_report_path(
                         suffix=suffix, extension=extension, keep_old=keep_old)
                 with open(report_path, "a") as rep:
                     if not raw:
-                        rep.write("\n%s:\n" % " ".join(self.args + cmd))
+                        rep.write("\n%s:\n" % " ".join(cmd))
                     rep.write("%s\n" % output)
-
-            if getjson:
-                return json.loads(output)
-            return output
-        except subprocess.CalledProcessError as e:
-            raise RallyCliError(cmd, e.returncode, e.output)
 
 
 def get_global(global_key, env):
