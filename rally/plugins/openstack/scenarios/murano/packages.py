@@ -19,12 +19,14 @@ import os
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.murano import utils
+from rally.task import types
 from rally.task import validation
 
 
 """Scenarios for Murano packages."""
 
 
+@types.convert(package={"type": "expand_user_path"})
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
@@ -55,6 +57,7 @@ class ImportAndListPackages(utils.MuranoScenario):
             os.remove(package_path)
 
 
+@types.convert(package={"type": "expand_user_path"})
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
@@ -82,6 +85,7 @@ class ImportAndDeletePackage(utils.MuranoScenario):
             os.remove(package_path)
 
 
+@types.convert(package={"type": "expand_user_path"})
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
@@ -118,6 +122,7 @@ class PackageLifecycle(utils.MuranoScenario):
             os.remove(package_path)
 
 
+@types.convert(package={"type": "expand_user_path"})
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
