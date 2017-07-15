@@ -19,64 +19,15 @@ import collections
 import copy
 import datetime as dt
 
-import ddt
 import mock
 from six import moves
 
 from rally.common import db
-from rally.common.db import api as db_api
 from rally import consts
 from rally import exceptions
 from tests.unit import test
 
 NOW = dt.datetime.now()
-
-
-class FakeSerializable(object):
-    def __init__(self, **kwargs):
-        self.dict = {}
-        self.dict.update(kwargs)
-
-    def _as_dict(self):
-        return self.dict
-
-
-@ddt.ddt
-class SerializeTestCase(test.DBTestCase):
-    def setUp(self):
-        super(SerializeTestCase, self).setUp()
-
-    @ddt.data(
-        {"data": 1, "serialized": 1},
-        {"data": 1.1, "serialized": 1.1},
-        {"data": "a string", "serialized": "a string"},
-        {"data": NOW, "serialized": NOW},
-        {"data": {"k1": 1, "k2": 2}, "serialized": {"k1": 1, "k2": 2}},
-        {"data": [1, "foo"], "serialized": [1, "foo"]},
-        {"data": ["foo", 1, {"a": "b"}], "serialized": ["foo", 1, {"a": "b"}]},
-        {"data": FakeSerializable(a=1), "serialized": {"a": 1}},
-        {"data": [FakeSerializable(a=1),
-                  FakeSerializable(b=FakeSerializable(c=1))],
-         "serialized": [{"a": 1}, {"b": {"c": 1}}]},
-    )
-    @ddt.unpack
-    def test_serialize(self, data, serialized):
-        @db_api.serialize
-        def fake_method():
-            return data
-
-        results = fake_method()
-        self.assertEqual(results, serialized)
-
-    def test_serialize_value_error(self):
-        @db_api.serialize
-        def fake_method():
-            class Fake(object):
-                pass
-
-            return Fake()
-
-        self.assertRaises(ValueError, fake_method)
 
 
 class ConnectionTestCase(test.DBTestCase):
@@ -500,12 +451,11 @@ class WorkloadTestCase(test.DBTestCase):
                                       runner_type=w_runner_type)
 
         workload.pop("uuid")
-        workload.pop("start_time")
         workload.pop("created_at")
         workload.pop("updated_at")
 
         self.assertEqual(
-            {"_profiling_data": "", "context_execution": {},
+            {"context_execution": {},
              "statistics": {},
              "subtask_uuid": self.subtask_uuid,
              "task_uuid": self.task_uuid,
