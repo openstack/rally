@@ -191,7 +191,7 @@ Documentation
   * Add descriptive docstrings for plugins based on OutputChart
   * Register these plugins in `Rally Plugins Reference`__
 
-__ http://docs.openstack.org/developer/rally/plugin/plugin_reference.html
+__ https://docs.openstack.org/rally/latest/plugins/plugin_reference.html
 
 * Documentation tox fix
 
@@ -204,11 +204,11 @@ __ http://docs.openstack.org/developer/rally/plugin/plugin_reference.html
 
 * The design of `Rally Plugins Reference`__ page was improved
 
-__ http://docs.openstack.org/developer/rally/plugin/plugin_reference.html
+__ https://docs.openstack.org/rally/latest/plugins/plugin_reference.html
 
 * New page was added - `CLI references`__
 
-__ http://docs.openstack.org/developer/rally/cli/cli_reference.html
+__ https://docs.openstack.org/rally/latest/cli_reference.html
 
 Thanks
 ~~~~~~

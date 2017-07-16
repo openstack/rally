@@ -165,7 +165,7 @@ Verify
 
 Rally can run different subunit-based testing tools against a target
 environment, for example `tempest
-<http://docs.openstack.org/developer/tempest/>`_ for OpenStack.
+<https://docs.openstack.org/tempest/latest/>`_ for OpenStack.
 
 .. _glossary-verification:
 

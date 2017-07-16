@@ -387,7 +387,7 @@ Documentation
 * Re-use openstack theme for building docs outside rtd.
 
   `Rally Docs at docs.openstack.org
-  <http://docs.openstack.org/developer/rally/>`_
+  <https://docs.openstack.org/rally/latest/>`_
 
 * Add page for Verification component
 

@@ -258,4 +258,4 @@ For more information about Style Commandments, read the
 .. _unit tests: http://en.wikipedia.org/wiki/Unit_testing
 .. _Tox: https://tox.readthedocs.org/en/latest/
 .. _functional tests: https://en.wikipedia.org/wiki/Functional_testing
-.. _OpenStack Style Commandments manual:  http://docs.openstack.org/developer/hacking/
+.. _OpenStack Style Commandments manual:  https://docs.openstack.org/hacking/latest/
