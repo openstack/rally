@@ -28,7 +28,7 @@ class PluginCommands(object):
     def _print_plugins_list(plugin_list):
         formatters = {
             "Name": lambda p: p.get_name(),
-            "Namespace": lambda p: p.get_namespace(),
+            "Namespace": lambda p: p.get_platform(),
             "Title": lambda p: p.get_info()["title"],
             "Plugin base": lambda p: p._get_base().__name__
         }
@@ -46,7 +46,7 @@ class PluginCommands(object):
     def show(self, api, name, namespace=None):
         """Show detailed information about a Rally plugin."""
         name_lw = name.lower()
-        all_plugins = plugin.Plugin.get_all(namespace=namespace)
+        all_plugins = plugin.Plugin.get_all(platform=namespace)
         found = [p for p in all_plugins if name_lw in p.get_name().lower()]
         exact_match = [p for p in found if name_lw == p.get_name().lower()]
 
@@ -91,7 +91,7 @@ class PluginCommands(object):
     @plugins.ensure_plugins_are_loaded
     def list(self, api, name=None, namespace=None, base_cls=None):
         """List all Rally plugins that match name and namespace."""
-        all_plugins = plugin.Plugin.get_all(namespace=namespace)
+        all_plugins = plugin.Plugin.get_all(platform=namespace)
         matched = all_plugins
         if name:
             name_lw = name.lower()

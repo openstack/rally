@@ -59,7 +59,7 @@ class ArgsValidator(validation.Validator):
     def validate(self, credentials, config, plugin_cls, plugin_cfg):
         scenario = plugin_cls
         name = scenario.get_name()
-        namespace = scenario.get_namespace()
+        namespace = scenario.get_platform()
         scenario = scenario().run
         args, _varargs, varkwargs, defaults = inspect.getargspec(scenario)
 

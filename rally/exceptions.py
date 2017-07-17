@@ -102,13 +102,13 @@ class ThreadTimeoutException(RallyException):
 class PluginNotFound(NotFoundException):
     error_code = 459
     msg_fmt = _("There is no plugin with name: `%(name)s` in "
-                "%(namespace)s namespace.")
+                "%(platform)s platform.")
 
 
 class PluginWithSuchNameExists(RallyException):
     error_code = 516
     msg_fmt = _("Plugin with such name: %(name)s already exists in "
-                "%(namespace)s namespace. It's module allocates at "
+                "%(platform)s platform. It's module allocates at "
                 "%(existing_path)s. You are trying to add plugin whose module "
                 "allocates at %(new_path)s.")
 

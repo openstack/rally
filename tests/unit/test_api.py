@@ -1030,7 +1030,7 @@ class FakeVerifierManager(object):
         return cls.NAME
 
     @classmethod
-    def get_namespace(cls):
+    def get_platform(cls):
         return cls.NAMESPACE
 
     @classmethod
@@ -1059,7 +1059,7 @@ class VerifierAPITestCase(test.TestCase):
                                      FakeVerifierManager.__name__)}],
             self.verifier_inst.list_plugins(namespace=namespace))
         mock_verifier_manager_get_all.assert_called_once_with(
-            namespace=namespace)
+            platform=namespace)
 
     @mock.patch("rally.api.objects.Verifier.get")
     def test_get(self, mock_verifier_get):
@@ -1097,14 +1097,15 @@ class VerifierAPITestCase(test.TestCase):
         extra_settings = {"verifier_specific_option": "value_for_it"}
 
         verifier_obj = mock_verifier_create.return_value
-        verifier_obj.manager._meta_get.side_effect = [namespace, source]
+        verifier_obj.manager.get_platform.return_value = namespace
+        verifier_obj.manager._meta_get.side_effect = [source]
 
         verifier_uuid = self.verifier_inst.create(
             name=name, vtype=vtype, version=version,
             system_wide=system_wide, extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          namespace=None)
+                                                          platform=None)
         mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=None, system_wide=system_wide, version=version,
@@ -1140,7 +1141,7 @@ class VerifierAPITestCase(test.TestCase):
                           extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          namespace=namespace)
+                                                          platform=namespace)
         mock___verifier__get.assert_called_once_with(name)
         self.assertFalse(mock_verifier_create.called)
 
@@ -1170,7 +1171,7 @@ class VerifierAPITestCase(test.TestCase):
                           extra_settings=extra_settings)
 
         mock_verifier_manager_get.assert_called_once_with(vtype,
-                                                          namespace=namespace)
+                                                          platform=namespace)
         mock___verifier__get.assert_called_once_with(name)
         mock_verifier_create.assert_called_once_with(
             name=name, source=source, system_wide=system_wide, version=version,

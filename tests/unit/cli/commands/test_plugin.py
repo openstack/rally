@@ -122,7 +122,7 @@ class PluginCommandsTestCase(test.TestCase):
                 mock_plugin_get_all.return_value = [self.Plugin2, self.Plugin3]
                 plugin_cmd.PluginCommands().show(None, "p", "p2_ns")
                 self.assertEqual(out.getvalue(), "Multiple plugins found:\n")
-                mock_plugin_get_all.assert_called_once_with(namespace="p2_ns")
+                mock_plugin_get_all.assert_called_once_with(platform="p2_ns")
 
         mock_plugin_commands__print_plugins_list.assert_called_once_with([
             self.Plugin2, self.Plugin3])

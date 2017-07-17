@@ -31,7 +31,7 @@ class ScenarioConfigureTestCase(test.TestCase):
                 pass
 
         self.assertEqual("fooscenario.name", SomeScenario.get_name())
-        self.assertEqual("testing", SomeScenario.get_namespace())
+        self.assertEqual("testing", SomeScenario.get_platform())
         SomeScenario.unregister()
 
 
@@ -85,7 +85,7 @@ class ScenarioTestCase(test.TestCase):
 
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
-            namespace = s.get_namespace()
+            namespace = s.get_platform()
             results = []
             for context_name, context_conf in s.get_default_context().items():
                 results.extend(context.Context.validate(

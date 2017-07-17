@@ -614,10 +614,10 @@ class _Verifier(APIGroup):
         :param namespace: Verifier plugin namespace
         """
         return [{"name": p.get_name(),
-                 "namespace": p.get_namespace(),
+                 "namespace": p.get_platform(),
                  "description": p.get_info()["title"],
                  "location": "%s.%s" % (p.__module__, p.__name__)}
-                for p in vmanager.VerifierManager.get_all(namespace=namespace)]
+                for p in vmanager.VerifierManager.get_all(platform=namespace)]
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/verifier/create", method="POST")
     def create(self, name, vtype, namespace=None, source=None, version=None,
@@ -637,7 +637,7 @@ class _Verifier(APIGroup):
         :param extra_settings: Extra installation settings for verifier
         """
         # check that the specified verifier type exists
-        vmanager.VerifierManager.get(vtype, namespace=namespace)
+        vmanager.VerifierManager.get(vtype, platform=namespace)
 
         LOG.info("Creating verifier '%s'.", name)
 
@@ -655,7 +655,7 @@ class _Verifier(APIGroup):
 
         properties = {}
 
-        default_namespace = verifier.manager._meta_get("namespace")
+        default_namespace = verifier.manager.get_platform()
         if not namespace and default_namespace:
             properties["namespace"] = default_namespace
 

@@ -185,20 +185,20 @@ class ContextManagerTestCase(test.TestCase):
         mock_context_get.return_value = a_ctx
 
         b_ctx = mock.Mock(return_value=OrderableMock())
-        c_ctx = mock.Mock(get_namespace=lambda: "foo",
+        c_ctx = mock.Mock(get_platform=lambda: "foo",
                           return_value=OrderableMock())
-        d_ctx = mock.Mock(get_namespace=lambda: "default",
+        d_ctx = mock.Mock(get_platform=lambda: "default",
                           return_value=OrderableMock())
         all_plugins = {
-            # it is a case when search is performed for any namespace and only
+            # it is a case when search is performed for any platform and only
             # one possible match is found
             "b": [b_ctx],
             # it is a case when plugin should be filtered by the scenario
-            # namespace
-            "c": [mock.Mock(get_namespace=lambda: "default"), c_ctx],
+            # platform
+            "c": [mock.Mock(get_platform=lambda: "default"), c_ctx],
             # it is a case when plugin should be filtered by the scenario
-            # namespace
-            "d": [mock.Mock(get_namespace=lambda: "bar"), d_ctx]
+            # platform
+            "d": [mock.Mock(get_platform=lambda: "bar"), d_ctx]
         }
 
         def fake_get_all(name, allow_hidden=True):
@@ -217,7 +217,7 @@ class ContextManagerTestCase(test.TestCase):
                           c_ctx.return_value, d_ctx.return_value},
                          set(manager._get_sorted_context_lst()))
 
-        mock_context_get.assert_called_once_with("a", namespace="foo",
+        mock_context_get.assert_called_once_with("a", platform="foo",
                                                  fallback_to_default=False,
                                                  allow_hidden=True)
         a_ctx.assert_called_once_with(ctx_object)
@@ -249,9 +249,9 @@ class ContextManagerTestCase(test.TestCase):
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
         mock_context_get.assert_has_calls(
-            [mock.call("a", namespace="foo", allow_hidden=True,
+            [mock.call("a", platform="foo", allow_hidden=True,
                        fallback_to_default=False),
-             mock.call("b", namespace="foo", allow_hidden=True,
+             mock.call("b", platform="foo", allow_hidden=True,
                        fallback_to_default=False)],
             any_order=True)
         mock_context.assert_has_calls(
@@ -270,9 +270,9 @@ class ContextManagerTestCase(test.TestCase):
         manager.cleanup()
 
         mock_context_get.assert_has_calls(
-            [mock.call("a", namespace="foo", allow_hidden=True,
+            [mock.call("a", platform="foo", allow_hidden=True,
                        fallback_to_default=False),
-             mock.call("b", namespace="foo", allow_hidden=True,
+             mock.call("b", platform="foo", allow_hidden=True,
                        fallback_to_default=False)],
             any_order=True)
         mock_context.assert_has_calls(
