@@ -552,7 +552,10 @@ def main():
                      resource["resource_name"] == "volume" and
                      resource["id"].get("name") in volume_names) or
 
-                    resource["cls"] == "murano"):
+                    resource["cls"] == "murano" or
+
+                    # Glance has issues with uWSGI integration...
+                    resource["cls"] == "glance"):
                 expected.append(resource)
 
         for resource in expected:
