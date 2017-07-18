@@ -127,7 +127,8 @@ class InfoMixin(object):
 
         return {
             "name": cls.get_name(),
-            "namespace": cls.get_namespace(),
+            "platform": cls.get_platform(),
+            "namespace": cls.get_platform(),
             "module": cls.__module__,
             "title": doc["short_description"],
             "description": doc["long_description"],

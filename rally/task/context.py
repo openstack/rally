@@ -42,7 +42,7 @@ def configure(name, order, namespace="default", hidden=False):
                    task config
     """
     def wrapper(cls):
-        cls = plugin.configure(name=name, namespace=namespace,
+        cls = plugin.configure(name=name, platform=namespace,
                                hidden=hidden)(cls)
         cls._meta_set("order", order)
         return cls
@@ -164,7 +164,7 @@ class ContextManager(object):
             if "@" in ctx_name:
                 ctx_name, ctx_namespace = ctx_name.split("@", 1)
                 context_list.append(Context.get(ctx_name,
-                                                namespace=ctx_namespace,
+                                                platform=ctx_namespace,
                                                 fallback_to_default=False,
                                                 allow_hidden=True))
             else:
@@ -176,18 +176,18 @@ class ContextManager(object):
                 elif len(potential_result) > 1:
                     scen_namespace = self.context_obj["scenario_namespace"]
                     another_attempt = [c for c in potential_result
-                                       if c.get_namespace() == scen_namespace]
+                                       if c.get_platform() == scen_namespace]
                     if another_attempt:
                         context_list.append(another_attempt[0])
                         continue
                     another_attempt = [c for c in potential_result
-                                       if c.get_namespace() == "default"]
+                                       if c.get_platform() == "default"]
                     if another_attempt:
                         context_list.append(another_attempt[0])
                         continue
 
                 raise exceptions.PluginNotFound(name=ctx_name,
-                                                namespace="any of")
+                                                platform="any of")
 
         return sorted([ctx(self.context_obj) for ctx in context_list])
 

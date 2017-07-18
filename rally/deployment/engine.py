@@ -84,13 +84,12 @@ class Engine(plugin.Plugin):
         try:
             engine_cls = Engine.get(name)
             return engine_cls(deployment)
-        except exceptions.PluginNotFound as e:
+        except exceptions.PluginNotFound:
             LOG.error(_LE("Deployment %(uuid)s: Deploy engine for %(name)s "
                       "does not exist.") %
                       {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
-            raise exceptions.PluginNotFound(
-                namespace=e.kwargs.get("namespace"), name=name)
+            raise
 
     @abc.abstractmethod
     def deploy(self):

@@ -265,7 +265,7 @@ class TaskEngine(object):
 
     def _validate_workload(self, workload, credentials=None, vtype=None):
         scenario_cls = scenario.Scenario.get(workload.name)
-        namespace = scenario_cls.get_namespace()
+        namespace = scenario_cls.get_platform()
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
 
         results = []
@@ -370,7 +370,7 @@ class TaskEngine(object):
                 # in future to identify what kind of users workload
                 # requires (regular users or admin)
                 scenario_cls = scenario.Scenario.get(workload.name)
-                namespace = scenario_cls.get_namespace()
+                namespace = scenario_cls.get_platform()
 
                 # TODO(andreykurilin): Remove check for plugin namespace after
                 #   Rally 0.10.0
@@ -402,7 +402,7 @@ class TaskEngine(object):
                 admin.verify_connection()
 
             ctx_conf = {"task": self.task, "admin": {"credential": admin}}
-            user_context = context.Context.get("users", namespace=platform,
+            user_context = context.Context.get("users", platform=platform,
                                                allow_hidden=True)(ctx_conf)
 
             self._validate_config_semantic_helper(admin, user_context,
@@ -437,7 +437,7 @@ class TaskEngine(object):
 
     def _prepare_context(self, ctx, name, owner_id):
         scenario_cls = scenario.Scenario.get(name)
-        namespace = scenario_cls.get_namespace()
+        namespace = scenario_cls.get_platform()
 
         creds = self.deployment.get_credentials_for(namespace)
 

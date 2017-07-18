@@ -71,11 +71,11 @@ class PluginModuleTestCase(test.TestCase):
         class SecondBase(plugin.Plugin):
             pass
 
-        @plugin.configure(name, namespace=name)
+        @plugin.configure(name, platform=name)
         class A(OneBase):
             pass
 
-        @plugin.configure(name, namespace=name)
+        @plugin.configure(name, platform=name)
         class B(SecondBase):
             pass
 
@@ -93,11 +93,11 @@ class PluginModuleTestCase(test.TestCase):
         class SecondBase(plugin.Plugin):
             pass
 
-        @plugin.configure(name, namespace=name)
+        @plugin.configure(name, platform=name)
         class A(OneBase):
             pass
 
-        @plugin.configure(name, namespace=name)
+        @plugin.configure(name, platform=name)
         class B(SecondBase):
             pass
 
@@ -120,7 +120,7 @@ class MyPluginInDefault(BasePlugin):
     pass
 
 
-@plugin.configure(name="test_my_plugin", namespace="foo")
+@plugin.configure(name="test_my_plugin", platform="foo")
 class MyPluginInFoo(BasePlugin):
     pass
 
@@ -158,7 +158,7 @@ class PluginTestCase(test.TestCase):
 
     def test_get_fallback_to_default(self):
         self.assertEqual(SomePlugin,
-                         BasePlugin.get("test_some_plugin", namespace="bar"))
+                         BasePlugin.get("test_some_plugin", platform="bar"))
 
     def test_get_hidden(self):
         self.assertEqual(HiddenPlugin,

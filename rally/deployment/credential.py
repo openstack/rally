@@ -23,13 +23,13 @@ from rally.common.plugin import plugin
 
 def configure(namespace):
     def wrapper(cls):
-        cls = plugin.configure(name="credential", namespace=namespace)(cls)
+        cls = plugin.configure(name="credential", platform=namespace)(cls)
         return cls
     return wrapper
 
 
 def get(namespace):
-    return Credential.get(name="credential", namespace=namespace)
+    return Credential.get(name="credential", platform=namespace)
 
 
 @plugin.base()
@@ -60,14 +60,14 @@ class Credential(plugin.Plugin):
 def configure_builder(namespace):
     def wrapper(cls):
         cls = plugin.configure(name="credential_builder",
-                               namespace=namespace)(cls)
+                               platform=namespace)(cls)
         return cls
     return wrapper
 
 
 def get_builder(namespace):
     return CredentialBuilder.get(name="credential_builder",
-                                 namespace=namespace)
+                                 platform=namespace)
 
 
 @plugin.base()

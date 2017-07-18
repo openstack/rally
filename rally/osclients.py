@@ -59,7 +59,7 @@ def configure(name, default_version=None, default_service_type=None,
         in client object)
     """
     def wrapper(cls):
-        cls = plugin.configure(name=name, namespace=_NAMESPACE)(cls)
+        cls = plugin.configure(name=name, platform=_NAMESPACE)(cls)
         cls._meta_set("default_version", default_version)
         cls._meta_set("default_service_type", default_service_type)
         cls._meta_set("supported_versions", supported_versions or [])
@@ -212,8 +212,8 @@ class OSClient(plugin.Plugin):
         return self.cache[key]
 
     @classmethod
-    def get(cls, name, namespace=_NAMESPACE, **kwargs):
-        return super(OSClient, cls).get(name, namespace, **kwargs)
+    def get(cls, name, platform=_NAMESPACE, namespace=_NAMESPACE, **kwargs):
+        return super(OSClient, cls).get(name, platform=namespace, **kwargs)
 
 
 @configure("keystone", supported_versions=("2", "3"))

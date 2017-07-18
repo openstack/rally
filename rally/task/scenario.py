@@ -49,7 +49,7 @@ def configure(name, namespace="default", context=None):
             msg = (_("Scenario name must include a dot: '%s'") % name)
             raise exceptions.RallyException(msg)
 
-        cls = plugin.configure(name=name, namespace=namespace)(cls)
+        cls = plugin.configure(name=name, platform=namespace)(cls)
         cls._meta_set("default_context", context or {})
         return cls
 

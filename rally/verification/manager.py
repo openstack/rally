@@ -57,12 +57,12 @@ def configure(name, namespace="default", default_repo=None,
     :param default_version: Default version to checkout
     :param context: List of contexts that should be executed for verification
     """
-    def decorator(plugin):
-        plugin._configure(name, namespace)
-        plugin._meta_set("default_repo", default_repo)
-        plugin._meta_set("default_version", default_version)
-        plugin._meta_set("context", context or {})
-        return plugin
+    def decorator(plugin_inst):
+        plugin_inst = plugin.configure(name, platform=namespace)(plugin_inst)
+        plugin_inst._meta_set("default_repo", default_repo)
+        plugin_inst._meta_set("default_version", default_version)
+        plugin_inst._meta_set("context", context or {})
+        return plugin_inst
 
     return decorator
 

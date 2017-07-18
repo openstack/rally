@@ -22,10 +22,15 @@ from rally.common import logging
 from rally.common.plugin import plugin
 from rally import exceptions
 
-configure = plugin.configure
-
-
 LOG = logging.getLogger(__name__)
+
+
+def configure(name, namespace="default"):
+
+    def wrapper(cls):
+        return plugin.configure(name=name, platform=namespace)(cls)
+
+    return wrapper
 
 
 @plugin.base()
@@ -198,7 +203,7 @@ class ValidatablePluginMixin(object):
         """
         try:
             plugin = cls.get(name, allow_hidden=allow_hidden,
-                             namespace=namespace)
+                             platform=namespace)
         except exceptions.PluginNotFound:
             msg = "There is no %s plugin with name: '%s'" % (
                 cls.__name__, name)

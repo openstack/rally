@@ -135,7 +135,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_trigger_validate.return_value = []
         default_context = {"foo": "foo_conf"}
         scenario_cls = mock_scenario_get.return_value
-        scenario_cls.get_namespace.return_value = "default"
+        scenario_cls.get_platform.return_value = "default"
         scenario_cls.get_default_context.return_value = default_context
 
         scenario_name = "Foo.bar"
@@ -366,12 +366,14 @@ class TaskEngineTestCase(test.TestCase):
         deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin=admin, users=users)
 
+        # TODO(boris-42): Refactor this test case to make it
+        #                 up to date with other code
         class SomeScen(object):
 
             is_classbased = True
 
             @classmethod
-            def get_namespace(cls):
+            def get_platform(cls):
                 return "openstack"
 
             @classmethod
@@ -466,7 +468,7 @@ class TaskEngineTestCase(test.TestCase):
             mock_scenario_runner, mock_scenario, mock_result_consumer,
             mock_log, mock_task_config, mock_task_get_status):
         scenario_cls = mock_scenario.get.return_value
-        scenario_cls.get_namespace.return_value = "openstack"
+        scenario_cls.get_platform.return_value = "openstack"
 
         mock_context_manager_setup.side_effect = Exception
         mock_result_consumer.is_task_in_aborting_status.return_value = False
@@ -502,7 +504,7 @@ class TaskEngineTestCase(test.TestCase):
             mock_context_manager_setup, mock_context_manager_cleanup,
             mock_result_consumer):
         scenario_cls = mock_scenario.get.return_value
-        scenario_cls.get_namespace.return_value = "openstack"
+        scenario_cls.get_platform.return_value = "openstack"
         task = mock.MagicMock()
         mock_result_consumer.is_task_in_aborting_status.side_effect = [False,
                                                                        False,
@@ -603,7 +605,7 @@ class TaskEngineTestCase(test.TestCase):
         default_context = {"a": 1, "b": 2}
         mock_scenario = mock_scenario_get.return_value
         mock_scenario.get_default_context.return_value = default_context
-        mock_scenario.get_namespace.return_value = "openstack"
+        mock_scenario.get_platform.return_value = "openstack"
         task = mock.MagicMock()
         name = "a.task"
         context = {"b": 3, "c": 4}
