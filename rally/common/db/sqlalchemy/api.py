@@ -17,7 +17,6 @@ SQLAlchemy implementation for DB.API
 """
 
 import collections
-import copy
 import datetime as dt
 import os
 import time
@@ -251,27 +250,6 @@ class Connection(object):
             results = (self.model_query(models.WorkloadData, session=session).
                        filter_by(workload_uuid=workload_uuid).
                        order_by(models.WorkloadData.chunk_order.asc()))
-            if results.first() and results[0].chunk_data["raw"] and isinstance(
-                    results[0].chunk_data["raw"][0]["atomic_actions"], dict):
-                # NOTE(andreykurilin): It is an old format of atomic actions.
-                #   We do not have migration yet, since it can take too much
-                #   time on the big databases. Let's lazy-migrate results which
-                #   user greps and force a migration after several releases.
-
-                for workload_data in results:
-                    chunk_data = copy.deepcopy(workload_data.chunk_data)
-                    for chunk in chunk_data["raw"]:
-                        new_atomic_actions = []
-                        started_at = chunk["timestamp"]
-                        for name, d in chunk["atomic_actions"].items():
-                            finished_at = started_at + d
-                            new_atomic_actions.append(
-                                {"name": name, "children": [],
-                                 "started_at": started_at,
-                                 "finished_at": finished_at})
-                            started_at = finished_at
-                        chunk["atomic_actions"] = new_atomic_actions
-                    workload_data.update({"chunk_data": chunk_data})
 
         return sorted([raw for workload_data in results
                        for raw in workload_data.chunk_data["raw"]],

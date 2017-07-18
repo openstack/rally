@@ -1566,10 +1566,8 @@ class MigrationWalkTestCase(rtest.DBTestCase,
              "data": [{"timestamp": 0,
                        "scenario_output": {"data": {1: 2}},
                        "duration": 3, "error": None,
-                       "atomic_actions": [
-                           {"name": "foo", "started_at": 0,
-                            "finished_at": 3}]
-                       }],
+                       "atomic_actions": {
+                           "foo": 3}}],
              "statistics": {"durations": {
                  "rows": [["foo", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1],
                           ["total", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1]
@@ -1719,6 +1717,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     for iter in json.loads(wdata.chunk_data)["raw"]:
                         self.assertNotIn("scenario_output", iter)
                         self.assertIn("output", iter)
+                        self.assertIsInstance(iter["atomic_actions"], list)
 
                 conn.execute(
                     wdata_table.delete().where(
