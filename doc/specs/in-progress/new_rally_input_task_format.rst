@@ -143,34 +143,15 @@ New format JSON schema:
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "name": {"type": "string"},
-
-                                    "args": {
-                                        "type": "object"
-                                    },
-
-                                    "runner": {
-                                        "type": "object",
-                                        "properties": {
-                                            "type": {"type": "string"}
-                                        },
-                                        "required": ["type"]
-                                    },
-
-                                    "sla": {
-                                        "type": "object"
-                                    },
-
-                                    "context": {
-                                        "type": "object"
-                                    }
+                                    "scenario": {"type": "object"},
+                                    "runner": {"type": "object"}
+                                    "slas": {"type": "object"},
+                                    "contexts": {"type": "object"}
                                 },
-                                "required": ["name", "runner"]
+                                "required": ["scenario", "runner"]
                             }
                         },
-                        "context": {
-                            "type": "object"
-                        }
+                        "context": {"type": "object"}
                     },
                     "required": ["title", "workloads"]
                 }
@@ -234,28 +215,26 @@ New format sample:
         # in "workloads" section.
         workloads:
           -
-            # Full name of scenario plugin
-            name: "NovaServers.boot_and_delete"
-            # Arguments that are passed to "NovaServers.boot_and_delete" plugin
-            args:
-              image:
-                name: "^cirros$"
-              flavors:
-                name: "m1.small"
-            # Specification of load that will be generated
+            scenario:
+              NovaServers.boot_and_delete:
+                image:
+                  name: "^cirros$"
+                flavors:
+                  name: "m1.small"
             runner:
-              type: "constant"
-              times: 100
-              concurrency: 10
+              constant:
+                times: 100
+                concurrency: 10
             # Benchmark success of criteria based on results
-            sla:
+            slas:
               # Every key means SLA plugin name, values are config of plugin
               # Only if all criteria pass task is marked as passed
               failure_rate:
                 max: 0
+
         # Specification of context that creates env for benchmark scenarios
         # E.g. it creates users, tenants, sets quotas, uploads images...
-        context:
+        contexts:
           # Each key is the name of context plugin
 
           # This context creates temporary users and tenants
@@ -280,43 +259,43 @@ New format sample:
         # load
         workloads:
           -
-            name: "CinderVolumes.create_and_delete"
-            args:
-              size: 10
+            scenario:
+              CinderVolumes.create_and_delete:
+                size: 10
             runner:
-              type: "constant"
-              times: 100
-              concurrency: 10
+              constant:
+                times: 100
+                concurrency: 10
             sla:
               failure_rate:
                 max: 0
           -
-            name: "KeystoneBasic.create_and_delete_users"
-            args:
-              name_length: 20
+            scenario:
+              KeystoneBasic.create_and_delete_users:
+                name_length: 20
             runner:
-                type: "rps"
+              rps:
                 rps: 1
                 times: 1000
-            sla:
+            slas:
               max_seconds_per_iteration: 10
           -
-            name: "PhysicalNode.restart"
-            args:
-              ip: "..."
-              user: "..."
-              password: "..."
+            scenario:
+              PhysicalNode.restart:
+                ip: "..."
+                user: "..."
+                password: "..."
             runner:
-                type: "rps"
+              rps:
                 rps: 10
                 times: 10
-            sla:
+            slas:
               max_seconds_per_iteration: 100
             # This scenario is called in own independent and isolated context
-            context: {}
+            contexts: {}
 
         # Global context that is used if scenario doesn't specify own
-        context:
+        contexts:
           users:
             tenants: 2
             users_per_tenant: 10
