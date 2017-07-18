@@ -18,6 +18,7 @@ mock>=2.0,<=2.0.0
 python-dateutil>=2.4.2,<=2.6.0                         # Simplified BSD
 testtools>=1.4.0,<=2.3.0
 
+sphinx>=1.6.2,<=1.6.3                                  # BSD
 oslosphinx>=4.7.0,<=4.15.0                             # Apache Software License
 oslotest>=1.10.0,<=2.16.0                              # Apache Software License
 

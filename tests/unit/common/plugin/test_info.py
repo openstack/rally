@@ -17,6 +17,50 @@ from rally.common.plugin import info
 from tests.unit import test
 
 
+class DocstringTestCasePep257(test.TestCase):
+    docstring_no_leading_whitespace = """One-line description.
+
+Multi-
+line-
+description.
+
+:param p1: Param 1 description.
+:param p2: Param 2
+           description.
+:returns: Return value
+          description.
+"""
+    docstring_indented = """One-line description.
+
+                       Multi-
+                       line-
+                       description.
+
+                       :param p1: Param 1 description.
+                       :param p2: Param 2
+                                  description.
+                       :returns: Return value
+                                 description.
+                       """
+
+    docstring_oneline = """Simple oneline description."""
+
+    def test_trim_docstring_multi_line_no_extra_whitespace(self):
+        docstring = self.docstring_no_leading_whitespace
+        expected = self.docstring_no_leading_whitespace
+        self.assertEqual(expected, info.trim(docstring))
+
+    def test_trim_docstring_trivial(self):
+        docstring = self.docstring_indented
+        expected = self.docstring_no_leading_whitespace
+        self.assertEqual(expected, info.trim(docstring))
+
+    def test_trim_docstring_oneline(self):
+        docstring = self.docstring_oneline
+        expected = self.docstring_oneline
+        self.assertEqual(expected, info.trim(docstring))
+
+
 class DocstringTestCase(test.TestCase):
 
     def test_parse_complete_docstring(self):

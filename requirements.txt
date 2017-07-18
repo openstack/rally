@@ -21,7 +21,6 @@ PyYAML>=3.10.0,<=3.12                                  # MIT
 python-subunit>=0.0.18,<=1.2.0
 requests>=2.14.2,<=2.18.1                              # Apache License, Version 2.0
 SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8,<=1.1.11  # MIT
-sphinx>=1.6.2,<=1.6.3                                  # BSD
 six>=1.9.0,<=1.10.0                                    # MIT
 virtualenv>=13.1.0,<=15.1.0                            # MIT
 
