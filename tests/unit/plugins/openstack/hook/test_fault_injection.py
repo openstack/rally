@@ -16,6 +16,7 @@
 
 import ddt
 import mock
+import os_faults
 from os_faults.api import error
 
 from rally import consts
@@ -46,17 +47,20 @@ class FaultInjectionHookTestCase(test.TestCase):
             self.assertEqual(1, len(results))
 
     @mock.patch("rally.common.objects.Deployment.get")
-    @mock.patch("os_faults.human_api")
-    @mock.patch("os_faults.connect")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
-    def test_run(self, mock_timer, mock_connect, mock_human_api,
-                 mock_deployment_get):
-        injector_inst = mock_connect.return_value
+    def test_run(self, mock_timer, mock_deployment_get):
         hook = fault_injection.FaultInjectionHook(
             self.task, {"action": "foo", "verify": True},
             {"iteration": 1})
 
-        hook.run_sync()
+        with mock.patch.object(os_faults, "human_api") as mock_human_api:
+            with mock.patch.object(os_faults, "connect") as mock_connect:
+                hook.run_sync()
+
+                injector_inst = mock_connect.return_value
+
+                mock_connect.assert_called_once_with(None)
+                mock_human_api.assert_called_once_with(injector_inst, "foo")
 
         self.assertEqual(
             {"finished_at": fakes.FakeTimer().finish_timestamp(),
@@ -64,25 +68,25 @@ class FaultInjectionHookTestCase(test.TestCase):
              "status": consts.HookStatus.SUCCESS,
              "triggered_by": {"iteration": 1}},
             hook.result())
-
-        mock_connect.assert_called_once_with(None)
         injector_inst.verify.assert_called_once_with()
-        mock_human_api.assert_called_once_with(injector_inst, "foo")
 
     @mock.patch("rally.common.objects.Deployment.get")
-    @mock.patch("os_faults.human_api")
-    @mock.patch("os_faults.connect")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
-    def test_run_extra_config(self, mock_timer, mock_connect, mock_human_api,
-                              mock_deployment_get):
+    def test_run_extra_config(self, mock_timer, mock_deployment_get):
         mock_deployment_get.return_value = {
             "config": {"type": "ExistingCloud",
                        "extra": {"cloud_config": {"conf": "foo_config"}}}}
-        injector_inst = mock_connect.return_value
         hook = fault_injection.FaultInjectionHook(
             self.task, {"action": "foo"}, {"iteration": 1})
 
-        hook.run_sync()
+        with mock.patch.object(os_faults, "human_api") as mock_human_api:
+            with mock.patch.object(os_faults, "connect") as mock_connect:
+                hook.run_sync()
+
+                injector_inst = mock_connect.return_value
+
+                mock_connect.assert_called_once_with({"conf": "foo_config"})
+                mock_human_api.assert_called_once_with(injector_inst, "foo")
 
         self.assertEqual(
             {"finished_at": fakes.FakeTimer().finish_timestamp(),
@@ -90,9 +94,6 @@ class FaultInjectionHookTestCase(test.TestCase):
              "status": consts.HookStatus.SUCCESS,
              "triggered_by": {"iteration": 1}},
             hook.result())
-
-        mock_connect.assert_called_once_with({"conf": "foo_config"})
-        mock_human_api.assert_called_once_with(injector_inst, "foo")
 
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("os_faults.human_api")

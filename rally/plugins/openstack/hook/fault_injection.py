@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os_faults
-
 from rally.common import logging
 from rally.common import objects
 from rally import consts
@@ -23,7 +21,7 @@ from rally.task import hook
 LOG = logging.getLogger(__name__)
 
 
-@hook.configure(name="fault_injection")
+@hook.configure(name="fault_injection", platform="openstack")
 class FaultInjectionHook(hook.Hook):
     """Performs fault injection using os-faults library.
 
@@ -65,6 +63,8 @@ class FaultInjectionHook(hook.Hook):
         return extra_config.get("cloud_config")
 
     def run(self):
+        import os_faults
+
         # get cloud configuration
         cloud_config = self.get_cloud_config()
 
