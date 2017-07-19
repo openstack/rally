@@ -72,9 +72,10 @@ class PluginCommands(object):
             if plugin_info["parameters"]:
                 print("PARAMETERS")
                 rows = [utils.Struct(name=p["name"],
-                                     description="%s\n" % p["doc"])
+                                     description=p["doc"])
                         for p in plugin_info["parameters"]]
-                cliutils.print_list(rows, fields=["name", "description"])
+                cliutils.print_list(rows, fields=["name", "description"],
+                                    sortby_index=None)
         else:
             print("Multiple plugins found:")
             self._print_plugins_list(found)
