@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 from oslo_config import cfg
 
 from rally.task import service
@@ -22,19 +20,18 @@ from rally.task import service
 CONF = cfg.CONF
 
 
-Volume = collections.namedtuple("Volume", ["id", "name", "size", "status"])
-VolumeSnapshot = collections.namedtuple("VolumeSnapshot", ["id", "name",
-                                                           "volume_id",
-                                                           "status"])
-VolumeBackup = collections.namedtuple("VolumeBackup", ["id", "name",
-                                                       "volume_id",
-                                                       "status"])
-VolumeTransfer = collections.namedtuple("VolumeTransfer", ["id", "name",
-                                                           "volume_id",
-                                                           "auth_key"])
-VolumeEncryptionType = collections.namedtuple("VolumeEncryptionType",
-                                              ["id", "volume_type_id"])
-QoSSpecs = collections.namedtuple("QoSSpecs", ["id", "name", "specs"])
+Volume = service.make_resource_cls(
+    "Volume", properties=["id", "name", "size", "status"])
+VolumeSnapshot = service.make_resource_cls(
+    "VolumeSnapshot", properties=["id", "name", "volume_id", "status"])
+VolumeBackup = service.make_resource_cls(
+    "VolumeBackup", properties=["id", "name", "volume_id", "status"])
+VolumeTransfer = service.make_resource_cls(
+    "VolumeTransfer", properties=["id", "name", "volume_id", "auth_key"])
+VolumeEncryptionType = service.make_resource_cls(
+    "VolumeEncryptionType", properties=["id", "volume_type_id"])
+QoSSpecs = service.make_resource_cls(
+    "QoSSpecs", properties=["id", "name", "specs"])
 
 
 class BlockStorage(service.UnifiedService):

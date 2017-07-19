@@ -12,16 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 from rally.task import service
 
 
-Project = collections.namedtuple("Project", ["id", "name", "domain_id"])
-User = collections.namedtuple("User",
-                              ["id", "name", "project_id", "domain_id"])
-Service = collections.namedtuple("Service", ["id", "name"])
-Role = collections.namedtuple("Role", ["id", "name"])
+Project = service.make_resource_cls("Project", ["id", "name", "domain_id"])
+User = service.make_resource_cls(
+    "User", properties=["id", "name", "project_id", "domain_id"])
+Service = service.make_resource_cls("Service", properties=["id", "name"])
+Role = service.make_resource_cls("Role", properties=["id", "name"])
 
 
 class Identity(service.UnifiedService):

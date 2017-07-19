@@ -76,7 +76,7 @@ class VolumeGenerator(context.Context):
                 vol = cinder_service.create_volume(size,
                                                    volume_type=volume_type)
                 self.context["tenants"][tenant_id]["volumes"].append(
-                    vol._asdict())
+                    vol._as_dict())
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):

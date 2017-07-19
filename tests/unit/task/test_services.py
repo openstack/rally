@@ -232,8 +232,8 @@ class DiscoverTestCase(test.TestCase):
                          str(e))
 
 
-class MethodWrapperTestCase(test.TestCase):
-    def test_positional(self):
+class UtilsTestCase(test.TestCase):
+    def test_method_wrapper(self):
         class Some(object):
             @service.method_wrapper
             def foo(slf, *args, **kwargs):
@@ -245,3 +245,22 @@ class MethodWrapperTestCase(test.TestCase):
         Some().foo(some=2, another=3)
         Some().foo(1, some=2, another=3)
         self.assertRaises(TypeError, Some().foo, 1, 2)
+
+    def test_make_resource_cls(self):
+        FooCls = service.make_resource_cls("Foo", properties=["a", "b"])
+
+        # check repr
+        self.assertEqual("<Foo id=1>", "%s" % FooCls(a=1))
+
+        # check getitem
+        self.assertEqual(1, FooCls(a=1)["a"])
+
+        # check used name for a type in error messages
+        e = self.assertRaises(AttributeError, getattr, FooCls(a=1), "c")
+        self.assertEqual("'Foo' object has no attribute 'c'",
+                         "%s" % e)
+
+        # check asserts
+        self.assertEqual(FooCls(a=1), FooCls(a=1))
+        self.assertEqual(FooCls(a=1), FooCls(a=1, b=3))
+        self.assertNotEqual(FooCls(a=1), FooCls(a=2))
