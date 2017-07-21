@@ -14,6 +14,7 @@
 #    under the License.
 
 import functools
+import traceback
 
 from oslo_config import cfg
 from oslo_log import handlers
@@ -223,17 +224,23 @@ def log_deprecated(message, rally_version, log_function=None, once=False):
     :param once: Show only once (default is each)
     """
     log_function = log_function or LOG.warning
+    msg = ("`%(func)s()' is deprecated in v%(version)s: %(msg)s."
+           " Used at %(caller)s")
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            if (not once) or (not getattr(f, "_warned_dep_method", False)):
-                log_function("'%(func)s' is deprecated in Rally v%(version)s: "
-                             "%(msg)s" % {"msg": message,
-                                          "version": rally_version,
-                                          "func": f.__name__})
-                setattr(f, "_warned_dep_method", once)
+            if not (once and getattr(f, "_warned_dep_method", False)):
+                log_function(msg % {
+                    "msg": message,
+                    "version": rally_version,
+                    "func": f.__name__,
+                    "caller": str(traceback.extract_stack()[-2])
+                })
+
+            f._warned_dep_method = True
             return f(*args, **kwargs)
+
         return wrapper
     return decorator
 
@@ -249,22 +256,28 @@ def log_deprecated_args(message, rally_version, deprecated_args,
     :param once: Show only once (default is each)
     """
     log_function = log_function or LOG.warning
+    msg = ("Argument(s): %(args)s of `%(func)s()' are deprecated in "
+           "v%(version)s: %(msg)s. Used at %(caller)s")
 
     def decorator(f):
+
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            if (not once) or (not getattr(f, "_warned_dep_args", False)):
+            if not (once and getattr(f, "_warned_dep_args", False)):
                 deprecated = ", ".join([
                     "`%s'" % x for x in deprecated_args if x in kwargs])
                 if deprecated:
-                    log_function(
-                        "%(msg)s (args %(args)s deprecated in Rally "
-                        "v%(version)s)" %
-                        {"msg": message, "version": rally_version,
-                         "args": deprecated})
-                    setattr(f, "_warned_dep_args", once)
-            result = f(*args, **kwargs)
-            return result
+                    log_function(msg % {
+                        "msg": message,
+                        "version": rally_version,
+                        "args": deprecated,
+                        "func": f.__name__,
+                        "caller": str(traceback.extract_stack()[-2])
+                    })
+
+            f._warned_dep_args = True
+            return f(*args, **kwargs)
+
         return wrapper
     return decorator
 

@@ -48,40 +48,40 @@ class LogTestCase(test.TestCase):
     def test_log_deprecated(self):
         mock_log = mock.MagicMock()
 
-        @logging.log_deprecated("some alternative", "0.0.1", mock_log)
+        @logging.log_deprecated("depr42", "1.1.1", mock_log)
         def some_method(x, y):
             return x + y
 
         self.assertEqual(some_method(2, 2), 4)
-        mock_log.assert_called_once_with("'some_method' is deprecated in "
-                                         "Rally v0.0.1: some alternative")
+        self.assertIn("some_method()", mock_log.call_args[0][0])
+        self.assertIn("depr42", mock_log.call_args[0][0])
+        self.assertIn("1.1.1", mock_log.call_args[0][0])
 
     def test_log_deprecated_args(self):
         mock_log = mock.MagicMock()
 
-        @logging.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
+        @logging.log_deprecated_args("ABC42", "0.0.1", ("z",),
                                      mock_log, once=True)
         def some_method(x, y, z):
             return x + y + z
 
         self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+        self.assertIn("ABC42", mock_log.call_args[0][0])
+        self.assertIn("`z' of `some_method()'", mock_log.call_args[0][0])
+        self.assertIn("0.0.1", mock_log.call_args[0][0])
 
         mock_log.reset_mock()
         self.assertEqual(some_method(2, 2, z=3), 7)
         self.assertFalse(mock_log.called)
 
-        @logging.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
+        @logging.log_deprecated_args("CBA42", "0.0.1", ("z",),
                                      mock_log, once=False)
         def some_method(x, y, z):
             return x + y + z
 
         self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+        self.assertIn("CBA42", mock_log.call_args[0][0])
 
         mock_log.reset_mock()
         self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+        self.assertIn("CBA42", mock_log.call_args[0][0])
