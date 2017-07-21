@@ -173,14 +173,10 @@ class CreateAndListRecords(utils.DesignateScenario):
         :param records_per_domain: Records to create pr domain.
         """
         domain = self._create_domain()
-
-        records = []
         for i in range(records_per_domain):
-            records.append(
-                self._create_record(domain))
+            self._create_record(domain)
 
-        list_records = self._list_records(domain["id"])
-        self.assertEqual(records, list_records)
+        self._list_records(domain["id"])
 
 
 @validation.add("required_services",

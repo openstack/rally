@@ -691,76 +691,69 @@ class ZaqarQueues(SynchronizedDeletion, base.ResourceManager):
 
 
 # DESIGNATE
-
 _designate_order = get_order(900)
 
 
 class DesignateResource(SynchronizedDeletion, base.ResourceManager):
-    def _manager(self):
+
+    # TODO(boris-42): This should be handled somewhere else.
+    NAME_PREFIX = "s_rally_"
+
+    def _manager(self, resource=None):
         # Map resource names to api / client version
-        resource_versions = {
+        resource = resource or self._resource
+        version = {
             "domains": "1",
             "servers": "1",
-            "recordsets": 2,
+            "records": "1",
+            "recordsets": "2",
             "zones": "2"
-        }
-        version = resource_versions[self._resource]
-        return getattr(getattr(self.user, self._service)(version),
-                       self._resource)
+        }[resource]
 
-    def _walk_pages(self, func, *args, **kwargs):
-        """Generator that keeps fetching pages until there's none left."""
-        marker = None
+        client = self._admin_required and self.admin or self.user
+        return getattr(getattr(client, self._service)(version), resource)
 
-        while True:
-            items = func(marker=marker, limit=100, *args, **kwargs)
-            if not items:
-                break
-            for item in items:
-                yield item
-            marker = items[-1]["id"]
+    def id(self):
+        """Returns id of resource."""
+        return self.raw_resource["id"]
+
+    def name(self):
+        """Returns name of resource."""
+        return self.raw_resource["name"]
+
+    def list(self):
+        return [item for item in self._manager().list()
+                if item["name"].startswith(self.NAME_PREFIX)]
 
 
-@base.resource("designate", "domains", order=next(_designate_order))
+@base.resource("designate", "domains", order=next(_designate_order),
+               tenant_resource=True, threads=1)
 class DesignateDomain(DesignateResource):
     pass
 
 
 @base.resource("designate", "servers", order=next(_designate_order),
-               admin_required=True, perform_for_admin_only=True)
+               admin_required=True, perform_for_admin_only=True, threads=1)
 class DesignateServer(DesignateResource):
     pass
 
 
-@base.resource("designate", "recordsets", order=next(_designate_order),
-               tenant_resource=True)
-class DesignateRecordSets(DesignateResource):
-    def _client(self):
-        # Map resource names to api / client version
-        resource_versions = {
-            "domains": "1",
-            "servers": "1",
-            "recordsets": 2,
-            "zones": "2"
-        }
-        version = resource_versions[self._resource]
-        return getattr(self.user, self._service)(version)
-
-    def list(self):
-        criterion = {"name": "s_rally_*"}
-        for zone in self._walk_pages(self._client().zones.list,
-                                     criterion=criterion):
-            for recordset in self._walk_pages(self._client().recordsets.list,
-                                              zone["id"]):
-                yield recordset
-
-
 @base.resource("designate", "zones", order=next(_designate_order),
-               tenant_resource=True)
+               tenant_resource=True, threads=1)
 class DesignateZones(DesignateResource):
+
     def list(self):
-        criterion = {"name": "s_rally_*"}
-        return self._walk_pages(self._manager().list, criterion=criterion)
+        marker = None
+        criterion = {"name": "%s*" % self.NAME_PREFIX}
+
+        while True:
+            items = self._manager().list(marker=marker, limit=100,
+                                         criterion=criterion)
+            if not items:
+                break
+            for item in items:
+                yield item
+            marker = items[-1]["id"]
 
 
 # SWIFT

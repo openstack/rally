@@ -139,7 +139,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         # Check that the defaults / randoms are used if nothing is specified
         server = scenario._create_server()
         self.admin_clients("designate").servers.create.assert_called_once_with(
-            {"name": "name.%s." % random_name})
+            {"name": "%s.name." % random_name})
         self.assertEqual(self.server, server)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.create_server")

@@ -365,13 +365,14 @@ class Designate(ResourceManager):
         return self.client.servers.list()
 
     def list_zones(self):
-        return self.client.zones.list()
+        return self.clients.designate("2").zones.list()
 
     def list_recordset(self):
-        result = []
-        result.extend(self.client.recordsets.list(zone_id)
-                      for zone_id in self.client.zones.list())
-        return result
+        client = self.clients.designate("2")
+        results = []
+        results.extend(client.recordsets.list(zone_id)
+                       for zone_id in client.zones.list())
+        return results
 
 
 class Trove(ResourceManager):

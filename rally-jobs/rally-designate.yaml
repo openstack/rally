@@ -3,8 +3,8 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 10
+        times: 4
+        concurrency: 2
       context:
         users:
           tenants: 2
@@ -17,8 +17,8 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 10
+        times: 4
+        concurrency: 2
       context:
         users:
           tenants: 2
@@ -30,11 +30,11 @@
   DesignateBasic.create_and_delete_records:
     -
       args:
-        records_per_domain: 10
+        records_per_domain: 5
       runner:
         type: "constant"
-        times: 10
-        concurrency: 10
+        times: 4
+        concurrency: 2
       context:
         users:
           tenants: 2
@@ -47,8 +47,8 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 10
+        times: 4
+        concurrency: 2
       context:
         users:
           tenants: 2
@@ -60,11 +60,11 @@
   DesignateBasic.create_and_list_records:
     -
       args:
-        records_per_domain: 10
+        records_per_domain: 5
       runner:
         type: "constant"
-        times: 10
-        concurrency: 10
+        times: 4
+        concurrency: 2
       context:
         users:
           tenants: 2
@@ -91,7 +91,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 1
       context:
         users:
@@ -105,7 +105,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 1
       context:
         users:
@@ -133,7 +133,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
@@ -147,7 +147,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
@@ -161,7 +161,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
@@ -177,7 +177,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:

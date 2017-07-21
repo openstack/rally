@@ -72,9 +72,7 @@ class DesignateScenario(scenario.OpenStackScenario):
                                     domain["name"])
         record.setdefault("data", "10.0.0.1")
 
-        client = self.clients("designate")
-
-        return client.records.create(domain["id"], record)
+        return self.clients("designate").records.create(domain["id"], record)
 
     @atomic.action_timer("designate.list_records")
     def _list_records(self, domain_id):
@@ -103,7 +101,7 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         server = server or {}
 
-        server["name"] = "name.%s." % self.generate_random_name()
+        server["name"] = "%s.name." % self.generate_random_name()
         return self.admin_clients("designate").servers.create(server)
 
     @atomic.action_timer("designate.list_servers")
