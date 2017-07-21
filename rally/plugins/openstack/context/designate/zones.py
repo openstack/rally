@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="zones", order=600)
+@context.configure(name="zones", platform="openstack", order=600)
 class ZoneGenerator(context.Context):
     """Context to add `zones_per_tenant` zones for each tenant."""
 

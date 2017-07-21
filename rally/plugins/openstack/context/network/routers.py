@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 @validation.add("required_platform", platform="openstack", admin=True,
                 users=True)
-@context.configure(name="router", order=351)
+@context.configure(name="router", platform="openstack", order=351)
 class Router(context.Context):
     """Create networking resources.
 

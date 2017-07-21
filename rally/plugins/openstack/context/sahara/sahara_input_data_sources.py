@@ -32,7 +32,8 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="sahara_input_data_sources", order=443)
+@context.configure(name="sahara_input_data_sources", platform="openstack",
+                   order=443)
 class SaharaInputDataSources(context.Context):
     """Context class for setting up Input Data Sources for an EDP job."""
 

@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 @validation.add("required_platform", platform="openstack", admin=True,
                 users=True)
-@context.configure(name="lbaas", order=360)
+@context.configure(name="lbaas", platform="openstack", order=360)
 class Lbaas(context.Context):
     """Creates a lb-pool for every subnet created in network context."""
     CONFIG_SCHEMA = {

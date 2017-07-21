@@ -29,7 +29,8 @@ LOG = logging.getLogger(__name__)
 
 @validation.add(name="check_cleanup_resources", admin_required=True)
 # NOTE(amaretskiy): Set order to run this just before UserCleanup
-@context.configure(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
+@context.configure(name="admin_cleanup", platform="openstack",
+                   order=(sys.maxsize - 1), hidden=True)
 class AdminCleanup(base.CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
 

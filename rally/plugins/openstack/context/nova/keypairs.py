@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="keypair", order=310)
+@context.configure(name="keypair", platform="openstack", order=310)
 class Keypair(context.Context):
     """Create Nova KeyPair for each user."""
 

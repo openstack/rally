@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 # NOTE(andreykurilin): admin is used only by cleanup
 @validation.add("required_platform", platform="openstack", admin=True,
                 users=True)
-@context.configure(name="network", order=350)
+@context.configure(name="network", platform="openstack", order=350)
 class Network(context.Context):
     """Create networking resources.
 

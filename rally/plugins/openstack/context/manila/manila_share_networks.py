@@ -62,7 +62,7 @@ users that does not satisfy criteria.
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name=CONTEXT_NAME, order=450)
+@context.configure(name=CONTEXT_NAME, platform="openstack", order=450)
 class ShareNetworks(context.Context):
     """This context creates share networks for Manila project."""
     CONFIG_SCHEMA = {

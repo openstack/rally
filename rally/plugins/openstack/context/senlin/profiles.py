@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="profiles", order=190)
+@context.configure(name="profiles", platform="openstack", order=190)
 class ProfilesGenerator(context.Context):
     """Context creates a temporary profile for Senlin test."""
 

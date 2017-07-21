@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="stacks", order=435)
+@context.configure(name="stacks", platform="openstack", order=435)
 class StackGenerator(context.Context):
     """Context class for create temporary stacks with resources.
 

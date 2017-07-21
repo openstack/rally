@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@context.configure(name="quotas", order=300)
+@context.configure(name="quotas", platform="openstack", order=300)
 class Quotas(context.Context):
     """Context class for updating benchmarks' tenants quotas."""
 

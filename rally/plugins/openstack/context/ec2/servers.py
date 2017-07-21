@@ -26,7 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="ec2_servers", order=460)
+@context.configure(name="ec2_servers", platform="openstack", order=460)
 class EC2ServerGenerator(context.Context):
     """Context class for adding temporary servers for benchmarks.
 

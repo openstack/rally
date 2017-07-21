@@ -32,7 +32,7 @@ CONF = cfg.CONF
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="roles", order=330)
+@context.configure(name="roles", platform="openstack", order=330)
 class RoleGenerator(context.Context):
     """Context class for assigning roles for users."""
 

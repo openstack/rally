@@ -27,7 +27,9 @@ from rally.task import functional
 LOG = logging.getLogger(__name__)
 
 
-def configure(name, order, namespace="default", hidden=False):
+@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
+                             ["namespace"], log_function=LOG.warning)
+def configure(name, order, platform="default", namespace=None, hidden=False):
     """Context class wrapper.
 
     Each context class has to be wrapped by configure() wrapper. It
@@ -41,8 +43,11 @@ def configure(name, order, namespace="default", hidden=False):
     :param hidden: If it is true you won't be able to specify context via
                    task config
     """
+    if namespace:
+        platform = namespace
+
     def wrapper(cls):
-        cls = plugin.configure(name=name, platform=namespace,
+        cls = plugin.configure(name=name, platform=platform,
                                hidden=hidden)(cls)
         cls._meta_set("order", order)
         return cls

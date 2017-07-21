@@ -29,7 +29,8 @@ LOG = logging.getLogger(__name__)
 
 @validation.add(name="check_cleanup_resources", admin_required=False)
 # NOTE(amaretskiy): Set maximum order to run this last
-@context.configure(name="cleanup", order=sys.maxsize, hidden=True)
+@context.configure(name="cleanup", platform="openstack", order=sys.maxsize,
+                   hidden=True)
 class UserCleanup(base.CleanupMixin, context.Context):
     """Context class for user resources cleanup."""
 

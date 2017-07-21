@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="murano_environments", order=402)
+@context.configure(name="murano_environments", platform="openstack", order=402)
 class EnvironmentGenerator(context.Context):
     """Context class for creating murano environments."""
 

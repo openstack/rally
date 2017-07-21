@@ -23,7 +23,8 @@ import rally.task.context as context
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="image_command_customizer", order=501)
+@context.configure(name="image_command_customizer", platform="openstack",
+                   order=501)
 class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
     """Context class for generating image customized by a command execution.
 

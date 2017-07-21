@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="ceilometer", order=450)
+@context.configure(name="ceilometer", platform="openstack", order=450)
 class CeilometerSampleGenerator(context.Context):
     """Context for creating samples and collecting resources for benchmarks."""
 

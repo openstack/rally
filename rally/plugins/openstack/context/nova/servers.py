@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="servers", order=430)
+@context.configure(name="servers", platform="openstack", order=430)
 class ServerGenerator(context.Context):
     """Context class for adding temporary servers for benchmarks.
 

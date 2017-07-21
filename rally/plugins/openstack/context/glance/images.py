@@ -36,7 +36,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="images", order=410)
+@context.configure(name="images", platform="openstack", order=410)
 class ImageGenerator(context.Context):
     """Context class for adding images to each user for benchmarks."""
 

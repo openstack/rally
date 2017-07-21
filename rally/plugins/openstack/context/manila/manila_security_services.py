@@ -32,7 +32,7 @@ CONTEXT_NAME = consts.SECURITY_SERVICES_CONTEXT_NAME
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name=CONTEXT_NAME, order=445)
+@context.configure(name=CONTEXT_NAME, platform="openstack", order=445)
 class SecurityServices(context.Context):
     """This context creates 'security services' for Manila project."""
 

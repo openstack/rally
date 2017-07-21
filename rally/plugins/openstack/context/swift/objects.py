@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="swift_objects", order=360)
+@context.configure(name="swift_objects", platform="openstack", order=360)
 class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
     """Create containers and objects in each tenant."""
     CONFIG_SCHEMA = {

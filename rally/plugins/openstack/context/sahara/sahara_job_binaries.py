@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="sahara_job_binaries", order=442)
+@context.configure(name="sahara_job_binaries", platform="openstack", order=442)
 class SaharaJobBinaries(context.Context):
     """Context class for setting up Job Binaries for an EDP job."""
 

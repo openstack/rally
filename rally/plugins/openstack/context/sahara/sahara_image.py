@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="sahara_image", order=440)
+@context.configure(name="sahara_image", platform="openstack", order=440)
 class SaharaImage(context.Context):
     """Context class for adding and tagging Sahara images."""
 

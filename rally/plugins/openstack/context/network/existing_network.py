@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="existing_network", order=349)
+@context.configure(name="existing_network", platform="openstack", order=349)
 class ExistingNetwork(context.Context):
     """This context supports using existing networks in Rally.
 

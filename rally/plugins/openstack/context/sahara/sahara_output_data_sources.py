@@ -29,7 +29,8 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="sahara_output_data_sources", order=444)
+@context.configure(name="sahara_output_data_sources", platform="openstack",
+                   order=444)
 class SaharaOutputDataSources(context.Context):
     """Context class for setting up Output Data Sources for an EDP job."""
 

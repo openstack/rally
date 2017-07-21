@@ -25,7 +25,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="volumes", order=420)
+@context.configure(name="volumes", platform="openstack", order=420)
 class VolumeGenerator(context.Context):
     """Context class for adding volumes to each user for benchmarks."""
 

@@ -145,7 +145,7 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
                                        allow_hidden=True)
 
         if fallback_to_default and len(potential_result) == 0:
-            # try to find in default namespace
+            # try to find in default platform
             potential_result = cls.get_all(name=name, platform="default",
                                            allow_hidden=True)
 

@@ -36,7 +36,7 @@ def get_data(filename_or_resource):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="heat_dataplane", order=435)
+@context.configure(name="heat_dataplane", platform="openstack", order=435)
 class HeatDataplane(context.Context):
     """Context class for create stack by given template.
 

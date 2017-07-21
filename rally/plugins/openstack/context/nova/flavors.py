@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@context.configure(name="flavors", order=340)
+@context.configure(name="flavors", platform="openstack", order=340)
 class FlavorsGenerator(context.Context):
     """Context creates a list of flavors."""
 

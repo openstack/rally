@@ -84,7 +84,7 @@ def _prepare_open_secgroup(credential, secgroup_name):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="allow_ssh", order=320)
+@context.configure(name="allow_ssh", platform="openstack", order=320)
 class AllowSSH(context.Context):
     """Sets up security groups for all users to access VM via SSH."""
 

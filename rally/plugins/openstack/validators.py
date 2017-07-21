@@ -33,7 +33,7 @@ ValidationResult = validation.ValidationResult
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="image_exists", namespace="openstack")
+@validation.configure(name="image_exists", platform="openstack")
 class ImageExistsValidator(validation.Validator):
 
     def __init__(self, param_name, nullable):
@@ -81,7 +81,7 @@ class ImageExistsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="external_network_exists", namespace="openstack")
+@validation.configure(name="external_network_exists", platform="openstack")
 class ExternalNetworkExistsValidator(validation.Validator):
 
     def __init__(self, param_name):
@@ -118,8 +118,7 @@ class ExternalNetworkExistsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="required_neutron_extensions",
-                      namespace="openstack")
+@validation.configure(name="required_neutron_extensions", platform="openstack")
 class RequiredNeutronExtensionsValidator(validation.Validator):
 
     def __init__(self, extensions, *args):
@@ -153,7 +152,7 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="image_valid_on_flavor", namespace="openstack")
+@validation.configure(name="image_valid_on_flavor", platform="openstack")
 class ImageValidOnFlavorValidator(validation.Validator):
 
     def __init__(self, flavor_param, image_param,
@@ -292,7 +291,7 @@ class ImageValidOnFlavorValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="required_clients", namespace="openstack")
+@validation.configure(name="required_clients", platform="openstack")
 class RequiredClientsValidator(validation.Validator):
 
     def __init__(self, components, *args, **kwargs):
@@ -346,7 +345,7 @@ class RequiredClientsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="required_services", namespace="openstack")
+@validation.configure(name="required_services", platform="openstack")
 class RequiredServicesValidator(validation.Validator):
 
     def __init__(self, services, *args):
@@ -396,7 +395,7 @@ class RequiredServicesValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="validate_heat_template", namespace="openstack")
+@validation.configure(name="validate_heat_template", platform="openstack")
 class ValidateHeatTemplateValidator(validation.Validator):
 
     def __init__(self, params, *args):
@@ -446,7 +445,7 @@ class ValidateHeatTemplateValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@validation.configure(name="required_cinder_services", namespace="openstack")
+@validation.configure(name="required_cinder_services", platform="openstack")
 class RequiredCinderServicesValidator(validation.Validator):
 
     def __init__(self, services):
@@ -473,8 +472,7 @@ class RequiredCinderServicesValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="required_api_versions",
-                      namespace="openstack")
+@validation.configure(name="required_api_versions", platform="openstack")
 class RequiredAPIVersionsValidator(validation.Validator):
 
     def __init__(self, component, versions):
@@ -522,7 +520,7 @@ class RequiredAPIVersionsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="volume_type_exists", namespace="openstack")
+@validation.configure(name="volume_type_exists", platform="openstack")
 class VolumeTypeExistsValidator(validation.Validator):
 
     def __init__(self, param_name, nullable=True):

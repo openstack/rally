@@ -33,7 +33,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="murano_packages", order=401)
+@context.configure(name="murano_packages", platform="openstack", order=401)
 class PackageGenerator(context.Context):
     """Context class for uploading applications for murano."""
 

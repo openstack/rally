@@ -31,7 +31,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@context.configure(name="audit_templates", order=550)
+@context.configure(name="audit_templates", platform="openstack", order=550)
 class AuditTemplateGenerator(context.Context):
     """Context class for adding temporary audit template for benchmarks."""
 

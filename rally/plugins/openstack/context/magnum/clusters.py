@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="clusters", order=480)
+@context.configure(name="clusters", platform="openstack", order=480)
 class ClusterGenerator(context.Context):
     """Context class for generating temporary cluster for benchmarks."""
 

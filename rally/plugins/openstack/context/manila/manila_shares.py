@@ -32,7 +32,7 @@ CONTEXT_NAME = consts.SHARES_CONTEXT_NAME
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name=CONTEXT_NAME, order=455)
+@context.configure(name=CONTEXT_NAME, platform="openstack", order=455)
 class Shares(context.Context):
     """This context creates shares for Manila project."""
 

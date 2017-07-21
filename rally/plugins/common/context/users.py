@@ -16,7 +16,7 @@
 from rally.task import context
 
 
-@context.configure(name="users", namespace="default", order=100, hidden=True)
+@context.configure(name="users", order=100, hidden=True)
 class NoUsers(context.Context):
     """Context that provides empty list of users for default namespace."""
 

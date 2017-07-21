@@ -39,7 +39,7 @@ add = validation.add
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@validation.configure(name="old_validator", namespace="openstack")
+@validation.configure(name="old_validator", platform="openstack")
 class OldValidator(validation.Validator):
 
     class Deployment(object):

@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@context.configure(name="sahara_cluster", order=441)
+@context.configure(name="sahara_cluster", platform="openstack", order=441)
 class SaharaCluster(context.Context):
     """Context class for setting up the Cluster an EDP job."""
 

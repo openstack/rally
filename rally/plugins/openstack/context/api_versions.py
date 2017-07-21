@@ -43,7 +43,7 @@ class CheckOpenStackAPIVersionsValidator(validation.Validator):
 
 
 @validation.add("check_api_versions")
-@context.configure(name="api_versions", order=150)
+@context.configure(name="api_versions", platform="openstack", order=150)
 class OpenStackAPIVersions(context.Context):
     """Context for specifying OpenStack clients versions and service types.
 
