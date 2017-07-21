@@ -37,8 +37,6 @@ OSCLIENTS_OPTS = [
 ]
 CONF.register_opts(OSCLIENTS_OPTS)
 
-_NAMESPACE = "openstack"
-
 
 def configure(name, default_version=None, default_service_type=None,
               supported_versions=None):
@@ -59,7 +57,8 @@ def configure(name, default_version=None, default_service_type=None,
         in client object)
     """
     def wrapper(cls):
-        cls = plugin.configure(name=name, platform=_NAMESPACE)(cls)
+        # openstack platform is hardcoded in OSclients.get() method
+        cls = plugin.configure(name=name)(cls)
         cls._meta_set("default_version", default_version)
         cls._meta_set("default_service_type", default_service_type)
         cls._meta_set("supported_versions", supported_versions or [])
@@ -212,8 +211,11 @@ class OSClient(plugin.Plugin):
         return self.cache[key]
 
     @classmethod
-    def get(cls, name, platform=_NAMESPACE, namespace=_NAMESPACE, **kwargs):
-        return super(OSClient, cls).get(name, platform=namespace, **kwargs)
+    def get(cls, name, **kwargs):
+        # NOTE(boris-42): Remove this after we finish rename refactoring.
+        kwargs.pop("platform", None)
+        kwargs.pop("namespace", None)
+        return super(OSClient, cls).get(name, platform="openstack", **kwargs)
 
 
 @configure("keystone", supported_versions=("2", "3"))
