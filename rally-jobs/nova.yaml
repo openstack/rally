@@ -1351,3 +1351,26 @@
       sla:
         failure_rate:
           max: 0
+
+  NovaServers.boot_server_attach_volume_and_list_attachments:
+    -
+      args:
+        flavor:
+            name: {{flavor_name}}
+        image:
+            name: {{image_name}}
+        volume_size: 1
+        volume_num: 2
+        boot_server_kwargs: {}
+        create_volume_kwargs: {}
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
