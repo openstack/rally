@@ -23,7 +23,7 @@ from rally.plugins.openstack.scenarios.zaqar import utils as zutils
 
 
 @scenario.configure(context={"cleanup": ["zaqar"]},
-                    name="ZaqarBasic.create_queue")
+                    name="ZaqarBasic.create_queue", platform="openstack")
 class CreateQueue(zutils.ZaqarScenario):
 
     @logging.log_deprecated_args(
@@ -39,7 +39,7 @@ class CreateQueue(zutils.ZaqarScenario):
 
 
 @scenario.configure(context={"cleanup": ["zaqar"]},
-                    name="ZaqarBasic.producer_consumer")
+                    name="ZaqarBasic.producer_consumer", platform="openstack")
 class ProducerConsumer(zutils.ZaqarScenario):
 
     @logging.log_deprecated_args(

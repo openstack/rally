@@ -40,7 +40,8 @@ class KeystoneBasic(scenario.OpenStackScenario):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_user")
+                    name="KeystoneBasic.create_user",
+                    platform="openstack")
 class CreateUser(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -57,7 +58,8 @@ class CreateUser(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_delete_user")
+                    name="KeystoneBasic.create_delete_user",
+                    platform="openstack")
 class CreateDeleteUser(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -75,7 +77,8 @@ class CreateDeleteUser(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_user_set_enabled_and_delete")
+                    name="KeystoneBasic.create_user_set_enabled_and_delete",
+                    platform="openstack")
 class CreateUserSetEnabledAndDelete(KeystoneBasic):
 
     def run(self, enabled=True, **kwargs):
@@ -93,7 +96,8 @@ class CreateUserSetEnabledAndDelete(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_tenant")
+                    name="KeystoneBasic.create_tenant",
+                    platform="openstack")
 class CreateTenant(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -109,7 +113,8 @@ class CreateTenant(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.authenticate_user_and_validate_token")
+                    name="KeystoneBasic.authenticate_user_and_validate_token",
+                    platform="openstack")
 class AuthenticateUserAndValidateToken(KeystoneBasic):
 
     def run(self):
@@ -121,7 +126,8 @@ class AuthenticateUserAndValidateToken(KeystoneBasic):
 @validation.add("number", param_name="users_per_tenant", minval=1)
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_tenant_with_users")
+                    name="KeystoneBasic.create_tenant_with_users",
+                    platform="openstack")
 class CreateTenantWithUsers(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -141,7 +147,8 @@ class CreateTenantWithUsers(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_list_users")
+                    name="KeystoneBasic.create_and_list_users",
+                    platform="openstack")
 class CreateAndListUsers(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -161,7 +168,8 @@ class CreateAndListUsers(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_list_tenants")
+                    name="KeystoneBasic.create_and_list_tenants",
+                    platform="openstack")
 class CreateAndListTenants(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -179,7 +187,8 @@ class CreateAndListTenants(KeystoneBasic):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.add_and_remove_user_role")
+                    name="KeystoneBasic.add_and_remove_user_role",
+                    platform="openstack")
 class AddAndRemoveUserRole(KeystoneBasic):
 
     def run(self):
@@ -195,7 +204,8 @@ class AddAndRemoveUserRole(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_delete_role")
+                    name="KeystoneBasic.create_and_delete_role",
+                    platform="openstack")
 class CreateAndDeleteRole(KeystoneBasic):
 
     def run(self):
@@ -207,7 +217,8 @@ class CreateAndDeleteRole(KeystoneBasic):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_add_and_list_user_roles")
+                    name="KeystoneBasic.create_add_and_list_user_roles",
+                    platform="openstack")
 class CreateAddAndListUserRoles(KeystoneBasic):
 
     def run(self):
@@ -222,7 +233,8 @@ class CreateAddAndListUserRoles(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.get_entities")
+                    name="KeystoneBasic.get_entities",
+                    platform="openstack")
 class GetEntities(KeystoneBasic):
 
     def run(self, service_name="keystone"):
@@ -254,7 +266,8 @@ class GetEntities(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_delete_service")
+                    name="KeystoneBasic.create_and_delete_service",
+                    platform="openstack")
 class CreateAndDeleteService(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -273,7 +286,8 @@ class CreateAndDeleteService(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_update_and_delete_tenant")
+                    name="KeystoneBasic.create_update_and_delete_tenant",
+                    platform="openstack")
 class CreateUpdateAndDeleteTenant(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -294,7 +308,8 @@ class CreateUpdateAndDeleteTenant(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_user_update_password")
+                    name="KeystoneBasic.create_user_update_password",
+                    platform="openstack")
 class CreateUserUpdatePassword(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -310,7 +325,8 @@ class CreateUserUpdatePassword(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_list_services")
+                    name="KeystoneBasic.create_and_list_services",
+                    platform="openstack")
 class CreateAndListServices(KeystoneBasic):
 
     @logging.log_deprecated_args(
@@ -329,7 +345,8 @@ class CreateAndListServices(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_list_ec2credentials")
+                    name="KeystoneBasic.create_and_list_ec2credentials",
+                    platform="openstack")
 class CreateAndListEc2Credentials(KeystoneBasic):
 
     def run(self):
@@ -342,7 +359,8 @@ class CreateAndListEc2Credentials(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_delete_ec2credential")
+                    name="KeystoneBasic.create_and_delete_ec2credential",
+                    platform="openstack")
 class CreateAndDeleteEc2Credential(KeystoneBasic):
 
     def run(self):
@@ -356,7 +374,8 @@ class CreateAndDeleteEc2Credential(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_get_role")
+                    name="KeystoneBasic.create_and_get_role",
+                    platform="openstack")
 class CreateAndGetRole(KeystoneBasic):
 
     def run(self, **kwargs):
@@ -370,7 +389,8 @@ class CreateAndGetRole(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_list_roles")
+                    name="KeystoneBasic.create_and_list_roles",
+                    platform="openstack")
 class CreateAddListRoles(KeystoneBasic):
 
     def run(self, create_role_kwargs=None, list_role_kwargs=None):
@@ -394,7 +414,8 @@ class CreateAddListRoles(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"]},
-                    name="KeystoneBasic.create_and_update_user")
+                    name="KeystoneBasic.create_and_update_user",
+                    platform="openstack")
 class CreateAndUpdateUser(KeystoneBasic):
 
     def run(self, create_user_kwargs=None, update_user_kwargs=None):

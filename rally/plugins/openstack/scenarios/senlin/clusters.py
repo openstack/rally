@@ -23,7 +23,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.SENLIN])
 @validation.add("required_contexts", contexts=("profiles"))
 @scenario.configure(context={"admin_cleanup": ["senlin"]},
-                    name="SenlinClusters.create_and_delete_cluster")
+                    name="SenlinClusters.create_and_delete_cluster",
+                    platform="openstack")
 class CreateAndDeleteCluster(utils.SenlinScenario):
 
     def run(self, desired_capacity=0, min_size=0,

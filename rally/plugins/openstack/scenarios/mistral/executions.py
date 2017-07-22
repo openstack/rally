@@ -31,7 +31,8 @@ from rally.task import validation
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
 @scenario.configure(name="MistralExecutions.list_executions",
-                    context={"cleanup": ["mistral"]})
+                    context={"cleanup": ["mistral"]},
+                    platform="openstack")
 class ListExecutions(utils.MistralScenario):
 
     def run(self, marker="", limit=None, sort_keys="", sort_dirs=""):
@@ -59,9 +60,9 @@ class ListExecutions(utils.MistralScenario):
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
 @validation.workbook_contains_workflow("definition", "workflow_name")
-@scenario.configure(
-    name="MistralExecutions.create_execution_from_workbook",
-    context={"cleanup": ["mistral"]})
+@scenario.configure(name="MistralExecutions.create_execution_from_workbook",
+                    context={"cleanup": ["mistral"]},
+                    platform="openstack")
 class CreateExecutionFromWorkbook(utils.MistralScenario):
 
     def run(self, definition, workflow_name=None, wf_input=None, params=None,

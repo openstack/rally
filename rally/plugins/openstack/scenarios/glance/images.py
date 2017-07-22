@@ -49,7 +49,8 @@ class GlanceBasic(scenario.OpenStackScenario):
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.create_and_list_image")
+                    name="GlanceImages.create_and_list_image",
+                    platform="openstack")
 class CreateAndListImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
@@ -95,7 +96,8 @@ class CreateAndListImage(GlanceBasic):
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.create_and_get_image")
+                    name="GlanceImages.create_and_get_image",
+                    platform="openstack")
 class CreateAndGetImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
@@ -126,7 +128,8 @@ class CreateAndGetImage(GlanceBasic):
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.list_images")
+                    name="GlanceImages.list_images",
+                    platform="openstack")
 class ListImages(GlanceBasic):
 
     def run(self):
@@ -152,7 +155,8 @@ class ListImages(GlanceBasic):
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.create_and_delete_image")
+                    name="GlanceImages.create_and_delete_image",
+                    platform="openstack")
 class CreateAndDeleteImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
@@ -192,7 +196,8 @@ class CreateAndDeleteImage(GlanceBasic):
                                                consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance", "nova"]},
-                    name="GlanceImages.create_image_and_boot_instances")
+                    name="GlanceImages.create_image_and_boot_instances",
+                    platform="openstack")
 class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format,
@@ -243,7 +248,8 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.create_and_update_image")
+                    name="GlanceImages.create_and_update_image",
+                    platform="openstack")
 class CreateAndUpdateImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,

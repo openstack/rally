@@ -30,7 +30,8 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_list_pools")
+                    name="NeutronLoadbalancerV1.create_and_list_pools",
+                    platform="openstack")
 class CreateAndListPools(utils.NeutronScenario):
 
     def run(self, pool_create_args=None):
@@ -55,7 +56,8 @@ class CreateAndListPools(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_delete_pools")
+                    name="NeutronLoadbalancerV1.create_and_delete_pools",
+                    platform="openstack")
 class CreateAndDeletePools(utils.NeutronScenario):
 
     def run(self, pool_create_args=None):
@@ -82,7 +84,8 @@ class CreateAndDeletePools(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_update_pools")
+                    name="NeutronLoadbalancerV1.create_and_update_pools",
+                    platform="openstack")
 class CreateAndUpdatePools(utils.NeutronScenario):
 
     def run(self, pool_update_args=None, pool_create_args=None):
@@ -111,7 +114,8 @@ class CreateAndUpdatePools(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_list_vips")
+                    name="NeutronLoadbalancerV1.create_and_list_vips",
+                    platform="openstack")
 class CreateAndListVips(utils.NeutronScenario):
 
     def run(self, pool_create_args=None, vip_create_args=None):
@@ -142,7 +146,8 @@ class CreateAndListVips(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_delete_vips")
+                    name="NeutronLoadbalancerV1.create_and_delete_vips",
+                    platform="openstack")
 class CreateAndDeleteVips(utils.NeutronScenario):
 
     def run(self, pool_create_args=None, vip_create_args=None):
@@ -175,7 +180,8 @@ class CreateAndDeleteVips(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"cleanup": ["neutron"]},
-                    name="NeutronLoadbalancerV1.create_and_update_vips")
+                    name="NeutronLoadbalancerV1.create_and_update_vips",
+                    platform="openstack")
 class CreateAndUpdateVips(utils.NeutronScenario):
 
     def run(self, pool_create_args=None,
@@ -207,9 +213,10 @@ class CreateAndUpdateVips(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["neutron"]},
-                    name=("NeutronLoadbalancerV1"
-                          ".create_and_list_healthmonitors"))
+@scenario.configure(
+    context={"cleanup": ["neutron"]},
+    name="NeutronLoadbalancerV1.create_and_list_healthmonitors",
+    platform="openstack")
 class CreateAndListHealthmonitors(utils.NeutronScenario):
 
     def run(self, healthmonitor_create_args=None):
@@ -230,9 +237,10 @@ class CreateAndListHealthmonitors(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["neutron"]},
-                    name=("NeutronLoadbalancerV1"
-                          ".create_and_delete_healthmonitors"))
+@scenario.configure(
+    context={"cleanup": ["neutron"]},
+    name="NeutronLoadbalancerV1.create_and_delete_healthmonitors",
+    platform="openstack")
 class CreateAndDeleteHealthmonitors(utils.NeutronScenario):
 
     def run(self, healthmonitor_create_args=None):
@@ -255,9 +263,10 @@ class CreateAndDeleteHealthmonitors(utils.NeutronScenario):
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["neutron"]},
-                    name=("NeutronLoadbalancerV1"
-                          ".create_and_update_healthmonitors"))
+@scenario.configure(
+    context={"cleanup": ["neutron"]},
+    name="NeutronLoadbalancerV1.create_and_update_healthmonitors",
+    platform="openstack")
 class CreateAndUpdateHealthmonitors(utils.NeutronScenario):
 
     def run(self, healthmonitor_create_args=None,

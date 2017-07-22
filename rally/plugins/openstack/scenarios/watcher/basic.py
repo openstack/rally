@@ -23,11 +23,11 @@ from rally.task import validation
 
 @types.convert(strategy={"type": "watcher_strategy"},
                goal={"type": "watcher_goal"})
-@validation.add("required_services",
-                services=[consts.Service.WATCHER])
+@validation.add("required_services", services=[consts.Service.WATCHER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
-                    name="Watcher.create_audit_template_and_delete")
+                    name="Watcher.create_audit_template_and_delete",
+                    platform="openstack")
 class CreateAuditTemplateAndDelete(utils.WatcherScenario):
 
     @logging.log_deprecated_args("Extra field has been removed "
@@ -45,9 +45,8 @@ class CreateAuditTemplateAndDelete(utils.WatcherScenario):
         self._delete_audit_template(audit_template.uuid)
 
 
-@validation.add("required_services",
-                services=[consts.Service.WATCHER])
-@scenario.configure(name="Watcher.list_audit_templates")
+@validation.add("required_services", services=[consts.Service.WATCHER])
+@scenario.configure(name="Watcher.list_audit_templates", platform="openstack")
 class ListAuditTemplates(utils.WatcherScenario):
 
     def run(self, name=None, goal=None, strategy=None,
@@ -80,11 +79,11 @@ class ListAuditTemplates(utils.WatcherScenario):
                                    sort_dir=sort_dir, detail=detail)
 
 
-@validation.add("required_services",
-                services=[consts.Service.WATCHER])
+@validation.add("required_services", services=[consts.Service.WATCHER])
 @validation.add("required_contexts", contexts="audit_templates")
 @scenario.configure(context={"admin_cleanup": ["watcher"]},
-                    name="Watcher.create_audit_and_delete")
+                    name="Watcher.create_audit_and_delete",
+                    platform="openstack")
 class CreateAuditAndDelete(utils.WatcherScenario):
 
     def run(self):

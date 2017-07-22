@@ -27,7 +27,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaKeypair.create_and_list_keypairs")
+                    name="NovaKeypair.create_and_list_keypairs",
+                    platform="openstack")
 class CreateAndListKeypairs(utils.NovaScenario):
 
     def run(self, **kwargs):
@@ -48,7 +49,8 @@ class CreateAndListKeypairs(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaKeypair.create_and_delete_keypair")
+                    name="NovaKeypair.create_and_delete_keypair",
+                    platform="openstack")
 class CreateAndDeleteKeypair(utils.NovaScenario):
 
     def run(self, **kwargs):
@@ -70,7 +72,8 @@ class CreateAndDeleteKeypair(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaKeypair.boot_and_delete_server_with_keypair")
+                    name="NovaKeypair.boot_and_delete_server_with_keypair",
+                    platform="openstack")
 class BootAndDeleteServerWithKeypair(utils.NovaScenario):
 
     @logging.log_deprecated_args(
@@ -107,7 +110,8 @@ class BootAndDeleteServerWithKeypair(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaKeypair.create_and_get_keypair")
+                    name="NovaKeypair.create_and_get_keypair",
+                    platform="openstack")
 class CreateAndGetKeypair(utils.NovaScenario):
 
     def run(self, **kwargs):

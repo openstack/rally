@@ -31,7 +31,8 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
-                    name="CeilometerTraits.create_user_and_list_traits")
+                    name="CeilometerTraits.create_user_and_list_traits",
+                    platform="openstack")
 class CreateUserAndListTraits(cutils.CeilometerScenario,
                               kbasic.KeystoneBasic):
 
@@ -55,7 +56,8 @@ class CreateUserAndListTraits(cutils.CeilometerScenario,
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
                     name="CeilometerTraits.create_user_and"
-                         "_list_trait_descriptions")
+                         "_list_trait_descriptions",
+                    platform="openstack")
 class CreateUserAndListTraitDescriptions(
         cutils.CeilometerScenario, kbasic.KeystoneBasic):
 

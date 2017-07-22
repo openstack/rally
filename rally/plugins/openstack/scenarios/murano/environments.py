@@ -24,7 +24,8 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.MURANO])
 @scenario.configure(context={"cleanup": ["murano.environments"]},
-                    name="MuranoEnvironments.list_environments")
+                    name="MuranoEnvironments.list_environments",
+                    platform="openstack")
 class ListEnvironments(utils.MuranoScenario):
 
     def run(self):
@@ -37,7 +38,8 @@ class ListEnvironments(utils.MuranoScenario):
 
 @validation.add("required_services", services=[consts.Service.MURANO])
 @scenario.configure(context={"cleanup": ["murano.environments"]},
-                    name="MuranoEnvironments.create_and_delete_environment")
+                    name="MuranoEnvironments.create_and_delete_environment",
+                    platform="openstack")
 class CreateAndDeleteEnvironment(utils.MuranoScenario):
 
     def run(self):
@@ -51,7 +53,8 @@ class CreateAndDeleteEnvironment(utils.MuranoScenario):
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_contexts", contexts=("murano_packages"))
 @scenario.configure(context={"cleanup": ["murano"], "roles": ["admin"]},
-                    name="MuranoEnvironments.create_and_deploy_environment")
+                    name="MuranoEnvironments.create_and_deploy_environment",
+                    platform="openstack")
 class CreateAndDeployEnvironment(utils.MuranoScenario):
 
     def run(self, packages_per_env=1):

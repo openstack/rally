@@ -37,6 +37,7 @@ def configure(name, order, platform="default", namespace=None, hidden=False):
     adds attributes to the class.
 
     :param name: Name of the class, used in the input task
+    :param platform: str plugin's platform
     :param order: As far as we can use multiple context classes that sometimes
                   depend on each other we have to specify order of execution.
                   Contexts with smaller order are run first

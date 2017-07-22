@@ -25,7 +25,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaServerGroups.create_and_list_server_groups")
+                    name="NovaServerGroups.create_and_list_server_groups",
+                    platform="openstack")
 class CreateAndListServerGroups(utils.NovaScenario):
 
     def run(self, all_projects=False, kwargs=None):
@@ -54,7 +55,8 @@ class CreateAndListServerGroups(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaServerGroups.create_and_get_server_group")
+                    name="NovaServerGroups.create_and_get_server_group",
+                    platform="openstack")
 class CreateAndGetServerGroup(utils.NovaScenario):
 
     def run(self, kwargs=None):

@@ -30,7 +30,9 @@ from rally.task.processing import charts
 LOG = logging.getLogger(__name__)
 
 
-def configure(name, namespace="default", context=None):
+@logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
+                             ["namespace"], log_function=LOG.warning)
+def configure(name, platform="default", namespace=None, context=None):
     """Configure scenario by setting proper meta data.
 
     This can also transform plain function into scenario plugin, however
@@ -38,18 +40,21 @@ def configure(name, namespace="default", context=None):
     based on rally.task.scenario.Scenario.
 
     :param name: str scenario name
-    :param namespace: str plugin namespace
+    :param platform: str plugin's platform
     :param context: default task context that is created for this scenario.
                     If there are custom user specified contexts this one
                     will be updated by provided contexts.
     """
+    if namespace:
+        platform = namespace
+
     def wrapper(cls):
         # TODO(boris-42): Drop this check as soon as we refactor rally report
         if "." not in name.strip("."):
             msg = (_("Scenario name must include a dot: '%s'") % name)
             raise exceptions.RallyException(msg)
 
-        cls = plugin.configure(name=name, platform=namespace)(cls)
+        cls = plugin.configure(name=name, platform=platform)(cls)
         cls._meta_set("default_context", context or {})
         return cls
 

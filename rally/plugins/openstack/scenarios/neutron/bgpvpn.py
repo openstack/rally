@@ -25,7 +25,8 @@ from rally.task import validation
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_and_delete_bgpvpns")
+                    name="NeutronBGPVPN.create_and_delete_bgpvpns",
+                    platform="openstack")
 class CreateAndDeleteBgpvpns(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,
@@ -58,7 +59,8 @@ class CreateAndDeleteBgpvpns(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_and_list_bgpvpns")
+                    name="NeutronBGPVPN.create_and_list_bgpvpns",
+                    platform="openstack")
 class CreateAndListBgpvpns(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,
@@ -91,7 +93,8 @@ class CreateAndListBgpvpns(utils.NeutronScenario):
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_and_update_bgpvpns")
+                    name="NeutronBGPVPN.create_and_update_bgpvpns",
+                    platform="openstack")
 class CreateAndUpdateBgpvpns(utils.NeutronScenario):
 
     def run(self, update_name=False, route_targets=None,
@@ -148,7 +151,8 @@ class CreateAndUpdateBgpvpns(utils.NeutronScenario):
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"admin_cleanup": ["neutron"],
                              "cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks")
+                    name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks",
+                    platform="openstack")
 class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,
@@ -189,7 +193,8 @@ class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 @validation.add("required_contexts", contexts=("router"))
 @scenario.configure(context={"admin_cleanup": ["neutron"],
                              "cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers")
+                    name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers",
+                    platform="openstack")
 class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,
@@ -230,7 +235,8 @@ class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_and_list_networks_associations")
+                    name="NeutronBGPVPN.create_and_list_networks_associations",
+                    platform="openstack")
 class CreateAndListNetworksAssocs(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,
@@ -279,7 +285,8 @@ class CreateAndListNetworksAssocs(utils.NeutronScenario):
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("router"))
 @scenario.configure(context={"admin_cleanup": ["neutron"]},
-                    name="NeutronBGPVPN.create_and_list_routers_associations")
+                    name="NeutronBGPVPN.create_and_list_routers_associations",
+                    platform="openstack")
 class CreateAndListRoutersAssocs(utils.NeutronScenario):
 
     def run(self, route_targets=None, import_targets=None,

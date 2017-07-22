@@ -21,7 +21,7 @@ from osprofiler import profiler
 from rally import osclients
 from rally.task import scenario
 
-configure = functools.partial(scenario.configure, namespace="openstack")
+configure = functools.partial(scenario.configure, platform="openstack")
 
 CONF = cfg.CONF
 

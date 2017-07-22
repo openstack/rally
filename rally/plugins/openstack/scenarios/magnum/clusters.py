@@ -24,7 +24,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.MAGNUM])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["magnum.clusters"]},
-                    name="MagnumClusters.list_clusters")
+                    name="MagnumClusters.list_clusters",
+                    platform="openstack")
 class ListClusters(utils.MagnumScenario):
 
     def run(self, **kwargs):
@@ -47,7 +48,8 @@ class ListClusters(utils.MagnumScenario):
 @validation.add("required_services", services=[consts.Service.MAGNUM])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["magnum.clusters", "nova.keypairs"]},
-                    name="MagnumClusters.create_and_list_clusters")
+                    name="MagnumClusters.create_and_list_clusters",
+                    platform="openstack")
 class CreateAndListClusters(utils.MagnumScenario):
 
     def run(self, node_count, **kwargs):

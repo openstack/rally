@@ -26,7 +26,8 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
-@scenario.configure(name="MistralWorkbooks.list_workbooks")
+@scenario.configure(name="MistralWorkbooks.list_workbooks",
+                    platform="openstack")
 class ListWorkbooks(utils.MistralScenario):
 
     def run(self):
@@ -44,7 +45,8 @@ class ListWorkbooks(utils.MistralScenario):
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
 @scenario.configure(context={"cleanup": ["mistral"]},
-                    name="MistralWorkbooks.create_workbook")
+                    name="MistralWorkbooks.create_workbook",
+                    platform="openstack")
 class CreateWorkbook(utils.MistralScenario):
 
     def run(self, definition, do_delete=False):

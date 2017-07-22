@@ -29,7 +29,8 @@ from rally.task import validation
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_and_list_stack")
+                    name="HeatStacks.create_and_list_stack",
+                    platform="openstack")
 class CreateAndListStack(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -53,7 +54,8 @@ class CreateAndListStack(utils.HeatScenario):
 
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="HeatStacks.list_stacks_and_resources")
+@scenario.configure(name="HeatStacks.list_stacks_and_resources",
+                    platform="openstack")
 class ListStacksAndResources(utils.HeatScenario):
 
     def run(self):
@@ -70,7 +72,8 @@ class ListStacksAndResources(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_and_delete_stack")
+                    name="HeatStacks.create_and_delete_stack",
+                    platform="openstack")
 class CreateAndDeleteStack(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -96,7 +99,8 @@ class CreateAndDeleteStack(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_check_delete_stack")
+                    name="HeatStacks.create_check_delete_stack",
+                    platform="openstack")
 class CreateCheckDeleteStack(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -128,7 +132,8 @@ class CreateCheckDeleteStack(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_update_delete_stack")
+                    name="HeatStacks.create_update_delete_stack",
+                    platform="openstack")
 class CreateUpdateDeleteStack(utils.HeatScenario):
 
     def run(self, template_path, updated_template_path,
@@ -167,7 +172,8 @@ class CreateUpdateDeleteStack(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_stack_and_scale")
+                    name="HeatStacks.create_stack_and_scale",
+                    platform="openstack")
 class CreateStackAndScale(utils.HeatScenario):
 
     def run(self, template_path, output_key, delta,
@@ -209,7 +215,8 @@ class CreateStackAndScale(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_suspend_resume_delete_stack")
+                    name="HeatStacks.create_suspend_resume_delete_stack",
+                    platform="openstack")
 class CreateSuspendResumeDeleteStack(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -236,7 +243,8 @@ class CreateSuspendResumeDeleteStack(utils.HeatScenario):
 
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="HeatStacks.list_stacks_and_events")
+@scenario.configure(name="HeatStacks.list_stacks_and_events",
+                    platform="openstack")
 class ListStacksAndEvents(utils.HeatScenario):
 
     def run(self):
@@ -253,7 +261,8 @@ class ListStacksAndEvents(utils.HeatScenario):
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_snapshot_restore_delete_stack")
+                    name="HeatStacks.create_snapshot_restore_delete_stack",
+                    platform="openstack")
 class CreateSnapshotRestoreDeleteStack(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -283,7 +292,8 @@ class CreateSnapshotRestoreDeleteStack(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_stack_and_show_output_via_API")
+                    name="HeatStacks.create_stack_and_show_output_via_API",
+                    platform="openstack")
 class CreateStackAndShowOutputViaAPI(utils.HeatScenario):
 
     def run(self, template_path, output_key,
@@ -310,7 +320,8 @@ class CreateStackAndShowOutputViaAPI(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_stack_and_show_output")
+                    name="HeatStacks.create_stack_and_show_output",
+                    platform="openstack")
 class CreateStackAndShowOutput(utils.HeatScenario):
 
     def run(self, template_path, output_key,
@@ -337,7 +348,8 @@ class CreateStackAndShowOutput(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_stack_and_list_output_via_API")
+                    name="HeatStacks.create_stack_and_list_output_via_API",
+                    platform="openstack")
 class CreateStackAndListOutputViaAPI(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
@@ -362,7 +374,8 @@ class CreateStackAndListOutputViaAPI(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["heat"]},
-                    name="HeatStacks.create_stack_and_list_output")
+                    name="HeatStacks.create_stack_and_list_output",
+                    platform="openstack")
 class CreateStackAndListOutput(utils.HeatScenario):
 
     def run(self, template_path, parameters=None,
