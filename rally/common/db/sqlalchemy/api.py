@@ -510,8 +510,8 @@ class Connection(object):
             iter_count = len(workload_results)
 
             failed_iter_count = 0
-            max_duration = 0
-            min_duration = 0
+            max_duration = None
+            min_duration = None
 
             for d in workload_results:
                 if d.get("error"):
@@ -519,10 +519,10 @@ class Connection(object):
 
                 duration = d.get("duration", 0)
 
-                if duration > max_duration:
+                if max_duration is None or duration > max_duration:
                     max_duration = duration
 
-                if min_duration and min_duration > duration:
+                if min_duration is None or min_duration > duration:
                     min_duration = duration
 
             atomics = collections.OrderedDict()

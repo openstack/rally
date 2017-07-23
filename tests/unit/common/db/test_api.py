@@ -244,7 +244,7 @@ class TasksTestCase(test.DBTestCase):
              "full_duration": w_full_duration,
              "load_duration": w_load_duration,
              "start_time": w_start_time,
-             "max_duration": 0.0, "min_duration": 0.0,
+             "max_duration": None, "min_duration": None,
              "failed_iteration_count": 0, "total_iteration_count": 0,
              "pass_sla": True, "sla": w_sla, "statistics": mock.ANY,
              "sla_results": {"sla": sla_results}}, workloads[0])
@@ -404,7 +404,6 @@ class WorkloadTestCase(test.DBTestCase):
              "args": w_args, "context": w_context, "hooks": w_hooks,
              "runner": w_runner, "runner_type": w_runner_type,
              "full_duration": 0.0, "load_duration": 0.0,
-             "max_duration": 0.0, "min_duration": 0.0,
              "failed_iteration_count": 0, "total_iteration_count": 0,
              "pass_sla": True, "sla": w_sla,
              "sla_results": {}}, workload)
@@ -483,8 +482,8 @@ class WorkloadTestCase(test.DBTestCase):
                                 start_time=start_time,
                                 sla_results=sla_results)
         workload = db.workload_get(workload["uuid"])
-        self.assertEqual(0, workload["min_duration"])
-        self.assertEqual(0, workload["max_duration"])
+        self.assertIsNone(workload["min_duration"])
+        self.assertIsNone(workload["max_duration"])
         self.assertEqual(0, workload["total_iteration_count"])
         self.assertEqual(0, workload["failed_iteration_count"])
         self.assertFalse(workload["pass_sla"])

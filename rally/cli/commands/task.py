@@ -613,7 +613,7 @@ class TaskCommands(object):
 
             task = {"subtasks": []}
 
-            start_time = float("inf")
+            start_time = None
 
             for result in tasks_results:
                 try:
@@ -625,13 +625,13 @@ class TaskCommands(object):
 
                 iter_count = 0
                 failed_iter_count = 0
-                min_duration = float("inf")
-                max_duration = 0
+                min_duration = None
+                max_duration = None
 
                 atomics = collections.OrderedDict()
 
                 for itr in result["result"]:
-                    if itr["timestamp"] < start_time:
+                    if start_time is None or itr["timestamp"] < start_time:
                         start_time = itr["timestamp"]
                     # NOTE(chenhb): back compatible for atomic_actions
                     itr["atomic_actions"] = list(
@@ -644,10 +644,10 @@ class TaskCommands(object):
 
                     duration = itr.get("duration", 0)
 
-                    if duration > max_duration:
+                    if max_duration is None or duration > max_duration:
                         max_duration = duration
 
-                    if min_duration and min_duration > duration:
+                    if min_duration is None or min_duration > duration:
                         min_duration = duration
 
                     merged_atomic = atomic.merge_atomic(itr["atomic_actions"])

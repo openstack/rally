@@ -270,8 +270,8 @@ class Workload(BASE, RallyBase):
 
     load_duration = sa.Column(sa.Float, default=0)
     full_duration = sa.Column(sa.Float, default=0)
-    min_duration = sa.Column(sa.Float, default=0)
-    max_duration = sa.Column(sa.Float, default=0)
+    min_duration = sa.Column(sa.Float)
+    max_duration = sa.Column(sa.Float)
     total_iteration_count = sa.Column(sa.Integer, default=0)
     failed_iteration_count = sa.Column(sa.Integer, default=0)
 
