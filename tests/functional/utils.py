@@ -93,6 +93,20 @@ class Rally(object):
         self.env = copy.deepcopy(os.environ)
         self.env["HOME"] = self.tmp_dir
         self.config_filename = None
+        self.method_name = None
+        self.class_name = None
+
+        caller_frame = inspect.currentframe().f_back
+        if caller_frame.f_code.co_name == "__call__":
+            caller_frame = caller_frame.f_back
+
+        self.method_name = caller_frame.f_code.co_name
+        if self.method_name == "setUp":
+            raise Exception("No rally instance should be generated in "
+                            "setUp method")
+
+        test_object = caller_frame.f_locals["self"]
+        self.class_name = test_object.__class__.__name__
 
         if force_new_db or ("RCI_KEEP_DB" not in os.environ):
             config_filename = os.path.join(self.tmp_dir, "conf")
@@ -139,20 +153,13 @@ class Rally(object):
 
         :return: complete report name to write report
         """
-        caller_frame = inspect.currentframe().f_back
-        if caller_frame.f_code.co_name == "__call__":
-            caller_frame = caller_frame.f_back
 
-        method_name = caller_frame.f_code.co_name
-        test_object = caller_frame.f_locals["self"]
-        class_name = test_object.__class__.__name__
-
-        self._safe_make_dirs("%s/%s" % (self.reports_root, class_name))
+        self._safe_make_dirs("%s/%s" % (self.reports_root, self.class_name))
 
         suff = suffix or ""
         ext = extension or "txt"
-        path = "%s/%s/%s%s.%s" % (self.reports_root, class_name,
-                                  method_name, suff, ext)
+        path = "%s/%s/%s%s.%s" % (self.reports_root, self.class_name,
+                                  self.method_name, suff, ext)
 
         if path not in self._created_files:
             if os.path.exists(path):
