@@ -13,6 +13,7 @@
 #    under the License.
 
 import datetime as dt
+import uuid
 
 import six
 
@@ -52,7 +53,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
             "counter_type": counter_type,
             "counter_unit": counter_unit,
             "counter_volume": counter_volume,
-            "resource_id": self.generate_random_name()
+            "resource_id": str(uuid.uuid4())
         }
         opt_fields = {
             "project_id": project_id,

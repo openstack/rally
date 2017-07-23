@@ -30,9 +30,9 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario(self.context)
 
-    def test__make_samples_no_batch_size(self):
-        self.scenario.generate_random_name = mock.Mock(
-            return_value="fake_resource")
+    @mock.patch("%s.uuid.uuid4" % CEILOMETER_UTILS)
+    def test__make_samples_no_batch_size(self, mock_uuid4):
+        mock_uuid4.return_value = "fake_uuid"
         test_timestamp = dt.datetime(2015, 10, 20, 14, 18, 40)
         result = list(self.scenario._make_samples(count=2, interval=60,
                                                   timestamp=test_timestamp))
@@ -41,16 +41,16 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
                     "counter_type": "gauge",
                     "counter_unit": "%",
                     "counter_volume": 1,
-                    "resource_id": "fake_resource",
+                    "resource_id": "fake_uuid",
                     "timestamp": test_timestamp.isoformat()}
         self.assertEqual(expected, result[0][0])
         samples_int = (parser.parse(result[0][0]["timestamp"]) -
                        parser.parse(result[0][1]["timestamp"])).seconds
         self.assertEqual(60, samples_int)
 
-    def test__make_samples_batch_size(self):
-        self.scenario.generate_random_name = mock.Mock(
-            return_value="fake_resource")
+    @mock.patch("%s.uuid.uuid4" % CEILOMETER_UTILS)
+    def test__make_samples_batch_size(self, mock_uuid4):
+        mock_uuid4.return_value = "fake_uuid"
         test_timestamp = dt.datetime(2015, 10, 20, 14, 18, 40)
         result = list(self.scenario._make_samples(count=4, interval=60,
                                                   batch_size=2,
@@ -60,7 +60,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
                     "counter_type": "gauge",
                     "counter_unit": "%",
                     "counter_volume": 1,
-                    "resource_id": "fake_resource",
+                    "resource_id": "fake_uuid",
                     "timestamp": test_timestamp.isoformat()}
         self.assertEqual(expected, result[0][0])
         samples_int = (parser.parse(result[0][-1]["timestamp"]) -

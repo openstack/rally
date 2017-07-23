@@ -118,7 +118,14 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
             ceilometer_ctx._store_batch_samples,
             scenario, ["foo", "bar"], 1)
 
-    def test_setup(self):
+    @mock.patch("%s.samples.ceilo_utils.CeilometerScenario._get_resource"
+                % CTX)
+    @mock.patch("%s.samples.ceilo_utils.CeilometerScenario._create_samples"
+                % CTX)
+    @mock.patch(
+        "rally.plugins.openstack.scenarios.ceilometer.utils.uuid")
+    def test_setup(self, mock_uuid, mock_create_samples, mock_get_resource):
+        mock_uuid.uuid4.return_value = "fake_resource-id"
         tenants_count = 2
         users_per_tenant = 2
         resources_per_tenant = 2
@@ -142,8 +149,6 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                  "created_at": "2015-09-10T06:55:12.000000"}
             ]
         }
-        scenario.generate_random_name = mock.Mock(
-            return_value="fake_resource-id")
         kwargs = copy.deepcopy(sample)
         samples_to_create = list(
             scenario._make_samples(count=samples_per_resource, interval=60,
@@ -158,16 +163,15 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
                     new_context["tenants"][id_]["samples"].append(sample)
                 new_context["tenants"][id_]["resources"].append(
                     sample["resource_id"])
-        with mock.patch("%s.samples.ceilo_utils.CeilometerScenario"
-                        "._create_samples" % CTX) as mock_create_samples:
-            mock_create_samples.return_value = []
-            for i, sample in enumerate(samples_to_create):
-                sample_object = mock.MagicMock(resource_id="fake_resource-id")
-                sample_object.to_dict.return_value = sample
-                mock_create_samples.return_value.append(sample_object)
-            ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
-            ceilometer_ctx.setup()
-            self.assertEqual(new_context, ceilometer_ctx.context)
+
+        mock_create_samples.return_value = []
+        for i, sample in enumerate(samples_to_create):
+            sample_object = mock.MagicMock(resource_id="fake_resource-id")
+            sample_object.to_dict.return_value = sample
+            mock_create_samples.return_value.append(sample_object)
+        ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
+        ceilometer_ctx.setup()
+        self.assertEqual(new_context, ceilometer_ctx.context)
 
     def test_cleanup(self):
         tenants, context = self._gen_context(2, 5, 3, 3)

@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
+
 from six import moves
 
 from rally.common.i18n import _
@@ -115,6 +117,7 @@ class CeilometerSampleGenerator(context.Context):
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
                 msg=_("Context failed to store too many batches of samples"))
+
         return samples
 
     @logging.log_task_wrapper(LOG.info, _("Enter context: `Ceilometer`"))
@@ -125,6 +128,8 @@ class CeilometerSampleGenerator(context.Context):
             "counter_unit": self.config["counter_unit"],
             "counter_volume": self.config["counter_volume"],
         }
+        resources = []
+
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             self.context["tenants"][tenant_id]["samples"] = []
@@ -148,6 +153,27 @@ class CeilometerSampleGenerator(context.Context):
                         sample.to_dict())
                 self.context["tenants"][tenant_id]["resources"].append(
                     samples[0].resource_id)
+                resources.append((user, samples[0].resource_id))
+
+        # NOTE(boris-42): Context should wait until samples are processed
+        from ceilometerclient import exc
+
+        for user, resource_id in resources:
+            scenario = ceilo_utils.CeilometerScenario(
+                context={"user": user, "task": self.context["task"]})
+
+            success = False
+            for i in range(60):
+                try:
+                    scenario._get_resource(resource_id)
+                    success = True
+                    break
+                except exc.HTTPNotFound:
+                    time.sleep(3)
+            if not success:
+                raise exceptions.ContextSetupFailure(
+                    ctx_name=self.get_name(),
+                    msg="Ceilometer Resource %s is not found" % resource_id)
 
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Ceilometer`"))
     def cleanup(self):
