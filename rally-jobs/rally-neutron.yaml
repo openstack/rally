@@ -9,12 +9,12 @@
         network_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 40}}
-        concurrency: {{smoke or 20}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -27,12 +27,12 @@
           provider:network_type: "vxlan"
       runner:
         type: "constant"
-        times: {{smoke or 40}}
-        concurrency: {{smoke or 20}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -73,12 +73,12 @@
         network_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 10}}
-        concurrency: {{smoke or 2}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -95,13 +95,13 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -119,13 +119,13 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -140,12 +140,12 @@
         security_group_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             security_group: -1
@@ -159,12 +159,12 @@
         security_group_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             security_group: -1
@@ -178,12 +178,12 @@
         security_group_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             security_group: -1
@@ -198,12 +198,12 @@
         security_group_update_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             security_group: -1
@@ -218,12 +218,12 @@
         security_group_rule_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 20 }}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8 }}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             security_group: -1
@@ -238,12 +238,12 @@
         security_group_rule_args: {}
       runner:
         type: "constant"
-        times: 20
-        concurrency: 10
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 3
+          tenants: 2
+          users_per_tenant: 1
         quotas:
           neutron:
             security_group: -1
@@ -258,12 +258,12 @@
         floating_ip_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 40}}
-        concurrency: {{smoke or 20}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 5}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              floatingip: -1
@@ -281,13 +281,13 @@
         router_create_args:
       runner:
         type: "constant"
-        times: {{smoke or 15}}
-        concurrency: {{smoke or 5}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -325,13 +325,13 @@
         ports_per_network: 4
       runner:
         type: "constant"
-        times: {{smoke or 15}}
-        concurrency: {{smoke or 5}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              network: -1
@@ -348,12 +348,12 @@
         agent_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 10}}
-        concurrency: {{smoke or 3}}
+        times: {{smoke or 4}}
+        concurrency: {{smoke or 2}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
       sla:
         failure_rate:
           max: 0
@@ -366,13 +366,13 @@
         ports_per_network: 2
       runner:
         type: "constant"
-        times: {{smoke or 5}}
+        times: {{smoke or 4}}
         concurrency: {{smoke or 2}}
       context:
         network: {}
         users:
           tenants: {{smoke or 2}}
-          users_per_tenant: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -390,12 +390,12 @@
             name: "_updated"
       runner:
         type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -415,13 +415,13 @@
             name: "_subnet_updated"
       runner:
         type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -443,13 +443,13 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: {{smoke or 15}}
-        concurrency: {{smoke or 5}}
+        times: {{smoke or 4}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -488,8 +488,8 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
@@ -510,12 +510,12 @@
         floating_ip_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 40}}
-        concurrency: {{smoke or 20}}
+        times: {{smoke or 8}}
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: {{smoke or 5}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
              floatingip: -1
@@ -533,13 +533,13 @@
         router_create_args: {}
       runner:
         type: "constant"
-        times: {{smoke or 15}}
-        concurrency: {{smoke or 5}}
+        times: {{smoke or 4}}
+        concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -554,16 +554,16 @@
       args:
         network_create_args: {}
         port_create_args: {}
-        ports_per_network: 10
+        ports_per_network: 5
       runner:
         type: "constant"
-        times: {{smoke or 8}}
+        times: {{smoke or 4}}
         concurrency: {{smoke or 4}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -577,7 +577,7 @@
       args:
         network_create_args: {}
         port_create_args: {}
-        ports_per_network: 5
+        ports_per_network: 2
         port_update_args:
             admin_state_up: False
             device_id: "dummy_id"
@@ -585,13 +585,13 @@
             name: "_port_updated"
       runner:
         type: "constant"
-        times: {{smoke or 20}}
-        concurrency: {{smoke or 10}}
+        times: {{smoke or 10}}
+        concurrency: {{smoke or 5}}
       context:
         network: {}
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         quotas:
           neutron:
             network: -1
@@ -610,8 +610,8 @@
         concurrency: {{smoke or 2}}
       context:
         users:
-          tenants: {{smoke or 3}}
-          users_per_tenant: {{smoke or 2}}
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
       sla:
         failure_rate:
           max: 0
@@ -655,7 +655,7 @@
         username: "cirros"
       runner:
         type: "constant"
-        times: {{smoke or 4}}
+        times: {{smoke or 2}}
         concurrency: {{smoke or 2}}
       context:
         users:
@@ -679,12 +679,12 @@
             size: 2
       runner:
         type: "constant"
-        times: {{smoke or 4}}
+        times: {{smoke or 2}}
         concurrency: {{smoke or 2}}
       context:
         users:
           tenants: {{smoke or 2}}
-          users_per_tenant: {{smoke or 2}}
+          users_per_tenant: {{smoke or 1}}
         network: {}
       sla:
         failure_rate:
@@ -768,6 +768,6 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         network: {}

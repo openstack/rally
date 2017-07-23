@@ -13,8 +13,8 @@
         concurrency: 5
       context:
         users:
-          tenants: 3
-          users_per_tenant: 5
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0
@@ -26,10 +26,10 @@
       runner:
         type: "constant"
         times: 4
-        concurrency: 1
+        concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -39,7 +39,7 @@
     -
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
@@ -59,7 +59,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -78,7 +78,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -97,7 +97,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         network:
           start_cidr: "10.2.0.0/24"
@@ -116,7 +116,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -136,7 +136,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -175,7 +175,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -233,7 +233,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -252,7 +252,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -271,7 +271,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -292,7 +292,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -311,7 +311,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
         network: {}
       sla:
@@ -327,11 +327,11 @@
           name: {{image_name}}
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         network: {}
       sla:
@@ -344,11 +344,11 @@
         detailed: True
       runner:
         type: "constant"
-        times: 2
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
         servers:
           flavor:
@@ -358,7 +358,7 @@
           servers_per_tenant: 2
           auto_assign_nic: True
         network:
-          networks_per_tenant: 2
+          networks_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -376,7 +376,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -395,7 +395,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -412,11 +412,11 @@
         console_type: {{s}}
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -478,7 +478,7 @@
         confirm: {{s}}
       runner:
         type: "constant"
-        times: 4
+        times: 2
         concurrency: 2
       context:
         users:
@@ -611,8 +611,8 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
-          users_per_tenant: 3
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0
@@ -677,28 +677,6 @@
       sla:
         failure_rate:
           max: 0
-#    -
-#      args:
-#        flavor:
-#            name: {{flavor_name}}
-#        image:
-#            name: {{image_name}}
-#      runner:
-#        type: "constant"
-#        times: 2
-#        concurrency: 2
-#      context:
-#        users:
-#          tenants: 2
-#          users_per_tenant: 2
-#        roles:
-#          - admin
-#        api_versions:
-#          glance:
-#            version: 1
-#      sla:
-#        failure_rate:
-#          max: 0
 
   NovaServers.boot_server:
     -
@@ -714,7 +692,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         flavors:
           -
@@ -735,7 +713,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -748,7 +726,7 @@
           name: "rally-named-image-from-context"
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -773,7 +751,7 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       sla:
         failure_rate:
@@ -800,7 +778,7 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -816,11 +794,11 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -832,7 +810,7 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -848,12 +826,12 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
-        concurrency: 2
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 2
-          users_per_tenant: 2
+          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -866,7 +844,7 @@
         concurrency: 4
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -880,7 +858,7 @@
         concurrency: 4
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         api_versions:
           nova:
@@ -897,7 +875,7 @@
         concurrency: 4
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -908,11 +886,11 @@
       args: {}
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 4
+        concurrency: 4
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -931,7 +909,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 4
           users_per_tenant: 2
         network:
           start_cidr: "10.2.0.0/24"
@@ -951,7 +929,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         network:
           start_cidr: "10.2.0.0/24"
@@ -985,7 +963,7 @@
         detailed: True
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -1000,7 +978,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times: 5
+        times: 4
       sla:
         failure_rate:
           max: 0
@@ -1010,7 +988,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times : 5
+        times : 4
       sla:
         failure_rate:
           max: 0
@@ -1021,11 +999,11 @@
         availability_zone: "nova"
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1038,7 +1016,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times: 5
+        times: 4
       sla:
         failure_rate:
           max: 0
@@ -1048,7 +1026,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times: 5
+        times: 4
       sla:
         failure_rate:
           max: 0
@@ -1061,7 +1039,7 @@
         times: 5
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1071,7 +1049,7 @@
     -
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       sla:
         failure_rate:
@@ -1085,7 +1063,7 @@
         disk: 1
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       sla:
         failure_rate:
@@ -1102,7 +1080,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times: 10
+        times: 4
       context:
         users:
           tenants: 2
@@ -1119,7 +1097,7 @@
         disk: 1
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       sla:
         failure_rate:
@@ -1151,7 +1129,7 @@
         disk: 1
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       sla:
         failure_rate:
@@ -1166,7 +1144,7 @@
       runner:
         type: "constant"
         concurrency: 2
-        times: 10
+        times: 4
       context:
         users:
           tenants: 2
@@ -1184,7 +1162,7 @@
           name: {{image_name}}
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         users:
@@ -1221,7 +1199,7 @@
         availability_zone: "nova"
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
@@ -1237,11 +1215,11 @@
         availability_zone: "nova"
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1253,11 +1231,11 @@
         availability_zone: "nova"
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1269,11 +1247,11 @@
         availability_zone: "nova"
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1292,7 +1270,7 @@
         boot_server_args: {}
       runner:
         type: "constant"
-        times: 5
+        times: 4
         concurrency: 2
       context:
         network: {}
@@ -1321,11 +1299,11 @@
         boot_server_kwargs: {}
       runner:
         type: "constant"
-        times: 10
+        times: 4
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 4
           users_per_tenant: 2
       sla:
         failure_rate:

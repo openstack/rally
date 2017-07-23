@@ -5,12 +5,12 @@
         lb_create_args: {}
       runner:
         type: "constant"
-        times: 5
+        times: 2
         concurrency: 2
       context:
         users:
           tenants: 2
-          users_per_tenant: 2
+          users_per_tenant: 1
         network: {}
       sla:
         failure_rate:
@@ -20,12 +20,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -34,12 +34,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -48,12 +48,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -62,12 +62,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         network: {}
       sla:
         failure_rate:
@@ -77,12 +77,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         router: {}
       sla:
         failure_rate:
@@ -92,12 +92,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         network: {}
       sla:
         failure_rate:
@@ -107,12 +107,12 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 8
+        concurrency: 4
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         router: {}
       sla:
         failure_rate:
