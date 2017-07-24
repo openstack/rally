@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="NovaFlavors.list_flavors")
+@scenario.configure(name="NovaFlavors.list_flavors", platform="openstack")
 class ListFlavors(utils.NovaScenario):
 
     def run(self, detailed=True, is_public=True, marker=None, min_disk=None,
@@ -59,7 +59,8 @@ class ListFlavors(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_and_list_flavor_access")
+                    name="NovaFlavors.create_and_list_flavor_access",
+                    platform="openstack")
 class CreateAndListFlavorAccess(utils.NovaScenario):
 
     def run(self, ram, vcpus, disk, flavorid="auto",
@@ -95,7 +96,8 @@ class CreateAndListFlavorAccess(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_flavor_and_add_tenant_access")
+                    name="NovaFlavors.create_flavor_and_add_tenant_access",
+                    platform="openstack")
 class CreateFlavorAndAddTenantAccess(utils.NovaScenario):
 
     def run(self, ram, vcpus, disk, flavorid="auto",
@@ -124,7 +126,7 @@ class CreateFlavorAndAddTenantAccess(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_flavor")
+                    name="NovaFlavors.create_flavor", platform="openstack")
 class CreateFlavor(utils.NovaScenario):
 
     def run(self, ram, vcpus, disk, flavorid="auto",
@@ -151,7 +153,8 @@ class CreateFlavor(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_and_get_flavor")
+                    name="NovaFlavors.create_and_get_flavor",
+                    platform="openstack")
 class CreateAndGetFlavor(utils.NovaScenario):
     """Scenario for create and get flavor."""
 
@@ -180,7 +183,8 @@ class CreateAndGetFlavor(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_and_delete_flavor")
+                    name="NovaFlavors.create_and_delete_flavor",
+                    platform="openstack")
 class CreateAndDeleteFlavor(utils.NovaScenario):
     def run(self, ram, vcpus, disk, flavorid="auto",
             ephemeral=0, swap=0, rxtx_factor=1.0, is_public=True):
@@ -207,7 +211,8 @@ class CreateAndDeleteFlavor(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["nova"]},
-                    name="NovaFlavors.create_flavor_and_set_keys")
+                    name="NovaFlavors.create_flavor_and_set_keys",
+                    platform="openstack")
 class CreateFlavorAndSetKeys(utils.NovaScenario):
     def run(self, ram, vcpus, disk, extra_specs, flavorid="auto",
             ephemeral=0, swap=0, rxtx_factor=1.0, is_public=True):

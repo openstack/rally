@@ -27,9 +27,10 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["swift"]},
-                    name="SwiftObjects.create_container"
-                         "_and_object_then_list_objects")
+@scenario.configure(
+    context={"cleanup": ["swift"]},
+    name="SwiftObjects.create_container_and_object_then_list_objects",
+    platform="openstack")
 class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
 
     def run(self, objects_per_container=1, object_size=1024, **kwargs):
@@ -52,9 +53,10 @@ class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["swift"]},
-                    name="SwiftObjects.create_container"
-                         "_and_object_then_delete_all")
+@scenario.configure(
+    context={"cleanup": ["swift"]},
+    name="SwiftObjects.create_container_and_object_then_delete_all",
+    platform="openstack")
 class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
 
     def run(self, objects_per_container=1, object_size=1024, **kwargs):
@@ -83,9 +85,10 @@ class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["swift"]},
-                    name="SwiftObjects.create_container"
-                         "_and_object_then_download_object")
+@scenario.configure(
+    context={"cleanup": ["swift"]},
+    name="SwiftObjects.create_container_and_object_then_download_object",
+    platform="openstack")
 class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
 
     def run(self, objects_per_container=1, object_size=1024, **kwargs):
@@ -113,8 +116,10 @@ class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"swift_objects": {}},
-                    name="SwiftObjects.list_objects_in_containers")
+@scenario.configure(
+    context={"swift_objects": {}},
+    name="SwiftObjects.list_objects_in_containers",
+    platform="openstack")
 class ListObjectsInContainers(utils.SwiftScenario):
 
     def run(self):
@@ -133,9 +138,10 @@ class ListObjectsInContainers(utils.SwiftScenario):
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"swift_objects": {}},
-                    name="SwiftObjects.list_and_"
-                         "download_objects_in_containers")
+@scenario.configure(
+    context={"swift_objects": {}},
+    name="SwiftObjects.list_and_download_objects_in_containers",
+    platform="openstack")
 class ListAndDownloadObjectsInContainers(utils.SwiftScenario):
 
     def run(self):

@@ -24,7 +24,8 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaHypervisors.list_hypervisors")
+@scenario.configure(name="NovaHypervisors.list_hypervisors",
+                    platform="openstack")
 class ListHypervisors(utils.NovaScenario):
 
     def run(self, detailed=True):
@@ -40,7 +41,8 @@ class ListHypervisors(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaHypervisors.list_and_get_hypervisors")
+@scenario.configure(name="NovaHypervisors.list_and_get_hypervisors",
+                    platform="openstack")
 class ListAndGetHypervisors(utils.NovaScenario):
     """Benchmark scenario for Nova hypervisors."""
     def run(self, detailed=True):
@@ -62,7 +64,8 @@ class ListAndGetHypervisors(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaHypervisors.statistics_hypervisors")
+@scenario.configure(name="NovaHypervisors.statistics_hypervisors",
+                    platform="openstack")
 class StatisticsHypervisors(utils.NovaScenario):
 
     def run(self):
@@ -75,7 +78,8 @@ class StatisticsHypervisors(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors")
+@scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors",
+                    platform="openstack")
 class ListAndGetUptimeHypervisors(utils.NovaScenario):
     def run(self, detailed=True):
         """List hypervisors,then display the uptime of it.
@@ -96,7 +100,8 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaHypervisors.list_and_search_hypervisors")
+@scenario.configure(name="NovaHypervisors.list_and_search_hypervisors",
+                    platform="openstack")
 class ListAndSearchHypervisors(utils.NovaScenario):
     def run(self, detailed=True):
         """List all servers belonging to specific hypervisor.

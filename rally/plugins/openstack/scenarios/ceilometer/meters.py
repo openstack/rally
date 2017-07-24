@@ -25,7 +25,7 @@ from rally.task import validation
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerMeters.list_meters")
+@scenario.configure(name="CeilometerMeters.list_meters", platform="openstack")
 class ListMeters(ceiloutils.CeilometerScenario):
 
     def run(self, metadata_query=None, limit=None):
@@ -49,7 +49,8 @@ class ListMeters(ceiloutils.CeilometerScenario):
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerMeters.list_matched_meters")
+@scenario.configure(name="CeilometerMeters.list_matched_meters",
+                    platform="openstack")
 class ListMatchedMeters(ceiloutils.CeilometerScenario):
 
     def run(self, filter_by_user_id=False, filter_by_project_id=False,

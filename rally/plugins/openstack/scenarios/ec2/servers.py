@@ -25,7 +25,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.EC2])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ec2"]},
-                    name="EC2Servers.list_servers")
+                    name="EC2Servers.list_servers", platform="openstack")
 class ListServers(utils.EC2Scenario):
 
     def run(self):
@@ -44,7 +44,7 @@ class ListServers(utils.EC2Scenario):
 @validation.add("required_services", services=[consts.Service.EC2])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["ec2"]},
-                    name="EC2Servers.boot_server")
+                    name="EC2Servers.boot_server", platform="openstack")
 class BootServer(utils.EC2Scenario):
 
     def run(self, image, flavor, **kwargs):

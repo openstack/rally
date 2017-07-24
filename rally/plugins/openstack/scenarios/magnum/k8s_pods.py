@@ -25,7 +25,7 @@ from rally.task import validation
 
 @validation.add("required_services", services=consts.Service.MAGNUM)
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="K8sPods.list_pods")
+@scenario.configure(name="K8sPods.list_pods", platform="openstack")
 class ListPods(utils.MagnumScenario):
 
     def run(self):
@@ -37,7 +37,7 @@ class ListPods(utils.MagnumScenario):
 
 @validation.add("required_services", services=consts.Service.MAGNUM)
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="K8sPods.create_pods")
+@scenario.configure(name="K8sPods.create_pods", platform="openstack")
 class CreatePods(utils.MagnumScenario):
 
     def run(self, manifests):
@@ -56,7 +56,7 @@ class CreatePods(utils.MagnumScenario):
 
 @validation.add("required_services", services=consts.Service.MAGNUM)
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="K8sPods.create_rcs")
+@scenario.configure(name="K8sPods.create_rcs", platform="openstack")
 class CreateRcs(utils.MagnumScenario):
 
     def run(self, manifests):

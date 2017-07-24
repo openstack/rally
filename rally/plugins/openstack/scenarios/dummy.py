@@ -17,6 +17,6 @@ from rally.plugins.common.scenarios.dummy import dummy
 from rally.task import scenario
 
 
-@scenario.configure(name="Dummy.openstack", namespace="openstack")
+@scenario.configure(name="Dummy.openstack", platform="openstack")
 class DummyOpenStack(dummy.Dummy):
     """Clone of Dummy.dummy for OpenStack"""

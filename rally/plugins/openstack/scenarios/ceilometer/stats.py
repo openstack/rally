@@ -25,7 +25,8 @@ from rally.task import validation
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerStats.create_meter_and_get_stats")
+@scenario.configure(name="CeilometerStats.create_meter_and_get_stats",
+                    platform="openstack")
 class CreateMeterAndGetStats(utils.CeilometerScenario):
 
     @logging.log_deprecated("Use 'get_stats' method, now samples are created"
@@ -46,7 +47,7 @@ class CreateMeterAndGetStats(utils.CeilometerScenario):
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerStats.get_stats")
+@scenario.configure(name="CeilometerStats.get_stats", platform="openstack")
 class GetStats(utils.CeilometerScenario):
 
     def run(self, meter_name, filter_by_user_id=False,

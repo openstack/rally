@@ -38,7 +38,8 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["sahara"]},
-                    name="SaharaClusters.create_and_delete_cluster")
+                    name="SaharaClusters.create_and_delete_cluster",
+                    platform="openstack")
 class CreateAndDeleteCluster(utils.SaharaScenario):
 
     def run(self, workers_count, plugin_name, hadoop_version,
@@ -128,7 +129,8 @@ class CreateAndDeleteCluster(utils.SaharaScenario):
 @validation.add("number", param_name="workers_count", minval=1,
                 integer_only=True)
 @scenario.configure(context={"cleanup": ["sahara"]},
-                    name="SaharaClusters.create_scale_delete_cluster")
+                    name="SaharaClusters.create_scale_delete_cluster",
+                    platform="openstack")
 class CreateScaleDeleteCluster(utils.SaharaScenario):
 
     def run(self, master_flavor, worker_flavor, workers_count,

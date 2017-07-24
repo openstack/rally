@@ -32,7 +32,8 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
-                    name="CeilometerEvents.create_user_and_list_events")
+                    name="CeilometerEvents.create_user_and_list_events",
+                    platform="openstack")
 class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
                                               kbasic.KeystoneBasic):
 
@@ -54,7 +55,8 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
-                    name="CeilometerEvents.create_user_and_list_event_types")
+                    name="CeilometerEvents.create_user_and_list_event_types",
+                    platform="openstack")
 class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
                                                   kbasic.KeystoneBasic):
 
@@ -76,7 +78,8 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["keystone"],
                              "cleanup": ["ceilometer"]},
-                    name="CeilometerEvents.create_user_and_get_event")
+                    name="CeilometerEvents.create_user_and_get_event",
+                    platform="openstack")
 class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,
                                             kbasic.KeystoneBasic):
 

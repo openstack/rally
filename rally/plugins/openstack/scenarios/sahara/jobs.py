@@ -30,7 +30,8 @@ LOG = logging.getLogger(__name__)
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
-                    name="SaharaJob.create_launch_job")
+                    name="SaharaJob.create_launch_job",
+                    platform="openstack")
 class CreateLaunchJob(utils.SaharaScenario):
 
     def run(self, job_type, configs, job_idx=0):
@@ -78,7 +79,8 @@ class CreateLaunchJob(utils.SaharaScenario):
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
-                    name="SaharaJob.create_launch_job_sequence")
+                    name="SaharaJob.create_launch_job_sequence",
+                    platform="openstack")
 class CreateLaunchJobSequence(utils.SaharaScenario):
 
     def run(self, jobs):
@@ -102,7 +104,8 @@ class CreateLaunchJobSequence(utils.SaharaScenario):
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
 @scenario.configure(context={"cleanup": ["sahara"]},
-                    name="SaharaJob.create_launch_job_sequence_with_scaling")
+                    name="SaharaJob.create_launch_job_sequence_with_scaling",
+                    platform="openstack")
 class CreateLaunchJobSequenceWithScaling(utils.SaharaScenario,):
 
     def run(self, jobs, deltas):

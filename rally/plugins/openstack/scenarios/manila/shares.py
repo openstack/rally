@@ -28,7 +28,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_and_delete_share")
+                    name="ManilaShares.create_and_delete_share",
+                    platform="openstack")
 class CreateAndDeleteShare(utils.ManilaScenario):
 
     def run(self, share_proto, size=1, min_sleep=0, max_sleep=0, **kwargs):
@@ -55,7 +56,7 @@ class CreateAndDeleteShare(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="ManilaShares.list_shares")
+@scenario.configure(name="ManilaShares.list_shares", platform="openstack")
 class ListShares(utils.ManilaScenario):
 
     def run(self, detailed=True, search_opts=None):
@@ -75,7 +76,8 @@ class ListShares(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_and_extend_share")
+                    name="ManilaShares.create_and_extend_share",
+                    platform="openstack")
 class CreateAndExtendShare(utils.ManilaScenario):
     def run(self, share_proto, size=1, new_size=2, snapshot_id=None,
             description=None, metadata=None, share_network=None,
@@ -118,7 +120,8 @@ class CreateAndExtendShare(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_and_shrink_share")
+                    name="ManilaShares.create_and_shrink_share",
+                    platform="openstack")
 class CreateAndShrinkShare(utils.ManilaScenario):
     def run(self, share_proto, size=2, new_size=1, snapshot_id=None,
             description=None, metadata=None, share_network=None,
@@ -158,7 +161,8 @@ class CreateAndShrinkShare(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_share_network_and_delete")
+                    name="ManilaShares.create_share_network_and_delete",
+                    platform="openstack")
 class CreateShareNetworkAndDelete(utils.ManilaScenario):
 
     @logging.log_deprecated_args(
@@ -185,7 +189,8 @@ class CreateShareNetworkAndDelete(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_share_network_and_list")
+                    name="ManilaShares.create_share_network_and_list",
+                    platform="openstack")
 class CreateShareNetworkAndList(utils.ManilaScenario):
 
     @logging.log_deprecated_args(
@@ -219,7 +224,8 @@ class CreateShareNetworkAndList(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="ManilaShares.list_share_servers")
+@scenario.configure(name="ManilaShares.list_share_servers",
+                    platform="openstack")
 class ListShareServers(utils.ManilaScenario):
 
     def run(self, search_opts=None):
@@ -236,7 +242,8 @@ class ListShareServers(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares.create_security_service_and_delete")
+                    name="ManilaShares.create_security_service_and_delete",
+                    platform="openstack")
 class CreateSecurityServiceAndDelete(utils.ManilaScenario):
 
     @logging.log_deprecated_args(
@@ -271,8 +278,9 @@ class CreateSecurityServiceAndDelete(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name=("ManilaShares."
-                          "attach_security_service_to_share_network"))
+                    name="ManilaShares."
+                         "attach_security_service_to_share_network",
+                    platform="openstack")
 class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
 
     def run(self, security_service_type="ldap"):
@@ -292,7 +300,8 @@ class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
-                    name=("ManilaShares.create_and_list_share"))
+                    name="ManilaShares.create_and_list_share",
+                    platform="openstack")
 class CreateAndListShare(utils.ManilaScenario):
 
     def run(self, share_proto, size=1, min_sleep=0, max_sleep=0, detailed=True,
@@ -330,9 +339,9 @@ class CreateAndListShare(utils.ManilaScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts",
                 contexts=manila_consts.SHARES_CONTEXT_NAME)
-@scenario.configure(
-    context={"cleanup": ["manila"]},
-    name="ManilaShares.set_and_delete_metadata")
+@scenario.configure(context={"cleanup": ["manila"]},
+                    name="ManilaShares.set_and_delete_metadata",
+                    platform="openstack")
 class SetAndDeleteMetadata(utils.ManilaScenario):
 
     def run(self, sets=10, set_size=3, delete_size=3,

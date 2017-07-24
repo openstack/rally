@@ -50,7 +50,8 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
                              "keypair": {}, "allow_ssh": None},
-                    name="VMTasks.boot_runcommand_delete")
+                    name="VMTasks.boot_runcommand_delete",
+                    platform="openstack")
 class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
 
     def run(self, flavor, username, password=None,
@@ -406,7 +407,8 @@ EOF
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["nova", "cinder"],
                              "keypair": {}, "allow_ssh": None},
-                    name="VMTasks.dd_load_test")
+                    name="VMTasks.dd_load_test",
+                    platform="openstack")
 class DDLoadTest(BootRuncommandDelete):
 
     def run(self, command, **kwargs):

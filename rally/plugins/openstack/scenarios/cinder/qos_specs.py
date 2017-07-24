@@ -24,7 +24,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
-                    name="CinderQos.create_and_list_qos")
+                    name="CinderQos.create_and_list_qos", platform="openstack")
 class CreateAndListQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec):
         """Create a qos, then list all qos.
@@ -51,7 +51,7 @@ class CreateAndListQos(cinder_utils.CinderBasic):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
-                    name="CinderQos.create_and_get_qos")
+                    name="CinderQos.create_and_get_qos", platform="openstack")
 class CreateAndGetQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec):
         """Create a qos, then get details of the qos.
@@ -73,7 +73,7 @@ class CreateAndGetQos(cinder_utils.CinderBasic):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
 @scenario.configure(context={"admin_cleanup": ["cinder"]},
-                    name="CinderQos.create_and_set_qos")
+                    name="CinderQos.create_and_set_qos", platform="openstack")
 class CreateAndSetQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec,
             set_consumer, set_write_iops_sec, set_read_iops_sec):

@@ -25,7 +25,8 @@ from rally.task import validation
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerResource.list_resources")
+@scenario.configure(name="CeilometerResource.list_resources",
+                    platform="openstack")
 class ListResources(ceiloutils.CeilometerScenario):
 
     def run(self, metadata_query=None, start_time=None,
@@ -58,7 +59,8 @@ class ListResources(ceiloutils.CeilometerScenario):
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerResource.get_tenant_resources")
+@scenario.configure(name="CeilometerResource.get_tenant_resources",
+                    platform="openstack")
 class GetTenantResources(ceiloutils.CeilometerScenario):
 
     def run(self):
@@ -79,7 +81,8 @@ class GetTenantResources(ceiloutils.CeilometerScenario):
                 services=[consts.Service.CEILOMETER])
 @validation.add("required_contexts", contexts=("ceilometer"))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="CeilometerResource.list_matched_resources")
+@scenario.configure(name="CeilometerResource.list_matched_resources",
+                    platform="openstack")
 class ListMatchedResources(ceiloutils.CeilometerScenario):
 
     def run(self, filter_by_user_id=False, filter_by_project_id=False,

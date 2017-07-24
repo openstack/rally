@@ -24,7 +24,7 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(name="NovaServices.list_services")
+@scenario.configure(name="NovaServices.list_services", platform="openstack")
 class ListServices(utils.NovaScenario):
 
     def run(self, host=None, binary=None):
