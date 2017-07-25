@@ -159,4 +159,4 @@ References
 .. [2] https://github.com/openstack/rally/blob/a5691d7850b5abd7ea707730f0d48d75116d88d3/rally/plugins/openstack/credential.py#L161
 .. [3] https://github.com/openstack/osprofiler/blob/1.8.0/osprofiler/profiler.py#L29-L30
 .. [4] https://github.com/openstack/rally/blob/a5691d7850b5abd7ea707730f0d48d75116d88d3/rally/plugins/openstack/scenario.py#L28-L55
-.. [5] https://docs.openstack.org/developer/osprofiler/background.html#why-not-cprofile-and-etc
+.. [5] https://docs.openstack.org/osprofiler/latest/user/background.html#why-not-cprofile-and-etc
