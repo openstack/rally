@@ -74,9 +74,9 @@ Initialization of OSProfiler is quite simple.
 
 As for the place where to initialize OSProfiler in Rally, constructor of
 scenario is a good choice. First of all, we have a separate class for OpenStack
-scenarios[4] which means that integration with OSProfiler there will not affect
-all other platforms. Another reason for using constructor is that we initialize
-new instance of scenario class for each iterations.
+scenarios [4]_ which means that integration with OSProfiler there will not
+affect all other platforms. Another reason for using constructor is that we
+initialize new instance of scenario class for each iterations.
 
 Storing profiling results
 -------------------------
