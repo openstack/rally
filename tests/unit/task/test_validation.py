@@ -16,7 +16,6 @@
 import os
 
 import ddt
-from glanceclient import exc as glance_exc
 import mock
 from novaclient import exceptions as nova_exc
 
@@ -287,72 +286,6 @@ class ValidatorsTestCase(test.TestCase):
         mock__file_access_ok.assert_called_once_with(
             filename="foobar", mode=os.R_OK, param_name="p.local_path",
             required=True)
-
-    def test__get_validated_image_no_value_in_config(self):
-        result = validation._get_validated_image({}, None, "non_existing")
-        self.assertFalse(result[0].is_valid, result[0].msg)
-
-    def test__get_validated_image_from_context(self):
-        clients = mock.MagicMock()
-        image = {
-            "size": 0,
-            "min_ram": 0,
-            "min_disk": 0
-        }
-        result = validation._get_validated_image({"args": {
-            "image": {"name": "foo"}}, "context": {
-            "images": {
-                "image_name": "foo"}
-        }}, clients, "image")
-
-        self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], image)
-
-        result = validation._get_validated_image({"args": {
-            "image": {"regex": r"^foo$"}}, "context": {
-            "images": {
-                "image_name": "foo"}
-        }}, clients, "image")
-
-        self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], image)
-
-    @mock.patch(MODULE + "openstack_types.GlanceImage.transform",
-                return_value="image_id")
-    def test__get_validated_image(self, mock_glance_image_transform):
-        clients = mock.MagicMock()
-        clients.glance().images.get().to_dict.return_value = {
-            "image": "image_id"}
-
-        result = validation._get_validated_image({"args": {"a": "test"},
-                                                  "context": {
-                                                      "image_name": "foo"}},
-                                                 clients, "a")
-        self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual({"image": "image_id", "min_disk": 0,
-                          "min_ram": 0, "size": 0},
-                         result[1])
-        mock_glance_image_transform.assert_called_once_with(
-            clients=clients, resource_config="test")
-        clients.glance().images.get.assert_called_with("image_id")
-
-    @mock.patch(MODULE + "openstack_types.GlanceImage.transform",
-                side_effect=exceptions.InvalidScenarioArgument)
-    def test__get_validated_image_transform_error(
-            self, mock_glance_image_transform):
-        result = validation._get_validated_image({"args": {"a": "test"}},
-                                                 None, "a")
-        self.assertFalse(result[0].is_valid, result[0].msg)
-
-    @mock.patch(MODULE + "openstack_types.GlanceImage.transform")
-    def test__get_validated_image_not_found(
-            self, mock_glance_image_transform):
-        clients = mock.MagicMock()
-        clients.glance().images.get().to_dict.side_effect = (
-            glance_exc.HTTPNotFound(""))
-        result = validation._get_validated_image({"args": {"a": "test"}},
-                                                 clients, "a")
-        self.assertFalse(result[0].is_valid, result[0].msg)
 
     def test__get_validated_flavor_no_value_in_config(self):
         result = validation._get_validated_flavor({}, None, "non_existing")
