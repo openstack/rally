@@ -13,9 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_10_verifying_cloud_via_tempest_verifier:
+.. _tutorial_step_9_verifying_cloud_via_tempest_verifier:
 
-Step 10. Verifying cloud via Tempest verifier
+Step 9. Verifying cloud via Tempest verifier
 =============================================
 
 .. contents::

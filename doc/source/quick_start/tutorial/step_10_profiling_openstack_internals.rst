@@ -13,9 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_11_profiling_openstack_internals:
+.. _tutorial_step_10_profiling_openstack_internals:
 
-Step 11. Profiling OpenStack Internals
+Step 10. Profiling OpenStack Internals
 ======================================
 
 .. contents::
