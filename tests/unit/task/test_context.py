@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import ddt
 import mock
 
@@ -47,6 +46,8 @@ class BaseContextTestCase(test.TestCase):
         class FooContext(fakes.FakeContext):
             DEFAULT_CONFIG = {"alpha": "beta", "delta": "gamma"}
 
+        self.addCleanup(FooContext.unregister)
+
         ctx = {"config": {"foo": {"ab": "cd"}, "bar": 42}, "task": "foo_task"}
         ins = FooContext(ctx)
         self.assertEqual({"ab": "cd", "alpha": "beta", "delta": "gamma"},
@@ -79,6 +80,7 @@ class BaseContextTestCase(test.TestCase):
             def cleanup(self):
                 pass
 
+        self.addCleanup(A.unregister)
         self.assertRaises(TypeError, A)
 
     def test_cleanup_is_abstract(self):
@@ -89,6 +91,7 @@ class BaseContextTestCase(test.TestCase):
             def setup(self):
                 pass
 
+        self.addCleanup(A.unregister)
         self.assertRaises(TypeError, A)
 
     def test_with_statement(self):
@@ -103,39 +106,6 @@ class BaseContextTestCase(test.TestCase):
             self.assertEqual(ctx, entered_ctx)
 
         ctx.cleanup.assert_called_once_with()
-
-    def test_lt(self):
-
-        @context.configure(name="lt", order=fakes.FakeContext.get_order() - 1)
-        class FakeLowerContext(fakes.FakeContext):
-            pass
-
-        ctx = mock.MagicMock()
-        self.assertTrue(FakeLowerContext(ctx) < fakes.FakeContext(ctx))
-        self.assertFalse(fakes.FakeContext(ctx) < FakeLowerContext(ctx))
-        self.assertFalse(fakes.FakeContext(ctx) < fakes.FakeContext(ctx))
-
-    def test_gt(self):
-
-        @context.configure(name="f", order=fakes.FakeContext.get_order() + 1)
-        class FakeBiggerContext(fakes.FakeContext):
-            pass
-
-        ctx = mock.MagicMock()
-        self.assertTrue(FakeBiggerContext(ctx) > fakes.FakeContext(ctx))
-        self.assertFalse(fakes.FakeContext(ctx) > FakeBiggerContext(ctx))
-        self.assertFalse(fakes.FakeContext(ctx) > fakes.FakeContext(ctx))
-
-    def test_eq(self):
-
-        @context.configure(name="fake2",
-                           order=fakes.FakeContext.get_order() + 1)
-        class FakeOtherContext(fakes.FakeContext):
-            pass
-
-        ctx = mock.MagicMock()
-        self.assertFalse(FakeOtherContext(ctx) == fakes.FakeContext(ctx))
-        self.assertTrue(FakeOtherContext(ctx) == FakeOtherContext(ctx))
 
     def test_get_owner_id_from_task(self):
         ctx = {"config": {"fake": {"test": 10}}, "task": {"uuid": "task_uuid"}}
@@ -156,8 +126,7 @@ class ContextManagerTestCase(test.TestCase):
         bar_context = mock.MagicMock()
         mock__get_sorted_context_lst.return_value = [foo_context, bar_context]
 
-        ctx_object = {"config": {"a": [], "b": []},
-                      "scenario_namespace": "foo"}
+        ctx_object = {"config": {"a": [], "b": []}}
 
         manager = context.ContextManager(ctx_object)
         result = manager.setup()
@@ -166,69 +135,40 @@ class ContextManagerTestCase(test.TestCase):
         foo_context.setup.assert_called_once_with()
         bar_context.setup.assert_called_once_with()
 
-    @mock.patch("rally.task.context.Context.get_all")
-    @mock.patch("rally.task.context.Context.get")
-    def test_get_sorted_context_lst(self, mock_context_get,
-                                    mock_context_get_all):
+    def test_get_sorted_context_lst(self):
 
-        # use ordereddict to predict the order of calls
-        ctx_object = {"config": collections.OrderedDict([("a@foo", []),
-                                                         ("b", []),
-                                                         ("c", []),
-                                                         ("d", [])]),
-                      "scenario_namespace": "foo"}
+        @context.configure("foo", order=1)
+        class A(context.Context):
 
-        def OrderableMock(**kwargs):
-            return mock.Mock(__lt__=(lambda x, y: x), **kwargs)
+            def setup(self):
+                pass
 
-        a_ctx = mock.Mock(return_value=OrderableMock())
-        mock_context_get.return_value = a_ctx
+            def cleanup(self):
+                pass
 
-        b_ctx = mock.Mock(return_value=OrderableMock())
-        c_ctx = mock.Mock(get_platform=lambda: "foo",
-                          return_value=OrderableMock())
-        d_ctx = mock.Mock(get_platform=lambda: "default",
-                          return_value=OrderableMock())
-        all_plugins = {
-            # it is a case when search is performed for any platform and only
-            # one possible match is found
-            "b": [b_ctx],
-            # it is a case when plugin should be filtered by the scenario
-            # platform
-            "c": [mock.Mock(get_platform=lambda: "default"), c_ctx],
-            # it is a case when plugin should be filtered by the scenario
-            # platform
-            "d": [mock.Mock(get_platform=lambda: "bar"), d_ctx]
-        }
+        @context.configure("foo", platform="foo", order=0)
+        class B(A):
+            pass
 
-        def fake_get_all(name, allow_hidden=True):
-            # use pop to ensure that get_all is called only one time per ctx
-            result = all_plugins.pop(name, None)
-            if result is None:
-                self.fail("Unexpected call of Context.get_all for %s plugin" %
-                          name)
-            return result
+        @context.configure("boo", platform="foo", order=2)
+        class C(A):
+            pass
 
-        mock_context_get_all.side_effect = fake_get_all
+        self.addCleanup(A.unregister)
+        self.addCleanup(B.unregister)
+        self.addCleanup(C.unregister)
 
-        manager = context.ContextManager(ctx_object)
-
-        self.assertEqual({a_ctx.return_value, b_ctx.return_value,
-                          c_ctx.return_value, d_ctx.return_value},
-                         set(manager._get_sorted_context_lst()))
-
-        mock_context_get.assert_called_once_with("a", platform="foo",
-                                                 fallback_to_default=False,
-                                                 allow_hidden=True)
-        a_ctx.assert_called_once_with(ctx_object)
-        self.assertEqual([mock.call(name=name, allow_hidden=True)
-                          for name in ("b", "c", "d")],
-                         mock_context_get_all.call_args_list)
+        ctx_obj = {"config": {"foo@default": [], "boo": [], "foo@foo": []}}
+        ctx_insts = context.ContextManager(ctx_obj)._get_sorted_context_lst()
+        self.assertEqual(3, len(ctx_insts))
+        self.assertIsInstance(ctx_insts[0], B)
+        self.assertIsInstance(ctx_insts[1], A)
+        self.assertIsInstance(ctx_insts[2], C)
 
     @mock.patch("rally.task.context.Context.get_all")
     def test_get_sorted_context_lst_fails(self, mock_context_get_all):
-        ctx_object = {"config": {"foo": "bar"},
-                      "scenario_namespace": "foo"}
+
+        ctx_object = {"config": {"foo": "bar"}}
 
         mock_context_get_all.return_value = []
         manager = context.ContextManager(ctx_object)
@@ -236,49 +176,56 @@ class ContextManagerTestCase(test.TestCase):
         self.assertRaises(exceptions.PluginNotFound,
                           manager._get_sorted_context_lst)
 
-        mock_context_get_all.assert_called_once_with(name="foo",
-                                                     allow_hidden=True)
+        mock_context_get_all.assert_called_once_with(
+            name="foo", platform=None, allow_hidden=True)
 
-    @mock.patch("rally.task.context.Context.get")
-    def test_cleanup(self, mock_context_get):
-        mock_context = mock.MagicMock()
-        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
-        mock_context_get.return_value = mock_context
+    def test_cleanup(self):
+        mock_obj = mock.MagicMock()
+
+        @context.configure("a", platform="foo", order=1)
+        class A(context.Context):
+
+            def setup(self):
+                pass
+
+            def cleanup(self):
+                mock_obj("a@foo")
+
+        self.addCleanup(A.unregister)
+
+        @context.configure("b", platform="foo", order=2)
+        class B(context.Context):
+
+            def setup(self):
+                pass
+
+            def cleanup(self):
+                mock_obj("b@foo")
+
         ctx_object = {"config": {"a@foo": [], "b@foo": []}}
+        context.ContextManager(ctx_object).cleanup()
+        mock_obj.assert_has_calls([mock.call("b@foo"), mock.call("a@foo")])
 
-        manager = context.ContextManager(ctx_object)
-        manager.cleanup()
-        mock_context_get.assert_has_calls(
-            [mock.call("a", platform="foo", allow_hidden=True,
-                       fallback_to_default=False),
-             mock.call("b", platform="foo", allow_hidden=True,
-                       fallback_to_default=False)],
-            any_order=True)
-        mock_context.assert_has_calls(
-            [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
-        mock_context.return_value.assert_has_calls(
-            [mock.call.cleanup(), mock.call.cleanup()], any_order=True)
+    @mock.patch("rally.task.context.LOG.exception")
+    def test_cleanup_exception(self, mock_log_exception):
+        mock_obj = mock.MagicMock()
 
-    @mock.patch("rally.task.context.Context.get")
-    def test_cleanup_exception(self, mock_context_get):
-        mock_context = mock.MagicMock()
-        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
-        mock_context.cleanup.side_effect = Exception()
-        mock_context_get.return_value = mock_context
-        ctx_object = {"config": {"a@foo": [], "b@foo": []}}
-        manager = context.ContextManager(ctx_object)
-        manager.cleanup()
+        @context.configure("a", platform="foo", order=1)
+        class A(context.Context):
 
-        mock_context_get.assert_has_calls(
-            [mock.call("a", platform="foo", allow_hidden=True,
-                       fallback_to_default=False),
-             mock.call("b", platform="foo", allow_hidden=True,
-                       fallback_to_default=False)],
-            any_order=True)
-        mock_context.assert_has_calls(
-            [mock.call(ctx_object), mock.call(ctx_object)], any_order=True)
-        mock_context.return_value.assert_has_calls(
-            [mock.call.cleanup(), mock.call.cleanup()], any_order=True)
+            def setup(self):
+                pass
+
+            def cleanup(self):
+                mock_obj("a@foo")
+                raise Exception("So Sad")
+
+        self.addCleanup(A.unregister)
+        ctx_object = {"config": {"a@foo": []}}
+        context.ContextManager(ctx_object).cleanup()
+        mock_obj.assert_called_once_with("a@foo")
+        mock_log_exception.assert_called_once_with(
+            "Context a@foo.cleanup() failed.")
 
     @mock.patch("rally.task.context.ContextManager.cleanup")
     @mock.patch("rally.task.context.ContextManager.setup")

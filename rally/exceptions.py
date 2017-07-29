@@ -218,14 +218,11 @@ class WorkerAlreadyRegistered(RallyException):
     msg_fmt = _("Worker %(worker)s already registered")
 
 
-class MultipleMatchesFound(RallyException):
+class MultiplePluginsFound(RallyException):
     error_code = 470
-    msg_fmt = _("Found multiple %(needle)s: %(haystack)s")
 
-    def __init__(self, **kwargs):
-        if "hint" in kwargs:
-            self.msg_fmt += ". Hint: %(hint)s"
-        super(MultipleMatchesFound, self).__init__(**kwargs)
+    msg_fmt = _("Multiple plugins found: %(plugins)s for name %(name)s. "
+                "Use full name in input task.")
 
 
 class SSHTimeout(RallyException):

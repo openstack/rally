@@ -406,7 +406,7 @@ class RequiredServicesValidator(validation.Validator):
             # NOTE(andreykurilin): validator should ignore services configured
             # via context(a proper validation should be in context)
             service_config = config.get("context", {}).get(
-                "api_versions", {}).get(service, {})
+                "api_versions@openstack", {}).get(service, {})
 
             if (service not in available_services and
                     not ("service_type" in service_config or
@@ -531,7 +531,7 @@ class RequiredAPIVersionsValidator(validation.Validator):
             else:
                 used_version = config.get(
                     "context", {}).get(
-                    "api_versions", {}).get(
+                    "api_versions@openstack", {}).get(
                     self.component, {}).get(
                     "version", getattr(
                         clients, self.component).choose_version())

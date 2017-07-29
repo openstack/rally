@@ -56,6 +56,10 @@ class Credential(plugin.Plugin):
         """
         return {}
 
+    @classmethod
+    def get_validation_context(cls):
+        return {}
+
 
 def configure_builder(namespace):
     def wrapper(cls):

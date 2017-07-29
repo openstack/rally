@@ -137,6 +137,34 @@ class DeploymentTestCase(test.TestCase):
                                          "users": [{"fake_user": True}]}]}
             })
 
+    @mock.patch("rally.deployment.credential.get")
+    def test_get_validation_context(self, mock_credential_get):
+        credential_cls = mock_credential_get.return_value
+        credential_cls.get_validation_context.side_effect = [
+            {"foo_test": "test"}, {"boo_test": "boo"}
+        ]
+        credentials = {"foo": [], "boo": []}
+        self.deployment["credentials"] = credentials
+        deploy = objects.Deployment(deployment=self.deployment)
+        self.assertEqual({"foo_test": "test", "boo_test": "boo"},
+                         deploy.get_validation_context())
+
+        mock_credential_get.assert_has_calls(
+            [mock.call("foo"), mock.call("boo")],
+            any_order=True)
+
+    @mock.patch("rally.common.objects.deploy.Deployment.get_all_credentials")
+    def test_verify_connections(self, mock_get_all_credentials):
+
+        creds = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
+        mock_get_all_credentials.return_value = {
+            "foo": [{"admin": creds[0], "users": [creds[1], creds[2]]}]
+        }
+        deploy = objects.Deployment(deployment=self.deployment)
+        deploy.verify_connections()
+        for c in creds:
+            c.verify_connection.assert_called_once_with()
+
     def test_get_platforms(self):
         self.deployment["credentials"] = {"foo": {"admin": None, "users": []},
                                           "bar": {"admin": None, "users": []}}

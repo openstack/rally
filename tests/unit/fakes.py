@@ -1857,6 +1857,12 @@ class FakeDeployment(dict):
     def get_credentials_for(self, namespace):
         return self["credentials"][namespace][0]
 
+    def verify_connections(self):
+        pass
+
+    def get_validation_context(self):
+        return {}
+
 
 class FakeTask(dict, object):
 

@@ -110,9 +110,12 @@ class UserGenerator(context.Context):
         super(UserGenerator, self).__init__(context)
 
         deployment = objects.Deployment.get(context["task"]["deployment_uuid"])
-        existing_users = deployment.get_credentials_for("openstack")["users"]
-        if existing_users and not (set(self.config) - {"user_choice_method"}):
-            self.existing_users = existing_users
+        creds = deployment.get_credentials_for("openstack")
+        if creds.get("admin"):
+            context["admin"] = {"credential": creds["admin"]}
+
+        if creds["users"] and not (set(self.config) - {"user_choice_method"}):
+            self.existing_users = creds["users"]
         else:
             self.existing_users = []
             self.credential = context["admin"]["credential"]

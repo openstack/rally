@@ -18,7 +18,9 @@ import random
 
 from oslo_config import cfg
 from osprofiler import profiler
+from rally.common.plugin import plugin
 from rally import osclients
+from rally.task import context
 from rally.task import scenario
 
 configure = functools.partial(scenario.configure, platform="openstack")
@@ -26,6 +28,8 @@ configure = functools.partial(scenario.configure, platform="openstack")
 CONF = cfg.CONF
 
 
+@context.add_default_context("users@openstack", {})
+@plugin.default_meta(inherit=False)
 class OpenStackScenario(scenario.Scenario):
     """Base class for all OpenStack scenarios."""
 
@@ -33,8 +37,8 @@ class OpenStackScenario(scenario.Scenario):
         super(OpenStackScenario, self).__init__(context)
         if context:
             api_info = {}
-            if "api_versions" in context.get("config", {}):
-                api_versions = context["config"]["api_versions"]
+            if "api_versions@openstack" in context.get("config", {}):
+                api_versions = context["config"]["api_versions@openstack"]
                 for service in api_versions:
                     api_info[service] = {
                         "version": api_versions[service].get("version"),

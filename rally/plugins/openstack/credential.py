@@ -91,6 +91,10 @@ class OpenStackCredential(credential.Credential):
                        for stype, sname in self.clients().services().items()],
                       key=lambda s: s["name"])
 
+    @classmethod
+    def get_validation_context(cls):
+        return {"users@openstack": {}}
+
     def clients(self, api_info=None):
         return osclients.Clients(self, api_info=api_info,
                                  cache=self._clients_cache)

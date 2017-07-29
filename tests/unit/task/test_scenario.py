@@ -85,7 +85,6 @@ class ScenarioTestCase(test.TestCase):
 
     def test_scenario_context_are_valid(self):
         for s in scenario.Scenario.get_all():
-            namespace = s.get_platform()
             results = []
             for context_name, context_conf in s.get_default_context().items():
                 results.extend(context.Context.validate(
@@ -93,7 +92,6 @@ class ScenarioTestCase(test.TestCase):
                     credentials=None,
                     config=None,
                     plugin_cfg=context_conf,
-                    namespace=namespace,
                     allow_hidden=True,
                     vtype="syntax"))
 

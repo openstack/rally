@@ -28,7 +28,6 @@ LOG = logging.getLogger(__name__)
 @logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
                              ["namespace"], log_function=LOG.warning)
 def configure(name, platform="default", namespace=None):
-
     if namespace:
         platform = namespace
 
@@ -107,7 +106,7 @@ class RequiredPlatformValidator(Validator):
             if credentials.get("admin") is None:
                 return self.fail("No user credentials for %s" % self.platform)
             else:
-                # NOTE(andreykurilin): It is a case whem the plugin requires
+                # NOTE(andreykurilin): It is a case when the plugin requires
                 #   'users' for launching, but there are no specified users in
                 #   deployment. Let's assume that 'users' context can create
                 #   them via admin user and do not fail."
@@ -147,9 +146,8 @@ def add_default(name, **kwargs):
 
     Validator is added to all subclasses by default
 
-    :param name: str, name of the validator plugin
-    :param kwargs: dict, arguments used to initialize validator class
-        instance
+    :param name: str, full name of the validator plugin
+    :param kwargs: dict, validator plugin arguments
     """
 
     def wrapper(plugin):
@@ -186,15 +184,14 @@ class ValidatablePluginMixin(object):
 
     @classmethod
     def validate(cls, name, credentials, config, plugin_cfg,
-                 namespace=None, allow_hidden=False, vtype=None):
+                 allow_hidden=False, vtype=None):
         """Execute all validators stored in meta of plugin.
 
         Iterate during all validators stored in the meta of Validator
         and execute proper validate() method and add validation result
         to the list.
 
-        :param name: name of the plugin to validate
-        :param namespace: namespace of the plugin
+        :param name: full name of the plugin to validate
         :param credentials: credentials dict for all platforms
         :param config: dict with configuration of specified workload
         :param plugin_cfg: dict, with exact configuration of the plugin
@@ -205,8 +202,7 @@ class ValidatablePluginMixin(object):
         :returns: list of ValidationResult(is_valid=False) instances
         """
         try:
-            plugin = cls.get(name, allow_hidden=allow_hidden,
-                             platform=namespace)
+            plugin = cls.get(name, allow_hidden=allow_hidden)
         except exceptions.PluginNotFound:
             msg = "There is no %s plugin with name: '%s'" % (
                 cls.__name__, name)

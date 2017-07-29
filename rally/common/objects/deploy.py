@@ -109,6 +109,21 @@ class Deployment(object):
         jsonschema.validate(credentials, CREDENTIALS_SCHEMA)
         self._update({"credentials": credentials})
 
+    def get_validation_context(self):
+        ctx = {}
+        for platform in self.get_platforms():
+            ctx.update(credential.get(platform).get_validation_context())
+        return ctx
+
+    def verify_connections(self):
+        for platform_creds in self.get_all_credentials().values():
+            for creds in platform_creds:
+                if creds["admin"]:
+                    creds["admin"].verify_connection()
+
+                for user in creds["users"]:
+                    user.verify_connection()
+
     def get_platforms(self):
         return self.deployment["credentials"].keys()
 

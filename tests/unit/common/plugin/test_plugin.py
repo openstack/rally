@@ -116,8 +116,7 @@ class PluginModuleTestCase(test.TestCase):
             pass
 
         self.addCleanup(B.unregister)
-
-        self.assertRaises(exceptions.MultipleMatchesFound, plugin.Plugin.get,
+        self.assertRaises(exceptions.MultiplePluginsFound, plugin.Plugin.get,
                           name, name)
 
     def test_default_meta_for_base(self):
@@ -198,10 +197,6 @@ class PluginTestCase(test.TestCase):
     def test_get(self):
         self.assertEqual(SomePlugin,
                          BasePlugin.get("test_some_plugin"))
-
-    def test_get_fallback_to_default(self):
-        self.assertEqual(SomePlugin,
-                         BasePlugin.get("test_some_plugin", platform="bar"))
 
     def test_get_hidden(self):
         self.assertEqual(HiddenPlugin,

@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import copy
 import json
 import threading
@@ -29,8 +28,6 @@ from rally.common import objects
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-# TODO(andreykurilin): remove openstack specific import after Rally 0.10.0
-from rally.plugins.openstack import scenario as os_scenario
 from rally.task import context
 from rally.task import hook
 from rally.task import runner
@@ -265,9 +262,7 @@ class TaskEngine(object):
 
     def _validate_workload(self, workload, credentials=None, vtype=None):
         scenario_cls = scenario.Scenario.get(workload["name"])
-        namespace = scenario_cls.get_platform()
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
-
         results = []
 
         results.extend(scenario.Scenario.validate(
@@ -283,7 +278,6 @@ class TaskEngine(object):
                 credentials=credentials,
                 config=None,
                 plugin_cfg=workload["runner"],
-                namespace=namespace,
                 vtype=vtype))
 
         for context_name, context_conf in workload["context"].items():
@@ -292,7 +286,6 @@ class TaskEngine(object):
                 credentials=credentials,
                 config=None,
                 plugin_cfg=context_conf,
-                namespace=namespace,
                 vtype=vtype))
 
         for context_name, context_conf in scenario_context.items():
@@ -301,7 +294,6 @@ class TaskEngine(object):
                 credentials=credentials,
                 config=None,
                 plugin_cfg=context_conf,
-                namespace=namespace,
                 allow_hidden=True,
                 vtype=vtype))
 
@@ -352,66 +344,33 @@ class TaskEngine(object):
         credentials = dict((p, creds[0]) for p, creds in credentials.items())
         for subtask in config.subtasks:
             for workload in subtask["workloads"]:
-                self._validate_workload(workload, vtype="platform",
-                                        credentials=credentials)
-
-    def _validate_config_semantic_helper(self, admin, user_context,
-                                         workloads, platform):
-        with user_context as ctx:
-            ctx.setup()
-            users = ctx.context["users"]
-            for workload in workloads:
-                credentials = {platform: {"admin": admin, "users": users}}
-                self._validate_workload(workload, credentials=credentials,
-                                        vtype="semantic")
+                self._validate_workload(
+                    workload, credentials=credentials, vtype="platform")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
-        # map workloads to platforms
-        platforms = collections.defaultdict(list)
-        for subtask in config.subtasks:
-            for workload in subtask["workloads"]:
-                # TODO(astudenov): We need to use a platform validator
-                # in future to identify what kind of users workload
-                # requires (regular users or admin)
-                scenario_cls = scenario.Scenario.get(workload["name"])
-                namespace = scenario_cls.get_platform()
+        self.deployment.verify_connections()
+        validation_ctx = self.deployment.get_validation_context()
+        ctx_obj = {"task": self.task, "config": validation_ctx}
+        with context.ContextManager(ctx_obj):
+            # TODO(boris-42): Temporary adapter for current validators
+            #                 validators are going to accept completely
+            #                 context object instead of credentials,
+            #                 which unifies it to how scenarios works.
+            if "users@openstack" in validation_ctx:
+                credentials = {
+                    "openstack": {
+                        "admin": ctx_obj.get("admin", {}).get("credential"),
+                        "users": ctx_obj["users"]
+                    }
+                }
+            else:
+                credentials = {}
 
-                # TODO(andreykurilin): Remove check for plugin namespace after
-                #   Rally 0.10.0
-
-                if (issubclass(scenario_cls, os_scenario.OpenStackScenario)
-                        and namespace == "default"):
-                    LOG.warning(
-                        "Scenario '%(scen)s' is located in 'default' "
-                        "namespace. Since it inherits from OpenStackScenario, "
-                        "possibly it's namespace should be 'openstack'. "
-                        "Please contact plugin maintainer to fix that issue if"
-                        " it is true (this change is backward compatible). "
-                        "Proper namespace is a guarantee of proper discovering"
-                        " contexts (users context is different for different "
-                        "platforms, i.e openstack, kubernetes). As for now, "
-                        "we assume that your plugin is in openstack namespace,"
-                        " but after Rally 0.10.0 it will be changed since "
-                        "default namespace doesn't need users context and so "
-                        "on + we do not want to align to only OpenStack "
-                        "deployments.")
-                    namespace = "openstack"
-                platforms[namespace].append(workload)
-
-        for platform, workloads in platforms.items():
-            creds = self.deployment.get_credentials_for(platform)
-
-            admin = creds["admin"]
-            if admin:
-                admin.verify_connection()
-
-            ctx_conf = {"task": self.task, "admin": {"credential": admin}}
-            user_context = context.Context.get("users", platform=platform,
-                                               allow_hidden=True)(ctx_conf)
-
-            self._validate_config_semantic_helper(admin, user_context,
-                                                  workloads, platform)
+            for subtask in config.subtasks:
+                for workload in subtask["workloads"]:
+                    self._validate_workload(
+                        workload, credentials, vtype="semantic")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self, only_syntax=False):
@@ -429,38 +388,31 @@ class TaskEngine(object):
         except Exception as e:
             exception_info = json.dumps(traceback.format_exc(), indent=2,
                                         separators=(",", ": "))
-            self.task.set_failed(type(e).__name__,
-                                 str(e), exception_info)
+            self.task.set_failed(type(e).__name__, str(e), exception_info)
             if (logging.is_debug() and
                     not isinstance(e, exceptions.InvalidTaskConfig)):
                 LOG.exception(e)
             raise exceptions.InvalidTaskException(str(e))
 
-    def _prepare_context(self, ctx, name, owner_id):
-        scenario_cls = scenario.Scenario.get(name)
-        namespace = scenario_cls.get_platform()
+    def _prepare_context(self, ctx, scenario_name, owner_id):
+        context_config = {}
+        # restore full names of plugins
+        scenario_plugin = scenario.Scenario.get(scenario_name)
+        for k, v in scenario_plugin.get_default_context().items():
+            c = context.Context.get(k, allow_hidden=True)
+            context_config[c.get_fullname()] = v
+        for k, v in ctx.items():
+            context_config[context.Context.get(k).get_fullname()] = v
 
-        creds = self.deployment.get_credentials_for(namespace)
-
-        scenario_context = copy.deepcopy(scenario_cls.get_default_context())
-        if "users" not in [c.split("@", 1)[0] for c in ctx.keys()]:
-            scenario_context.setdefault("users", {})
-
-        scenario_context.update(ctx)
         context_obj = {
             "task": self.task,
             "owner_id": owner_id,
-            "scenario_name": name,
-            "scenario_namespace": namespace,
-            "config": scenario_context
+            "scenario_name": scenario_name,
+            "config": context_config
         }
-
-        if creds["admin"]:
-            context_obj["admin"] = {"credential": creds["admin"]}
-
         return context_obj
 
-    @logging.log_task_wrapper(LOG.info, _("Benchmarking."))
+    @logging.log_task_wrapper(LOG.info, _("Running task."))
     def run(self):
         """Run the benchmark according to the test configuration.
 
@@ -521,7 +473,7 @@ class TaskEngine(object):
         workload["uuid"] = workload_obj["uuid"]
 
         workload_cfg = objects.Workload.to_task(workload)
-        LOG.info("Running benchmark with key: \n"
+        LOG.info("Running workload: \n"
                  "  position = %(position)s\n"
                  "  config = %(cfg)s", {"position": workload["position"],
                                         "cfg": json.dumps(workload_cfg,
@@ -770,7 +722,6 @@ class TaskConfig(object):
                     wconf["runner"] = runner_cfg
                 else:
                     wconf["runner"] = {"serial": {}}
-
                 wconf.setdefault("sla", {"failure_rate": {"max": 0}})
                 wconf.setdefault("hooks", [])
                 wconf["hooks"] = [{"config": h} for h in wconf["hooks"]]

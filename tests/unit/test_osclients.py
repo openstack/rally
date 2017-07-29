@@ -137,9 +137,8 @@ class CachedTestCase(test.TestCase):
     def test_cached(self):
         clients = osclients.Clients(mock.MagicMock())
         client_name = "CachedTestCase.test_cached"
-        fake_client = osclients.configure(client_name)(
-            osclients.OSClient(clients.credential, clients.api_info,
-                               clients.cache))
+        fake_client = osclients.configure(client_name)(osclients.OSClient)(
+            clients.credential, clients.api_info, clients.cache)
         fake_client.create_client = mock.MagicMock()
 
         self.assertEqual({}, clients.cache)

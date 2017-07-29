@@ -43,7 +43,7 @@ config = dict(args={"image": {"id": "fake_id",
                     "foo_image": {"id": "fake_image_id"}
                     },
               context={"images": {"image_name": "foo_image"},
-                       "api_versions": mock.MagicMock()}
+                       "api_versions@openstack": mock.MagicMock()}
               )
 
 
@@ -534,7 +534,7 @@ class RequiredServicesValidatorTestCase(test.TestCase):
 
     def test_validator(self):
 
-        self.config["context"]["api_versions"].get = mock.Mock(
+        self.config["context"]["api_versions@openstack"].get = mock.Mock(
             return_value={consts.Service.KEYSTONE: "service_type"})
 
         clients = self.credentials["openstack"]["admin"].clients()
@@ -575,7 +575,7 @@ class RequiredServicesValidatorTestCase(test.TestCase):
 
     def test_validator_wrong_service(self):
 
-        self.config["context"]["api_versions"].get = mock.Mock(
+        self.config["context"]["api_versions@openstack"].get = mock.Mock(
             return_value={consts.Service.KEYSTONE: "service_type",
                           consts.Service.NOVA: "service_name"})
 
@@ -761,7 +761,7 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
             "credential"].clients()
 
         clients.nova.choose_version.return_value = nova
-        config = {"context": {"api_versions": {}}}
+        config = {"context": {"api_versions@openstack": {}}}
 
         result = validator.validate(config, self.credentials, None, None)
 
@@ -779,7 +779,8 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         validator = validators.RequiredAPIVersionsValidator("nova",
                                                             [version])
 
-        config = {"context": {"api_versions": {"nova": {"version": 2}}}}
+        config = {
+            "context": {"api_versions@openstack": {"nova": {"version": 2}}}}
 
         result = validator.validate(config, self.credentials, None, None)
 

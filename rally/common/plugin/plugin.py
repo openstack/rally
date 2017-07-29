@@ -16,7 +16,6 @@
 import sys
 
 from rally.common.i18n import _
-from rally.common.i18n import _LE
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import meta
@@ -70,16 +69,18 @@ def configure(name, platform="default", hidden=False):
     """
 
     def decorator(plugin):
-        if name is None:
-            plugin_id = "%s.%s" % (plugin.__module__, plugin.__name__)
-            raise ValueError("The name of the plugin %s cannot be None." %
-                             plugin_id)
+        plugin_id = "%s.%s" % (plugin.__module__, plugin.__name__)
+        if not name:
+            raise ValueError(
+                "The name of the plugin %s cannot be empty." % plugin_id)
+        if "@" in name:
+            raise ValueError(
+                "The name of the plugin cannot contain @ symbol" % plugin_id)
 
         plugin._meta_init()
         try:
             existing_plugin = plugin._get_base().get(
-                name=name, platform=platform, allow_hidden=True,
-                fallback_to_default=False)
+                name=name, platform=platform, allow_hidden=True)
         except exceptions.PluginNotFound:
             plugin._meta_set("name", name)
             plugin._meta_set("platform", platform)
@@ -142,51 +143,30 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         return getattr(cls, "base_ref", Plugin)
 
     @classmethod
-    def get(cls, name, platform=None, allow_hidden=False,
-            fallback_to_default=True):
+    def get(cls, name, platform=None, allow_hidden=False):
         """Return plugin by its name for specified platform.
 
-        This method iterates over all subclasses of cls and returns plugin
-        by name for specified platform.
-
-        If platform is not specified, it will return first found plugin from
-        any of platform.
-
-        :param name: Plugin's name
+        :param name: Plugin's name or fullname
         :param platform: Plugin's platform
         :param allow_hidden: if False and found plugin is hidden then
-            PluginNotFound will be raised
-        :param fallback_to_default: if True, then it tries to find
-            plugin within "default" platform
+                              PluginNotFound is raised
         """
+        if "@" in name:
+            name, platform = name.split("@", 1)
 
-        potential_result = cls.get_all(name=name, platform=platform,
-                                       allow_hidden=True)
+        results = cls.get_all(name=name, platform=platform,
+                              allow_hidden=allow_hidden)
 
-        if fallback_to_default and len(potential_result) == 0:
-            # try to find in default platform
-            potential_result = cls.get_all(name=name, platform="default",
-                                           allow_hidden=True)
+        if not results:
+            raise exceptions.PluginNotFound(
+                name=name, platform=platform or "in any")
 
-        if len(potential_result) == 1:
-            plugin = potential_result[0]
-            if allow_hidden or not plugin.is_hidden():
-                return plugin
+        if len(results) == 1:
+            return results[0]
 
-        elif potential_result:
-            hint = _LE("Try to choose the correct Plugin base or platform to "
-                       "search in.")
-            if platform:
-                needle = "%s at %s platform" % (name, platform)
-            else:
-                needle = "%s at any of platform" % name
-            raise exceptions.MultipleMatchesFound(
-                needle=needle,
-                haystack=", ".join(p.get_name() for p in potential_result),
-                hint=hint)
-
-        raise exceptions.PluginNotFound(
-            name=name, platform=platform or "any of")
+        raise exceptions.MultiplePluginsFound(
+            name=name,
+            plugins=", ".join(p.get_fullname() for p in results))
 
     @classmethod
     def get_all(cls, platform=None, allow_hidden=False, name=None):
@@ -223,6 +203,11 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
     def get_platform(cls):
         """"Return plugin's platform name."""
         return cls._meta_get("platform")
+
+    @classmethod
+    def get_fullname(cls):
+        """Returns plugins's full name."""
+        return "%s@%s" % (cls.get_name(), cls.get_platform() or "")
 
     @classmethod
     def is_hidden(cls):

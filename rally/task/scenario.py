@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import random
 
 from rally.common.i18n import _
@@ -55,7 +56,8 @@ def configure(name, platform="default", namespace=None, context=None):
             raise exceptions.RallyException(msg)
 
         cls = plugin.configure(name=name, platform=platform)(cls)
-        cls._meta_set("default_context", context or {})
+        cls._meta_setdefault("default_context", {})
+        cls._meta_get("default_context").update(context or {})
         return cls
 
     return wrapper
@@ -88,7 +90,7 @@ class Scenario(plugin.Plugin,
 
     @classmethod
     def get_default_context(cls):
-        return cls._meta_get("default_context")
+        return copy.deepcopy(cls._meta_get("default_context"))
 
     def sleep_between(self, min_sleep, max_sleep=None, atomic_delay=0.1):
         """Call an interruptable_sleep() for a random amount of seconds.

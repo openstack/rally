@@ -57,8 +57,7 @@ def configure(name, default_version=None, default_service_type=None,
         in client object)
     """
     def wrapper(cls):
-        # openstack platform is hardcoded in OSclients.get() method
-        cls = plugin.configure(name=name)(cls)
+        cls = plugin.configure(name=name, platform="openstack")(cls)
         cls._meta_set("default_version", default_version)
         cls._meta_set("default_service_type", default_service_type)
         cls._meta_set("supported_versions", supported_versions or [])
