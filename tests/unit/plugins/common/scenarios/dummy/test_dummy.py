@@ -190,7 +190,7 @@ class DummyTestCase(test.TestCase):
         self.assertEqual(calls, mock_interruptable_sleep.mock_calls)
 
         calls = [mock.call(kwargs.get("sleep_min", 0),
-                           kwargs.get("sleep_max", 2))
+                           kwargs.get("sleep_max", 0))
                  for i in range(actions_num)]
         self.assertEqual(calls, mock_random.uniform.mock_calls)
         for i in range(actions_num):

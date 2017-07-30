@@ -362,18 +362,43 @@ class TaskTestCase(unittest.TestCase):
     def test_trends(self):
         cfg1 = {
             "Dummy.dummy": [
-                {"runner": {"type": "constant", "times": 2,
-                            "concurrency": 2}}],
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 2,
+                        "concurrency": 2
+                    }
+                }
+            ],
             "Dummy.dummy_random_action": [
-                {"args": {"actions_num": 4},
-                 "runner": {"type": "constant", "times": 2, "concurrency": 2}},
-                {"runner": {"type": "constant", "times": 2,
-                            "concurrency": 2}}]}
+                {
+                    "args": {"actions_num": 4},
+                    "runner": {
+                        "type": "constant",
+                        "times": 2,
+                        "concurrency": 2
+                    }
+                },
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 2,
+                        "concurrency": 2
+                    }
+                }
+            ]
+        }
         cfg2 = {
             "Dummy.dummy": [
-                {"args": {"sleep": 0.6},
-                 "runner": {"type": "constant", "times": 2,
-                            "concurrency": 2}}]}
+                {
+                    "args": {"sleep": 0.2},
+                    "runner": {
+                        "type": "constant", "times": 2,
+                        "concurrency": 2
+                    }
+                }
+            ]
+        }
 
         config1 = utils.TaskConfig(cfg1)
         config2 = utils.TaskConfig(cfg2)
