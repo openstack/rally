@@ -27,7 +27,6 @@ import six
 import rally as rally_module
 from rally import api
 from rally.common import broker
-from rally.common import db
 from rally.common import yamlutils as yaml
 from rally import plugins
 from rally.plugins.openstack.context.keystone import users
@@ -58,10 +57,6 @@ class TestTaskSamples(unittest.TestCase):
     @plugins.ensure_plugins_are_loaded
     def test_task_samples_are_valid(self):
         rally = utils.Rally(force_new_db=True)
-        # In TestTaskSamples, Rally API will be called directly (not via
-        # subprocess), so we need to change database options to temp database.
-        db.db_options.set_defaults(
-            db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir)
 
         # let's use pre-created users to make TestTaskSamples quicker
         rapi = api.API(config_file=rally.config_filename)
