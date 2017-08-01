@@ -82,27 +82,29 @@ class TaskCommands(object):
 
         print(cliutils.make_header("Preparing input task"))
 
-        if not os.path.isfile(task_file):
-            raise FailedToLoadTask(source="--task",
-                                   msg="File '%s' doesn't exist." % task_file)
-        with open(task_file) as f:
-            input_task = f.read()
-            task_dir = os.path.expanduser(os.path.dirname(task_file)) or "./"
+        try:
+            input_task = open(task_file).read()
+        except IOError as err:
+            raise FailedToLoadTask(
+                source="--task",
+                msg="Error reading %s: %s" % (task_file, err))
+
+        task_dir = os.path.expanduser(os.path.dirname(task_file)) or "./"
 
         task_args = {}
         if args_file:
-            if not os.path.isfile(args_file):
+            try:
+                task_args.update(yaml.safe_load(open(args_file).read()))
+            except yaml.ParserError as e:
                 raise FailedToLoadTask(
                     source="--task-args-file",
-                    msg="File '%s' doesn't exist." % args_file)
-            with open(args_file) as f:
-                try:
-                    task_args.update(yaml.safe_load(f.read()))
-                except yaml.ParserError as e:
-                    raise FailedToLoadTask(
-                        source="--task-args-file",
-                        msg="File '%s' has to be YAML or JSON. Details:\n\n%s"
-                            % (args_file, e))
+                    msg="File '%s' has to be YAML or JSON. Details:\n\n%s"
+                    % (args_file, e))
+            except IOError as err:
+                raise FailedToLoadTask(
+                    source="--task-args-file",
+                    msg="Error reading %s: %s" % (args_file, err))
+
         if raw_args:
             try:
                 data = yaml.safe_load(raw_args)
