@@ -216,7 +216,7 @@ class DummyRandomFailInAtomic(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy_random_action")
 class DummyRandomAction(scenario.Scenario):
 
-    def run(self, actions_num=5, sleep_min=0, sleep_max=2):
+    def run(self, actions_num=5, sleep_min=0, sleep_max=0):
         """Sleep random time in dummy actions.
 
         :param actions_num: int number of actions to generate
