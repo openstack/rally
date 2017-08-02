@@ -18,7 +18,7 @@ There are 3 use cases that requires DB refactoring:
 
 1. scalable task engine
 
-   Run benchmarks with billions iterations
+   Run load tests with billions iterations
    Generate distributed load 10k-100k RPS
    Generate all reports/aggregated based on that data
 
@@ -150,10 +150,10 @@ Task table
     # Duration of verification can be used to tune verification process.
     validation_duration     : FLOAT
 
-    # Duration of benchmarking part of task
+    # Duration of load part of subtask
     task_duration           : FLOAT
 
-    # All workloads in the task are passed
+    # All workloads in the subtask are passed
     pass_sla                : BOOL
 
     # Current status of task

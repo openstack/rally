@@ -18,9 +18,8 @@
 Scenario runner as a plugin
 ===========================
 
-Let's create a scenario runner plugin that runs a given benchmark
-scenario a random number of times (chosen at random from a given
-range).
+Let's create a runner plugin that runs a given scenario a random number of
+times (chosen at random from a given range).
 
 Creation
 ^^^^^^^^
@@ -40,8 +39,7 @@ and implement its API (the *_run_scenario()* method):
     class RandomTimesScenarioRunner(runner.ScenarioRunner):
         """Sample scenario runner plugin.
 
-        Run scenario random number of times, which is chosen between min_times and
-        max_times.
+        Run scenario random number of times (between min_times and max_times)
         """
 
         CONFIG_SCHEMA = {
@@ -78,10 +76,9 @@ and implement its API (the *_run_scenario()* method):
 Usage
 ^^^^^
 
-You can refer to your scenario runner in the benchmark task
-configuration files in the same way as any other runners. Don't forget
-to put your runner-specific parameters in the configuration as well
-(*"min_times"* and *"max_times"* in our example):
+You can refer to your scenario runner in the input task files in the same way
+as any other runners. Don't forget to put your runner-specific parameters
+in the configuration as well (*"min_times"* and *"max_times"* in our example):
 
 .. code-block:: json
 
@@ -106,4 +103,5 @@ to put your runner-specific parameters in the configuration as well
 
 
 
-Different plugin samples are available `here <https://github.com/openstack/rally/tree/master/samples/plugins>`_.
+Different plugin samples are available
+`here <https://github.com/openstack/rally/tree/master/samples/plugins>`_.

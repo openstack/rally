@@ -19,14 +19,14 @@ Problem description
 
 There are 5 use cases that require cleanup refactoring:
 
-#. Benchmarking with existing tenants.
+#. Running Task against existing tenants and users.
 
    Keep existing resources instead of deleting all resources in the tenants.
 
-#. Persistence benchmark context.
+#. Persistence Task context.
 
-   Create benchmark environment once before benchmarking. After that run some
-   amount of benchmarks that are using it and at the end just delete all
+   Create testing environment once before running tasks. After that run some
+   amount of tasks that are using it and at the end just delete all
    created resources by context cleanups.
 
 #. Disaster cleanup.
@@ -141,7 +141,7 @@ Alternatives
   better place for this, and for the cleanup code in general. In this case,
   we need to think about a case where a Rally scenario creates a tenant, and
   then deletes it but some resources are left around. And also we need to think
-  about a case of benchmark on existing tenants.
+  about a case of testing using existing tenants.
 
 
 Implementation
@@ -188,10 +188,10 @@ Dependencies
 * Add name pattern filter for resource cleanup:
   https://review.openstack.org/#/c/139643/
 
-* Finish support of benchmarking with existing users:
+* Finish support of running tasks using existing users:
   https://review.openstack.org/#/c/168524/
 
-* Add support of persistence benchmark environment:
+* Add support of persistence context environment:
   https://github.com/openstack/rally/blob/master/doc/feature_request/persistence_benchmark_env.rst
 
 * Production ready cleanups:

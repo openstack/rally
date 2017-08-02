@@ -199,7 +199,7 @@ starting a task:
      Task  cbf7eb97-0f1d-42d3-a1f1-3cc6f45ce23f: started
     --------------------------------------------------------------------------------
 
-    Benchmarking... This can take a while...
+    Running Task... This can take a while...
 
 
 Using the default values
@@ -365,12 +365,12 @@ automatically unfold the for-loop for you:
      Task  ea7e97e3-dd98-4a81-868a-5bb5b42b8610: started
     --------------------------------------------------------------------------------
 
-    Benchmarking... This can take a while...
+    Running Task... This can take a while...
 
 As you can see, the Rally task template syntax is a simple but powerful
 mechanism that not only enables you to write elegant task configurations, but
 also makes them more readable for other people. When used appropriately, it can
-really improve the understanding of your benchmarking procedures in Rally when
+really improve the understanding of your testing procedures in Rally when
 shared with others.
 
 .. references:

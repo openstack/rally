@@ -25,7 +25,8 @@ resources (e.g., download 10 images) that will be used by the
 scenarios. All created objects must be put into the *self.context*
 dict, through which they will be available in the scenarios. Let's
 create a simple context plugin that adds a flavor to the environment
-before the benchmark task starts and deletes it after it finishes.
+before runner start first iteration and deletes it after runner finishes
+execution of all iterations.
 
 Creation
 ^^^^^^^^
@@ -46,12 +47,7 @@ implement the Context API: the *setup()* method that creates a flavor and the
 
     @context.configure(name="create_flavor", order=1000)
     class CreateFlavorContext(context.Context):
-        """This sample creates a flavor with specified options before task starts
-        and deletes it after task completion.
-
-        To create your own context plugin, inherit it from
-        rally.task.context.Context
-        """
+        """This sample creates a flavor with specified option."""
 
         CONFIG_SCHEMA = {
             "type": "object",
@@ -113,8 +109,7 @@ implement the Context API: the *setup()* method that creates a flavor and the
 Usage
 ^^^^^
 
-You can refer to your plugin context in the benchmark task configuration
-files in the same way as any other contexts:
+The new plugin can be used by specifying it in context section. Like below:
 
 .. code-block:: json
 

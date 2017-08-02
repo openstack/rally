@@ -14,22 +14,22 @@ image and listing users.
 Problem Description
 -------------------
 
-At the moment Rally is able to run only 1 scenario per benchmark.
+At the moment Rally is able to run only 1 scenario per subtask.
 Scenario are quite specific (e.g. boot and delete VM for example) and can't
 actually generate real life load.
 
-Writing a lot of specific benchmark scenarios that will produce more real life
+Writing a lot of specific subtask scenarios that produces more real life
 load will produce mess and a lot of duplication of code.
 
 
 Possible solution
 -----------------
 
-* Extend Rally task benchmark configuration in such way to support passing
-  multiple benchmark scenarios in single benchmark context
+* Extend Rally subtask configuration in such way to support passing
+  multiple scenarios in single subtask context
 
 * Extend Rally task output format to support results of multiple scenarios in
-  single benchmark separately.
+  single subtask separately.
 
 * Extend rally task plot2html and rally task detailed to show results
   separately for every scenario.

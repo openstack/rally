@@ -18,10 +18,9 @@
 User stories
 ============
 
-Many users of Rally were able to make interesting discoveries concerning their
-OpenStack clouds using our benchmarking tool. Numerous user stories presented
-below show how Rally has made it possible to find performance bugs and validate
+Rally has made it possible to find performance bugs and validate
 improvements for different OpenStack installations.
+You can read some stories below:
 
 
 .. toctree::

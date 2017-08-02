@@ -69,8 +69,7 @@ Inherit a class for your plugin from the base *SLA* class and implement its API
 Usage
 ^^^^^
 
-You can refer to your SLA in the benchmark task configuration files in
-the same way as any other SLA:
+The new plugin can be used by specifying it in SLA section. Like below:
 
 .. code-block:: json
 

@@ -26,7 +26,7 @@ by Rally (and thus should be cleaned up after the fact).
 
 Random names are generated from a fairly limited set of digits and
 ASCII letters. This should be configurable by each plugin, along with
-all other parts of the random name, in order to support benchmarking
+all other parts of the random name, in order to support testing
 systems other than OpenStack, which may have different naming
 restrictions.
 

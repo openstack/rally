@@ -33,11 +33,11 @@ task**. To do so, use the following syntax:
 .. code-block:: json
 
     {
-        "<ScenarioName1>": [<benchmark_config>, <benchmark_config2>, ...]
-        "<ScenarioName2>": [<benchmark_config>, ...]
+        "<ScenarioName1>": [<config>, <config2>, ...]
+        "<ScenarioName2>": [<config>, ...]
     }
 
-where *<benchmark_config>*, as before, is a dictionary:
+where *<config>*, as before, is a dictionary:
 
 .. code-block:: json
 
@@ -48,7 +48,7 @@ where *<benchmark_config>*, as before, is a dictionary:
         "sla": { <different SLA configs> }
     }
 
-Multiple benchmarks in a single task
+Multiple subtasks in a single task
 ------------------------------------
 
 As an example, let's edit our configuration file from
@@ -100,7 +100,7 @@ JSON file:
         ]
     }
 
-Now you can start this benchmark task as usually:
+Now you can start this task as usually:
 
 .. code-block:: console
 
@@ -131,11 +131,10 @@ Now you can start this benchmark task as usually:
 
     ...
 
-Note that the HTML reports you can generate by typing **rally task report
---out=report_name.html** after your benchmark task has completed will get
-richer as your benchmark task configuration file includes more benchmark
-scenarios. Let's take a look at the report overview page for a task that covers
-all the scenarios available in Rally:
+Note that the HTML task reports can be generate by typing **rally task report
+--out=report_name.html**. This command works even if not all subtask are done.
+
+Let's take a look at the report overview page for a task with multiple subtasks
 
 .. code-block:: bash
 
@@ -148,11 +147,10 @@ all the scenarios available in Rally:
 Multiple configurations of the same scenario
 --------------------------------------------
 
-Yet another thing you can do in Rally is to launch **the same benchmark
-scenario multiple times with different configurations**. That's why our
-configuration file stores a list for the key
-*"NovaServers.boot_and_delete_server"*: you can just append a different
-configuration of this benchmark scenario to this list to get it. Let's say,
+Yet another thing you can do in Rally is to launch **the same scenario multiple
+times with different configurations**. That's why our configuration file stores
+a list for the key *"NovaServers.boot_and_delete_server"*: you can just append
+a different configuration of this scenario to this list to get it. Let's say,
 you want to run the **boot_and_delete_server** scenario twice: first using the
 *"m1.tiny"* flavor and then using the *"m1.small"* flavor:
 

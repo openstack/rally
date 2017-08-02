@@ -32,7 +32,7 @@ of the software.
 Create a custom Rally Gate job
 ------------------------------
 
-You can create a **Rally Gate job** for your project to run Rally benchmarks
+You can create a **Rally Gate job** for your project to run Rally tasks
 against the patchsets proposed to be merged into your project.
 
 To create a rally-gate job, you should create a **rally-jobs/** directory at
@@ -40,8 +40,7 @@ the root of your project.
 
 As a rule, this directory contains only **{projectname}.yaml**, but more
 scenarios and jobs can be added as well. This yaml file is in fact an input
-Rally task file specifying benchmark scenarios that should be run in your gate
-job.
+Rally task file specifying scenarios that should be run in your gate job.
 
 To make *{projectname}.yaml* run in gates, you need to add *"rally-jobs"* to
 the "jobs" section of *projects.yaml* in *openstack-infra/project-config*.

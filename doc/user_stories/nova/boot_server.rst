@@ -1,14 +1,15 @@
-==========================================================================================
-Finding a Keystone bug while benchmarking 20 node HA cloud performance at creating 400 VMs
-==========================================================================================
+=====================================================================================
+Finding a Keystone bug while testing 20 node HA cloud performance at creating 400 VMs
+=====================================================================================
 
 *(Contributed by Alexander Maretskiy, Mirantis)*
 
 Below we describe how we found a `bug in Keystone`_ and achieved 2x average
 performance increase at booting Nova servers after fixing that bug. Our initial
-goal was to benchmark the booting of a significant amount of servers on a
-cluster (running on a custom build of `Mirantis OpenStack`_ v5.1) and to ensure
-that this operation has reasonable performance and completes with no errors.
+goal was to measure performance the booting of a significant amount of servers
+on a cluster (running on a custom build of `Mirantis OpenStack`_ v5.1) and to
+ensure that this operation has reasonable performance and completes
+with no errors.
 
 Goal
 ----
@@ -65,7 +66,7 @@ Rally
 
 **Version**
 
-For this benchmark, we use custom Rally with the following patch:
+For this test case, we use custom Rally with the following patch:
 
 https://review.openstack.org/#/c/96300/
 

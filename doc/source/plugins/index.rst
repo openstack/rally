@@ -32,7 +32,7 @@ plugins with detailed descriptions.
 How plugins work
 ----------------
 
-Rally provides an opportunity to create and use a **custom benchmark
+Rally provides an opportunity to create and use a **custom task
 scenario, runner, SLA, deployment or context** as a **plugin**:
 
 .. image:: ../images/Rally-Plugins.png

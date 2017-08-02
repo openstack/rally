@@ -19,7 +19,7 @@ Information
 Details
 -------
 
-This release contains new features, new benchmark plugins, bug fixes,
+This release contains new features, new task plugins, bug fixes,
 various code and API improvements.
 
 
@@ -27,7 +27,7 @@ New Features & API changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    * Add the ability to specify versions for clients in benchmark scenarios
+    * Add the ability to specify versions for clients in scenarios
 
       You can call self.clients("glance", "2") and get any client for
       specific version.
@@ -70,7 +70,7 @@ Specs
 Plugins
 ~~~~~~~
 
-* **Benchmark Scenario Runners**:
+* **Task Runners**:
 
     * Add a maximum concurrency option to rps runner
 
@@ -79,7 +79,7 @@ Plugins
       more parallel requests then 'concurrency' value.
 
 
-* **Benchmark Scenarios**:
+* **Task Scenarios**:
 
     [new] CeilometerAlarms.create_alarm_and_get_history
 
@@ -114,7 +114,7 @@ Plugins
 
 
 
-* **Benchmark SLA**:
+* **Task SLA**:
 
     * [new] aborted_on_sla
 

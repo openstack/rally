@@ -15,8 +15,8 @@
 
 .. _tutorial_step_3_benchmarking_with_existing_users:
 
-Step 3. Benchmarking OpenStack with existing users
-==================================================
+Step 3. Running Task against OpenStack with read only users
+===========================================================
 
 .. contents::
    :local:
@@ -25,10 +25,9 @@ Motivation
 ----------
 
 There are two very important reasons from the production world of why it is
-preferable to use some already existing users to benchmark your OpenStack
-cloud:
+preferable to use some already existing users to test your OpenStack cloud:
 
-1. *Read-only Keystone Backends:* creating temporary users for benchmark
+1. *Read-only Keystone Backends:* creating temporary users for running
 scenarios in Rally is just impossible in case of r/o Keystone backends like
 *LDAP* and *AD*.
 
@@ -36,8 +35,8 @@ scenarios in Rally is just impossible in case of r/o Keystone backends like
 goes wrong, this won’t affect the rest of the cloud users.
 
 
-Registering existing users in Rally
------------------------------------
+Registering deployment with existing users in Rally
+---------------------------------------------------
 
 The information about existing users in your OpenStack cloud should be passed
 to Rally at the
@@ -92,15 +91,15 @@ it as usual:
     ~/.rally/openrc was updated
 
 With this new deployment being active, Rally will use the already existing
-users instead of creating the temporary ones when launching benchmark task
-that do not specify the *"users"* context.
+users instead of creating the temporary ones when launching task that do not
+specify the *"users"* context.
 
 
-Running benchmark scenarios with existing users
------------------------------------------------
+Running tasks that uses existing users
+--------------------------------------
 
 After you have registered a deployment with existing users, don't forget to
-remove the *"users"* context from your benchmark task configuration if you want
+remove the *"users"* context from your task input file if you want
 to use existing users, like in the following configuration file
 (*boot-and-delete.json*):
 
@@ -129,14 +128,14 @@ to use existing users, like in the following configuration file
         ]
     }
 
-When you start this task, it will use the existing users *"b1"* and *"b2"*
-instead of creating the temporary ones:
+When you start this task, it is going to use *"b1"* and *"b2"* for running
+subtask instead of creating the temporary users:
 
 .. code-block:: bash
 
     rally task start samples/tasks/scenarios/nova/boot-and-delete.json
 
-It goes without saying that support of benchmarking with predefined users
+It goes without saying that support of running with predefined users
 simplifies the usage of Rally for generating loads against production clouds.
 
 (based on: http://boris-42.me/rally-can-generate-load-with-passed-users-now/)

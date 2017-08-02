@@ -39,7 +39,7 @@ test plan and test execution results.
 
 It is suggested to provide Rally users an ability to export information about
 testing their environments into such test management systems in order
-to integrate benchmarking via Rally into rest of their testing activities.
+to integrate testing via Rally into rest of their testing activities.
 
 Since different test management systems have alike yet different API
 for the purpose it is reasonable to implement this export functionality via

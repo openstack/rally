@@ -22,8 +22,8 @@
 Overview
 ========
 
-**Rally** is a **benchmarking tool** that **automates** and **unifies**
-multi-node OpenStack deployment, cloud verification, benchmarking & profiling.
+**Rally** is a **generic testing tool** that **automates** and **unifies**
+multi-node OpenStack deployment, verification, testing & profiling.
 It can be used as a basic tool for an *OpenStack CI/CD system* that would
 continuously improve its SLA, performance and stability.
 
@@ -79,7 +79,7 @@ How does amqp_rpc_single_reply_queue affect performance?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Rally allowed us to reveal a quite an interesting fact about **Nova**. We used
-*NovaServers.boot_and_delete* benchmark scenario to see how the
+*NovaServers.boot_and_delete*  scenario to see how the
 *amqp_rpc_single_reply_queue* option affects VM bootup time (it turns on a kind
 of fast RPC). Some time ago it was
 `shown <https://docs.google.com/file/d/0B-droFdkDaVhVzhsN3RKRlFLODQ/edit?pli=1>`_
@@ -101,16 +101,14 @@ Performance of Nova list command
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another interesting result comes from the *NovaServers.boot_and_list_server*
-scenario, which enabled us to launch the following benchmark with Rally:
+scenario, which enabled us to launch the following task with Rally:
 
-    * **Benchmark environment** (which we also call **"Context"**): 1 temporary
-      OpenStack user.
-    * **Benchmark scenario**: boot a single VM from this user & list all VMs.
-    * **Benchmark runner** setting: repeat this procedure 200 times in a
-      continuous way.
+    * **Task context**: 1 temporary OpenStack user.
+    * **Task scenario**: boot a single VM from this user & list all VMs.
+    * **Task runner**: repeat this procedure 200 times in a continuous way.
 
-During the execution of this benchmark scenario, the user has more and more VMs
-on each iteration. Rally has shown that in this case, the performance of the
+During the execution of this task, the user has more and more VMs on each
+iteration. Rally has shown that in this case, the performance of the
 **VM list** command in Nova is degrading much faster than one might expect:
 
 .. image:: ../images/Rally_VM_list.png
@@ -131,9 +129,9 @@ atomic actions:
     5. delete VM
     6. delete snapshot
 
-Rally measures not only the performance of the benchmark scenario as a whole,
-but also that of single atomic actions. As a result, Rally also plots the
-atomic actions performance data for each benchmark iteration in a quite
+Rally measures not only the performance of the scenario as a whole,
+but also that of single atomic actions. As a result, Rally also displays the
+atomic actions performance data for each scenario iteration in a quite
 detailed way:
 
 .. image:: ../images/Rally_snapshot_vm.png
@@ -157,27 +155,25 @@ The diagram below shows how this is possible:
 .. image:: ../images/Rally_Architecture.png
    :align: center
 
-The actual **Rally core** consists of 4 main components, listed below in the
+The actual **Rally core** consists of 3 main components, listed below in the
 order they go into action:
 
-    1. **Server Providers** - provide a **unified interface** for interaction
-       with different **virtualization technologies** (*LXS*, *Virsh* etc.) and
-       **cloud suppliers** (like *Amazon*): it does so via *ssh* access and in
-       one *L3 network*;
-    2. **Deploy Engines** - deploy some OpenStack distribution (like *DevStack*
-       or *FUEL*) before any benchmarking procedures take place, using servers
-       retrieved from Server Providers;
-    3. **Verification** - runs *Tempest* (or another specific set of tests)
-       against the deployed cloud to check that it works correctly, collects
-       results & presents them in human readable form;
-    4. **Benchmark Engine** - allows to write parameterized benchmark scenarios
-       & run them against the cloud.
+    1. **Deploy** - store credentials about your deployments, credentials
+       are used by verify and task commands. It has plugable mechanism that
+       allows one to implement basic LCM for testing environment as well.
+
+    2. **Verify** - wraps unittest based functional testing framework to
+       provide complete tool with result storage and reporting.
+       Currently has only plugin implemneted for OpenStack Tempest.
+
+    3. **Task** - framework that allows to write parametrized plugins and
+       combine them in complex test cases using YAML. Framework allows to
+       produce all kinds of tests including functional, concurrency,
+       regression, load, scale, capacity and even chaos testing.
 
 It should become fairly obvious why Rally core needs to be split to these parts
 if you take a look at the following diagram that visualizes a rough **algorithm
-for starting benchmarking OpenStack at scale**. Keep in mind that there might
-be lots of different ways to set up virtual servers, as well as to deploy
-OpenStack to them.
+for starting testing clouds at scale**.
 
 .. image:: ../images/Rally_QA.png
    :align: center

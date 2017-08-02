@@ -5,7 +5,7 @@ Production read cleanups
 Use Case
 --------
 
-Rally should delete in any case all resources that it created during benchmark.
+Rally should delete in all cases all resources that it creates during tasks.
 
 
 Problem Description

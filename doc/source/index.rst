@@ -18,10 +18,10 @@ What is Rally?
 ==============
 
 **OpenStack** is, undoubtedly, a really *huge* ecosystem of cooperative
-services. **Rally** is a **benchmarking tool** that answers the question:
+services. **Rally** is a **testing tool** that answers the question:
 **"How does OpenStack work at scale?"**. To make this possible, Rally
 **automates** and **unifies** multi-node OpenStack deployment, cloud
-verification, benchmarking & profiling. Rally does it in a **generic** way,
+verification, testing & profiling. Rally does it in a **generic** way,
 making it possible to check whether OpenStack is going to work well on, say, a
 1k-servers installation under high load. Thus it can be used as a basic tool
 for an *OpenStack CI/CD system* that would continuously improve its SLA,

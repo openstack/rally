@@ -22,7 +22,7 @@ Information
 Details
 -------
 
-Rally is awesome tool for testing verifying and benchmarking OpenStack clouds.
+Rally is awesome tool for generic testing of OpenStack clouds.
 
 A lot of people started using Rally in their CI/CD so Rally team should provide
 more stable product with clear strategy of deprecation and upgrades.

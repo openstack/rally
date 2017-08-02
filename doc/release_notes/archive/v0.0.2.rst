@@ -19,7 +19,7 @@ Information
 Details
 -------
 
-This release contains new features, new benchmark plugins, bug fixes,
+This release contains new features, new task plugins, bug fixes,
 various code and API improvements.
 
 
@@ -64,7 +64,7 @@ API changes
 Plugins
 ~~~~~~~
 
-* **Benchmark Scenario Runners**:
+* **Task Runners**:
 
     [improved] Improved algorithm of generation load in **constant runner**
 
@@ -80,7 +80,7 @@ Plugins
         New method **abort()** is used to immediately interrupt execution.
 
 
-* **Benchmark Scenarios**:
+* **Task Scenarios**:
 
     [new] DesignateBasic.create_and_delete_server
 
@@ -135,7 +135,7 @@ Plugins
         Add optional \*\*kwargs that are passed to boot server comment
 
 
-* **Benchmark Context**:
+* **Task Context**:
 
     [new] **stacks**
 
@@ -143,7 +143,7 @@ Plugins
 
     [new] **custom_image**
 
-        Prepares images for benchmarks in VMs.
+        Prepares images for internal VMs testing.
 
         To Support generating workloads in VMs by existing tools like: IPerf,
         Blogbench, HPCC and others we have to have prepared images, with
@@ -181,7 +181,7 @@ Plugins
         The Job Binaries data should be treated as a binary content
 
 
-* **Benchmark SLA**:
+* **Task SLA**:
 
     [interface] SLA calculations is done in additive way now
 
