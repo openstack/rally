@@ -148,9 +148,14 @@ function run () {
     set -e
 
     cp resources_at_start.txt rally-plot/
-    $PYTHON $RALLY_DIR/tests/ci/osresources.py\
-        --compare-with-list resources_at_start.txt\
-            | gzip > rally-plot/resources_diff.txt.gz
+    if [ "$ZUUL_PROJECT" == "openstack/rally" ];then
+        $PYTHON $RALLY_DIR/tests/ci/osresources.py\
+            --compare-with-list resources_at_start.txt
+    else
+        $PYTHON $RALLY_DIR/tests/ci/osresources.py\
+            --compare-with-list resources_at_start.txt\
+                | gzip > rally-plot/resources_diff.txt.gz
+    fi
 
     exit $retval
 }
