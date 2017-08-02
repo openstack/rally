@@ -25,7 +25,7 @@ PYTEST_ARGUMENTS = ("py.test"  # base command
                     " --html=%(html_report)s"  # html report
                     " --self-contained-html"  # embedded css
                     " --durations=10"  # get a list of the slowest 10 tests
-                    " -n auto"  # launch tests in parallel
+                    " -n %(concurrency)s"  # launch tests in parallel
                     " %(path)s"
                     )
 
@@ -42,9 +42,8 @@ def main(args):
     parser.add_argument("--posargs", metavar="<str>", type=str, default="",
                         help="TOX posargs. Currently supported only string to "
                              "partial test or tests group to launch.")
-    parser.add_argument("--timeout", metavar="<seconds>", type=int, default=60,
-                        help="Timeout for individual test execution. "
-                             "Defaults to 60")
+    parser.add_argument("--concurrency", metavar="<N>", type=int,
+                        help="Number of parallel processes.")
     args = parser.parse_args(args[1:])
 
     # We allow only one parameter - path to partial test or tests group
@@ -99,7 +98,7 @@ def main(args):
 
     args = PYTEST_ARGUMENTS % {"html_report": pytest_report,
                                "path": path,
-                               "timeout": args.timeout}
+                               "concurrency": args.concurrency or "auto"}
     try:
         subprocess.check_call(args.split(" "),
                               stderr=subprocess.STDOUT)
