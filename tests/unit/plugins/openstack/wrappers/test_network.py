@@ -342,6 +342,8 @@ class NeutronWrapperTestCase(test.TestCase):
     def test_create_router(self, mock_neutron_wrapper_external_networks):
         wrap = self.get_wrapper()
         wrap.client.create_router.return_value = {"router": "foo_router"}
+        wrap.client.list_extensions.return_value = {
+            "extensions": [{"alias": "ext-gw-mode"}]}
         mock_neutron_wrapper_external_networks.__get__ = (
             lambda *args: [{"id": "ext_id"}]
         )
@@ -357,6 +359,27 @@ class NeutronWrapperTestCase(test.TestCase):
                         "external_gateway_info": {
                             "network_id": "ext_id",
                             "enable_snat": True},
+                        "foo": "bar"}})
+
+    @mock.patch(SVC + "NeutronWrapper.external_networks")
+    def test_create_router_without_ext_gw_mode_extension(
+            self, mock_neutron_wrapper_external_networks):
+        wrap = self.get_wrapper()
+        wrap.client.create_router.return_value = {"router": "foo_router"}
+        wrap.client.list_extensions.return_value = {"extensions": []}
+        mock_neutron_wrapper_external_networks.__get__ = (
+            lambda *args: [{"id": "ext_id"}]
+        )
+
+        router = wrap.create_router()
+        wrap.client.create_router.assert_called_once_with(
+            {"router": {"name": self.owner.generate_random_name.return_value}})
+        self.assertEqual(router, "foo_router")
+
+        router = wrap.create_router(external=True, foo="bar")
+        wrap.client.create_router.assert_called_with(
+            {"router": {"name": self.owner.generate_random_name.return_value,
+                        "external_gateway_info": {"network_id": "ext_id"},
                         "foo": "bar"}})
 
     def test_create_port(self):

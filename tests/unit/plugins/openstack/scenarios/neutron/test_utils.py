@@ -253,6 +253,8 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         external_network = [{"id": "ext-net", "router:external": True}]
         self.scenario._list_networks = mock.Mock(return_value=external_network)
         self.clients("neutron").create_router.return_value = router
+        self.clients("neutron").list_extensions.return_value = {
+            "extensions": [{"alias": "ext-gw-mode"}]}
 
         # External_gw options
         gw_info = {"network_id": external_network[0]["id"],
@@ -273,6 +275,8 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         external_network = [{"id": "ext-net", "router:external": False}]
         self.scenario._list_networks = mock.Mock(return_value=external_network)
         self.clients("neutron").create_router.return_value = router
+        self.clients("neutron").list_extensions.return_value = {
+            "extensions": [{"alias": "ext-gw-mode"}]}
 
         # External_gw options with no external networks in list_networks()
         result_router = self.scenario._create_router({}, external_gw=True)
@@ -282,6 +286,27 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(result_router, router)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.create_router")
+
+    def test_create_router_with_ext_gw_but_no_ext_gw_mode_extension(self):
+        router = mock.Mock()
+        external_network = [{"id": "ext-net", "router:external": True}]
+        self.scenario._list_networks = mock.Mock(return_value=external_network)
+        self.clients("neutron").create_router.return_value = router
+        self.clients("neutron").list_extensions.return_value = {
+            "extensions": []}
+
+        # External_gw options
+        gw_info = {"network_id": external_network[0]["id"]}
+        router_data = {
+            "name": self.scenario.generate_random_name.return_value,
+            "external_gateway_info": gw_info
+        }
+        result_router = self.scenario._create_router({}, external_gw=True)
+        self.clients("neutron").create_router.assert_called_once_with(
+            {"router": router_data})
+        self.assertEqual(result_router, router)
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(), "neutron.create_router")
 
     def test_create_router_explicit(self):
         router = mock.Mock()
@@ -377,6 +402,33 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         enable_snat = "fake_snat"
         gw_info = {"network_id": ext_net["network"]["id"],
                    "enable_snat": enable_snat}
+        self.clients("neutron").list_extensions.return_value = {
+            "extensions": [{"alias": "ext-gw-mode"}]}
+
+        self.scenario._add_gateway_router(router, ext_net, enable_snat)
+        self.clients("neutron").add_gateway_router.assert_called_once_with(
+            router["router"]["id"], gw_info)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.add_gateway_router")
+
+    def test_add_gateway_router_without_ext_gw_mode_extension(self):
+        ext_net = {
+            "network": {
+                "name": "extnet-name",
+                "id": "extnet-id"
+            }
+        }
+        router = {
+            "router": {
+                "name": "router-name",
+                "id": "router-id"
+            }
+        }
+        enable_snat = "fake_snat"
+        gw_info = {"network_id": ext_net["network"]["id"]}
+        self.clients("neutron").list_extensions.return_value = {
+            "extensions": {}}
+
         self.scenario._add_gateway_router(router, ext_net, enable_snat)
         self.clients("neutron").add_gateway_router.assert_called_once_with(
             router["router"]["id"], gw_info)
