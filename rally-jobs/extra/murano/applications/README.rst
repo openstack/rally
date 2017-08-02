@@ -1,7 +1,7 @@
 Murano applications
 ===================
 
-Files for Murano benchmarking
+Files for Murano plugins
 
 Structure
 ---------
