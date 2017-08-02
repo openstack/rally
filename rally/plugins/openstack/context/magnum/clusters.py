@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="clusters", platform="openstack", order=480)
 class ClusterGenerator(context.Context):
-    """Context class for generating temporary cluster for benchmarks."""
+    """Creates specified amount of Magnum clusters."""
 
     CONFIG_SCHEMA = {
         "type": "object",

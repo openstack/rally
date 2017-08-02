@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="cluster_templates", platform="openstack", order=470)
 class ClusterTemplateGenerator(context.Context):
-    """Context class for generating temporary cluster model for benchmarks."""
+    """Creates Magnum cluster template."""
 
     CONFIG_SCHEMA = {
         "type": "object",

@@ -261,7 +261,7 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
                            If False -> return only non admin plugins
     :param admin: rally.deployment.credential.Credential that corresponds to
                   OpenStack admin.
-    :param users: List of OpenStack users that was used during benchmarking.
+    :param users: List of OpenStack users that was used during testing.
                   Every user has next structure:
                   {
                     "id": <uuid1>,

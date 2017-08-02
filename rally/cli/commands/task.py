@@ -136,7 +136,7 @@ class FailedToLoadResults(exceptions.RallyException):
 
 
 class TaskCommands(object):
-    """Set of commands that allow you to manage benchmarking tasks and results.
+    """Set of commands that allow you to manage tasks and results.
 
     """
 
@@ -281,17 +281,17 @@ class TaskCommands(object):
                    help="Don't set new task as default for future operations.")
     @cliutils.args("--abort-on-sla-failure", action="store_true",
                    dest="abort_on_sla_failure",
-                   help="Abort the execution of a benchmark scenario when"
-                        "any SLA check for it fails.")
+                   help="Abort the execution of a task when any SLA check "
+                        "for it fails for subtask or workload.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     @plugins.ensure_plugins_are_loaded
     def start(self, api, task_file, deployment=None, task_args=None,
               task_args_file=None, tags=None, do_use=False,
               abort_on_sla_failure=False):
-        """Start benchmark task.
+        """Run task.
 
-        If both task_args and task_args_file are specified, they will
-        be merged. task_args has a higher priority so it will override
+        If both task_args and task_args_file are specified, they are going to
+        be merged. task_args has a higher priority so it overrides
         values from task_args_file.
 
         :param task_file: Path to the input task file.
@@ -306,9 +306,8 @@ class TaskCommands(object):
         :param tags: optional tag for this task
         :param do_use: if True, the new task will be stored as the default one
                        for future operations
-        :param abort_on_sla_failure: if True, the execution of a benchmark
-                                     scenario will stop when any SLA check
-                                     for it fails
+        :param abort_on_sla_failure: if True, the execution of a task stops
+                                     if any SLA fails
         """
         input_task = self._load_and_validate_task(api, task_file,
                                                   raw_args=task_args,
@@ -322,7 +321,7 @@ class TaskCommands(object):
             print(cliutils.make_header(
                 _("Task %(tags)s %(uuid)s: started")
                 % {"uuid": task_instance["uuid"], "tags": tags}))
-            print("Benchmarking... This can take a while...\n")
+            print("Running Task... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
 
@@ -345,15 +344,15 @@ class TaskCommands(object):
         "--soft", action="store_true",
         help="Abort task after current scenario finishes execution.")
     def abort(self, api, task_id=None, soft=False):
-        """Abort a running benchmarking task.
+        """Abort a running task.
 
         :param task_id: Task uuid
         :param soft: if set to True, task should be aborted after execution of
-                     current scenario
+                     current workload
         """
         if soft:
             print("INFO: please be informed that soft abort won't stop "
-                  "a running scenario, but will prevent new ones from "
+                  "a running workload, but will prevent new ones from "
                   "starting. If you are running task with only one "
                   "scenario, soft abort will not help at all.")
 

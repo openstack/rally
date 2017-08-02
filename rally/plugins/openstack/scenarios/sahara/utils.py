@@ -409,7 +409,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         scale_object required by Sahara API and waits for the scaling to
         complete.
 
-        NOTE: This method is not meant to be called directly in benchmarks.
+        NOTE: This method is not meant to be called directly in scenarios.
         There two specific scaling methods of up and down scaling which have
         different atomic timers.
         """

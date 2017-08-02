@@ -179,7 +179,7 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
     }
 
     def _run_scenario(self, cls, method_name, context, args):
-        """Runs the specified benchmark scenario with given arguments.
+        """Runs the specified scenario with given arguments.
 
         This method generates a constant load on the cloud under test by
         executing each scenario iteration using a pool of processes without
@@ -188,8 +188,9 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
 
         :param cls: The Scenario class where the scenario is implemented
         :param method_name: Name of the method that implements the scenario
-        :param context: Benchmark context that contains users, admin & other
-                        information, that was created before benchmark started.
+        :param context: context that contains users, admin & other
+                        information, that was created before scenario
+                        execution starts.
         :param args: Arguments to call the scenario method with
 
         :returns: List of results fore each single scenario iteration,
@@ -297,12 +298,13 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         return _scenario_args
 
     def _run_scenario(self, cls, method, context, args):
-        """Runs the specified benchmark scenario with given arguments.
+        """Runs the specified scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
         :param method: Name of the method that implements the scenario
-        :param context: Benchmark context that contains users, admin & other
-                        information, that was created before benchmark started.
+        :param context: context that contains users, admin & other
+                        information, that was created before scenario is
+                        execution starts.
         :param args: Arguments to call the scenario method with
 
         :returns: List of results fore each single scenario iteration,

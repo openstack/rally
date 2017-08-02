@@ -79,9 +79,8 @@ def preprocess(name, context, args):
     """Run preprocessor on scenario arguments.
 
     :param name: Plugin name
-    :param context: dictionary object that must have admin and credential
-                    entries
-    :param args: args section of benchmark specification in rally task file
+    :param context: dict with contexts data
+    :param args: args section of input task file
 
     :returns processed_args: dictionary object with additional client
                              and resource configuration

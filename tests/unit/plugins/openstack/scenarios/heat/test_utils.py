@@ -277,7 +277,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
 
 
 class HeatScenarioNegativeTestCase(test.ScenarioTestCase):
-    patch_benchmark_utils = False
+    patch_task_utils = False
 
     def test_failed_create_stack(self):
         self.clients("heat").stacks.create.return_value = {

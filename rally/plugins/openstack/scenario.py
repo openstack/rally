@@ -87,8 +87,7 @@ class OpenStackScenario(scenario.Scenario):
     def clients(self, client_type, version=None):
         """Returns a python openstack client of the requested type.
 
-        The client will be that for one of the temporary non-administrator
-        users created before the benchmark launch.
+        Only one non-admin user is used per every run of scenario.
 
         :param client_type: Client type ("nova"/"glance" etc.)
         :param version: client version ("1"/"2" etc.)

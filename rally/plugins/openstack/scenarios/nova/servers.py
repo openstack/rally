@@ -1099,7 +1099,7 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
     name="NovaServers.boot_server_associate_and_dissociate_floating_ip",
     platform="openstack")
 class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
-    """"Benchmark scenarios for Nova FloatingIp API."""
+
     def run(self, image, flavor, **kwargs):
         """Boot a server associate and dissociate a floating IP from it.
 
@@ -1129,6 +1129,7 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
                     name="NovaServers.boot_server_and_list_interfaces",
                     platform="openstack")
 class BootServerAndListInterfaces(utils.NovaScenario):
+
     def run(self, image, flavor, **kwargs):
         """Boot a server and list interfaces attached to it.
 

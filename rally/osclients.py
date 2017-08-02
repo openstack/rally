@@ -703,8 +703,7 @@ class EC2(OSClient):
 
         if kc.version != "v2.0":
             raise exceptions.RallyException(
-                _("Rally EC2 benchmark currently supports only"
-                  "Keystone version 2"))
+                _("Rally EC2 scenario supports only Keystone version 2"))
         ec2_credential = kc.ec2.create(user_id=kc.auth_user_id,
                                        tenant_id=kc.auth_tenant_id)
         client = boto.connect_ec2_endpoint(

@@ -23,9 +23,9 @@ from rally.task import scenario
 class HttpRequestsCheckRequest(utils.RequestScenario):
 
     def run(self, url, method, status_code, **kwargs):
-        """Standard way to benchmark web services.
+        """Standard way for testing web services using HTTP requests.
 
-        This benchmark is used to make request and check it with expected
+        This scenario is used to make request and check it with expected
         Response.
 
         :param url: url for the Request object
@@ -41,7 +41,7 @@ class HttpRequestsCheckRequest(utils.RequestScenario):
 class HttpRequestsCheckRandomRequest(utils.RequestScenario):
 
     def run(self, requests, status_code):
-        """Benchmark the list of requests
+        """Executes random HTTP requests from provided list.
 
         This scenario takes random url from list of requests, and raises
         exception if the response is not the expected response.

@@ -44,7 +44,7 @@ class ListHypervisors(utils.NovaScenario):
 @scenario.configure(name="NovaHypervisors.list_and_get_hypervisors",
                     platform="openstack")
 class ListAndGetHypervisors(utils.NovaScenario):
-    """Benchmark scenario for Nova hypervisors."""
+
     def run(self, detailed=True):
         """List and Get hypervisors.
 
@@ -81,6 +81,7 @@ class StatisticsHypervisors(utils.NovaScenario):
 @scenario.configure(name="NovaHypervisors.list_and_get_uptime_hypervisors",
                     platform="openstack")
 class ListAndGetUptimeHypervisors(utils.NovaScenario):
+
     def run(self, detailed=True):
         """List hypervisors,then display the uptime of it.
 
@@ -103,6 +104,7 @@ class ListAndGetUptimeHypervisors(utils.NovaScenario):
 @scenario.configure(name="NovaHypervisors.list_and_search_hypervisors",
                     platform="openstack")
 class ListAndSearchHypervisors(utils.NovaScenario):
+
     def run(self, detailed=True):
         """List all servers belonging to specific hypervisor.
 

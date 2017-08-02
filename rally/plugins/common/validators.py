@@ -124,7 +124,7 @@ class RequiredParameterValidator(validation.Validator):
 
         if missing:
             msg = ("%s parameter(s) are not defined in "
-                   "the task config file") % ", ".join(missing)
+                   "the input task file") % ", ".join(missing)
             return self.fail(msg)
 
 
@@ -270,7 +270,7 @@ class RestrictedParametersValidator(validation.Validator):
 class RequiredContextsValidator(validation.Validator):
 
     def __init__(self, contexts, *args):
-        """Validator checks if required benchmark contexts are specified.
+        """Validator checks if required contexts are specified.
 
         :param contexts: list of strings and tuples with context names that
                          should be specified. Tuple represent 'at least one
@@ -306,7 +306,7 @@ class RequiredContextsValidator(validation.Validator):
 
         if missing_contexts:
             msg = ("The following context(s) are required but missing from "
-                   "the benchmark configuration file: {}").format(
+                   "the input task file: {}").format(
                 ", ".join(missing_contexts))
             return self.fail(msg)
 

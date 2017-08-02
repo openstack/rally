@@ -22,9 +22,6 @@ from rally.task import validation
 LOG = logging.getLogger(__name__)
 
 
-"""Benchmark scenarios for Sahara jobs."""
-
-
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_contexts", contexts=["users", "sahara_image",
                                                "sahara_job_binaries",

@@ -25,9 +25,9 @@ class Stack(common_utils.RandomNameGeneratorMixin):
 
     Usage:
     >>> stack = Stack(scenario, task, "template.yaml", parameters={"nodes": 3})
-    >>> run_benchmark(stack)
+    >>> do_testing(stack)
     >>> stack.update(nodes=4)
-    >>> run_benchmark(stack)
+    >>> do_testing(stack)
     """
 
     def __init__(self, scenario, task, template, files, parameters=None):

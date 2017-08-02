@@ -36,7 +36,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="ca_certs", platform="openstack", order=490)
 class CaCertGenerator(context.Context):
-    """Context class for generating temporary ca cert for benchmarks."""
+    """Creates ca certs."""
 
     CONFIG_SCHEMA = {
         "type": "object",

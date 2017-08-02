@@ -81,7 +81,7 @@ def validator(fn):
     def wrap_given(*args, **kwargs):
         """Dynamic validation decorator for scenario.
 
-        :param args: the arguments of the decorator of the benchmark scenario
+        :param args: the arguments of the decorator of the scenario
         ex. @my_decorator("arg1"), then args = ("arg1",)
         :param kwargs: the keyword arguments of the decorator of the scenario
         ex. @my_decorator(kwarg1="kwarg1"), then kwargs = {"kwarg1": "kwarg1"}
