@@ -1049,8 +1049,7 @@ class WatcherActionPlanTestCase(test.TestCase):
 
     def test_name(self):
         watcher = resources.WatcherActionPlan()
-        watcher.raw_resource = mock.MagicMock(uuid="name")
-        self.assertEqual("name", watcher.name())
+        self.assertIsInstance(watcher.name(), resources.base.NoName)
 
     @mock.patch("%s.WatcherActionPlan._manager" % BASE)
     def test_is_deleted(self, mock__manager):

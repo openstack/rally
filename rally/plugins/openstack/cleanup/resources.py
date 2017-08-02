@@ -911,7 +911,7 @@ class WatcherTemplate(WatcherMixin):
 class WatcherActionPlan(WatcherMixin):
 
     def name(self):
-        return self.raw_resource.uuid
+        return base.NoName(self._resource)
 
 
 @base.resource("watcher", "audit", order=next(_watcher_order),
