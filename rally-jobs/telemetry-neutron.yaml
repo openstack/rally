@@ -84,7 +84,7 @@
            tenants: 1
            users_per_tenant: 1
          ceilometer:
-           counter_name: "benchmark_meter"
+           counter_name: "rally_meter"
            counter_type: "gauge"
            counter_unit: "%"
            counter_volume: 100
@@ -106,7 +106,7 @@
            tenants: 1
            users_per_tenant: 1
          ceilometer:
-           counter_name: "benchmark_meter"
+           counter_name: "rally_meter"
            counter_type: "gauge"
            counter_unit: "%"
            counter_volume: 100
@@ -376,7 +376,7 @@
          tenants: 2
          users_per_tenant: 2
        ceilometer:
-         counter_name: "benchmark_meter"
+         counter_name: "rally_meter"
          counter_type: "gauge"
          counter_unit: "%"
          counter_volume: 100
@@ -386,14 +386,14 @@
          metadata_list:
            -
              status: "active"
-             name: "rally benchmark on"
+             name: "rally on"
              deleted: "false"
            -
              status: "terminated"
-             name: "rally benchmark off"
+             name: "rally off"
              deleted: "true"
      args:
-       meter_name: "benchmark_meter"
+       meter_name: "rally_meter"
        filter_by_user_id: true
        filter_by_project_id: true
        filter_by_resource_id: true

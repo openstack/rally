@@ -7,7 +7,7 @@ Structure
 ---------
 
 * plugins - directory where you can add rally plugins. Almost everything in
-  Rally is a plugin. Benchmark context, Benchmark scenario, SLA checks, Generic
+  Rally is a plugin. Task contexts, scenarios, SLAs, Hooks, Generic
   cleanup resources, ....
 
 * extra - all files from this directory will be copy pasted to gates, so you
