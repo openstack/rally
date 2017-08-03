@@ -20,6 +20,8 @@ from __future__ import print_function
 import contextlib
 import sys
 
+from oslo_config import cfg
+
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import db
@@ -65,6 +67,10 @@ class DBCommands(object):
     def revision(self, api):
         """Print current Rally database revision UUID."""
         print(db.schema_revision())
+
+    def show(self, api):
+        """Show the connection string."""
+        print(cfg.CONF.database.connection)
 
 
 def main():
