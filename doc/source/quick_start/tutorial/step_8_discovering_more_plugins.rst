@@ -62,7 +62,7 @@ information about them:
     +--------+------------------------------------------------+
 
 
-In case if multiple found benchmarks found command list all matches elements:
+In case if multiple plugins were found, all matched elements are listed:
 
 .. code-block:: console
 

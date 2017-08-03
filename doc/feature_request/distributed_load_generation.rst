@@ -6,7 +6,7 @@ Use Case
 --------
 
 Some OpenStack projects (Marconi, MagnetoDB) require a real huge load,
-like 10-100k request per second for benchmarking.
+like 10-100k request per second for load testing.
 
 To generate such huge load Rally has to create load from different
 servers.

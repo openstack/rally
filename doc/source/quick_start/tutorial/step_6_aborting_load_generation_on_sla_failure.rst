@@ -18,7 +18,7 @@
 Step 6. Aborting load generation on success criteria failure
 ============================================================
 
-Benchmarking pre-production and production OpenStack clouds is not a trivial
+Testing pre-production and production OpenStack clouds is not a trivial
 task. From the one side it is important to reach the OpenStack cloud's limits,
 from the other side the cloud shouldn't be damaged. Rally aims to make this
 task as simple as possible. Since the very beginning Rally was able to generate
@@ -29,8 +29,8 @@ until it was too late.
 With the **"stop on SLA failure"** feature, however, things are much better.
 
 This feature can be easily tested in real life by running one of the most
-important and plain benchmark scenario called *"Authenticate.keystone"*. This
-scenario just tries to authenticate from users that were pre-created by Rally.
+important and plain scenario called *"Authenticate.keystone"*. This scenario
+just tries to authenticate from users that were pre-created by Rally.
 Rally input task looks as follows (*auth.yaml*):
 
 .. code-block:: yaml

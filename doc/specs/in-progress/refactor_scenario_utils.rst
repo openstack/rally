@@ -88,7 +88,7 @@ keystone scenarios use plugins/openstack/scenarios/keystone/utils.py
 .. code-block:: python
 
     class KeystoneBasic(kutils.KeystoneScenario):
-        """Basic benchmark scenarios for Keystone."""
+        """Basic scenarios for Keystone."""
 
         @validation.number("name_length", minval=10)
         @validation.required_openstack(admin=True)
@@ -155,8 +155,7 @@ Users context:
 
     @context.configure(name="users", order=100)
     class UserGenerator(UserContextMixin, context.Context):
-        """Context class for generating temporary
-           users/tenants for benchmarks."""
+        """Context class for generating temporary users/tenants for testing."""
 
         def _create_tenants(self):
             cache["client"] = keystone.wrap(clients.keystone())
@@ -307,7 +306,7 @@ of scenario.
     from rally.plugins.openstack.services.identity import keystone_v3
 
     class KeystoneBasic(scenario.OpenStackScenario):  # no more utils.py
-        """Basic benchmark scenarios for Keystone."""
+        """Basic scenarios for Keystone."""
 
 
         @validation.number("name_length", minval=10)

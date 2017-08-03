@@ -47,8 +47,8 @@ clients:
         def _list_flavors(self):
             """Sample of usage clients - list flavors
 
-            You can use self.context, self.admin_clients and self.clients which are
-            initialized on scenario instance creation"""
+            You can use self.context, self.admin_clients and self.clients
+            which are initialized on scenario instance creation"""
             self.clients("nova").flavors.list()
 
         @atomic.action_timer("list_flavors_as_admin")
@@ -65,8 +65,8 @@ clients:
 Usage
 ^^^^^
 
-You can refer to your plugin scenario in the benchmark task
-configuration files in the same way as any other scenarios:
+You can refer to your plugin scenario in the task input files in the same
+way as any other scenarios:
 
 .. code-block:: json
 

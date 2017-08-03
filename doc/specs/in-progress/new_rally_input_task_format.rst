@@ -187,13 +187,13 @@ New format sample:
       subtasks:
       # Note every task is executed serially (one by one)
       #
-      # Using list for describing what benchmarks (tasks) to run is much
-      # better idea then using Dictionary. It resolves at least 3 big issues:
+      # Using list for describing what subtasks to run is much better idea then
+      # using dictionary. It resolves at least 3 big issues:
       #
       # 1) Bad user experience
-      # 1.1) Users do not realize that Rally can run N benchmarks
+      # 1.1) Users do not realize that Rally can run N subtask
       # 1.2) Keys of Dictionary were Scenario names (reasonable question why?!)
-      # 1.3) Users tried to put N times same k-v (to run one benchmark N times)
+      # 1.3) Users tried to put N times same k-v (to run one subtask N times)
       # 2) No way to specify order of scenarios execution, especially in case
       #    where we need to do chain like: ScenarioA -> SecnearioB -> ScenarioA
       # 3) No way to support multi scenario load, because we used scenario name
@@ -225,14 +225,14 @@ New format sample:
               constant:
                 times: 100
                 concurrency: 10
-            # Benchmark success of criteria based on results
+            # Subtask success of criteria based on results
             slas:
               # Every key means SLA plugin name, values are config of plugin
               # Only if all criteria pass task is marked as passed
               failure_rate:
                 max: 0
 
-        # Specification of context that creates env for benchmark scenarios
+        # Specification of context that creates env for scenarios
         # E.g. it creates users, tenants, sets quotas, uploads images...
         contexts:
           # Each key is the name of context plugin
@@ -322,8 +322,7 @@ Work Items
 
 - Implement OLD -> NEW format converter
 
-- Switch benchmark engine to use new format.
-  This should affect only benchmark engine
+- Switch task engine to use new format. This should affect only task engine
 
 - Implement new DB schema format, that will allow to store multi-scenario
   output data

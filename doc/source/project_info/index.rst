@@ -55,25 +55,25 @@ Project Core maintainers
 +------------------------------+------------------------------------------------+
 | | Boris Pavlovic             |  * Founder and ideological leader              |
 | | boris-42 (irc)             |  * Architect                                   |
-| | boris@pavlovic.me          |  * Rally task & benchmark                      |
+| | boris@pavlovic.me          |  * Rally task & plugins                        |
 +------------------------------+------------------------------------------------+
-| | Chris St. Pierre           |  * Rally task & benchmark                      |
+| | Chris St. Pierre           |  * Rally task & plugins                        |
 | | stpierre (irc)             |  * Bash guru ;)                                |
 | | cstpierr@cisco.com         |                                                |
 +------------------------------+------------------------------------------------+
-| | Illia Khudoshyn            |  * Rally task & benchmark                      |
+| | Illia Khudoshyn            |  * Rally task & plugins                        |
 | | ikhudoshyn (irc)           |                                                |
 | | ikhudoshyn@mirantis.com    |                                                |
 +------------------------------+------------------------------------------------+
-| | Kun Huang                  |  * Rally task & benchmark                      |
+| | Kun Huang                  |  * Rally task & plugins                        |
 | | kun_huang (irc)            |                                                |
 | | gareth.huang@huawei.com    |                                                |
 +------------------------------+------------------------------------------------+
-| | Li Yingjun                 |  * Rally task & benchmark                      |
+| | Li Yingjun                 |  * Rally task & plugins                        |
 | | liyingjun (irc)            |                                                |
 | | yingjun.li@kylin-cloud.com |                                                |
 +------------------------------+------------------------------------------------+
-| | Roman Vasilets             |  * Rally task & benchmark                      |
+| | Roman Vasilets             |  * Rally task & plugins                        |
 | | rvasilets (irc)            |                                                |
 | | pomeo92@gmail.com          |                                                |
 +------------------------------+------------------------------------------------+
@@ -82,7 +82,7 @@ Project Core maintainers
 | | sskripnick@mirantis.com    |  * Automation of everything                    |
 +------------------------------+------------------------------------------------+
 | | Yair Fried                 |  * Rally-Tempest integration                   |
-| | yfried (irc)               |  * Rally task & benchmark                      |
+| | yfried (irc)               |  * Rally task & plugins                        |
 | | yfried@redhat.com          |                                                |
 +------------------------------+------------------------------------------------+
 | | Yaroslav Lobankov          |  * Rally Verification                          |

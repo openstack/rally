@@ -75,7 +75,7 @@ Plugins
 
    Cloudera manager need master-node flavor
 
- * [added] Expand Nova API benchmark in Rally
+ * [added] Add more Nova API scenarios
 
    Add support for listing nova hosts, agents, availability-zones
    and aggregates.

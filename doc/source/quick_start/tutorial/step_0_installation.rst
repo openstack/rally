@@ -35,7 +35,7 @@ please refer to the :ref:`installation <install>` page.
 **Note:** Rally requires Python version 2.7 or 3.4.
 
 Now that you have Rally installed, you are ready to start
-:ref:`benchmarking OpenStack with it <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`!
+:ref:`testing OpenStack with Rally <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`!
 
 .. references:
 
