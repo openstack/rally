@@ -127,8 +127,7 @@ class CreateAndGetImage(GlanceBasic):
 
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
-                    name="GlanceImages.list_images",
+@scenario.configure(name="GlanceImages.list_images",
                     platform="openstack")
 class ListImages(GlanceBasic):
 

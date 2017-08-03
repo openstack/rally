@@ -31,7 +31,6 @@ from rally.task import validation
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
 @scenario.configure(name="MistralExecutions.list_executions",
-                    context={"cleanup": ["mistral"]},
                     platform="openstack")
 class ListExecutions(utils.MistralScenario):
 

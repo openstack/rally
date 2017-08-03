@@ -74,8 +74,7 @@ class BootAndListServer(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaServers.list_servers", platform="openstack")
+@scenario.configure(name="NovaServers.list_servers", platform="openstack")
 class ListServers(utils.NovaScenario):
 
     def run(self, detailed=True):
