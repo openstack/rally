@@ -99,8 +99,7 @@ class CreateAndGetVolume(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["cinder"]},
-                    name="CinderVolumes.list_volumes",
+@scenario.configure(name="CinderVolumes.list_volumes",
                     platform="openstack")
 class ListVolumes(cinder_utils.CinderBasic):
 

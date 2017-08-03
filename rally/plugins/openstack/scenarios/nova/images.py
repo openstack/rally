@@ -24,8 +24,7 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
-                    name="NovaImages.list_images",
+@scenario.configure(name="NovaImages.list_images",
                     platform="openstack")
 class ListImages(utils.NovaScenario):
 

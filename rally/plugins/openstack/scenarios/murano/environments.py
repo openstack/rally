@@ -23,8 +23,7 @@ from rally.task import validation
 
 
 @validation.add("required_services", services=[consts.Service.MURANO])
-@scenario.configure(context={"cleanup": ["murano.environments"]},
-                    name="MuranoEnvironments.list_environments",
+@scenario.configure(name="MuranoEnvironments.list_environments",
                     platform="openstack")
 class ListEnvironments(utils.MuranoScenario):
 
