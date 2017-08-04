@@ -229,6 +229,26 @@ class BlockStorage(service.UnifiedService):
                                   set_specs_args=set_specs_args)
 
     @service.should_be_overridden
+    def qos_associate_type(self, qos_specs, volume_type):
+        """Associate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be associated with
+        :param volume_type: The volume type id to be associated with
+        :rtype: :class:`QoSSpecs`
+        """
+        return self._impl.qos_associate_type(qos_specs, volume_type)
+
+    @service.should_be_overridden
+    def qos_disassociate_type(self, qos_specs, volume_type):
+        """Disassociate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be associated with
+        :param volume_type: The volume type id to be disassociated with
+        :rtype: :class:`QoSSpecs`
+        """
+        return self._impl.qos_disassociate_type(qos_specs, volume_type)
+
+    @service.should_be_overridden
     def create_snapshot(self, volume_id, force=False,
                         name=None, description=None, metadata=None):
         """Create one snapshot.

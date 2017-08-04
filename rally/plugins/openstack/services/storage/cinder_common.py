@@ -249,6 +249,34 @@ class CinderMixin(object):
             return self._get_client().qos_specs.set_keys(qos_id,
                                                          set_specs_args)
 
+    def qos_associate_type(self, qos_specs, vol_type_id):
+        """Associate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be associated with
+        :param vol_type_id: The volume type id to be associated with
+        :returns: base on client response return True if the request
+                  has been accepted or not
+        """
+        aname = "cinder_v%s.qos_associate_type" % self.version
+        with atomic.ActionTimer(self, aname):
+            tuple_res = self._get_client().qos_specs.associate(qos_specs,
+                                                               vol_type_id)
+            return (tuple_res[0].status_code == 202)
+
+    def qos_disassociate_type(self, qos_specs, vol_type_id):
+        """Disassociate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be disassociated with
+        :param vol_type_id: The volume type id to be disassociated with
+        :returns: base on client response return True if the request
+                  has been accepted or not
+        """
+        aname = "cinder_v%s.qos_disassociate_type" % self.version
+        with atomic.ActionTimer(self, aname):
+            tuple_res = self._get_client().qos_specs.disassociate(qos_specs,
+                                                                  vol_type_id)
+            return (tuple_res[0].status_code == 202)
+
     def delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 
@@ -558,6 +586,24 @@ class UnifiedCinderMixin(object):
         """
         self._impl.set_qos(qos.id, set_specs_args)
         return self._unify_qos(qos)
+
+    def qos_associate_type(self, qos_specs, vol_type_id):
+        """Associate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be associated with
+        :param vol_type_id: The volume type id to be associated with
+        """
+        self._impl.qos_associate_type(qos_specs, vol_type_id)
+        return self._unify_qos(qos_specs)
+
+    def qos_disassociate_type(self, qos_specs, vol_type_id):
+        """Disassociate qos specs from volume type.
+
+        :param qos_specs: The qos specs to be disassociated with
+        :param vol_type_id: The volume type id to be disassociated with
+        """
+        self._impl.qos_disassociate_type(qos_specs, vol_type_id)
+        return self._unify_qos(qos_specs)
 
     def delete_snapshot(self, snapshot):
         """Delete the given backup.

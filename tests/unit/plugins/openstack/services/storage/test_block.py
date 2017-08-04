@@ -145,6 +145,22 @@ class BlockTestCase(test.TestCase):
         self.service._impl.set_qos.assert_called_once_with(
             qos="qos", set_specs_args=set_specs_args)
 
+    def test_qos_associate_type(self):
+        self.assertEqual(
+            self.service._impl.qos_associate_type.return_value,
+            self.service.qos_associate_type(qos_specs="fake_qos",
+                                            volume_type="fake_type"))
+        self.service._impl.qos_associate_type.assert_called_once_with(
+            "fake_qos", "fake_type")
+
+    def test_qos_disassociate_type(self):
+        self.assertEqual(
+            self.service._impl.qos_disassociate_type.return_value,
+            self.service.qos_disassociate_type(qos_specs="fake_qos",
+                                               volume_type="fake_type"))
+        self.service._impl.qos_disassociate_type.assert_called_once_with(
+            "fake_qos", "fake_type")
+
     def test_create_snapshot(self):
         self.assertEqual(
             self.service._impl.create_snapshot.return_value,
