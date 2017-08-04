@@ -54,7 +54,7 @@ class GlanceBasic(scenario.OpenStackScenario):
 class CreateAndListImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
-            visibility="private", min_disk=0, min_ram=0):
+            visibility="private", min_disk=0, min_ram=0, properties=None):
         """Create an image and then list all images.
 
         Measure the "glance image-list" command performance.
@@ -73,6 +73,8 @@ class CreateAndListImage(GlanceBasic):
         :param visibility: The access permission for the created image
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: A dict of image metadata properties to set
+                           on the image
         """
         image = self.glance.create_image(
             container_format=container_format,
@@ -80,7 +82,8 @@ class CreateAndListImage(GlanceBasic):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         self.assertTrue(image)
         image_list = self.glance.list_images()
         self.assertIn(image.id, [i.id for i in image_list])
@@ -101,7 +104,7 @@ class CreateAndListImage(GlanceBasic):
 class CreateAndGetImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
-            visibility="private", min_disk=0, min_ram=0):
+            visibility="private", min_disk=0, min_ram=0, properties=None):
         """Create and get detailed information of an image.
 
         :param container_format: container format of image. Acceptable
@@ -112,6 +115,8 @@ class CreateAndGetImage(GlanceBasic):
         :param visibility: The access permission for the created image
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: A dict of image metadata properties to set
+                           on the image
         """
         image = self.glance.create_image(
             container_format=container_format,
@@ -119,7 +124,8 @@ class CreateAndGetImage(GlanceBasic):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         self.assertTrue(image)
         image_info = self.glance.get_image(image)
         self.assertEqual(image.id, image_info.id)
@@ -159,7 +165,7 @@ class ListImages(GlanceBasic):
 class CreateAndDeleteImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
-            visibility="private", min_disk=0, min_ram=0):
+            visibility="private", min_disk=0, min_ram=0, properties=None):
         """Create and then delete an image.
 
         :param container_format: container format of image. Acceptable
@@ -170,6 +176,8 @@ class CreateAndDeleteImage(GlanceBasic):
         :param visibility: The access permission for the created image
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: A dict of image metadata properties to set
+                           on the image
         """
         image = self.glance.create_image(
             container_format=container_format,
@@ -177,7 +185,8 @@ class CreateAndDeleteImage(GlanceBasic):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         self.glance.delete_image(image.id)
 
 
@@ -201,7 +210,7 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
 
     def run(self, container_format, image_location, disk_format,
             flavor, number_instances, visibility="private", min_disk=0,
-            min_ram=0, boot_server_kwargs=None, **kwargs):
+            min_ram=0, properties=None, boot_server_kwargs=None, **kwargs):
         """Create an image and boot several instances from it.
 
         :param container_format: container format of image. Acceptable
@@ -212,9 +221,10 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
         :param visibility: The access permission for the created image
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: A dict of image metadata properties to set
+                           on the image
         :param flavor: Nova flavor to be used to launch an instance
         :param number_instances: number of Nova servers to boot
-        :param create_image_kwargs: optional parameters to create image
         :param boot_server_kwargs: optional parameters to boot server
         :param kwargs: optional parameters to create server (deprecated)
         """
@@ -231,7 +241,8 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
 
         self._boot_servers(image.id, flavor, number_instances,
                            **boot_server_kwargs)
@@ -253,7 +264,8 @@ class CreateAndUpdateImage(GlanceBasic):
 
     def run(self, container_format, image_location, disk_format,
             remove_props=None, visibility="private", create_min_disk=0,
-            create_min_ram=0, update_min_disk=0, update_min_ram=0):
+            create_min_ram=0, create_properties=None,
+            update_min_disk=0, update_min_ram=0):
         """Create an image then update it.
 
         Measure the "glance image-create" and "glance image-update" commands
@@ -269,6 +281,8 @@ class CreateAndUpdateImage(GlanceBasic):
         :param visibility: The access permission for the created image
         :param create_min_disk: The min disk of created images
         :param create_min_ram: The min ram of created images
+        :param create_properties: A dict of image metadata properties to set
+                                  on the created image
         :param update_min_disk: The min disk of updated images
         :param update_min_ram: The min ram of updated images
         """
@@ -278,7 +292,8 @@ class CreateAndUpdateImage(GlanceBasic):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=create_min_disk,
-            min_ram=create_min_ram)
+            min_ram=create_min_ram,
+            properties=create_properties)
 
         self.glance.update_image(image.id,
                                  min_disk=update_min_disk,

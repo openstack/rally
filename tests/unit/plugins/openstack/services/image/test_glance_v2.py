@@ -51,20 +51,23 @@ class GlanceV2ServiceTestCase(test.TestCase):
         container_format = "container_format"
         disk_format = "disk_format"
         visibility = "public"
+        properties = {"fakeprop": "fake"}
 
         image = self.service.create_image(
             image_name=image_name,
             container_format=container_format,
             image_location=location,
             disk_format=disk_format,
-            visibility=visibility)
+            visibility=visibility,
+            properties=properties)
 
         call_args = {"container_format": container_format,
                      "disk_format": disk_format,
                      "name": image_name,
                      "visibility": visibility,
                      "min_disk": 0,
-                     "min_ram": 0}
+                     "min_ram": 0,
+                     "fakeprop": "fake"}
 
         if location.startswith("/"):
             mock_open.assert_called_once_with(location)
@@ -143,19 +146,22 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
         image_location = "image_location"
         disk_format = "disk_format"
         visibility = "public"
+        properties = {"fakeprop": "fake"}
         callargs = {"image_name": image_name,
                     "container_format": container_format,
                     "image_location": image_location,
                     "disk_format": disk_format,
                     "visibility": visibility,
                     "min_disk": 0,
-                    "min_ram": 0}
+                    "min_ram": 0,
+                    "properties": properties}
 
         image = self.service.create_image(image_name=image_name,
                                           container_format=container_format,
                                           image_location=image_location,
                                           disk_format=disk_format,
-                                          visibility=visibility)
+                                          visibility=visibility,
+                                          properties=properties)
 
         self.assertEqual(mock_image__unify_image.return_value, image)
         self.service._impl.create_image.assert_called_once_with(**callargs)

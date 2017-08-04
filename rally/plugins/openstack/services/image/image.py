@@ -48,7 +48,7 @@ class Image(service.UnifiedService):
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
                      visibility="private", min_disk=0,
-                     min_ram=0):
+                     min_ram=0, properties=None):
         """Creates new image.
 
         :param image_name: Image name for which need to be created
@@ -58,7 +58,9 @@ class Image(service.UnifiedService):
         :param visibility: The access permission for the created image.
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: Dict of image properties
         """
+        properties = properties or {}
         image = self._impl.create_image(
             image_name=image_name,
             container_format=container_format,
@@ -66,7 +68,8 @@ class Image(service.UnifiedService):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         return image
 
     @service.should_be_overridden
