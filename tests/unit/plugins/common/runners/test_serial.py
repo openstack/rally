@@ -39,9 +39,9 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              fakes.FakeContext().context, {})
 
-        self.assertEqual(len(runner.result_queue), times)
+        self.assertEqual(times, len(runner.result_queue))
         results = list(runner.result_queue)
-        self.assertEqual(results, expected_results)
+        self.assertEqual(expected_results, results)
         expected_calls = []
         for i in range(times):
             ctxt = fakes.FakeContext().context
@@ -60,7 +60,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner.abort()
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              fakes.FakeContext().context, {})
-        self.assertEqual(len(runner.result_queue), 0)
+        self.assertEqual(0, len(runner.result_queue))
 
     def test_abort(self):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),

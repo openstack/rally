@@ -57,7 +57,7 @@ class FileTypeTestCase(test.TestCase):
         resource_config = "file.yaml"
         file_context = types.FileType.transform(
             clients=None, resource_config=resource_config)
-        self.assertEqual(file_context, "file_context")
+        self.assertEqual("file_context", file_context)
 
     @mock.patch("six.moves.builtins.open", side_effect=IOError, create=True)
     def test_transform_by_path_no_match(self, mock_open):
@@ -78,7 +78,7 @@ class FileTypeDictTestCase(test.TestCase):
         file_context = types.FileTypeDict.transform(
             clients=None,
             resource_config=resource_config)
-        self.assertEqual(file_context, {"file.yaml": "file_context"})
+        self.assertEqual({"file.yaml": "file_context"}, file_context)
 
     @mock.patch("six.moves.builtins.open", side_effect=IOError, create=True)
     def test_transform_by_path_no_match(self, mock_open):

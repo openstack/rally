@@ -76,7 +76,7 @@ class SSHTestCase(test.TestCase):
         key = self.ssh._get_pkey("key")
         dss_calls = mock_paramiko.dsskey.DSSKey.from_private_key.mock_calls
         self.assertEqual([mock.call("string_key")], dss_calls)
-        self.assertEqual(key, "dss_key")
+        self.assertEqual("dss_key", key)
         mock_string_io.assert_called_once_with("key")
 
     @mock.patch("rally.common.sshutils.six.moves.StringIO")
@@ -90,7 +90,7 @@ class SSHTestCase(test.TestCase):
         key = self.ssh._get_pkey("key")
         rsa_calls = mock_paramiko.rsakey.RSAKey.from_private_key.mock_calls
         self.assertEqual([mock.call("string_key")], rsa_calls)
-        self.assertEqual(key, "rsa_key")
+        self.assertEqual("rsa_key", key)
         mock_string_io.assert_called_once_with("key")
 
     @mock.patch("rally.common.sshutils.SSH._get_pkey")

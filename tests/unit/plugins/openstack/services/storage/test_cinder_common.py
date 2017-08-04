@@ -158,11 +158,11 @@ class CinderMixinTestCase(test.ScenarioTestCase):
 
         self.service.set_metadata(volume, sets=2, set_size=4)
         calls = self.cinder.volumes.set_metadata.call_args_list
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(2, len(calls))
         for call in calls:
             call_volume, metadata = call[0]
-            self.assertEqual(call_volume, volume)
-            self.assertEqual(len(metadata), 4)
+            self.assertEqual(volume, call_volume)
+            self.assertEqual(4, len(metadata))
 
     def test_delete_metadata(self):
         volume = fakes.FakeVolume()
@@ -170,12 +170,12 @@ class CinderMixinTestCase(test.ScenarioTestCase):
         keys = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]
         self.service.delete_metadata(volume, keys, deletes=3, delete_size=4)
         calls = self.cinder.volumes.delete_metadata.call_args_list
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(3, len(calls))
         all_deleted = []
         for call in calls:
             call_volume, del_keys = call[0]
-            self.assertEqual(call_volume, volume)
-            self.assertEqual(len(del_keys), 4)
+            self.assertEqual(volume, call_volume)
+            self.assertEqual(4, len(del_keys))
             for key in del_keys:
                 self.assertIn(key, keys)
                 self.assertNotIn(key, all_deleted)

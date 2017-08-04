@@ -56,9 +56,9 @@ class SeekAndDestroyTestCase(test.TestCase):
             mock_resource)
 
         mock_resource.delete.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(mock_resource.delete.call_count, 3)
+        self.assertEqual(3, mock_resource.delete.call_count)
         mock_resource.is_deleted.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(mock_resource.is_deleted.call_count, 3)
+        self.assertEqual(3, mock_resource.is_deleted.call_count)
 
         # NOTE(boris-42): No logs and no exceptions means no bugs!
         self.assertEqual(0, mock_log.call_count)
@@ -167,7 +167,7 @@ class SeekAndDestroyTestCase(test.TestCase):
         ])
         expected_queue = [(admin, users[0], x) for x in range(1, 4)]
         expected_queue += [(admin, users[1], x) for x in range(4, 6)]
-        self.assertEqual(queue, expected_queue)
+        self.assertEqual(expected_queue, queue)
 
     @mock.patch("%s.LOG" % BASE)
     @mock.patch("%s.SeekAndDestroy._get_cached_client" % BASE)

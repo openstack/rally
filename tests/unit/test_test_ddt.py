@@ -29,7 +29,7 @@ class Test(object):
         tree = ast.parse(code).body[0]
         visitor = test_ddt.DDTDecoratorChecker()
         visitor.visit(tree)
-        self.assertEqual(visitor.errors, {})
+        self.assertEqual({}, visitor.errors)
 
     def test_fail(self):
         code = """
@@ -41,8 +41,7 @@ class Test(object):
         tree = ast.parse(code).body[0]
         visitor = test_ddt.DDTDecoratorChecker()
         visitor.visit(tree)
-        self.assertEqual(
-            visitor.errors,
-            {"Test": {"lineno": 3,
-                      "message": "Class Test has functions that use DDT, "
-                      "but is not decorated with `ddt.ddt`"}})
+        self.assertEqual({"Test": {"lineno": 3,
+                          "message": "Class Test has functions that use DDT, "
+                                     "but is not decorated with `ddt.ddt`"}},
+                         visitor.errors)

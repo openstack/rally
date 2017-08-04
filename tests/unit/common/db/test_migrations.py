@@ -230,7 +230,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
 
     def assertColumnCount(self, engine, table, columns):
         t = db_utils.get_table(engine, table)
-        self.assertEqual(len(t.columns), len(columns))
+        self.assertEqual(len(columns), len(t.columns))
 
     def assertColumnNotExists(self, engine, table, column):
         t = db_utils.get_table(engine, table)
@@ -419,7 +419,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                   "name": self._08e1515a576c_deployment_uuid,
                   "config": six.b("{}"),
                   "enum_deployments_status":
-                      consts.DeployStatus.DEPLOY_FINISHED,
+                  consts.DeployStatus.DEPLOY_FINISHED,
                   "credentials": six.b(json.dumps([])),
                   "users": six.b(json.dumps([]))
                   }])
@@ -544,21 +544,21 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 where(task_table.c.uuid == self._e654a0648db0_task_uuid)
             ).fetchall()
 
-            self.assertEqual(len(tasks_found), 1)
+            self.assertEqual(1, len(tasks_found))
 
             task_found = tasks_found[0]
-            self.assertEqual(task_found.uuid, self._e654a0648db0_task_uuid)
-            self.assertEqual(task_found.deployment_uuid,
-                             self._e654a0648db0_deployment_uuid)
-            self.assertEqual(task_found.status, consts.TaskStatus.FINISHED)
+            self.assertEqual(self._e654a0648db0_task_uuid, task_found.uuid)
+            self.assertEqual(self._e654a0648db0_deployment_uuid,
+                             task_found.deployment_uuid)
+            self.assertEqual(consts.TaskStatus.FINISHED, task_found.status)
             # NOTE(ikhudoshyn): if for all workloads success == True
-            self.assertEqual(task_found.pass_sla, False)
+            self.assertFalse(task_found.pass_sla)
             # NOTE(ikhudoshyn): sum of all full_durations of all workloads
-            self.assertEqual(task_found.task_duration, 142)
+            self.assertEqual(142, task_found.task_duration)
             # NOTE(ikhudoshyn): we have no info on validation duration in old
             # schema
-            self.assertEqual(task_found.validation_duration, 0)
-            self.assertEqual(json.loads(task_found.validation_result), {})
+            self.assertEqual(0, task_found.validation_duration)
+            self.assertEqual({}, json.loads(task_found.validation_result))
 
             # Check subtask
 
@@ -568,16 +568,16 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       self._e654a0648db0_task_uuid)
             ).fetchall()
 
-            self.assertEqual(len(subtasks_found), 1)
+            self.assertEqual(1, len(subtasks_found))
 
             subtask_found = subtasks_found[0]
-            self.assertEqual(subtask_found.task_uuid,
-                             self._e654a0648db0_task_uuid)
+            self.assertEqual(self._e654a0648db0_task_uuid,
+                             subtask_found.task_uuid)
 
             # NOTE(ikhudoshyn): if for all workloads success == True
-            self.assertEqual(subtask_found.pass_sla, False)
+            self.assertFalse(subtask_found.pass_sla)
             # NOTE(ikhudoshyn): sum of all full_durations of all workloads
-            self.assertEqual(subtask_found.duration, 142)
+            self.assertEqual(142, subtask_found.duration)
 
             self._e654a0648db0_subtask_uuid = subtask_found.uuid
 
@@ -588,9 +588,9 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 where(tag_table.c.uuid == self._e654a0648db0_task_uuid)
             ).fetchall()
 
-            self.assertEqual(len(tags_found), 1)
-            self.assertEqual(tags_found[0].tag, "test_tag")
-            self.assertEqual(tags_found[0].type, consts.TagType.TASK)
+            self.assertEqual(1, len(tags_found))
+            self.assertEqual("test_tag", tags_found[0].tag)
+            self.assertEqual(consts.TagType.TASK, tags_found[0].type)
 
             # Check workload
 
@@ -600,43 +600,36 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       self._e654a0648db0_task_uuid)
             ).fetchall()
 
-            self.assertEqual(len(workloads_found), 1)
+            self.assertEqual(1, len(workloads_found))
 
             workload_found = workloads_found[0]
 
-            self.assertEqual(workload_found.task_uuid,
-                             self._e654a0648db0_task_uuid)
+            self.assertEqual(self._e654a0648db0_task_uuid,
+                             workload_found.task_uuid)
 
-            self.assertEqual(workload_found.subtask_uuid,
-                             self._e654a0648db0_subtask_uuid)
+            self.assertEqual(self._e654a0648db0_subtask_uuid,
+                             workload_found.subtask_uuid)
 
-            self.assertEqual(workload_found.name, "test_scenario")
-            self.assertEqual(workload_found.position, 0)
-            self.assertEqual(workload_found.runner_type, "theRunner")
-            self.assertEqual(workload_found.runner,
-                             json.dumps({"type": "theRunner"}))
-            self.assertEqual(workload_found.sla,
-                             json.dumps({"s": "S"}))
-            self.assertEqual(workload_found.args,
-                             json.dumps({"a": "A"}))
-            self.assertEqual(workload_found.context,
-                             json.dumps({"c": "C"}))
-            self.assertEqual(workload_found.sla_results,
-                             json.dumps({
-                                 "sla": [
-                                     {"success": True},
-                                     {"success": False}
-                                 ]
-                             }))
-            self.assertEqual(workload_found.context_execution,
-                             json.dumps({}))
-            self.assertEqual(workload_found.load_duration, 42)
-            self.assertEqual(workload_found.full_duration, 142)
-            self.assertEqual(workload_found.min_duration, 1)
-            self.assertEqual(workload_found.max_duration, 8)
-            self.assertEqual(workload_found.total_iteration_count, 3)
-            self.assertEqual(workload_found.failed_iteration_count, 1)
-            self.assertEqual(workload_found.pass_sla, False)
+            self.assertEqual("test_scenario", workload_found.name)
+            self.assertEqual(0, workload_found.position)
+            self.assertEqual("theRunner", workload_found.runner_type)
+            self.assertEqual(json.dumps({"type": "theRunner"}),
+                             workload_found.runner)
+            self.assertEqual(json.dumps({"s": "S"}), workload_found.sla)
+            self.assertEqual(json.dumps({"a": "A"}), workload_found.args)
+            self.assertEqual(json.dumps({"c": "C"}), workload_found.context)
+            self.assertEqual(json.dumps({
+                             "sla": [{"success": True},
+                                     {"success": False}]
+                             }), workload_found.sla_results)
+            self.assertEqual(json.dumps({}), workload_found.context_execution)
+            self.assertEqual(42, workload_found.load_duration)
+            self.assertEqual(142, workload_found.full_duration)
+            self.assertEqual(1, workload_found.min_duration)
+            self.assertEqual(8, workload_found.max_duration)
+            self.assertEqual(3, workload_found.total_iteration_count)
+            self.assertEqual(1, workload_found.failed_iteration_count)
+            self.assertFalse(workload_found.pass_sla)
 
             self._e654a0648db0_workload_uuid = workload_found.uuid
 
@@ -648,23 +641,22 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                       self._e654a0648db0_task_uuid)
             ).fetchall()
 
-            self.assertEqual(len(workloaddata_found), 1)
+            self.assertEqual(1, len(workloaddata_found))
 
             wloaddata_found = workloaddata_found[0]
 
-            self.assertEqual(wloaddata_found.task_uuid,
-                             self._e654a0648db0_task_uuid)
+            self.assertEqual(self._e654a0648db0_task_uuid,
+                             wloaddata_found.task_uuid)
 
-            self.assertEqual(wloaddata_found.workload_uuid,
-                             self._e654a0648db0_workload_uuid)
+            self.assertEqual(self._e654a0648db0_workload_uuid,
+                             wloaddata_found.workload_uuid)
 
-            self.assertEqual(wloaddata_found.chunk_order, 0)
-            self.assertEqual(wloaddata_found.chunk_size, 0)
-            self.assertEqual(wloaddata_found.compressed_chunk_size, 0)
-            self.assertEqual(wloaddata_found.iteration_count, 3)
-            self.assertEqual(wloaddata_found.failed_iteration_count, 1)
+            self.assertEqual(0, wloaddata_found.chunk_order)
+            self.assertEqual(0, wloaddata_found.chunk_size)
+            self.assertEqual(0, wloaddata_found.compressed_chunk_size)
+            self.assertEqual(3, wloaddata_found.iteration_count)
+            self.assertEqual(1, wloaddata_found.failed_iteration_count)
             self.assertEqual(
-                wloaddata_found.chunk_data,
                 json.dumps(
                     {
                         "raw": [
@@ -673,7 +665,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                             {"duration": 8},
                         ]
                     }
-                )
+                ), wloaddata_found.chunk_data
             )
 
             # Delete all stuff created at _pre_upgrade step
@@ -939,7 +931,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                         verifications_table.insert(),
                         [{"uuid": vuuid,
                           "deployment_uuid":
-                              self._484cd9413e66_deployment_uuid,
+                          self._484cd9413e66_deployment_uuid,
                           "status": vstatus,
                           "set_name": verification["set_name"],
                           "tests": verification["total"]["tests"],
@@ -1286,7 +1278,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                   "name": self._4ef544102ba7_deployment_uuid,
                   "config": six.b(json.dumps([])),
                   "enum_deployments_status":
-                      consts.DeployStatus.DEPLOY_FINISHED,
+                  consts.DeployStatus.DEPLOY_FINISHED,
                   "credentials": six.b(json.dumps([])),
                   "users": six.b(json.dumps([]))
                   }])

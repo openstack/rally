@@ -46,7 +46,7 @@ class ImmutableMixinTestCase(test.TestCase):
         a = A("test")
         self.assertRaises(AttributeError,
                           a.__setattr__, "abc", "test")
-        self.assertEqual(a.test, "test")
+        self.assertEqual("test", a.test)
 
 
 class EnumMixinTestCase(test.TestCase):
@@ -58,7 +58,7 @@ class EnumMixinTestCase(test.TestCase):
             b = 20
             CC = "2000"
 
-        self.assertEqual(set(list(Foo())), set([10, 20, "2000"]))
+        self.assertEqual(set([10, 20, "2000"]), set(list(Foo())))
 
     def test_with_underscore(self):
 
@@ -67,7 +67,7 @@ class EnumMixinTestCase(test.TestCase):
             b = 20
             _CC = "2000"
 
-        self.assertEqual(set(list(Foo())), set([10, 20]))
+        self.assertEqual(set([10, 20]), set(list(Foo())))
 
 
 class StdIOCaptureTestCase(test.TestCase):
@@ -79,8 +79,8 @@ class StdIOCaptureTestCase(test.TestCase):
             for msg in messages:
                 print(msg)
 
-        self.assertEqual(out.getvalue().rstrip("\n").split("\n"), messages)
-        self.assertEqual(stdout, sys.stdout)
+        self.assertEqual(messages, out.getvalue().rstrip("\n").split("\n"))
+        self.assertEqual(sys.stdout, stdout)
 
     def test_stderr_capture(self):
         stderr = sys.stderr
@@ -89,8 +89,8 @@ class StdIOCaptureTestCase(test.TestCase):
             for msg in messages:
                 print(msg, file=sys.stderr)
 
-        self.assertEqual(err.getvalue().rstrip("\n").split("\n"), messages)
-        self.assertEqual(stderr, sys.stderr)
+        self.assertEqual(messages, err.getvalue().rstrip("\n").split("\n"))
+        self.assertEqual(sys.stderr, stderr)
 
 
 class TimerTestCase(test.TestCase):
@@ -141,9 +141,9 @@ class FirstIndexTestCase(test.TestCase):
 
     def test_list_with_existing_matching_element(self):
         lst = [1, 3, 5, 7]
-        self.assertEqual(utils.first_index(lst, lambda e: e == 1), 0)
-        self.assertEqual(utils.first_index(lst, lambda e: e == 5), 2)
-        self.assertEqual(utils.first_index(lst, lambda e: e == 7), 3)
+        self.assertEqual(0, utils.first_index(lst, lambda e: e == 1))
+        self.assertEqual(2, utils.first_index(lst, lambda e: e == 5))
+        self.assertEqual(3, utils.first_index(lst, lambda e: e == 7))
 
     def test_list_with_non_existing_matching_element(self):
         lst = [1, 3, 5, 7]
@@ -242,7 +242,7 @@ class RandomNameTestCase(test.TestCase):
         generator = FakeNameGenerator()
 
         mock_choice.side_effect = iter("blarglesdweebled")
-        self.assertEqual(generator.generate_random_name(), expected)
+        self.assertEqual(expected, generator.generate_random_name())
 
         class FakeNameGenerator(utils.RandomNameGeneratorMixin):
             RESOURCE_NAME_FORMAT = fmt
@@ -251,7 +251,7 @@ class RandomNameTestCase(test.TestCase):
         generator = FakeNameGenerator()
 
         mock_choice.side_effect = iter("blarglesdweebled")
-        self.assertEqual(generator.generate_random_name(), expected)
+        self.assertEqual(expected, generator.generate_random_name())
 
     def test_generate_random_name_bogus_name_format(self):
         class FakeNameGenerator(utils.RandomNameGeneratorMixin):
@@ -393,13 +393,13 @@ class RandomNameTestCase(test.TestCase):
 
         names = [generator.generate_random_name() for i in range(100)]
         task_id_parts = set([n.split("_")[0] for n in names])
-        self.assertEqual(len(task_id_parts), 1)
+        self.assertEqual(1, len(task_id_parts))
 
         generator.task = {"uuid": "bogus! task! id!"}
 
         names = [generator.generate_random_name() for i in range(100)]
         task_id_parts = set([n.split("_")[0] for n in names])
-        self.assertEqual(len(task_id_parts), 1)
+        self.assertEqual(1, len(task_id_parts))
 
     def test_make_name_matcher(self):
         matcher = utils.make_name_matcher("foo", "bar")
@@ -457,7 +457,7 @@ class MergeTestCase(test.TestCase):
         in_iters = [iter(src) for src in sources]
 
         out = list(utils.merge(10, *in_iters))
-        self.assertEqual(out, expected_output)
+        self.assertEqual(expected_output, out)
 
 
 class TimeoutThreadTestCase(test.TestCase):
@@ -506,10 +506,10 @@ class LockedDictTestCase(test.TestCase):
 
         d = utils.LockedDict()
         self.assertIsInstance(d, dict)
-        self.assertEqual(d, {})
+        self.assertEqual({}, d)
 
         d = utils.LockedDict(foo="bar", spam={"a": ["b", {"c": "d"}]})
-        self.assertEqual(d, {"foo": "bar", "spam": {"a": ("b", {"c": "d"})}})
+        self.assertEqual({"foo": "bar", "spam": {"a": ("b", {"c": "d"})}}, d)
         self.assertIsInstance(d["spam"], utils.LockedDict)
         self.assertIsInstance(d["spam"]["a"][1], utils.LockedDict)
         self.assertRaises(RuntimeError, setitem, d, 123, 456)
@@ -521,21 +521,21 @@ class LockedDictTestCase(test.TestCase):
         self.assertRaises(RuntimeError, d.pop, "foo")
         self.assertRaises(RuntimeError, d.popitem)
         self.assertRaises(RuntimeError, d.clear)
-        self.assertEqual(d, {"foo": "bar", "spam": {"a": ("b", {"c": "d"})}})
+        self.assertEqual({"foo": "bar", "spam": {"a": ("b", {"c": "d"})}}, d)
 
         with d.unlocked():
             d["spam"] = 42
-            self.assertEqual(d, {"foo": "bar", "spam": 42})
+            self.assertEqual({"foo": "bar", "spam": 42}, d)
             d.clear()
-            self.assertEqual(d, {})
+            self.assertEqual({}, d)
             d.setdefault("foo", 42)
             d.update({"bar": 24})
-            self.assertEqual(d, {"foo": 42, "bar": 24})
+            self.assertEqual({"foo": 42, "bar": 24}, d)
             self.assertEqual(24, d.pop("bar"))
             self.assertEqual(("foo", 42), d.popitem())
             d[123] = 456
 
-        self.assertEqual(d, {123: 456})
+        self.assertEqual({123: 456}, d)
 
         self.assertRaises(RuntimeError, setitem, d, 123, 456)
         self.assertRaises(RuntimeError, delitem, d, "foo")
@@ -798,7 +798,7 @@ class BackupTestCase(test.TestCase):
             # it is expected behaviour
             pass
         else:
-            self.fail("BackupHelper context manager should not hide an "
-                      "exception")
+            self.fail("BackupHelper context manager should not hide "
+                      "an exception")
 
         self.assertTrue(mock_backup_helper_rollback.called)

@@ -138,7 +138,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                        network_update_args)
         self.clients("neutron").update_network.assert_called_once_with(
             network["network"]["id"], expected_network)
-        self.assertEqual(result_network, expected_network)
+        self.assertEqual(expected_network, result_network)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_network")
 
@@ -221,7 +221,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                      subnet_update_args)
         self.clients("neutron").update_subnet.assert_called_once_with(
             subnet["subnet"]["id"], expected_subnet)
-        self.assertEqual(result_subnet, expected_subnet)
+        self.assertEqual(expected_subnet, result_subnet)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_subnet")
 
@@ -337,7 +337,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                      router_update_args)
         self.clients("neutron").update_router.assert_called_once_with(
             router["router"]["id"], expected_router)
-        self.assertEqual(result_router, expected_router)
+        self.assertEqual(expected_router, result_router)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_router")
 
@@ -398,7 +398,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
-        self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
+        self.assertEqual(4, utils.NeutronScenario.SUBNET_IP_VERSION)
 
     def test_create_port(self):
         net_id = "network-id"
@@ -474,7 +474,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         result_port = self.scenario._update_port(port, port_update_args)
         self.clients("neutron").update_port.assert_called_once_with(
             port["port"]["id"], expected_port)
-        self.assertEqual(result_port, expected_port)
+        self.assertEqual(expected_port, result_port)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_port")
 
@@ -613,7 +613,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                          subnet_cidr_start,
                                                          subnets_per_network,
                                                          router_create_args)
-        self.assertEqual(actual, (network, subnets, routers))
+        self.assertEqual((network, subnets, routers), actual)
         self.scenario._create_network.assert_called_once_with(
             network_create_args or {})
         self.scenario._create_subnets.assert_called_once_with(
@@ -652,7 +652,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                             "fakearg": "fake"}
 
         result_pool = self.scenario._update_v1_pool(pool, **pool_update_args)
-        self.assertEqual(result_pool, expected_pool)
+        self.assertEqual(expected_pool, result_pool)
         self.clients("neutron").update_pool.assert_called_once_with(
             pool["pool"]["id"], expected_pool)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -697,7 +697,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         vip_update_args = {"name": "foo", "admin_state_up": False}
 
         result_vip = self.scenario._update_v1_vip(vip, **vip_update_args)
-        self.assertEqual(result_vip, expected_vip)
+        self.assertEqual(expected_vip, result_vip)
         self.clients("neutron").update_vip.assert_called_once_with(
             vip["vip"]["id"], expected_vip)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -784,7 +784,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                 "description": "Updated",
                 "name": self.scenario.generate_random_name.return_value}}
         )
-        self.assertEqual(result_security_group, expected_security_group)
+        self.assertEqual(expected_security_group, result_security_group)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_security_group")
 
@@ -859,7 +859,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             self.scenario._create_lb_pool.assert_has_calls(
                 [mock.call(subnet,
                            **pool_create_args) for subnet in subnets])
-            self.assertEqual(resultant_pools, [pool] * len(subnets))
+            self.assertEqual([pool] * len(subnets), resultant_pools)
 
     @ddt.data(
         {"subnet_id": "foo-id"},
@@ -884,7 +884,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         resultant_pool = self.scenario._create_lb_pool(
             subnet_id=subnet_id,
             **pool_create_args)
-        self.assertEqual(resultant_pool, pool)
+        self.assertEqual(pool, resultant_pool)
         self.clients("neutron").create_pool.assert_called_once_with(
             expected_pool_data)
         self._test_atomic_action_timer(
@@ -910,7 +910,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         args.update(vip_create_args)
         expected_vip_data = {"vip": args}
         resultant_vip = self.scenario._create_v1_vip(pool, **vip_create_args)
-        self.assertEqual(resultant_vip, vip)
+        self.assertEqual(vip, resultant_vip)
         self.clients("neutron").create_vip.assert_called_once_with(
             expected_vip_data)
 
@@ -933,7 +933,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         expected_fip_data = {"floatingip": args}
         resultant_fip = self.scenario._create_floatingip(
             floating_network, **floating_ip_args)
-        self.assertEqual(resultant_fip, fip)
+        self.assertEqual(fip, resultant_fip)
         self.clients("neutron").create_floatingip.assert_called_once_with(
             expected_fip_data)
         mock_get_network_id.assert_called_once_with(floating_network)
@@ -957,7 +957,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         expected_hm_data = {"health_monitor": args}
         resultant_hm = self.scenario._create_v1_healthmonitor(
             **healthmonitor_create_args)
-        self.assertEqual(resultant_hm, hm)
+        self.assertEqual(hm, resultant_hm)
         self.clients("neutron").create_health_monitor.assert_called_once_with(
             expected_hm_data)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -988,7 +988,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         healthmonitor_update_args = {"admin_state_up": False}
         result_hm = self.scenario._update_v1_healthmonitor(
             hm, **healthmonitor_update_args)
-        self.assertEqual(result_hm, expected_hm)
+        self.assertEqual(expected_hm, result_hm)
         mock_update.assert_called_once_with(
             hm["health_monitor"]["id"], expected_hm)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -1112,7 +1112,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                                      **bgpvpn_update_data)
         self.admin_clients("neutron").update_bgpvpn.assert_called_once_with(
             bgpvpn["bgpvpn"]["id"], expected_bgpvpn)
-        self.assertEqual(result_bgpvpn, expected_bgpvpn)
+        self.assertEqual(expected_bgpvpn, result_bgpvpn)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.update_bgpvpn")
 

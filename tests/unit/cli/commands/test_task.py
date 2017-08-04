@@ -61,7 +61,7 @@ class TaskCommandsTestCase(test.TestCase):
         ]
         task_conf = self.task._load_and_validate_task(
             self.real_api, "in_task", raw_args=input_args)
-        self.assertEqual(task_conf, {"ab": 2})
+        self.assertEqual({"ab": 2}, task_conf)
 
         mock_open.side_effect = [
             mock.mock_open(read_data=input_task).return_value,
@@ -70,7 +70,7 @@ class TaskCommandsTestCase(test.TestCase):
         task_conf = self.task._load_and_validate_task(
             self.real_api, "in_task", raw_args=input_args,
             args_file="any_file")
-        self.assertEqual(task_conf, {"ab": 2})
+        self.assertEqual({"ab": 2}, task_conf)
 
         mock_open.side_effect = [
             mock.mock_open(read_data=input_task).return_value,
@@ -79,7 +79,7 @@ class TaskCommandsTestCase(test.TestCase):
         task_conf = self.task._load_and_validate_task(
             self.real_api, "in_task", raw_args="test=2",
             args_file="any_file")
-        self.assertEqual(task_conf, {"ab": 2})
+        self.assertEqual({"ab": 2}, task_conf)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
     def test__load_task_wrong_task_args_file(self, mock_open):
@@ -740,7 +740,7 @@ class TaskCommandsTestCase(test.TestCase):
     def test_old_report_exceptions(self, mock_open, mock_path_exists):
         ret = self.task._old_report(self.real_api, tasks="/tmp/task.json",
                                     out="/tmp/tmp.hsml")
-        self.assertEqual(ret, 1)
+        self.assertEqual(1, ret)
 
     @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
     def test_report(self, mock_path_exists):

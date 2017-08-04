@@ -50,20 +50,20 @@ class DeploymentTestCase(test.TestCase):
         mock_deployment_create.return_value = self.deployment
         deploy = objects.Deployment()
         mock_deployment_create.assert_called_once_with({})
-        self.assertEqual(deploy["uuid"], self.deployment["uuid"])
+        self.assertEqual(self.deployment["uuid"], deploy["uuid"])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_create")
     def test_init_without_create(self, mock_deployment_create):
         deploy = objects.Deployment(deployment=self.deployment)
         self.assertFalse(mock_deployment_create.called)
-        self.assertEqual(deploy["uuid"], self.deployment["uuid"])
+        self.assertEqual(self.deployment["uuid"], deploy["uuid"])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):
         mock_deployment_get.return_value = self.deployment
         deploy = objects.Deployment.get(self.deployment["uuid"])
         mock_deployment_get.assert_called_once_with(self.deployment["uuid"])
-        self.assertEqual(deploy["uuid"], self.deployment["uuid"])
+        self.assertEqual(self.deployment["uuid"], deploy["uuid"])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_delete")
     @mock.patch("rally.common.objects.deploy.db.deployment_create")
@@ -88,7 +88,7 @@ class DeploymentTestCase(test.TestCase):
         deploy._update({"opt": "val2"})
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"], {"opt": "val2"})
-        self.assertEqual(deploy["opt"], "val2")
+        self.assertEqual("val2", deploy["opt"])
 
     @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_status(self, mock_deployment_update):
@@ -250,7 +250,7 @@ class DeploymentTestCase(test.TestCase):
         deploy = objects.Deployment(deployment=self.deployment)
         resource = deploy.add_resource("provider", type="some",
                                        info={"key": "value"})
-        self.assertEqual(resource["id"], self.resource["id"])
+        self.assertEqual(self.resource["id"], resource["id"])
         mock_resource_create.assert_called_once_with({
             "deployment_uuid": self.deployment["uuid"],
             "provider_name": "provider",
@@ -268,8 +268,8 @@ class DeploymentTestCase(test.TestCase):
         mock_resource_get_all.return_value = [self.resource]
         deploy = objects.Deployment(deployment=self.deployment)
         resources = deploy.get_resources(provider_name="provider", type="some")
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0]["id"], self.resource["id"])
+        self.assertEqual(1, len(resources))
+        self.assertEqual(self.resource["id"], resources[0]["id"])
 
     @mock.patch("rally.common.objects.deploy.dt.datetime")
     @mock.patch("rally.common.objects.deploy.db.deployment_update")

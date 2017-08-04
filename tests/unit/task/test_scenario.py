@@ -67,7 +67,7 @@ class ScenarioTestCase(test.TestCase):
         scenario_inst = scenario.Scenario()
         scenario_inst.sleep_between(0.001, 0.001)
         scenario_inst.sleep_between(0.004, 0.004)
-        self.assertEqual(scenario_inst.idle_duration(), 0.005)
+        self.assertEqual(0.005, scenario_inst.idle_duration())
 
     @mock.patch("rally.common.utils.interruptable_sleep")
     @mock.patch("rally.task.scenario.random.uniform")

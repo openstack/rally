@@ -315,7 +315,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                       clients,
                                                       "flavor")
         self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], "flavor")
+        self.assertEqual("flavor", result[1])
 
         mock_flavor_transform.assert_called_once_with(
             clients=clients, resource_config=self.config["args"]["flavor"])
@@ -326,7 +326,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                       clients,
                                                       "flavor")
         self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], "flavor")
+        self.assertEqual("flavor", result[1])
         mock_flavor_transform.assert_called_with(
             clients=clients, resource_config=self.config["args"]["flavor"])
         clients.nova().flavors.get.assert_called_with(flavor="flavor_id")
@@ -365,8 +365,8 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         }}, self.credentials, "image")
         self.assertIsInstance(result[0], validators.ValidationResult)
         self.assertTrue(result[0].is_valid)
-        self.assertEqual(result[0].msg, "")
-        self.assertEqual(result[1], image)
+        self.assertEqual("", result[0].msg)
+        self.assertEqual(image, result[1])
 
         clients = mock.Mock()
         clients.glance().images.get().to_dict.return_value = {
@@ -393,8 +393,8 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                      "fake_param")
         self.assertIsInstance(result[0], validators.ValidationResult)
         self.assertFalse(result[0].is_valid)
-        self.assertEqual(result[0].msg,
-                         "Parameter fake_param is not specified.")
+        self.assertEqual("Parameter fake_param is not specified.",
+                         result[0].msg)
         self.assertIsNone(result[1])
 
         # 'image_name' is not in 'image_context'
@@ -413,7 +413,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                      "image")
         self.assertIsNotNone(result)
         self.assertTrue(result[0].is_valid)
-        self.assertEqual(result[1], image)
+        self.assertEqual(image, result[1])
 
         mock_glance_image_transform.assert_called_once_with(
             clients=clients, resource_config=config["args"]["image"])
@@ -432,8 +432,8 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                      "image")
         self.assertIsInstance(result[0], validators.ValidationResult)
         self.assertFalse(result[0].is_valid)
-        self.assertEqual(result[0].msg,
-                         "Image '%s' not found" % config["args"]["image"])
+        self.assertEqual("Image '%s' not found" % config["args"]["image"],
+                         result[0].msg)
         self.assertIsNone(result[1])
         mock_glance_image_transform.assert_called_once_with(
             clients=clients, resource_config=config["args"]["image"])
@@ -445,8 +445,8 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
                                                      "image")
         self.assertIsInstance(result[0], validators.ValidationResult)
         self.assertFalse(result[0].is_valid)
-        self.assertEqual(result[0].msg,
-                         "Image '%s' not found" % config["args"]["image"])
+        self.assertEqual("Image '%s' not found" % config["args"]["image"],
+                         result[0].msg)
         self.assertIsNone(result[1])
         mock_glance_image_transform.assert_called_with(
             clients=clients, resource_config=config["args"]["image"])

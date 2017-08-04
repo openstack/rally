@@ -289,7 +289,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
                                  fakes.FakeContext({}).context, {})
-        self.assertEqual(len(runner_obj.result_queue), config["times"])
+        self.assertEqual(config["times"], len(runner_obj.result_queue))
         for result_batch in runner_obj.result_queue:
             for result in result_batch:
                 self.assertIsNotNone(result)
@@ -303,7 +303,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
                                  fakes.FakeUser().context, {})
 
-        self.assertEqual(len(runner_obj.result_queue), 0)
+        self.assertEqual(0, len(runner_obj.result_queue))
 
         for result in runner_obj.result_queue:
             self.assertIsNotNone(result)

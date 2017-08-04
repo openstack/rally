@@ -38,9 +38,9 @@ class BaseContextTestCase(test.TestCase):
     def test_init(self, config, expected):
         ctx = {"config": {"foo": 42, "fake": config}, "task": "foo_task"}
         ins = fakes.FakeContext(ctx)
-        self.assertEqual(ins.config, expected)
-        self.assertEqual(ins.task, "foo_task")
-        self.assertEqual(ins.context, ctx)
+        self.assertEqual(expected, ins.config)
+        self.assertEqual("foo_task", ins.task)
+        self.assertEqual(ctx, ins.context)
 
     def test_init_with_default_config(self):
         @context.configure(name="foo", order=1)
@@ -58,16 +58,16 @@ class BaseContextTestCase(test.TestCase):
             "config": {"fake": {"foo": 42}}
         }
         ctx = fakes.FakeContext(ctx0)
-        self.assertEqual(ctx.config, ctx0["config"]["fake"])
-        self.assertEqual(ctx.task, ctx0["task"])
-        self.assertEqual(ctx.context, ctx0)
+        self.assertEqual(ctx0["config"]["fake"], ctx.config)
+        self.assertEqual(ctx0["task"], ctx.task)
+        self.assertEqual(ctx0, ctx.context)
 
     @ddt.data(({"test": 2}, True), ({"nonexisting": 2}, False))
     @ddt.unpack
     def test_validate(self, config, valid):
         results = context.Context.validate("fake", None, None, config)
         if valid:
-            self.assertEqual([], results)
+            self.assertEqual(results, [])
         else:
             self.assertEqual(1, len(results))
 

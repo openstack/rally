@@ -186,7 +186,7 @@ class PlotTestCase(test.TestCase):
              "met": "dummy",
              "pos": str(c)})
         source, p_workloads = plot._process_workloads(workloads)
-        self.assertEqual(source, "json_data")
+        self.assertEqual("json_data", source)
         mock_json_dumps.assert_called_once_with(
             {"Foo.bar_1": [{"runner": {"type": "constant", "times": 3},
                             "hooks": [{"hook1": "xxx"}],
@@ -231,7 +231,7 @@ class PlotTestCase(test.TestCase):
 
         html = plot.plot([task_dict], **ddt_kwargs)
 
-        self.assertEqual(html, "tasks_html")
+        self.assertEqual("tasks_html", html)
         mock_get_template.assert_called_once_with("task/report.html")
         mock__process_workloads.assert_called_once_with(["foo", "bar"])
         if "include_libs" in ddt_kwargs:

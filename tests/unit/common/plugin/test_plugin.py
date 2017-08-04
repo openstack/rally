@@ -79,8 +79,8 @@ class PluginModuleTestCase(test.TestCase):
         class B(SecondBase):
             pass
 
-        self.assertEqual(A, OneBase.get(name))
-        self.assertEqual(B, SecondBase.get(name))
+        self.assertEqual(OneBase.get(name), A)
+        self.assertEqual(SecondBase.get(name), B)
 
     def test_get_multiple_chooses(self):
         name = "test_get_multiple_chooses"
@@ -221,5 +221,5 @@ class PluginTestCase(test.TestCase):
 
     def test_is_deprecated(self):
         self.assertFalse(SomePlugin.is_deprecated())
-        self.assertEqual(DeprecatedPlugin.is_deprecated(),
-                         {"reason": "some_reason", "rally_version": "0.1.1"})
+        self.assertEqual({"reason": "some_reason", "rally_version": "0.1.1"},
+                         DeprecatedPlugin.is_deprecated())

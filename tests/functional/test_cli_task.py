@@ -1074,7 +1074,7 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
         try:
             rally("task sla-check --json", getjson=True)
         except utils.RallyCliError as expected_error:
-            self.assertEqual(json.loads(expected_error.output), expected)
+            self.assertEqual(expected, json.loads(expected_error.output))
         else:
             self.fail("`rally task sla-check` command should return non-zero "
                       "exit code")
@@ -1102,7 +1102,7 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
         try:
             rally("task sla-check --json", getjson=True)
         except utils.RallyCliError as expected_error:
-            self.assertEqual(json.loads(expected_error.output), expected)
+            self.assertEqual(expected, json.loads(expected_error.output))
         else:
             self.fail("`rally task sla-check` command should return non-zero "
                       "exit code")
