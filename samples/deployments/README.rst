@@ -1,21 +1,16 @@
 Rally Deployments
 =================
 
-Rally needs to be configured to use an OpenStack Cloud deployment before it
-can benchmark the deployment.
+Rally needs to have information about OpenStack Cloud before you actually
+can run any tests against it.
 
-To configure Rally to use an OpenStack Cloud deployment, you need create a
-deployment configuration by supplying the endpoint and credentials, as follows:
+You need create a deployment input file and run use command bellow:
 
 .. code-block::
 
     rally deployment create --file <one_of_files_from_this_dir> --name my_cloud
 
-
-If you don't have OpenStack deployments, Rally can deploy it for you.
-For samples of various deployments take a look at samples from
-**for_deploying_openstack_with_rally** directory.
-
+Below you can find samples of supported configurations.
 
 existing.json
 -------------
@@ -33,7 +28,6 @@ existing-with-predefined-users.json
 If you are using read-only backend in Keystone like LDAP, AD then
 you need this sample. If you don't specify "users" rally will use already
 existing users that you provide.
-
 
 
 existing-with-given-endpoint.json

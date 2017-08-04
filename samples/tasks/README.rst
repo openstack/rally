@@ -65,10 +65,10 @@ For humans:
     }
 
 
-ScanarioClass should be a subclass of the base Scenario class
-and scenario_method specifies what benchmark task should be run. Section
-"args" is also related to scenario. To learn more about scenarios
-configuration, see samples in `samples/tasks/scenarios
+Scenario Plugin should be a subclass of the base Scenario class
+and implement run() method. Section "args" is also related to scenario.
+To learn more about scenarios configuration, see samples in
+ `samples/tasks/scenarios
 <https://github.com/openstack/rally/tree/master/samples/tasks/scenarios>`_.
 
 Section "runners" specifies the way, how task should be run. To learn
@@ -86,5 +86,5 @@ Look at `samples/tasks/sla
 <https://github.com/openstack/rally/tree/master/samples/tasks/sla>`_ for
 samples.
 
-See a `detailed description of benchmark scenarios, contexts & runners
+See a `detailed description of scenarios, contexts & runners
 <https://github.com/openstack/rally/tree/master/source/concepts.rst>`_.
