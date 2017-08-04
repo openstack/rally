@@ -123,6 +123,15 @@ class NeutronWrapper(NetworkWrapper):
         return self.client.list_networks(**{
             "router:external": True})["networks"]
 
+    @property
+    def ext_gw_mode_enabled(self):
+        """Determine if the ext-gw-mode extension is enabled.
+
+        Without this extension, we can't pass the enable_snat parameter.
+        """
+        return any(e["alias"] == "ext-gw-mode"
+                   for e in self.client.list_extensions()["extensions"])
+
     def get_network(self, net_id=None, name=None):
         net = None
         try:
@@ -153,8 +162,9 @@ class NeutronWrapper(NetworkWrapper):
 
         if external and "external_gateway_info" not in kwargs:
             for net in self.external_networks:
-                kwargs["external_gateway_info"] = {
-                    "network_id": net["id"], "enable_snat": True}
+                kwargs["external_gateway_info"] = {"network_id": net["id"]}
+                if self.ext_gw_mode_enabled:
+                    kwargs["external_gateway_info"]["enable_snat"] = True
         return self.client.create_router({"router": kwargs})["router"]
 
     def create_v1_pool(self, tenant_id, subnet_id, **kwargs):

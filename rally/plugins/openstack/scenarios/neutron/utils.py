@@ -59,6 +59,16 @@ class NeutronScenario(scenario.OpenStackScenario):
         msg = (_("Network %s not found.") % network)
         raise exceptions.NotFoundException(message=msg)
 
+    @property
+    def _ext_gw_mode_enabled(self):
+        """Determine if the ext-gw-mode extension is enabled.
+
+        Without this extension, we can't pass the enable_snat parameter.
+        """
+        return any(
+            e["alias"] == "ext-gw-mode"
+            for e in self.clients("neutron").list_extensions()["extensions"])
+
     @atomic.action_timer("neutron.create_network")
     def _create_network(self, network_create_args):
         """Create neutron network.
@@ -195,8 +205,9 @@ class NeutronScenario(scenario.OpenStackScenario):
             for network in self._list_networks():
                 if network.get("router:external"):
                     external_network = network
-                    gw_info = {"network_id": external_network["id"],
-                               "enable_snat": True}
+                    gw_info = {"network_id": external_network["id"]}
+                    if self._ext_gw_mode_enabled:
+                        gw_info["enable_snat"] = True
                     router_create_args.setdefault("external_gateway_info",
                                                   gw_info)
 
@@ -406,8 +417,9 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param ext_net: external network for the gateway
         :param enable_snat: True if enable snat
         """
-        gw_info = {"network_id": ext_net["network"]["id"],
-                   "enable_snat": enable_snat}
+        gw_info = {"network_id": ext_net["network"]["id"]}
+        if self._ext_gw_mode_enabled:
+            gw_info["enable_snat"] = enable_snat
         self.clients("neutron").add_gateway_router(
             router["router"]["id"], gw_info)
 
