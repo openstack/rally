@@ -102,12 +102,7 @@ def task_get(uuid, detailed=False):
     :raises TaskNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
-    task = get_impl().task_get(uuid, detailed=detailed)
-    if detailed:
-        for subtask in task["subtasks"]:
-            for workload in subtask["workloads"]:
-                del workload["context_execution"]
-    return task
+    return get_impl().task_get(uuid, detailed=detailed)
 
 
 def task_get_status(uuid):

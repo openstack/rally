@@ -23,6 +23,7 @@ from oslo_db.sqlalchemy import models
 from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import deferred
 from sqlalchemy import schema
 
 from rally.common.db.sqlalchemy import types as sa_types
@@ -160,14 +161,18 @@ class Task(BASE, RallyBase):
         primaryjoin=(deployment_uuid == Deployment.uuid),
     )
 
-    input_task = sa.Column(sa.Text, default="")
+    # we do not save the whole input task
+    input_task = deferred(sa.Column(sa.Text, default=""))
+
     title = sa.Column(sa.String(64), default="")
     description = sa.Column(sa.Text, default="")
 
     validation_result = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
-    validation_duration = sa.Column(sa.Float)
+    # we do not calculate the duration of a validation step yet
+    validation_duration = deferred(sa.Column(sa.Float))
+
     task_duration = sa.Column(sa.Float, default=0.0)
     pass_sla = sa.Column(sa.Boolean, default=True)
     status = sa.Column(sa.String(36), default=consts.TaskStatus.INIT)
@@ -199,13 +204,18 @@ class Subtask(BASE, RallyBase):
     title = sa.Column(sa.String(64), default="")
     description = sa.Column(sa.Text, default="")
 
-    context = sa.Column(
-        sa_types.JSONEncodedDict, default={}, nullable=False)
+    # we do not support subtask contexts feature, see
+    # https://review.openstack.org/#/c/404168/
+    context = deferred(sa.Column(
+        sa_types.JSONEncodedDict, default={}, nullable=False))
 
     sla = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
 
-    run_in_parallel = sa.Column(sa.Boolean, default=False, nullable=False)
+    # It is always False for now
+    run_in_parallel = deferred(
+        sa.Column(sa.Boolean, default=False, nullable=False))
+
     duration = sa.Column(sa.Float, default=0.0)
     pass_sla = sa.Column(sa.Boolean, default=True)
     status = sa.Column(sa.String(36), default=consts.SubtaskStatus.RUNNING)
@@ -263,8 +273,9 @@ class Workload(BASE, RallyBase):
     sla_results = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
-    context_execution = sa.Column(
-        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+    # we do not support atomics for contexts yet
+    context_execution = deferred(sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False))
 
     start_time = sa.Column(sa_types.TimeStamp)
 
@@ -279,7 +290,7 @@ class Workload(BASE, RallyBase):
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     pass_sla = sa.Column(sa.Boolean, default=True)
-    _profiling_data = sa.Column(sa.Text, default="")
+    _profiling_data = deferred(sa.Column(sa.Text, default=""))
 
 
 class WorkloadData(BASE, RallyBase):
@@ -311,16 +322,17 @@ class WorkloadData(BASE, RallyBase):
     )
 
     chunk_order = sa.Column(sa.Integer, nullable=False)
-    iteration_count = sa.Column(sa.Integer, nullable=False)
-    failed_iteration_count = sa.Column(sa.Integer, nullable=False)
-    chunk_size = sa.Column(sa.Integer, nullable=False)
-    compressed_chunk_size = sa.Column(sa.Integer, nullable=False)
-    started_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
-                           nullable=False)
-    finished_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
-                            nullable=False)
     chunk_data = sa.Column(
         sa_types.MutableJSONEncodedDict, default={}, nullable=False)
+    # all these fields are not used
+    iteration_count = deferred(sa.Column(sa.Integer, nullable=False))
+    failed_iteration_count = deferred(sa.Column(sa.Integer, nullable=False))
+    chunk_size = deferred(sa.Column(sa.Integer, nullable=False))
+    compressed_chunk_size = deferred(sa.Column(sa.Integer, nullable=False))
+    started_at = deferred(sa.Column(
+        sa.DateTime, default=lambda: timeutils.utcnow(), nullable=False))
+    finished_at = deferred(sa.Column(
+        sa.DateTime, default=lambda: timeutils.utcnow(), nullable=False))
 
 
 class Tag(BASE, RallyBase):
