@@ -159,7 +159,7 @@ def _process_workload(workload, workload_cfg, pos):
         "load_duration": workload["load_duration"],
         "full_duration": workload["full_duration"],
         "created_at": workload["created_at"],
-        "sla": workload["sla"],
+        "sla": workload["sla_results"].get("sla"),
         "sla_success": workload["pass_sla"],
         "iterations_count": workload["total_iteration_count"],
     }

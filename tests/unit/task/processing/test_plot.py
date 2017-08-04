@@ -46,7 +46,8 @@ class PlotTestCase(test.TestCase):
              "output": {"additive": [], "complete": []},
              "atomic_actions": {"foo_action": i + 10}} for i in range(10)]
         workload = {
-            "data": iterations, "sla": {}, "pass_sla": True,
+            "data": iterations,
+            "sla_results": {"sla": {}}, "pass_sla": True,
             "position": 0,
             "name": "Foo.bar", "description": "Description!!",
             "runner": {"type": "constant"},
