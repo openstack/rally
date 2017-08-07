@@ -14,19 +14,21 @@
 #    under the License.
 
 import json
+import os
 import pkgutil
 
 from rally.common import logging
 from rally.common import sshutils
+from rally.common import validation
 from rally import consts
 from rally import exceptions
+from rally.plugins.common import validators
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.plugins.openstack.services import heat
 from rally.task import atomic
 from rally.task import types
-from rally.task import validation
 
 
 """Scenarios that are to be run inside VM instances."""
@@ -35,11 +37,91 @@ from rally.task import validation
 LOG = logging.getLogger(__name__)
 
 
+# TODO(andreykurilin): replace by advanced jsonschema(lollipop?!) someday
+@validation.configure(name="valid_command", platform="openstack")
+class ValidCommandValidator(validation.Validator):
+
+    def __init__(self, param_name, required=True):
+        """Checks that parameter is a proper command-specifying dictionary.
+
+        Ensure that the command dictionary is a proper command-specifying
+        dictionary described in `vmtasks.VMTasks.boot_runcommand_delete'
+        docstring.
+
+        :param param_name: Name of parameter to validate
+        :param required: Boolean indicating that the command dictionary is
+            required
+        """
+        super(ValidCommandValidator, self).__init__()
+
+        self.param_name = param_name
+        self.required = required
+
+    def check_command_dict(self, command):
+        """Check command-specifying dict `command'
+
+        :raises ValueError: on error
+        """
+
+        if not isinstance(command, dict):
+            raise ValueError("Command must be a dictionary")
+
+        # NOTE(pboldin): Here we check for the values not for presence of the
+        # keys due to template-driven configuration generation that can leave
+        # keys defined but values empty.
+        if command.get("interpreter"):
+            script_file = command.get("script_file")
+            if script_file:
+                if "script_inline" in command:
+                    raise ValueError(
+                        "Exactly one of script_inline or script_file with "
+                        "interpreter is expected: %r" % command)
+            # User tries to upload a shell? Make sure it is same as interpreter
+            interpreter = command.get("interpreter")
+            interpreter = (interpreter[-1]
+                           if isinstance(interpreter, (tuple, list))
+                           else interpreter)
+            if (command.get("local_path") and
+                    command.get("remote_path") != interpreter):
+                raise ValueError(
+                    "When uploading an interpreter its path should be as well"
+                    " specified as the `remote_path' string: %r" % command)
+        elif not command.get("remote_path"):
+            # No interpreter and no remote command to execute is given
+            raise ValueError(
+                "Supplied dict specifies no command to execute, either "
+                "interpreter or remote_path is required: %r" % command)
+
+        unexpected_keys = set(command) - {"script_file", "script_inline",
+                                          "interpreter", "remote_path",
+                                          "local_path", "command_args"}
+        if unexpected_keys:
+            raise ValueError(
+                "Unexpected command parameters: %s" % ", ".join(
+                    unexpected_keys))
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        command = config.get("args", {}).get(self.param_name)
+        if command is None and not self.required:
+            return
+
+        try:
+            self.check_command_dict(command)
+        except ValueError as e:
+            return self.fail(str(e))
+
+        for key in "script_file", "local_path":
+            if command.get(key):
+                return validators.ValidatorUtils._file_access_ok(
+                    filename=command[key], mode=os.R_OK,
+                    param_name=self.param_name, required=self.required)
+
+
 @types.convert(image={"type": "glance_image"},
                flavor={"type": "nova_flavor"})
 @validation.add("image_valid_on_flavor", flavor_param="flavor",
                 image_param="image", fail_on_404_image=False)
-@validation.valid_command("command")
+@validation.add("valid_command", param_name="command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
 @validation.add("external_network_exists", param_name="floating_network")
@@ -398,7 +480,7 @@ EOF
                flavor={"type": "nova_flavor"})
 @validation.add("image_valid_on_flavor", flavor_param="flavor",
                 image_param="image")
-@validation.valid_command("command")
+@validation.add("valid_command", param_name="command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
 @validation.add("external_network_exists", param_name="floating_network")

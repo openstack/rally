@@ -24,7 +24,9 @@ from rally.task import validation
 """Scenarios for Manila shares."""
 
 
-@validation.validate_share_proto()
+@validation.add("enum", param_name="share_proto",
+                values=["NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS"],
+                case_insensitive=True, missed=False)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
@@ -70,8 +72,8 @@ class ListShares(utils.ManilaScenario):
         self._list_shares(detailed=detailed, search_opts=search_opts)
 
 
-@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
-                "cifs", "glusterfs", "hdfs"], missed=False,
+@validation.add("enum", param_name="share_proto",
+                values=["NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS"],
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
@@ -114,8 +116,8 @@ class CreateAndExtendShare(utils.ManilaScenario):
         self._extend_share(share, new_size)
 
 
-@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
-                "cifs", "glusterfs", "hdfs"], missed=False,
+@validation.add("enum", param_name="share_proto",
+                values=["NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS"],
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
@@ -296,7 +298,9 @@ class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
         self._add_security_service_to_share_network(sn, ss)
 
 
-@validation.validate_share_proto()
+@validation.add("enum", param_name="share_proto",
+                values=["NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS"],
+                case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},

@@ -51,14 +51,15 @@ class ListExecutions(utils.MistralScenario):
                               sort_keys=sort_keys, sort_dirs=sort_dirs)
 
 
-@validation.add("file_exists", param_name="definition")
 @types.convert(definition={"type": "file"})
 @types.convert(params={"type": "file"})
 @types.convert(wf_input={"type": "file"})
+@validation.add("file_exists", param_name="definition")
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
-@validation.workbook_contains_workflow("definition", "workflow_name")
+@validation.add("workbook_contains_workflow", param_name="definition",
+                workflow_name="workflow_name")
 @scenario.configure(name="MistralExecutions.create_execution_from_workbook",
                     context={"cleanup": ["mistral"]},
                     platform="openstack")

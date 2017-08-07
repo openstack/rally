@@ -200,7 +200,7 @@ class CreateAndDeleteImage(GlanceBasic):
                 values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
                         "qcow2", "vdi", "iso"])
 @validation.add("restricted_parameters", param_names=["image_name", "name"])
-@validation.flavor_exists("flavor")
+@validation.add("flavor_exists", param_name="flavor")
 @validation.add("required_services", services=[consts.Service.GLANCE,
                                                consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)

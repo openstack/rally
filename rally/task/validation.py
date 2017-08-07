@@ -15,20 +15,9 @@
 #    under the License.
 
 import functools
-import os
 
-from novaclient import exceptions as nova_exc
-import six
-
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import validation
-from rally.common import yamlutils as yaml
-from rally import exceptions
-from rally.plugins.openstack.context.nova import flavors as flavors_ctx
-from rally.plugins.openstack import types as openstack_types
-from rally.task import types
-
 LOG = logging.getLogger(__name__)
 
 # TODO(astudenov): remove after deprecating all old validators
@@ -82,6 +71,13 @@ def validator(fn):
     :param fn: function that performs validation
     :returns: rally scenario validator
     """
+
+    LOG.warning("The old validator mechanism is deprecated since Rally 0.10.0."
+                " Use plugin base for validators - "
+                "rally.common.validation.Validator (see rally.plugin.common."
+                "validators and rally.plugins.openstack.validators for "
+                "examples).")
+
     def wrap_given(*args, **kwargs):
         """Dynamic validation decorator for scenario.
 
@@ -99,172 +95,6 @@ def validator(fn):
         return wrap_scenario
 
     return wrap_given
-
-
-def _file_access_ok(filename, mode, param_name, required=True):
-    if not filename:
-        return ValidationResult(not required,
-                                "Parameter %s required" % param_name)
-    if not os.access(os.path.expanduser(filename), mode):
-        return ValidationResult(
-            False, "Could not open %(filename)s with mode %(mode)s "
-            "for parameter %(param_name)s"
-            % {"filename": filename, "mode": mode, "param_name": param_name})
-    return ValidationResult(True)
-
-
-def check_command_dict(command):
-    """Check command-specifying dict `command', raise ValueError on error."""
-
-    if not isinstance(command, dict):
-        raise ValueError("Command must be a dictionary")
-
-    # NOTE(pboldin): Here we check for the values not for presence of the keys
-    # due to template-driven configuration generation that can leave keys
-    # defined but values empty.
-    if command.get("interpreter"):
-        script_file = command.get("script_file")
-        if script_file:
-            if "script_inline" in command:
-                raise ValueError(
-                    "Exactly one of script_inline or script_file with "
-                    "interpreter is expected: %r" % command)
-        # User tries to upload a shell? Make sure it is same as interpreter
-        interpreter = command.get("interpreter")
-        interpreter = (interpreter[-1]
-                       if isinstance(interpreter, (tuple, list))
-                       else interpreter)
-        if (command.get("local_path") and
-           command.get("remote_path") != interpreter):
-            raise ValueError(
-                "When uploading an interpreter its path should be as well"
-                " specified as the `remote_path' string: %r" % command)
-    elif not command.get("remote_path"):
-        # No interpreter and no remote command to execute is given
-        raise ValueError(
-            "Supplied dict specifies no command to execute,"
-            " either interpreter or remote_path is required: %r" % command)
-
-    unexpected_keys = set(command) - set(["script_file", "script_inline",
-                                          "interpreter", "remote_path",
-                                          "local_path", "command_args"])
-    if unexpected_keys:
-        raise ValueError(
-            "Unexpected command parameters: %s" % ", ".join(unexpected_keys))
-
-
-@validator
-def valid_command(config, clients, deployment, param_name, required=True):
-    """Checks that parameter is a proper command-specifying dictionary.
-
-    Ensure that the command dictionary is a proper command-specifying
-    dictionary described in `vmtasks.VMTasks.boot_runcommand_delete' docstring.
-
-    :param param_name: Name of parameter to validate
-    :param required: Boolean indicating that the command dictionary is required
-    """
-    # TODO(amaretskiy): rework this validator into ResourceType, so this
-    #                   will allow to validate parameters values as well
-
-    command = config.get("args", {}).get(param_name)
-    if command is None and not required:
-        return ValidationResult(True)
-
-    try:
-        check_command_dict(command)
-    except ValueError as e:
-        return ValidationResult(False, str(e))
-
-    for key in "script_file", "local_path":
-        if command.get(key):
-            return _file_access_ok(
-                filename=command[key],
-                mode=os.R_OK,
-                param_name=param_name + "." + key,
-                required=True)
-
-    return ValidationResult(True)
-
-
-def _get_flavor_from_context(config, flavor_value):
-    if "flavors" not in config.get("context", {}):
-        raise exceptions.InvalidScenarioArgument("No flavors context")
-
-    flavors = [flavors_ctx.FlavorConfig(**f)
-               for f in config["context"]["flavors"]]
-    resource = types.obj_from_name(resource_config=flavor_value,
-                                   resources=flavors, typename="flavor")
-    flavor = flavors_ctx.FlavorConfig(**resource)
-    flavor.id = "<context flavor: %s>" % flavor.name
-    return (ValidationResult(True), flavor)
-
-
-def _get_validated_flavor(config, clients, param_name):
-    flavor_value = config.get("args", {}).get(param_name)
-    if not flavor_value:
-        msg = "Parameter %s is not specified." % param_name
-        return (ValidationResult(False, msg), None)
-    try:
-        flavor_id = openstack_types.Flavor.transform(
-            clients=clients, resource_config=flavor_value)
-        flavor = clients.nova().flavors.get(flavor=flavor_id)
-        return (ValidationResult(True), flavor)
-    except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
-        try:
-            return _get_flavor_from_context(config, flavor_value)
-        except exceptions.InvalidScenarioArgument:
-            pass
-        message = _("Flavor '%s' not found") % flavor_value
-        return (ValidationResult(False, message), None)
-
-
-@validator
-def validate_share_proto(config, clients, deployment):
-    """Validates value of share protocol for creation of Manila share."""
-    allowed = ("NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS", )
-    share_proto = config.get("args", {}).get("share_proto")
-    if six.text_type(share_proto).upper() not in allowed:
-        message = _("Share protocol '%(sp)s' is invalid, allowed values are "
-                    "%(allowed)s.") % {"sp": share_proto,
-                                       "allowed": "', '".join(allowed)}
-        return ValidationResult(False, message)
-
-
-@validator
-def flavor_exists(config, clients, deployment, param_name):
-    """Returns validator for flavor
-
-    :param param_name: defines which variable should be used
-                       to get flavor id value.
-    """
-    return _get_validated_flavor(config, clients, param_name)[0]
-
-
-@validator
-def workbook_contains_workflow(config, clients, deployment, workbook,
-                               workflow_name):
-    """Validate that workflow exist in workbook when workflow is passed
-
-    :param workbook: parameter containing the workbook definition
-    :param workflow_name: parameter containing the workflow name
-    """
-
-    wf_name = config.get("args", {}).get(workflow_name)
-    if wf_name:
-        wb_path = config.get("args", {}).get(workbook)
-        wb_path = os.path.expanduser(wb_path)
-        file_result = _file_access_ok(config.get("args", {}).get(workbook),
-                                      os.R_OK, workbook)
-        if not file_result.is_valid:
-            return file_result
-
-        with open(wb_path, "r") as wb_def:
-            wb_def = yaml.safe_load(wb_def)
-            if wf_name not in wb_def["workflows"]:
-                return ValidationResult(
-                    False,
-                    "workflow '{}' not found in the definition '{}'".format(
-                        wf_name, wb_def))
 
 
 # TODO(astudenov): remove deprecated validators in 1.0.0
@@ -342,3 +172,26 @@ volume_type_exists = deprecated_validator("volume_type_exists",
                                           "0.10.0")
 
 file_exists = deprecated_validator("file_exists", "file_exists", "0.10.0")
+
+valid_command = deprecated_validator("valid_command", "valid_command",
+                                     "0.10.0")
+
+flavor_exists = deprecated_validator("flavor_exists", "flavor_exists",
+                                     "0.10.0")
+
+_deprecated_share_proto = deprecated_validator(
+    "enum", "validate_share_proto", "0.10.0")
+
+validate_share_proto = functools.partial(
+    _deprecated_share_proto,
+    param_name="share_proto",
+    values=["NFS", "CIFS", "GLUSTERFS", "HDFS", "CEPHFS"],
+    case_insensitive=True)
+
+_workbook_contains_workflow = deprecated_validator(
+    "workbook_contains_workflow", "workbook_contains_workflow", "0.10.0")
+
+
+def workbook_contains_workflow(workbook, workflow_name):
+    return _workbook_contains_workflow(param_name=workbook,
+                                       workflow_name=workflow_name)

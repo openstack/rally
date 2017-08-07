@@ -197,6 +197,89 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
             self.assertIsNone(result)
 
 
+class FlavorExistsValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(FlavorExistsValidatorTestCase, self).setUp()
+        self.validator = validators.FlavorExistsValidator(
+            param_name="foo_flavor")
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
+
+    def test__get_validated_flavor_wrong_value_in_config(self):
+
+        result = self.validator._get_validated_flavor(self.config,
+                                                      self.credentials,
+                                                      "foo_flavor")
+        self.assertEqual("Parameter foo_flavor is not specified.",
+                         result[0].msg)
+
+    @mock.patch("rally.plugins.openstack.validators"
+                ".openstack_types.Flavor.transform",
+                return_value="flavor_id")
+    def test__get_validated_flavor(self, mock_flavor_transform):
+
+        clients = mock.Mock()
+        clients.nova().flavors.get.return_value = "flavor"
+
+        result = self.validator._get_validated_flavor(self.config,
+                                                      clients,
+                                                      "flavor")
+        self.assertTrue(result[0].is_valid, result[0].msg)
+        self.assertEqual("flavor", result[1])
+
+        mock_flavor_transform.assert_called_once_with(
+            clients=clients, resource_config=self.config["args"]["flavor"])
+        clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")
+
+        clients.side_effect = exceptions.InvalidScenarioArgument("")
+        result = self.validator._get_validated_flavor(self.config,
+                                                      clients,
+                                                      "flavor")
+        self.assertTrue(result[0].is_valid, result[0].msg)
+        self.assertEqual("flavor", result[1])
+        mock_flavor_transform.assert_called_with(
+            clients=clients, resource_config=self.config["args"]["flavor"])
+        clients.nova().flavors.get.assert_called_with(flavor="flavor_id")
+
+    @mock.patch("rally.plugins.openstack.validators"
+                ".openstack_types.Flavor.transform")
+    def test__get_validated_flavor_not_found(self, mock_flavor_transform):
+
+        clients = mock.MagicMock()
+        clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
+
+        result = self.validator._get_validated_flavor(self.config,
+                                                      clients,
+                                                      "flavor")
+        self.assertFalse(result[0].is_valid, result[0].msg)
+        self.assertEqual("Flavor '%s' not found" %
+                         self.config["args"]["flavor"],
+                         result[0].msg)
+        mock_flavor_transform.assert_called_once_with(
+            clients=clients, resource_config=self.config["args"]["flavor"])
+
+    @mock.patch("rally.plugins.openstack.validators"
+                ".types.obj_from_name")
+    @mock.patch("rally.plugins.openstack.validators"
+                ".flavors_ctx.FlavorConfig")
+    def test__get_flavor_from_context(self, mock_flavor_config,
+                                      mock_obj_from_name):
+        config = {"context": {"images": {"fake_parameter_name": "foo_image"},
+                              }
+                  }
+
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          self.validator._get_flavor_from_context,
+                          config, "foo_flavor")
+
+        config = {"context": {"images": {"fake_parameter_name": "foo_image"},
+                              "flavors": [{"flavor1": "fake_flavor1"}]}
+                  }
+        result = self.validator._get_flavor_from_context(config, "foo_flavor")
+        self.assertEqual("<context flavor: %s>" % result.name, result.id)
+
+
 @ddt.ddt
 class ImageValidOnFlavorValidatorTestCase(test.TestCase):
 
@@ -294,59 +377,6 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         mock__get_validated_image.return_value = (success, image)
         result = validator.validate(self.config, self.credentials, None, None)
         self.assertIsNone(result)
-
-    def test__get_validated_flavor_wrong_value_in_config(self):
-
-        result = self.validator._get_validated_flavor(self.config,
-                                                      self.credentials,
-                                                      "foo_flavor")
-        self.assertEqual("Parameter foo_flavor is not specified.",
-                         result[0].msg)
-
-    @mock.patch("rally.plugins.openstack.validators"
-                ".openstack_types.Flavor.transform",
-                return_value="flavor_id")
-    def test__get_validated_flavor(self, mock_flavor_transform):
-
-        clients = mock.Mock()
-        clients.nova().flavors.get.return_value = "flavor"
-
-        result = self.validator._get_validated_flavor(self.config,
-                                                      clients,
-                                                      "flavor")
-        self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual("flavor", result[1])
-
-        mock_flavor_transform.assert_called_once_with(
-            clients=clients, resource_config=self.config["args"]["flavor"])
-        clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")
-
-        clients.side_effect = exceptions.InvalidScenarioArgument("")
-        result = self.validator._get_validated_flavor(self.config,
-                                                      clients,
-                                                      "flavor")
-        self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual("flavor", result[1])
-        mock_flavor_transform.assert_called_with(
-            clients=clients, resource_config=self.config["args"]["flavor"])
-        clients.nova().flavors.get.assert_called_with(flavor="flavor_id")
-
-    @mock.patch("rally.plugins.openstack.validators"
-                ".openstack_types.Flavor.transform")
-    def test__get_validated_flavor_not_found(self, mock_flavor_transform):
-
-        clients = mock.MagicMock()
-        clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
-
-        result = self.validator._get_validated_flavor(self.config,
-                                                      clients,
-                                                      "flavor")
-        self.assertFalse(result[0].is_valid, result[0].msg)
-        self.assertEqual("Flavor '%s' not found" %
-                         self.config["args"]["flavor"],
-                         result[0].msg)
-        mock_flavor_transform.assert_called_once_with(
-            clients=clients, resource_config=self.config["args"]["flavor"])
 
     @mock.patch("rally.plugins.openstack.validators"
                 ".openstack_types.GlanceImage.transform",
@@ -451,29 +481,6 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         mock_glance_image_transform.assert_called_with(
             clients=clients, resource_config=config["args"]["image"])
         clients.glance().images.get.assert_called_with("image_id")
-
-    @mock.patch("rally.plugins.openstack.validators"
-                ".types.obj_from_name")
-    @mock.patch("rally.plugins.openstack.validators"
-                ".flavors_ctx.FlavorConfig")
-    def test__get_flavor_from_context(self, mock_flavor_config,
-                                      mock_obj_from_name):
-        config = {"context": {"images": {"fake_parameter_name": "foo_image"},
-                              }
-                  }
-
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          self.validator._get_flavor_from_context,
-                          config, "foo_flavor")
-
-        config = {"context": {"images": {"fake_parameter_name": "foo_image"},
-                              "flavors": [{"flavor1": "fake_flavor1"}]}
-                  }
-        result = self.validator._get_flavor_from_context(config, "foo_flavor")
-
-        self.assertIsInstance(result[0], validators.ValidationResult)
-        self.assertTrue(result[0].is_valid)
-        self.assertEqual("<context flavor: %s>" % result[1].name, result[1].id)
 
 
 class RequiredClientsValidatorTestCase(test.TestCase):
@@ -837,3 +844,47 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
             self.assertEqual(err_msg.format(fake_user), result.msg)
         else:
             self.assertIsNone(result)
+
+
+@ddt.ddt
+class WorkbookContainsWorkflowValidatorTestCase(test.TestCase):
+
+    def setUp(self):
+        super(WorkbookContainsWorkflowValidatorTestCase, self).setUp()
+        self.config = copy.deepcopy(config)
+        self.credentials = copy.deepcopy(credentials)
+
+    @mock.patch("rally.common.yamlutils.safe_load")
+    @mock.patch("rally.plugins.openstack.validators.os.access")
+    @mock.patch("rally.plugins.openstack.validators.open")
+    def test_validator(self, mock_open, mock_access, mock_safe_load):
+        mock_safe_load.return_value = {
+            "version": "2.0",
+            "name": "wb",
+            "workflows": {
+                "wf1": {
+                    "type": "direct",
+                    "tasks": {
+                        "t1": {
+                            "action": "std.noop"
+                        }
+                    }
+                }
+            }
+        }
+        validator = validators.WorkbookContainsWorkflowValidator(
+            param_name="definition", workflow_name="workflow_name")
+
+        context = {
+            "args": {
+                "definition": "fake_path1",
+                "workflow_name": "wf1"
+            }
+        }
+
+        result = validator.validate(context, None, None, None)
+        self.assertIsNone(result)
+
+        self.assertEqual(1, mock_open.called)
+        self.assertEqual(1, mock_access.called)
+        self.assertEqual(1, mock_safe_load.called)

@@ -23,8 +23,10 @@ from rally.task import types
 
 from rally.common import logging
 from rally.common import validation
+from rally.common import yamlutils as yaml
 from rally import consts
 from rally import exceptions
+from rally.plugins.common import validators
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 
@@ -152,8 +154,61 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
+@validation.configure(name="flavor_exists", platform="openstack")
+class FlavorExistsValidator(validation.Validator):
+
+    def __init__(self, param_name):
+        """Returns validator for flavor
+
+        :param param_name: defines which variable should be used
+                           to get flavor id value.
+        """
+        super(FlavorExistsValidator, self).__init__()
+
+        self.param_name = param_name
+
+    def _get_flavor_from_context(self, config, flavor_value):
+        if "flavors" not in config.get("context", {}):
+            raise exceptions.InvalidScenarioArgument("No flavors context")
+
+        flavors = [flavors_ctx.FlavorConfig(**f)
+                   for f in config["context"]["flavors"]]
+        resource = types.obj_from_name(resource_config=flavor_value,
+                                       resources=flavors, typename="flavor")
+        flavor = flavors_ctx.FlavorConfig(**resource)
+        flavor.id = "<context flavor: %s>" % flavor.name
+        return flavor
+
+    def _get_validated_flavor(self, config, clients, param_name):
+        flavor_value = config.get("args", {}).get(param_name)
+        if not flavor_value:
+            msg = "Parameter %s is not specified." % param_name
+            return ValidationResult(False, msg), None
+        try:
+            flavor_id = openstack_types.Flavor.transform(
+                clients=clients, resource_config=flavor_value)
+            flavor = clients.nova().flavors.get(flavor=flavor_id)
+            return ValidationResult(True), flavor
+        except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
+            try:
+                return ValidationResult(True), self._get_flavor_from_context(
+                    config, flavor_value)
+            except exceptions.InvalidScenarioArgument:
+                pass
+            message = "Flavor '%s' not found" % flavor_value
+            return ValidationResult(False, message), None
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        # flavors do not depend on user or tenant, so checking for one user
+        # should be enough
+        user = credentials["openstack"]["users"][0]
+        clients = user["credential"].clients()
+        return self._get_validated_flavor(config, clients, self.param_name)[0]
+
+
+@validation.add("required_platform", platform="openstack", users=True)
 @validation.configure(name="image_valid_on_flavor", platform="openstack")
-class ImageValidOnFlavorValidator(validation.Validator):
+class ImageValidOnFlavorValidator(FlavorExistsValidator):
 
     def __init__(self, flavor_param, image_param,
                  fail_on_404_image=True, validate_disk=True):
@@ -170,8 +225,7 @@ class ImageValidOnFlavorValidator(validation.Validator):
         :param fail_on_404_image: flag what indicate whether to validate image
                                   or not.
         """
-        super(ImageValidOnFlavorValidator, self).__init__()
-        self.flavor_name = flavor_param
+        super(ImageValidOnFlavorValidator, self).__init__(flavor_param)
         self.image_name = image_param
         self.fail_on_404_image = fail_on_404_image
         self.validate_disk = validate_disk
@@ -219,36 +273,6 @@ class ImageValidOnFlavorValidator(validation.Validator):
             message = ("Image '%s' not found") % image_args
             return (ValidationResult(False, message), None)
 
-    def _get_flavor_from_context(self, config, flavor_value):
-        if "flavors" not in config.get("context", {}):
-            raise exceptions.InvalidScenarioArgument("No flavors context")
-
-        flavors = [flavors_ctx.FlavorConfig(**f)
-                   for f in config["context"]["flavors"]]
-        resource = types.obj_from_name(resource_config=flavor_value,
-                                       resources=flavors, typename="flavor")
-        flavor = flavors_ctx.FlavorConfig(**resource)
-        flavor.id = "<context flavor: %s>" % flavor.name
-        return (ValidationResult(True), flavor)
-
-    def _get_validated_flavor(self, config, clients, param_name):
-        flavor_value = config.get("args", {}).get(param_name)
-        if not flavor_value:
-            msg = "Parameter %s is not specified." % param_name
-            return (ValidationResult(False, msg), None)
-        try:
-            flavor_id = openstack_types.Flavor.transform(
-                clients=clients, resource_config=flavor_value)
-            flavor = clients.nova().flavors.get(flavor=flavor_id)
-            return (ValidationResult(True), flavor)
-        except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
-            try:
-                return self._get_flavor_from_context(config, flavor_value)
-            except exceptions.InvalidScenarioArgument:
-                pass
-            message = ("Flavor '%s' not found") % flavor_value
-            return (ValidationResult(False, message), None)
-
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
 
         flavor = None
@@ -257,7 +281,7 @@ class ImageValidOnFlavorValidator(validation.Validator):
 
             if not flavor:
                 valid_result, flavor = self._get_validated_flavor(
-                    config, clients, self.flavor_name)
+                    config, clients, self.param_name)
                 if not valid_result.is_valid:
                     return valid_result
 
@@ -555,3 +579,35 @@ class VolumeTypeExistsValidator(validation.Validator):
         else:
             msg = ("The parameter '{}' is required and should not be empty.")
             return self.fail(msg.format(self.param))
+
+
+@validation.configure(name="workbook_contains_workflow", platform="openstack")
+class WorkbookContainsWorkflowValidator(validation.Validator):
+
+    def __init__(self, param_name, workflow_name):
+        """Validate that workflow exist in workbook when workflow is passed
+
+        :param param_name: parameter containing the workbook definition
+        :param workflow_name: parameter containing the workflow name
+        """
+        super(WorkbookContainsWorkflowValidator, self).__init__()
+        self.param_name = param_name
+        self.workflow_name = workflow_name
+
+    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+        wf_name = config.get("args", {}).get(self.param_name)
+        if wf_name:
+            wb_path = config.get("args", {}).get(self.param_name)
+            wb_path = os.path.expanduser(wb_path)
+            file_result = validators.ValidatorUtils._file_access_ok(
+                config.get("args", {}).get(self.param_name),
+                os.R_OK, self.param_name)
+            if not file_result.is_valid:
+                return file_result
+
+            with open(wb_path, "r") as wb_def:
+                wb_def = yaml.safe_load(wb_def)
+                if wf_name not in wb_def["workflows"]:
+                    self.fail("workflow '{}' not found "
+                              "in the definition '{}'".format(wf_name,
+                                                              wb_def))

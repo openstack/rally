@@ -23,7 +23,7 @@ from rally.task import validation
 
 
 @types.convert(flavor={"type": "nova_flavor"})
-@validation.flavor_exists("flavor")
+@validation.add("flavor_exists", param_name="flavor")
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
@@ -69,7 +69,7 @@ class CreateAndListNodeGroupTemplates(utils.SaharaScenario):
 
 
 @types.convert(flavor={"type": "nova_flavor"})
-@validation.flavor_exists("flavor")
+@validation.add("flavor_exists", param_name="flavor")
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
