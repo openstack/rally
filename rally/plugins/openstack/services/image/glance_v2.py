@@ -137,6 +137,16 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
         self._clients.glance("2").images.update(image_id,
                                                 visibility=visibility)
 
+    @atomic.action_timer("glance_v2.deactivate_image")
+    def deactivate_image(self, image_id):
+        """deactivate image."""
+        self._clients.glance("2").images.deactivate(image_id)
+
+    @atomic.action_timer("glance_v2.reactivate_image")
+    def reactivate_image(self, image_id):
+        """reactivate image."""
+        self._clients.glance("2").images.reactivate(image_id)
+
 
 @service.compat_layer(GlanceV2Service)
 class UnifiedGlanceV2Service(glance_common.UnifiedGlanceMixin, image.Image):

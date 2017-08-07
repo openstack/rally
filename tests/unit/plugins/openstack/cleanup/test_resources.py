@@ -27,6 +27,8 @@ from rally.plugins.openstack.cleanup import resources
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.cleanup.resources"
+GLANCE_V2_PATH = ("rally.plugins.openstack.services.image.glance_v2."
+                  "GlanceV2Service")
 
 
 class SynchronizedDeletionTestCase(test.TestCase):
@@ -624,12 +626,18 @@ class GlanceImageTestCase(test.TestCase):
     def test_list(self):
         glance = resources.GlanceImage()
         glance._client = mock.Mock()
+        list_images = glance._client.return_value.list_images
+        list_images.side_effect = (
+            ["active-image1", "active-image2"],
+            ["deactivated-image1"])
         glance.tenant_uuid = mock.Mock()
 
-        self.assertEqual(glance.list(),
-                         glance._client.return_value.list_images.return_value)
-        glance._client.return_value.list_images.assert_called_once_with(
-            owner=glance.tenant_uuid)
+        self.assertEqual(
+            glance.list(),
+            ["active-image1", "active-image2", "deactivated-image1"])
+        list_images.assert_has_calls([
+            mock.call(owner=glance.tenant_uuid),
+            mock.call(status="deactivated", owner=glance.tenant_uuid)])
 
     def test_delete(self):
         glance = resources.GlanceImage()
@@ -643,6 +651,24 @@ class GlanceImageTestCase(test.TestCase):
         client.get_image.side_effect = [glance.raw_resource, deleted_image]
 
         glance.delete()
+        client.delete_image.assert_called_once_with(glance.raw_resource.id)
+        self.assertFalse(client.reactivate_image.called)
+
+    @mock.patch("%s.reactivate_image" % GLANCE_V2_PATH)
+    def test_delete_deactivated_image(self, mock_reactivate_image):
+        glance = resources.GlanceImage()
+        glance._client = mock.Mock()
+        glance._wrapper = mock.Mock()
+        glance.raw_resource = mock.Mock(status="deactivated")
+
+        client = glance._client.return_value
+
+        deleted_image = mock.Mock(status="DELETED")
+        client.get_image.side_effect = [glance.raw_resource, deleted_image]
+
+        glance.delete()
+
+        mock_reactivate_image.assert_called_once_with(glance.raw_resource.id)
         client.delete_image.assert_called_once_with(glance.raw_resource.id)
 
 

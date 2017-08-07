@@ -23,6 +23,7 @@ from rally.common import logging
 from rally import consts
 from rally.plugins.openstack.cleanup import base
 from rally.plugins.openstack.services.identity import identity
+from rally.plugins.openstack.services.image import glance_v2
 from rally.plugins.openstack.services.image import image
 from rally.task import utils as task_utils
 
@@ -587,10 +588,16 @@ class GlanceImage(base.ResourceManager):
         return image.Image(self.admin or self.user)
 
     def list(self):
-        return self._client().list_images(owner=self.tenant_uuid)
+        images = (self._client().list_images(owner=self.tenant_uuid) +
+                  self._client().list_images(status="deactivated",
+                                             owner=self.tenant_uuid))
+        return images
 
     def delete(self):
         client = self._client()
+        if self.raw_resource.status == "deactivated":
+            glancev2 = glance_v2.GlanceV2Service(self.admin or self.user)
+            glancev2.reactivate_image(self.raw_resource.id)
         client.delete_image(self.raw_resource.id)
         task_utils.wait_for_status(
             self.raw_resource, ["deleted"],

@@ -21,6 +21,8 @@ from tests.unit import fakes
 from tests.unit import test
 
 BASE = "rally.plugins.openstack.scenarios.glance.images"
+GLANCE_V2_PATH = ("rally.plugins.openstack.services.image.glance_v2."
+                  "GlanceV2Service")
 
 
 class GlanceBasicTestCase(test.ScenarioTestCase):
@@ -189,3 +191,21 @@ class GlanceBasicTestCase(test.ScenarioTestCase):
         image_service.create_image.assert_called_once_with(**create_args)
         image_service.update_image.assert_called_once_with(
             fake_image.id, min_disk=0, min_ram=0, remove_props=None)
+
+    @mock.patch("%s.create_image" % GLANCE_V2_PATH)
+    @mock.patch("%s.deactivate_image" % GLANCE_V2_PATH)
+    def test_create_and_deactivate_image(self, mock_deactivate_image,
+                                         mock_create_image):
+        fake_image = fakes.FakeImage(id=1, name="img_name1")
+        mock_create_image.return_value = fake_image
+        call_args = {"container_format": "cf",
+                     "image_location": "url",
+                     "disk_format": "df",
+                     "visibility": "vs",
+                     "min_disk": 0,
+                     "min_ram": 0}
+
+        images.CreateAndDeactivateImage(self.context).run(
+            "cf", "url", "df", "vs", 0, 0)
+        mock_create_image.assert_called_once_with(**call_args)
+        mock_deactivate_image.assert_called_once_with(fake_image.id)
