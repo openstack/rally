@@ -41,9 +41,21 @@ class MaxAverageDurationPerAtomicTestCase(test.TestCase):
         sla2 = cls({"a1": 42, "a2": 2})
         for sla_inst in [sla1, sla2]:
             sla_inst.add_iteration(
-                {"atomic_actions": {"a1": 3.14, "a2": 7.77}})
+                {"atomic_actions": [
+                    {"name": "a1",
+                     "started_at": 0.0,
+                     "finished_at": 3.14},
+                    {"name": "a2",
+                     "started_at": 10,
+                     "finished_at": 17.77}]})
             sla_inst.add_iteration(
-                {"atomic_actions": {"a1": 8.14, "a2": 9.77}})
+                {"atomic_actions": [
+                    {"name": "a1",
+                     "started_at": 12.0,
+                     "finished_at": 15.14},
+                    {"name": "a2",
+                     "started_at": 13,
+                     "finished_at": 27.33}]})
         self.assertTrue(sla1.result()["success"])
         self.assertFalse(sla2.result()["success"])
         self.assertEqual("Passed", sla1.status())
@@ -56,35 +68,59 @@ class MaxAverageDurationPerAtomicTestCase(test.TestCase):
     def test_add_iteration(self):
         sla_inst = madpa.MaxAverageDurationPerAtomic({"a1": 5, "a2": 10})
         add = sla_inst.add_iteration
-        self.assertTrue(add({"atomic_actions": {"a1": 2.5, "a2": 5.0}}))
-        self.assertTrue(add({"atomic_actions": {"a1": 5.0, "a2": 10.0}}))
+        self.assertTrue(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 2.5},
+            {"name": "a2", "started_at": 0, "finished_at": 5.0}]}))
+        self.assertTrue(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 5.0},
+            {"name": "a2", "started_at": 0, "finished_at": 10.0}]}))
         # the following pushes a2 over the limit
-        self.assertFalse(add({"atomic_actions": {"a1": 5.0, "a2": 20.0}}))
+        self.assertFalse(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 5.0},
+            {"name": "a2", "started_at": 0, "finished_at": 20.0}]}))
         # bring a2 back
-        self.assertTrue(add({"atomic_actions": {"a1": 5.0, "a2": 2.0}}))
+        self.assertTrue(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 5.0},
+            {"name": "a2", "started_at": 0, "finished_at": 2.0}]}))
         # push a1 over
-        self.assertFalse(add({"atomic_actions": {"a1": 10.0, "a2": 2.0}}))
+        self.assertFalse(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 10.0},
+            {"name": "a2", "started_at": 0, "finished_at": 2.0}]}))
         # bring it back
-        self.assertTrue(add({"atomic_actions": {"a1": 1.0, "a2": 2.0}}))
+        self.assertTrue(add({"atomic_actions": [
+            {"name": "a1", "started_at": 0, "finished_at": 1.0},
+            {"name": "a2", "started_at": 0, "finished_at": 2.0}]}))
 
-    @ddt.data([[1.0, 2.0, 1.5, 4.3],
-               [2.1, 3.4, 1.2, 6.3, 7.2, 7.0, 1.],
-               [1.1, 1.1, 2.2, 2.2, 3.3, 4.3]])
-    def test_merge(self, durations):
+    def test_merge(self):
+        durations = [[1.0, 2.0, 1.5, 4.3],
+                     [2.1, 3.4, 1.2, 6.3, 7.2, 7.0, 1.],
+                     [1.1, 1.1, 2.2, 2.2, 3.3, 4.3]]
         init = {"a1": 8.14, "a2": 9.77}
         single_sla = madpa.MaxAverageDurationPerAtomic(init)
 
         for dd in durations:
             for d in dd:
                 single_sla.add_iteration(
-                    {"atomic_actions": {"a1": d, "a2": d * 2}})
+                    {"atomic_actions": [{"name": "a1",
+                                         "started_at": 0,
+                                         "finished_at": d},
+                                        {"name": "a2",
+                                         "started_at": d,
+                                         "finished_at": d * 3}
+                                        ]})
 
         slas = [madpa.MaxAverageDurationPerAtomic(init) for _ in durations]
 
         for idx, sla_inst in enumerate(slas):
             for d in durations[idx]:
                 sla_inst.add_iteration(
-                    {"atomic_actions": {"a1": d, "a2": d * 2}})
+                    {"atomic_actions": [{"name": "a1",
+                                         "started_at": 0,
+                                         "finished_at": d},
+                                        {"name": "a2",
+                                         "started_at": d,
+                                         "finished_at": d * 3}
+                                        ]})
 
         merged_sla = slas[0]
         for sla_inst in slas[1:]:

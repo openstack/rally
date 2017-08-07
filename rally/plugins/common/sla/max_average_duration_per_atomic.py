@@ -46,10 +46,11 @@ class MaxAverageDurationPerAtomic(sla.SLA):
 
     def add_iteration(self, iteration):
         if not iteration.get("error"):
-            for action, value in iteration["atomic_actions"].items():
-                self.avg_comp_by_action[action].add(value)
-                result = self.avg_comp_by_action[action].result()
-                self.avg_by_action[action] = result
+            for action in iteration["atomic_actions"]:
+                duration = action["finished_at"] - action["started_at"]
+                self.avg_comp_by_action[action["name"]].add(duration)
+                result = self.avg_comp_by_action[action["name"]].result()
+                self.avg_by_action[action["name"]] = result
         self.success = all(self.avg_by_action[atom] <= val
                            for atom, val in self.criterion_items)
         return self.success
