@@ -61,7 +61,8 @@ def serialize_data(data):
                          )):
         return data
     if isinstance(data, dict):
-        return {k: serialize_data(v) for k, v in data.items()}
+        return collections.OrderedDict((k, serialize_data(v))
+                                       for k, v in data.items())
     if isinstance(data, (list, tuple)):
         return [serialize_data(i) for i in data]
     if hasattr(data, "_as_dict"):

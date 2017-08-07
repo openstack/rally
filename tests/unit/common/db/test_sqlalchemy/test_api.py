@@ -15,6 +15,7 @@
 # NOTE(andreykurilin): most tests for sqlalchemy api is merged with db_api
 #   tests. Hope, it will be fixed someday.
 
+import collections
 import datetime as dt
 
 import ddt
@@ -61,6 +62,13 @@ class SerializeTestCase(test.DBTestCase):
 
         results = fake_method()
         self.assertEqual(serialized, results)
+
+    def test_serialize_ordered_dict(self):
+        data = collections.OrderedDict([(1, 2), ("foo", "bar"), (2, 3)])
+        serialized = db_api.serialize_data(data)
+        self.assertIsInstance(serialized, collections.OrderedDict)
+        self.assertEqual([1, "foo", 2], list(serialized.keys()))
+        self.assertEqual([2, "bar", 3], list(serialized.values()))
 
     def test_serialize_value_error(self):
         @db_api.serialize
