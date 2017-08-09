@@ -43,6 +43,11 @@
                     "auto_security_group": true
                 },
                 "network": {}
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

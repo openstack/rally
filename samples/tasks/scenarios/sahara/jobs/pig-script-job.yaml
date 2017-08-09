@@ -40,3 +40,6 @@
           hadoop_version: "2.6.0"
           auto_security_group: True
         network: {}
+      sla:
+        failure_rate:
+          max: 0
