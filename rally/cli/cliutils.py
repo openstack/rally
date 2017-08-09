@@ -388,7 +388,7 @@ def pretty_float_formatter(field, ndigits=None):
     :returns: field formatter function
     """
     def _formatter(obj):
-        value = obj[field] if type(obj) == dict else getattr(obj, field)
+        value = obj[field] if isinstance(obj, dict) else getattr(obj, field)
         if type(value) in (int, float):
             if ndigits:
                 return round(value, ndigits)
