@@ -18,6 +18,11 @@
                     "app_package": "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter.zip"
                 },
                 "roles": ["admin"]
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         },
         {
@@ -38,6 +43,11 @@
                     "app_package": "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
                 },
                 "roles": ["admin"]
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

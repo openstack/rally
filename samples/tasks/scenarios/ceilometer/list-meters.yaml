@@ -33,3 +33,6 @@
         filter_by_resource_id: true
         metadata_query:
           status: "terminated"
+      sla:
+        failure_rate:
+          max: 0

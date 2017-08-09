@@ -17,6 +17,11 @@
                     "counter_unit": "instance",
                     "counter_volume": 1.0
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

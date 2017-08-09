@@ -20,3 +20,6 @@
             subnet: -1
             pool: -1
             vip: -1
+      sla:
+        failure_rate:
+          max: 0

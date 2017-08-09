@@ -18,6 +18,11 @@
                     "size": 1,
                     "volumes_per_tenant": 4
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

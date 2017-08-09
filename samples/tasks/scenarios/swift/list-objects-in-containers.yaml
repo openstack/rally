@@ -15,3 +15,6 @@
           containers_per_tenant: 1
           objects_per_container: 10
           object_size: 1024
+      sla:
+        failure_rate:
+          max: 0

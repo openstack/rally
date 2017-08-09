@@ -32,6 +32,11 @@
                 "metadata_query": {"status": "terminated"},
                 "filter_by_user_id": true,
                 "filter_by_project_id": true
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

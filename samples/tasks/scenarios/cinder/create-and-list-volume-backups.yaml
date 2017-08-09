@@ -17,3 +17,6 @@
           users_per_tenant: 1
         roles:
           - "Member"
+      sla:
+        failure_rate:
+          max: 0

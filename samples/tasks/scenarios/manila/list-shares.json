@@ -15,6 +15,11 @@
                     "users_per_tenant": 4,
                     "user_choice_method": "round_robin"
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

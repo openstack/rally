@@ -25,6 +25,11 @@
                 "zones": {
                     "zones_per_tenant": 1
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]

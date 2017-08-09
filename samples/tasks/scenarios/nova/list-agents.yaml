@@ -5,3 +5,6 @@
         type: "constant"
         concurrency: 2
         times: 10
+      sla:
+        failure_rate:
+          max: 0

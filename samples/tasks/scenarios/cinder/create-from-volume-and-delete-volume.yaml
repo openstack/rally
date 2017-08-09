@@ -13,6 +13,9 @@
           users_per_tenant: 1
         volumes:
           size: 1
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         size:
@@ -28,3 +31,6 @@
           users_per_tenant: 1
         volumes:
           size: 1
+      sla:
+        failure_rate:
+          max: 0

@@ -23,6 +23,11 @@
           "users_per_tenant": 1,
           "tenants": 1
         }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
+        }
       }
     },
     {
@@ -48,6 +53,11 @@
           "users_per_tenant": 1,
           "tenants": 1
         }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
+        }
       }
     },
     {
@@ -71,6 +81,11 @@
         "users": {
           "users_per_tenant": 1,
           "tenants": 1
+        }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
         }
       }
     }

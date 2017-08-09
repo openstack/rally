@@ -21,6 +21,9 @@
           node_count: 2
         ca_certs:
           directory: ""
+      sla:
+        failure_rate:
+          max: 0
     -
       runner:
         type: "constant"
@@ -41,3 +44,6 @@
           tls_disabled: True
         clusters:
           node_count: 2
+      sla:
+        failure_rate:
+          max: 0

@@ -33,3 +33,6 @@
         timeout: 3000
         times: 1
         type: constant
+      sla:
+        failure_rate:
+          max: 0

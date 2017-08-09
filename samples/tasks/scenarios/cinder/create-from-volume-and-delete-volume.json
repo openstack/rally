@@ -17,6 +17,11 @@
                 "volumes": {
                     "size": 1
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         },
         {
@@ -38,6 +43,11 @@
                 },
                 "volumes": {
                     "size": 1
+                }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
                 }
             }
         }

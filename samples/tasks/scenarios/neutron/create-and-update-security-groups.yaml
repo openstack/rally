@@ -15,3 +15,6 @@
         quotas:
           neutron:
             security_group: -1
+      sla:
+        failure_rate:
+          max: 0

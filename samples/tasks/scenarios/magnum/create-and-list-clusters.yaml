@@ -19,6 +19,9 @@
           docker_volume_size: 5
           network_driver: "flannel"
           coe: "kubernetes"
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         node_count: 1
@@ -38,6 +41,9 @@
           docker_volume_size: 5
           network_driver: "docker"
           coe: "swarm"
+      sla:
+        failure_rate:
+          max: 0
     -
       args:
         node_count: 1
@@ -56,3 +62,6 @@
           flavor_id: "m1.small"
           network_driver: "docker"
           coe: "mesos"
+      sla:
+        failure_rate:
+          max: 0

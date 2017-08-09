@@ -21,3 +21,6 @@
       args:
         "region": "RegionOne"
         "limit": 5
+      sla:
+        failure_rate:
+          max: 0

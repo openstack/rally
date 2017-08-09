@@ -26,6 +26,11 @@
         "ca_certs": {
           "directory": ""
         }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
+        }
       }
     },
     {
@@ -51,6 +56,11 @@
         },
         "clusters": {
           "node_count": 2
+        }
+      },
+      "sla": {
+        "failure_rate": {
+          "max": 0
         }
       }
     }

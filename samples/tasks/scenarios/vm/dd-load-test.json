@@ -28,6 +28,11 @@
                 },
                 "network": {
                 }
+            },
+            "sla": {
+                "failure_rate": {
+                    "max": 0
+                }
             }
         }
     ]
