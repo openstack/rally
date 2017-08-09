@@ -16,19 +16,16 @@
 import copy
 
 
-DEFAULT_META_CONCATENATION = {
-    "context": "dict",
-    "validators": "list",
-}
-
-
 class MetaMixin(object):
     """Safe way to store meta information related to class object.
 
-    We are storing information in class object instead of the instance.
+    Allows to store information in class object instead of the instance.
+
     Information is stored in dict that is initialized only once during the
     load of module, it means that all subclasses of this class will point to
     the same dict object with the information.
+
+    Allows to protect children from using parents meta.
 
     Sample that explains why it's important to use MetaMixin:
 
@@ -64,24 +61,12 @@ class MetaMixin(object):
         >>> assert B._meta_get("a")  == 20
     """
 
+    _default_meta = (None, {})
+
     @classmethod
     def _meta_init(cls):
         """Initialize meta for this class."""
-        cls._meta = {}
-
-        # set default values defined in all parent classes
-        for class_ in reversed(cls.__mro__):
-            default_meta = vars(class_).get("DEFAULT_META", {})
-            for key, value in default_meta.items():
-                if key in DEFAULT_META_CONCATENATION:
-                    if DEFAULT_META_CONCATENATION[key] == "list":
-                        cls._meta.setdefault(key, [])
-                        cls._meta[key].extend(value)
-                    elif DEFAULT_META_CONCATENATION[key] == "dict":
-                        cls._meta.setdefault(key, {})
-                        cls._meta[key].update(value)
-                else:
-                    cls._meta[key] = copy.deepcopy(value)
+        cls._meta = copy.deepcopy(cls._default_meta[1])
 
     @classmethod
     def _meta_clear(cls):
@@ -120,3 +105,37 @@ class MetaMixin(object):
         """Set default value for key in meta."""
         cls._meta_is_inited()
         cls._meta.setdefault(key, value)
+
+    @classmethod
+    def _default_meta_init(cls, inherit=True):
+        """Initialize default meta.
+
+        Default Meta is used to change the behavior of _meta_init() method
+        Meta is initialized with the copy of default meta instead of {}
+
+        :param inherit: initialize meta with copy of parent's default meta
+        """
+        if inherit:
+            cls._default_meta = (cls, copy.deepcopy(cls._default_meta[1]))
+        else:
+            cls._default_meta = (cls, {})
+
+    @classmethod
+    def _default_meta_set(cls, key, value):
+        if cls is not cls._default_meta[0]:
+            raise ReferenceError(
+                "Trying to update default meta from children class.")
+
+        cls._default_meta[1][key] = value
+
+    @classmethod
+    def _default_meta_get(cls, key, default=None):
+        return cls._default_meta[1].get(key, default)
+
+    @classmethod
+    def _default_meta_setdefault(cls, key, value):
+        if cls is not cls._default_meta[0]:
+            raise ReferenceError(
+                "Trying to update default meta from children class.")
+
+        cls._default_meta[1].setdefault(key, value)

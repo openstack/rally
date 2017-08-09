@@ -145,7 +145,7 @@ def add(name, **kwargs):
 def add_default(name, **kwargs):
     """Add validator to the plugin class default meta.
 
-    Validator will be added to all subclasses by default
+    Validator is added to all subclasses by default
 
     :param name: str, name of the validator plugin
     :param kwargs: dict, arguments used to initialize validator class
@@ -153,10 +153,8 @@ def add_default(name, **kwargs):
     """
 
     def wrapper(plugin):
-        if not hasattr(plugin, "DEFAULT_META"):
-            plugin.DEFAULT_META = {}
-        plugin.DEFAULT_META.setdefault("validators", [])
-        plugin.DEFAULT_META["validators"].append((name, (), kwargs,))
+        plugin._default_meta_setdefault("validators", [])
+        plugin._default_meta_get("validators").append((name, (), kwargs,))
         return plugin
     return wrapper
 
