@@ -32,7 +32,8 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
     @atomic.action_timer("glance_v1.create_image")
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
-                     is_public=True, min_disk=0, min_ram=0):
+                     is_public=True, min_disk=0, min_ram=0,
+                     properties=None):
         """Creates new image.
 
         :param image_name: Image name for which need to be created
@@ -42,6 +43,7 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
         :param is_public: The created image's public status
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: Dict of image properties
         """
         image_location = os.path.expanduser(image_location)
         image_name = image_name or self.generate_random_name()
@@ -60,6 +62,7 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
                 is_public=is_public,
                 min_disk=min_disk,
                 min_ram=min_ram,
+                properties=properties,
                 **kwargs)
 
             rutils.interruptable_sleep(CONF.benchmark.
@@ -134,7 +137,7 @@ class UnifiedGlanceV1Service(glance_common.UnifiedGlanceMixin, image.Image):
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
                      visibility="public", min_disk=0,
-                     min_ram=0):
+                     min_ram=0, properties=None):
         """Creates new image.
 
         :param image_name: Image name for which need to be created
@@ -144,6 +147,7 @@ class UnifiedGlanceV1Service(glance_common.UnifiedGlanceMixin, image.Image):
         :param visibility: The created image's visible status
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: Dict of image properties
         """
         self._check_v1_visibility(visibility)
 
@@ -155,7 +159,8 @@ class UnifiedGlanceV1Service(glance_common.UnifiedGlanceMixin, image.Image):
             disk_format=disk_format,
             is_public=is_public,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         return self._unify_image(image_obj)
 
     def update_image(self, image_id, image_name=None, min_disk=0,

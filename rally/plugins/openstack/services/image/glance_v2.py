@@ -35,7 +35,7 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
                      visibility=None, min_disk=0,
-                     min_ram=0):
+                     min_ram=0, properties=None):
         """Creates new image.
 
         :param image_name: Image name for which need to be created
@@ -45,16 +45,19 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
         :param visibility: The created image's visible status.
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: Dict of image properties
         """
         image_name = image_name or self.generate_random_name()
 
+        properties = properties or {}
         image_obj = self._clients.glance("2").images.create(
             name=image_name,
             container_format=container_format,
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            **properties)
 
         image_location = os.path.expanduser(image_location)
         rutils.interruptable_sleep(CONF.benchmark.
@@ -153,7 +156,7 @@ class UnifiedGlanceV2Service(glance_common.UnifiedGlanceMixin, image.Image):
     def create_image(self, image_name=None, container_format=None,
                      image_location=None, disk_format=None,
                      visibility=None, min_disk=0,
-                     min_ram=0):
+                     min_ram=0, properties=None):
         """Creates new image.
 
         :param image_name: Image name for which need to be created
@@ -163,6 +166,7 @@ class UnifiedGlanceV2Service(glance_common.UnifiedGlanceMixin, image.Image):
         :param visibility: The access permission for the created image.
         :param min_disk: The min disk of created images
         :param min_ram: The min ram of created images
+        :param properties: Dict of image properties
         """
         image_obj = self._impl.create_image(
             image_name=image_name,
@@ -171,7 +175,8 @@ class UnifiedGlanceV2Service(glance_common.UnifiedGlanceMixin, image.Image):
             disk_format=disk_format,
             visibility=visibility,
             min_disk=min_disk,
-            min_ram=min_ram)
+            min_ram=min_ram,
+            properties=properties)
         return self._unify_image(image_obj)
 
     def update_image(self, image_id, image_name=None, min_disk=0,

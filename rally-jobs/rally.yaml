@@ -590,6 +590,9 @@
         flavor:
             name: "m1.tiny"
         number_instances: 2
+        create_image_kwargs:
+          properties:
+            hw_video_model: vga
       runner:
         type: "constant"
         times: 1

@@ -50,20 +50,23 @@ class GlanceV1ServiceTestCase(test.TestCase):
         image_name = "image_name"
         container_format = "container_format"
         disk_format = "disk_format"
+        properties = {"fakeprop": "fake"}
 
         image = self.service.create_image(
             image_name=image_name,
             container_format=container_format,
             image_location=location,
             disk_format=disk_format,
-            is_public=is_public)
+            is_public=is_public,
+            properties=properties)
 
         call_args = {"container_format": container_format,
                      "disk_format": disk_format,
                      "is_public": is_public,
                      "name": image_name,
                      "min_disk": 0,
-                     "min_ram": 0}
+                     "min_ram": 0,
+                     "properties": properties}
 
         if location.startswith("/"):
             call_args["data"] = mock_open.return_value
@@ -141,11 +144,14 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
         container_format = "container_format"
         image_location = "image_location"
         disk_format = "disk_format"
+        properties = {"fakeprop": "fake"}
+
         image = self.service.create_image(image_name=image_name,
                                           container_format=container_format,
                                           image_location=image_location,
                                           disk_format=disk_format,
-                                          visibility=visibility)
+                                          visibility=visibility,
+                                          properties=properties)
 
         is_public = visibility == "public"
         callargs = {"image_name": image_name,
@@ -154,7 +160,8 @@ class UnifiedGlanceV1ServiceTestCase(test.TestCase):
                     "disk_format": disk_format,
                     "is_public": is_public,
                     "min_disk": 0,
-                    "min_ram": 0}
+                    "min_ram": 0,
+                    "properties": properties}
         self.service._impl.create_image.assert_called_once_with(**callargs)
         self.assertEqual(mock_image__unify_image.return_value, image)
 
