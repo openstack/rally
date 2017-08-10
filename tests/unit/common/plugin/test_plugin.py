@@ -27,6 +27,8 @@ class PluginModuleTestCase(test.TestCase):
         class MyPlugin(plugin.Plugin):
             pass
 
+        self.addCleanup(MyPlugin.unregister)
+
         self.assertEqual({"reason": "God why?", "rally_version": "0.0.2"},
                          MyPlugin.is_deprecated())
 
@@ -35,6 +37,8 @@ class PluginModuleTestCase(test.TestCase):
         @plugin.configure(name="get_name_class_plugin")
         class MyPlugin(plugin.Plugin):
             pass
+
+        self.addCleanup(MyPlugin.unregister)
 
         self.assertEqual("get_name_class_plugin", MyPlugin.get_name())
 
@@ -49,10 +53,14 @@ class PluginModuleTestCase(test.TestCase):
         class MyPlugin(FooBase):
             pass
 
+        self.addCleanup(MyPlugin.unregister)
+
         try:
             @plugin.configure(name=name)
             class MyPlugin2(FooBase):
                 pass
+
+            self.addCleanup(MyPlugin2.unregister)
 
         except exceptions.PluginWithSuchNameExists:
             self.assertEqual([MyPlugin], FooBase.get_all())
@@ -75,9 +83,13 @@ class PluginModuleTestCase(test.TestCase):
         class A(OneBase):
             pass
 
+        self.addCleanup(A.unregister)
+
         @plugin.configure(name, platform=name)
         class B(SecondBase):
             pass
+
+        self.addCleanup(B.unregister)
 
         self.assertEqual(OneBase.get(name), A)
         self.assertEqual(SecondBase.get(name), B)
@@ -97,12 +109,43 @@ class PluginModuleTestCase(test.TestCase):
         class A(OneBase):
             pass
 
+        self.addCleanup(A.unregister)
+
         @plugin.configure(name, platform=name)
         class B(SecondBase):
             pass
 
+        self.addCleanup(B.unregister)
+
         self.assertRaises(exceptions.MultipleMatchesFound, plugin.Plugin.get,
                           name, name)
+
+    def test_default_meta_for_base(self):
+
+        @plugin.base()
+        class CanUseDefaultMetaBase(plugin.Plugin):
+            pass
+
+        CanUseDefaultMetaBase._default_meta_set("a", 10)
+
+        @plugin.configure("CantUseDefaultMetaPlugin")
+        class CantUseDefaultMetaPlugin(CanUseDefaultMetaBase):
+            pass
+
+        self.addCleanup(CantUseDefaultMetaPlugin.unregister)
+        self.assertRaises(ReferenceError,
+                          CantUseDefaultMetaPlugin._default_meta_set, "a", 10)
+
+        self.assertEqual(10, CantUseDefaultMetaPlugin._meta_get("a"))
+
+    def test_default_meta_decorator(self):
+
+        @plugin.default_meta()
+        class CanUseDefaultMetaPlugin(plugin.Plugin):
+            pass
+
+        CanUseDefaultMetaPlugin._default_meta_set("a", 10)
+        self.assertEqual(10, CanUseDefaultMetaPlugin._default_meta_get("a"))
 
 
 @plugin.configure(name="test_base_plugin")

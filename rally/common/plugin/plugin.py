@@ -26,13 +26,15 @@ from rally import exceptions
 def base():
     """Mark Plugin as a base.
 
-    Base Plugins are used to have better organization of plugins.
-
-    It basically resolved to problems:
+    Base Plugins are used to have better organization of plugins providing
+    subtypes. Base Plugins may contain documentation and other base methods
+    related to specific type of plugins, resolving next problems:
 
     - Having different types of plugins (e.g. Sceanrio, Context, SLA, ...)
     - Auto generation of plugin reference with splitting plugins by their base
     - Plugin lookup - one can easily get all plugins from some base.
+
+    Plugin bases by default initialize _default_meta
 
     .. warning:: This decorator should be added the line before
         six.add_metaclass if it is used.
@@ -51,6 +53,7 @@ def base():
                 "parent": parent.__name__})
 
         cls.base_ref = cls
+        cls._default_meta_init(True)
         return cls
     return wrapper
 
@@ -89,6 +92,22 @@ def configure(name, platform="default", hidden=False):
                 new_path=sys.modules[plugin.__module__].__file__
             )
         plugin._meta_set("hidden", hidden)
+        return plugin
+
+    return decorator
+
+
+def default_meta(inherit=True):
+    """Initialize default meta for particular plugin.
+
+    Default Meta is inherited by all children comparing to Meta which is unique
+    per plugin.
+
+    :param inherit: Whatever to copy parents default meta
+    """
+
+    def decorator(plugin):
+        plugin._default_meta_init(inherit)
         return plugin
 
     return decorator
