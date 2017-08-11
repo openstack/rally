@@ -252,8 +252,8 @@ For more information about Style Commandments, read the
 .. _Launchpad: https://launchpad.net/
 .. _OpenStack team: https://launchpad.net/openstack
 .. _Rally team: https://launchpad.net/rally
-.. _account setup: http://docs.openstack.org/infra/manual/developers.html#development-workflow
-.. _review site: http://review.openstack.org/
+.. _account setup: https://docs.openstack.org/infra/manual/developers.html#development-workflow
+.. _review site: https://review.openstack.org/
 .. _Jenkins setup: http://jenkins.openstack.org/
 .. _unit tests: http://en.wikipedia.org/wiki/Unit_testing
 .. _Tox: https://tox.readthedocs.org/en/latest/
