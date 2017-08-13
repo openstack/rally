@@ -400,8 +400,12 @@ class ReportVerificationMixin(Step):
 class HtmlVerificationReport(ReportVerificationMixin):
     """Generate HTML report for verification(s)."""
 
-    CALL_ARGS = {"type": "html"}
+    CALL_ARGS = {"type": "html-static"}
     DEPENDS_ON = RunVerification
+
+    def setUp(self):
+        super(HtmlVerificationReport, self).setUp()
+        self.CALL_ARGS["out"] = self.CALL_ARGS["out"][:-7]
 
 
 class JsonVerificationReport(ReportVerificationMixin):
