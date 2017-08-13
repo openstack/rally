@@ -130,6 +130,16 @@ class GlanceV2ServiceTestCase(test.TestCase):
             image_id,
             visibility=visibility)
 
+    def test_deactivate_image(self):
+        image_id = "image_id"
+        self.service.deactivate_image(image_id)
+        self.gc.images.deactivate.assert_called_once_with(image_id)
+
+    def test_reactivate_image(self):
+        image_id = "image_id"
+        self.service.reactivate_image(image_id)
+        self.gc.images.reactivate.assert_called_once_with(image_id)
+
 
 @ddt.ddt
 class UnifiedGlanceV2ServiceTestCase(test.TestCase):

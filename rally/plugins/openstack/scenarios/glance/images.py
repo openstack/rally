@@ -17,6 +17,7 @@ from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack.services.image import glance_v2
 from rally.plugins.openstack.services.image import image
 from rally.task import types
 from rally.task import validation
@@ -299,3 +300,37 @@ class CreateAndUpdateImage(GlanceBasic):
                                  min_disk=update_min_disk,
                                  min_ram=update_min_ram,
                                  remove_props=remove_props)
+
+
+@validation.add("required_services", services=(consts.Service.GLANCE, ))
+@validation.add("required_platform", platform="openstack", users=True)
+@validation.add("required_api_versions", component="glance", versions=["2"])
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_deactivate_image",
+                    platform="openstack")
+class CreateAndDeactivateImage(GlanceBasic):
+    def run(self, container_format, image_location, disk_format,
+            visibility="private", min_disk=0, min_ram=0):
+        """Create an image, then deactivate it.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
+        """
+        service = glance_v2.GlanceV2Service(self._clients,
+                                            self.generate_random_name,
+                                            atomic_inst=self.atomic_actions())
+
+        image = service.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram)
+        service.deactivate_image(image.id)
