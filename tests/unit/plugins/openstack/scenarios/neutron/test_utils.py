@@ -891,6 +891,13 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "neutron.show_security_group_rule")
 
+    def test_delete_security_group_rule(self):
+        self.scenario._delete_security_group_rule(1)
+        clients = self.clients("neutron")
+        clients.delete_security_group_rule.assert_called_once_with(1)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "neutron.delete_security_group_rule")
+
     @ddt.data(
         {"networks": [{"subnets": "subnet-id"}]},
         {"pool_create_args": None, "networks": [{"subnets": ["subnet-id"]}]},
