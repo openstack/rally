@@ -59,81 +59,81 @@ workload_data_helper = sa.Table(
 
 def upgrade():
     connection = op.get_bind()
-    workloads = {}
-    for wdata in connection.execute(workload_data_helper.select()):
-        workloads.setdefault(wdata.workload_uuid, [])
-
-        chunk_data = wdata.chunk_data["raw"]
-
-        require_updating = False
-        for itr in chunk_data:
-            if "output" not in itr:
-                itr["output"] = {"additive": [], "complete": []}
-                if "scenario_output" in itr and itr["scenario_output"]["data"]:
-                    itr["output"]["additive"].append(
-                        {"items": list(itr["scenario_output"]["data"].items()),
-                         "title": "Scenario output",
-                         "description": "",
-                         "chart": "OutputStackedAreaChart"})
-                    del itr["scenario_output"]
-                require_updating = True
-            if isinstance(itr["atomic_actions"], dict):
-                new_atomic_actions = []
-                started_at = itr["timestamp"]
-                for name, d in itr["atomic_actions"].items():
-                    finished_at = started_at + d
-                    new_atomic_actions.append(
-                        {"name": name, "children": [],
-                         "started_at": started_at,
-                         "finished_at": finished_at})
-                    started_at = finished_at
-                itr["atomic_actions"] = new_atomic_actions
-                require_updating = True
-
-        if require_updating:
-            connection.execute(workload_data_helper.update().where(
-                workload_data_helper.c.uuid == wdata.uuid).values(
-                chunk_data={"raw": chunk_data}))
-
-        workloads[wdata.workload_uuid].extend(chunk_data)
 
     for workload in connection.execute(workload_helper.select()):
-        if workload.uuid not in workloads or not workloads[workload.uuid]:
-            continue
-        data = sorted(workloads[workload.uuid],
-                      key=lambda itr: itr["timestamp"])
+        full_data = []
+        for wdata in connection.execute(workload_data_helper.select(
+                workload_data_helper.c.workload_uuid == workload.uuid)):
+            chunk_data = wdata.chunk_data["raw"]
 
-        start_time = data[0]["timestamp"]
+            require_updating = False
+            for itr in chunk_data:
+                if "output" not in itr:
+                    itr["output"] = {"additive": [], "complete": []}
+                    if ("scenario_output" in itr
+                            and itr["scenario_output"]["data"]):
+                        items = list(itr["scenario_output"]["data"].items())
+                        itr["output"]["additive"].append(
+                            {"items": items,
+                             "title": "Scenario output",
+                             "description": "",
+                             "chart": "OutputStackedAreaChart"})
+                        del itr["scenario_output"]
+                    require_updating = True
+                if isinstance(itr["atomic_actions"], dict):
+                    new_atomic_actions = []
+                    started_at = itr["timestamp"]
+                    for name, d in itr["atomic_actions"].items():
+                        finished_at = started_at + d
+                        new_atomic_actions.append(
+                            {"name": name, "children": [],
+                             "started_at": started_at,
+                             "finished_at": finished_at})
+                        started_at = finished_at
+                    itr["atomic_actions"] = new_atomic_actions
+                    require_updating = True
 
-        atomics = collections.OrderedDict()
+            if require_updating:
+                connection.execute(workload_data_helper.update().where(
+                    workload_data_helper.c.uuid == wdata.uuid).values(
+                    chunk_data={"raw": chunk_data}))
 
-        for itr in workloads[workload.uuid]:
-            merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
-            for name, value in merged_atomic.items():
-                duration = value["duration"]
-                count = value["count"]
-                if name not in atomics or count > atomics[name]["count"]:
-                    atomics[name] = {"min_duration": duration,
-                                     "max_duration": duration,
-                                     "count": count}
-                elif count == atomics[name]["count"]:
-                    if duration < atomics[name]["min_duration"]:
-                        atomics[name]["min_duration"] = duration
-                    if duration > atomics[name]["max_duration"]:
-                        atomics[name]["max_duration"] = duration
+            full_data.extend(chunk_data)
 
-        durations_stat = charts.MainStatsTable(
-            {"total_iteration_count": len(workloads[workload.uuid]),
-             "statistics": {"atomics": atomics}})
+        if full_data:
+            full_data.sort(key=lambda itr: itr["timestamp"])
 
-        for itr in workloads[workload.uuid]:
-            durations_stat.add_iteration(itr)
+            start_time = full_data[0]["timestamp"]
 
-        connection.execute(workload_helper.update().where(
-            workload_helper.c.uuid == workload.uuid).values(
-            start_time=start_time,
-            statistics={"durations": durations_stat.render(),
-                        "atomics": atomics}))
+            atomics = collections.OrderedDict()
+
+            for itr in full_data:
+                merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
+                for name, value in merged_atomic.items():
+                    duration = value["duration"]
+                    count = value["count"]
+                    if name not in atomics or count > atomics[name]["count"]:
+                        atomics[name] = {"min_duration": duration,
+                                         "max_duration": duration,
+                                         "count": count}
+                    elif count == atomics[name]["count"]:
+                        if duration < atomics[name]["min_duration"]:
+                            atomics[name]["min_duration"] = duration
+                        if duration > atomics[name]["max_duration"]:
+                            atomics[name]["max_duration"] = duration
+
+            durations_stat = charts.MainStatsTable(
+                {"total_iteration_count": len(full_data),
+                 "statistics": {"atomics": atomics}})
+
+            for itr in full_data:
+                durations_stat.add_iteration(itr)
+
+            connection.execute(workload_helper.update().where(
+                workload_helper.c.uuid == workload.uuid).values(
+                start_time=start_time,
+                statistics={"durations": durations_stat.render(),
+                            "atomics": atomics}))
 
 
 def downgrade():
