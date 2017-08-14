@@ -108,7 +108,8 @@ def upgrade():
             atomics = collections.OrderedDict()
 
             for itr in full_data:
-                merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
+                merged_atomic = atomic.merge_atomic_actions(
+                    itr["atomic_actions"])
                 for name, value in merged_atomic.items():
                     duration = value["duration"]
                     count = value["count"]

@@ -21,6 +21,7 @@ import six
 
 from rally.common.plugin import plugin
 from rally.common import streaming_algorithms as streaming
+from rally.task import atomic
 from rally.task.processing import utils
 
 
@@ -90,9 +91,9 @@ class Chart(plugin.Plugin):
         return atomic_merger.merge_atomic_actions(
             atomic_actions)
 
-    @abc.abstractmethod
     def _map_iteration_values(self, iteration):
         """Get values for processing, from given iteration."""
+        return iteration
 
 
 class MainStackedAreaChart(Chart):
@@ -353,6 +354,14 @@ class Table(Chart):
                 return ins.result() is not None
         return True
 
+    def _process_row(self, name, values):
+        row = [name]
+        has_result = self._row_has_results(values)
+        for ins, fn in values:
+            fn = fn or self._round
+            row.append(fn(ins, has_result))
+        return row
+
     def get_rows(self):
         """Collect rows values finally, after all data is processed.
 
@@ -360,12 +369,7 @@ class Table(Chart):
         """
         rows = []
         for name, values in self._data.items():
-            row = [name]
-            has_result = self._row_has_results(values)
-            for ins, fn in values:
-                fn = fn or self._round
-                row.append(fn(ins, has_result))
-            rows.append(row)
+            rows.append(self._process_row(name, values))
         return rows
 
     def render(self):
@@ -377,58 +381,158 @@ class MainStatsTable(Table):
     columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
                "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
 
+    _DEPTH_OF_PROCESSING = 2
+
     def __init__(self, *args, **kwargs):
         super(MainStatsTable, self).__init__(*args, **kwargs)
-        iters_num = self._workload["total_iteration_count"]
-        for name in (self._get_atomic_names() + ["total"]):
-            self._data[name] = [
+        self.iters_num = self._workload["total_iteration_count"]
+
+    def _initialize_atomic(self, name, root, real_name=None, count=1):
+        real_name = real_name or name
+        root[name] = {
+            # streaming algorithms
+            "sa": [
                 [streaming.MinComputation(), None],
-                [streaming.PercentileComputation(0.5, iters_num), None],
-                [streaming.PercentileComputation(0.9, iters_num), None],
-                [streaming.PercentileComputation(0.95, iters_num), None],
+                [streaming.PercentileComputation(0.5, self.iters_num), None],
+                [streaming.PercentileComputation(0.9, self.iters_num), None],
+                [streaming.PercentileComputation(0.95, self.iters_num), None],
                 [streaming.MaxComputation(), None],
                 [streaming.MeanComputation(), None],
                 [streaming.MeanComputation(),
                  lambda st, has_result: ("%.1f%%" % (st.result() * 100)
                                          if has_result else "n/a")],
                 [streaming.IncrementComputation(),
-                 lambda st, has_result: st.result()]]
+                 lambda st, has_result: st.result()]],
+            "children": collections.OrderedDict(),
+            "real_name": real_name,
+            "count_per_iteration": count
+        }
 
-    def _map_iteration_values(self, iteration):
-        atomic_actions = self._merge_atomic_actions(
-            iteration["atomic_actions"])
-        return dict(atomic_actions, total=iteration["duration"])
+    def _add_data(self, raw_data, root=None):
+        """Add iteration data."""
+        p_data = self._data if root is None else root
+        for name, data in raw_data.items():
+            original_name = name
+            if data["count"] > 1:
+                name += (" (x%s)" % data["count"])
+            if name not in p_data:
+                self._initialize_atomic(name,
+                                        root=p_data,
+                                        real_name=original_name,
+                                        count=data["count"])
+
+            stats = p_data[name]["sa"]
+            # count
+            stats[-1][0].add()
+            # success
+            stats[-2][0].add(0 if data.get("error", False) else 1)
+            for idx in range(6):
+                stats[idx][0].add(data["duration"])
+
+            if data["children"]:
+                self._add_data(data["children"], root=p_data[name]["children"])
+
+    def _mark_the_last_as_an_error(self, atomic_actions):
+        """Mark the last atomic action as failed."""
+        if atomic_actions:
+            # NOTE(andreykurilin): the easiest way to identify the last
+            #   atomic is to find the last added key to the OrderedDict. The
+            #   most perfect way is to use reversed, since class OrderedDict
+            #   uses a doubly linked list for the dictionary items and
+            #   implements __reversed__(), what is why such implementation
+            #   gives you O(1) access to the desired element.
+            the_last = atomic_actions[next(reversed(atomic_actions))]
+            the_last["error"] = True
+            if the_last["children"]:
+                # NOTE(andreykurilin): not all of children of the last
+                #   top-level atomic should be marked as failed, only the last
+                #   one, so we need recursively call
+                #   `_mark_the_last_as_an_error` to find all last actions.
+                self._mark_the_last_as_an_error(the_last["children"])
 
     def add_iteration(self, iteration):
-        for name, value in self._map_iteration_values(iteration).items():
-            self._data[name][-1][0].add()
-            if iteration["error"]:
-                self._data[name][-2][0].add(0)
-            else:
-                self._data[name][-2][0].add(1)
-                for idx, dummy in enumerate(self._data[name][:-2]):
-                    self._data[name][idx][0].add(value)
+        """Add data of a single iteration."""
+        data = atomic.merge_atomic_actions(iteration["atomic_actions"])
+        if iteration["error"]:
+            # NOTE(andreykurilin): if an iteration fails, it means that the
+            #   last atomic action produced an error.
+            # NOTE(andreykurilin): It worse to mention that there is a
+            #   uncovered case when the failed item is not wrapped by atomic
+            #   timer, so possibly the last item in atomic actions list can be
+            #   successful. This thing should be fixed in AtomicTimer.
+            self._mark_the_last_as_an_error(data)
+        data["total"] = {"duration": iteration["duration"],
+                         "children": [], "count": 1}
+        if iteration["error"]:
+            data["total"]["error"] = True
+
+        self._add_data(data)
+
+    def _process_result(self, name, values, depth=0):
+        row = self._process_row(name, values["sa"])
+        children = []
+
+        for c_name, c_values in values["children"].items():
+            children.append(self._process_result(c_name, c_values))
+        return {"data": {"iteration_count": row[8],
+                         "min": row[1],
+                         "median": row[2],
+                         "90%ile": row[3],
+                         "95%ile": row[4],
+                         "max": row[5],
+                         "avg": row[6],
+                         "success": row[7]},
+                "count_per_iteration": values["count_per_iteration"],
+                "name": values["real_name"],
+                "display_name": name,
+                "children": children}
+
+    def _get_results(self):
+        if self._data:
+            # NOTE(andreykurilin): In case when the specific atomic action was
+            #   not executed in the first iteration, it will be added to
+            #   self._data after the "total" raw. It is a wrong order, so
+            #   let's ensure that the "total" is always at the end
+            self._data["total"] = self._data.pop("total")
+        else:
+            # NOTE(andreykurilin): The workload doesn't have any iteration, so
+            #   the method `add_iteration` had not been called and 'total' item
+            #   had not be initialized. Let's do it here, since 'total' item
+            #   should always present in the rows.
+            self._initialize_atomic("total", root=self._data)
+
+        results = []
+        for name, values in self._data.items():
+            results.append(self._process_result(name, values))
+        return results
+
+    def get_rows(self):
+        rows = []
+
+        def _process_elem(elem, depth=0):
+            name = elem["display_name"]
+            if depth > 0:
+                name = (" %s> %s" % ("-" * depth, name))
+            rows.append([name,
+                         elem["data"]["min"],
+                         elem["data"]["median"],
+                         elem["data"]["90%ile"],
+                         elem["data"]["95%ile"],
+                         elem["data"]["max"],
+                         elem["data"]["avg"],
+                         elem["data"]["success"],
+                         elem["data"]["iteration_count"]])
+            for child in elem["children"]:
+                _process_elem(child, depth=(depth + 1))
+
+        for elem in self._get_results():
+            _process_elem(elem)
+
+        return rows
 
     def to_dict(self):
-        stats = {"total": None, "atomics": []}
-
-        def row_to_dict(data):
-            return {"name": data[0],
-                    "min": data[1],
-                    "median": data[2],
-                    "90%ile": data[3],
-                    "95%ile": data[4],
-                    "max": data[5],
-                    "avg": data[6],
-                    "success": data[7],
-                    "count": data[8]}
-
-        for row in self.get_rows():
-            if row[0] == "total":
-                stats["total"] = row_to_dict(row)
-            else:
-                stats["atomics"].append(row_to_dict(row))
-        return stats
+        res = self._get_results()
+        return {"total": res[-1], "atomics": res[:-1]}
 
 
 class OutputChart(Chart):
@@ -441,9 +545,6 @@ class OutputChart(Chart):
         self.description = description
         self.label = label
         self.axis_label = axis_label
-
-    def _map_iteration_values(self, iteration):
-        return iteration
 
     def render(self):
         return {"title": self.title,

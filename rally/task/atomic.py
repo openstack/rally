@@ -125,14 +125,32 @@ def optional_action_timer(name, argument_name="atomic_action", default=True):
     return wrap
 
 
-def merge_atomic(atomic_actions):
-    merged_atomic = collections.OrderedDict()
+def merge_atomic_actions(atomic_actions, root=None, depth=0,
+                         depth_of_processing=2):
+    """Merge duplicates of atomic actions into one atomic action.
+
+    :param atomic_actions: a list with atomic action
+    :param root: an ordered dict to save atomics to (leave it with a default
+        value, since the primary use case of that parameter is processing inner
+        atomic actions)
+    :param depth: current level of processing inner atomic actions
+    :param depth_of_processing: the depth of processing of inner atomic actions
+        (defaults to 2)
+    """
+    p_atomics = collections.OrderedDict() if root is None else root
     for action in atomic_actions:
-        name = action["name"]
+        if action["name"] not in p_atomics:
+            p_atomics[action["name"]] = {
+                "duration": 0,
+                "count": 0,
+                "children": collections.OrderedDict()}
         duration = action["finished_at"] - action["started_at"]
-        if name not in merged_atomic:
-            merged_atomic[name] = {"duration": duration, "count": 1}
-        else:
-            merged_atomic[name]["duration"] += duration
-            merged_atomic[name]["count"] += 1
-    return merged_atomic
+        p_atomics[action["name"]]["duration"] += duration
+        p_atomics[action["name"]]["count"] += 1
+        if action["children"] and depth < depth_of_processing:
+            merge_atomic_actions(
+                action["children"],
+                root=p_atomics[action["name"]]["children"],
+                depth=depth + 1)
+
+    return p_atomics
