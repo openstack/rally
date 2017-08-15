@@ -130,11 +130,10 @@ var widgetDirective = function($compile) {
       scope.$watch("data", function(data) {
         if (! data) { return console.log("Chart has no data to render!") }
         if (attrs.widget === "Table") {
-          var ng_class = attrs.lastrowClass ? " ng-class='{"+attrs.lastrowClass+":$last}'" : "";
           var template = "<table class='striped'><thead>" +
             "<tr><th ng-repeat='i in data.cols track by $index'>{{i}}<tr>" +
             "</thead><tbody>" +
-            "<tr" + ng_class + " ng-repeat='row in data.rows track by $index'>" +
+            "<tr ng-class='data.styles[$index] ? data.styles[$index] : \"\"' ng-repeat='row in data.rows track by $index'>" +
             "<td ng-repeat='i in row track by $index'>{{i}}" +
             "<tr>" +
             "</tbody></table>";

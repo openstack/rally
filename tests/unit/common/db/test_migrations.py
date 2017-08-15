@@ -1557,45 +1557,32 @@ class MigrationWalkTestCase(rtest.DBTestCase,
              # deprecated output
              "data": [{"timestamp": 0,
                        "scenario_output": {"data": {1: 2}},
-                       "duration": 3, "error": None,
+                       "duration": 3,
+                       "idle_duration": 0,
+                       "error": None,
                        "atomic_actions": {
-                           "foo": 3}}],
-             "statistics": {"durations": {
-                 "rows": [["foo", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1],
-                          ["total", 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, "100.0%", 1]
-                          ],
-                 "cols":
-                     ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
-                      "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success",
-                      "Count"]},
-                 "atomics": {"foo": {"count": 1, "max_duration": 3,
-                                     "min_duration": 3}}}},
+                           "foo": 3}}]},
             {"uuid": str(uuid.uuid4()),
              "start_time": 1.0,
              "data": [{"timestamp": 1, "output": {},
-                       "duration": 5, "error": None,
+                       "duration": 5,
+                       "idle_duration": 0,
+                       "error": None,
                        "atomic_actions": [
                            {"name": "foo", "started_at": 2,
                             "finished_at": 3, "children": []},
                            {"name": "foo", "started_at": 3,
                             "finished_at": 5, "children": []}]},
-                      {"timestamp": 6, "output": {},
-                       "duration": 4, "error": None,
+                      {"timestamp": 6,
+                       "output": {},
+                       "duration": 4,
+                       "idle_duration": 0,
+                       "error": None,
                        "atomic_actions": [
                            {"name": "foo", "started_at": 6,
                             "finished_at": 9, "children": []},
                            {"name": "foo", "started_at": 9,
-                            "finished_at": 10, "children": []}]}],
-             "statistics": {"durations": {
-                 "cols": ["Action", "Min (sec)", "Median (sec)",
-                          "90%ile (sec)", "95%ile (sec)", "Max (sec)",
-                          "Avg (sec)", "Success", "Count"],
-                 "rows": [
-                     ["foo (x2)", 3.0, 3.5, 3.9, 3.95, 4.0, 3.5, "100.0%", 2],
-                     ["total", 4.0, 4.5, 4.9, 4.95, 5.0, 4.5, "100.0%", 2]]},
-                 "atomics": {
-                     "foo": {"count": 2, "max_duration": 4, "min_duration": 3}}
-            }}
+                            "finished_at": 10, "children": []}]}]}
         ]
 
         with engine.connect() as conn:
@@ -1701,8 +1688,6 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 else:
                     start_time = workload.start_time / 1000000.0
                 self.assertEqual(original["start_time"], start_time)
-                self.assertEqual(original["statistics"],
-                                 json.loads(workload.statistics))
                 wuuid = workload.uuid
                 for wdata in conn.execute(wdata_table.select().where(
                         wdata_table.c.workload_uuid == wuuid)).fetchall():

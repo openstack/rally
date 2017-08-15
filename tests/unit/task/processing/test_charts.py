@@ -560,9 +560,10 @@ class TableTestCase(test.TestCase):
 
     def test_render(self):
         table = self.Table({"total_iteration_count": 42})
-        table.get_rows = lambda: "rows data"
+        table.get_rows = lambda: ["rows data"]
         self.assertEqual({"cols": ["Name", "Min", "Max", "Max rounded by 2"],
-                          "rows": "rows data"},
+                          "rows": ["rows data"],
+                          "styles": {0: "rich"}},
                          table.render())
 
 
@@ -575,6 +576,7 @@ def generate_iteration(duration, error, *actions):
     return {
         "atomic_actions": atomic_actions,
         "duration": duration,
+        "idle_duration": 0,
         "error": error
     }
 
@@ -584,47 +586,52 @@ class MainStatsTableTestCase(test.TestCase):
 
     @ddt.data(
         {
-            "info": {
-                "total_iteration_count": 1, "statistics": {
-                    "atomics": collections.OrderedDict([("foo", {}),
-                                                        ("bar", {})])}
-            },
+            "info": {"total_iteration_count": 1},
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
             ],
             "expected_rows": [
                 ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "100.0%", 1],
                 ["bar", 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, "100.0%", 1],
-                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1]]
+                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1],
+                [" -> duration",
+                 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1],
+                [" -> idle_duration",
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "100.0%", 1]],
+            "expected_styles": {2: "rich", 3: "oblique", 4: "oblique"}
         },
         {
-            "info": {"total_iteration_count": 2, "statistics": {
-                "atomics": {"foo": {}}}},
+            "info": {"total_iteration_count": 2},
             "data": [
                 generate_iteration(10.0, True, ("foo", 1.0)),
                 generate_iteration(10.0, True, ("foo", 2.0))
             ],
             "expected_rows": [
                 ["foo", 1.0, 1.5, 1.9, 1.95, 2.0, 1.5, "0.0%", 2],
-                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "0.0%", 2]]
+                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "0.0%", 2],
+                [" -> duration",
+                 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "0.0%", 2],
+                [" -> idle_duration",
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "0.0%", 2]],
+            "expected_styles": {1: "rich", 2: "oblique", 3: "oblique"}
         },
         {
-            "info": {"total_iteration_count": 2, "statistics": {
-                "atomics": {"foo": {}}}},
+            "info": {"total_iteration_count": 2},
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0)),
                 generate_iteration(20.0, True, ("foo", 2.0))
             ],
             "expected_rows": [
                 ["foo", 1.0, 1.5, 1.9, 1.95, 2.0, 1.5, "50.0%", 2],
-                ["total", 10.0, 15.0, 19.0, 19.5, 20.0, 15.0, "50.0%", 2]]
+                ["total", 10.0, 15.0, 19.0, 19.5, 20.0, 15.0, "50.0%", 2],
+                [" -> duration",
+                 10.0, 15.0, 19.0, 19.5, 20.0, 15.0, "50.0%", 2],
+                [" -> idle_duration",
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "50.0%", 2]],
+            "expected_styles": {1: "rich", 2: "oblique", 3: "oblique"}
         },
         {
-            "info": {
-                "total_iteration_count": 4,
-                "statistics": {"atomics": collections.OrderedDict(
-                    [("foo", {}), ("bar", {})])}
-            },
+            "info": {"total_iteration_count": 4},
             "data": [
                 generate_iteration(10.0, False, ("foo", 1.0), ("bar", 4.0)),
                 generate_iteration(20.0, False, ("foo", 2.0), ("bar", 4.0)),
@@ -634,21 +641,22 @@ class MainStatsTableTestCase(test.TestCase):
             "expected_rows": [
                 ["foo", 1.0, 2.5, 3.7, 3.85, 4.0, 2.5, "100.0%", 4],
                 ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
-                ["total", 10.0, 25.0, 37.0, 38.5, 40.0, 25.0, "75.0%", 4]]
+                ["total", 10.0, 25.0, 37.0, 38.5, 40.0, 25.0, "75.0%", 4],
+                [" -> duration",
+                 10.0, 25.0, 37.0, 38.5, 40.0, 25.0, "75.0%", 4],
+                [" -> idle_duration",
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "75.0%", 4]],
+            "expected_styles": {2: "rich", 3: "oblique", 4: "oblique"}
         },
         {
-            "info": {
-                "total_iteration_count": 0,
-                "statistics": {"atomics": collections.OrderedDict()}
-            },
+            "info": {"total_iteration_count": 0},
             "data": [],
             "expected_rows": [
-                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 0]]
+                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 0]],
+            "expected_styles": {0: "rich"}
         },
         {
-            "info": {"total_iteration_count": 4, "statistics": {
-                "atomics": collections.OrderedDict([("foo", {}),
-                                                   ("bar", {})])}},
+            "info": {"total_iteration_count": 4},
             "data": [
                 generate_iteration(1.6, True, ("foo", 1.2)),
                 generate_iteration(5.2, False, ("foo", 1.2)),
@@ -658,11 +666,15 @@ class MainStatsTableTestCase(test.TestCase):
             "expected_rows": [
                 ["foo", 1.2, 1.2, 3.6, 3.9, 4.2, 2.2, "66.7%", 3],
                 ["bar", 4.8, 5.2, 5.52, 5.56, 5.6, 5.2, "50.0%", 2],
-                ["total", 1.6, 5.1, 10.17, 11.235, 12.3, 6.025, "50.0%", 4]]
+                ["total", 1.6, 5.1, 10.17, 11.235, 12.3, 6.025, "50.0%", 4],
+                [" -> duration",
+                 1.6, 5.1, 10.17, 11.235, 12.3, 6.025, "50.0%", 4],
+                [" -> idle_duration",
+                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "50.0%", 4]],
+            "expected_styles": {2: "rich", 3: "oblique", 4: "oblique"}
         },
         {
-            "info": {"total_iteration_count": 4, "statistics": {
-                "atomics": collections.OrderedDict([("foo", {})])}},
+            "info": {"total_iteration_count": 4},
             "data": [
                 {
                     "atomic_actions": [
@@ -680,6 +692,7 @@ class MainStatsTableTestCase(test.TestCase):
                               "children": []}]}
                     ],
                     "duration": 3.3,
+                    "idle_duration": 17,
                     "error": False},
                 {
                     "atomic_actions": [
@@ -697,16 +710,23 @@ class MainStatsTableTestCase(test.TestCase):
                               "children": []}]}
                     ],
                     "duration": 7.3,
+                    "idle_duration": 20,
                     "error": True}
             ],
             "expected_rows": [
                 ["foo", 3.3, 5.3, 6.9, 7.1, 7.3, 5.3, "50.0%", 2],
                 [" -> bar (x2)", 4.6, 7.1, 9.1, 9.35, 9.6, 7.1, "50.0%", 2],
-                ["total", 3.3, 5.3, 6.9, 7.1, 7.3, 5.3, "50.0%", 2]]
+                ["total", 20.3, 23.8, 26.6, 26.95, 27.3, 23.8, "50.0%", 2],
+                [" -> duration", 3.3, 5.3, 6.9, 7.1, 7.3, 5.3, "50.0%", 2],
+                [" -> idle_duration",
+                 17.0, 18.5, 19.7, 19.85, 20.0, 18.5, "50.0%", 2]],
+            "expected_styles": {1: "oblique", 2: "rich",
+                                3: "oblique", 4: "oblique"}
         }
     )
     @ddt.unpack
-    def test_add_iteration_and_render(self, info, data, expected_rows):
+    def test_add_iteration_and_render(self, info, data, expected_rows,
+                                      expected_styles):
 
         table = charts.MainStatsTable(info)
         for el in data:
@@ -714,14 +734,12 @@ class MainStatsTableTestCase(test.TestCase):
         expected = {"cols": ["Action", "Min (sec)", "Median (sec)",
                              "90%ile (sec)", "95%ile (sec)", "Max (sec)",
                              "Avg (sec)", "Success", "Count"],
-                    "rows": expected_rows}
+                    "rows": expected_rows,
+                    "styles": expected_styles}
         self.assertEqual(expected, table.render())
 
     def test_to_dict(self):
-        table = charts.MainStatsTable(
-            {"total_iteration_count": 4, "statistics": {
-                "atomics": collections.OrderedDict([("foo", {}),
-                                                    ("bar", {})])}})
+        table = charts.MainStatsTable({"total_iteration_count": 4})
         data = [generate_iteration(1.6, True, ("foo", 1.2)),
                 generate_iteration(5.2, False, ("foo", 1.2)),
                 generate_iteration(5.0, True, ("bar", 4.8)),
@@ -754,8 +772,7 @@ class MainStatsTableTestCase(test.TestCase):
                          "display_name": "bar",
                          "count_per_iteration": 1,
                          "name": "bar"}],
-            "total": {"children": [],
-                      "data": {"90%ile": 10.17,
+            "total": {"data": {"90%ile": 10.17,
                                "95%ile": 11.235,
                                "avg": 6.025,
                                "iteration_count": 4,
@@ -765,8 +782,34 @@ class MainStatsTableTestCase(test.TestCase):
                                "success": "50.0%"},
                       "display_name": "total",
                       "count_per_iteration": 1,
-                      "name": "total"}},
-            table.to_dict())
+                      "name": "total",
+                      "children": [
+                          {"children": [],
+                           "count_per_iteration": 1,
+                           "data": {"90%ile": 10.17,
+                                    "95%ile": 11.235,
+                                    "avg": 6.025,
+                                    "iteration_count": 4,
+                                    "max": 12.3,
+                                    "median": 5.1,
+                                    "min": 1.6,
+                                    "success": "50.0%"},
+                           "display_name": "duration",
+                           "name": "duration"},
+                          {"children": [],
+                           "count_per_iteration": 1,
+                           "data": {"90%ile": 0.0,
+                                    "95%ile": 0.0,
+                                    "avg": 0.0,
+                                    "iteration_count": 4,
+                                    "max": 0.0,
+                                    "median": 0.0,
+                                    "min": 0.0,
+                                    "success": "50.0%"},
+                           "display_name": "idle_duration",
+                           "name": "idle_duration"}]
+                      }
+        }, table.to_dict())
 
 
 class OutputChartTestCase(test.TestCase):
@@ -900,11 +943,13 @@ class OutputStatsTableTestCase(test.TestCase):
             title=title, description=description)
         for iteration in iterations:
             table.add_iteration(iteration)
+        styles = {1: "rich"} if iterations else {}
         self.assertEqual({"title": title,
                           "description": description,
                           "widget": "Table",
                           "data": {"cols": charts.OutputStatsTable.columns,
-                                   "rows": expected},
+                                   "rows": expected,
+                                   "styles": styles},
                           "label": "",
                           "axis_label": ""},
                          table.render())

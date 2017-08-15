@@ -312,6 +312,7 @@ class Table(Chart):
     """
 
     widget = "Table"
+    _styles = {}
 
     @abc.abstractproperty
     def columns(self):
@@ -362,7 +363,18 @@ class Table(Chart):
         return rows
 
     def render(self):
-        return {"cols": self.columns, "rows": self.get_rows()}
+        rows = self.get_rows()
+        if self._styles is None:
+            # do not apply anything
+            styles = {}
+        elif not self._styles and rows:
+            # make the last elements bold
+            styles = {len(rows) - 1: "rich"}
+        else:
+            styles = self._styles
+        return {"cols": self.columns,
+                "rows": rows,
+                "styles": styles}
 
 
 class MainStatsTable(Table):
@@ -450,8 +462,22 @@ class MainStatsTable(Table):
             #   timer, so possibly the last item in atomic actions list can be
             #   successful. This thing should be fixed in AtomicTimer.
             self._mark_the_last_as_an_error(data)
-        data["total"] = {"duration": iteration["duration"],
-                         "children": [], "count": 1}
+        total_duration = iteration["duration"] + iteration["idle_duration"]
+        data["total"] = {"duration": total_duration,
+                         "count": 1,
+                         "error": iteration["error"],
+                         "children": collections.OrderedDict(
+                             [("duration", {
+                                 "duration": iteration["duration"],
+                                 "count": 1,
+                                 "error": iteration["error"],
+                                 "children": []}),
+                              ("idle_duration", {
+                                  "duration": iteration["idle_duration"],
+                                  "count": 1,
+                                  "error": iteration["error"],
+                                  "children": []})
+                              ])}
         if iteration["error"]:
             data["total"]["error"] = True
 
@@ -522,6 +548,21 @@ class MainStatsTable(Table):
     def to_dict(self):
         res = self._get_results()
         return {"total": res[-1], "atomics": res[:-1]}
+
+    def render(self):
+        rendered_data = super(MainStatsTable, self).render()
+        rows_len = len(rendered_data["rows"])
+        if rows_len > 1:
+            styles = {rows_len - 3: "rich",
+                      rows_len - 2: "oblique",
+                      rows_len - 1: "oblique"}
+            for i, row in enumerate(rendered_data["rows"]):
+                if i == rows_len - 3:
+                    break
+                if row[0].startswith(" -"):
+                    styles[i] = "oblique"
+            rendered_data["styles"] = styles
+        return rendered_data
 
 
 class OutputChart(Chart):
