@@ -523,14 +523,16 @@ class TaskEngine(object):
             sla=workload["sla"],
             args=workload["args"])
 
-        # to make the log more readable, use OrderedDict
-        key = collections.OrderedDict([
-            ("name", workload["name"]),
-            ("description", workload["description"]),
-            ("position", workload["position"]),
-            ("config", objects.Workload.format_workload_config(workload))])
-        LOG.info("Running benchmark with key: \n%s"
-                 % json.dumps(key, indent=2))
+        workload_cfg = objects.Workload.format_workload_config(workload)
+        LOG.info("Running benchmark with key: \n"
+                 "  name = %(name)s\n"
+                 "  description = %(description)s\n"
+                 "  position = %(position)s\n"
+                 "  config = %(cfg)s", {"name": workload["name"],
+                                        "description": workload["description"],
+                                        "position": workload["position"],
+                                        "cfg": json.dumps(workload_cfg,
+                                                          indent=3)})
 
         runner_obj = self._get_runner(workload["runner"])
         context_obj = self._prepare_context(
