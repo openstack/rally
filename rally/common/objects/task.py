@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import datetime as dt
 import uuid
 
@@ -412,8 +413,9 @@ class Task(object):
                       "validation_result": {
                           "etype": etype, "msg": msg, "trace": etraceback}})
 
-    def add_subtask(self, **subtask):
-        return Subtask(self.task["uuid"], **subtask)
+    def add_subtask(self, title, description=None, context=None):
+        return Subtask(self.task["uuid"], title=title, description=description,
+                       context=context)
 
     def delete(self, status=None):
         db.task_delete(self.task["uuid"], status=status)
@@ -444,8 +446,11 @@ class Task(object):
 class Subtask(object):
     """Represents a subtask object."""
 
-    def __init__(self, task_uuid, **attributes):
-        self.subtask = db.subtask_create(task_uuid, **attributes)
+    def __init__(self, task_uuid, title, description=None, context=None):
+        self.subtask = db.subtask_create(task_uuid,
+                                         title=title,
+                                         description=description,
+                                         context=context)
 
     def __getitem__(self, key):
         return self.subtask[key]
@@ -497,8 +502,9 @@ class Workload(object):
 
     @classmethod
     def format_workload_config(cls, workload):
-        return {"args": workload["args"],
-                "runner": workload["runner"],
-                "context": workload["context"],
-                "sla": workload["sla"],
-                "hooks": [r["config"] for r in workload["hooks"]]}
+        return collections.OrderedDict([
+            ("args", workload["args"]),
+            ("context", workload["context"]),
+            ("runner", workload["runner"]),
+            ("sla", workload["sla"]),
+            ("hooks", [r["config"] for r in workload["hooks"]])])

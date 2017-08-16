@@ -16,7 +16,6 @@
 """Tests for the Test engine."""
 
 import collections
-import json
 import threading
 
 import mock
@@ -35,6 +34,18 @@ class MyException(exceptions.RallyException):
 
 
 class TaskEngineTestCase(test.TestCase):
+
+    @staticmethod
+    def _make_workload(name, args=None, description=None, context=None,
+                       sla=None, runner=None, hooks=None, position=0):
+        return {"name": name,
+                "position": position,
+                "description": description,
+                "args": args,
+                "context": context or {},
+                "runner": runner or {},
+                "sla": sla or {},
+                "hooks": hooks or []}
 
     @mock.patch("rally.task.engine.TaskConfig")
     def test_init(self, mock_task_config):
@@ -143,11 +154,12 @@ class TaskEngineTestCase(test.TestCase):
         hook_conf = {"name": "c",
                      "args": "c_args",
                      "trigger": {"name": "d", "args": "d_args"}}
-        workload = engine.Workload({"name": scenario_name,
-                                    "runner": {"type": runner_type},
-                                    "context": {"a": "a_conf"},
-                                    "hooks": [hook_conf],
-                                    "sla": {"foo_sla": "sla_conf"}}, 2)
+        workload = {"name": scenario_name,
+                    "runner": {"type": runner_type},
+                    "context": {"a": "a_conf"},
+                    "hooks": [{"config": hook_conf}],
+                    "sla": {"foo_sla": "sla_conf"},
+                    "position": 2}
 
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
@@ -193,7 +205,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_scenario_runner_validate.return_value = [result]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
-        workload = engine.Workload({"name": "sca", "runner": {"type": "b"}}, 0)
+        workload = self._make_workload(name="sca", runner={"type": "b"})
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
 
@@ -217,12 +229,11 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        mock_subtask = mock.MagicMock()
-        mock_subtask.workloads = [
-            engine.Workload({"name": "sca"}, 0),
-            engine.Workload({"name": "sca", "context": {"a": "a_conf"}}, 1)
-        ]
-        mock_task_instance.subtasks = [mock_subtask]
+        mock_task_instance.subtasks = [{"workloads": [
+            self._make_workload(name="sca"),
+            self._make_workload(name="sca", position=1,
+                                context={"a": "a_conf"})
+        ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
 
@@ -245,12 +256,11 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        mock_subtask = mock.MagicMock()
-        mock_subtask.workloads = [
-            engine.Workload({"name": "sca"}, 0),
-            engine.Workload({"name": "sca", "sla": {"foo_sla": "sla_conf"}}, 1)
-        ]
-        mock_task_instance.subtasks = [mock_subtask]
+        mock_task_instance.subtasks = [{"workloads": [
+            self._make_workload(name="sca"),
+            self._make_workload(name="sca", position=1,
+                                sla={"foo_sla": "sla_conf"})
+        ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
         e = self.assertRaises(exceptions.InvalidTaskConfig,
@@ -275,15 +285,14 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        mock_subtask = mock.MagicMock()
         hook_conf = {"name": "c",
                      "args": "c_args",
                      "trigger": {"name": "d", "args": "d_args"}}
-        mock_subtask.workloads = [
-            engine.Workload({"name": "sca"}, 0),
-            engine.Workload({"name": "sca", "hooks": [hook_conf]}, 1),
-        ]
-        mock_task_instance.subtasks = [mock_subtask]
+        mock_task_instance.subtasks = [{"workloads": [
+            self._make_workload(name="sca"),
+            self._make_workload(name="sca", position=1,
+                                hooks=[{"config": hook_conf}])
+        ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
 
@@ -310,15 +319,14 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        mock_subtask = mock.MagicMock()
         hook_conf = {"name": "c",
                      "args": "c_args",
                      "trigger": {"name": "d", "args": "d_args"}}
-        mock_subtask.workloads = [
-            engine.Workload({"name": "sca"}, 0),
-            engine.Workload({"name": "sca", "hooks": [hook_conf]}, 1),
-        ]
-        mock_task_instance.subtasks = [mock_subtask]
+        mock_task_instance.subtasks = [{"workloads": [
+            self._make_workload(name="sca"),
+            self._make_workload(name="sca", position=1,
+                                hooks=[{"config": hook_conf}])
+        ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
 
@@ -335,8 +343,10 @@ class TaskEngineTestCase(test.TestCase):
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
         eng._validate_workload = mock.Mock()
-        workloads = [engine.Workload(
-            {"name": "name", "runner": "runner", "args": "args"}, 0)]
+        workloads = [{"name": "name",
+                      "runner": "runner",
+                      "args": "args",
+                      "position": 0}]
         users = [{"foo": "user1"}]
         user_context = mock.MagicMock()
         user_context.__enter__.return_value.context = {"users": users}
@@ -383,17 +393,15 @@ class TaskEngineTestCase(test.TestCase):
         mock_scenario_get.return_value = SomeScen
 
         mock_task_instance = mock.MagicMock()
-        mock_subtask1 = mock.MagicMock()
-        wconf1 = engine.Workload({"name": "a", "runner": "ra",
-                                  "context": {"users": {}}}, 0)
-        wconf2 = engine.Workload({"name": "a", "runner": "rb"}, 1)
-        mock_subtask1.workloads = [wconf1, wconf2]
+        wconf1 = self._make_workload(name="a", runner="ra",
+                                     context={"users": {}})
+        wconf2 = self._make_workload(name="a", runner="rb", position=1)
+        subtask1 = {"workloads": [wconf1, wconf2]}
 
-        mock_subtask2 = mock.MagicMock()
-        wconf3 = engine.Workload({"name": "b", "runner": "ra"}, 0)
-        mock_subtask2.workloads = [wconf3]
+        wconf3 = self._make_workload(name="b", runner="ra", position=2)
+        subtask2 = {"workloads": [wconf3]}
 
-        mock_task_instance.subtasks = [mock_subtask1, mock_subtask2]
+        mock_task_instance.subtasks = [subtask1, subtask2]
         fake_task = mock.MagicMock()
         eng = engine.TaskEngine(mock_task_instance, fake_task, deployment)
 
@@ -421,8 +429,8 @@ class TaskEngineTestCase(test.TestCase):
 
         workload1 = "workload1"
         workload2 = "workload2"
-        subtasks = [mock.Mock(workloads=[workload1]),
-                    mock.Mock(workloads=[workload2])]
+        subtasks = [{"workloads": [workload1]},
+                    {"workloads": [workload2]}]
         config = mock.Mock(subtasks=subtasks)
         eng = engine.TaskEngine({}, mock.MagicMock(), deployment)
 
@@ -474,16 +482,17 @@ class TaskEngineTestCase(test.TestCase):
         mock_result_consumer.is_task_in_aborting_status.return_value = False
 
         mock_task_instance = mock.MagicMock()
-        mock_subtask = mock.MagicMock()
-        mock_subtask.workloads = [
-            engine.Workload(
-                {"name": "a.task", "description": "foo",
-                 "context": {"context_a": {"a": 1}}}, 0),
-            engine.Workload(
-                {"name": "b.task", "description": "foo",
-                 "context": {"context_b": {"b": 2}}}, 1)
-        ]
-        mock_task_instance.subtasks = [mock_subtask]
+
+        mock_task_instance.subtasks = [{
+            "title": "foo",
+            "description": "Do not launch it!!",
+            "context": {},
+            "workloads": [
+                self._make_workload(name="a.task", description="foo",
+                                    context={"context_a": {"a": 1}}),
+                self._make_workload(name="a.task", description="foo",
+                                    context={"context_a": {"b": 2}},
+                                    position=2)]}]
 
         mock_task_config.return_value = mock_task_instance
         deployment = fakes.FakeDeployment(
@@ -640,7 +649,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -653,8 +662,8 @@ class ResultConsumerTestCase(test.TestCase):
 
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
-        with engine.ResultConsumer(
-                key, task, subtask, workload, runner, False) as consumer_obj:
+        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
+                                   runner, False) as consumer_obj:
             pass
 
         mock_sla_instance.add_iteration.assert_has_calls([
@@ -680,7 +689,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_checker.return_value = mock_sla_instance
         mock_sla_instance.results.return_value = mock_sla_results
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -690,7 +699,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
         with engine.ResultConsumer(
-                key, task, subtask, workload, runner, False):
+                workload_cfg, task, subtask, workload, runner, False):
             pass
 
         self.assertFalse(workload.add_workload_data.called)
@@ -708,7 +717,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_checker.return_value = mock_sla_instance
         mock_sla_instance.add_iteration.side_effect = [True, True, False,
                                                        False]
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -718,7 +727,8 @@ class ResultConsumerTestCase(test.TestCase):
             [[{"duration": 1, "timestamp": 1},
               {"duration": 2, "timestamp": 2}]] * 4)
 
-        with engine.ResultConsumer(key, task, subtask, workload, runner, True):
+        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
+                                   runner, True):
             pass
 
         self.assertTrue(runner.abort.called)
@@ -744,15 +754,16 @@ class ResultConsumerTestCase(test.TestCase):
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
 
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
 
         mock_hook_executor_instance = mock_hook_executor.return_value
 
-        with engine.ResultConsumer(key, task, subtask, workload, runner, True):
+        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
+                                   runner, True):
             pass
 
-        mock_sla_checker.assert_called_once_with(key["kw"])
-        mock_hook_executor.assert_called_once_with(key["kw"], task)
+        mock_sla_checker.assert_called_once_with(workload_cfg)
+        mock_hook_executor.assert_called_once_with(workload_cfg, task)
         self.assertFalse(mock_hook_executor_instance.on_iteration.called)
         mocked_set_aborted = mock_sla_checker.return_value.set_aborted_manually
         mocked_set_aborted.assert_called_once_with()
@@ -766,7 +777,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_task_get_status.return_value = consts.TaskStatus.CRASHED
         mock_sla_instance.add_iteration.side_effect = [True, True, False,
                                                        False]
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -775,7 +786,7 @@ class ResultConsumerTestCase(test.TestCase):
             [[{"duration": 1, "timestamp": 4}]] * 4)
         runner.event_queue = collections.deque()
 
-        with engine.ResultConsumer(key, task, subtask, workload,
+        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
                                    runner, False):
             pass
 
@@ -790,7 +801,7 @@ class ResultConsumerTestCase(test.TestCase):
                                                      mock_task_get_status):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -799,7 +810,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner.event_queue = collections.deque()
         exc = MyException()
         try:
-            with engine.ResultConsumer(key, task, subtask, workload,
+            with engine.ResultConsumer(workload_cfg, task, subtask, workload,
                                        runner, False):
                 raise exc
         except MyException:
@@ -819,7 +830,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
-        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": []}
         task = mock.MagicMock(spec=objects.Task)
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -837,8 +848,8 @@ class ResultConsumerTestCase(test.TestCase):
 
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
-        with engine.ResultConsumer(
-                key, task, subtask, workload, runner, False) as consumer_obj:
+        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
+                                   runner, False) as consumer_obj:
             pass
 
         mock_sla_instance.add_iteration.assert_has_calls([
@@ -878,7 +889,7 @@ class ResultConsumerTestCase(test.TestCase):
         mock_hook_results = mock_hook_executor_instance.results.return_value
 
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
-        key = {"kw": {"fake": 2, "hooks": []}, "name": "fake", "pos": 0}
+        workload_cfg = {"fake": 2, "hooks": [{"config": True}]}
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -891,7 +902,7 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque()
         runner.event_queue = collections.deque(events)
 
-        consumer_obj = engine.ResultConsumer(key, task, subtask,
+        consumer_obj = engine.ResultConsumer(workload_cfg, task, subtask,
                                              workload, runner, False)
         stop_event = threading.Event()
 
@@ -986,134 +997,76 @@ class TaskTestCase(test.TestCase):
             mock.call(config, engine.TaskConfig.CONFIG_SCHEMA_V1)])
 
     @mock.patch("jsonschema.validate")
-    @mock.patch("rally.task.engine.TaskConfig._make_subtasks")
-    def test_validate_json_v2(self, mock_task_config__make_subtasks,
-                              mock_validate):
-        config = {"version": 2}
+    def test_validate_json_v2(self, mock_validate):
+        config = {"version": 2, "subtasks": []}
         engine.TaskConfig(config)
         mock_validate.assert_has_calls([
             mock.call(config, engine.TaskConfig.CONFIG_SCHEMA_V2)])
 
     @mock.patch("rally.task.engine.TaskConfig._get_version")
     @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    @mock.patch("rally.task.engine.TaskConfig._make_subtasks")
-    def test_validate_version(self, mock_task_config__make_subtasks,
-                              mock_task_config__validate_json,
+    def test_validate_version(self, mock_task_config__validate_json,
                               mock_task_config__get_version):
         mock_task_config__get_version.return_value = 1
         engine.TaskConfig(mock.MagicMock())
 
     @mock.patch("rally.task.engine.TaskConfig._get_version")
     @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    @mock.patch("rally.task.engine.TaskConfig._make_subtasks")
     def test_validate_version_wrong_version(
-            self, mock_task_config__make_subtasks,
-            mock_task_config__validate_json,
+            self, mock_task_config__validate_json,
             mock_task_config__get_version):
 
         mock_task_config__get_version.return_value = "wrong"
         self.assertRaises(exceptions.InvalidTaskException, engine.TaskConfig,
                           mock.MagicMock)
 
-    @mock.patch("rally.task.engine.SubTask")
     @mock.patch("rally.task.engine.TaskConfig._get_version")
     @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    def test_make_subtasks_v1(self, mock_task_config__validate_json,
-                              mock_task_config__get_version, mock_sub_task):
+    def test__adopt_task_format_v1(
+            self, mock_task_config__validate_json,
+            mock_task_config__get_version):
         mock_task_config__get_version.return_value = 1
-        config = {"a.task": [{"s": 1}, {"s": 2}],
-                  "b.task": [{"s": 3}]}
-        self.assertEqual(3, len(engine.TaskConfig(config).subtasks))
-        mock_sub_task.assert_has_calls([
-            mock.call({
-                "title": "a.task",
-                "workloads": [{"s": 1, "name": "a.task"}]
-            }),
-            mock.call({
-                "title": "a.task",
-                "workloads": [{"s": 2, "name": "a.task"}]
-            }),
-            mock.call({
-                "title": "b.task",
-                "workloads": [{"s": 3, "name": "b.task"}]
-            })
-        ], any_order=True)
-
-    @mock.patch("rally.task.engine.SubTask")
-    @mock.patch("rally.task.engine.TaskConfig._get_version")
-    @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    def test_make_subtasks_v2(self, mock_task_config__validate_json,
-                              mock_task_config__get_version, mock_sub_task):
-        mock_task_config__get_version.return_value = 2
-        subtask_conf1 = mock.MagicMock()
-        subtask_conf2 = mock.MagicMock()
-        config = {"subtasks": [subtask_conf1, subtask_conf2]}
-        self.assertEqual(2, len(engine.TaskConfig(config).subtasks))
-        mock_sub_task.assert_has_calls([
-            mock.call(subtask_conf1),
-            mock.call(subtask_conf2)])
-
-
-class WorkloadTestCase(test.TestCase):
-
-    def setUp(self):
-        super(WorkloadTestCase, self).setUp()
-
-        self.wconf = engine.Workload({
-            "name": "n",
-            "runner": "r",
-            "context": "c",
-            "sla": "s",
-            "hooks": "h",
-            "args": "a"
-        }, 0)
-
-    def test_to_dict(self):
-        expected_dict = {
-            "runner": "r",
-            "context": "c",
-            "sla": "s",
-            "hooks": "h",
-            "args": "a"
-        }
-
-        self.assertEqual(expected_dict, self.wconf.to_dict())
-
-    def test_to_task(self):
-        expected_dict = {
-            "runner": "r",
-            "context": "c",
-            "sla": "s",
-            "hooks": "h",
-            "args": "a"
-        }
-
-        self.assertEqual(expected_dict, self.wconf.to_task())
-
-    def test_make_key(self):
-        expected_key = {
-            "name": "n",
-            "description": "",
-            "pos": 0,
-            "kw": {
-                "runner": "r",
-                "context": "c",
-                "sla": "s",
-                "hooks": "h",
-                "args": "a"
-            }
-        }
-
-        self.assertEqual(expected_key, self.wconf.make_key())
-
-    def test_make_exception_args(self):
-        expected_args = {
-            "name": "n",
-            "pos": 0,
-            "reason": "r",
-            "config": json.dumps({"runner": "r", "context": "c", "sla": "s",
-                                  "hooks": "h", "args": "a"})
-        }
-
-        self.assertEqual(expected_args,
-                         self.wconf.make_exception_args("r"))
+        config = collections.OrderedDict()
+        config["a.task"] = [{"s": 1}, {"s": 2}]
+        config["b.task"] = [{"s": 3}]
+        self.assertEqual([
+            {"title": "a.task",
+             "context": {},
+             "description": None,
+             "group": None,
+             "tags": [],
+             "workloads": [{"s": 1,
+                            "name": "a.task",
+                            "args": {},
+                            "context": {},
+                            "runner": {},
+                            "sla": {},
+                            "hooks": [],
+                            "position": 0}]},
+            {"title": "a.task",
+             "context": {},
+             "description": None,
+             "group": None,
+             "tags": [],
+             "workloads": [{"s": 2,
+                            "name": "a.task",
+                            "args": {},
+                            "context": {},
+                            "runner": {},
+                            "sla": {},
+                            "hooks": [],
+                            "position": 0}]},
+            {"title": "b.task",
+             "context": {},
+             "description": None,
+             "group": None,
+             "tags": [],
+             "workloads": [{"s": 3,
+                            "name": "b.task",
+                            "args": {},
+                            "context": {},
+                            "runner": {},
+                            "sla": {},
+                            "hooks": [],
+                            "position": 0}]}
+        ], engine.TaskConfig(config).subtasks)

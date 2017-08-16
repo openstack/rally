@@ -46,9 +46,10 @@ class HookExecutor(object):
 
         self.triggers = collections.defaultdict(list)
         for hook in config.get("hooks", []):
-            hook_cls = Hook.get(hook["name"])
+            hook_cfg = hook["config"]
+            hook_cls = Hook.get(hook_cfg["name"])
             trigger_obj = trigger.Trigger.get(
-                hook["trigger"]["name"])(hook, self.task, hook_cls)
+                hook_cfg["trigger"]["name"])(hook_cfg, self.task, hook_cls)
             event_type = trigger_obj.get_listening_event()
             self.triggers[event_type].append(trigger_obj)
 

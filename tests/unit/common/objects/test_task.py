@@ -217,7 +217,7 @@ class TaskTestCase(test.TestCase):
         task = objects.Task(task=self.task)
         subtask = task.add_subtask(title="foo")
         mock_subtask.assert_called_once_with(
-            self.task["uuid"], title="foo")
+            self.task["uuid"], title="foo", context=None, description=None)
         self.assertIs(subtask, mock_subtask.return_value)
 
     @ddt.data(
@@ -289,7 +289,7 @@ class SubtaskTestCase(test.TestCase):
         mock_subtask_create.return_value = self.subtask
         subtask = objects.Subtask("bar", title="foo")
         mock_subtask_create.assert_called_once_with(
-            "bar", title="foo")
+            "bar", title="foo", context=None, description=None)
         self.assertEqual(subtask["uuid"], self.subtask["uuid"])
 
     @mock.patch("rally.common.objects.task.db.subtask_update")
