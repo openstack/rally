@@ -59,10 +59,9 @@ class ActionTimer(utils.Timer):
         self._root.append(self.atomic_action)
 
     def _find_parent(self, atomic_actions):
-        if atomic_actions and "finished_at" not in atomic_actions[-1]:
-            return self._find_parent(atomic_actions[-1]["children"])
-        else:
-            return atomic_actions
+        while atomic_actions and "finished_at" not in atomic_actions[-1]:
+            atomic_actions = atomic_actions[-1]["children"]
+        return atomic_actions
 
     def __enter__(self):
         super(ActionTimer, self).__enter__()
