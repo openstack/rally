@@ -621,42 +621,10 @@ class TaskConfig(object):
                 "type": "array",
                 "minItems": 1,
                 "items": {
-                    "type": "object",
-                    "properties": {
-                        "title": {"type": "string"},
-                        "group": {"type": "string"},
-                        "description": {"type": "string"},
-                        "tags": {
-                            "type": "array",
-                            "items": {"type": "string"}
-                        },
-
-                        "run_in_parallel": {"type": "boolean"},
-                        "workloads": {
-                            "type": "array",
-                            "minItems": 1,
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "scenario": {
-                                        "$ref": "#/definitions/singleEntity"},
-                                    "description": {"type": "string"},
-                                    "runner": {
-                                        "$ref": "#/definitions/singleEntity"},
-                                    "sla": {"type": "object"},
-                                    "hooks": {
-                                        "type": "array",
-                                        "items": HOOK_CONFIG,
-                                    },
-                                    "contexts": {"type": "object"}
-                                },
-                                "additionalProperties": False,
-                                "required": ["scenario", "runner"]
-                            }
-                        }
-                    },
-                    "additionalProperties": False,
-                    "required": ["title", "workloads"]
+                    "oneOf": [
+                        {"$ref": "#/definitions/subtask-workload"},
+                        {"$ref": "#/definitions/subtask-workloads"}
+                    ]
                 }
             }
         },
@@ -670,6 +638,65 @@ class TaskConfig(object):
                 "patternProperties": {
                     ".*": {"type": "object"}
                 }
+            },
+            "subtask-workload": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "group": {"type": "string"},
+                    "description": {"type": "string"},
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    },
+                    "scenario": {"$ref": "#/definitions/singleEntity"},
+                    "runner": {"$ref": "#/definitions/singleEntity"},
+                    "sla": {"type": "object"},
+                    "hooks": {
+                        "type": "array",
+                        "items": HOOK_CONFIG,
+                    },
+                    "contexts": {"type": "object"}
+                },
+                "additionalProperties": False,
+                "required": ["title", "scenario", "runner"]
+            },
+            "subtask-workloads": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "group": {"type": "string"},
+                    "description": {"type": "string"},
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    },
+                    "run_in_parallel": {"type": "boolean"},
+                    "workloads": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "scenario": {
+                                    "$ref": "#/definitions/singleEntity"},
+                                "description": {"type": "string"},
+                                "runner": {
+                                    "$ref": "#/definitions/singleEntity"},
+                                "sla": {"type": "object"},
+                                "hooks": {
+                                    "type": "array",
+                                    "items": HOOK_CONFIG,
+                                },
+                                "contexts": {"type": "object"}
+                            },
+                            "additionalProperties": False,
+                            "required": ["scenario", "runner"]
+                        }
+                    }
+                },
+                "additionalProperties": False,
+                "required": ["title", "workloads"]
             }
         }
     }
@@ -704,10 +731,21 @@ class TaskConfig(object):
         self.subtasks = []
         for sconf in config["subtasks"]:
             sconf = copy.deepcopy(sconf)
+
             # fill all missed properties of a SubTask
             sconf.setdefault("tags", [])
-            sconf.setdefault("group", None)
-            sconf.setdefault("description", None)
+            sconf.setdefault("description", "")
+
+            # port the subtask to a single format before validating
+            if "workloads" not in sconf and "scenario" in sconf:
+                workload = sconf
+                sconf = {"title": workload.pop("title"),
+                         "description": workload.pop("description"),
+                         "tags": workload.pop("tags"),
+                         "workloads": [workload]}
+
+            # it is not supported feature yet, but the code expects this
+            # variable
             sconf.setdefault("context", {})
 
             workloads = []
@@ -769,14 +807,15 @@ class TaskConfig(object):
         subtasks = []
         for name, v1_workloads in config.items():
             for v1_workload in v1_workloads:
-                v2_workload = copy.deepcopy(v1_workload)
-                v2_workload["scenario"] = {name: v2_workload.pop("args", {})}
-                v2_workload["sla"] = v2_workload.pop("sla", {})
-                v2_workload["contexts"] = v2_workload.pop("context", {})
-                if "runner" in v2_workload:
-                    runner_type = v2_workload["runner"].pop("type")
-                    v2_workload["runner"] = {
-                        runner_type: v2_workload["runner"]}
-                subtasks.append({"title": name, "workloads": [v2_workload]})
+                subtask = copy.deepcopy(v1_workload)
+                subtask["scenario"] = {name: subtask.pop("args", {})}
+                subtask["sla"] = subtask.pop("sla", {})
+                subtask["contexts"] = subtask.pop("context", {})
+                subtask["title"] = name
+                if "runner" in subtask:
+                    runner_type = subtask["runner"].pop("type")
+                    subtask["runner"] = {
+                        runner_type: subtask["runner"]}
+                subtasks.append(subtask)
         return {"title": "Task (adopted from task format v1)",
                 "subtasks": subtasks}
