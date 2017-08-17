@@ -82,12 +82,6 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
                      for container in con_list]
         scenario._list_objects.assert_has_calls(con_calls)
 
-        key_suffix = "container"
-        if num_cons > 1:
-            key_suffix = "%i_containers" % num_cons
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "swift.list_objects_in_%s" % key_suffix)
-
     @ddt.data([1, 1], [1, 2], [2, 1], [3, 5])
     @ddt.unpack
     def test_list_and_download_objects_in_containers(self, num_cons, num_objs):
@@ -110,19 +104,6 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
             for obj in obj_list:
                 obj_calls.append(mock.call(container["name"], obj["name"]))
         scenario._download_object.assert_has_calls(obj_calls, any_order=True)
-
-        list_key_suffix = "container"
-        if num_cons > 1:
-            list_key_suffix = "%i_containers" % num_cons
-        self._test_atomic_action_timer(
-            scenario.atomic_actions(),
-            "swift.list_objects_in_%s" % list_key_suffix)
-        download_key_suffix = "object"
-        if num_cons * num_objs > 1:
-            download_key_suffix = "%i_objects" % (num_cons * num_objs)
-        self._test_atomic_action_timer(
-            scenario.atomic_actions(),
-            "swift.download_%s" % download_key_suffix)
 
     def test_functional_create_container_and_object_then_list_objects(self):
         names_list = ["AA", "BB", "CC", "DD"]

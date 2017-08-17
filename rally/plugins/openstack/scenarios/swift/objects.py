@@ -18,7 +18,6 @@ import tempfile
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.swift import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -127,13 +126,8 @@ class ListObjectsInContainers(utils.SwiftScenario):
 
         containers = self._list_containers()[1]
 
-        key_suffix = "container"
-        if len(containers) > 1:
-            key_suffix = "%i_containers" % len(containers)
-
-        with atomic.ActionTimer(self, "swift.list_objects_in_%s" % key_suffix):
-            for container in containers:
-                self._list_objects(container["name"])
+        for container in containers:
+            self._list_objects(container["name"])
 
 
 @validation.add("required_services", services=[consts.Service.SWIFT])
@@ -149,25 +143,12 @@ class ListAndDownloadObjectsInContainers(utils.SwiftScenario):
 
         containers = self._list_containers()[1]
 
-        list_key_suffix = "container"
-        if len(containers) > 1:
-            list_key_suffix = "%i_containers" % len(containers)
-
         objects_dict = {}
-        with atomic.ActionTimer(self,
-                                "swift.list_objects_in_%s" % list_key_suffix):
-            for container in containers:
-                container_name = container["name"]
-                objects_dict[container_name] = self._list_objects(
-                    container_name)[1]
+        for container in containers:
+            container_name = container["name"]
+            objects_dict[container_name] = self._list_objects(
+                container_name)[1]
 
-        objects_total = sum(map(len, objects_dict.values()))
-        download_key_suffix = "object"
-        if objects_total > 1:
-            download_key_suffix = "%i_objects" % objects_total
-
-        with atomic.ActionTimer(self,
-                                "swift.download_%s" % download_key_suffix):
-            for container_name, objects in objects_dict.items():
-                for obj in objects:
-                    self._download_object(container_name, obj["name"])
+        for container_name, objects in objects_dict.items():
+            for obj in objects:
+                self._download_object(container_name, obj["name"])

@@ -49,7 +49,10 @@ class TestCase(base.BaseTestCase):
     def _test_atomic_action_timer(self, atomic_actions, name):
         atomic_wrapper = tutils.WrapperForAtomicActions(atomic_actions)
         action_duration = atomic_wrapper.get(name)
-        self.assertIsNotNone(action_duration)
+        if action_duration is None:
+            self.fail("The duration of atomic action '%s' should not be None. "
+                      "None duration means that it had not called before the "
+                      "check is executed." % name)
         self.assertIsInstance(action_duration, float)
 
     def assertSequenceEqual(self, iterable_1, iterable_2, msg=None):

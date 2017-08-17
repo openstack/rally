@@ -90,7 +90,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
         self.clients("heat").resources.list.assert_called_once_with(
             stack.id)
         self._test_atomic_action_timer(heat_scenario.atomic_actions(),
-                                       "heat.list_resources_of_1_stacks")
+                                       "heat.list_resources")
 
     @mock.patch("%s.ListStacksAndEvents._list_stacks" % BASE)
     def test_list_stack_and_events(self, mock__list_stacks):
@@ -100,7 +100,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
         heat_scenario.run()
         self.clients("heat").events.list.assert_called_once_with(stack.id)
         self._test_atomic_action_timer(
-            heat_scenario.atomic_actions(), "heat.list_events_of_1_stacks")
+            heat_scenario.atomic_actions(), "heat.list_events")
 
     @mock.patch("%s.CreateAndDeleteStack._delete_stack" % BASE)
     @mock.patch("%s.CreateAndDeleteStack._create_stack" % BASE)

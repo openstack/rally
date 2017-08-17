@@ -47,9 +47,7 @@ class ValidateGlance(scenario.OpenStackScenario):
         """
         glance_client = self.clients("glance")
         image_name = "__intentionally_non_existent_image___"
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_glance_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_glance"):
             for i in range(repetitions):
                 list(glance_client.images.list(name=image_name))
 
@@ -68,9 +66,7 @@ class ValidateNova(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         nova_client = self.clients("nova")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_nova_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_nova"):
             for i in range(repetitions):
                 nova_client.flavors.list()
 
@@ -90,9 +86,7 @@ class ValidateCeilometer(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         ceilometer_client = self.clients("ceilometer")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_ceilometer_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_ceilometer"):
             for i in range(repetitions):
                 ceilometer_client.meters.list()
 
@@ -111,9 +105,7 @@ class ValidateCinder(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         cinder_client = self.clients("cinder")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_cinder_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_cinder"):
             for i in range(repetitions):
                 cinder_client.volume_types.list()
 
@@ -132,9 +124,7 @@ class ValidateNeutron(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         neutron_client = self.clients("neutron")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_neutron_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_neutron"):
             for i in range(repetitions):
                 neutron_client.list_networks()
 
@@ -153,9 +143,7 @@ class ValidateHeat(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         heat_client = self.clients("heat")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_heat_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_heat"):
             for i in range(repetitions):
                 list(heat_client.stacks.list(limit=0))
 
@@ -176,8 +164,6 @@ class ValidateMonasca(scenario.OpenStackScenario):
         :param repetitions: number of times to validate
         """
         monasca_client = self.clients("monasca")
-        with atomic.ActionTimer(
-                self,
-                "authenticate.validate_monasca_%s_times" % repetitions):
+        with atomic.ActionTimer(self, "authenticate.validate_monasca"):
             for i in range(repetitions):
                 list(monasca_client.metrics.list(limit=0))
