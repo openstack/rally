@@ -1020,53 +1020,31 @@ class TaskTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskException, engine.TaskConfig,
                           mock.MagicMock)
 
-    @mock.patch("rally.task.engine.TaskConfig._get_version")
-    @mock.patch("rally.task.engine.TaskConfig._validate_json")
-    def test__adopt_task_format_v1(
-            self, mock_task_config__validate_json,
-            mock_task_config__get_version):
-        mock_task_config__get_version.return_value = 1
+    def test__adopt_task_format_v1(self):
+
+        # mock all redundant checks :)
+        class TaskConfig(engine.TaskConfig):
+            def __init__(self):
+                pass
+
         config = collections.OrderedDict()
-        config["a.task"] = [{"s": 1}, {"s": 2}]
-        config["b.task"] = [{"s": 3}]
-        self.assertEqual([
-            {"title": "a.task",
-             "context": {},
-             "description": None,
-             "group": None,
-             "tags": [],
-             "workloads": [{"s": 1,
-                            "name": "a.task",
-                            "args": {},
-                            "context": {},
-                            "runner": {},
-                            "sla": {},
-                            "hooks": [],
-                            "position": 0}]},
-            {"title": "a.task",
-             "context": {},
-             "description": None,
-             "group": None,
-             "tags": [],
-             "workloads": [{"s": 2,
-                            "name": "a.task",
-                            "args": {},
-                            "context": {},
-                            "runner": {},
-                            "sla": {},
-                            "hooks": [],
-                            "position": 0}]},
-            {"title": "b.task",
-             "context": {},
-             "description": None,
-             "group": None,
-             "tags": [],
-             "workloads": [{"s": 3,
-                            "name": "b.task",
-                            "args": {},
-                            "context": {},
-                            "runner": {},
-                            "sla": {},
-                            "hooks": [],
-                            "position": 0}]}
-        ], engine.TaskConfig(config).subtasks)
+        config["a.task"] = [{"s": 1, "context": {"foo": "bar"}}, {"s": 2}]
+        config["b.task"] = [{"s": 3, "sla": {"key": "value"}}]
+        self.assertEqual(
+            {"title": "Task (adopted from task format v1)",
+             "subtasks": [{"title": "a.task",
+                           "workloads": [{"s": 1,
+                                          "scenario": {"a.task": {}},
+                                          "sla": {},
+                                          "contexts": {"foo": "bar"}}]},
+                          {"title": "a.task",
+                           "workloads": [{"s": 2,
+                                          "scenario": {"a.task": {}},
+                                          "sla": {},
+                                          "contexts": {}}]},
+                          {"title": "b.task",
+                           "workloads": [{"s": 3,
+                                          "scenario": {"b.task": {}},
+                                          "sla": {"key": "value"},
+                                          "contexts": {}}]}]},
+            TaskConfig._adopt_task_format_v1(config))
