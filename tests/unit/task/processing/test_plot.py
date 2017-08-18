@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import json
 
 import ddt
@@ -61,13 +62,12 @@ class PlotTestCase(test.TestCase):
             "hooks": []}
 
         result = plot._process_workload(
-            workload, {"runner": {"type": "constant"}}, 1)
+            workload, "!!!CONF!!!", 1)
         self.assertEqual(
             {"cls": "Foo", "met": "bar", "pos": "1",
              "name": "bar [2]", "description": "Description!!",
-             "runner": "constant", "config": json.dumps(
-                 {"Foo.bar": [{"runner": {"type": "constant"}}]},
-                 indent=2),
+             "runner": "constant", "config": json.dumps("!!!CONF!!!",
+                                                        indent=2),
              "created_at": "xxx_time",
              "full_duration": 40, "load_duration": 32, "hooks": [],
              "atomic": {"histogram": "atomic_histogram",
@@ -162,8 +162,7 @@ class PlotTestCase(test.TestCase):
         self.assertEqual(expected, plot._process_hooks(hooks))
 
     @mock.patch(PLOT + "_process_workload")
-    @mock.patch(PLOT + "json.dumps", return_value="json_data")
-    def test__process_workloads(self, mock_json_dumps, mock__process_workload):
+    def test__process_workloads(self, mock__process_workload):
         workloads = [{"id": i, "uuid": "uuid-%s" % i, "task_uuid": "task-uuid",
                       "subtask_uuid": "subtask-uuid",
                       "name": "Foo.bar_%s" % i,
@@ -186,30 +185,7 @@ class PlotTestCase(test.TestCase):
              "name": str(c),
              "met": "dummy",
              "pos": str(c)})
-        source, p_workloads = plot._process_workloads(workloads)
-        self.assertEqual("json_data", source)
-        mock_json_dumps.assert_called_once_with(
-            {"Foo.bar_1": [{"runner": {"type": "constant", "times": 3},
-                            "hooks": [{"hook1": "xxx"}],
-                            "args": {"key1": "value1"},
-                            "sla": {"failure_rate": {"max": 0}},
-                            "context": {"users": {}}},
-                           {"runner": {"type": "constant", "times": 3},
-                            "hooks": [{"hook1": "xxx"}],
-                            "args": {"key1": "value1"},
-                            "sla": {"failure_rate": {"max": 0}},
-                            "context": {"users": {}}}],
-             "Foo.bar_3": [
-                {"runner": {"type": "constant", "times": 3},
-                 "hooks": [{"hook1": "xxx"}], "args": {"key1": "value1"},
-                 "sla": {"failure_rate": {"max": 0}},
-                 "context": {"users": {}}}],
-             "Foo.bar_2": [
-                {"runner": {"type": "constant", "times": 3},
-                 "hooks": [{"hook1": "xxx"}], "args": {"key1": "value1"},
-                 "sla": {"failure_rate": {"max": 0}},
-                 "context": {"users": {}}}]},
-            sort_keys=True, indent=2)
+        p_workloads = plot._process_workloads(workloads)
         self.assertEqual([
             {"cls": "Foo.bar_1_cls", "met": "dummy", "name": "0", "pos": "0"},
             {"cls": "Foo.bar_1_cls", "met": "dummy", "name": "1", "pos": "1"},
@@ -217,17 +193,135 @@ class PlotTestCase(test.TestCase):
             {"cls": "Foo.bar_3_cls", "met": "dummy", "name": "0", "pos": "0"}],
             p_workloads)
 
+    def test__make_source(self):
+        tasks = [{"title": "task title",
+                  "uuid": "task1",
+                  "description": "task description",
+                  "subtasks": [
+                      {"title": "subtask title",
+                       "description": "subtask description",
+                       "workloads": [
+                           {"name": "workload1.1",
+                            "uuid": "w1.1",
+                            "description": "Be or not to be",
+                            "args": {},
+                            "context": {"key": "context"},
+                            "sla": {"key": "sla"},
+                            "runner": {"type": "crunner"},
+                            "hooks": []}
+                       ]}
+                  ]}]
+        esource = json.dumps(collections.OrderedDict([
+            ("version", 2),
+            ("title", "task title"),
+            ("description", "task description"),
+            ("subtasks",
+             [collections.OrderedDict([
+                 ("title", "subtask title"),
+                 ("description", "subtask description"),
+                 ("workloads", [
+                     collections.OrderedDict(
+                         [("scenario", {"workload1.1": {}}),
+                          ("description", "Be or not to be"),
+                          ("contexts", {"key": "context"}),
+                          ("runner", {"crunner": {}}),
+                          ("hooks", []),
+                          ("sla", {"key": "sla"})])])])])]),
+            indent=2)
+
+        self.assertEqual(esource, plot._make_source(tasks))
+
+        tasks.append({"title": "task title",
+                      "uuid": "task2",
+                      "description": "task description",
+                      "subtasks": [
+                          {"title": "subtask title2",
+                           "description": "subtask description2",
+                           "workloads": [
+                               {"name": "workload2.1",
+                                "uuid": "w2.1",
+                                "description": "Be or not to be",
+                                "args": {},
+                                "context": {"key": "context"},
+                                "sla": {"key": "sla"},
+                                "runner": {"type": "crunner"},
+                                "hooks": []}
+                           ]},
+                          {"title": "subtask title3",
+                           "description": "subtask description3",
+                           "workloads": [
+                               {"name": "workload2.2",
+                                "uuid": "w2.2",
+                                "description": "Be or not to be3",
+                                "args": {},
+                                "context": {"key": "context"},
+                                "sla": {"key": "sla"},
+                                "runner": {"type": "crunner"},
+                                "hooks": []}
+                           ]}
+                      ]})
+        esource = json.dumps(collections.OrderedDict([
+            ("version", 2),
+            ("title", "A combined task."),
+            ("description",
+             "The task contains subtasks from a multiple number of tasks."),
+            ("subtasks",
+             [
+                 collections.OrderedDict([
+                     ("title", "subtask title"),
+                     ("description",
+                      "subtask description\n[Task UUID: task1]"),
+                     ("workloads", [
+                         collections.OrderedDict(
+                             [("scenario", {"workload1.1": {}}),
+                              ("description", "Be or not to be"),
+                              ("contexts", {"key": "context"}),
+                              ("runner", {"crunner": {}}),
+                              ("hooks", []),
+                              ("sla", {"key": "sla"})])])]),
+                 collections.OrderedDict([
+                     ("title", "subtask title2"),
+                     ("description",
+                      "subtask description2\n[Task UUID: task2]"),
+                     ("workloads", [
+                         collections.OrderedDict([
+                             ("scenario", {"workload2.1": {}}),
+                             ("description", "Be or not to be"),
+                             ("contexts", {"key": "context"}),
+                             ("runner", {"crunner": {}}),
+                             ("hooks", []),
+                             ("sla", {"key": "sla"})])])]),
+                 collections.OrderedDict([
+                     ("title", "subtask title3"),
+                     ("description",
+                      "subtask description3\n[Task UUID: task2]"),
+                     ("workloads", [
+                         collections.OrderedDict([
+                             ("scenario", {"workload2.2": {}}),
+                             ("description", "Be or not to be3"),
+                             ("contexts", {"key": "context"}),
+                             ("runner", {"crunner": {}}),
+                             ("hooks", []),
+                             ("sla", {"key": "sla"})])])])])]),
+            indent=2)
+
+        self.assertEqual(esource, plot._make_source(tasks))
+
     @ddt.data({},
               {"include_libs": True},
               {"include_libs": False})
     @ddt.unpack
+    @mock.patch(PLOT + "_make_source")
     @mock.patch(PLOT + "_process_workloads")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch("rally.common.version.version_string", return_value="42.0")
     def test_plot(self, mock_version_string, mock_get_template,
-                  mock__process_workloads, **ddt_kwargs):
-        task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
-        mock__process_workloads.return_value = "source", "scenarios"
+                  mock__process_workloads, mock__make_source, **ddt_kwargs):
+        task_dict = {"title": "", "description": "",
+                     "subtasks": [{"title": "", "description": "",
+                                   "workloads": ["foo", "bar"]}]}
+        mock__make_source.return_value = "source"
+        mock__process_workloads.return_value = "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
 
         html = plot.plot([task_dict], **ddt_kwargs)
@@ -245,13 +339,12 @@ class PlotTestCase(test.TestCase):
                 version="42.0", data="\"scenarios\"",
                 source="\"source\"", include_libs=False)
 
-    @mock.patch(PLOT + "objects.Workload.format_workload_config")
     @mock.patch(PLOT + "objects.Task")
     @mock.patch(PLOT + "Trends")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch("rally.common.version.version_string", return_value="42.0")
     def test_trends(self, mock_version_string, mock_get_template, mock_trends,
-                    mock_task, mock_format_workload_config):
+                    mock_task):
         task_dict = {"subtasks": [{"workloads": ["foo", "bar"]}]}
 
         trends = mock.Mock()
@@ -265,8 +358,8 @@ class PlotTestCase(test.TestCase):
 
         self.assertEqual("trends html", result)
         self.assertEqual(
-            [mock.call("foo", mock_format_workload_config.return_value),
-             mock.call("bar", mock_format_workload_config.return_value)],
+            [mock.call("foo"),
+             mock.call("bar")],
             trends.add_result.mock_calls)
         mock_get_template.assert_called_once_with("task/trends.html")
         template.render.assert_called_once_with(version="42.0",
@@ -363,10 +456,12 @@ class TrendsTestCase(test.TestCase):
                 trends_result[idx]["actions"][a_idx]["durations"].sort()
         return trends_result
 
-    def test_add_result_and_get_data(self):
+    @mock.patch(PLOT + "objects.Workload.to_task")
+    def test_add_result_and_get_data(self, mock_workload_to_task):
+        mock_workload_to_task.side_effect = ("kw_0", "kw_1")
         trends = plot.Trends()
         for i in 0, 1:
-            trends.add_result(self._make_result(i), "kw_%s" % i)
+            trends.add_result(self._make_result(i))
         expected = [
             {"actions": [{"durations": [("90%ile", [(123456789, 0.9)]),
                                         ("95%ile", [(123456789, 0.87)]),
@@ -430,9 +525,11 @@ class TrendsTestCase(test.TestCase):
              "success": [("success", [(123457789, 100.0)])]}]
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
-    def test_add_result_once_and_get_data(self):
+    @mock.patch(PLOT + "objects.Workload.to_task")
+    def test_add_result_once_and_get_data(self, mock_workload_to_task):
+        mock_workload_to_task.return_value = "kw_42"
         trends = plot.Trends()
-        trends.add_result(self._make_result(42, sla_success=False), "kw_42")
+        trends.add_result(self._make_result(42, sla_success=False))
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, 0.9)]),
                                         ("95%ile", [(123498789, 0.87)]),
@@ -466,10 +563,12 @@ class TrendsTestCase(test.TestCase):
              "success": [("success", [(123498789, 100.0)])]}]
         self.assertEqual(expected, self._sort_trends(trends.get_data()))
 
-    def test_add_result_with_na_and_get_data(self):
+    @mock.patch(PLOT + "objects.Workload.to_task")
+    def test_add_result_with_na_and_get_data(self, mock_workload_to_task):
+        mock_workload_to_task.return_value = "kw_42"
         trends = plot.Trends()
         trends.add_result(
-            self._make_result(42, sla_success=False, with_na=True), "kw_42")
+            self._make_result(42, sla_success=False, with_na=True))
         expected = [
             {"actions": [{"durations": [("90%ile", [(123498789, "n/a")]),
                                         ("95%ile", [(123498789, "n/a")]),

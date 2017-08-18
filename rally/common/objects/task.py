@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import copy
 import datetime as dt
 import uuid
 
@@ -326,10 +327,21 @@ class Workload(object):
                                 hooks_results=hooks_results)
 
     @classmethod
-    def format_workload_config(cls, workload):
-        return collections.OrderedDict([
-            ("args", workload["args"]),
-            ("context", workload["context"]),
-            ("runner", workload["runner"]),
-            ("sla", workload["sla"]),
-            ("hooks", [r["config"] for r in workload["hooks"]])])
+    def to_task(cls, workload):
+        task = collections.OrderedDict()
+        task["version"] = 2
+        task["title"] = "A cropped version of a bigger task."
+        task["description"] = "Auto-generated task from a single workload"
+        if "uuid" in workload:
+            task["description"] += " (uuid=%s)" % workload["uuid"]
+        task["subtasks"] = [collections.OrderedDict()]
+        subtask = task["subtasks"][0]
+        subtask["title"] = workload["name"]
+        subtask["description"] = workload["description"]
+        subtask["scenario"] = {workload["name"]: workload["args"]}
+        subtask["contexts"] = workload["context"]
+        runner = copy.copy(workload["runner"])
+        subtask["runner"] = {runner.pop("type"): runner}
+        subtask["hooks"] = [h["config"] for h in workload["hooks"]]
+        subtask["sla"] = workload["sla"]
+        return task

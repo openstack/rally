@@ -1075,6 +1075,7 @@ class TaskCommandsTestCase(test.TestCase):
                                      mock_open):
         task_file = "/tmp/task.json"
         workload = {
+            "uuid": "n/a",
             "full_duration": 2, "load_duration": 1,
             "created_at": "2017-07-01T07:03:01",
             "updated_at": "2017-07-01T07:03:03",
@@ -1119,7 +1120,16 @@ class TaskCommandsTestCase(test.TestCase):
         ]
         mock_safe_load.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual({"subtasks": [{"workloads": [workload]}]}, ret)
+        self.assertEqual({
+            "version": 2,
+            "title": "Task loaded from a file.",
+            "description": "Auto-ported from task format V1.",
+            "uuid": "n/a",
+            "tags": [],
+            "subtasks": [{
+                "title": "A SubTask",
+                "description": "",
+                "workloads": [workload]}]}, ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.yaml.safe_load")
