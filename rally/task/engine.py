@@ -436,10 +436,6 @@ class TaskEngine(object):
                 LOG.exception(e)
             raise exceptions.InvalidTaskException(str(e))
 
-    def _get_runner(self, config):
-        config = config or {"type": "serial"}
-        return runner.ScenarioRunner.get(config["type"])(self.task, config)
-
     def _prepare_context(self, ctx, name, owner_id):
         scenario_cls = scenario.Scenario.get(name)
         namespace = scenario_cls.get_platform()
@@ -534,7 +530,8 @@ class TaskEngine(object):
                                         "cfg": json.dumps(workload_cfg,
                                                           indent=3)})
 
-        runner_obj = self._get_runner(workload["runner"])
+        runner_cls = runner.ScenarioRunner.get(workload["runner"]["type"])
+        runner_obj = runner_cls(self.task, workload["runner"])
         context_obj = self._prepare_context(
             workload["context"], workload["name"], workload_obj["uuid"])
         try:
@@ -691,7 +688,7 @@ class TaskConfig(object):
                                 "contexts": {"type": "object"}
                             },
                             "additionalProperties": False,
-                            "required": ["scenario", "runner"]
+                            "required": ["scenario"]
                         }
                     }
                 },
@@ -770,14 +767,17 @@ class TaskConfig(object):
 
                 wconf["context"] = wconf.pop("contexts", {})
 
-                runner_type, runner_cfg = list(
-                    wconf["runner"].items())[0]
-                runner_cfg["type"] = runner_type
-                wconf["runner"] = runner_cfg
+                if "runner" in wconf:
+                    runner_type, runner_cfg = list(wconf["runner"].items())[0]
+                    runner_cfg["type"] = runner_type
+                    wconf["runner"] = runner_cfg
+                else:
+                    wconf["runner"] = {"serial": {}}
 
-                wconf.setdefault("sla", {})
+                wconf.setdefault("sla", {"failure_rate": {"max": 0}})
                 wconf.setdefault("hooks", [])
                 wconf["hooks"] = [{"config": h} for h in wconf["hooks"]]
+
                 workloads.append(wconf)
             sconf["workloads"] = workloads
             self.subtasks.append(sconf)
@@ -809,13 +809,11 @@ class TaskConfig(object):
             for v1_workload in v1_workloads:
                 subtask = copy.deepcopy(v1_workload)
                 subtask["scenario"] = {name: subtask.pop("args", {})}
-                subtask["sla"] = subtask.pop("sla", {})
                 subtask["contexts"] = subtask.pop("context", {})
                 subtask["title"] = name
                 if "runner" in subtask:
                     runner_type = subtask["runner"].pop("type")
-                    subtask["runner"] = {
-                        runner_type: subtask["runner"]}
+                    subtask["runner"] = {runner_type: subtask["runner"]}
                 subtasks.append(subtask)
         return {"title": "Task (adopted from task format v1)",
                 "subtasks": subtasks}

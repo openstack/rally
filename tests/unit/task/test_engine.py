@@ -43,7 +43,7 @@ class TaskEngineTestCase(test.TestCase):
                 "description": description,
                 "args": args,
                 "context": context or {},
-                "runner": runner or {},
+                "runner": runner or {"type": "serial"},
                 "sla": sla or {},
                 "hooks": hooks or []}
 
@@ -934,10 +934,8 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.TaskEngine._prepare_context")
     @mock.patch("rally.task.engine.time.sleep")
-    @mock.patch("rally.task.engine.TaskEngine._get_runner")
     def test_wait_and_abort_on_abort(
-            self, mock_task_engine__get_runner,
-            mock_sleep, mock_task_engine__prepare_context,
+            self, mock_sleep, mock_task_engine__prepare_context,
             mock_task_get_status, mock_event, mock_thread):
         runner = mock.MagicMock()
         key = mock.MagicMock()
@@ -963,11 +961,9 @@ class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.TaskEngine._prepare_context")
     @mock.patch("rally.task.engine.time.sleep")
-    @mock.patch("rally.task.engine.TaskEngine._get_runner")
     def test_wait_and_abort_on_no_abort(
-            self, mock_task_engine__get_runner, mock_sleep,
-            mock_task_engine__prepare_context, mock_task_get_status,
-            mock_event, mock_thread):
+            self, mock_sleep, mock_task_engine__prepare_context,
+            mock_task_get_status, mock_event, mock_thread):
         runner = mock.MagicMock()
         key = mock.MagicMock()
         task = mock.MagicMock()
@@ -1035,12 +1031,10 @@ class TaskTestCase(test.TestCase):
              "subtasks": [{"title": "a.task",
                            "scenario": {"a.task": {}},
                            "s": 1,
-                           "sla": {},
                            "contexts": {"foo": "bar"}},
                           {"title": "a.task",
                            "s": 2,
                            "scenario": {"a.task": {}},
-                           "sla": {},
                            "contexts": {}},
                           {"title": "b.task",
                            "s": 3,

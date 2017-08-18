@@ -350,6 +350,9 @@
           scenario:
             Dummy.dummy_exception:
               size_of_message: 5
+          sla:
+            failure_rate:
+              max: 100
           runner:
             constant:
               times: 20
@@ -357,17 +360,10 @@
         -
           scenario:
             Dummy.dummy_exception_probability:
-              exception_probability: 0.05
-          runner:
-            serial:
-              times: 2042
-        -
-          scenario:
-            Dummy.dummy_exception_probability:
               exception_probability: 0.5
           runner:
             serial:
-              times: 100
+              times: 2042
           sla:
             failure_rate:
               min: 20
@@ -386,6 +382,10 @@
           scenario:
             Dummy.dummy_random_fail_in_atomic:
               exception_probability: 0.5
+          sla:
+            failure_rate:
+              min: 20
+              max: 80
           runner:
             constant:
               times: 50
