@@ -61,9 +61,8 @@ class ListStacksAndResources(utils.HeatScenario):
     def run(self):
         """List all resources from tenant stacks."""
         stacks = self._list_stacks()
-        with atomic.ActionTimer(
-                self, "heat.list_resources_of_%s_stacks" % len(stacks)):
-            for stack in stacks:
+        for stack in stacks:
+            with atomic.ActionTimer(self, "heat.list_resources"):
                 self.clients("heat").resources.list(stack.id)
 
 
@@ -250,9 +249,8 @@ class ListStacksAndEvents(utils.HeatScenario):
     def run(self):
         """List events from tenant stacks."""
         stacks = self._list_stacks()
-        with atomic.ActionTimer(
-                self, "heat.list_events_of_%s_stacks" % len(stacks)):
-            for stack in stacks:
+        for stack in stacks:
+            with atomic.ActionTimer(self, "heat.list_events"):
                 self.clients("heat").events.list(stack.id)
 
 

@@ -16,7 +16,6 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -472,17 +471,15 @@ class CreateAndShowPorts(utils.NeutronScenario):
         port_create_args = port_create_args or {}
 
         network = self._get_or_create_network(network_create_args)
-        with atomic.ActionTimer(self, "neutron.create_and_show_%i_ports" %
-                                ports_per_network):
-            for i in range(ports_per_network):
-                port = self._create_port(network, port_create_args)
-                msg = "Port isn't created"
-                self.assertTrue(port, err_msg=msg)
+        for i in range(ports_per_network):
+            port = self._create_port(network, port_create_args)
+            msg = "Port isn't created"
+            self.assertTrue(port, err_msg=msg)
 
-                port_info = self._show_port(port)
-                msg = "Created port and Showed port isn't equal"
-                self.assertEqual(port["port"]["id"], port_info["port"]["id"],
-                                 err_msg=msg)
+            port_info = self._show_port(port)
+            msg = "Created port and Showed port isn't equal"
+            self.assertEqual(port["port"]["id"], port_info["port"]["id"],
+                             err_msg=msg)
 
 
 @validation.add("number", param_name="ports_per_network", minval=1,

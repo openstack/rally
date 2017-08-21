@@ -43,14 +43,14 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             self.clients("glance").images.list.call_args_list,
             [mock.call(name=mock.ANY)] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_glance_5_times")
+                                       "authenticate.validate_glance")
 
     def test_validate_nova(self):
         scenario_inst = authenticate.ValidateNova()
         scenario_inst.run(5)
         self.clients("nova").flavors.list.assert_has_calls([mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_nova_5_times")
+                                       "authenticate.validate_nova")
 
     def test_validate_ceilometer(self):
         scenario_inst = authenticate.ValidateCeilometer()
@@ -59,7 +59,7 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             [mock.call()] * 5)
         self._test_atomic_action_timer(
             scenario_inst.atomic_actions(),
-            "authenticate.validate_ceilometer_5_times")
+            "authenticate.validate_ceilometer")
 
     def test_validate_cinder(self):
         scenario_inst = authenticate.ValidateCinder()
@@ -67,7 +67,7 @@ class AuthenticateTestCase(test.ScenarioTestCase):
         self.clients("cinder").volume_types.list.assert_has_calls(
             [mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_cinder_5_times")
+                                       "authenticate.validate_cinder")
 
     def test_validate_neutron(self):
         scenario_inst = authenticate.ValidateNeutron()
@@ -75,7 +75,7 @@ class AuthenticateTestCase(test.ScenarioTestCase):
         self.clients("neutron").list_networks.assert_has_calls(
             [mock.call()] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_neutron_5_times")
+                                       "authenticate.validate_neutron")
 
     def test_validate_heat(self):
         scenario_inst = authenticate.ValidateHeat()
@@ -84,7 +84,7 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             self.clients("heat").stacks.list.call_args_list,
             [mock.call(limit=0)] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_heat_5_times")
+                                       "authenticate.validate_heat")
 
     def test_validate_monasca(self):
         scenario_inst = authenticate.ValidateMonasca()
@@ -93,4 +93,4 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             self.clients("monasca").metrics.list.call_args_list,
             [mock.call(limit=0)] * 5)
         self._test_atomic_action_timer(scenario_inst.atomic_actions(),
-                                       "authenticate.validate_monasca_5_times")
+                                       "authenticate.validate_monasca")

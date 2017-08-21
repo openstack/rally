@@ -15,7 +15,6 @@ import random
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
-from rally.task import atomic
 from rally.task import validation
 
 
@@ -132,9 +131,8 @@ class CreateAndListVips(utils.NeutronScenario):
         pool_create_args = pool_create_args or {}
         networks = self.context.get("tenant", {}).get("networks", [])
         pools = self._create_v1_pools(networks, **pool_create_args)
-        with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
-            for pool in pools:
-                self._create_v1_vip(pool, **vip_create_args)
+        for pool in pools:
+            self._create_v1_vip(pool, **vip_create_args)
         self._list_v1_vips()
 
 
@@ -165,9 +163,8 @@ class CreateAndDeleteVips(utils.NeutronScenario):
         vip_create_args = vip_create_args or {}
         networks = self.context.get("tenant", {}).get("networks", [])
         pools = self._create_v1_pools(networks, **pool_create_args)
-        with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
-            for pool in pools:
-                vips.append(self._create_v1_vip(pool, **vip_create_args))
+        for pool in pools:
+            vips.append(self._create_v1_vip(pool, **vip_create_args))
         for vip in vips:
             self._delete_v1_vip(vip["vip"])
 
@@ -202,9 +199,8 @@ class CreateAndUpdateVips(utils.NeutronScenario):
         vip_update_args = vip_update_args or {}
         networks = self.context.get("tenant", {}).get("networks", [])
         pools = self._create_v1_pools(networks, **pool_create_args)
-        with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
-            for pool in pools:
-                vips.append(self._create_v1_vip(pool, **vip_create_args))
+        for pool in pools:
+            vips.append(self._create_v1_vip(pool, **vip_create_args))
         for vip in vips:
             self._update_v1_vip(vip, **vip_update_args)
 
