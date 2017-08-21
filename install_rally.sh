@@ -32,7 +32,6 @@ RED="$ESC[0;31m"
 PYTHON2=$(which python || true)
 PYTHON3=$(which python3 || true)
 PYTHON=${PYTHON2:-$PYTHON3}
-BASE_PIP_URL=${BASE_PIP_URL:-"https://pypi.python.org/simple"}
 VIRTUALENV_VERSION="15.1.0"
 VIRTUALENV_URL="https://raw.github.com/pypa/virtualenv/$VIRTUALENV_VERSION/virtualenv.py"
 
@@ -734,11 +733,11 @@ install_db_connector
 # Install rally
 cd "$SOURCEDIR"
 # Get latest available pip and reset shell cache
-pip install -i "$BASE_PIP_URL" -U 'pip!=8'
+pip install -U 'pip!=8'
 hash -r
 
 # Install dependencies
-pip install -i "$BASE_PIP_URL" pbr 'tox<=1.6.1' bindep
+pip install pbr 'tox<=1.6.1' bindep
 
 # Install binary dependencies
 install_required_sw "$(which_missing_packages)"
@@ -747,9 +746,9 @@ install_required_sw "$(which_missing_packages)"
 pip uninstall -y rally || true
 # Install rally
 if [ "$DEVELOPMENT_MODE" = "true" ]; then
-    pip install -i "$BASE_PIP_URL" -e .
+    pip install -e .
 else
-    pip install -i "$BASE_PIP_URL" .
+    pip install .
 fi
 
 cd "$ORIG_WD"
