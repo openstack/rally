@@ -185,10 +185,7 @@ class TaskAPITestCase(test.TestCase):
             task_template=template))
 
     def test_render_template_missing_args(self):
-
-        self.assertRaises(exceptions.RallyException,
-                          self.task_inst.render_template,
-                          task_template="{{a}}")
+        self.assertRaises(TypeError, self.task_inst.render_template, "{{a}}")
 
     def test_render_template_include_other_template(self):
         other_template_path = os.path.join(
@@ -290,7 +287,7 @@ class TaskAPITestCase(test.TestCase):
         fake_task = objects.Task(task={"deployment_uuid": "deployment_uuid",
                                        "uuid": "some_uuid"}, temporary=True)
 
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(ValueError,
                           self.task_inst.start,
                           deployment=fake_deployment,
                           config="config", task=fake_task)
@@ -328,7 +325,7 @@ class TaskAPITestCase(test.TestCase):
         mock_deployment_get.return_value = fake_deployment
         mock_task.return_value.is_temporary = False
         mock_task_engine.return_value.run.side_effect = TypeError
-        self.assertRaises(exceptions.RallyException, self.task_inst.start,
+        self.assertRaises(TypeError, self.task_inst.start,
                           deployment="deployment_uuid", config="config")
         fake_deployment.update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
@@ -655,7 +652,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             self, mock_existing_cloud_validate, mock_deployment_create,
             mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(jsonschema.ValidationError,
                           self.deployment_inst.create,
                           config=self.deployment_config,
                           name="fake_deployment")
@@ -742,7 +739,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         config = copy.deepcopy(self.deployment_config)
         config["admin"] = {"foo": "bar"}
 
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(jsonschema.ValidationError,
                           self.deployment_inst.recreate,
                           deployment=self.deployment_uuid,
                           config=config)
@@ -988,10 +985,6 @@ class APITestCase(test.TestCase):
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
-    @mock.patch("rally.api.API.check_db_revision")
-    def test_init_rally_endpoint(self, mock_api_check_db_revision):
-        self.assertRaises(NotImplementedError, api.API, rally_endpoint="foo")
-
     def test_version(self):
         api_inst = api.API(skip_db_check=True)
         self.assertEqual(1, api_inst.version)
@@ -1163,7 +1156,7 @@ class VerifierAPITestCase(test.TestCase):
         system_wide = True
         extra_settings = {"verifier_specific_option": "value_for_it"}
 
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(RuntimeError,
                           self.verifier_inst.create,
                           name=name, vtype=vtype, namespace=namespace,
                           source=source, version=version,
@@ -1579,7 +1572,7 @@ class VerifierAPITestCase(test.TestCase):
         verifier_obj.update_status.reset_mock()
 
         verifier_obj.manager.install_extension.side_effect = RuntimeError
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(RuntimeError,
                           self.verifier_inst.add_extension,
                           verifier_id=verifier_id,
                           source=source, version=version,
@@ -1754,7 +1747,7 @@ class VerificationAPITestCase(test.TestCase):
         verification.finish.reset_mock()
 
         verifier_obj.manager.parse_results.side_effect = RuntimeError
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(RuntimeError,
                           self.verification_inst.import_results,
                           verifier_id=verifier_id,
                           deployment_id=deployment_id,
@@ -1893,7 +1886,7 @@ class VerificationAPITestCase(test.TestCase):
         verifier_manager._meta_get.return_value = {}
         verifier_obj.manager.run.side_effect = RuntimeError
 
-        self.assertRaises(exceptions.RallyException,
+        self.assertRaises(RuntimeError,
                           self.verification_inst.start,
                           verifier_id=verifier_id,
                           deployment_id=deployment_id,
