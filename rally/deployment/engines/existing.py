@@ -186,7 +186,8 @@ class ExistingCloud(engine.Engine):
                             {
                                 "description": "List of credentials",
                                 "type": "array",
-                                "items": {"type": "object"}
+                                "items": {"type": "object"},
+                                "maxItems": 1,
                             },
                         ]
                     }
@@ -243,9 +244,6 @@ class ExistingCloud(engine.Engine):
         return credentials
 
     def deploy(self):
-        if "creds" not in self.config:
-            LOG.warning("Old config schema is deprecated since Rally 0.10.0. "
-                        "Please use new config schema for ExistingCloud")
         creds_config = self._get_creds(self.config)
         parsed_credentials = {}
         for platform, config in creds_config.items():

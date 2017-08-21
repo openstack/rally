@@ -49,16 +49,13 @@ if [[ "$IDENTITY_API_VERSION" == 2.0 ]]
 then
     cat >$1 <<EOF
 {
-    "type": "ExistingCloud",
-    "creds": {
-        "openstack": {
-            "auth_url": "$OS_AUTH_URL",
-            "region_name": "$REGION_NAME",
-            "admin": {
-                "username": "admin",
-                "password": "$ADMIN_PASSWORD",
-                "tenant_name": "admin",
-            }
+    "openstack": {
+        "auth_url": "$OS_AUTH_URL",
+        "region_name": "$REGION_NAME",
+        "admin": {
+            "username": "admin",
+            "password": "$ADMIN_PASSWORD",
+            "tenant_name": "admin",
         }
     }
 }
@@ -68,18 +65,15 @@ if [[ "$IDENTITY_API_VERSION" == 3 ]]
 then
     cat >$1 <<EOF
 {
-    "type": "ExistingCloud",
-    "creds": {
-        "openstack": {
-            "auth_url": "$OS_AUTH_URL",
-            "region_name": "$REGION_NAME",
-            "admin": {
-                "username": "admin",
-                "password": "$ADMIN_PASSWORD",
-                "project_name": "admin",
-                "user_domain_name": "Default",
-                "project_domain_name": "Default"
-            }
+    "openstack": {
+        "auth_url": "$OS_AUTH_URL",
+        "region_name": "$REGION_NAME",
+        "admin": {
+            "username": "admin",
+            "password": "$ADMIN_PASSWORD",
+            "project_name": "admin",
+            "user_domain_name": "Default",
+            "project_domain_name": "Default"
         }
     }
 }
