@@ -57,11 +57,11 @@ class ResultConsumer(object):
     about started iterations.
     """
 
-    def __init__(self, key, task, subtask, workload, runner,
+    def __init__(self, workload_cfg, task, subtask, workload, runner,
                  abort_on_sla_failure):
         """ResultConsumer constructor.
 
-        :param key: Scenario identifier
+        :param workload_cfg: A configuration of the Workload
         :param task: Instance of Task, task to run
         :param subtask: Instance of Subtask
         :param workload: Instance of Workload
@@ -71,30 +71,30 @@ class ResultConsumer(object):
                                      when some SLA check fails
         """
 
-        self.key = key
         self.task = task
         self.subtask = subtask
         self.workload = workload
+        self.workload_cfg = workload_cfg
         self.runner = runner
         self.load_started_at = float("inf")
         self.load_finished_at = 0
         self.workload_data_count = 0
 
-        self.sla_checker = sla.SLAChecker(key["kw"])
-        self.hook_executor = hook.HookExecutor(key["kw"], self.task)
+        self.sla_checker = sla.SLAChecker(self.workload_cfg)
+        self.hook_executor = hook.HookExecutor(self.workload_cfg, self.task)
         self.abort_on_sla_failure = abort_on_sla_failure
         self.is_done = threading.Event()
         self.unexpected_failure = {}
         self.results = []
         self.thread = threading.Thread(target=self._consume_results)
         self.aborting_checker = threading.Thread(target=self.wait_and_abort)
-        if "hooks" in self.key["kw"]:
+        if self.workload_cfg["hooks"]:
             self.event_thread = threading.Thread(target=self._consume_events)
 
     def __enter__(self):
         self.thread.start()
         self.aborting_checker.start()
-        if "hooks" in self.key["kw"]:
+        if self.workload_cfg["hooks"]:
             self.event_thread.start()
         self.start = time.time()
         return self
@@ -167,7 +167,7 @@ class ResultConsumer(object):
             self.finish - self.start))
 
         results = {}
-        if "hooks" in self.key["kw"]:
+        if self.workload_cfg["hooks"]:
             self.event_thread.join()
             results["hooks_results"] = self.hook_executor.results()
 
@@ -264,29 +264,29 @@ class TaskEngine(object):
         self.abort_on_sla_failure = abort_on_sla_failure
 
     def _validate_workload(self, workload, credentials=None, vtype=None):
-        scenario_cls = scenario.Scenario.get(workload.name)
+        scenario_cls = scenario.Scenario.get(workload["name"])
         namespace = scenario_cls.get_platform()
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
 
         results = []
 
         results.extend(scenario.Scenario.validate(
-            name=workload.name,
+            name=workload["name"],
             credentials=credentials,
-            config=workload.to_dict(),
+            config=workload,
             plugin_cfg=None,
             vtype=vtype))
 
-        if workload.runner:
+        if workload["runner"]:
             results.extend(runner.ScenarioRunner.validate(
-                name=workload.runner["type"],
+                name=workload["runner"]["type"],
                 credentials=credentials,
                 config=None,
-                plugin_cfg=workload.runner,
+                plugin_cfg=workload["runner"],
                 namespace=namespace,
                 vtype=vtype))
 
-        for context_name, context_conf in workload.context.items():
+        for context_name, context_conf in workload["context"].items():
             results.extend(context.Context.validate(
                 name=context_name,
                 credentials=credentials,
@@ -305,7 +305,7 @@ class TaskEngine(object):
                 allow_hidden=True,
                 vtype=vtype))
 
-        for sla_name, sla_conf in workload.sla.items():
+        for sla_name, sla_conf in workload["sla"].items():
             results.extend(sla.SLA.validate(
                 name=sla_name,
                 credentials=credentials,
@@ -313,15 +313,15 @@ class TaskEngine(object):
                 plugin_cfg=sla_conf,
                 vtype=vtype))
 
-        for hook_conf in workload.hooks:
+        for hook_conf in workload["hooks"]:
             results.extend(hook.Hook.validate(
-                name=hook_conf["name"],
+                name=hook_conf["config"]["name"],
                 credentials=credentials,
                 config=None,
-                plugin_cfg=hook_conf["args"],
+                plugin_cfg=hook_conf["config"]["args"],
                 vtype=vtype))
 
-            trigger_conf = hook_conf["trigger"]
+            trigger_conf = hook_conf["config"]["trigger"]
             results.extend(trigger.Trigger.validate(
                 name=trigger_conf["name"],
                 credentials=credentials,
@@ -331,13 +331,18 @@ class TaskEngine(object):
 
         if results:
             msg = "\n ".join([str(r) for r in results])
-            kw = workload.make_exception_args(msg)
+            kw = {"name": workload["name"],
+                  "pos": workload["position"],
+                  "config": json.dumps(
+                      objects.Workload.format_workload_config(workload)),
+                  "reason": msg}
+
             raise exceptions.InvalidTaskConfig(**kw)
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
-            for workload in subtask.workloads:
+            for workload in subtask["workloads"]:
                 self._validate_workload(workload, vtype="syntax")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of required "
@@ -346,7 +351,7 @@ class TaskEngine(object):
         credentials = self.deployment.get_all_credentials()
         credentials = dict((p, creds[0]) for p, creds in credentials.items())
         for subtask in config.subtasks:
-            for workload in subtask.workloads:
+            for workload in subtask["workloads"]:
                 self._validate_workload(workload, vtype="platform",
                                         credentials=credentials)
 
@@ -365,11 +370,11 @@ class TaskEngine(object):
         # map workloads to platforms
         platforms = collections.defaultdict(list)
         for subtask in config.subtasks:
-            for workload in subtask.workloads:
+            for workload in subtask["workloads"]:
                 # TODO(astudenov): We need to use a platform validator
                 # in future to identify what kind of users workload
                 # requires (regular users or admin)
-                scenario_cls = scenario.Scenario.get(workload.name)
+                scenario_cls = scenario.Scenario.get(workload["name"])
                 namespace = scenario_cls.get_platform()
 
                 # TODO(andreykurilin): Remove check for plugin namespace after
@@ -482,11 +487,13 @@ class TaskEngine(object):
                 self.task.update_status(consts.TaskStatus.FINISHED)
 
     def _run_subtask(self, subtask):
-        subtask_obj = self.task.add_subtask(**subtask.to_dict())
+        subtask_obj = self.task.add_subtask(title=subtask["title"],
+                                            description=subtask["description"],
+                                            context=subtask["context"])
 
         try:
             # TODO(astudenov): add subtask context here
-            for workload in subtask.workloads:
+            for workload in subtask["workloads"]:
                 self._run_workload(subtask_obj, workload)
         except TaskAborted:
             subtask_obj.update_status(consts.SubtaskStatus.ABORTED)
@@ -506,24 +513,34 @@ class TaskEngine(object):
     def _run_workload(self, subtask_obj, workload):
         if ResultConsumer.is_task_in_aborting_status(self.task["uuid"]):
             raise TaskAborted()
-
-        key = workload.make_key()
         workload_obj = subtask_obj.add_workload(
-            name=workload.name, description=workload.description,
-            position=workload.pos, runner=workload.runner,
-            hooks=workload.hooks, context=workload.context, sla=workload.sla,
-            args=workload.args)
+            name=workload["name"],
+            description=workload["description"],
+            position=workload["position"],
+            runner=workload["runner"],
+            hooks=workload["hooks"],
+            context=workload["context"],
+            sla=workload["sla"],
+            args=workload["args"])
+
+        # to make the log more readable, use OrderedDict
+        key = collections.OrderedDict([
+            ("name", workload["name"]),
+            ("description", workload["description"]),
+            ("position", workload["position"]),
+            ("config", objects.Workload.format_workload_config(workload))])
         LOG.info("Running benchmark with key: \n%s"
                  % json.dumps(key, indent=2))
-        runner_obj = self._get_runner(workload.runner)
+
+        runner_obj = self._get_runner(workload["runner"])
         context_obj = self._prepare_context(
-            workload.context, workload.name, workload_obj["uuid"])
+            workload["context"], workload["name"], workload_obj["uuid"])
         try:
-            with ResultConsumer(key, self.task, subtask_obj, workload_obj,
+            with ResultConsumer(workload, self.task, subtask_obj, workload_obj,
                                 runner_obj, self.abort_on_sla_failure):
                 with context.ContextManager(context_obj):
-                    runner_obj.run(workload.name, context_obj,
-                                   workload.args)
+                    runner_obj.run(workload["name"], context_obj,
+                                   workload["args"])
         except Exception as e:
             LOG.debug(traceback.format_exc())
             LOG.exception(e)
@@ -670,11 +687,45 @@ class TaskConfig(object):
         self._validate_version()
         self._validate_json(config)
 
+        if self.version == 1:
+            config = self._adopt_task_format_v1(config)
+
         self.title = config.get("title", "Task")
         self.tags = config.get("tags", [])
         self.description = config.get("description")
 
-        self.subtasks = self._make_subtasks(config)
+        self.subtasks = []
+        for sconf in config["subtasks"]:
+            sconf = copy.deepcopy(sconf)
+            # fill all missed properties of a SubTask
+            sconf.setdefault("tags", [])
+            sconf.setdefault("group", None)
+            sconf.setdefault("description", None)
+            sconf.setdefault("context", {})
+
+            workloads = []
+            for position, wconf in enumerate(sconf["workloads"]):
+                # fill all missed properties of a Workload
+                wconf["position"] = position
+                if not wconf.get("description", ""):
+                    try:
+                        wconf["description"] = scenario.Scenario.get(
+                            wconf["name"]).get_info()["title"]
+                    except (exceptions.PluginNotFound,
+                            exceptions.MultipleMatchesFound):
+                        # let's fail an issue with loading plugin at a
+                        # validation step
+                        pass
+                wconf.setdefault("args", {})
+                wconf.setdefault("context", {})
+                wconf.setdefault("runner", {})
+                wconf.setdefault("sla", {})
+                wconf.setdefault("hooks", [])
+                # store hooks in the format which we have in db
+                wconf["hooks"] = [{"config": h} for h in wconf["hooks"]]
+                workloads.append(wconf)
+            sconf["workloads"] = workloads
+            self.subtasks.append(sconf)
 
         # if self.version == 1:
         # TODO(ikhudoshyn): Warn user about deprecated format
@@ -696,104 +747,13 @@ class TaskConfig(object):
         except Exception as e:
             raise exceptions.InvalidTaskException(str(e))
 
-    def _make_subtasks(self, config):
-        if self.version == 2:
-            return [SubTask(s) for s in config["subtasks"]]
-        elif self.version == 1:
-            subtasks = []
-            for name, v1_workloads in config.items():
-                for v1_workload in v1_workloads:
-                    v2_workload = copy.deepcopy(v1_workload)
-                    v2_workload["name"] = name
-                    subtasks.append(
-                        SubTask({"title": name, "workloads": [v2_workload]}))
-            return subtasks
-
-
-class SubTask(object):
-    """Subtask -- unit of execution in Task
-
-    """
-    def __init__(self, config):
-        """Subtask constructor.
-
-        :param config: Dict with configuration of specified subtask
-        """
-        self.title = config["title"]
-        self.tags = config.get("tags", [])
-        self.group = config.get("group")
-        self.description = config.get("description")
-        self.workloads = [Workload(wconf, pos)
-                          for pos, wconf in enumerate(config["workloads"])]
-        self.context = config.get("context", {})
-
-    def to_dict(self):
-        return {
-            "title": self.title,
-            "description": self.description,
-            "context": self.context,
-        }
-
-
-class Workload(object):
-    """Workload -- workload configuration in SubTask.
-
-    """
-    def __init__(self, config, pos):
-        self.name = config["name"]
-        self.description = config.get("description", "")
-        if not self.description:
-            try:
-                self.description = scenario.Scenario.get(
-                    self.name).get_info()["title"]
-            except (exceptions.PluginNotFound,
-                    exceptions.MultipleMatchesFound):
-                # let's fail an issue with loading plugin at a validation step
-                pass
-        self.runner = config.get("runner", {})
-        self.sla = config.get("sla", {})
-        self.hooks = config.get("hooks", [])
-        self.context = config.get("context", {})
-        self.args = config.get("args", {})
-        self.pos = pos
-
-    def to_dict(self):
-        workload = {"runner": self.runner}
-
-        for prop in "sla", "args", "context", "hooks":
-            value = getattr(self, prop)
-            if value:
-                workload[prop] = value
-
-        return workload
-
-    def to_task(self):
-        """Make task configuration for the workload.
-
-        This method returns a dict representing full configuration
-        of the task containing a single subtask with this single
-        workload.
-
-        :return: dict containing full task configuration
-        """
-        # NOTE(ikhudoshyn): Result of this method will be used
-        # to store full task configuration in DB so that
-        # subtask configuration in reports would be given
-        # in the same format as it was provided by user.
-        # Temporarily it returns to_dict() in order not
-        # to break existing reports. It should be
-        # properly implemented in a patch that will update reports.
-        # return {self.name: [self.to_dict()]}
-        return self.to_dict()
-
-    def make_key(self):
-        return {"name": self.name,
-                "description": self.description,
-                "pos": self.pos,
-                "kw": self.to_task()}
-
-    def make_exception_args(self, reason):
-        return {"name": self.name,
-                "pos": self.pos,
-                "config": json.dumps(self.to_dict()),
-                "reason": reason}
+    @staticmethod
+    def _adopt_task_format_v1(config):
+        subtasks = []
+        for name, v1_workloads in config.items():
+            for v1_workload in v1_workloads:
+                v2_workload = copy.deepcopy(v1_workload)
+                v2_workload["name"] = name
+                subtasks.append({"title": name, "workloads": [v2_workload]})
+        return {"title": "Task (adopted from task format v1)",
+                "subtasks": subtasks}

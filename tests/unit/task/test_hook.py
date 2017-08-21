@@ -55,7 +55,7 @@ class HookExecutorTestCase(test.TestCase):
         super(HookExecutorTestCase, self).setUp()
         self.conf = {
             "hooks": [
-                {
+                {"config": {
                     "name": "dummy_hook",
                     "description": "dummy_action",
                     "args": {
@@ -68,7 +68,7 @@ class HookExecutorTestCase(test.TestCase):
                             "at": [1],
                         }
                     }
-                }
+                }}
             ]
         }
         self.task = mock.MagicMock()
@@ -80,7 +80,7 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0],
+            [{"config": self.conf["hooks"][0]["config"],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -92,7 +92,7 @@ class HookExecutorTestCase(test.TestCase):
     @mock.patch("rally.task.hook.HookExecutor._timer_method")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result_optional(self, mock_timer, mock__timer_method):
-        hook_args = self.conf["hooks"][0]["args"]
+        hook_args = self.conf["hooks"][0]["config"]["args"]
         hook_args["error"] = ["Exception", "Description", "Traceback"]
         hook_args["output"] = {"additive": None, "complete": None}
 
@@ -100,7 +100,7 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0],
+            [{"config": self.conf["hooks"][0]["config"],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -114,7 +114,8 @@ class HookExecutorTestCase(test.TestCase):
 
     def test_empty_result(self):
         hook_executor = hook.HookExecutor(self.conf, self.task)
-        self.assertEqual([{"config": self.conf["hooks"][0], "results": [],
+        self.assertEqual([{"config": self.conf["hooks"][0]["config"],
+                           "results": [],
                            "summary": {}}],
                          hook_executor.results())
 
@@ -127,7 +128,7 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0],
+            [{"config": self.conf["hooks"][0]["config"],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "error": {"etype": "Exception",
@@ -140,14 +141,14 @@ class HookExecutorTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_time_event(self, mock_timer):
-        trigger_args = self.conf["hooks"][0]["trigger"]["args"]
+        trigger_args = self.conf["hooks"][0]["config"]["trigger"]["args"]
         trigger_args["unit"] = "time"
 
         hook_executor = hook.HookExecutor(self.conf, self.task)
         hook_executor.on_event(event_type="time", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0],
+            [{"config": self.conf["hooks"][0]["config"],
               "results": [{
                   "triggered_by": {"event_type": "time", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -158,7 +159,7 @@ class HookExecutorTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_time_periodic(self, mock_timer):
-        self.conf["hooks"][0]["trigger"] = {
+        self.conf["hooks"][0]["config"]["trigger"] = {
             "name": "periodic", "args": {"unit": "time", "step": 2}}
         hook_executor = hook.HookExecutor(self.conf, self.task)
 
@@ -167,7 +168,7 @@ class HookExecutorTestCase(test.TestCase):
 
         self.assertEqual(
             [{
-                "config": self.conf["hooks"][0],
+                "config": self.conf["hooks"][0]["config"],
                 "results":[
                     {
                         "triggered_by": {"event_type": "time", "value": 2},
@@ -195,7 +196,7 @@ class HookExecutorTestCase(test.TestCase):
     @mock.patch("rally.common.utils.Stopwatch", autospec=True)
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_timer_thread(self, mock_timer, mock_stopwatch):
-        trigger_args = self.conf["hooks"][0]["trigger"]["args"]
+        trigger_args = self.conf["hooks"][0]["config"]["trigger"]["args"]
         trigger_args["unit"] = "time"
         hook_executor = hook.HookExecutor(self.conf, self.task)
 
@@ -210,7 +211,7 @@ class HookExecutorTestCase(test.TestCase):
         self.assertTrue(hook_executor._timer_stop_event.wait(1))
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0],
+            [{"config": self.conf["hooks"][0]["config"],
               "results": [{
                   "triggered_by": {"event_type": "time", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
