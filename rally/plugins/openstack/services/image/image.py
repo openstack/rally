@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 from rally import exceptions
 from rally.task import service
 
@@ -20,8 +18,8 @@ from oslo_config import cfg
 
 CONF = cfg.CONF
 
-UnifiedImage = collections.namedtuple("Image", ["id", "name", "visibility",
-                                                "status"])
+UnifiedImage = service.make_resource_cls(
+    "Image", properties=["id", "name", "visibility", "status"])
 
 
 class VisibilityException(exceptions.RallyException):

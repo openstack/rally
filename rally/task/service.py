@@ -336,3 +336,51 @@ class UnifiedService(Service):
             client = getattr(clients, impl._meta_get("client_name"))
             return client.choose_version() == impl._meta_get("version")
         return False
+
+
+class _Resource(object):
+
+    __slots__ = []
+    _id_property = None
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __getitem__(self, item, default=None):
+        return getattr(self, item, default)
+
+    def __repr__(self):
+        return "<%s id=%s>" % (self.__class__.__name__,
+                               getattr(self, self._id_property, "n/a"))
+
+    def __eq__(self, other):
+        self_id = getattr(self, self._id_property)
+        return (isinstance(other, self.__class__) and
+                self_id == getattr(other, self._id_property))
+
+    def _as_dict(self):
+        return dict((k, self[k]) for k in self.__slots__)
+
+
+def make_resource_cls(name, properties, id_property="id"):
+    """Construct a resource class with limited number of properties.
+
+    Unlike collections.namedtuple, a created class has user-friendly getitem
+    method for obtaining properties.
+
+    :param name: The name of resource (i.e image, container..)
+    :param properties: The list of allowed properties
+    :param id_property: The name of property which should be used as id of
+        resource. By defaults, it is "id" field if such property presents in
+        "properties" or first element of "properties" in other cases.
+    """
+
+    id_property = id_property if id_property in properties else properties[0]
+
+    # NOTE(andreykurilin): call a `type` method instead of returning just raw
+    #   class (create Resource class inside the method make_resource_cls and
+    #   return it) allows to setup a custom name of a new class, which will be
+    #   used in case of errors and etc
+    return type(name.title(), (_Resource,), {"__slots__": properties,
+                                             "_id_property": id_property})

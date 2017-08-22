@@ -96,7 +96,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             new_context["tenants"][id_].setdefault("volumes", [])
             for i in range(volumes_per_tenant):
                 new_context["tenants"][id_]["volumes"].append(
-                    mock_service.create_volume.return_value._asdict())
+                    mock_service.create_volume.return_value._as_dict())
 
         volumes_ctx = volumes.VolumeGenerator(self.context)
         volumes_ctx.setup()
