@@ -516,7 +516,7 @@ def main():
         out = subprocess.check_output(["rally", "deployment", "config",
                                        "--deployment", "devstack"])
         config = json.loads(out if six.PY2 else out.decode("utf-8"))
-        config = config["creds"]["openstack"]
+        config = config["openstack"]
         config.update(config.pop("admin"))
         if "users" in config:
             del config["users"]

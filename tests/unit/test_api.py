@@ -34,18 +34,19 @@ from tests.unit import test
 FAKE_DEPLOYMENT_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
     "type": "ExistingCloud",
-    "auth_url": "http://example.net:5000/v2.0/",
-    "admin": {
-        "username": "admin",
-        "password": "myadminpass",
-        "tenant_name": "demo",
-        "domain_name": None,
-        "project_domain_name": "Default",
-        "user_domain_name": "Default",
-        "profiler_hmac_key": None
-    },
-    "region_name": "RegionOne",
-    "endpoint_type": consts.EndpointType.INTERNAL,
+    "creds": {"openstack": {
+        "auth_url": "http://example.net:5000/v2.0/",
+        "admin": {
+            "username": "admin",
+            "password": "myadminpass",
+            "tenant_name": "demo",
+            "domain_name": None,
+            "project_domain_name": "Default",
+            "user_domain_name": "Default",
+            "profiler_hmac_key": None
+        },
+        "region_name": "RegionOne",
+        "endpoint_type": consts.EndpointType.INTERNAL}}
 }
 
 
@@ -610,8 +611,8 @@ class BaseDeploymentTestCase(test.TestCase):
         self.deployment_inst = api._Deployment(mock_api)
         self.deployment_config = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
         self.deployment_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
-        admin_credential = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)
-        admin_credential.pop("type")
+        creds = copy.deepcopy(FAKE_DEPLOYMENT_CONFIG)["creds"]
+        admin_credential = creds["openstack"]
         admin_credential["endpoint"] = None
         admin_credential.update(admin_credential.pop("admin"))
         admin_credential["permission"] = consts.EndpointPermission.ADMIN
@@ -719,12 +720,14 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
         config = copy.deepcopy(self.deployment_config)
-        config["admin"] = {"username": "admin",
-                           "password": "pass1",
-                           "tenant_name": "demo"}
-        config["users"] = [{"username": "user1",
-                            "password": "pass2",
-                            "tenant_name": "demo"}]
+        config["creds"]["openstack"]["admin"] = {
+            "username": "admin",
+            "password": "pass1",
+            "tenant_name": "demo"}
+        config["creds"]["openstack"]["users"] = [
+            {"username": "user1",
+             "password": "pass2",
+             "tenant_name": "demo"}]
 
         self.deployment_inst.recreate(deployment=self.deployment_uuid,
                                       config=config)
@@ -767,7 +770,10 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_get.return_value = self.deployment
         ret = self.deployment_inst.get(deployment=deployment_id)
         for key in self.deployment:
-            self.assertEqual(ret[key], self.deployment[key])
+            self.assertIn(key, ret)
+            if key != "config":
+                self.assertEqual(self.deployment[key], ret[key])
+        self.assertEqual(self.deployment_config["creds"], ret["config"])
 
     @mock.patch("rally.common.objects.Deployment.list")
     def test_list(self, mock_deployment_list):

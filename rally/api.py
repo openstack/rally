@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import json
 import os
 import re
 import sys
@@ -95,6 +96,15 @@ class _Deployment(APIGroup):
         :returns: Deployment object
         """
 
+        # NOTE(andreykurilin): the following transformation is a preparatory
+        #   step for further refactoring (it will be done soon).
+        print_warning = True
+        if "type" not in config:
+            # it looks like a new format! wow!
+            config = {"type": "ExistingCloud",
+                      "creds": config}
+            print_warning = False
+
         try:
             deployment = objects.Deployment(name=name, config=config)
         except exceptions.DeploymentNameExists as e:
@@ -111,6 +121,17 @@ class _Deployment(APIGroup):
                       deployment["uuid"])
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise
+
+        if print_warning and config.get("type", "") == "ExistingCloud":
+            # credentials are stored in the list, but it contains one item.
+            new_conf = dict(
+                (name, cred[0])
+                for name, cred in deployer._get_creds(config).items())
+            LOG.warning(
+                "The used config schema is deprecated since Rally 0.10.0. "
+                "The new one is much simpler, try it now:\n%s",
+                json.dumps(new_conf, indent=4)
+            )
 
         with deployer:
             credentials = deployer.make_deploy()
@@ -193,7 +214,16 @@ class _Deployment(APIGroup):
     @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/get",
                  method="GET")
     def get(self, deployment):
-        return self._get(deployment).to_dict()
+        deployment = self._get(deployment).to_dict()
+        if deployment["config"].get("type", "") == "ExistingCloud":
+            deployment_creds = {}
+            for platform, creds in deployment["config"]["creds"].items():
+                if isinstance(creds, dict):
+                    deployment_creds[platform] = creds
+                else:
+                    deployment_creds[platform] = creds[0]
+            deployment["config"] = deployment_creds
+        return deployment
 
     @api_wrapper(path=API_REQUEST_PREFIX + "/deployment/service_list",
                  method="GET")

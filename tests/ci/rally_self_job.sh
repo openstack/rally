@@ -32,7 +32,7 @@ sed -i.bak "s|#connection =.*|connection = \"$DBCONNSTRING\"|" $TMP_RALLY_CONF
 rally-manage --config-file $TMP_RALLY_CONF db create
 
 # Create self deployment
-echo '{"type": "ExistingCloud", "creds": {}}' > $TMP_RALLY_DEPLOYMENT
+echo '{}' > $TMP_RALLY_DEPLOYMENT
 $RALLY -d deployment create --file=$TMP_RALLY_DEPLOYMENT --name=self
 
 # Run task

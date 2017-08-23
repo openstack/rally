@@ -1,20 +1,17 @@
 {
-    "type": "ExistingCloud",
-    "creds": {
-        "openstack": {
-            "auth_url": "http://example.net:5000/v3/",
-            "region_name": "RegionOne",
-            "endpoint_type": "public",
-            "admin": {
-                "username": "admin",
-                "password": "myadminpass",
-                "user_domain_name": "admin",
-                "project_name": "admin",
-                "project_domain_name": "admin"
-            },
-            "https_insecure": false,
-            "https_cacert": "",
-            "profiler_hmac_key": "SECRET_KEY"
-        }
+    "openstack": {
+        "auth_url": "http://example.net:5000/v3/",
+        "region_name": "RegionOne",
+        "endpoint_type": "public",
+        "admin": {
+            "username": "admin",
+            "password": "myadminpass",
+            "user_domain_name": "admin",
+            "project_name": "admin",
+            "project_domain_name": "admin"
+        },
+        "https_insecure": false,
+        "https_cacert": "",
+        "profiler_hmac_key": "SECRET_KEY"
     }
 }

@@ -70,8 +70,7 @@ class TestTaskSamples(unittest.TestCase):
         user_ctx.setup()
         self.addCleanup(user_ctx.cleanup)
 
-        config = deployment["config"]
-        os_creds = config["creds"]["openstack"]
+        os_creds = deployment["config"]["creds"]["openstack"]
 
         user = copy.copy(os_creds["admin"])
         user["username"] = ctx["users"][0]["credential"].username
@@ -81,12 +80,12 @@ class TestTaskSamples(unittest.TestCase):
             user["project_name"] = ctx["users"][0]["credential"].tenant_name
         else:
             user["tenant_name"] = ctx["users"][0]["credential"].tenant_name
-        config["creds"]["openstack"]["users"] = [user]
+        os_creds["users"] = [user]
 
         rally("deployment destroy MAIN", write_report=False)
         deployment_cfg = os.path.join(rally.tmp_dir, "new_deployment.json")
         with open(deployment_cfg, "w") as f:
-            f.write(json.dumps(config))
+            f.write(json.dumps({"openstack": os_creds}))
         rally("deployment create --name MAIN --filename %s" % deployment_cfg,
               write_report=False)
 
