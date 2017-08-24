@@ -658,7 +658,7 @@ def validate_output(output_type, output):
         return ("unexpected output type: '%s', "
                 "should be in ('additive', 'complete')" % output_type)
 
-    if type(output) != dict:
+    if not isinstance(output, dict):
         return ("%(name)s output item has wrong type '%(type)s', "
                 "must be 'dict'" % {"name": output_type,
                                     "type": type(output).__name__})
