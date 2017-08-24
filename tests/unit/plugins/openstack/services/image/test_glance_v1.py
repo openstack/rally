@@ -117,7 +117,8 @@ class GlanceV1ServiceTestCase(test.TestCase):
         self.service.list_images(is_public=is_public, status=status,
                                  owner=owner)
         self.gc.images.list.assert_called_once_with(status=status,
-                                                    owner=owner)
+                                                    owner=owner,
+                                                    is_public=is_public)
 
     def test_set_visibility(self):
         image_id = "image_id"
