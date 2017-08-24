@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import copy
 import datetime as dt
 import uuid
 
@@ -21,119 +22,243 @@ from rally.common import db
 from rally.common import logging
 from rally import consts
 from rally import exceptions
+from rally.task.processing import charts
 
 
 LOG = logging.getLogger(__name__)
 
 
-OUTPUT_SCHEMA = {
+TASK_SCHEMA = {
     "type": "object",
+    "$schema": consts.JSON_SCHEMA,
     "properties": {
-        "additive": {
+        "uuid": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "version": {"type": "number"},
+        "status": {"type": "string"},
+        "tags": {"type": "array"},
+        "created_at": {"type": "string"},
+        "updated_at": {"type": "string"},
+        "pass_sla": {"type": "boolean"},
+        "task_duration": {"type": "number"},
+        "subtasks": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
+                    "uuid": {"type": "string"},
+                    "task_uuid": {"type": "string"},
                     "title": {"type": "string"},
                     "description": {"type": "string"},
-                    "chart_plugin": {"type": "string"},
-                    "data": {
+                    "status": {"type": "string"},
+                    "pass_sla": {"type": "boolean"},
+                    "run_in_parallel": {"type": "boolean"},
+                    "created_at": {"type": "string"},
+                    "updated_at": {"type": "string"},
+                    "sla": {"type": "object"},
+                    "context": {"type": "object"},
+                    "duration": {"type": "number"},
+                    "workloads": {
                         "type": "array",
-                        "items": {
-                            "type": "array",
-                            "items": [{"type": "string"},
-                                      {"type": "number"}],
-                            "additionalItems": False}},
-                    "label": {"type": "string"},
-                    "axis_label": {"type": "string"}},
-                "required": ["title", "chart_plugin", "data"],
-                "additionalProperties": False
-            }
-        },
-        "complete": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string"},
-                    "description": {"type": "string"},
-                    "chart_plugin": {"type": "string"},
-                    "data": {"anyOf": [
-                        {"type": "array",
-                         "items": {
-                             "type": "array",
-                             "items": [
-                                 {"type": "string"},
-                                 {"anyOf": [
-                                     {"type": "array",
-                                      "items": {"type": "array",
-                                                "items": [{"type": "number"},
-                                                          {"type": "number"}]
-                                                }},
-                                     {"type": "number"}]}]}},
-                        {"type": "object",
-                         "properties": {
-                             "cols": {"type": "array",
-                                      "items": {"type": "string"}},
-                             "rows": {
-                                 "type": "array",
-                                 "items": {
-                                     "type": "array",
-                                     "items": {"anyOf": [{"type": "string"},
-                                                         {"type": "number"}]}}
-                             }
-                         },
-                         "required": ["cols", "rows"],
-                         "additionalProperties": False},
-                        {"type": "array", "items": {"type": "string"}},
-                    ]},
-                    "label": {"type": "string"},
-                    "axis_label": {"type": "string"}
+                        "items": {"$ref": "#/definitions/workload"}
+                    }
                 },
-                "required": ["title", "chart_plugin", "data"],
+                "required": ["workloads"],
                 "additionalProperties": False
             }
         }
     },
-    "required": ["additive", "complete"],
-    "additionalProperties": False
-}
-
-HOOK_RUN_RESULT_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "started_at": {"type": "number"},
-        "finished_at": {"type": "number"},
-        "triggered_by": {
+    "required": ["subtasks"],
+    "additionalProperties": False,
+    "definitions": {
+        "workload": {
             "type": "object",
-            "properties": {"event_type": {"type": "string"},
-                           "value": {}},
-            "required": ["event_type", "value"],
+            "properties": {
+                "uuid": {"type": "string"},
+                "task_uuid": {"type": "string"},
+                "subtask_uuid": {"type": "string"},
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "args": {"type": "object"},
+                "runner": {"type": "object"},
+                "runner_type": {"type": "string"},
+                "hooks": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/hook_result"}
+                },
+                "min_duration": {"type": "number"},
+                "max_duration": {"type": "number"},
+                "start_time": {"oneOf": [
+                    {"type": "number",
+                     "description": "The timestamp of load start"},
+                    {"type": "null",
+                     "description": "The load was not started"}]},
+                "load_duration": {"type": "number"},
+                "full_duration": {"type": "number"},
+                "statistics": {
+                    "type": "object",
+                    "properties": {
+                        "durations": {"type": "object"},
+                        "atomics": {"type": "object"}
+                    }
+                },
+                "data": {"type": "array"},
+                "failed_iteration_count": {"type": "integer"},
+                "total_iteration_count": {"type": "integer"},
+                "created_at": {"type": "string"},
+                "updated_at": {"type": "string"},
+                "context": {"type": "object"},
+                "position": {"type": "integer"},
+                "pass_sla": {"type": "boolean"},
+                "sla_results": {
+                    "type": "object",
+                    "properties": {
+                        "sla": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "criterion": {
+                                        "type": "string"
+                                    },
+                                    "detail": {
+                                        "type": "string"
+                                    },
+                                    "success": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "sla": {"type": "object"}
+            },
+            "required": ["pass_sla", "sla_results", "sla", "statistics",
+                         "context", "data", "runner", "args", "full_duration",
+                         "load_duration", "total_iteration_count",
+                         "failed_iteration_count", "position"],
             "additionalProperties": False
         },
-        "status": {"type": "string"},
-        "error": {
-            "type": "array",
-            "minItems": 3,
-            "maxItems": 3,
-            "items": {"type": "string"},
+        "hook_result": {
+            "type": "object",
+            "properties": {
+                "config": {"type": "object"},
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "started_at": {"type": "number"},
+                            "finished_at": {"type": "number"},
+                            "triggered_by": {
+                                "type": "object",
+                                "properties": {
+                                    "event_type": {"type": "string"},
+                                    "value": {}},
+                                "required": ["event_type", "value"],
+                                "additionalProperties": False
+                            },
+                            "status": {"type": "string"},
+                            "error": {
+                                "type": "array",
+                                "minItems": 3,
+                                "maxItems": 3,
+                                "items": {"type": "string"},
+                            },
+                            "output": {"$ref": "#/definitions/output"},
+                        },
+                        "required": ["finished_at", "triggered_by", "status"],
+                        "additionalProperties": False
+                    }
+                },
+                "summary": {"type": "object"}
+            },
+            "required": ["config", "results", "summary"],
+            "additionalProperties": False,
         },
-        "output": OUTPUT_SCHEMA,
-    },
-    "required": ["finished_at", "triggered_by", "status"],
-    "additionalProperties": False
-}
-
-HOOK_RESULTS_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "config": {"type": "object"},
-        "results": {"type": "array",
-                    "items": HOOK_RUN_RESULT_SCHEMA},
-        "summary": {"type": "object"}
-    },
-    "required": ["config", "results", "summary"],
-    "additionalProperties": False,
+        "output": {
+            "type": "object",
+            "properties": {
+                "additive": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "description": {"type": "string"},
+                            "chart_plugin": {"type": "string"},
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "type": "array",
+                                    "items": [{"type": "string"},
+                                              {"type": "number"}],
+                                    "additionalItems": False}},
+                            "label": {"type": "string"},
+                            "axis_label": {"type": "string"}},
+                        "required": ["title", "chart_plugin", "data"],
+                        "additionalProperties": False
+                    }
+                },
+                "complete": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "description": {"type": "string"},
+                            "chart_plugin": {"type": "string"},
+                            "data": {"anyOf": [
+                                {"type": "array",
+                                 "items": {
+                                     "type": "array",
+                                     "items": [
+                                         {"type": "string"},
+                                         {"anyOf": [
+                                             {"type": "array",
+                                              "items": {
+                                                  "type": "array",
+                                                  "items": [
+                                                      {"type": "number"},
+                                                      {"type": "number"}]
+                                              }},
+                                             {"type": "number"}]
+                                          }]
+                                 }},
+                                {"type": "object",
+                                 "properties": {
+                                     "cols": {"type": "array",
+                                              "items": {"type": "string"}},
+                                     "rows": {
+                                         "type": "array",
+                                         "items": {
+                                             "type": "array",
+                                             "items": {
+                                                 "anyOf": [{"type": "string"},
+                                                           {"type": "number"}]
+                                             }
+                                         }
+                                     }
+                                 },
+                                 "required": ["cols", "rows"],
+                                 "additionalProperties": False},
+                                {"type": "array",
+                                 "items": {"type": "string"}},
+                            ]},
+                            "label": {"type": "string"},
+                            "axis_label": {"type": "string"}
+                        },
+                        "required": ["title", "chart_plugin", "data"],
+                        "additionalProperties": False
+                    }
+                }
+            },
+            "required": ["additive", "complete"],
+            "additionalProperties": False
+        }
+    }
 }
 
 
@@ -264,6 +389,86 @@ class Task(object):
                       if soft else consts.TaskStatus.ABORTING)
         self.update_status(new_status, allowed_statuses=(
             consts.TaskStatus.RUNNING, consts.TaskStatus.SOFT_ABORTING))
+
+    def result_has_valid_schema(self, result):
+        """Check whatever result has valid schema or not."""
+        # NOTE(boris-42): We can't use here jsonschema, this method is called
+        #                 to check every iteration result schema. And this
+        #                 method works 200 times faster then jsonschema
+        #                 which totally makes sense.
+        _RESULT_SCHEMA = {
+            "fields": [("duration", float), ("timestamp", float),
+                       ("idle_duration", float), ("output", dict),
+                       ("atomic_actions", list), ("error", list)]
+        }
+        for key, proper_type in _RESULT_SCHEMA["fields"]:
+            if key not in result:
+                LOG.warning("'%s' is not result" % key)
+                return False
+            if not isinstance(result[key], proper_type):
+                LOG.warning(
+                    "Task %(uuid)s | result['%(key)s'] has wrong type "
+                    "'%(actual_type)s', should be '%(proper_type)s'"
+                    % {"uuid": self.task["uuid"],
+                       "key": key,
+                       "actual_type": type(result[key]),
+                       "proper_type": proper_type.__name__})
+                return False
+
+        actions_list = copy.deepcopy(result["atomic_actions"])
+        for action in actions_list:
+            for key in ("name", "started_at", "finished_at", "children"):
+                if key not in action:
+                    LOG.warning(
+                        "Task %(uuid)s | Atomic action %(action)s "
+                        "missing key '%(key)s'"
+                        % {"uuid": self.task["uuid"],
+                           "action": action,
+                           "key": key})
+                    return False
+            for key in ("started_at", "finished_at"):
+                if not isinstance(action[key], float):
+                    LOG.warning(
+                        "Task %(uuid)s | Atomic action %(action)s has "
+                        "wrong type '%(type)s', should be 'float'"
+                        % {"uuid": self.task["uuid"],
+                           "action": action,
+                           "type": type(action[key])})
+                    return False
+            if action["children"]:
+                actions_list.extend(action["children"])
+
+        for e in result["error"]:
+            if not isinstance(e, str):
+                LOG.warning("error value has wrong type '%s', should be 'str'"
+                            % type(e))
+                return False
+
+        for key in ("additive", "complete"):
+            if key not in result["output"]:
+                LOG.warning("Task %(uuid)s | Output missing key '%(key)s'"
+                            % {"uuid": self.task["uuid"], "key": key})
+                return False
+
+            type_ = type(result["output"][key])
+            if type_ != list:
+                LOG.warning(
+                    "Task %(uuid)s | Value of result['output']['%(key)s'] "
+                    "has wrong type '%(type)s', must be 'list'"
+                    % {"uuid": self.task["uuid"],
+                       "key": key, "type": type_.__name__})
+                return False
+
+        for key in result["output"]:
+            for output_data in result["output"][key]:
+                message = charts.validate_output(key, output_data)
+                if message:
+                    LOG.warning("Task %(uuid)s | %(message)s"
+                                % {"uuid": self.task["uuid"],
+                                   "message": message})
+                    return False
+
+        return True
 
 
 class Subtask(object):

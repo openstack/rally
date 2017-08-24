@@ -25,7 +25,6 @@ from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally.common import validation
-from rally.task.processing import charts
 from rally.task import scenario
 from rally.task import types
 from rally.task import utils
@@ -228,87 +227,6 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
             self.result_queue.append(sorted_batch)
             del self.result_batch[:]
 
-    _RESULT_SCHEMA = {
-        "fields": [("duration", float), ("timestamp", float),
-                   ("idle_duration", float), ("output", dict),
-                   ("atomic_actions", list), ("error", list)]
-    }
-
-    def _result_has_valid_schema(self, result):
-        """Check whatever result has valid schema or not."""
-        # NOTE(boris-42): We can't use here jsonschema, this method is called
-        #                 to check every iteration result schema. And this
-        #                 method works 200 times faster then jsonschema
-        #                 which totally makes sense.
-        for key, proper_type in self._RESULT_SCHEMA["fields"]:
-            if key not in result:
-                LOG.warning("'%s' is not result" % key)
-                return False
-            if not isinstance(result[key], proper_type):
-                LOG.warning(
-                    "Task %(uuid)s | result['%(key)s'] has wrong type "
-                    "'%(actual_type)s', should be '%(proper_type)s'"
-                    % {"uuid": self.task["uuid"],
-                       "key": key,
-                       "actual_type": type(result[key]),
-                       "proper_type": proper_type.__name__})
-                return False
-
-        actions_list = copy.deepcopy(result["atomic_actions"])
-        for action in actions_list:
-            for key in ("name", "started_at", "finished_at", "children"):
-                if key not in action:
-                    LOG.warning(
-                        "Task %(uuid)s | Atomic action %(action)s "
-                        "missing key '%(key)s'"
-                        % {"uuid": self.task["uuid"],
-                           "action": action,
-                           "key": key})
-                    return False
-            for key in ("started_at", "finished_at"):
-                if not isinstance(action[key], float):
-                    LOG.warning(
-                        "Task %(uuid)s | Atomic action %(action)s has "
-                        "wrong type '%(type)s', should be 'float'"
-                        % {"uuid": self.task["uuid"],
-                           "action": action,
-                           "type": type(action[key])})
-                    return False
-            if action["children"]:
-                actions_list.extend(action["children"])
-
-        for e in result["error"]:
-            if not isinstance(e, str):
-                LOG.warning("error value has wrong type '%s', should be 'str'"
-                            % type(e))
-                return False
-
-        for key in ("additive", "complete"):
-            if key not in result["output"]:
-                LOG.warning("Task %(uuid)s | Output missing key '%(key)s'"
-                            % {"uuid": self.task["uuid"], "key": key})
-                return False
-
-            type_ = type(result["output"][key])
-            if type_ != list:
-                LOG.warning(
-                    "Task %(uuid)s | Value of result['output']['%(key)s'] "
-                    "has wrong type '%(type)s', must be 'list'"
-                    % {"uuid": self.task["uuid"],
-                       "key": key, "type": type_.__name__})
-                return False
-
-        for key in result["output"]:
-            for output_data in result["output"][key]:
-                message = charts.validate_output(key, output_data)
-                if message:
-                    LOG.warning("Task %(uuid)s | %(message)s"
-                                % {"uuid": self.task["uuid"],
-                                   "message": message})
-                    return False
-
-        return True
-
     def _send_result(self, result):
         """Store partial result to send it to consumer later.
 
@@ -317,7 +235,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
                        ValidationError is raised.
         """
 
-        if not self._result_has_valid_schema(result):
+        if not self.task.result_has_valid_schema(result):
             LOG.warning(
                 "Task %(task)s | Runner `%(runner)s` is trying to send "
                 "results in wrong format"

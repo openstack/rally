@@ -510,13 +510,17 @@ class TaskAPITestCase(test.TestCase):
                     "load_duration": 1,
                     "start_time": 23.77,
                     "position": 77,
-                    "runner": "runner-config",
-                    "runner_type": "runner-type",
-                    "context": "ctx-config",
-                    "hooks": "hooks-config",
-                    "sla": "sla-config",
-                    "sla_results": {"sla": "sla=result"},
-                    "args": "scen-args",
+                    "runner": {},
+                    "runner_type": "",
+                    "context": {},
+                    "hooks": [],
+                    "pass_sla": True,
+                    "sla": {},
+                    "sla_results": {"sla": [{"success": True}]},
+                    "args": {},
+                    "statistics": {},
+                    "total_iteration_count": 3,
+                    "failed_iteration_count": 0,
                     "data": ["data-raw"]}
 
         task_results = {"subtasks": [
@@ -573,13 +577,17 @@ class TaskAPITestCase(test.TestCase):
                     "load_duration": 1,
                     "start_time": 23.77,
                     "position": 77,
-                    "runner": "runner-config",
-                    "runner_type": "runner-type",
-                    "context": "ctx-config",
-                    "hooks": "hooks-config",
-                    "sla": "sla-config",
-                    "sla_results": {"sla": "sla=result"},
-                    "args": "scen-args",
+                    "runner": {},
+                    "runner_type": "",
+                    "context": {},
+                    "hooks": [],
+                    "pass_sla": True,
+                    "sla": {},
+                    "sla_results": {"sla": [{"success": True}]},
+                    "args": {},
+                    "statistics": {},
+                    "total_iteration_count": 3,
+                    "failed_iteration_count": 0,
                     "data": [{"timestamp": 1},
                              {"timestamp": 2},
                              {"timestamp": 3}]}
@@ -624,8 +632,9 @@ class TaskAPITestCase(test.TestCase):
             hooks_results=workload["hooks"], start_time=workload["start_time"])
 
     @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.jsonschema.validate", return_value=True)
     def test_import_results_with_inconsistent_deployment(
-            self, mock_deployment_get):
+            self, mock_jsonschema_validate, mock_deployment_get):
         fake_deployment = fakes.FakeDeployment(
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_INCONSISTENT,
@@ -635,8 +644,36 @@ class TaskAPITestCase(test.TestCase):
         self.assertRaises(exceptions.DeploymentNotFinishedStatus,
                           self.task_inst.import_results,
                           deployment="deployment_uuid",
-                          task_results=[],
+                          task_results={},
                           tags=["tag"])
+
+    @mock.patch("rally.api.objects.Deployment.get")
+    def test_import_results_with_error_jsonschema(
+            self, mock_deployment_get):
+        self.assertRaises(exceptions.RallyException,
+                          self.task_inst.import_results,
+                          deployment="deployment_uuid",
+                          task_results={"key": "invalid json"})
+
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.jsonschema.validate", return_value=True)
+    def test_import_results_with_error_data(
+            self, mock_jsonschema_validate, mock_deployment_get, mock_task):
+        mock_deployment_get.return_value = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
+            status=consts.DeployStatus.DEPLOY_FINISHED)
+        mock_task.return_value.result_has_valid_schema = mock.MagicMock(
+            return_value=False)
+
+        task_results = {"subtasks": [{"title": "subtask-title",
+                                      "workloads": [{"data": [{"a": 1}]}]
+                                      }]}
+
+        self.assertRaises(exceptions.RallyException,
+                          self.task_inst.import_results,
+                          deployment="deployment_uuid",
+                          task_results=task_results)
 
 
 class BaseDeploymentTestCase(test.TestCase):

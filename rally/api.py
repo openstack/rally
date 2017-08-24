@@ -27,6 +27,7 @@ import jsonschema
 from oslo_config import cfg
 import requests
 from requests.packages import urllib3
+import six
 
 from rally.common import logging
 from rally.common import objects
@@ -525,7 +526,14 @@ class _Task(APIGroup):
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
     def import_results(self, deployment, task_results, tags=None):
-        """Import json results of a task into database."""
+        """Import json results of a task into rally database"""
+        try:
+            jsonschema.validate(task_results, objects.task.TASK_SCHEMA)
+        except jsonschema.ValidationError as e:
+            msg = six.text_type(e)
+            raise exceptions.RallyException(
+                "ERROR: Invalid task result format\n\n\t%s" % msg)
+
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
             raise exceptions.DeploymentNotFinishedStatus(
@@ -539,12 +547,19 @@ class _Task(APIGroup):
         for subtask in task_results["subtasks"]:
             subtask_obj = task_inst.add_subtask(title=subtask.get("title"))
             for workload in subtask["workloads"]:
+                for data in workload["data"]:
+                    if not task_inst.result_has_valid_schema(data):
+                        raise exceptions.RallyException(
+                            "Task %s is trying to import "
+                            "results in wrong format" % task_inst["uuid"])
+
                 workload_obj = subtask_obj.add_workload(
                     name=workload["name"], description=workload["description"],
                     position=workload["position"], runner=workload["runner"],
                     runner_type=workload["runner_type"],
                     context=workload["context"], hooks=workload["hooks"],
                     sla=workload["sla"], args=workload["args"])
+
                 chunk_size = CONF.raw_result_chunk_size
                 workload_data_count = 0
                 while len(workload["data"]) > chunk_size:
@@ -554,6 +569,7 @@ class _Task(APIGroup):
                     workload_obj.add_workload_data(workload_data_count,
                                                    {"raw": results_chunk})
                     workload_data_count += 1
+
                 workload_obj.add_workload_data(workload_data_count,
                                                {"raw": workload["data"]})
                 workload_obj.set_results(

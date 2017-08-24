@@ -284,7 +284,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration(self):
         runner_obj = constant.ConstantForDurationScenarioRunner(
-            None, self.config)
+            mock.MagicMock(), self.config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "do_it",
                                  self.context, self.args)
@@ -297,7 +297,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration_exception(self):
         runner_obj = constant.ConstantForDurationScenarioRunner(
-            None, self.config)
+            mock.MagicMock(), self.config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
                                  self.context, self.args)
@@ -311,7 +311,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration_timeout(self):
         runner_obj = constant.ConstantForDurationScenarioRunner(
-            None, self.config)
+            mock.MagicMock(), self.config)
 
         runner_obj._run_scenario(fakes.FakeScenario, "raise_timeout",
                                  self.context, self.args)

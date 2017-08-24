@@ -214,137 +214,23 @@ class ScenarioRunnerTestCase(test.TestCase):
         scenario_runner._meta_set("name", "FakePlugin_%s" % id(ScenarioRunner))
         return scenario_runner
 
-    @ddt.data(
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "output": {"additive": [], "complete": []},
-                  "error": ["err1", "err2"], "atomic_actions": []},
-         "expected": True},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 5.2, "children": []}]},
-         "expected": True},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": ["a1", "a2"],
-                                          "complete": ["c1", "c2"]},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 5.2, "children": []}]},
-         "validate_output_calls": [("additive", "a1"), ("additive", "a2"),
-                                   ("complete", "c1"), ("complete", "c2")],
-         "expected": True},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": ["a1", "a2"],
-                                          "complete": ["c1", "c2"]},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 5.2, "children": []}]},
-         "validate_output_return_value": "validation error message"},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [42], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 5.2, "children": []}]}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 10,
-                                      "finished_at": 52, "children": []}]}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "non-float", "started_at": 1.0,
-                                      "children": []}]}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 4.0,
-                                      "children": [{"name": "foo1",
-                                                    "started_at": 2.0,
-                                                    "finished_at": 3.0,
-                                                    "children": []}]}]},
-         "expected": True},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 4.0,
-                                      "children": [{"name": "foo1",
-                                                    "started_at": 20,
-                                                    "finished_at": 30,
-                                                    "children": []}]}]}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": [{"name": "foo", "started_at": 1.0,
-                                      "finished_at": 4.0,
-                                      "children": [{"name": "foo1",
-                                                    "started_at": 2.0,
-                                                    "finished_at": 3.0}]}]}},
-        {"data": {"duration": 1, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1,
-                  "error": [], "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": "foo", "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {}, "atomic_actions": []}},
-        {"data": {"timestamp": 1.0, "idle_duration": 1.0, "error": [],
-                  "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "idle_duration": 1.0, "error": [],
-                  "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "error": [],
-                  "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "output": {"additive": [], "complete": []},
-                  "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "atomic_actions": []}},
-        {"data": {"duration": 1.0, "timestamp": 1.0, "idle_duration": 1.0,
-                  "error": [], "output": {"additive": [], "complete": []}}},
-        {"data": []},
-        {"data": {}},
-        {"data": "foo"})
-    @ddt.unpack
-    @mock.patch("rally.task.runner.LOG")
-    @mock.patch(BASE + "charts.validate_output")
-    def test__result_has_valid_schema(self, mock_validate_output, mock_log,
-                                      data, expected=False,
-                                      validate_output_return_value=None,
-                                      validate_output_calls=None):
-        runner_ = self._get_runner(task={"uuid": "foo_uuid"})
-        mock_validate_output.return_value = validate_output_return_value
-        self.assertEqual(expected,
-                         runner_._result_has_valid_schema(data),
-                         message=repr(data))
-        if validate_output_calls:
-            mock_validate_output.assert_has_calls(
-                [mock.call(*args) for args in validate_output_calls],
-                any_order=True)
-
     def test__send_result(self):
-        runner_ = self._get_runner(task={"uuid": "foo_uuid"})
+        task = fakes.FakeTask(uuid="foo_uuid")
+        task.result_has_valid_schema = mock.MagicMock(return_value=True)
+        runner_ = self._get_runner(task=task)
         result = {"timestamp": 42}
-        runner_._result_has_valid_schema = mock.Mock(return_value=True)
         self.assertIsNone(runner_._send_result(result))
         self.assertEqual([], runner_.result_batch)
         self.assertEqual(collections.deque([[result]]), runner_.result_queue)
 
     @mock.patch("rally.task.runner.LOG")
     def test__send_result_with_invalid_schema(self, mock_log):
-        runner_ = self._get_runner(task={"uuid": "foo_uuid"})
+        task = fakes.FakeTask(uuid="foo_uuid")
+        task.result_has_valid_schema = mock.MagicMock(return_value=False)
+        runner_ = self._get_runner(task=task)
         result = {"timestamp": 42}
-        runner_._result_has_valid_schema = mock.Mock(return_value=False)
         self.assertIsNone(runner_._send_result(result))
-        runner_._result_has_valid_schema.assert_called_once_with(result)
+        runner_.task.result_has_valid_schema.assert_called_once_with(result)
         self.assertTrue(mock_log.warning.called)
         self.assertEqual([], runner_.result_batch)
         self.assertEqual(collections.deque([]), runner_.result_queue)
