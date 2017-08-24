@@ -651,14 +651,6 @@ class TaskAPITestCase(test.TestCase):
                           task_results={},
                           tags=["tag"])
 
-    @mock.patch("rally.api.objects.Deployment.get")
-    def test_import_results_with_error_jsonschema(
-            self, mock_deployment_get):
-        self.assertRaises(exceptions.RallyException,
-                          self.task_inst.import_results,
-                          deployment="deployment_uuid",
-                          task_results={"key": "invalid json"})
-
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.jsonschema.validate", return_value=True)

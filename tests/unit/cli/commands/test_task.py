@@ -660,7 +660,7 @@ class TaskCommandsTestCase(test.TestCase):
                                       "path_to_file"],
                                out="output.html", out_format="html")
         expected = [task_obj, task_obj,
-                    ["result_1_from_file", "result_2_from_file"]]
+                    "result_1_from_file", "result_2_from_file"]
         mock_plot.trends.assert_called_once_with(expected)
         self.assertEqual([mock.call(self.fake_api, "path_to_file")],
                          self.task._load_task_results_file.mock_calls)
@@ -807,7 +807,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_plot.plot.return_value = "html_report"
         mock_open.side_effect = mock.mock_open()
         self.task._load_task_results_file = mock.MagicMock(
-            return_value=task_obj
+            return_value=[task_obj]
         )
 
         self.task._old_report(self.real_api, tasks=task_file,
@@ -1255,7 +1255,7 @@ class TaskCommandsTestCase(test.TestCase):
         ]
         mock_safe_load.return_value = results
         ret = self.task._load_task_results_file(self.fake_api, task_file)
-        self.assertEqual({
+        self.assertEqual([{
             "version": 2,
             "title": "Task loaded from a file.",
             "description": "Auto-ported from task format V1.",
@@ -1264,7 +1264,45 @@ class TaskCommandsTestCase(test.TestCase):
             "subtasks": [{
                 "title": "A SubTask",
                 "description": "",
-                "workloads": [workload]}]}, ret)
+                "workloads": [workload]}]}], ret)
+
+    @mock.patch("rally.cli.commands.task.open", create=True)
+    @mock.patch("rally.cli.commands.task.yaml.safe_load")
+    @mock.patch("rally.cli.commands.task.jsonschema.validate")
+    def test__load_task_new_results_file(self, mock_validate,
+                                         mock_safe_load, mock_open):
+        task_file = "/tmp/task.json"
+        results = {
+            "tasks": [{
+                "subtasks": [{
+                    "workloads": [{
+                        "contexts": "contexts",
+                        "scenario": {"Foo.bar": {}},
+                        "runner": {"constant": {
+                            "times": 100,
+                            "concurrency": 5
+                        }}
+                    }]
+                }]
+            }]
+        }
+
+        mock_safe_load.return_value = results
+        ret = self.task._load_task_results_file(self.fake_api, task_file)
+        self.assertEqual([{
+            "subtasks": [{
+                "workloads": [{
+                    "args": {},
+                    "name": "Foo.bar",
+                    "context": "contexts",
+                    "runner_type": "constant",
+                    "runner": {
+                        "times": 100,
+                        "concurrency": 5
+                    }
+                }]
+            }]
+        }], ret)
 
     @mock.patch("rally.cli.commands.task.open", create=True)
     @mock.patch("rally.cli.commands.task.yaml.safe_load")
@@ -1273,6 +1311,11 @@ class TaskCommandsTestCase(test.TestCase):
                                                   mock_open):
         task_id = "/tmp/task.json"
         mock_safe_load.return_value = "results"
+        self.assertRaises(task.FailedToLoadResults,
+                          self.task._load_task_results_file,
+                          api=self.real_api, task_id=task_id)
+
+        mock_safe_load.return_value = ["results"]
         self.assertRaises(task.FailedToLoadResults,
                           self.task._load_task_results_file,
                           api=self.real_api, task_id=task_id)
@@ -1293,7 +1336,7 @@ class TaskCommandsTestCase(test.TestCase):
             self.fake_api, "task_file"
         )
         self.fake_api.task.import_results.assert_called_once_with(
-            deployment="deployment_uuid", task_results=["results"],
+            deployment="deployment_uuid", task_results="results",
             tags=["tag"])
 
         # not exist

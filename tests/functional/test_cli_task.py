@@ -20,6 +20,7 @@ import threading
 import time
 import unittest
 
+import jsonschema
 import mock
 
 from rally import api
@@ -185,6 +186,14 @@ class TaskTestCase(unittest.TestCase):
         task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
         self.assertIn("Dummy.dummy_random_fail_in_atomic",
                       rally("task results --uuid %s" % task_uuid))
+
+        # new json report
+        rally("task report --json --out %s" % json_report)
+        import_print = rally("task import --file %s" % json_report)
+        self.assertIn("successfully", import_print)
+        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        self.assertIn("Dummy.dummy_random_fail_in_atomic",
+                      rally("task report --uuid %s --json" % task_uuid))
 
     def test_abort_with_wrong_task_id(self):
         rally = utils.Rally()
@@ -367,12 +376,9 @@ class TaskTestCase(unittest.TestCase):
         results = json.loads(open(file_path).read())
         self.assertIn("info", results)
         self.assertIn("tasks", results)
-        # TODO(chenhb): We will switch to check this
-        # json via json schema in next patch
         for task in results["tasks"]:
-            self.assertIn("subtasks", task)
-            for subtask in task["subtasks"]:
-                self.assertIn("workloads", subtask)
+            jsonschema.validate(task,
+                                api._Task.TASK_SCHEMA)
 
     def test_report_one_uuid_with_json(self):
         rally = utils.Rally()

@@ -41,7 +41,6 @@ TASK_SCHEMA = {
         "created_at": {"type": "string"},
         "updated_at": {"type": "string"},
         "pass_sla": {"type": "boolean"},
-        "task_duration": {"type": "number"},
         "subtasks": {
             "type": "array",
             "items": {
@@ -57,8 +56,6 @@ TASK_SCHEMA = {
                     "created_at": {"type": "string"},
                     "updated_at": {"type": "string"},
                     "sla": {"type": "object"},
-                    "context": {"type": "object"},
-                    "duration": {"type": "number"},
                     "workloads": {
                         "type": "array",
                         "items": {"$ref": "#/definitions/workload"}
@@ -81,8 +78,15 @@ TASK_SCHEMA = {
                 "uuid": {"type": "string"},
                 "task_uuid": {"type": "string"},
                 "subtask_uuid": {"type": "string"},
-                "name": {"type": "string"},
                 "description": {"type": "string"},
+                "scenario": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "patternProperties": {
+                        ".*": {"type": "object"}
+                    }
+                },
                 "args": {"type": "object"},
                 "runner": {"type": "object"},
                 "runner_type": {"type": "string"},
@@ -107,7 +111,7 @@ TASK_SCHEMA = {
                 "total_iteration_count": {"type": "integer"},
                 "created_at": {"type": "string"},
                 "updated_at": {"type": "string"},
-                "context": {"type": "object"},
+                "contexts": {"type": "object"},
                 "position": {"type": "integer"},
                 "pass_sla": {"type": "boolean"},
                 "sla_results": {
@@ -135,9 +139,10 @@ TASK_SCHEMA = {
                 "sla": {"type": "object"}
             },
             "required": ["pass_sla", "sla_results", "sla", "statistics",
-                         "context", "data", "runner", "args", "full_duration",
-                         "load_duration", "total_iteration_count",
-                         "failed_iteration_count", "position"],
+                         "contexts", "data", "runner", "scenario",
+                         "full_duration", "load_duration",
+                         "total_iteration_count", "failed_iteration_count",
+                         "position"],
             "additionalProperties": False
         },
         "hook_result": {

@@ -27,7 +27,6 @@ import jsonschema
 from oslo_config import cfg
 import requests
 from requests.packages import urllib3
-import six
 
 from rally.common import logging
 from rally.common import objects
@@ -274,6 +273,8 @@ class _Deployment(APIGroup):
 
 
 class _Task(APIGroup):
+
+    TASK_SCHEMA = objects.task.TASK_SCHEMA
 
     def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
@@ -546,13 +547,6 @@ class _Task(APIGroup):
 
     def import_results(self, deployment, task_results, tags=None):
         """Import json results of a task into rally database"""
-        try:
-            jsonschema.validate(task_results, objects.task.TASK_SCHEMA)
-        except jsonschema.ValidationError as e:
-            msg = six.text_type(e)
-            raise exceptions.RallyException(
-                "ERROR: Invalid task result format\n\n\t%s" % msg)
-
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
             raise exceptions.DeploymentNotFinishedStatus(

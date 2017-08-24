@@ -659,7 +659,7 @@ class TaskCommands(object):
         with open(os.path.expanduser(task_id)) as inp_js:
             tasks_results = yaml.safe_load(inp_js)
 
-        if type(tasks_results) == list:
+        if isinstance(tasks_results, list):
             # it is an old format:
 
             task = {"version": 2,
@@ -753,7 +753,25 @@ class TaskCommands(object):
                     {"title": "A SubTask",
                      "description": "",
                      "workloads": [workload]})
-            return task
+            return [task]
+        elif isinstance(tasks_results, dict) and "tasks" in tasks_results:
+            for task_result in tasks_results["tasks"]:
+                try:
+                    jsonschema.validate(task_result,
+                                        api.task.TASK_SCHEMA)
+                except jsonschema.ValidationError as e:
+                    msg = six.text_type(e)
+                    raise exceptions.RallyException(
+                        "ERROR: Invalid task result format\n\n\t%s" % msg)
+                for subtask in task_result["subtasks"]:
+                    for workload in subtask["workloads"]:
+                        workload["context"] = workload.pop("contexts")
+                        workload["runner_type"], workload["runner"] = list(
+                            workload["runner"].items())[0]
+                        workload["name"], workload["args"] = list(
+                            workload.pop("scenario").items())[0]
+
+            return tasks_results["tasks"]
         else:
             raise FailedToLoadResults(
                 source=task_id, msg="Wrong format")
@@ -779,15 +797,13 @@ class TaskCommands(object):
         results = []
         for task_id in tasks:
             if os.path.exists(os.path.expanduser(task_id)):
-                task_results = self._load_task_results_file(api, task_id)
+                results.extend(self._load_task_results_file(api, task_id))
             elif uuidutils.is_uuid_like(task_id):
-                task_results = api.task.get(task_id=task_id, detailed=True)
+                results.append(api.task.get(task_id=task_id, detailed=True))
             else:
                 print("ERROR: Invalid UUID or file name passed: %s" % task_id,
                       file=sys.stderr)
                 return 1
-
-            results.append(task_results)
 
         result = plot.trends(results)
 
@@ -857,15 +873,19 @@ class TaskCommands(object):
         processed_names = {}
         for task_file_or_uuid in tasks:
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
-                task = self._load_task_results_file(api, task_file_or_uuid)
+                results.extend(
+                    self._load_task_results_file(api, task_file_or_uuid)
+                )
             elif uuidutils.is_uuid_like(task_file_or_uuid):
-                task = api.task.get(task_id=task_file_or_uuid, detailed=True)
+                results.append(api.task.get(task_id=task_file_or_uuid,
+                                            detailed=True))
             else:
                 print("ERROR: Invalid UUID or file name passed: %s"
                       % task_file_or_uuid,
                       file=sys.stderr)
                 return 1
 
+        for task in results:
             for workload in itertools.chain(
                     *[s["workloads"] for s in task["subtasks"]]):
                 if workload["name"] in processed_names:
@@ -873,7 +893,6 @@ class TaskCommands(object):
                     workload["position"] = processed_names[workload["name"]]
                 else:
                     processed_names[workload["name"]] = 0
-            results.append(task)
 
         if out_format.startswith("html"):
             result = plot.plot(results,
@@ -1060,10 +1079,11 @@ class TaskCommands(object):
 
         if os.path.exists(os.path.expanduser(task_file)):
             tasks_results = self._load_task_results_file(api, task_file)
-            task = api.task.import_results(deployment=deployment,
-                                           task_results=tasks_results,
-                                           tags=tags)
-            print("Task UUID: %s." % task["uuid"])
+            for task_results in tasks_results:
+                task = api.task.import_results(deployment=deployment,
+                                               task_results=task_results,
+                                               tags=tags)
+                print("Task UUID: %s." % task["uuid"])
         else:
             print("ERROR: Invalid file name passed: %s" % task_file,
                   file=sys.stderr)
