@@ -49,6 +49,81 @@ from rally.task import utils as tutils
 
 LOG = logging.getLogger(__name__)
 
+OLD_TASK_RESULT_SCHEMA = {
+    "type": "object",
+    "$schema": consts.JSON_SCHEMA,
+    "properties": {
+        "key": {
+            "type": "object",
+            "properties": {
+                "kw": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pos": {
+                    "type": "integer"
+                },
+            },
+            "required": ["kw", "name", "pos"]
+        },
+        "sla": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "criterion": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "success": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "hooks": {"type": "array"},
+        "result": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "atomic_actions": {
+                        "type": "object"
+                    },
+                    "duration": {
+                        "type": "number"
+                    },
+                    "error": {
+                        "type": "array"
+                    },
+                    "idle_duration": {
+                        "type": "number"
+                    },
+                    "output": {"type": "object"}
+                },
+                "required": ["atomic_actions", "duration", "error",
+                             "idle_duration"]
+            },
+            "minItems": 1
+        },
+        "load_duration": {
+            "type": "number",
+        },
+        "full_duration": {
+            "type": "number",
+        },
+        "created_at": {
+            "type": "string"
+        }
+    },
+    "required": ["key", "sla", "result", "load_duration", "full_duration"],
+    "additionalProperties": False
+}
+
 
 class FailedToLoadTask(exceptions.RallyException):
     error_code = 472
@@ -620,7 +695,7 @@ class TaskCommands(object):
             for result in tasks_results:
                 try:
                     jsonschema.validate(
-                        result, api.task.TASK_RESULT_SCHEMA)
+                        result, OLD_TASK_RESULT_SCHEMA)
                 except jsonschema.ValidationError as e:
                     raise FailedToLoadResults(source=task_id,
                                               msg=six.text_type(e))

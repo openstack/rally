@@ -253,8 +253,6 @@ class _Deployment(APIGroup):
 
 class _Task(APIGroup):
 
-    TASK_RESULT_SCHEMA = objects.task.TASK_RESULT_SCHEMA
-
     def list(self, **filters):
         return [task.to_dict() for task in objects.Task.list(**filters)]
 
