@@ -106,7 +106,7 @@ New DB schema
 * Workload - aggregated information about some specific workload (required
   for reports) as well as information how these workloads are executed in
   parallel/serial and status of each workload.  Without workloads table we
-  won't be able to support multiple workloads per single subtas
+  won't be able to support multiple workloads per single subtask
 
 * WorkloadData - contains chunks of raw data for future data analyze and
   reporting. This is complete information that we don't need always, as well

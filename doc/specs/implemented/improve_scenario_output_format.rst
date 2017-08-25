@@ -126,7 +126,7 @@ Here is proposed iterations results structure for output data:
               # because this data does not require processing - it is
               # already processed and represents a result of Chart.render()
               {"title": "Interesting data from specific iteration",
-               "description": "Some details explaind here",
+               "description": "Some details explained here",
                "widget": "StackedArea",
                "data": [
                    [
