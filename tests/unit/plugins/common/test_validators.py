@@ -90,13 +90,14 @@ class RequiredParameterValidatorTestCase(test.TestCase):
 
     @ddt.data(({"args": {"a": 10, "b": 20}}, "a", None, None),
               ({"args": {"a": 10, "b": 20}}, "c", None,
-               "c parameters are not defined in the benchmark config file"),
+               "'c' parameter(s) are not defined in the task config file"),
               ({"args": {"a": 10, "b": {"c": 20}}}, [("b", "c")],
                None, None),
               ({"args": {"a": 10, "c": 20}}, [("b", "c")],
                None, None),
               ({"args": {"a": 10}}, [("b", "c")], None,
-               "c parameters are not defined in the benchmark config file"))
+               "'b'/'c' (at least one parameter should be specified) "
+               "parameter(s) are not defined in the task config file"))
     @ddt.unpack
     def test_validate(self, config, params, subdict, err_msg):
         validator = validators.RequiredParameterValidator(params, subdict)

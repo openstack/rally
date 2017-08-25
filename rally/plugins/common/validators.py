@@ -115,14 +115,16 @@ class RequiredParameterValidator(validation.Validator):
                     if case in args:
                         break
                 else:
-                    missing.append(case)
+                    arg = "'/'".join(arg)
+                    missing.append("'%s' (at least one parameter should be "
+                                   "specified)" % arg)
             else:
                 if arg not in args:
-                    missing.append(arg)
+                    missing.append("'%s'" % arg)
 
         if missing:
-            msg = ("%s parameters are not defined in "
-                   "the benchmark config file") % ", ".join(missing)
+            msg = ("%s parameter(s) are not defined in "
+                   "the task config file") % ", ".join(missing)
             return self.fail(msg)
 
 
