@@ -8,46 +8,46 @@ decorator>=3.4.0,<=4.0.11                              # new BSD License
 Jinja2>=2.8,!=2.9.0,!=2.9.1,!=2.9.2,!=2.9.3,!=2.9.4,<=2.9.6  # BSD
 jsonschema>=2.0.0,!=2.5.0,<3.0.0                       # MIT
 netaddr>=0.7.13,!=0.7.16,<=0.7.19                      # BSD
-oslo.config>=4.0.0,!=4.3.0,!=4.4.0,<=4.7.0             # Apache Software License
-oslo.db>=4.23.0,<=4.24.0                               # Apache Software License
-oslo.i18n>=2.1.0,!=3.15.2,<=3.15.3                     # Apache Software License
-oslo.log>=3.22.0,<=3.28.1                              # Apache Software License
-oslo.serialization>=1.10.0,<=2.19.0                    # Apache Software License
-oslo.utils>=3.20.0,<=3.26.0                            # Apache Software License
+oslo.config>=4.0.0,!=4.3.0,!=4.4.0,<=4.7.0             # Apache-2.0
+oslo.db>=4.23.0,<=4.24.0                               # Apache-2.0
+oslo.i18n>=2.1.0,!=3.15.2,<=3.15.3                     # Apache-2.0
+oslo.log>=3.22.0,<=3.28.1                              # Apache-2.0
+oslo.serialization>=1.10.0,<=2.19.0                    # Apache-2.0
+oslo.utils>=3.20.0,<=3.26.0                            # Apache-2.0
 paramiko>=2.0,<=2.2.1                                  # LGPL
-pbr>=2.0.0,!=2.1.0,<=3.1.1                             # Apache Software License
+pbr>=2.0.0,!=2.1.0,<=3.1.1                             # Apache-2.0
 PrettyTable>=0.7.1,<0.8                                # BSD
 PyYAML>=3.10.0,<=3.12                                  # MIT
 python-subunit>=0.0.18,<=1.2.0
-requests>=2.14.2,<=2.18.1                              # Apache License, Version 2.0
+requests>=2.14.2,<=2.18.1                              # Apache-2.0
 SQLAlchemy>=1.0.10,!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8,<=1.1.11  # MIT
 six>=1.9.0,<=1.10.0                                    # MIT
 virtualenv>=13.1.0,<=15.1.0                            # MIT
 
 # OpenStack related
 boto>=2.32.1,<=2.47.0                                  # MIT
-gnocchiclient>=2.7.0,<=3.3.1                           # Apache Software License
-keystoneauth1==2.21.0                                  # Apache Software License
-os-faults>=0.1.5,<=0.1.13                              # Apache Software License
-osprofiler>=1.4.0,<=1.10.1                             # Apache Software License
-python-ceilometerclient>=2.5.0,<=2.9.0                 # Apache Software License
-python-cinderclient>=2.1.0,<=2.2.0                     # Apache Software License
-python-designateclient>=1.5.0,<=2.6.0                  # Apache License, Version 2.0
-python-glanceclient==2.7.0                             # Apache License, Version 2.0
-python-heatclient>=1.6.1,<=1.10.0                      # Apache Software License
-python-ironicclient>=1.11.0,<=1.13.0                   # Apache Software License
-python-keystoneclient>=3.8.0,<=3.12.0                  # Apache Software License
-python-magnumclient>=2.0.0,<=2.6.0                     # Apache Software License
-python-manilaclient>=1.12.0,<=1.16.0                   # Apache Software License
-python-mistralclient==3.1.0                            # Apache Software License
-python-monascaclient>=1.1.0,<=1.6.0                    # Apache Software License
-python-muranoclient>=0.8.2,<=0.13.0                    # Apache License, Version 2.0
-python-neutronclient==6.3.0                            # Apache Software License
-python-novaclient>=9.0.0,<=9.0.1                       # Apache License, Version 2.0
-python-saharaclient>=1.1.0,<=1.2.0                     # Apache License, Version 2.0
-python-senlinclient>=1.1.0,<=1.3.0                     # Apache Software License
-python-swiftclient>=3.2.0,<=3.3.0                      # Apache Software License
-python-troveclient>=2.2.0,<=2.10.0                     # Apache Software License
-python-watcherclient>=0.23.0,<=1.2.0                   # Apache Software License
-python-zaqarclient>=1.0.0,<=1.6.0                      # Apache Software License
-kubernetes>=1.0.0b1,<=2.0.0                            # Apache License Version 2.0
+gnocchiclient>=2.7.0,<=3.3.1                           # Apache-2.0
+keystoneauth1==2.21.0                                  # Apache-2.0
+os-faults>=0.1.5,<=0.1.13                              # Apache-2.0
+osprofiler>=1.4.0,<=1.10.1                             # Apache-2.0
+python-ceilometerclient>=2.5.0                         # Apache-2.0
+python-cinderclient>=3.1.0                             # Apache-2.0
+python-designateclient>=1.5.0                          # Apache-2.0
+python-heatclient>=1.6.1                               # Apache-2.0
+python-glanceclient>=2.8.0                             # Apache-2.0
+python-ironicclient>=1.14.0                            # Apache-2.0
+python-keystoneclient>=3.8.0                           # Apache-2.0
+python-magnumclient>=2.0.0                             # Apache-2.0
+python-manilaclient>=1.12.0                            # Apache-2.0
+python-mistralclient>=3.1.0                            # Apache-2.0
+python-muranoclient>=0.8.2                             # Apache-2.0
+python-monascaclient>=1.7.0                            # Apache-2.0
+python-neutronclient>=6.3.0                            # Apache-2.0
+python-novaclient>=9.1.0                               # Apache-2.0
+python-saharaclient>=1.1.0                             # Apache-2.0
+python-senlinclient>=1.1.0                             # Apache-2.0
+python-swiftclient>=3.2.0                              # Apache-2.0
+python-troveclient>=2.2.0                              # Apache-2.0
+python-watcherclient>=0.23.0                           # Apache-2.0
+python-zaqarclient>=1.0.0                              # Apache-2.0
+kubernetes>=1.0.0b1,<=2.0.0                            # Apache-2.0
