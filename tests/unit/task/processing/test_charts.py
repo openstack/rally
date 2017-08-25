@@ -762,7 +762,8 @@ class ModuleTestCase(test.TestCase):
                             "must be 'dict'")},
               {"args": ["additive", {}],
                "expected": "additive output missing key 'title'"},
-              {"args": ["additive", {"title": "foo"}],
+              {"args": ["additive", collections.OrderedDict(
+                  [("title", "foo")])],
                "expected": "additive output missing key 'chart_plugin'"},
               {"args": ["additive", {"title": "a", "chart_plugin": "b"}],
                "expected": "additive output missing key 'data'"},
