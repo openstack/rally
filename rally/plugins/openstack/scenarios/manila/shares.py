@@ -241,6 +241,55 @@ class ListShareServers(utils.ManilaScenario):
         self._list_share_servers(search_opts=search_opts)
 
 
+@validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
+                "cifs", "glusterfs", "hdfs"], missed=False,
+                case_insensitive=True)
+@validation.required_services(consts.Service.MANILA)
+@validation.required_openstack(users=True)
+@scenario.configure(
+    context={"cleanup": ["manila"]},
+    name="ManilaShares.create_share_then_allow_and_deny_access")
+class CreateShareThenAllowAndDenyAccess(utils.ManilaScenario):
+    def run(self, share_proto, access_type, access, access_level="rw", size=1,
+            snapshot_id=None, description=None, metadata=None,
+            share_network=None, share_type=None, is_public=False,
+            availability_zone=None, share_group_id=None):
+        """Create a share and allow and deny access to it
+
+        :param share_proto: share protocol for new share
+            available values are NFS, CIFS, CephFS, GlusterFS and HDFS.
+        :param access_type: represents the access type (e.g: 'ip', 'domain'...)
+        :param access: represents the object (e.g: '127.0.0.1'...)
+        :param access_level: access level to the share (e.g: 'rw', 'ro')
+        :param size: size in GiB
+        :param new_size: new size of the share in GiB
+        :param snapshot_id: ID of the snapshot
+        :param description: description of a share
+        :param metadata: optional metadata to set on share creation
+        :param share_network: either instance of ShareNetwork or text with ID
+        :param share_type: either instance of ShareType or text with ID
+        :param is_public: whether to set share as public or not.
+        :param availability_zone: availability zone of the share
+        :param share_group_id: ID of the share group to which the share
+            should belong
+        """
+        share = self._create_share(
+            share_proto=share_proto,
+            size=size,
+            snapshot_id=snapshot_id,
+            description=description,
+            metadata=metadata,
+            share_network=share_network,
+            share_type=share_type,
+            is_public=is_public,
+            availability_zone=availability_zone,
+            share_group_id=share_group_id
+        )
+        access_result = self._allow_access_share(share, access_type, access,
+                                                 access_level)
+        self._deny_access_share(share, access_result["id"])
+
+
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["manila"]},
