@@ -204,7 +204,7 @@ the following commands:
 
 .. code-block:: console
 
-   $ source ~/.rally/openrc
+   $ . ~/.rally/openrc
    $ openstack image list
    +--------------------------------------+---------------------------------+--------+
    | ID                                   | Name                            | Status |
