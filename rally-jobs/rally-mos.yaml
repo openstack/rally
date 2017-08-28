@@ -1,4 +1,5 @@
 ---
+{%- set cirros_image_url = "http://download.cirros-cloud.net/0.3.5/cirros-0.3.5-x86_64-disk.img" %}
 {%- set keystone_version = keystone_version|default("v2.0") %}
 {% if keystone_version == "v2.0" %}
 
@@ -832,6 +833,27 @@
         timeout: 3000
         times: 1
         type: constant
+      sla:
+        failure_rate:
+          max: 100
+
+  GlanceImages.create_and_update_image:
+    -
+      args:
+        image_location: "{{ cirros_image_url }}"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        api_versions:
+          glance:
+            version: 1
       sla:
         failure_rate:
           max: 100

@@ -78,36 +78,24 @@ class GlanceV1ServiceTestCase(test.TestCase):
         self.gc.images.create.assert_called_once_with(**call_args)
         self.assertEqual(image, self.mock_wait_for_status.mock.return_value)
 
-    def test_update_image(self):
+    @ddt.data({"image_name": None},
+              {"image_name": "test_image_name"})
+    @ddt.unpack
+    def test_update_image(self, image_name):
         image_id = "image_id"
-        image_name1 = self.name_generator.return_value
-        image_name2 = "image_name"
         min_disk = 0
         min_ram = 0
+        expected_image_name = image_name or self.name_generator.return_value
 
-        # case: image_name is None:
-        call_args1 = {"image_id": image_id,
-                      "name": image_name1,
-                      "min_disk": min_disk,
-                      "min_ram": min_ram}
-        image1 = self.service.update_image(image_id=image_id,
-                                           image_name=None,
-                                           min_disk=min_disk,
-                                           min_ram=min_ram)
-        self.assertEqual(self.gc.images.update.return_value, image1)
-        self.gc.images.update.assert_called_once_with(**call_args1)
-
-        # case: image_name is not None:
-        call_args2 = {"image_id": image_id,
-                      "name": image_name2,
-                      "min_disk": min_disk,
-                      "min_ram": min_ram}
-        image2 = self.service.update_image(image_id=image_id,
-                                           image_name=image_name2,
-                                           min_disk=min_disk,
-                                           min_ram=min_ram)
-        self.assertEqual(self.gc.images.update.return_value, image2)
-        self.gc.images.update.assert_called_with(**call_args2)
+        image = self.service.update_image(image_id=image_id,
+                                          image_name=image_name,
+                                          min_disk=min_disk,
+                                          min_ram=min_ram)
+        self.assertEqual(self.gc.images.update.return_value, image)
+        self.gc.images.update.assert_called_once_with(image_id,
+                                                      name=expected_image_name,
+                                                      min_disk=min_disk,
+                                                      min_ram=min_ram)
 
     @ddt.data({"status": "activate", "is_public": True, "owner": "owner"},
               {"status": "activate", "is_public": False, "owner": "owner"},
