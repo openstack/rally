@@ -13,68 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""CLI interface for Rally DB management."""
-
-from __future__ import print_function
-
-import contextlib
 import sys
 
-from oslo_config import cfg
-
 from rally.cli import cliutils
-from rally.cli import envutils
-from rally.common import db
-
-
-@contextlib.contextmanager
-def output_migration_result(method_name):
-    """Print migration result."""
-    print("%s started." % method_name.capitalize())
-    start_revision = db.schema_revision()
-    yield
-    print("%s processed." % method_name.capitalize())
-    current_revision = db.schema_revision()
-    if start_revision != current_revision:
-        print("Database migrated successfully "
-              "from {start} to {end} revision.".format(start=start_revision,
-                                                       end=current_revision))
-    else:
-        print("Database is already up to date")
-
-
-class DBCommands(object):
-    """Commands for DB management."""
-
-    def recreate(self, api):
-        """Drop and create Rally database.
-
-        This will delete all existing data.
-        """
-        db.schema_cleanup()
-        db.schema_create()
-        envutils.clear_env()
-
-    def create(self, api):
-        """Create Rally database."""
-        db.schema_create()
-
-    def upgrade(self, api):
-        """Upgrade Rally database to the latest state."""
-        with output_migration_result("upgrade"):
-            db.schema_upgrade()
-
-    def revision(self, api):
-        """Print current Rally database revision UUID."""
-        print(db.schema_revision())
-
-    def show(self, api):
-        """Show the connection string."""
-        print(cfg.CONF.database.connection)
+from rally.cli.commands import db
 
 
 def main():
-    categories = {"db": DBCommands}
+    categories = {"db": db.DBCommands}
+    print("`rally-manage db <command>` was deprecated since 0.10.0 version "
+          "and is going to be removed soon. Please use `rally db <command>`.")
     return cliutils.run(sys.argv, categories)
 
 

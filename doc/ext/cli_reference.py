@@ -20,7 +20,6 @@ from docutils.parsers import rst
 
 from rally.cli import cliutils
 from rally.cli import main
-from rally.cli import manage
 import utils
 
 
@@ -153,10 +152,7 @@ def get_defaults(func):
 
 
 def make_command_section(category_name, name, parser):
-    # NOTE(andreykurilin): there is only one category in rally-manage, so
-    # let's just hardcode it.
-    cmd = "rally-manage" if category_name == "db" else "rally"
-    section = utils.subcategory("%s %s %s" % (cmd, category_name, name))
+    section = utils.subcategory("rally %s %s" % (category_name, name))
     section.extend(utils.parse_text(parser["description"]))
     if parser["parser"].arguments:
         defaults = get_defaults(parser["parser"].defaults["action_fn"])
@@ -196,7 +192,6 @@ class CLIReferenceDirective(rst.Directive):
     def run(self):
         parser = Parser()
         categories = copy.copy(main.categories)
-        categories["db"] = manage.DBCommands
         if "group" in self.options:
             categories = {k: v for k, v in categories.items()
                           if k == self.options["group"]}

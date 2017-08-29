@@ -20,6 +20,7 @@ from __future__ import print_function
 import sys
 
 from rally.cli import cliutils
+from rally.cli.commands import db
 from rally.cli.commands import deployment
 from rally.cli.commands import plugin
 from rally.cli.commands import task
@@ -27,6 +28,7 @@ from rally.cli.commands import verify
 
 
 categories = {
+    "db": db.DBCommands,
     "deployment": deployment.DeploymentCommands,
     "plugin": plugin.PluginCommands,
     "task": task.TaskCommands,
