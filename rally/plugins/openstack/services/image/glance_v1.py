@@ -93,7 +93,7 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
         """
         image_name = image_name or self.generate_random_name()
 
-        return self._clients.glance("1").images.update(image_id=image_id,
+        return self._clients.glance("1").images.update(image_id,
                                                        name=image_name,
                                                        min_disk=min_disk,
                                                        min_ram=min_ram)
