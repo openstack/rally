@@ -38,7 +38,6 @@ from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
-from rally.task import atomic
 from rally.task.processing import charts
 
 
@@ -526,27 +525,8 @@ class Connection(object):
                 if min_duration is None or min_duration > duration:
                     min_duration = duration
 
-            atomics = collections.OrderedDict()
-
-            for itr in workload_results:
-                merged_atomic = atomic.merge_atomic_actions(
-                    itr["atomic_actions"])
-                for name, value in merged_atomic.items():
-                    duration = value["duration"]
-                    count = value["count"]
-                    if name not in atomics or count > atomics[name]["count"]:
-                        atomics[name] = {"min_duration": duration,
-                                         "max_duration": duration,
-                                         "count": count}
-                    elif count == atomics[name]["count"]:
-                        if duration < atomics[name]["min_duration"]:
-                            atomics[name]["min_duration"] = duration
-                        if duration > atomics[name]["max_duration"]:
-                            atomics[name]["max_duration"] = duration
-
             durations_stat = charts.MainStatsTable(
-                {"total_iteration_count": iter_count,
-                 "statistics": {"atomics": atomics}})
+                {"total_iteration_count": iter_count})
 
             for itr in workload_results:
                 durations_stat.add_iteration(itr)
@@ -570,8 +550,7 @@ class Connection(object):
                     "total_iteration_count": iter_count,
                     "failed_iteration_count": failed_iter_count,
                     "start_time": start_time,
-                    "statistics": {"durations": durations_stat.to_dict(),
-                                   "atomics": atomics},
+                    "statistics": {"durations": durations_stat.to_dict()},
                     "pass_sla": success}
             )
             task_values = {
