@@ -29,7 +29,7 @@ RALLY="rally --config-file $TMP_RALLY_CONF"
 # Create temp db
 cp etc/rally/rally.conf.sample $TMP_RALLY_CONF
 sed -i.bak "s|#connection =.*|connection = \"$DBCONNSTRING\"|" $TMP_RALLY_CONF
-rally-manage --config-file $TMP_RALLY_CONF db create
+rally --config-file $TMP_RALLY_CONF db create
 
 # Create self deployment
 echo '{}' > $TMP_RALLY_DEPLOYMENT

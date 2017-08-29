@@ -2,7 +2,7 @@
 
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-DB_CONNECTION="$(rally-manage db show)"
+DB_CONNECTION="$(rally db show)"
 
 if [[ $DB_CONNECTION == sqlite* ]]; then
     CONCURRENCY=0

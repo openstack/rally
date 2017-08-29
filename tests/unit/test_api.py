@@ -973,7 +973,7 @@ class APITestCase(test.TestCase):
                                            mock_database_revision,
                                            mock_isfile):
         exc = self.assertRaises(exceptions.RallyException, api.API)
-        self.assertIn("rally-manage db upgrade", str(exc))
+        self.assertIn("rally db upgrade", str(exc))
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
@@ -987,7 +987,7 @@ class APITestCase(test.TestCase):
                                                  mock_database_revision,
                                                  mock_isfile):
         exc = self.assertRaises(exceptions.RallyException, api.API)
-        self.assertIn("rally-manage db create", str(exc))
+        self.assertIn("rally db create", str(exc))
         mock_conf.assert_called_once_with(
             [], default_config_files=None, project="rally", version="0.0.0")
 
