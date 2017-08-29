@@ -107,9 +107,8 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
         :param owner: Filter in images for tenant ID
         """
         images = self._clients.glance("1").images.list(status=status,
-                                                       owner=owner)
-        if is_public in [True, False]:
-            return [i for i in images if i.is_public is is_public]
+                                                       owner=owner,
+                                                       is_public=is_public)
         return images
 
     @atomic.action_timer("glance_v1.set_visibility")
