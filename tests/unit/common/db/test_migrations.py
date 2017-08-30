@@ -1541,27 +1541,77 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 deployment_table.delete().where(
                     deployment_table.c.uuid == task_obj.deployment_uuid))
 
-    def _pre_upgrade_c517b0011857(self, engine):
+    def _pre_upgrade_fab4f4f31f8a(self, engine):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
         workload_table = db_utils.get_table(engine, "workloads")
         wdata_table = db_utils.get_table(engine, "workloaddata")
 
-        self._c517b0011857_deployment_uuid = str(uuid.uuid4())
+        self._fab4f4f31f8a_deployment_uuid = str(uuid.uuid4())
         task_uuid = str(uuid.uuid4())
-        self._c517b0011857_subtask = str(uuid.uuid4())
-        self._c517b0011857_workloads = [
+        self._fab4f4f31f8a_subtask = str(uuid.uuid4())
+        self._fab4f4f31f8a_workloads = [
             {"uuid": str(uuid.uuid4()),
              "start_time": 0.0,
-             # deprecated output
              "data": [{"timestamp": 0,
+                       # deprecated output
                        "scenario_output": {"data": {1: 2}},
                        "duration": 3,
                        "idle_duration": 0,
                        "error": None,
-                       "atomic_actions": {
-                           "foo": 3}}]},
+                       # old format of atomics
+                       "atomic_actions": {"foo": 3}}],
+             "statistics": {"durations": {
+                 "atomics": [{"children": [],
+                              "count_per_iteration": 1,
+                              "data": {"90%ile": 3.0,
+                                       "95%ile": 3.0,
+                                       "avg": 3.0,
+                                       "iteration_count": 1,
+                                       "max": 3.0,
+                                       "median": 3.0,
+                                       "min": 3.0,
+                                       "success": "100.0%"},
+                              "display_name": "foo",
+                              "name": "foo"}],
+                 "total": {
+                     "display_name": "total",
+                     "name": "total",
+                     "count_per_iteration": 1,
+                     "data": {"90%ile": 3.0,
+                              "95%ile": 3.0,
+                              "avg": 3.0,
+                              "iteration_count": 1,
+                              "max": 3.0,
+                              "median": 3.0,
+                              "min": 3.0,
+                              "success": "100.0%"},
+                     "children": [
+                         {"display_name": "duration",
+                          "name": "duration",
+                          "children": [],
+                          "count_per_iteration": 1,
+                          "data": {"90%ile": 3.0,
+                                   "95%ile": 3.0,
+                                   "avg": 3.0,
+                                   "iteration_count": 1,
+                                   "max": 3.0,
+                                   "median": 3.0,
+                                   "min": 3.0,
+                                   "success": "100.0%"}},
+                         {"display_name": "idle_duration",
+                          "name": "idle_duration",
+                          "children": [],
+                          "count_per_iteration": 1,
+                          "data": {"90%ile": 0.0,
+                                   "95%ile": 0.0,
+                                   "avg": 0.0,
+                                   "iteration_count": 1,
+                                   "max": 0.0,
+                                   "median": 0.0,
+                                   "min": 0.0,
+                                   "success": "100.0%"}}]}}}},
             {"uuid": str(uuid.uuid4()),
              "start_time": 1.0,
              "data": [{"timestamp": 1, "output": {},
@@ -1582,14 +1632,70 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                            {"name": "foo", "started_at": 6,
                             "finished_at": 9, "children": []},
                            {"name": "foo", "started_at": 9,
-                            "finished_at": 10, "children": []}]}]}
+                            "finished_at": 10, "children": []}]}],
+             "statistics": {"durations": {
+                 "atomics": [{"display_name": "foo (x2)",
+                              "name": "foo",
+                              "children": [],
+                              "count_per_iteration": 2,
+                              "data": {"90%ile": 3.9,
+                                       "95%ile": 3.95,
+                                       "avg": 3.5,
+                                       "iteration_count": 2,
+                                       "max": 4.0,
+                                       "median": 3.5,
+                                       "min": 3.0,
+                                       "success": "100.0%"}}],
+                 "total": {
+                     "display_name": "total",
+                     "name": "total",
+                     "count_per_iteration": 1,
+                     "data": {"90%ile": 4.9,
+                              "95%ile": 4.95,
+                              "avg": 4.5,
+                              "iteration_count": 2,
+                              "max": 5.0,
+                              "median": 4.5,
+                              "min": 4.0,
+                              "success": "100.0%"},
+                     "children": [
+                         {
+                             "display_name": "duration",
+                             "name": "duration",
+                             "children": [],
+                             "count_per_iteration": 1,
+                             "data": {"90%ile": 4.9,
+                                      "95%ile": 4.95,
+                                      "avg": 4.5,
+                                      "iteration_count": 2,
+                                      "max": 5.0,
+                                      "median": 4.5,
+                                      "min": 4.0,
+                                      "success": "100.0%"}},
+                         {
+                             "display_name": "idle_duration",
+                             "name": "idle_duration",
+                             "children": [],
+                             "count_per_iteration": 1,
+                             "data": {"90%ile": 0.0,
+                                      "95%ile": 0.0,
+                                      "avg": 0.0,
+                                      "iteration_count": 2,
+                                      "max": 0.0,
+                                      "median": 0.0,
+                                      "min": 0.0,
+                                      "success": "100.0%"}
+                         }
+                     ]
+                 }
+             }}}
         ]
 
         with engine.connect() as conn:
             conn.execute(
                 deployment_table.insert(),
                 [{
-                    "uuid": self._c517b0011857_deployment_uuid,
+                    "uuid": self._fab4f4f31f8a_deployment_uuid,
                     "name": str(uuid.uuid4()),
                     "config": "{}",
                     "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
@@ -1606,14 +1712,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     "updated_at": timeutils.utcnow(),
                     "status": consts.TaskStatus.FINISHED,
                     "validation_result": six.b(json.dumps({})),
-                    "deployment_uuid": self._c517b0011857_deployment_uuid
+                    "deployment_uuid": self._fab4f4f31f8a_deployment_uuid
                 }]
             )
 
             conn.execute(
                 subtask_table.insert(),
                 [{
-                    "uuid": self._c517b0011857_subtask,
+                    "uuid": self._fab4f4f31f8a_subtask,
                     "created_at": timeutils.utcnow(),
                     "updated_at": timeutils.utcnow(),
                     "task_uuid": task_uuid,
@@ -1623,14 +1729,14 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 }]
             )
 
-            for workload in self._c517b0011857_workloads:
+            for workload in self._fab4f4f31f8a_workloads:
                 conn.execute(
                     workload_table.insert(),
                     [{
                         "uuid": workload["uuid"],
                         "name": "foo",
                         "task_uuid": task_uuid,
-                        "subtask_uuid": self._c517b0011857_subtask,
+                        "subtask_uuid": self._fab4f4f31f8a_subtask,
                         "created_at": timeutils.utcnow(),
                         "updated_at": timeutils.utcnow(),
                         "position": 0,
@@ -1666,7 +1772,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                     }]
                 )
 
-    def _check_c517b0011857(self, engine, data):
+    def _check_fab4f4f31f8a(self, engine, data):
         deployment_table = db_utils.get_table(engine, "deployments")
         task_table = db_utils.get_table(engine, "tasks")
         subtask_table = db_utils.get_table(engine, "subtasks")
@@ -1676,18 +1782,20 @@ class MigrationWalkTestCase(rtest.DBTestCase,
         task_uuid = None
 
         with engine.connect() as conn:
-            subtask_id = self._c517b0011857_subtask
+            subtask_id = self._fab4f4f31f8a_subtask
             for workload in conn.execute(workload_table.select().where(
                     workload_table.c.subtask_uuid == subtask_id)).fetchall():
                 if task_uuid is None:
                     task_uuid = workload.task_uuid
-                original = [w for w in self._c517b0011857_workloads
+                original = [w for w in self._fab4f4f31f8a_workloads
                             if w["uuid"] == workload.uuid][0]
                 if workload.start_time is None:
                     start_time = None
                 else:
                     start_time = workload.start_time / 1000000.0
                 self.assertEqual(original["start_time"], start_time)
+                self.assertEqual(original["statistics"],
+                                 json.loads(workload.statistics))
                 wuuid = workload.uuid
                 for wdata in conn.execute(wdata_table.select().where(
                         wdata_table.c.workload_uuid == wuuid)).fetchall():
@@ -1709,7 +1817,7 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 task_table.delete().where(task_table.c.uuid == task_uuid))
 
-            deployment_uuid = self._c517b0011857_deployment_uuid
+            deployment_uuid = self._fab4f4f31f8a_deployment_uuid
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid))
