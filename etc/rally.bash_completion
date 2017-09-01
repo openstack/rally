@@ -18,6 +18,11 @@ _rally()
     declare -A SUBCOMMANDS
     declare -A OPTS
 
+    OPTS["db_create"]=""
+    OPTS["db_recreate"]=""
+    OPTS["db_revision"]=""
+    OPTS["db_show"]=""
+    OPTS["db_upgrade"]=""
     OPTS["deployment_check"]="--deployment"
     OPTS["deployment_config"]="--deployment"
     OPTS["deployment_create"]="--name --fromenv --filename --no-use"

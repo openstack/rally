@@ -558,7 +558,7 @@ def check_db_imports_in_cli(logical_line, physical_line, filename):
     N360
     """
     if (not filename.startswith("./rally/cli")
-            or filename == "./rally/cli/manage.py"):
+            or filename == "./rally/cli/commands/db.py"):
         return
     if re_db_import.search(logical_line):
         yield (0, "N360 CLI modules do not allow to work with "
