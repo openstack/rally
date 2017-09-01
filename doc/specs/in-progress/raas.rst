@@ -309,7 +309,7 @@ Rally-as-a-Service itself should be started via new command:
 
   .. code-block:: console
 
-    $ rally-manage service start
+    $ rally service start
 
 Rally Web Portal
 ----------------

@@ -455,7 +455,7 @@ setup_rally_configuration () {
     sed "s|#connection *=.*|connection = \"$DBCONNSTRING\"|" "$ETCDIR"/rally.conf > "$CONF_TMPFILE"
     cat "$CONF_TMPFILE" > "$ETCDIR"/rally.conf
     rm "$CONF_TMPFILE"
-    rally-manage db recreate
+    rally db recreate
 }
 
 rally_venv () {

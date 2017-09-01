@@ -1270,14 +1270,14 @@ class API(object):
         if rev["revision"] is None:
             raise exceptions.RallyException(_(
                 "Database is missing. Create database by command "
-                "`rally-manage db create'"))
+                "`rally db create'"))
 
         # Check that db is updated
         if rev["revision"] != rev["current_head"]:
             raise exceptions.RallyException(_(
                 "Database seems to be outdated. Run upgrade from "
                 "revision %(revision)s to %(current_head)s by command "
-                "`rally-manage db upgrade'") % rev)
+                "`rally db upgrade'") % rev)
 
     def _request(self, path, method, **kwargs):
         headers = {

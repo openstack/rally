@@ -94,7 +94,7 @@ complete:
 
 .. code-block:: bash
 
-   rally-manage db recreate
+   rally db recreate
 
 .. include:: ../../../devstack/README.rst
 
@@ -149,7 +149,7 @@ anything with Rally, but you need to create the database first:
 .. code-block:: console
 
    user@box:~/rally$ dock_rally
-   rally@1cc98e0b5941:~$ rally-manage db recreate
+   rally@1cc98e0b5941:~$ rally db recreate
    rally@1cc98e0b5941:~$ rally deployment list
    There are no deployments. To create a new deployment, use:
    rally deployment create

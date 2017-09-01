@@ -30,7 +30,7 @@ End user is provided with the following possibilities:
 
   .. code-block:: shell
 
-    rally-manage db revision
+    rally db revision
 
 - Upgrade existing DB to the latest state.
 
@@ -39,7 +39,7 @@ End user is provided with the following possibilities:
 
   .. code-block:: shell
 
-    rally-manage db upgrade
+    rally db upgrade
 
   **AFTER** upgrading Rally package. DB schema
   will get upgraded to the latest state and all existing data will be kept.

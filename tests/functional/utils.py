@@ -117,12 +117,12 @@ class Rally(object):
             with open(config_filename, "w") as conf:
                 config.write(conf)
             self.args = ["rally", "--config-file", config_filename]
-            subprocess.call(["rally-manage", "--config-file", config_filename,
+            subprocess.call(["rally", "--config-file", config_filename,
                              "db", "recreate"], env=self.env)
             self.config_filename = config_filename
         else:
             self.args = ["rally"]
-            subprocess.call(["rally-manage", "db", "recreate"], env=self.env)
+            subprocess.call(["rally", "db", "recreate"], env=self.env)
 
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")

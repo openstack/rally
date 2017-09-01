@@ -109,7 +109,7 @@ function configure_rally() {
 function init_rally() {
     recreate_database rally utf8
     # Recreate rally database
-    rally-manage --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE db recreate
+    rally --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE db recreate
     # Add current DevStack deployment to Rally
     if [ "$RALLY_ADD_DEPLOYMENT" = "True" ]; then
         local tmpfile=$(mktemp)
