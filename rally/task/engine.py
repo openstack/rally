@@ -638,27 +638,20 @@ class TaskConfig(object):
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "name": {"type": "string"},
+                                    "scenario": {
+                                        "$ref": "#/definitions/singleEntity"},
                                     "description": {"type": "string"},
-                                    "args": {"type": "object"},
-
                                     "runner": {
-                                        "type": "object",
-                                        "properties": {
-                                            "type": {"type": "string"}
-                                        },
-                                        "required": ["type"]
-                                    },
-
+                                        "$ref": "#/definitions/singleEntity"},
                                     "sla": {"type": "object"},
                                     "hooks": {
                                         "type": "array",
                                         "items": HOOK_CONFIG,
                                     },
-                                    "context": {"type": "object"}
+                                    "contexts": {"type": "object"}
                                 },
                                 "additionalProperties": False,
-                                "required": ["name", "runner"]
+                                "required": ["scenario", "runner"]
                             }
                         }
                     },
@@ -668,7 +661,17 @@ class TaskConfig(object):
             }
         },
         "additionalProperties": False,
-        "required": ["title", "subtasks"]
+        "required": ["title", "subtasks"],
+        "definitions": {
+            "singleEntity": {
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 1,
+                "patternProperties": {
+                    ".*": {"type": "object"}
+                }
+            }
+        }
     }
 
     CONFIG_SCHEMAS = {1: CONFIG_SCHEMA_V1, 2: CONFIG_SCHEMA_V2}
@@ -676,13 +679,15 @@ class TaskConfig(object):
     def __init__(self, config):
         """TaskConfig constructor.
 
+        Validates and represents different versions of task configuration in
+        unified form.
+
         :param config: Dict with configuration of specified task
+        :raises Exception: in case of validation error. (This gets reraised as
+            InvalidTaskException. if we raise it here as InvalidTaskException,
+            then "Task config is invalid: " gets prepended to the message twice
         """
         if config is None:
-            # NOTE(stpierre): This gets reraised as
-            # InvalidTaskException. if we raise it here as
-            # InvalidTaskException, then "Task config is invalid: "
-            # gets prepended to the message twice.
             raise Exception(_("Input task is empty"))
 
         self.version = self._get_version(config)
@@ -708,7 +713,13 @@ class TaskConfig(object):
             workloads = []
             for position, wconf in enumerate(sconf["workloads"]):
                 # fill all missed properties of a Workload
+
+                wconf["name"], wconf["args"] = list(
+                    wconf["scenario"].items())[0]
+                del wconf["scenario"]
+
                 wconf["position"] = position
+
                 if not wconf.get("description", ""):
                     try:
                         wconf["description"] = scenario.Scenario.get(
@@ -718,12 +729,16 @@ class TaskConfig(object):
                         # let's fail an issue with loading plugin at a
                         # validation step
                         pass
-                wconf.setdefault("args", {})
-                wconf.setdefault("context", {})
-                wconf.setdefault("runner", {})
+
+                wconf["context"] = wconf.pop("contexts", {})
+
+                runner_type, runner_cfg = list(
+                    wconf["runner"].items())[0]
+                runner_cfg["type"] = runner_type
+                wconf["runner"] = runner_cfg
+
                 wconf.setdefault("sla", {})
                 wconf.setdefault("hooks", [])
-                # store hooks in the format which we have in db
                 wconf["hooks"] = [{"config": h} for h in wconf["hooks"]]
                 workloads.append(wconf)
             sconf["workloads"] = workloads
@@ -755,7 +770,13 @@ class TaskConfig(object):
         for name, v1_workloads in config.items():
             for v1_workload in v1_workloads:
                 v2_workload = copy.deepcopy(v1_workload)
-                v2_workload["name"] = name
+                v2_workload["scenario"] = {name: v2_workload.pop("args", {})}
+                v2_workload["sla"] = v2_workload.pop("sla", {})
+                v2_workload["contexts"] = v2_workload.pop("context", {})
+                if "runner" in v2_workload:
+                    runner_type = v2_workload["runner"].pop("type")
+                    v2_workload["runner"] = {
+                        runner_type: v2_workload["runner"]}
                 subtasks.append({"title": name, "workloads": [v2_workload]})
         return {"title": "Task (adopted from task format v1)",
                 "subtasks": subtasks}
