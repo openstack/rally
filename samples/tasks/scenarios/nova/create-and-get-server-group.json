@@ -2,11 +2,9 @@
     "NovaServerGroups.create_and_get_server_group": [
         {
             "args": {
-                "kwargs": {
-                        "policies": [
-                            "affinity"
-                        ]
-                    }
+                "policies": [
+                    "affinity"
+                ]
             },
             "runner": {
                 "type": "constant",
