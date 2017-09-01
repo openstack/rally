@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.common import utils
@@ -29,6 +30,7 @@ class Owner(utils.RandomNameGeneratorMixin):
     task = {"uuid": "task-uuid"}
 
 
+@ddt.ddt
 class NeutronWrapperTestCase(test.TestCase):
     def setUp(self):
         self.owner = Owner()
@@ -284,6 +286,63 @@ class NeutronWrapperTestCase(test.TestCase):
                          [mock.call(subnet_id) for subnet_id in subnets])
         service.client.delete_network.assert_called_once_with("foo_id")
 
+        mock_neutron_wrapper_supports_extension.assert_called_once_with(
+            "dhcp_agent_scheduler")
+
+    @ddt.data({"exception_type": neutron_exceptions.NotFound,
+               "should_raise": False},
+              {"exception_type": neutron_exceptions.BadRequest,
+               "should_raise": False},
+              {"exception_type": KeyError,
+               "should_raise": True})
+    @ddt.unpack
+    @mock.patch("rally.plugins.openstack.wrappers.network.NeutronWrapper"
+                ".supports_extension", return_value=(True, ""))
+    def test_delete_network_with_router_throw_exception(
+            self, mock_neutron_wrapper_supports_extension, exception_type,
+            should_raise):
+        # Ensure cleanup context still move forward even
+        # remove_interface_router throw NotFound/BadRequest exception
+
+        service = self.get_wrapper()
+        service.client.remove_interface_router.side_effect = exception_type
+        agents = ["foo_agent", "bar_agent"]
+        subnets = ["foo_subnet", "bar_subnet"]
+        ports = [{"id": "foo_port", "device_owner": "network:router_interface",
+                  "device_id": "rounttter"},
+                 {"id": "bar_port", "device_owner": "network:dhcp"}]
+        service.client.list_dhcp_agent_hosting_networks.return_value = (
+            {"agents": [{"id": agent_id} for agent_id in agents]})
+        service.client.list_ports.return_value = ({"ports": ports})
+        service.client.delete_network.return_value = "foo_deleted"
+
+        if should_raise:
+            self.assertRaises(exception_type, service.delete_network,
+                              {"id": "foo_id", "router_id": "foo_router",
+                               "subnets": subnets, "lb_pools": []})
+
+            self.assertNotEqual(service.client.delete_subnet.mock_calls,
+                                [mock.call(subnet_id) for subnet_id in
+                                 subnets])
+            self.assertFalse(service.client.delete_network.called)
+        else:
+            result = service.delete_network(
+                {"id": "foo_id", "router_id": "foo_router", "subnets": subnets,
+                 "lb_pools": []})
+
+            self.assertEqual("foo_deleted", result)
+            service.client.delete_port.assert_called_once_with(ports[1]["id"])
+            service.client.remove_interface_router.assert_called_once_with(
+                ports[0]["device_id"], {"port_id": ports[0]["id"]})
+            self.assertEqual(service.client.delete_subnet.mock_calls,
+                             [mock.call(subnet_id) for subnet_id in subnets])
+            service.client.delete_network.assert_called_once_with("foo_id")
+
+        self.assertEqual(
+            service.client.remove_network_from_dhcp_agent.mock_calls,
+            [mock.call(agent_id, "foo_id") for agent_id in agents])
+        self.assertEqual(service.client.remove_gateway_router.mock_calls,
+                         [mock.call("foo_router")])
         mock_neutron_wrapper_supports_extension.assert_called_once_with(
             "dhcp_agent_scheduler")
 
