@@ -244,8 +244,8 @@ class ListShareServers(utils.ManilaScenario):
 @validation.add("enum", param_name="share_proto", values=["nfs", "cephfs",
                 "cifs", "glusterfs", "hdfs"], missed=False,
                 case_insensitive=True)
-@validation.required_services(consts.Service.MANILA)
-@validation.required_openstack(users=True)
+@validation.add("required_services", services=[consts.Service.MANILA])
+@validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
     context={"cleanup": ["manila"]},
     name="ManilaShares.create_share_then_allow_and_deny_access")
