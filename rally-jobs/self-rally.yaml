@@ -399,18 +399,16 @@
               concurrency: 5
 
     -
-      title: Test function based scenario
-      workloads:
-        -
-          scenario:
-            FakePlugin.testplugin: {}
-          runner:
-            constant:
-              times: 4
-              concurrency: 4
-          sla:
-            failure_rate:
-              max: 0
+      title: Test a subtask with only one workload
+      scenario:
+        FakePlugin.testplugin: {}
+      runner:
+        constant:
+          times: 4
+          concurrency: 4
+      sla:
+        failure_rate:
+          max: 0
 
     -
       title: Profile generate_random_name method
