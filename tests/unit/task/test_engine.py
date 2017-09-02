@@ -38,7 +38,8 @@ class TaskEngineTestCase(test.TestCase):
     @staticmethod
     def _make_workload(name, args=None, description=None, context=None,
                        sla=None, runner=None, hooks=None, position=0):
-        return {"name": name,
+        return {"uuid": "foo",
+                "name": name,
                 "position": position,
                 "description": description,
                 "args": args,
@@ -514,6 +515,7 @@ class TaskEngineTestCase(test.TestCase):
             mock_result_consumer):
         scenario_cls = mock_scenario.get.return_value
         scenario_cls.get_platform.return_value = "openstack"
+        scenario_cls.get_info.return_value = {"title": ""}
         task = mock.MagicMock()
         mock_result_consumer.is_task_in_aborting_status.side_effect = [False,
                                                                        False,

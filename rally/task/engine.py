@@ -334,7 +334,7 @@ class TaskEngine(object):
             kw = {"name": workload["name"],
                   "pos": workload["position"],
                   "config": json.dumps(
-                      objects.Workload.format_workload_config(workload)),
+                      objects.Workload.to_task(workload)),
                   "reason": msg}
 
             raise exceptions.InvalidTaskConfig(**kw)
@@ -518,15 +518,12 @@ class TaskEngine(object):
             context=workload["context"],
             sla=workload["sla"],
             args=workload["args"])
+        workload["uuid"] = workload_obj["uuid"]
 
-        workload_cfg = objects.Workload.format_workload_config(workload)
+        workload_cfg = objects.Workload.to_task(workload)
         LOG.info("Running benchmark with key: \n"
-                 "  name = %(name)s\n"
-                 "  description = %(description)s\n"
                  "  position = %(position)s\n"
-                 "  config = %(cfg)s", {"name": workload["name"],
-                                        "description": workload["description"],
-                                        "position": workload["position"],
+                 "  config = %(cfg)s", {"position": workload["position"],
                                         "cfg": json.dumps(workload_cfg,
                                                           indent=3)})
 

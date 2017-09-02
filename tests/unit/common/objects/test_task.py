@@ -15,6 +15,7 @@
 
 """Tests for db.task layer."""
 
+import collections
 import datetime as dt
 
 import ddt
@@ -407,7 +408,7 @@ class WorkloadTestCase(test.TestCase):
             start_time=start_time, sla_results=sla_results,
             hooks_results=None)
 
-    def test_format_workload_config(self):
+    def test_to_task(self):
         workload = {
             "id": 777,
             "uuid": "uuiiidd",
@@ -433,9 +434,18 @@ class WorkloadTestCase(test.TestCase):
             "statistics": {},
             "pass_sla": False
         }
-        self.assertEqual({"args": {"key1": "value1"},
-                          "context": {"users": {}},
-                          "sla": {"failure_rate": {"max": 0}},
-                          "hooks": [{"hook1": "xxx"}],
-                          "runner": {"type": "constant", "times": 3}},
-                         objects.Workload.format_workload_config(workload))
+        expected_task = collections.OrderedDict([
+            ("version", 2),
+            ("title", "A cropped version of a bigger task."),
+            ("description", "Auto-generated task from a single workload "
+                            "(uuid=%s)" % workload["uuid"]),
+            ("subtasks",
+             [collections.OrderedDict([
+                 ("title", workload["name"]),
+                 ("description", workload["description"]),
+                 ("scenario", {workload["name"]: workload["args"]}),
+                 ("contexts", workload["context"]),
+                 ("runner", {"constant": {"times": 3}}),
+                 ("hooks", [h["config"] for h in workload["hooks"]]),
+                 ("sla", workload["sla"])])])])
+        self.assertEqual(expected_task, objects.Workload.to_task(workload))

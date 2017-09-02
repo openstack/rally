@@ -688,7 +688,12 @@ class TaskCommands(object):
         if type(tasks_results) == list:
             # it is an old format:
 
-            task = {"subtasks": []}
+            task = {"version": 2,
+                    "title": "Task loaded from a file.",
+                    "description": "Auto-ported from task format V1.",
+                    "uuid": "n/a",
+                    "tags": [],
+                    "subtasks": []}
 
             start_time = None
 
@@ -753,7 +758,8 @@ class TaskCommands(object):
                 updated_at += dt.timedelta(seconds=result["full_duration"])
                 updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
                 pass_sla = all(s.get("success") for s in result["sla"])
-                workload = {"name": result["key"]["name"],
+                workload = {"uuid": "n/a",
+                            "name": result["key"]["name"],
                             "position": result["key"]["pos"],
                             "description": result["key"].get("description",
                                                              ""),
@@ -780,7 +786,10 @@ class TaskCommands(object):
                                 "durations": durations_stat.to_dict(),
                                 "atomics": atomics},
                             }
-                task["subtasks"].append({"workloads": [workload]})
+                task["subtasks"].append(
+                    {"title": "A SubTask",
+                     "description": "",
+                     "workloads": [workload]})
             return task
         else:
             raise FailedToLoadResults(

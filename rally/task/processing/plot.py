@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import copy
 import datetime as dt
 import hashlib
 import itertools
@@ -137,7 +138,7 @@ def _process_workload(workload, workload_cfg, pos):
         "pos": str(pos),
         "name": method + (pos and " [%d]" % (pos + 1) or ""),
         "runner": workload["runner"]["type"],
-        "config": json.dumps({workload["name"]: [workload_cfg]}, indent=2),
+        "config": json.dumps(workload_cfg, indent=2),
         "hooks": _process_hooks(workload["hooks"]),
         "description": workload.get("description", ""),
         "iterations": {
@@ -167,35 +168,72 @@ def _process_workload(workload, workload_cfg, pos):
 
 def _process_workloads(workloads):
     p_workloads = []
-    source_dict = collections.defaultdict(list)
     position = collections.defaultdict(lambda: -1)
 
     for workload in workloads:
         name = workload["name"]
         position[name] += 1
-        workload_cfg = objects.Workload.format_workload_config(workload)
-        source_dict[name].append(workload_cfg)
+        workload_cfg = objects.Workload.to_task(workload)
         p_workloads.append(_process_workload(workload, workload_cfg,
                                              position[name]))
 
-    source = json.dumps(source_dict, indent=2, sort_keys=True)
-    return source, sorted(p_workloads, key=lambda r: (r["cls"], r["met"],
-                                                      int(r["pos"])))
+    return sorted(p_workloads,
+                  key=lambda r: (r["cls"], r["met"], int(r["pos"])))
+
+
+def _make_source(tasks):
+    # TODO(andreykurilin): include tags someday
+    source = collections.OrderedDict([("version", 2)])
+    single_task = (len(tasks) == 1)
+    if not single_task:
+        source["title"] = "A combined task."
+        source["description"] = ("The task contains subtasks from a multiple "
+                                 "number of tasks.")
+    else:
+        source["title"] = tasks[0]["title"]
+        source["description"] = tasks[0]["description"]
+    source["subtasks"] = []
+    for task in tasks:
+        for subtask in task["subtasks"]:
+            subtask_cfg = collections.OrderedDict()
+            subtask_cfg["title"] = subtask["title"]
+            subtask_cfg["description"] = subtask["description"]
+            if not single_task:
+                # save original identifiers.
+                if subtask_cfg["description"]:
+                    subtask_cfg["description"] += "\n"
+                subtask_cfg["description"] += (
+                    "[Task UUID: %s]" % task["uuid"])
+            # subtask_cfg["tags"] = subtask["tags"]
+            subtask_cfg["workloads"] = []
+            for workload in subtask["workloads"]:
+                workload_cfg = collections.OrderedDict()
+                workload_cfg["scenario"] = {workload["name"]: workload["args"]}
+                workload_cfg["description"] = workload["description"]
+                workload_cfg["contexts"] = workload["context"]
+                runner = copy.copy(workload["runner"])
+                workload_cfg["runner"] = {runner.pop("type"): runner}
+                workload_cfg["hooks"] = [h["config"]
+                                         for h in workload["hooks"]]
+                workload_cfg["sla"] = workload["sla"]
+                subtask_cfg["workloads"].append(workload_cfg)
+            source["subtasks"].append(subtask_cfg)
+    return json.dumps(source, indent=2)
 
 
 def plot(tasks_results, include_libs=False):
+    source = _make_source(tasks_results)
     tasks = []
     subtasks = []
     workloads = []
     for task in tasks_results:
         tasks.append(task)
-
         for subtask in tasks[-1]["subtasks"]:
             workloads.extend(subtask.pop("workloads"))
         subtasks.extend(tasks[-1].pop("subtasks"))
 
     template = ui_utils.get_template("task/report.html")
-    source, data = _process_workloads(workloads)
+    data = _process_workloads(workloads)
     return template.render(version=version.version_string(),
                            source=json.dumps(source),
                            data=json.dumps(data),
@@ -207,8 +245,7 @@ def trends(tasks):
     for task in tasks:
         for workload in itertools.chain(
                 *[s["workloads"] for s in task["subtasks"]]):
-            workload_cfg = objects.Workload.format_workload_config(workload)
-            trends.add_result(workload, workload_cfg)
+            trends.add_result(workload)
     template = ui_utils.get_template("task/trends.html")
     return template.render(version=version.version_string(),
                            data=json.dumps(trends.get_data()))
@@ -243,7 +280,8 @@ class Trends(object):
     def _make_hash(self, obj):
         return hashlib.md5(self._to_str(obj).encode("utf8")).hexdigest()
 
-    def add_result(self, workload, workload_cfg):
+    def add_result(self, workload):
+        workload_cfg = objects.Workload.to_task(workload)
         key = self._make_hash(workload_cfg)
         if key not in self._data:
             self._data[key] = {
