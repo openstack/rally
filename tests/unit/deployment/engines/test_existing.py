@@ -38,6 +38,7 @@ class TestExistingCloud(test.TestCase):
                     "https_insecure": False,
                     "https_cacert": "cacert",
                     "profiler_hmac_key": None,
+                    "profiler_conn_str": None,
                     "admin": {
                         "username": "admin",
                         "password": "myadminpass",
@@ -54,6 +55,7 @@ class TestExistingCloud(test.TestCase):
                     "https_insecure": False,
                     "https_cacert": "cacert",
                     "profiler_hmac_key": None,
+                    "profiler_conn_str": None,
                     "admin": {
                         "username": "admin",
                         "password": "myadminpass",
@@ -75,6 +77,7 @@ class TestExistingCloud(test.TestCase):
                             "https_insecure": False,
                             "https_cacert": "cacert",
                             "profiler_hmac_key": None,
+                            "profiler_conn_str": None,
                             "admin": {
                                 "username": "admin",
                                 "password": "myadminpass",
@@ -163,6 +166,7 @@ class TestExistingCloud(test.TestCase):
             "https_cacert": "cacert",
             "https_insecure": False,
             "profiler_hmac_key": None,
+            "profiler_conn_str": None,
             "password": "myadminpass",
             "permission": "admin",
             "project_domain_name": None,

@@ -43,7 +43,8 @@ FAKE_DEPLOYMENT_CONFIG = {
             "domain_name": None,
             "project_domain_name": "Default",
             "user_domain_name": "Default",
-            "profiler_hmac_key": None
+            "profiler_hmac_key": None,
+            "profiler_conn_str": None
         },
         "region_name": "RegionOne",
         "endpoint_type": consts.EndpointType.INTERNAL}}

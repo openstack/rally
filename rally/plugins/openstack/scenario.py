@@ -121,19 +121,23 @@ class OpenStackScenario(scenario.Scenario):
         if context is not None:
             cred = None
             profiler_hmac_key = None
+            profiler_conn_str = None
             if context.get("admin"):
                 cred = context["admin"]["credential"]
                 if cred.profiler_hmac_key is not None:
                     profiler_hmac_key = cred.profiler_hmac_key
+                    profiler_conn_str = cred.profiler_conn_str
             if context.get("user"):
                 cred = context["user"]["credential"]
                 if cred.profiler_hmac_key is not None:
                     profiler_hmac_key = cred.profiler_hmac_key
+                    profiler_conn_str = cred.profiler_conn_str
             if profiler_hmac_key is None:
                 return
             profiler.init(profiler_hmac_key)
             trace_id = profiler.get().get_base_id()
-            self.add_output(complete={
-                "title": "OSProfiler Trace-ID",
-                "chart_plugin": "TextArea",
-                "data": [trace_id]})
+            complete_data = {"title": "OSProfiler Trace-ID",
+                             "chart_plugin": "OSProfiler",
+                             "data": {"trace_id": [trace_id],
+                                      "conn_str": profiler_conn_str}}
+            self.add_output(complete=complete_data)

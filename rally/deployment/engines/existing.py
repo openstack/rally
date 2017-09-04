@@ -153,6 +153,7 @@ class ExistingCloud(engine.Engine):
             "https_insecure": {"type": "boolean"},
             "https_cacert": {"type": "string"},
             "profiler_hmac_key": {"type": ["string", "null"]},
+            "profiler_conn_str": {"type": ["string", "null"]},
             "admin": USER_SCHEMA,
             "users": {"type": "array", "items": USER_SCHEMA, "minItems": 1},
             "extra": {"type": "object", "additionalProperties": True}
