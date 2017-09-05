@@ -1,24 +1,24 @@
 ---
-  ZaqarBasic.create_queue:
+  version: 2
+  title: Task for gate-rally-dsvm-zaqar-rally-ubuntu-xenial-nv job
+  description: >
+    This task contains various scenarios for testing zaqar plugins
+  subtasks:
     -
-      args: {}
+      title: ZaqarBasic.create_queue test
+      scenario:
+        ZaqarBasic.create_queue: {}
       runner:
-        type: "constant"
-        times: 100
-        concurrency: 10
-      sla:
-        failure_rate:
-          max: 0
-
-  ZaqarBasic.producer_consumer:
+        constant:
+          times: 100
+          concurrency: 10
     -
-      args:
-        min_msg_count: 50
-        max_msg_count: 200
+      title: ZaqarBasic.producer_consumer test
+      scenario:
+        ZaqarBasic.producer_consumer:
+          min_msg_count: 50
+          max_msg_count: 200
       runner:
-        type: "constant"
-        times: 100
-        concurrency: 10
-      sla:
-        failure_rate:
-          max: 0
+        constant:
+          times: 100
+          concurrency: 10
