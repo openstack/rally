@@ -604,7 +604,7 @@ class TaskConfig(object):
         "$schema": consts.JSON_SCHEMA,
         "properties": {
             "version": {"type": "number"},
-            "title": {"type": "string"},
+            "title": {"type": "string", "maxLength": 128},
             "description": {"type": "string"},
             "tags": {
                 "type": "array",
@@ -636,12 +636,12 @@ class TaskConfig(object):
             "subtask-workload": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
+                    "title": {"type": "string", "maxLength": 128},
                     "group": {"type": "string"},
                     "description": {"type": "string"},
                     "tags": {
                         "type": "array",
-                        "items": {"type": "string"}
+                        "items": {"type": "string", "maxLength": 255}
                     },
                     "scenario": {"$ref": "#/definitions/singleEntity"},
                     "runner": {"$ref": "#/definitions/singleEntity"},
@@ -663,7 +663,7 @@ class TaskConfig(object):
                     "description": {"type": "string"},
                     "tags": {
                         "type": "array",
-                        "items": {"type": "string"}
+                        "items": {"type": "string", "maxLength": 255}
                     },
                     "run_in_parallel": {"type": "boolean"},
                     "workloads": {
