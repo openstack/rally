@@ -14,9 +14,8 @@
 #    under the License.
 
 import inspect
-import json
+import itertools
 import os
-import re
 import traceback
 
 import mock
@@ -29,7 +28,7 @@ from rally.task import engine
 from rally.task import scenario
 from tests.unit import test
 
-RALLY_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir)
+RALLY_PATH = os.path.dirname(os.path.dirname(rally.__file__))
 
 
 class TaskSampleTestCase(test.TestCase):
@@ -42,53 +41,58 @@ class TaskSampleTestCase(test.TestCase):
         with mock.patch("rally.api.API.check_db_revision"):
             self.rapi = api.API()
 
-    def _check_missing_sla_section(self, raw, filename):
-        re_sla_section = re.compile(r"\"?failure_rate\"?:")
-        matches = re_sla_section.findall(raw)
-        self.assertTrue(
-            len(matches),
-            "sla section is required in %s." % filename)
+    def iterate_samples(self, merge_pairs=True):
+        """Iterates all task samples
 
-    def test_check_missing_sla_section(self):
+        :param merge_pairs: Whether or not to return both json and yaml samples
+            of one sample.
+        """
         for dirname, dirnames, filenames in os.walk(self.samples_path):
             for filename in filenames:
-                full_path = os.path.join(dirname, filename)
+                # NOTE(hughsaunders): Skip non config files
+                # (bug https://bugs.launchpad.net/rally/+bug/1314369)
+                if filename.endswith("json") or (
+                        not merge_pairs and filename.endswith("yaml")):
+                    yield os.path.join(dirname, filename)
 
-                if not full_path.startswith("./samples/tasks/scenarios/"):
-                    continue
-
-                if not re.search("\.(ya?ml|json)$", filename, flags=re.I):
-                    continue
-
-                with open(full_path) as task_file:
-                    data = task_file.read()
-                    self._check_missing_sla_section(data, task_file)
+    def test_check_missing_sla_section(self):
+        failures = []
+        for path in self.iterate_samples():
+            if "tasks/scenarios" not in path:
+                continue
+            with open(path) as task_file:
+                task_config = yaml.safe_load(
+                    self.rapi.task.render_template(
+                        task_template=task_file.read()))
+                for workload in itertools.chain(*task_config.values()):
+                    if not workload.get("sla", {}):
+                        failures.append(path)
+        if failures:
+            self.fail("One or several workloads from the list of samples below"
+                      " doesn't have SLA section: \n  %s" %
+                      "\n  ".join(failures))
 
     def test_schema_is_valid(self):
         scenarios = set()
 
-        for dirname, dirnames, filenames in os.walk(self.samples_path):
-            for filename in filenames:
-                full_path = os.path.join(dirname, filename)
-
-                # NOTE(hughsaunders): Skip non config files
-                # (bug https://bugs.launchpad.net/rally/+bug/1314369)
-                if not re.search("\.(ya?ml|json)$", filename, flags=re.I):
-                    continue
-
-                with open(full_path) as task_file:
+        for path in self.iterate_samples():
+            with open(path) as task_file:
+                try:
                     try:
                         task_config = yaml.safe_load(
                             self.rapi.task.render_template(
                                 task_template=task_file.read()))
-                        eng = engine.TaskEngine(task_config,
-                                                mock.MagicMock(), mock.Mock())
-                        eng.validate(only_syntax=True)
                     except Exception:
                         print(traceback.format_exc())
-                        self.fail("Invalid task file: %s" % full_path)
-                    else:
-                        scenarios.update(task_config.keys())
+                        self.fail("Invalid JSON file: %s" % path)
+                    eng = engine.TaskEngine(task_config,
+                                            mock.MagicMock(), mock.Mock())
+                    eng.validate(only_syntax=True)
+                except Exception:
+                    print(traceback.format_exc())
+                    self.fail("Invalid task file: %s" % path)
+                else:
+                    scenarios.update(task_config.keys())
 
         missing = set(s.get_name() for s in scenario.Scenario.get_all())
         missing -= scenarios
@@ -98,80 +102,63 @@ class TaskSampleTestCase(test.TestCase):
         self.assertEqual(missing, [],
                          "These scenarios don't have samples: %s" % missing)
 
-    def test_json_correct_syntax(self):
-        for dirname, dirnames, filenames in os.walk(self.samples_path):
-            for filename in filenames:
-                if not filename.endswith(".json"):
-                    continue
-                full_path = os.path.join(dirname, filename)
-                with open(full_path) as task_file:
-                    try:
-                        json.loads(self.rapi.task.render_template(
-                            task_template=task_file.read()))
-                    except Exception:
-                        print(traceback.format_exc())
-                        self.fail("Invalid JSON file: %s" % full_path)
+    def test_task_config_pairs(self):
 
-    def test_task_config_pair_existance(self):
-        inexistent_paths = []
+        not_equal = []
+        missed = []
+        checked = []
 
-        for dirname, dirnames, filenames in os.walk(self.samples_path):
-            # iterate over unique config names
-            for sample_name in set(
-                    f[:-5] for f in filenames
-                    if f.endswith(".json") or f.endswith(".yaml")):
+        for path in self.iterate_samples(merge_pairs=False):
+            if path.endswith(".json"):
+                json_path = path
+                yaml_path = json_path.replace(".json", ".yaml")
+            else:
+                yaml_path = path
+                json_path = yaml_path.replace(".yaml", ".json")
 
-                partial_path = os.path.join(dirname, sample_name)
-                yaml_path = partial_path + ".yaml"
-                json_path = partial_path + ".json"
+            if json_path in checked:
+                continue
+            else:
+                checked.append(json_path)
 
-                if not os.path.exists(yaml_path):
-                    inexistent_paths.append(yaml_path)
-                elif not os.path.exists(json_path):
-                    inexistent_paths.append(json_path)
+            if not os.path.exists(yaml_path):
+                missed.append(yaml_path)
+            elif not os.path.exists(json_path):
+                missed.append(json_path)
+            else:
+                with open(json_path) as json_file:
+                    json_config = yaml.safe_load(
+                        self.rapi.task.render_template(
+                            task_template=json_file.read()))
+                with open(yaml_path) as yaml_file:
+                    yaml_config = yaml.safe_load(
+                        self.rapi.task.render_template(
+                            task_template=yaml_file.read()))
+                if json_config != yaml_config:
+                    not_equal.append("'%s' and '%s'" % (yaml_path, json_path))
 
-        if inexistent_paths:
-            self.fail("Sample task configs are missing:\n%r"
-                      % inexistent_paths)
+        error = ""
+        if not_equal:
+            error += ("Sample task configs are not equal:\n\t%s\n"
+                      % "\n\t".join(not_equal))
+        if missed:
+            self.fail("Sample task configs are missing:\n\t%s\n"
+                      % "\n\t".join(missed))
 
-    def test_task_config_pairs_equality(self):
-        for dirname, dirnames, filenames in os.walk(self.samples_path):
-            # iterate over unique config names
-            for sample_name in set(
-                    f[:-5] for f in filenames
-                    if f.endswith(".json") or f.endswith(".yaml")):
-
-                partial_path = os.path.join(dirname, sample_name)
-                yaml_path = partial_path + ".yaml"
-                json_path = partial_path + ".json"
-
-                if os.path.exists(yaml_path) and os.path.exists(json_path):
-                    with open(json_path) as json_file:
-                        json_config = yaml.safe_load(
-                            self.rapi.task.render_template(
-                                task_template=json_file.read()))
-                    with open(yaml_path) as yaml_file:
-                        yaml_config = yaml.safe_load(
-                            self.rapi.task.render_template(
-                                task_template=yaml_file.read()))
-                    self.assertEqual(json_config, yaml_config,
-                                     "Sample task configs are not equal:"
-                                     "\n%s\n%s" % (yaml_path, json_path))
+        if error:
+            self.fail(error)
 
     def test_no_underscores_in_filename(self):
         bad_filenames = []
 
-        for dirname, dirnames, filenames in os.walk(self.samples_path):
-            for filename in filenames:
-                if "_" in filename and (filename.endswith(".yaml") or
-                                        filename.endswith(".json")):
-                    full_path = os.path.join(dirname, filename)
-                    bad_filenames.append(full_path)
+        for path in self.iterate_samples(merge_pairs=False):
+            if "_" in path:
+                bad_filenames.append(path)
 
-        self.assertEqual([], bad_filenames,
-                         "Following sample task filenames contain "
-                         "underscores (_) but must use dashes (-) instead: "
-                         "{}".format(bad_filenames))
+        if bad_filenames:
+            self.fail("Following sample task filename(s) contain underscores "
+                      "(_) but must use dashes (-) instead: %s" %
+                      bad_filenames)
 
     def test_context_samples_found(self):
         all_plugins = context.Context.get_all()
