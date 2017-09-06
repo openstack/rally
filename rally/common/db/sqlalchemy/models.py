@@ -164,7 +164,7 @@ class Task(BASE, RallyBase):
     # we do not save the whole input task
     input_task = deferred(sa.Column(sa.Text, default=""))
 
-    title = sa.Column(sa.String(64), default="")
+    title = sa.Column(sa.String(128), default="")
     description = sa.Column(sa.Text, default="")
 
     validation_result = sa.Column(
@@ -201,7 +201,7 @@ class Subtask(BASE, RallyBase):
         primaryjoin=(task_uuid == Task.uuid),
     )
 
-    title = sa.Column(sa.String(64), default="")
+    title = sa.Column(sa.String(128), default="")
     description = sa.Column(sa.Text, default="")
 
     # we do not support subtask contexts feature, see
