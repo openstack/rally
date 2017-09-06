@@ -17,8 +17,6 @@ from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 from rally.task import validation
 
-"""Benchmark scenarios for Ceilometer Alarms API."""
-
 
 @validation.add("required_services",
                 services=[consts.Service.CEILOMETER])

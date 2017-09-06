@@ -27,7 +27,7 @@ from tests.unit import fakes
 from tests.unit import test
 
 
-class BenchmarkUtilsTestCase(test.TestCase):
+class TaskUtilsTestCase(test.TestCase):
 
     def test_wait_for_delete(self):
         def update_resource(self):

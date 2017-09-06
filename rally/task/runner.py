@@ -111,7 +111,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
     """Base class for all scenario runners.
 
     Scenario runner is an entity that implements a certain strategy of
-    launching benchmark scenarios, e.g. running them continuously or
+    launching scenarios plugins, e.g. running them continuously or
     periodically for a given number of times or seconds.
     These strategies should be implemented in subclasses of ScenarioRunner
     in the_run_scenario() method.
@@ -133,7 +133,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
         result_queue, where results will be put by _send_result method.
 
         :param task: Instance of objects.Task
-        :param config: Dict with runner section from benchmark configuration
+        :param config: Dict with runner section of input task
         """
         self.task = task
         self.config = config
@@ -146,13 +146,13 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
 
     @abc.abstractmethod
     def _run_scenario(self, cls, method_name, context, args):
-        """Runs the specified benchmark scenario with given arguments.
+        """Runs the specified scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
         :param method_name: Name of the method that implements the scenario
-        :param context: Benchmark context that contains users, admin & other
-                        information, that was created before benchmark started.
-        :param args: Arguments to call the scenario method with
+        :param context: dict object that contains data created
+                        by contexts plugins
+        :param args: Arguments to call the scenario plugin with
 
         :returns: List of results fore each single scenario iteration,
                   where each result is a dictionary
@@ -171,7 +171,7 @@ class ScenarioRunner(plugin.Plugin, validation.ValidatablePluginMixin):
         self.run_duration = timer.duration()
 
     def abort(self):
-        """Abort the execution of further benchmark scenario iterations."""
+        """Abort the execution of further scenario iterations."""
         self.aborted.set()
 
     @staticmethod

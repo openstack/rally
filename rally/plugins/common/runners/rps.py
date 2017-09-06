@@ -137,8 +137,8 @@ class CheckPRSValidator(validation.Validator):
 class RPSScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that does the job with specified frequency.
 
-    Every single benchmark scenario iteration is executed with specified
-    frequency (runs per second) in a pool of processes. The scenario will be
+    Every single scenario iteration is executed with specified frequency
+    (runs per second) in a pool of processes. The scenario will be
     launched for a fixed number of times in total (specified in the config).
 
     An example of a rps scenario is booting 1 VM per second. This
@@ -210,17 +210,18 @@ class RPSScenarioRunner(runner.ScenarioRunner):
     }
 
     def _run_scenario(self, cls, method_name, context, args):
-        """Runs the specified benchmark scenario with given arguments.
+        """Runs the specified scenario with given arguments.
 
-        Every single benchmark scenario iteration is executed with specified
-        frequency (runs per second) in a pool of processes. The scenario will
-        be launched for a fixed number of times in total (specified in the
+        Every single scenario iteration is executed with specified
+        frequency (runs per second) in a pool of processes. The scenario is
+        launched for a fixed number of times in total (specified in the
         config).
 
         :param cls: The Scenario class where the scenario is implemented
         :param method_name: Name of the method that implements the scenario
-        :param context: Benchmark context that contains users, admin & other
-                        information, that was created before benchmark started.
+        :param context: Context that contains users, admin & other
+                        information, that was created before scenario
+                        execution starts.
         :param args: Arguments to call the scenario method with
 
         :returns: List of results fore each single scenario iteration,

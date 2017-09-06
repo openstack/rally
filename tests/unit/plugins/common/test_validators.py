@@ -90,14 +90,14 @@ class RequiredParameterValidatorTestCase(test.TestCase):
 
     @ddt.data(({"args": {"a": 10, "b": 20}}, "a", None, None),
               ({"args": {"a": 10, "b": 20}}, "c", None,
-               "'c' parameter(s) are not defined in the task config file"),
+               "'c' parameter(s) are not defined in the input task file"),
               ({"args": {"a": 10, "b": {"c": 20}}}, [("b", "c")],
                None, None),
               ({"args": {"a": 10, "c": 20}}, [("b", "c")],
                None, None),
               ({"args": {"a": 10}}, [("b", "c")], None,
                "'b'/'c' (at least one parameter should be specified) "
-               "parameter(s) are not defined in the task config file"))
+               "parameter(s) are not defined in the input task file"))
     @ddt.unpack
     def test_validate(self, config, params, subdict, err_msg):
         validator = validators.RequiredParameterValidator(params, subdict)
@@ -255,7 +255,7 @@ class RequiredContextsValidatorTestCase(test.TestCase):
     @ddt.data(
         {"config": {"context": {"a": 1}},
          "err_msg": "The following context(s) are required but missing from "
-                    "the benchmark configuration file: c1, c2, c3"},
+                    "the input task file: c1, c2, c3"},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3}}},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}}}
     )
@@ -273,8 +273,7 @@ class RequiredContextsValidatorTestCase(test.TestCase):
     @ddt.data(
         {"config": {"context": {"c1": 1, "c2": 2}},
          "err_msg": "The following context(s) are required but missing "
-                    "from the benchmark configuration "
-                    "file: 'a1 or a2', 'b1 or b2'"},
+                    "from the input task file: 'a1 or a2', 'b1 or b2'"},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "b1": 1, "a1": 1}}},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3,
                                 "b1": 1, "b2": 2, "a1": 1}}},

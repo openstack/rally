@@ -72,8 +72,8 @@ class DBTestCase(TestCase):
 
 class ScenarioTestCase(TestCase):
     """Base class for Scenario tests using mocked self.clients."""
-    benchmark_utils = "rally.task.utils"
-    patch_benchmark_utils = True
+    task_utils = "rally.task.utils"
+    patch_task_utils = True
 
     def client_factory(self, client_type, version=None, admin=False):
         """Create a new client object."""
@@ -121,17 +121,17 @@ class ScenarioTestCase(TestCase):
 
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
-        if self.patch_benchmark_utils:
+        if self.patch_task_utils:
             self.mock_resource_is = fixtures.MockPatch(
-                self.benchmark_utils + ".resource_is")
+                self.task_utils + ".resource_is")
             self.mock_get_from_manager = fixtures.MockPatch(
-                self.benchmark_utils + ".get_from_manager")
+                self.task_utils + ".get_from_manager")
             self.mock_wait_for = fixtures.MockPatch(
-                self.benchmark_utils + ".wait_for")
+                self.task_utils + ".wait_for")
             self.mock_wait_for_delete = fixtures.MockPatch(
-                self.benchmark_utils + ".wait_for_delete")
+                self.task_utils + ".wait_for_delete")
             self.mock_wait_for_status = fixtures.MockPatch(
-                self.benchmark_utils + ".wait_for_status")
+                self.task_utils + ".wait_for_status")
             self.useFixture(self.mock_resource_is)
             self.useFixture(self.mock_get_from_manager)
             self.useFixture(self.mock_wait_for)

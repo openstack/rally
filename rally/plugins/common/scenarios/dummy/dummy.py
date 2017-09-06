@@ -70,11 +70,11 @@ class Dummy(scenario.Scenario):
 class DummyException(scenario.Scenario):
 
     def run(self, size_of_message=1, sleep=1, message=""):
-        """Throw an exception.
+        """Throws an exception.
 
-        Dummy.dummy_exception can be used for test if exceptions are processed
-        properly by ScenarioRunners and benchmark and analyze rally
-        results storing process.
+        Dummy.dummy_exception used for testing if exceptions are processed
+        properly by task engine and analyze rally results storing & displaying
+        capabilities.
 
         :param size_of_message: int size of the exception message
         :param sleep: idle time of method (in seconds).
@@ -93,11 +93,11 @@ class DummyException(scenario.Scenario):
 class DummyExceptionProbability(scenario.Scenario):
 
     def run(self, exception_probability=0.5):
-        """Throw an exception with given probability.
+        """Throws an exception with given probability.
 
-        Dummy.dummy_exception_probability can be used to test if exceptions
-        are processed properly by ScenarioRunners. This scenario will throw
-        an exception sometimes, depending on the given exception probability.
+        Dummy.dummy_exception_probability used for testing if exceptions are
+        processed properly by task engine and analyze rally results storing
+        & displaying capabilities.
 
         :param exception_probability: Sets how likely it is that an exception
                                       will be thrown. Float between 0 and 1

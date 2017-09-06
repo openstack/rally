@@ -28,10 +28,7 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="ec2_servers", platform="openstack", order=460)
 class EC2ServerGenerator(context.Context):
-    """Context class for adding temporary servers for benchmarks.
-
-    Servers are added for each tenant.
-    """
+    """Creates specified amount of nova servers in each tenant uses ec2 API."""
 
     CONFIG_SCHEMA = {
         "type": "object",

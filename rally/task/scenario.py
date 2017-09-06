@@ -68,10 +68,9 @@ class Scenario(plugin.Plugin,
                functional.FunctionalMixin,
                utils.RandomNameGeneratorMixin,
                validation.ValidatablePluginMixin):
-    """This is base class for any benchmark scenario.
+    """This is base class for any scenario.
 
-       You should create subclass of this class. And your test scenarios will
-       be auto discoverable and you will be able to specify it in test config.
+        All Scenario Plugins should be subclass of this class.
     """
     RESOURCE_NAME_FORMAT = "s_rally_XXXXXXXX_XXXXXXXX"
 

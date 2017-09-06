@@ -77,7 +77,7 @@ class RequiredPlatformValidator(Validator):
     def __init__(self, platform, admin=False, users=False):
         """Validates credentials for specified platform.
 
-        This allows us to create 4 kind of benchmarks:
+        This allows us to create 4 kind of tests cases:
         1) platform independent (validator is not specified)
         2) requires platform with admin
         3) requires platform with admin + users

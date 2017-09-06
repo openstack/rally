@@ -99,7 +99,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                             filter_by_user_id=None,
                             filter_by_resource_id=None,
                             metadata_query=None):
-        """Create a SimpleQuery for the list benchmarks.
+        """Create a SimpleQuery used by samples list API.
 
         :param filter_by_project_id: add a project id to query
         :param filter_by_user_id: add a user id to query

@@ -29,10 +29,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="servers", platform="openstack", order=430)
 class ServerGenerator(context.Context):
-    """Context class for adding temporary servers for benchmarks.
-
-    Servers are added for each tenant.
-    """
+    """Creates specified amount of Nova Servers per each tenant."""
 
     CONFIG_SCHEMA = {
         "type": "object",

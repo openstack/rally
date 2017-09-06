@@ -269,7 +269,8 @@ class TaskAPITestCase(test.TestCase):
             mock.call("config", mock_task.return_value,
                       mock_deployment_get.return_value,
                       abort_on_sla_failure=False),
-            mock.call().run(),
+            mock.call().validate(),
+            mock.call().run()
         ])
 
         mock_task.assert_called_once_with(

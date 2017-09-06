@@ -350,8 +350,11 @@ class _Task(APIGroup):
     def create(self, deployment, tags=None):
         """Create a task without starting it.
 
-        Task is a list of benchmarks that will be called one by one, results of
-        execution will be stored in DB.
+        Task is a list of subtasks that are called one by one, results of
+        execution are stored into DB.
+
+        Every subtask is sort of test case which is created by combination
+        of scenario, runner, contexts, sla and hoooks plugins.
 
         :param deployment: UUID or name of the deployment
         :param tags: a list of tags for this task
@@ -390,22 +393,21 @@ class _Task(APIGroup):
             task = objects.Task(deployment_uuid=deployment, temporary=True)
         deployment = objects.Deployment.get(deployment)
 
-        benchmark_engine = engine.TaskEngine(config, task, deployment)
-        benchmark_engine.validate()
+        engine.TaskEngine(config, task, deployment).validate()
 
     def start(self, deployment, config, task=None, abort_on_sla_failure=False):
         """Validate and start a task.
 
-        Task is a list of benchmarks that will be called one by one, results of
-        execution will be stored in DB.
+        Task is a list of subtasks that are called one by one, results of
+        execution are stored in DB.
 
         :param deployment: UUID or name of the deployment (will be ignored in
             case of transmitting existing task)
         :param config: a dict with a task configuration
         :param task: Task UUID to use pre-created task. If None, new task will
             be created
-        :param abort_on_sla_failure: If set to True, the task execution will
-                                     stop when any SLA check for it fails
+        :param abort_on_sla_failure: If set to True, the task execution is
+                                     stop when any of SLA checks fails
         """
         if task and isinstance(task, objects.Task):
             LOG.warning("Transmitting task object in `task start` is "
@@ -431,22 +433,18 @@ class _Task(APIGroup):
         if task is None:
             task = objects.Task(deployment_uuid=deployment["uuid"])
 
-        benchmark_engine = engine.TaskEngine(
+        task_engine = engine.TaskEngine(
             config, task, deployment,
             abort_on_sla_failure=abort_on_sla_failure)
 
-        benchmark_engine.validate()
+        task_engine.validate()
 
-        LOG.info("Task %s config is valid." % task["uuid"])
-        LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
-                                                         deployment["uuid"]))
-
-        benchmark_engine = engine.TaskEngine(
-            config, task, deployment,
-            abort_on_sla_failure=abort_on_sla_failure)
+        LOG.info("Task %s input file is valid." % task["uuid"])
+        LOG.info("Run Task %s against Deployment %s"
+                 % (task["uuid"], deployment["uuid"]))
 
         try:
-            benchmark_engine.run()
+            task_engine.run()
         except Exception:
             deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
             raise
@@ -487,7 +485,7 @@ class _Task(APIGroup):
                 time.sleep(1)
 
     def delete(self, task_uuid, force=False):
-        """Delete the task.
+        """Deletes all task data from database.
 
         :param task_uuid: The UUID of the task
         :param force: If set to True, then delete the task despite to the
@@ -508,7 +506,7 @@ class _Task(APIGroup):
                 task_uuid, status=consts.TaskStatus.FINISHED)
 
     def import_results(self, deployment, task_results, tags=None):
-        """Import json results of a task into rally database"""
+        """Import json results of a task into database."""
         deployment = objects.Deployment.get(deployment)
         if deployment["status"] != consts.DeployStatus.DEPLOY_FINISHED:
             raise exceptions.DeploymentNotFinishedStatus(

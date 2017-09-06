@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Tests for the Benchmark VM image context."""
-
 import mock
 
 from rally.plugins.openstack.context.vm import custom_image

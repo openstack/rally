@@ -13,10 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Benchmark scenarios for Keystone.
-"""
-
 from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.services.identity import identity

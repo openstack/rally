@@ -33,16 +33,13 @@ LOG = logging.getLogger(__name__)
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseCustomImageGenerator(context.Context):
-    """Base class for the contexts providing customized image with.
+    """Base plugin for the contexts providing customized image with.
 
-    Every context class for the specific customization must implement
+    Every context plugin for the specific customization must implement
     the method `_customize_image` that is able to connect to the server
-    using SSH and e.g. install applications inside it.
+    using SSH and install applications inside it.
 
-    This is used e.g. to install the benchmark application using SSH
-    access.
-
-    This base context class provides a way to prepare an image with
+    This base context plugin provides a way to prepare an image with
     custom preinstalled applications. Basically, this code boots a VM, calls
     the `_customize_image` and then snapshots the VM disk, removing the VM
     afterwards. The image UUID is stored in the user["custom_image"]["id"]
@@ -168,7 +165,7 @@ class BaseCustomImageGenerator(context.Context):
             **kwargs)
 
         try:
-            LOG.debug("Installing benchmark on %r %s", server, fip["ip"])
+            LOG.debug("Installing tools on %r %s", server, fip["ip"])
             self.customize_image(server, fip, user)
 
             LOG.debug("Stopping server %r", server)

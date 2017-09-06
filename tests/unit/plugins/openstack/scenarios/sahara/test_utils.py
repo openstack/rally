@@ -36,7 +36,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     # get_from_manager() calls. As a result, the tests below do more
     # integrated/functional testing of wait_for() calls, and we can't
     # just mock out wait_for and friends the way we usually do.
-    patch_benchmark_utils = False
+    patch_task_utils = False
 
     def setUp(self):
         super(SaharaScenarioTestCase, self).setUp()

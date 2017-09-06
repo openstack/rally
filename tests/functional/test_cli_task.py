@@ -923,10 +923,7 @@ class TaskTestCase(unittest.TestCase):
         task.join()
         results = json.loads(rally("task results"))
         iterations_completed = len(results[0]["result"])
-        # NOTE(msdubov): check that the task is stopped after first runner
-        #                benchmark finished all its iterations
         self.assertEqual(3, iterations_completed)
-        # NOTE(msdubov): check that the next benchmark scenario is not started
         self.assertEqual(1, len(results))
         self.assertIn("aborted", rally("task status"))
 

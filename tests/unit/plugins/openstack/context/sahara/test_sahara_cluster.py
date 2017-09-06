@@ -27,7 +27,7 @@ CTX = "rally.plugins.openstack.context.sahara"
 
 class SaharaClusterTestCase(test.ScenarioTestCase):
 
-    patch_benchmark_utils = False
+    patch_task_utils = False
 
     def setUp(self):
         super(SaharaClusterTestCase, self).setUp()

@@ -49,7 +49,7 @@ USER_DOMAIN_DESCR = "ID of domain in which users will be created."
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="users", platform="openstack", order=100)
 class UserGenerator(context.Context):
-    """Context class for generating temporary users/tenants for benchmarks."""
+    """Creates specified amount of keystone users and tenants."""
 
     CONFIG_SCHEMA = {
         "type": "object",

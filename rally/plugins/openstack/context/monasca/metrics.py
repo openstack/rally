@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", users=True)
 @context.configure(name="monasca_metrics", platform="openstack", order=510)
 class MonascaMetricGenerator(context.Context):
-    """Context for creating metrics  for benchmarks."""
+    """Creates Monasca Metrics."""
 
     CONFIG_SCHEMA = {
         "type": "object",

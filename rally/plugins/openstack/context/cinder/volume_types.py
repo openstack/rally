@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_platform", platform="openstack", admin=True)
 @context.configure(name="volume_types", platform="openstack", order=410)
 class VolumeTypeGenerator(context.Context):
-    """Context class for adding volumes types for benchmarks."""
+    """Adds cinder volumes types."""
 
     CONFIG_SCHEMA = {
         "type": "array",

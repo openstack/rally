@@ -40,7 +40,7 @@ def _prepare_open_secgroup(credential, secgroup_name):
     security_groups = neutron.list_security_groups()["security_groups"]
     rally_open = [sg for sg in security_groups if sg["name"] == secgroup_name]
     if not rally_open:
-        descr = "Allow ssh access to VMs created by Rally for benchmarking"
+        descr = "Allow ssh access to VMs created by Rally"
         rally_open = neutron.create_security_group(
             {"security_group": {"name": secgroup_name,
                                 "description": descr}})["security_group"]
