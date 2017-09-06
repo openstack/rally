@@ -366,8 +366,8 @@
               times: 2042
           sla:
             failure_rate:
-              min: 20
-              max: 80
+              min: 5
+              max: 95
         -
           scenario:
             Dummy.dummy_output: {}
@@ -384,8 +384,8 @@
               exception_probability: 0.5
           sla:
             failure_rate:
-              min: 20
-              max: 80
+              min: 5
+              max: 95
           runner:
             constant:
               times: 50
