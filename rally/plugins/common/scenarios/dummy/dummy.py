@@ -52,6 +52,14 @@ class DummyFailure(scenario.Scenario):
 @scenario.configure(name="Dummy.dummy")
 class Dummy(scenario.Scenario):
 
+    @atomic.action_timer("bar")
+    def bar(self, sleep):
+        utils.interruptable_sleep(sleep)
+
+    @atomic.action_timer("foo")
+    def foo(self, sleep):
+        self.bar(sleep)
+
     def run(self, sleep=0):
         """Do nothing and sleep for the given number of seconds (0 by default).
 
@@ -61,7 +69,7 @@ class Dummy(scenario.Scenario):
 
         :param sleep: idle time of method (in seconds).
         """
-        utils.interruptable_sleep(sleep)
+        self.foo(sleep)
 
 
 @validation.add("number", param_name="size_of_message", minval=1,
@@ -191,8 +199,7 @@ class DummyOutput(scenario.Scenario):
 class DummyRandomFailInAtomic(scenario.Scenario):
     """Randomly throw exceptions in atomic actions."""
 
-    @atomic.action_timer("dummy_fail_test")
-    def _random_fail_emitter(self, exception_probability):
+    def _play_roulette(self, exception_probability):
         """Throw an exception with given probability.
 
         :raises KeyError: when exception_probability is bigger
@@ -209,8 +216,18 @@ class DummyRandomFailInAtomic(scenario.Scenario):
         :param exception_probability: Probability with which atomic actions
                                       fail in this dummy scenario (0 <= p <= 1)
         """
-        self._random_fail_emitter(exception_probability)
-        self._random_fail_emitter(exception_probability)
+        # devide probability on the number of possible places to fail
+        if exception_probability != 1:
+            exception_probability = exception_probability / 4.0
+        with atomic.ActionTimer(self, "dummy_fail_test"):
+            self._play_roulette(exception_probability)
+            with atomic.ActionTimer(self, "dummy_fail_inner_test"):
+                self._play_roulette(exception_probability)
+
+        with atomic.ActionTimer(self, "dummy_fail_test"):
+            self._play_roulette(exception_probability)
+            with atomic.ActionTimer(self, "dummy_fail_inner_test"):
+                self._play_roulette(exception_probability)
 
 
 @scenario.configure(name="Dummy.dummy_random_action")
