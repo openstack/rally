@@ -43,7 +43,6 @@ from rally import plugins
 from rally.task import atomic
 from rally.task.processing import charts
 from rally.task.processing import plot
-from rally.task.processing import utils as putils
 from rally.task import utils as tutils
 
 
@@ -433,15 +432,16 @@ class TaskCommands(object):
                 indent=2))
             print()
 
+            duration_stats = workload["statistics"]["durations"]
+
             iterations = []
             iterations_headers = ["iteration", "duration"]
             iterations_actions = []
             output = []
             task_errors = []
             if iterations_data:
-                atomic_merger = putils.AtomicMerger(
-                    workload["statistics"]["atomics"])
-                atomic_names = atomic_merger.get_merged_names()
+                atomic_names = [a["display_name"]
+                                for a in duration_stats["atomics"]]
                 for i, atomic_name in enumerate(atomic_names, 1):
                     action = "%i. %s" % (i, atomic_name)
                     iterations_headers.append(action)
@@ -452,10 +452,10 @@ class TaskCommands(object):
                 if iterations_data:
                     row = {"iteration": idx, "duration": itr["duration"]}
                     for name, action in iterations_actions:
-                        atomic_actions = (
-                            atomic_merger.merge_atomic_actions(
-                                itr["atomic_actions"]))
-                        row[action] = atomic_actions.get(name, 0)
+                        atomic_actions = atomic.merge_atomic_actions(
+                            itr["atomic_actions"])
+                        row[action] = atomic_actions.get(name, {}).get(
+                            "duration", 0)
                     iterations.append(row)
 
                 if "output" in itr:
@@ -463,19 +463,9 @@ class TaskCommands(object):
                 else:
                     iteration_output = {"additive": [], "complete": []}
 
-                    # NOTE(amaretskiy): "scenario_output" is supported
-                    #   for backward compatibility
-                    if ("scenario_output" in itr
-                            and itr["scenario_output"]["data"]):
-                        iteration_output["additive"].append(
-                            {"data": itr["scenario_output"]["data"].items(),
-                             "title": "Scenario output",
-                             "description": "",
-                             "chart_plugin": "StackedArea"})
-
                 for idx, additive in enumerate(iteration_output["additive"]):
                     if len(output) <= idx + 1:
-                        output_table = plot.charts.OutputStatsTable(
+                        output_table = charts.OutputStatsTable(
                             workload, title=additive["title"])
                         output.append(output_table)
                     output[idx].add_iteration(additive["data"])
@@ -485,8 +475,7 @@ class TaskCommands(object):
 
             self._print_task_errors(task_id, task_errors)
 
-            cols = plot.charts.MainStatsTable.columns
-            duration_stats = workload["statistics"]["durations"]
+            cols = charts.MainStatsTable.columns
             formatters = {
                 "Action": lambda x: x["name"],
                 "Min (sec)": lambda x: x["data"]["min"],
@@ -498,8 +487,21 @@ class TaskCommands(object):
                 "Success": lambda x: x["data"]["success"],
                 "Count": lambda x: x["data"]["iteration_count"]
             }
-            rows = duration_stats["atomics"]
-            rows.append(duration_stats["total"])
+
+            rows = []
+
+            def make_flat(r, depth=0):
+                if depth > 0:
+                    r["name"] = (" %s> %s" % ("-" * depth,
+                                              r["display_name"]))
+                rows.append(r)
+                for children in r["children"]:
+                    make_flat(children, depth + 1)
+
+            for row in itertools.chain(duration_stats["atomics"],
+                                       [duration_stats["total"]]):
+                make_flat(row)
+
             cliutils.print_list(rows,
                                 fields=cols,
                                 formatters=formatters,
@@ -519,7 +521,7 @@ class TaskCommands(object):
                 print()
 
             if output:
-                cols = plot.charts.OutputStatsTable.columns
+                cols = charts.OutputStatsTable.columns
                 float_cols = cols[1:7]
                 formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
@@ -711,8 +713,6 @@ class TaskCommands(object):
                 min_duration = None
                 max_duration = None
 
-                atomics = collections.OrderedDict()
-
                 for itr in result["result"]:
                     if start_time is None or itr["timestamp"] < start_time:
                         start_time = itr["timestamp"]
@@ -733,24 +733,8 @@ class TaskCommands(object):
                     if min_duration is None or min_duration > duration:
                         min_duration = duration
 
-                    merged_atomic = atomic.merge_atomic_actions(
-                        itr["atomic_actions"])
-                    for key, value in merged_atomic.items():
-                        duration = value["duration"]
-                        count = value["count"]
-                        if key not in atomics or count > atomics[key]["count"]:
-                            atomics[key] = {"min_duration": duration,
-                                            "max_duration": duration,
-                                            "count": count}
-                        elif count == atomics[key]["count"]:
-                            if duration < atomics[key]["min_duration"]:
-                                atomics[key]["min_duration"] = duration
-                            if duration > atomics[key]["max_duration"]:
-                                atomics[key]["max_duration"] = duration
-
                 durations_stat = charts.MainStatsTable(
-                    {"total_iteration_count": iter_count,
-                     "statistics": {"atomics": atomics}})
+                    {"total_iteration_count": iter_count})
 
                 for itr in result["result"]:
                     durations_stat.add_iteration(itr)
@@ -785,8 +769,7 @@ class TaskCommands(object):
                             "data": sorted(result["result"],
                                            key=lambda x: x["timestamp"]),
                             "statistics": {
-                                "durations": durations_stat.to_dict(),
-                                "atomics": atomics},
+                                "durations": durations_stat.to_dict()},
                             }
                 task["subtasks"].append(
                     {"title": "A SubTask",

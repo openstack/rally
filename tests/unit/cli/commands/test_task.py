@@ -357,7 +357,22 @@ class TaskCommandsTestCase(test.TestCase):
                                 "name": "foo",
                                 "display_name": "foo (x2)",
                                 "count_per_iteration": 2,
-                                "children": [],
+                                "children": [
+                                    {"name": "inner_foo",
+                                     "display_name": "inner_foo",
+                                     "count_per_iteration": 1,
+                                     "children": [],
+                                     "data": {
+                                         "min": 1,
+                                         "median": 2,
+                                         "90%ile": 1.5,
+                                         "95%ile": 1.6,
+                                         "max": 3,
+                                         "avg": 1.4,
+                                         "success": 3,
+                                         "iteration_count": 3}
+                                     }
+                                ],
                                 "data": {
                                     "min": 1,
                                     "median": 2,
@@ -395,54 +410,66 @@ class TaskCommandsTestCase(test.TestCase):
                                 "max": 3,
                                 "avg": 1.45,
                                 "success": 6,
-                                "iteration_count": 6}}},
-                    "atomics": {"foo": {"count": 3}, "bar": {"count": 3}}},
+                                "iteration_count": 6}}}},
                 "load_duration": 3.2,
                 "full_duration": 3.5,
                 "total_iteration_count": 4,
                 "data": [
-                    {"duration": 0.9,
-                     "idle_duration": 0.1,
-                     "output": {"additive": [], "complete": []},
-                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                         "finished_at": 0.6},
-                                        {"name": "bar", "started_at": 0.6,
-                                         "finished_at": 1.3}
-                                        ],
-                     "error": ["type", "message", "traceback"]
-                     },
-                    {"duration": 1.2,
-                     "idle_duration": 0.3,
-                     "output": {"additive": [], "complete": []},
-                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                         "finished_at": 0.6},
-                                        {"name": "bar", "started_at": 0.6,
-                                         "finished_at": 1.3}
-                                        ],
-                     "error": ["type", "message", "traceback"]
-                     },
-                    {"duration": 0.7,
-                     "idle_duration": 0.5,
-                     "scenario_output": {
-                         "data": {"foo": 0.6, "bar": 0.7},
-                         "errors": "some"
-                     },
-                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                         "finished_at": 0.6},
-                                        {"name": "bar", "started_at": 0.6,
-                                         "finished_at": 1.3}
-                                        ],
-                     "error": ["type", "message", "traceback"]
-                     },
-                    {"duration": 0.5,
-                     "idle_duration": 0.5,
-                     "atomic_actions": [{"name": "foo", "started_at": 0.0,
-                                         "finished_at": 0.6},
-                                        {"name": "bar", "started_at": 0.6,
-                                         "finished_at": 1.3}
-                                        ],
-                     "error": ["type", "message", "traceback"]
-                     }],
+                    {
+                        "duration": 0.9,
+                        "idle_duration": 0.1,
+                        "output": {"additive": [], "complete": []},
+                        "atomic_actions": [
+                            {"name": "foo", "started_at": 0.0,
+                             "finished_at": 0.6, "children": []},
+                            {"name": "bar", "started_at": 0.6,
+                             "finished_at": 1.3, "children": []}
+                        ],
+                        "error": ["type", "message", "traceback"]
+                    },
+                    {
+                        "duration": 1.2,
+                        "idle_duration": 0.3,
+                        "output": {"additive": [], "complete": []},
+                        "atomic_actions": [
+                            {"name": "foo", "started_at": 0.0,
+                             "finished_at": 0.6, "children": []},
+                            {"name": "bar", "started_at": 0.6,
+                             "finished_at": 1.3, "children": []}
+                        ],
+                        "error": ["type", "message", "traceback"]
+                    },
+                    {
+                        "duration": 0.7,
+                        "idle_duration": 0.5,
+                        "output": {
+                            "additive": [
+                                {"data": [("foo", 0.6), ("bar", 0.7)],
+                                 "title": "Scenario output",
+                                 "description": "",
+                                 "chart_plugin": "StackedArea"}
+                            ],
+                            "complete": []
+                        },
+                        "atomic_actions": [
+                            {"name": "foo", "started_at": 0.0,
+                             "finished_at": 0.6, "children": []},
+                            {"name": "bar", "started_at": 0.6,
+                             "finished_at": 1.3, "children": []}
+                        ],
+                        "error": ["type", "message", "traceback"]
+                    },
+                    {
+                        "duration": 0.5,
+                        "idle_duration": 0.5,
+                        "atomic_actions": [
+                            {"name": "foo", "started_at": 0.0,
+                             "finished_at": 0.6, "children": []},
+                            {"name": "bar", "started_at": 0.6,
+                             "finished_at": 1.3, "children": []}
+                        ],
+                        "error": ["type", "message", "traceback"]
+                    }],
             }]}]}
         if has_output:
             detailed_value["subtasks"][0]["workloads"][0]["output"] = {
@@ -1067,18 +1094,52 @@ class TaskCommandsTestCase(test.TestCase):
                 "load_duration": 3.2,
                 "full_duration": 3.5,
                 "statistics": {
-                    "durations": {"atomics": [
-                        {"name": "foo", "min": 1, "median": 2,
-                         "90ile": 1.5, "95ile": 1.6, "max": 3,
-                         "average": 1.4, "success": 3, "count": 3},
-                        {"name": "bar", "min": 1.1, "median": 2.2,
-                         "90ile": 1.6, "95ile": 1.65, "max": 3,
-                         "average": 1.5, "success": 3, "count": 3}],
-                        "total": {"name": "total", "min": 1, "median": 2.1,
-                                  "90ile": 1.55, "95ile": 1.62, "max": 3,
-                                  "average": 1.45, "success": 6,
-                                  "count": 6}},
-                    "atomics": {"foo": {"count": 3}, "bar": {"count": 3}}},
+                    "durations": {
+                        "atomics": [
+                            {
+                                "name": "foo",
+                                "display_name": "foo (x2)",
+                                "count_per_iteration": 2,
+                                "children": [],
+                                "data": {
+                                    "min": 1,
+                                    "median": 2,
+                                    "90%ile": 1.5,
+                                    "95%ile": 1.6,
+                                    "max": 3,
+                                    "avg": 1.4,
+                                    "success": 3,
+                                    "iteration_count": 3}},
+                            {
+                                "name": "bar",
+                                "display_name": "bar",
+                                "count_per_iteration": 1,
+                                "children": [],
+                                "data": {
+                                    "min": 1.1,
+                                    "median": 2.2,
+                                    "90%ile": 1.6,
+                                    "95%ile": 1.65,
+                                    "max": 3,
+                                    "avg": 1.5,
+                                    "success": 3,
+                                    "iteration_count": 3}
+                            }],
+                        "total": {
+                            "name": "total",
+                            "display_name": "bar",
+                            "count_per_iteration": 1,
+                            "children": [],
+                            "data": {
+                                "min": 1,
+                                "median": 2.1,
+                                "90%ile": 1.55,
+                                "95%ile": 1.62,
+                                "max": 3,
+                                "avg": 1.45,
+                                "success": 6,
+                                "iteration_count": 6}}}
+                },
                 "total_iteration_count": 1,
                 "total_iteration_failed": 1,
                 "data": [
@@ -1131,8 +1192,7 @@ class TaskCommandsTestCase(test.TestCase):
                       "duration": 5, "error": [{}]},
                      {"timestamp": 2, "atomic_actions": {"bar": 1.1},
                       "duration": 3, "error": []}],
-            "statistics": {"durations": mock.ANY,
-                           "atomics": mock.ANY}
+            "statistics": {"durations": mock.ANY}
         }
 
         results = [

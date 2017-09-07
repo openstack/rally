@@ -76,20 +76,14 @@ class Chart(plugin.Plugin):
         due to failures, this method must be used in all cases
         related to atomic actions processing.
         """
-        for name in self._get_atomic_names():
-            atomic_actions.setdefault(name, 0)
-        return atomic_actions
+        return list(
+            (name, atomic_actions.get(name, {}).get("duration", 0))
+            for name in self._get_atomic_names()
+        )
 
     def _get_atomic_names(self):
-        atomic_merger = utils.AtomicMerger(
-            self._workload["statistics"]["atomics"])
-        return atomic_merger.get_merged_names()
-
-    def _merge_atomic_actions(self, atomic_actions):
-        atomic_merger = utils.AtomicMerger(
-            self._workload["statistics"]["atomics"])
-        return atomic_merger.merge_atomic_actions(
-            atomic_actions)
+        duration_stats = self._workload["statistics"]["durations"]
+        return [a["display_name"] for a in duration_stats["atomics"]]
 
     def _map_iteration_values(self, iteration):
         """Get values for processing, from given iteration."""
@@ -120,10 +114,9 @@ class AtomicStackedAreaChart(Chart):
     widget = "StackedArea"
 
     def _map_iteration_values(self, iteration):
-        atomic_actions = self._merge_atomic_actions(
+        atomic_actions = atomic.merge_atomic_actions(
             iteration["atomic_actions"])
-        atomic_actions = self._fix_atomic_actions(atomic_actions)
-        atomics = list(atomic_actions.items())
+        atomics = self._fix_atomic_actions(atomic_actions)
         if self._workload["failed_iteration_count"]:
             if iteration["error"]:
                 failed_duration = (
@@ -153,10 +146,9 @@ class AvgChart(Chart):
 class AtomicAvgChart(AvgChart):
 
     def _map_iteration_values(self, iteration):
-        atomic_actions = self._merge_atomic_actions(
+        atomic_actions = atomic.merge_atomic_actions(
             iteration["atomic_actions"])
-        atomic_actions = self._fix_atomic_actions(atomic_actions)
-        return list(atomic_actions.items())
+        return self._fix_atomic_actions(atomic_actions)
 
 
 class LoadProfileChart(Chart):
@@ -289,20 +281,17 @@ class AtomicHistogramChart(HistogramChart):
 
     def __init__(self, workload_info):
         super(AtomicHistogramChart, self).__init__(workload_info)
-        atomics = self._workload["statistics"]["atomics"]
-        atomic_merger = utils.AtomicMerger(atomics)
-        for i, name in enumerate(atomics):
-            value = atomics[name]
-            self._data[atomic_merger.get_merged_name(name)] = {
-                "views": self._init_views(value["min_duration"],
-                                          value["max_duration"]),
+        for i, aa in enumerate(
+                self._workload["statistics"]["durations"]["atomics"]):
+            self._data[aa["display_name"]] = {
+                "views": self._init_views(aa["data"]["min"],
+                                          aa["data"]["max"]),
                 "disabled": i}
 
     def _map_iteration_values(self, iteration):
-        atomic_actions = self._merge_atomic_actions(
+        atomic_actions = atomic.merge_atomic_actions(
             iteration["atomic_actions"])
-        atomic_actions = self._fix_atomic_actions(atomic_actions)
-        return list(atomic_actions.items())
+        return self._fix_atomic_actions(atomic_actions)
 
 
 @six.add_metaclass(abc.ABCMeta)
