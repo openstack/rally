@@ -22,7 +22,6 @@ fi
 RND=$(head /dev/urandom | tr -dc a-z0-9 | head -c 5)
 TMP_RALLY_CONF="/tmp/self-rally-$RND.conf"
 TMP_RALLY_DB="/tmp/self-rally-$RND.sqlite"
-TMP_RALLY_DEPLOYMENT="/tmp/self-rally-dep-$RND.json"
 DBCONNSTRING="sqlite:///$TMP_RALLY_DB"
 RALLY="rally --config-file $TMP_RALLY_CONF"
 
@@ -32,8 +31,7 @@ sed -i.bak "s|#connection =.*|connection = \"$DBCONNSTRING\"|" $TMP_RALLY_CONF
 rally --config-file $TMP_RALLY_CONF db create
 
 # Create self deployment
-echo '{}' > $TMP_RALLY_DEPLOYMENT
-$RALLY -d deployment create --file=$TMP_RALLY_DEPLOYMENT --name=self
+$RALLY -d deployment create --name=self
 
 # Run task
 $RALLY -d --plugin-paths=$PLUGIN_PATHS task start $TASK_FILE

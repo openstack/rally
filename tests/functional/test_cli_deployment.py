@@ -43,6 +43,11 @@ class DeploymentTestCase(unittest.TestCase):
               "--filename /tmp/.tmp.deployment")
         self.assertIn("t_create_file", rally("deployment list"))
 
+    def test_create_empty(self):
+        rally = utils.Rally()
+        rally("deployment create --name t_empty")
+        self.assertEqual("{}", rally("deployment config"))
+
     def test_config(self):
         rally = utils.Rally()
         rally.env.update(utils.TEST_ENV)
