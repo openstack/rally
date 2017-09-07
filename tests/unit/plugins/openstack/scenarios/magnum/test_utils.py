@@ -260,7 +260,7 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
             {"apiVersion": "v1", "kind": "Pod",
              "metadata": {"name": "nginx"}})
         k8s_api.create_namespaced_pod.return_value = self.pod
-        mock_time.side_effect = [1, 2, 3, 4, 5, 900, 901]
+        mock_time.side_effect = [1, 2, 3, 4, 5, 1800, 1801]
         not_ready_pod = api_client.models.V1Pod()
         not_ready_status = api_client.models.V1PodStatus()
         not_ready_status.phase = "not_ready"
@@ -348,7 +348,7 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
         rc = api_client.models.V1ReplicationController()
         rc.spec = api_client.models.V1ReplicationControllerSpec()
         rc.spec.replicas = manifest["spec"]["replicas"]
-        mock_time.side_effect = [1, 2, 3, 4, 5, 900, 901]
+        mock_time.side_effect = [1, 2, 3, 4, 5, 1800, 1801]
         k8s_api.create_namespaced_replication_controller.return_value = rc
         not_ready_rc = api_client.models.V1ReplicationController()
         not_ready_rc_status = (

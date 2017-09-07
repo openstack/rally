@@ -268,15 +268,15 @@
 
 # Time(in sec) to wait for magnum cluster to be created. (floating
 # point value)
-#magnum_cluster_create_timeout = 1200.0
+#magnum_cluster_create_timeout = 2400.0
 
 # Time interval(in sec) between checks when waiting for cluster
 # creation. (floating point value)
-#magnum_cluster_create_poll_interval = 1.0
+#magnum_cluster_create_poll_interval = 2.0
 
 # Time(in sec) to wait for k8s pod to be created. (floating point
 # value)
-#k8s_pod_create_timeout = 600.0
+#k8s_pod_create_timeout = 1200.0
 
 # Time interval(in sec) between checks when waiting for k8s pod
 # creation. (floating point value)
