@@ -419,13 +419,22 @@ class WorkloadTestCase(test.DBTestCase):
             "raw": [
                 {"error": "anError", "duration": 1, "timestamp": 1,
                  "atomic_actions": [
-                     {"name": "foo", "started_at": 1, "finished_at": 3}]},
+                     {"name": "foo",
+                      "started_at": 1,
+                      "finished_at": 3,
+                      "children": []}]},
                 {"error": None, "duration": 2, "timestamp": 1,
                  "atomic_actions": [
-                     {"name": "foo", "started_at": 1, "finished_at": 2}]},
+                     {"name": "foo",
+                      "started_at": 1,
+                      "finished_at": 2,
+                      "children": []}]},
                 {"error": None, "duration": 0, "timestamp": 2,
                  "atomic_actions": [
-                     {"name": "foo", "started_at": 1, "finished_at": 10}]}
+                     {"name": "foo",
+                      "started_at": 1,
+                      "finished_at": 10,
+                      "children": []}]}
             ],
         }
         sla_results = [{"s": "S", "success": True},

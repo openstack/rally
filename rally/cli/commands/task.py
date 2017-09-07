@@ -489,12 +489,14 @@ class TaskCommands(object):
             duration_stats = workload["statistics"]["durations"]
             formatters = {
                 "Action": lambda x: x["name"],
-                "Min (sec)": cliutils.pretty_float_formatter("min", 3),
-                "Median (sec)": cliutils.pretty_float_formatter("median", 3),
-                "90%ile (sec)": cliutils.pretty_float_formatter("90%ile", 3),
-                "95%ile (sec)": cliutils.pretty_float_formatter("95%ile", 3),
-                "Max (sec)": cliutils.pretty_float_formatter("max", 3),
-                "Avg (sec)": cliutils.pretty_float_formatter("avg", 3)
+                "Min (sec)": lambda x: x["data"]["min"],
+                "Median (sec)": lambda x: x["data"]["median"],
+                "90%ile (sec)": lambda x: x["data"]["90%ile"],
+                "95%ile (sec)": lambda x: x["data"]["95%ile"],
+                "Max (sec)": lambda x: x["data"]["max"],
+                "Avg (sec)": lambda x: x["data"]["avg"],
+                "Success": lambda x: x["data"]["success"],
+                "Count": lambda x: x["data"]["iteration_count"]
             }
             rows = duration_stats["atomics"]
             rows.append(duration_stats["total"])
@@ -731,7 +733,8 @@ class TaskCommands(object):
                     if min_duration is None or min_duration > duration:
                         min_duration = duration
 
-                    merged_atomic = atomic.merge_atomic(itr["atomic_actions"])
+                    merged_atomic = atomic.merge_atomic_actions(
+                        itr["atomic_actions"])
                     for key, value in merged_atomic.items():
                         duration = value["duration"]
                         count = value["count"]

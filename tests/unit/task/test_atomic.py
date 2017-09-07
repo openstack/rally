@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+
 import mock
 
 from rally.task import atomic
@@ -136,12 +138,17 @@ class AtomicActionTestCase(test.TestCase):
                            "started_at": 1, "finished_at": 3}],
                          inst.atomic_actions())
 
-    def test_merge_atomic(self):
-        expected = [("foo", {"duration": 2, "count": 1}),
-                    ("bar", {"duration": 5, "count": 2})]
-        result = atomic.merge_atomic(
-            [{"name": "foo", "started_at": 4, "finished_at": 6},
-             {"name": "bar", "started_at": 6, "finished_at": 8},
-             {"name": "bar", "started_at": 8, "finished_at": 11}])
+    def test_merge_atomic_actions(self):
+        expected = [("foo", {"duration": 2, "count": 1,
+                             "children": collections.OrderedDict()}),
+                    ("bar", {"duration": 5, "count": 2,
+                             "children": collections.OrderedDict()})]
+        result = atomic.merge_atomic_actions(
+            [{"name": "foo", "started_at": 4, "finished_at": 6,
+              "children": []},
+             {"name": "bar", "started_at": 6, "finished_at": 8,
+              "children": []},
+             {"name": "bar", "started_at": 8, "finished_at": 11,
+              "children": []}])
         result = list(result.items())
         self.assertEqual(expected, result)

@@ -178,8 +178,6 @@ class AvgChartTestCase(test.TestCase):
             return iteration["foo"].items()
 
     def test_add_iteration_and_render(self):
-        self.assertRaises(TypeError, charts.AvgChart,
-                          {"total_iteration_count": 3})
         chart = self.AvgChart({"total_iteration_count": 3})
         self.assertIsInstance(chart, charts.AvgChart)
         [chart.add_iteration({"foo": x}) for x in ({"a": 1.3, "b": 4.3},
@@ -272,8 +270,6 @@ class HistogramChartTestCase(test.TestCase):
             return iteration["foo"].items()
 
     def test_add_iteration_and_render(self):
-        self.assertRaises(TypeError, charts.HistogramChart,
-                          {"total_iteration_count": 3})
         chart = self.HistogramChart({"total_iteration_count": 3})
         self.assertIsInstance(chart, charts.HistogramChart)
         [chart.add_iteration({"foo": x}) for x in ({"bar": 1.2},
@@ -457,8 +453,10 @@ class TableTestCase(test.TestCase):
 
 
 def generate_iteration(duration, error, *actions):
-    atomic_actions = [{"name": name, "started_at": 0,
-                       "finished_at": finished_at}
+    atomic_actions = [{"name": name,
+                       "started_at": 0,
+                       "finished_at": finished_at,
+                       "children": []}
                       for name, finished_at in actions]
     return {
         "atomic_actions": atomic_actions,
@@ -493,8 +491,8 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(10.0, True, ("foo", 2.0))
             ],
             "expected_rows": [
-                ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 2],
-                ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", 2]]
+                ["foo", 1.0, 1.5, 1.9, 1.95, 2.0, 1.5, "0.0%", 2],
+                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "0.0%", 2]]
         },
         {
             "info": {"total_iteration_count": 2, "statistics": {
@@ -504,8 +502,8 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(20.0, True, ("foo", 2.0))
             ],
             "expected_rows": [
-                ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "50.0%", 2],
-                ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "50.0%", 2]]
+                ["foo", 1.0, 1.5, 1.9, 1.95, 2.0, 1.5, "50.0%", 2],
+                ["total", 10.0, 15.0, 19.0, 19.5, 20.0, 15.0, "50.0%", 2]]
         },
         {
             "info": {
@@ -520,9 +518,9 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(40.0, True, ("foo", 4.0), ("bar", 4.0))
             ],
             "expected_rows": [
-                ["foo", 1.0, 2.0, 2.8, 2.9, 3.0, 2.0, "75.0%", 4],
+                ["foo", 1.0, 2.5, 3.7, 3.85, 4.0, 2.5, "100.0%", 4],
                 ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
-                ["total", 10.0, 20.0, 28.0, 29.0, 30.0, 20.0, "75.0%", 4]]
+                ["total", 10.0, 25.0, 37.0, 38.5, 40.0, 25.0, "75.0%", 4]]
         },
         {
             "info": {
@@ -544,9 +542,53 @@ class MainStatsTableTestCase(test.TestCase):
                 generate_iteration(12.3, False, ("foo", 4.2), ("bar", 5.6))
             ],
             "expected_rows": [
-                ["foo", 1.2, 2.7, 3.9, 4.05, 4.2, 2.7, "66.7%", 3],
-                ["bar", 5.6, 5.6, 5.6, 5.6, 5.6, 5.6, "50.0%", 2],
-                ["total", 5.2, 8.75, 11.59, 11.945, 12.3, 8.75, "50.0%", 4]]
+                ["foo", 1.2, 1.2, 3.6, 3.9, 4.2, 2.2, "66.7%", 3],
+                ["bar", 4.8, 5.2, 5.52, 5.56, 5.6, 5.2, "50.0%", 2],
+                ["total", 1.6, 5.1, 10.17, 11.235, 12.3, 6.025, "50.0%", 4]]
+        },
+        {
+            "info": {"total_iteration_count": 4, "statistics": {
+                "atomics": collections.OrderedDict([("foo", {})])}},
+            "data": [
+                {
+                    "atomic_actions": [
+                        {"name": "foo",
+                         "started_at": 0,
+                         "finished_at": 3.3,
+                         "children": [
+                             {"name": "bar",
+                              "started_at": 0,
+                              "finished_at": 1.3,
+                              "children": []},
+                             {"name": "bar",
+                              "started_at": 0,
+                              "finished_at": 3.3,
+                              "children": []}]}
+                    ],
+                    "duration": 3.3,
+                    "error": False},
+                {
+                    "atomic_actions": [
+                        {"name": "foo",
+                         "started_at": 0,
+                         "finished_at": 7.3,
+                         "children": [
+                             {"name": "bar",
+                              "started_at": 0,
+                              "finished_at": 2.3,
+                              "children": []},
+                             {"name": "bar",
+                              "started_at": 0,
+                              "finished_at": 7.3,
+                              "children": []}]}
+                    ],
+                    "duration": 7.3,
+                    "error": True}
+            ],
+            "expected_rows": [
+                ["foo", 3.3, 5.3, 6.9, 7.1, 7.3, 5.3, "50.0%", 2],
+                [" -> bar (x2)", 4.6, 7.1, 9.1, 9.35, 9.6, 7.1, "50.0%", 2],
+                ["total", 3.3, 5.3, 6.9, 7.1, 7.3, 5.3, "50.0%", 2]]
         }
     )
     @ddt.unpack
@@ -573,34 +615,44 @@ class MainStatsTableTestCase(test.TestCase):
         for el in data:
             table.add_iteration(el)
 
-        self.assertEqual(
-            {"atomics": [{"90%ile": 3.9,
-                          "95%ile": 4.05,
-                          "avg": 2.7,
-                          "count": 3,
-                          "max": 4.2,
-                          "median": 2.7,
-                          "min": 1.2,
-                          "name": "foo",
-                          "success": "66.7%"},
-                         {"90%ile": 5.6,
-                          "95%ile": 5.6,
-                          "avg": 5.6,
-                          "count": 2,
-                          "max": 5.6,
-                          "median": 5.6,
-                          "min": 5.6,
-                          "name": "bar",
-                          "success": "50.0%"}],
-             "total": {"90%ile": 11.59,
-                       "95%ile": 11.945,
-                       "avg": 8.75,
-                       "count": 4,
-                       "max": 12.3,
-                       "median": 8.75,
-                       "min": 5.2,
-                       "name": "total",
-                       "success": "50.0%"}}, table.to_dict())
+        self.assertEqual({
+            "atomics": [{"children": [],
+                         "data": {"90%ile": 3.6,
+                                  "95%ile": 3.9,
+                                  "avg": 2.2,
+                                  "iteration_count": 3,
+                                  "max": 4.2,
+                                  "median": 1.2,
+                                  "min": 1.2,
+                                  "success": "66.7%"},
+                         "display_name": "foo",
+                         "count_per_iteration": 1,
+                         "name": "foo"},
+                        {"children": [],
+                         "data": {"90%ile": 5.52,
+                                  "95%ile": 5.56,
+                                  "avg": 5.2,
+                                  "iteration_count": 2,
+                                  "max": 5.6,
+                                  "median": 5.2,
+                                  "min": 4.8,
+                                  "success": "50.0%"},
+                         "display_name": "bar",
+                         "count_per_iteration": 1,
+                         "name": "bar"}],
+            "total": {"children": [],
+                      "data": {"90%ile": 10.17,
+                               "95%ile": 11.235,
+                               "avg": 6.025,
+                               "iteration_count": 4,
+                               "max": 12.3,
+                               "median": 5.1,
+                               "min": 1.6,
+                               "success": "50.0%"},
+                      "display_name": "total",
+                      "count_per_iteration": 1,
+                      "name": "total"}},
+            table.to_dict())
 
 
 class OutputChartTestCase(test.TestCase):
