@@ -271,8 +271,17 @@ class NeutronWrapper(NetworkWrapper):
                     "network:router_interface_distributed",
                     "network:ha_router_replicated_interface",
                     "network:router_gateway"):
-                self.client.remove_interface_router(
-                    port["device_id"], {"port_id": port["id"]})
+                try:
+                    self.client.remove_interface_router(
+                        port["device_id"], {"port_id": port["id"]})
+                except (neutron_exceptions.BadRequest,
+                        neutron_exceptions.NotFound):
+                    # Some neutron plugins don't use router as
+                    # the device ID. Also, some plugin doesn't allow
+                    # to update the ha rotuer interface as there is
+                    # an internal logic to update the interface/data model
+                    # instead.
+                    pass
             else:
                 try:
                     self.client.delete_port(port["id"])
