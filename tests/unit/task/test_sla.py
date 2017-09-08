@@ -21,23 +21,31 @@ from rally.task import sla
 from tests.unit import test
 
 
-@plugin.configure(name="test_criterion")
-class TestCriterion(sla.SLA):
-    CONFIG_SCHEMA = {"type": "integer"}
+class SLABaseForTestCase(test.TestCase):
 
-    def add_iteration(self, iteration):
-        self.success = self.criterion_value == iteration
-        return self.success
+    def setUp(self):
+        super(SLABaseForTestCase, self).setUp()
 
-    def merge(self, other):
-        raise NotImplementedError()
+        @plugin.configure(name="test_criterion")
+        class FakeCriterion(sla.SLA):
+            CONFIG_SCHEMA = {"type": "integer"}
 
-    def details(self):
-        return "detail"
+            def add_iteration(self, iteration):
+                self.success = self.criterion_value == iteration
+                return self.success
+
+            def merge(self, other):
+                raise NotImplementedError()
+
+            def details(self):
+                return "detail"
+
+        self.FakeCriterion = FakeCriterion
+        self.addCleanup(FakeCriterion.unregister)
 
 
 @ddt.ddt
-class SLACheckerTestCase(test.TestCase):
+class SLACheckerTestCase(SLABaseForTestCase):
 
     def test_add_iteration_and_results(self):
         sla_checker = sla.SLAChecker({"sla": {"test_criterion": 42}})
@@ -154,19 +162,19 @@ class SLACheckerTestCase(test.TestCase):
 
 
 @ddt.ddt
-class SLATestCase(test.TestCase):
+class SLATestCase(SLABaseForTestCase):
     def test_validate_type_positive(self):
-        sla1 = TestCriterion(0)
-        sla2 = TestCriterion(0)
+        sla1 = self.FakeCriterion(0)
+        sla2 = self.FakeCriterion(0)
         sla1.validate_type(sla2)
 
     def test_validate_type_negative(self):
-        sla1 = TestCriterion(0)
+        sla1 = self.FakeCriterion(0)
 
-        class AnotherTestCriterion(TestCriterion):
+        class AnotherFakeCriterion(self.FakeCriterion):
             pass
 
-        sla2 = AnotherTestCriterion(0)
+        sla2 = AnotherFakeCriterion(0)
         self.assertRaises(TypeError, sla1.validate_type, sla2)
 
     @ddt.data((10, True),
