@@ -1189,9 +1189,9 @@ class TaskCommandsTestCase(test.TestCase):
             "context": {"users": {}},
             "data": [{"timestamp": 1, "atomic_actions": {"foo": 1.0,
                                                          "bar": 1.0},
-                      "duration": 5, "error": [{}]},
+                      "duration": 5, "idle_duration": 0, "error": [{}]},
                      {"timestamp": 2, "atomic_actions": {"bar": 1.1},
-                      "duration": 3, "error": []}],
+                      "duration": 3, "idle_duration": 0, "error": []}],
             "statistics": {"durations": mock.ANY}
         }
 
