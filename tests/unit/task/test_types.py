@@ -20,32 +20,8 @@ from rally.task import types
 from tests.unit import test
 
 
-@types.convert(bar={"type": "test_bar"})
-@scenario.configure(name="TestConvertPlugin.one_arg")
-class TestConvertOneArgPlugin(scenario.Scenario):
-    def run(self, bar):
-        """Dummy docstring.
-
-        :param bar: dummy parameter
-        """
-        pass
-
-
-@types.convert(bar={"type": "test_bar"},
-               baz={"type": "test_baz"})
-@scenario.configure(name="TestConvertPlugin.two_args")
-class TestConvertTwoArgsPlugin(scenario.Scenario):
-
-    def run(self, bar, baz):
-        """Dummy docstring.
-
-        :param bar: dummy parameter
-        :param baz: dummy parameter
-        """
-        pass
-
-
 class ConvertTestCase(test.TestCase):
+
     # NOTE(stpierre): These cases test types.convert(),
     # types._get_preprocessor_loader(), and bits of
     # types.preprocess(). This may not look very elegant, but it's the
@@ -53,10 +29,40 @@ class ConvertTestCase(test.TestCase):
     # _get_preprocessor_loader() without getting so fine-grained that
     # the tests are basically tests that the computer is on.
 
+    def setUp(self):
+        super(ConvertTestCase, self).setUp()
+
+        @types.convert(bar={"type": "test_bar"})
+        @scenario.configure(name="FakeConvertPlugin.one_arg")
+        class FakeConvertOneArgPlugin(scenario.Scenario):
+            def run(self, bar):
+                """Dummy docstring.
+
+                :param bar: dummy parameter
+                """
+                pass
+
+        self.addCleanup(FakeConvertOneArgPlugin.unregister)
+
+        @types.convert(bar={"type": "test_bar"},
+                       baz={"type": "test_baz"})
+        @scenario.configure(name="FakeConvertPlugin.two_args")
+        class FakeConvertTwoArgsPlugin(scenario.Scenario):
+
+            def run(self, bar, baz):
+                """Dummy docstring.
+
+                :param bar: dummy parameter
+                :param baz: dummy parameter
+                """
+                pass
+
+        self.addCleanup(FakeConvertTwoArgsPlugin.unregister)
+
     @mock.patch("rally.task.types.ResourceType.get", create=True)
     def test_convert(self, mock_resource_type_get):
         mock_transform = mock_resource_type_get.return_value.transform
-        args = types.preprocess("TestConvertPlugin.one_arg",
+        args = types.preprocess("FakeConvertPlugin.one_arg",
                                 mock.MagicMock(),
                                 {"bar": "bar_config"})
         mock_resource_type_get.assert_called_once_with("test_bar")
@@ -69,7 +75,7 @@ class ConvertTestCase(test.TestCase):
         loaders = {"test_bar": mock.Mock(), "test_baz": mock.Mock()}
         mock_resource_type_get.side_effect = lambda p: loaders[p]
 
-        args = types.preprocess("TestConvertPlugin.two_args",
+        args = types.preprocess("FakeConvertPlugin.two_args",
                                 mock.MagicMock(),
                                 {"bar": "bar_config",
                                  "baz": "baz_config"})
