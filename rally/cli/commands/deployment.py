@@ -93,11 +93,10 @@ class DeploymentCommands(object):
                 "creds": {"openstack": envutils.get_creds_from_env_vars()}}
         else:
             if not filename:
-                print("Either --filename or --fromenv is required.")
-                return 1
-            filename = os.path.expanduser(filename)
-            with open(filename, "rb") as deploy_file:
-                config = yaml.safe_load(deploy_file.read())
+                config = {}
+            else:
+                with open(os.path.expanduser(filename), "rb") as deploy_file:
+                    config = yaml.safe_load(deploy_file.read())
 
         try:
             deployment = api.deployment.create(config=config, name=name)

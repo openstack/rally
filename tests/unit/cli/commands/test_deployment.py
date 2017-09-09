@@ -45,6 +45,13 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.fake_api.deployment.create.assert_called_once_with(
             config={"some": "json"}, name="fake_deploy")
 
+    @mock.patch.dict(os.environ, {"RALLY_DEPLOYMENT": "my_deployment_id"})
+    @mock.patch("rally.cli.commands.deployment.DeploymentCommands.list")
+    def test_create_empty(self, mock_deployment_commands_list):
+        self.deployment.create(self.fake_api, "fake_deploy")
+        self.fake_api.deployment.create.assert_called_once_with(
+            config={}, name="fake_deploy")
+
     @mock.patch.dict(os.environ, {"OS_AUTH_URL": "fake_auth_url",
                                   "OS_USERNAME": "fake_username",
                                   "OS_PASSWORD": "fake_password",
