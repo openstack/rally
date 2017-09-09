@@ -1,3 +1,4 @@
+{% set image = "Fedora-Atomic-26-20170723.0.x86_64" %}
 ---
   MagnumClusterTemplates.list_cluster_templates:
     -
@@ -10,7 +11,7 @@
           tenants: 1
           users_per_tenant: 1
         cluster_templates:
-          image_id: "fedora-atomic-latest"
+          image_id: {{ image }}
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"
           external_network_id: "public"
@@ -34,7 +35,7 @@
           tenants: 1
           users_per_tenant: 1
         cluster_templates:
-          image_id: "fedora-atomic-latest"
+          image_id: {{ image }}
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"
           external_network_id: "public"
@@ -61,7 +62,7 @@
           tenants: 1
           users_per_tenant: 1
         cluster_templates:
-          image_id: "fedora-atomic-latest"
+          image_id: {{ image }}
           flavor_id: "m1.small"
           master_flavor_id: "m1.small"
           external_network_id: "public"
