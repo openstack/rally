@@ -3,1292 +3,1130 @@
 {% set flavor_name = "m1.tiny" %}
 {% set volume_type = "" %}
 ---
-  Authenticate.validate_nova:
+  version: 2
+  title: Task for gate-rally-dsvm-rally-nova-nv job
+  description: >
+    This task contains various scenarios for testing nova plugins
+  subtasks:
     -
-      args:
-        repetitions: 2
+      title: Authenticate.validate_nova tests
+      scenario:
+        Authenticate.validate_nova:
+          repetitions: 2
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 5
-      context:
+        constant:
+          times: 10
+          concurrency: 5
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.nova_update_and_delete:
     -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 1
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.nova_get:
+      title: Quotas test cases
+      workloads:
+        -
+          scenario:
+            Quotas.nova_update_and_delete:
+              max_quota: 1024
+          runner:
+            constant:
+              times: 4
+              concurrency: 1
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            Quotas.nova_get: {}
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            Quotas.nova_update:
+              max_quota: 1024
+          runner:
+            constant:
+              times: 4
+              concurrency: 1
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
     -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
+      title: NovaServers.boot_and_delete_server tests
+      workloads:
+        -
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              auto_assign_nic: true
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            network:
+              start_cidr: "10.2.0.0/24"
+              networks_per_tenant: 2
+        -
+          scenario:
+            NovaServers.boot_and_delete_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              force_delete: true
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
 
-  Quotas.nova_update:
     -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 1
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
+      title: NovaServers.boot_and_list_server tests
+      workloads:
+        -
+          scenario:
+            NovaServers.boot_and_list_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              detailed: True
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 1
+        -
+          scenario:
+            NovaServers.boot_and_list_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              detailed: True
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+              user_choice_method: "round_robin"
+        -
+          scenario:
+            NovaServers.boot_and_list_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              files:
+                /home/bootfile: "rallytest"
+              detailed: True
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 1
+    -
+      title: NovaServerGroups.create_and_get_server_group tests
+      workloads:
+      {% for s in (["affinity"], ["anti-affinity"]) %}
+        -
+          scenario:
+            NovaServerGroups.create_and_get_server_group:
+              policies: {{s}}
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+      {% endfor %}
 
-  NovaServers.boot_and_delete_server:
     -
-      args:
-        flavor:
+      title: NovaServerGroups.create_and_list_server_groups tests
+      workloads:
+     {% for s in (["affinity"], ["anti-affinity"]) %}
+        -
+          scenario:
+            NovaServerGroups.create_and_list_server_groups:
+              policies: {{s}}
+              all_projects: false
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+
+      {% endfor %}
+    -
+      title: NovaServerGroups.create_and_delete_server_group tests
+      workloads:
+      {% for s in (["affinity"], ["anti-affinity"]) %}
+        -
+          scenario:
+            NovaServerGroups.create_and_delete_server_group:
+              policies: {{s}}
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+      {% endfor %}
+    -
+      title: NovaServers.suspend_and_resume_server tests
+      scenario:
+        NovaServers.suspend_and_resume_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        auto_assign_nic: true
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-          networks_per_tenant: 2
-
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        force_delete: true
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_list_server:
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        detailed: True
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
     -
-      args:
-        flavor:
+      title: NovaServers.pause_and_unpause_server tests
+      scenario:
+        NovaServers.pause_and_unpause_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        detailed: True
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-          user_choice_method: "round_robin"
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        files:
-            /home/bootfile: "rallytest"
-        detailed: True
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServerGroups.create_and_get_server_group:
-  {% for s in (["affinity"], ["anti-affinity"]) %}
     -
-      args:
-        policies: {{s}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  NovaServerGroups.create_and_list_server_groups:
-  {% for s in (["affinity"], ["anti-affinity"]) %}
-    -
-      args:
-        policies: {{s}}
-        all_projects: false
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  NovaServerGroups.create_and_delete_server_group:
-  {% for s in (["affinity"], ["anti-affinity"]) %}
-    -
-      args:
-        policies: {{s}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  NovaServers.suspend_and_resume_server:
-    -
-      args:
-        flavor:
+      title: NovaServers.shelve_and_unshelve_server tests
+      scenario:
+        NovaServers.shelve_and_unshelve_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.pause_and_unpause_server:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_and_rebuild_server tests
+      scenario:
+        NovaServers.boot_and_rebuild_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          from_image:
+            name: {{image_name}}
+          to_image:
             name: {{image_name}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.shelve_and_unshelve_server:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_and_associate_floating_ip tests
+      scenario:
+        NovaServers.boot_and_associate_floating_ip:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_rebuild_server:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        from_image:
-          name: {{image_name}}
-        to_image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_associate_floating_ip:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
         network: {}
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_associate_and_dissociate_floating_ip:
     -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
+      title: NovaServers.boot_server_associate_and_dissociate_floating_ip tests
+      scenario:
+        NovaServers.boot_server_associate_and_dissociate_floating_ip:
+          flavor:
+            name: {{flavor_name}}
+          image:
+            name: {{image_name}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
         network: {}
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.list_servers:
     -
-      args:
-        detailed: True
+      title: NovaServers.list_servers tests
+      scenario:
+        NovaServers.list_servers:
+          detailed: True
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
         servers:
           flavor:
-              name: {{flavor_name}}
+            name: {{flavor_name}}
           image:
-              name: {{image_name}}
+            name: {{image_name}}
           servers_per_tenant: 2
           auto_assign_nic: True
         network:
           networks_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_show_server:
     -
-      args:
-        image:
-          name: {{image_name}}
-        flavor:
-          name: {{flavor_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_get_console_output:
-    -
-      args:
-        image:
-          name: {{image_name}}
-        flavor:
-          name: {{flavor_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_get_console_url:
-  {% for s in ("novnc", "xvpvnc") %}
-    -
-      args:
-        flavor:
-            name: "{{flavor_name}}"
-        image:
-            name: "{{image_name}}"
-        console_type: {{s}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  NovaServers.resize_server:
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
+      title: NovaServers.boot_and_show_server tests
+      scenario:
+        NovaServers.boot_and_show_server:
+          image:
             name: {{image_name}}
-        to_flavor:
+          flavor:
+            name: {{flavor_name}}
+      runner:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+    -
+      title: NovaServers.boot_and_get_console_output tests
+      scenario:
+        NovaServers.boot_and_get_console_output:
+          image:
+            name: {{image_name}}
+          flavor:
+            name: {{flavor_name}}
+      runner:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+    -
+      title: NovaServers.boot_and_get_console_url tests
+      workloads:
+      {% for s in ("novnc", "xvpvnc") %}
+        -
+          scenario:
+            NovaServers.boot_and_get_console_url:
+              flavor:
+                name: "{{flavor_name}}"
+              image:
+                name: "{{image_name}}"
+              console_type: {{s}}
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+      {% endfor %}
+
+    -
+      title: NovaServers.resize_server tests
+      workloads:
+        -
+          scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              to_flavor:
+                name: "m1.small"
+              confirm: true
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 1
+        -
+          scenario:
+            NovaServers.resize_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              to_flavor:
+                name: "m1.small"
+              confirm: false
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 1
+    -
+      title: NovaServers.resize_shutoff_server tests
+      workloads:
+      {% for s in ("true", "false") %}
+        -
+          scenario:
+            NovaServers.resize_shutoff_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              to_flavor:
+                name: "m1.small"
+              confirm: {{s}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+      {% endfor %}
+    -
+      title: NovaServers.boot_server_attach_created_volume_and_resize tests
+      scenario:
+        NovaServers.boot_server_attach_created_volume_and_resize:
+          flavor:
+            name: {{flavor_name}}
+          image:
+            name: {{image_name}}
+          to_flavor:
             name: "m1.small"
-        confirm: true
+          volume_size: 1
+          confirm: true
+          force_delete: false
+          do_delete: true
+          boot_server_kwargs: {}
+          create_volume_kwargs: {}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
     -
-      args:
-        flavor:
+      title: NovaServers.boot_server_from_volume_and_resize tests
+      scenario:
+        NovaServers.boot_server_from_volume_and_resize:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        to_flavor:
+          to_flavor:
             name: "m1.small"
-        confirm: false
+          volume_size: 1
+          confirm: true
+          force_delete: false
+          do_delete: true
+          boot_server_kwargs: {}
+          create_volume_kwargs: {}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.resize_shutoff_server:
-  {% for s in ("true", "false") %}
     -
-      args:
-        flavor:
+      title: NovaServers.boot_and_bounce_server tests
+      scenario:
+        NovaServers.boot_and_bounce_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        to_flavor:
-            name: "m1.small"
-        confirm: {{s}}
+          actions:
+            -
+              hard_reboot: 1
+            -
+              stop_start: 1
+            -
+              rescue_unrescue: 1
+            -
+              pause_unpause: 1
+            -
+              suspend_resume: 1
+            -
+              lock_unlock: 1
+            -
+              shelve_unshelve: 1
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  NovaServers.boot_server_attach_created_volume_and_resize:
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        to_flavor:
-            name: "m1.small"
-        volume_size: 1
-        confirm: true
-        force_delete: false
-        do_delete: true
-        boot_server_kwargs: {}
-        create_volume_kwargs: {}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_from_volume_and_resize:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_lock_unlock_and_delete tests
+      scenario:
+        NovaServers.boot_lock_unlock_and_delete:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        to_flavor:
-            name: "m1.small"
-        volume_size: 1
-        confirm: true
-        force_delete: false
-        do_delete: true
-        boot_server_kwargs: {}
-        create_volume_kwargs: {}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_bounce_server:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_server_from_volume_and_delete tests
+      scenario:
+        NovaServers.boot_server_from_volume_and_delete:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        actions:
-          -
-            hard_reboot: 1
-          -
-            stop_start: 1
-          -
-            rescue_unrescue: 1
-          -
-            pause_unpause: 1
-          -
-            suspend_resume: 1
-          -
-            lock_unlock: 1
-          -
-            shelve_unshelve: 1
+          volume_size: 1
+          volume_type: {{volume_type}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaServers.boot_server_from_volume tests
+      scenario:
+        NovaServers.boot_server_from_volume:
+          flavor:
+            name: {{flavor_name}}
+          image:
+            name: {{image_name}}
+          volume_size: 1
+          volume_type: {{volume_type}}
+      runner:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaServers.snapshot_server tests
+      workloads:
+        -
+          scenario:
+            NovaServers.snapshot_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            NovaServers.snapshot_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            api_versions:
+              glance:
+                version: 2
+    -
+      title: NovaServers.boot_server tests
+      workloads:
+        -
+          scenario:
+            NovaServers.boot_server:
+              flavor:
+                name: "^ram64$"
+              image:
+                name: {{image_name}}
+              auto_assign_nic: false
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            flavors:
+              -
+                name: "ram64"
+                ram: 64
+        -
+          scenario:
+            NovaServers.boot_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            NovaServers.boot_server:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: "rally-named-image-from-context"
+          runner:
+            constant:
+              times: 4
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 2
+            roles:
+              - admin
+            images:
+              image_url: "{{ cirros_image_url }}"
+              disk_format: "qcow2"
+              container_format: "bare"
+              images_per_tenant: 1
+              image_name: "rally-named-image-from-context"
+              visibility: "public"
+
+    -
+      title: NovaHypervisors.list_hypervisors tests
+      scenario:
+        NovaHypervisors.list_hypervisors:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+    -
+      title: NovaHypervisors.statistics_hypervisors tests
+      scenario:
+        NovaHypervisors.statistics_hypervisors: {}
+      runner:
+        constant:
+          times: 5
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaHypervisors.list_and_get_hypervisors tests
+      scenario:
+        NovaHypervisors.list_and_get_hypervisors:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaHypervisors.list_and_get_uptime_hypervisors tests
+      scenario:
+        NovaHypervisors.list_and_get_uptime_hypervisors:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title:  NovaHypervisors.list_and_search_hypervisors tests
+      scenario:
+        NovaHypervisors.list_and_search_hypervisors:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaImages.list_images tests
+      scenario:
+        NovaImages.list_images:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_lock_unlock_and_delete:
     -
-      args:
-        flavor:
+      title: NovaKeypair.create_and_delete_keypair tests
+      workloads:
+        -
+          scenario:
+            NovaKeypair.create_and_delete_keypair: {}
+          runner:
+            constant:
+              times: 4
+              concurrency: 4
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+        -
+          scenario:
+            NovaKeypair.create_and_delete_keypair:
+              key_type: "x509"
+          runner:
+            constant:
+              times: 4
+              concurrency: 4
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            api_versions:
+              nova:
+                version: 2.2
+    -
+      title: NovaKeypair.create_and_list_keypairs tests
+      scenario:
+        NovaKeypair.create_and_list_keypairs: {}
+      runner:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaKeypair.create_and_get_keypair tests
+      scenario:
+        NovaKeypair.create_and_get_keypair: {}
+      runner:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaKeypair.create_and_get_keypair tests
+      workloads:
+        -
+          scenario:
+            NovaKeypair.boot_and_delete_server_with_keypair:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            network:
+              start_cidr: "10.2.0.0/24"
+        -
+          scenario:
+            NovaKeypair.boot_and_delete_server_with_keypair:
+              flavor:
+                name: {{flavor_name}}
+              image:
+                name: {{image_name}}
+              key_type: "x509"
+          runner:
+            constant:
+              times: 2
+              concurrency: 2
+          contexts:
+            users:
+              tenants: 2
+              users_per_tenant: 2
+            network:
+              start_cidr: "10.2.0.0/24"
+            api_versions:
+              nova:
+                version: 2.2
+    -
+      title: NovaServers.boot_and_delete_multiple_servers tests
+      scenario:
+        NovaServers.boot_and_delete_multiple_servers:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
+          count: 5
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_from_volume_and_delete:
+          users_per_tenant: 2
     -
-      args:
-        flavor:
+      title: NovaFlavors.list_flavors tests
+      scenario:
+        NovaFlavors.list_flavors:
+          detailed: True
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaAgents.list_agents tests
+      scenario:
+        NovaAgents.list_agents: {}
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+    -
+      title: NovaAggregates.list_aggregates tests
+      scenario:
+        NovaAggregates.list_aggregates: {}
+      runner:
+        constant:
+          concurrency: 2
+          times : 4
+    -
+      title: NovaAggregates.create_aggregate_add_and_remove_host tests
+      scenario:
+        NovaAggregates.create_aggregate_add_and_remove_host:
+          availability_zone: "nova"
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaAvailabilityZones.list_availability_zones tests
+      scenario:
+        NovaAvailabilityZones.list_availability_zones:
+          detailed: true
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+    -
+      title: NovaHosts.list_hosts tests
+      scenario:
+        NovaHosts.list_hosts: {}
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+    -
+      title: NovaHosts.list_and_get_hosts tests
+      scenario:
+        NovaHosts.list_and_get_hosts: {}
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaServices.list_services tests
+      scenario:
+        NovaServices.list_services: {}
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+    -
+      title: NovaFlavors.create_flavor tests
+      scenario:
+        NovaFlavors.create_flavor:
+          ram: 500
+          vcpus: 1
+          disk: 1
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+    -
+      title: NovaFlavors.create_flavor_and_set_keys tests
+      scenario:
+        NovaFlavors.create_flavor_and_set_keys:
+          ram: 500
+          vcpus : 1
+          disk: 1
+          extra_specs:
+            quota:disk_read_bytes_sec: 10240
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+    -
+      title: NovaFlavors.create_and_get_flavor tests
+      scenario:
+        NovaFlavors.create_and_get_flavor:
+          ram: 500
+          vcpus: 1
+          disk: 1
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+    -
+      title: NovaFlavors.create_and_delete_flavor tests
+      scenario:
+        NovaFlavors.create_and_delete_flavor:
+          ram: 500
+          vcpus : 1
+          disk: 1
+      runner:
+        constant:
+          concurrency: 2
+          times: 10
+    -
+      title: NovaFlavors.create_and_list_flavor_access tests
+      scenario:
+        NovaFlavors.create_and_list_flavor_access:
+          ram: 500
+          vcpus: 1
+          disk: 1
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+    -
+      title: NovaFlavors.create_flavor_and_add_tenant_access tests
+      scenario:
+        NovaFlavors.create_flavor_and_add_tenant_access:
+          ram: 500
+          vcpus : 1
+          disk: 1
+      runner:
+        constant:
+          concurrency: 2
+          times: 4
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaServers.boot_and_update_server tests
+      scenario:
+        NovaServers.boot_and_update_server:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        volume_size: 1
-        volume_type: {{volume_type}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_from_volume:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_server_from_volume_snapshot tests
+      scenario:
+        NovaServers.boot_server_from_volume_snapshot:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        volume_size: 1
-        volume_type: {{volume_type}}
+          volume_size: 1
+          volume_type: {{volume_type}}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaServers.snapshot_server:
     -
-      args:
-        flavor:
+      title: NovaAggregates.create_and_list_aggregates tests
+      scenario:
+        NovaAggregates.create_and_list_aggregates:
+          availability_zone: "nova"
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaAggregates.create_and_delete_aggregate tests
+      scenario:
+        NovaAggregates.create_and_delete_aggregate:
+          availability_zone: "nova"
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaAggregates.create_and_update_aggregate tests
+      scenario:
+        NovaAggregates.create_and_update_aggregate:
+          availability_zone: "nova"
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaAggregates.create_and_get_aggregate_details tests
+      scenario:
+        NovaAggregates.create_and_get_aggregate_details:
+          availability_zone: "nova"
+      runner:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+    -
+      title: NovaServers.boot_server_and_attach_interface tests
+      scenario:
+        NovaServers.boot_server_and_attach_interface:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
+          network_create_args: {}
+          subnet_create_args: {}
+          subnet_cidr_start: "1.1.0.0/30"
+          boot_server_args: {}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        api_versions:
-          glance:
-            version: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server:
-    -
-      args:
-        flavor:
-            name: "^ram64$"
-        image:
-            name: {{image_name}}
-        auto_assign_nic: false
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        flavors:
-          -
-            name: "ram64"
-            ram: 64
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: "rally-named-image-from-context"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 2
-        roles:
-          - admin
-        images:
-          image_url: "{{ cirros_image_url }}"
-          disk_format: "qcow2"
-          container_format: "bare"
-          images_per_tenant: 1
-          image_name: "rally-named-image-from-context"
-          visibility: "public"
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.list_hypervisors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.statistics_hypervisors:
-    -
-      args: {}
-      runner:
-        type: "constant"
-        times: 5
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.list_and_get_hypervisors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.list_and_get_uptime_hypervisors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.list_and_search_hypervisors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaImages.list_images:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaKeypair.create_and_delete_keypair:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        key_type: "x509"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        api_versions:
-          nova:
-            version: 2.2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaKeypair.create_and_list_keypairs:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaKeypair.create_and_get_keypair:
-    -
-      args: {}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaKeypair.boot_and_delete_server_with_keypair:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-        key_type: "x509"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-        api_versions:
-          nova:
-            version: 2.2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_delete_multiple_servers:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-        count: 5
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-
-  NovaFlavors.list_flavors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAgents.list_agents:
-    -
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 4
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.list_aggregates:
-    -
-      runner:
-        type: "constant"
-        concurrency: 2
-        times : 4
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_aggregate_add_and_remove_host:
-    -
-      args:
-        availability_zone: "nova"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAvailabilityZones.list_availability_zones:
-    -
-      args:
-        detailed: true
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 4
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHosts.list_hosts:
-    -
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 4
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHosts.list_and_get_hosts:
-    -
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 5
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServices.list_services:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_flavor:
-    -
-      args:
-        ram: 500
-        vcpus: 1
-        disk: 1
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_flavor_and_set_keys:
-    -
-      args:
-        ram: 500
-        vcpus : 1
-        disk: 1
-        extra_specs:
-          quota:disk_read_bytes_sec: 10240
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_and_get_flavor:
-    -
-      args:
-        ram: 500
-        vcpus: 1
-        disk: 1
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_and_delete_flavor:
-    -
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 10
-      args:
-        ram: 500
-        vcpus : 1
-        disk: 1
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_and_list_flavor_access:
-    -
-      args:
-        ram: 500
-        vcpus: 1
-        disk: 1
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFlavors.create_flavor_and_add_tenant_access:
-    -
-      args:
-        ram: 500
-        vcpus : 1
-        disk: 1
-      runner:
-        type: "constant"
-        concurrency: 2
-        times: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_update_server:
-    -
-      args:
-        flavor:
-          name: {{flavor_name}}
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_from_volume_snapshot:
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        volume_size: 1
-        volume_type: {{volume_type}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_and_list_aggregates:
-    -
-      args:
-        availability_zone: "nova"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_and_delete_aggregate:
-    -
-      args:
-        availability_zone: "nova"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_and_update_aggregate:
-    -
-      args:
-        availability_zone: "nova"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_and_get_aggregate_details:
-    -
-      args:
-        availability_zone: "nova"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_and_attach_interface:
-    -
-      args:
-        flavor:
-            name: {{flavor_name}}
-        image:
-            name: {{image_name}}
-        network_create_args: {}
-        subnet_create_args: {}
-        subnet_cidr_start: "1.1.0.0/30"
-        boot_server_args: {}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         network: {}
         users:
           tenants: 2
@@ -1297,74 +1135,62 @@
           neutron:
             network: -1
             subnet: -1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaAggregates.create_aggregate_add_host_and_boot_server:
     -
-      args:
-        image:
-          name: {{image_name}}
-        metadata:
-          test_metadata: "true"
-        availability_zone: "nova"
-        ram: 512
-        vcpus: 1
-        disk: 1
-        boot_server_kwargs: {}
+      title: NovaAggregates.create_aggregate_add_host_and_boot_server tests
+      scenario:
+        NovaAggregates.create_aggregate_add_host_and_boot_server:
+          image:
+            name: {{image_name}}
+          metadata:
+            test_metadata: "true"
+          availability_zone: "nova"
+          ram: 512
+          vcpus: 1
+          disk: 1
+          boot_server_kwargs: {}
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
+        constant:
+          times: 4
+          concurrency: 2
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_and_list_interfaces:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_server_and_list_interfaces tests
+      scenario:
+        NovaServers.boot_server_and_list_interfaces:
+          flavor:
             name: "{{flavor_name}}"
-        image:
+          image:
             name: {{image_name}}
       runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
+        constant:
+          times: 3
+          concurrency: 3
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
         network:
           start_cidr: "100.1.0.0/26"
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_attach_volume_and_list_attachments:
     -
-      args:
-        flavor:
+      title: NovaServers.boot_server_attach_volume_and_list_attachments tests
+      scenario:
+        NovaServers.boot_server_attach_volume_and_list_attachments:
+          flavor:
             name: {{flavor_name}}
-        image:
+          image:
             name: {{image_name}}
-        volume_size: 1
-        volume_num: 2
-        boot_server_kwargs: {}
-        create_volume_kwargs: {}
+          volume_size: 1
+          volume_num: 2
+          boot_server_kwargs: {}
+          create_volume_kwargs: {}
       runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
+        constant:
+          times: 2
+          concurrency: 2
+      contexts:
         users:
           tenants: 1
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
