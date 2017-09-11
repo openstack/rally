@@ -199,10 +199,13 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
 
         status = "active"
         self.assertEqual([mock_image__unify_image.return_value],
-                         self.service.list_images())
+                         self.service.list_images(owner="foo",
+                                                  visibility="shared"))
         self.service._impl.list_images.assert_called_once_with(
             status=status,
-            visibility=None)
+            visibility="shared",
+            owner="foo"
+        )
 
     def test_set_visibility(self):
         image_id = "image_id"

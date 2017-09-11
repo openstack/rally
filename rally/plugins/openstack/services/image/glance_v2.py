@@ -216,7 +216,8 @@ class UnifiedGlanceV2Service(glance_common.UnifiedGlanceMixin, image.Image):
         """
         self._check_v2_visibility(visibility)
 
-        images = self._impl.list_images(status=status, visibility=visibility)
+        images = self._impl.list_images(
+            status=status, visibility=visibility, owner=owner)
         return [self._unify_image(i) for i in images]
 
     def set_visibility(self, image_id, visibility="shared"):
