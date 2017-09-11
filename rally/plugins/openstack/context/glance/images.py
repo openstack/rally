@@ -193,6 +193,13 @@ class ImageGenerator(context.Context):
     @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
         if self.context.get("admin", {}):
+            # NOTE(andreykurilin): Glance does not require the admin for
+            #   listing tenant images, but the admin is required for
+            #   discovering Cinder volumes which might be created for the
+            #   purpose of caching. Removing such volumes are optional step,
+            #   since Cinder should have own mechanism like garbage collector,
+            #   but if we can, let's remove everything and make the cloud as
+            #   close as possible to the original state.
             admin = self.context["admin"]
             admin_required = None
         else:

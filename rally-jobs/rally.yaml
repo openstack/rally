@@ -442,13 +442,13 @@
         concurrency: 5
       context:
         users:
-          tenants: 1
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         images:
           image_url: "~/.rally/extra/fake-image.img"
           disk_format: "qcow2"
           container_format: "bare"
-          images_per_tenant: 1
+          images_per_tenant: 2
       sla:
         failure_rate:
           max: 100
