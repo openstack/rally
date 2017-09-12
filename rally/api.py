@@ -525,23 +525,23 @@ class _Task(APIGroup):
                     position=workload["position"], runner=workload["runner"],
                     context=workload["context"], hooks=workload["hooks"],
                     sla=workload["sla"], args=workload["args"])
-            chunk_size = CONF.raw_result_chunk_size
-            workload_data_count = 0
-            while len(workload["data"]) > chunk_size:
-                results_chunk = workload["data"][:chunk_size]
-                workload["data"] = workload["data"][chunk_size:]
-                results_chunk.sort(key=lambda x: x["timestamp"])
+                chunk_size = CONF.raw_result_chunk_size
+                workload_data_count = 0
+                while len(workload["data"]) > chunk_size:
+                    results_chunk = workload["data"][:chunk_size]
+                    workload["data"] = workload["data"][chunk_size:]
+                    results_chunk.sort(key=lambda x: x["timestamp"])
+                    workload_obj.add_workload_data(workload_data_count,
+                                                   {"raw": results_chunk})
+                    workload_data_count += 1
                 workload_obj.add_workload_data(workload_data_count,
-                                               {"raw": results_chunk})
-                workload_data_count += 1
-            workload_obj.add_workload_data(workload_data_count,
-                                           {"raw": workload["data"]})
-            workload_obj.set_results(
-                sla_results=workload["sla_results"].get("sla"),
-                hooks_results=workload["hooks"],
-                start_time=workload["start_time"],
-                full_duration=workload["full_duration"],
-                load_duration=workload["load_duration"])
+                                               {"raw": workload["data"]})
+                workload_obj.set_results(
+                    sla_results=workload["sla_results"].get("sla"),
+                    hooks_results=workload["hooks"],
+                    start_time=workload["start_time"],
+                    full_duration=workload["full_duration"],
+                    load_duration=workload["load_duration"])
             subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
         task_inst.update_status(consts.SubtaskStatus.FINISHED)
 
