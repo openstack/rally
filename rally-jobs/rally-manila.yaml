@@ -1,11 +1,18 @@
 ---
-  Dummy.openstack:
+  version: 2
+  title: Task for gate-rally-dsvm-manila-multibackend-no-ss job
+  description: >
+    This task contains various subtasks for testing manila plugins
+  subtasks:
     -
+      title: Test Manila Quotas context
+      scenario:
+        Dummy.openstack: {}
       runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
+        constant:
+          times: 1
+          concurrency: 1
+      contexts:
         users:
           tenants: 1
           users_per_tenant: 1
@@ -16,36 +23,33 @@
             snapshots: -1
             snapshot_gigabytes: -1
             share_networks: -1
-
-  ManilaShares.list_shares:
     -
-      args:
-        detailed: True
+      title: ManilaShares.list_shares tests
+      scenario:
+        ManilaShares.list_shares:
+          detailed: True
       runner:
-        type: "constant"
-        times: 12
-        concurrency: 1
-      context:
+        constant:
+          times: 12
+          concurrency: 4
+      contexts:
         users:
           tenants: 3
           users_per_tenant: 4
           user_choice_method: "round_robin"
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.create_and_extend_share:
     -
-      args:
-        share_proto: "nfs"
-        size: 1
-        new_size: 2
-        share_type: "dhss_true"
+      title: ManilaShares.create_and_extend_share tests
+      scenario:
+        ManilaShares.create_and_extend_share:
+          share_proto: "nfs"
+          size: 1
+          new_size: 2
+          share_type: "dhss_true"
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         quotas:
           manila:
             shares: -1
@@ -57,22 +61,19 @@
           user_choice_method: "round_robin"
         manila_share_networks:
           use_share_networks: True
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.create_and_shrink_share:
     -
-      args:
-        share_proto: "nfs"
-        size: 2
-        new_size: 1
-        share_type: "dhss_true"
+      title: ManilaShares.create_and_shrink_share tests
+      scenario:
+        ManilaShares.create_and_shrink_share:
+          share_proto: "nfs"
+          size: 2
+          new_size: 1
+          share_type: "dhss_true"
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         quotas:
           manila:
             shares: -1
@@ -84,23 +85,20 @@
           user_choice_method: "round_robin"
         manila_share_networks:
           use_share_networks: True
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.create_share_then_allow_and_deny_access:
     -
-      args:
-        share_proto: "nfs"
-        size: 1
-        share_type: "dhss_true"
-        access: "127.0.0.1"
-        access_type: "ip"
+      title: ManilaShares.create_share_then_allow_and_deny_access tests
+      scenario:
+        ManilaShares.create_share_then_allow_and_deny_access:
+          share_proto: "nfs"
+          size: 1
+          share_type: "dhss_true"
+          access: "127.0.0.1"
+          access_type: "ip"
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         quotas:
           manila:
             shares: -1
@@ -112,24 +110,20 @@
           user_choice_method: "round_robin"
         manila_share_networks:
           use_share_networks: True
-      sla:
-        failure_rate:
-          max: 0
-
-  {% for s in ("create_and_delete_share", "create_and_list_share") %}
-  ManilaShares.{{s}}:
     -
-      args:
-        share_proto: "nfs"
-        size: 1
-        share_type: "dhss_true"
-        min_sleep: 1
-        max_sleep: 2
+      title: ManilaShares.create_and_delete_share tests
+      scenario:
+        ManilaShares.create_and_delete_share:
+          share_proto: "nfs"
+          size: 1
+          share_type: "dhss_true"
+          min_sleep: 1
+          max_sleep: 2
       runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         quotas:
           manila:
             shares: -1
@@ -141,125 +135,135 @@
           user_choice_method: "round_robin"
         manila_share_networks:
           use_share_networks: True
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  ManilaShares.create_share_network_and_delete:
     -
-      args:
-        name: "rally"
+      title: ManilaShares.create_and_list_share tests
+      scenario:
+        ManilaShares.create_and_list_share:
+          share_proto: "nfs"
+          size: 1
+          share_type: "dhss_true"
+          min_sleep: 1
+          max_sleep: 2
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
+        constant:
+          times: 4
+          concurrency: 4
+      contexts:
         quotas:
           manila:
+            shares: -1
+            gigabytes: -1
             share_networks: -1
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.create_share_network_and_list:
+          user_choice_method: "round_robin"
+        manila_share_networks:
+          use_share_networks: True
     -
-      args:
-        name: "rally"
-        detailed: True
-        search_opts:
+      title: ManilaShares.create_share_network_and_delete tests
+      scenario:
+        ManilaShares.create_share_network_and_delete:
           name: "rally"
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
+        constant:
+          times: 10
+          concurrency: 10
+      contexts:
         quotas:
           manila:
             share_networks: -1
         users:
           tenants: 2
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.list_share_servers:
     -
-      args:
-        search_opts: {}
+      title: ManilaShares.create_share_network_and_list tests
+      scenario:
+        ManilaShares.create_share_network_and_list:
+          name: "rally"
+          detailed: True
+          search_opts:
+            name: "rally"
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      sla:
-        failure_rate:
-          max: 0
-
-  ManilaShares.create_security_service_and_delete:
-  {% for s in ("ldap", "kerberos", "active_directory") %}
-    -
-      args:
-        security_service_type: {{s}}
-        dns_ip: "fake_dns_ip"
-        server: "fake-server"
-        domain: "fake_domain"
-        user: "fake_user"
-        password: "fake_password"
-        name: "fake_name"
-        description: "fake_description"
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  ManilaShares.attach_security_service_to_share_network:
-  {% for s in ("ldap", "kerberos", "active_directory") %}
-    -
-      args:
-        security_service_type: {{s}}
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
+        constant:
+          times: 10
+          concurrency: 10
+      contexts:
         quotas:
           manila:
             share_networks: -1
-      sla:
-        failure_rate:
-          max: 0
-  {% endfor %}
-
-  ManilaShares.set_and_delete_metadata:
+        users:
+          tenants: 2
+          users_per_tenant: 1
     -
-      args:
-        sets: 1
-        set_size: 3
-        delete_size: 3
-        key_min_length: 1
-        key_max_length: 256
-        value_min_length: 1
-        value_max_length: 1024
+      title: ManilaShares.list_share_servers tests
+      scenario:
+        ManilaShares.list_share_servers:
+          search_opts: {}
       runner:
-        type: "constant"
-        times: 10
-        concurrency: 10
-      context:
+        constant:
+          times: 10
+          concurrency: 10
+    -
+      title: ManilaShares.create_security_service_and_delete tests
+      workloads:
+      {% for s in ("ldap", "kerberos", "active_directory") %}
+        -
+          scenario:
+            ManilaShares.create_security_service_and_delete:
+              security_service_type: {{s}}
+              dns_ip: "fake_dns_ip"
+              server: "fake-server"
+              domain: "fake_domain"
+              user: "fake_user"
+              password: "fake_password"
+              name: "fake_name"
+              description: "fake_description"
+          runner:
+            constant:
+              times: 10
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+      {% endfor %}
+    -
+      title: ManilaShares.attach_security_service_to_share_network tests
+      workloads:
+      {% for s in ("ldap", "kerberos", "active_directory") %}
+        -
+          scenario:
+            ManilaShares.attach_security_service_to_share_network:
+              security_service_type: {{s}}
+          runner:
+            constant:
+              times: 10
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            quotas:
+              manila:
+                share_networks: -1
+      {% endfor %}
+    -
+      title: ManilaShares.set_and_delete_metadata tests
+      scenario:
+        ManilaShares.set_and_delete_metadata:
+          sets: 1
+          set_size: 3
+          delete_size: 3
+          key_min_length: 1
+          key_max_length: 256
+          value_min_length: 1
+          value_max_length: 1024
+      runner:
+        constant:
+          times: 10
+          concurrency: 10
+      contexts:
         quotas:
           manila:
             shares: -1
@@ -275,6 +279,3 @@
           share_proto: "NFS"
           size: 1
           share_type: "dhss_true"
-      sla:
-        failure_rate:
-          max: 0

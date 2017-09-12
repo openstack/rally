@@ -1,36 +1,67 @@
 {% set image = "Fedora-Atomic-26-20170723.0.x86_64" %}
 ---
-  MagnumClusterTemplates.list_cluster_templates:
+  version: 2
+  title: Task for gate-rally-dsvm-magnum-rally-nv job
+  description: >
+    This task contains various subtasks for testing magnum plugins
+  subtasks:
     -
-      runner:
-        type: "constant"
-        times: 40
-        concurrency: 20
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        cluster_templates:
-          image_id: {{ image }}
-          flavor_id: "m1.small"
-          master_flavor_id: "m1.small"
-          external_network_id: "public"
-          dns_nameserver: "8.8.8.8"
-          docker_volume_size: 5
-          coe: "kubernetes"
-          network_driver: "flannel"
-          docker_storage_driver: "devicemapper"
-          master_lb_enabled: False
-      sla:
-        failure_rate:
-          max: 0
-
+      title: MagnumClusterTemplates.list_cluster_templates tests
+      workloads:
+        -
+          scenario:
+            MagnumClusterTemplates.list_cluster_templates: {}
+          runner:
+            constant:
+              times: 40
+              concurrency: 20
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            cluster_templates:
+              image_id: {{ image }}
+              flavor_id: "m1.small"
+              master_flavor_id: "m1.small"
+              external_network_id: "public"
+              dns_nameserver: "8.8.8.8"
+              docker_volume_size: 5
+              coe: "kubernetes"
+              network_driver: "flannel"
+              docker_storage_driver: "devicemapper"
+              master_lb_enabled: False
+        -
+          scenario:
+            MagnumClusterTemplates.list_cluster_templates: {}
+          runner:
+            constant:
+              times: 40
+              concurrency: 20
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+            cluster_templates:
+              image_id: {{ image }}
+              flavor_id: "m1.small"
+              master_flavor_id: "m1.small"
+              external_network_id: "public"
+              dns_nameserver: "8.8.8.8"
+              docker_volume_size: 5
+              coe: "swarm"
+              network_driver: "docker"
+              docker_storage_driver: "devicemapper"
+              master_lb_enabled: False
     -
+      title: MagnumClusters.create_and_list_clusters tests
+      scenario:
+        MagnumClusters.create_and_list_clusters:
+          node_count: 1
       runner:
-        type: "constant"
-        times: 40
-        concurrency: 20
-      context:
+        constant:
+          times: 1
+          concurrency: 1
+      contexts:
         users:
           tenants: 1
           users_per_tenant: 1
@@ -45,33 +76,3 @@
           network_driver: "docker"
           docker_storage_driver: "devicemapper"
           master_lb_enabled: False
-      sla:
-        failure_rate:
-          max: 0
-
-  MagnumClusters.create_and_list_clusters:
-    -
-      args:
-        node_count: 1
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        cluster_templates:
-          image_id: {{ image }}
-          flavor_id: "m1.small"
-          master_flavor_id: "m1.small"
-          external_network_id: "public"
-          dns_nameserver: "8.8.8.8"
-          docker_volume_size: 5
-          coe: "swarm"
-          network_driver: "docker"
-          docker_storage_driver: "devicemapper"
-          master_lb_enabled: False
-      sla:
-        failure_rate:
-          max: 0

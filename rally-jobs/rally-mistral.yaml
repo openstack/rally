@@ -1,80 +1,75 @@
 ---
-  MistralWorkbooks.list_workbooks:
+  version: 2
+  title: Task for gate-rally-dsvm-mistral-rally-ubuntu-xenial-nv job
+  description: >
+    This task contains various subtasks for testing mistral plugins
+  subtasks:
     -
+      title: MistralWorkbooks.list_workbooks tests
+      scenario:
+        MistralWorkbooks.list_workbooks: {}
       runner:
-        type: "constant"
-        times: 50
-        concurrency: 10
-      context:
+        constant:
+          times: 50
+          concurrency: 10
+      contexts:
         users:
           tenants: 1
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  MistralWorkbooks.create_workbook:
     -
-      args:
-        definition: "~/.rally/extra/mistral_wb.yaml"
-      runner:
-        type: "constant"
-        times: 50
-        concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
+      title: MistralWorkbooks.create_workbook tests
+      workloads:
+        -
+          scenario:
+            MistralWorkbooks.create_workbook:
+              definition: "~/.rally/extra/mistral_wb.yaml"
+          runner:
+            constant:
+              times: 50
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
+        -
+          scenario:
+            MistralWorkbooks.create_workbook:
+              definition: "~/.rally/extra/mistral_wb.yaml"
+              do_delete: true
+          runner:
+            constant:
+              times: 50
+              concurrency: 10
+          contexts:
+            users:
+              tenants: 1
+              users_per_tenant: 1
     -
-      args:
-        definition: "~/.rally/extra/mistral_wb.yaml"
-        do_delete: true
+      title: MistralExecutions.list_executions tests
+      scenario:
+        MistralExecutions.list_executions: {}
       runner:
-        type: "constant"
-        times: 50
-        concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  MistralExecutions.list_executions:
-    -
-      runner:
-        type: "constant"
-        times: 50
-        concurrency: 10
-      context:
+        constant:
+          times: 50
+          concurrency: 10
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  MistralExecutions.create_execution_from_workbook:
     -
-      args:
-        definition: "~/.rally/extra/mistral_wb.yaml"
-        workflow_name: "wf1"
-        params: "~/.rally/extra/mistral_params.json"
-        wf_input: "~/.rally/extra/mistral_input.json"
-        do_delete: true
+      title: MistralExecutions.create_execution_from_workbook tests
+      scenario:
+        MistralExecutions.create_execution_from_workbook:
+          definition: "~/.rally/extra/mistral_wb.yaml"
+          workflow_name: "wf1"
+          params: "~/.rally/extra/mistral_params.json"
+          wf_input: "~/.rally/extra/mistral_input.json"
+          do_delete: true
       runner:
-        type: "constant"
-        times: 50
-        concurrency: 10
-      context:
+        constant:
+          times: 50
+          concurrency: 10
+      contexts:
         users:
           tenants: 2
           users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
