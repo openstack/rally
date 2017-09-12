@@ -128,8 +128,8 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.scenario.Scenario.get")
     @mock.patch("rally.task.sla.SLA.validate")
-    @mock.patch("rally.task.trigger.Trigger.validate")
-    @mock.patch("rally.task.hook.Hook.validate")
+    @mock.patch("rally.task.hook.HookTrigger.validate")
+    @mock.patch("rally.task.hook.HookAction.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
     @mock.patch("rally.task.engine.context.Context.validate")
@@ -137,15 +137,15 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_context_validate,
             mock_scenario_runner_validate,
             mock_task_config,
-            mock_hook_validate,
-            mock_trigger_validate,
+            mock_hook_action_validate,
+            mock_hook_trigger_validate,
             mock_sla_validate,
             mock_scenario_get):
 
         mock_context_validate.return_value = []
         mock_sla_validate.return_value = []
-        mock_hook_validate.return_value = []
-        mock_trigger_validate.return_value = []
+        mock_hook_action_validate.return_value = []
+        mock_hook_trigger_validate.return_value = []
         default_context = {"foo": "foo_conf"}
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_platform.return_value = "default"
@@ -153,9 +153,8 @@ class TaskEngineTestCase(test.TestCase):
 
         scenario_name = "Foo.bar"
         runner_type = "MegaRunner"
-        hook_conf = {"name": "c",
-                     "args": "c_args",
-                     "trigger": {"name": "d", "args": "d_args"}}
+        hook_conf = {"action": {"c": "c_args"},
+                     "trigger": {"d": "d_args"}}
         workload = {"name": scenario_name,
                     "runner": {"type": runner_type},
                     "context": {"a": "a_conf"},
@@ -186,10 +185,10 @@ class TaskEngineTestCase(test.TestCase):
         mock_sla_validate.assert_called_once_with(
             config=None, context=None,
             name="foo_sla", plugin_cfg="sla_conf", vtype=None)
-        mock_hook_validate.assert_called_once_with(
+        mock_hook_action_validate.assert_called_once_with(
             config=None, context=None, name="c", plugin_cfg="c_args",
             vtype=None)
-        mock_trigger_validate.assert_called_once_with(
+        mock_hook_trigger_validate.assert_called_once_with(
             config=None, context=None, name="d", plugin_cfg="d_args",
             vtype=None)
 
@@ -270,21 +269,21 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.json.dumps")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    @mock.patch("rally.task.hook.Hook.validate")
-    @mock.patch("rally.task.trigger.Trigger.validate")
+    @mock.patch("rally.task.hook.HookAction.validate")
+    @mock.patch("rally.task.hook.HookTrigger.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_syntax__wrong_hook(
-            self, mock_task_config, mock_trigger_validate, mock_hook_validate,
+            self, mock_task_config, mock_hook_trigger_validate,
+            mock_hook_action_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        mock_trigger_validate.return_value = []
-        mock_hook_validate.return_value = ["hook_error"]
+        mock_hook_trigger_validate.return_value = []
+        mock_hook_action_validate.return_value = ["hook_error"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        hook_conf = {"name": "c",
-                     "args": "c_args",
-                     "trigger": {"name": "d", "args": "d_args"}}
+        hook_conf = {"action": {"c": "c_args"},
+                     "trigger": {"d": "d_args"}}
         mock_task_instance.subtasks = [{"workloads": [
             self._make_workload(name="sca"),
             self._make_workload(name="sca", position=1,
@@ -303,21 +302,21 @@ class TaskEngineTestCase(test.TestCase):
 
     @mock.patch("rally.task.engine.json.dumps")
     @mock.patch("rally.task.engine.scenario.Scenario.get")
-    @mock.patch("rally.task.trigger.Trigger.validate")
-    @mock.patch("rally.task.hook.Hook.validate")
+    @mock.patch("rally.task.hook.HookTrigger.validate")
+    @mock.patch("rally.task.hook.HookAction.validate")
     @mock.patch("rally.task.engine.TaskConfig")
     def test__validate_config_syntax__wrong_trigger(
-            self, mock_task_config, mock_hook_validate, mock_trigger_validate,
+            self, mock_task_config, mock_hook_action_validate,
+            mock_hook_trigger_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        mock_trigger_validate.return_value = ["trigger_error"]
-        mock_hook_validate.return_value = []
+        mock_hook_trigger_validate.return_value = ["trigger_error"]
+        mock_hook_action_validate.return_value = []
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        hook_conf = {"name": "c",
-                     "args": "c_args",
-                     "trigger": {"name": "d", "args": "d_args"}}
+        hook_conf = {"action": {"c": "c_args"},
+                     "trigger": {"d": "d_args"}}
         mock_task_instance.subtasks = [{"workloads": [
             self._make_workload(name="sca"),
             self._make_workload(name="sca", position=1,
@@ -954,7 +953,7 @@ class ResultConsumerTestCase(test.TestCase):
         self.assertEqual(4, mock_task_get_status.call_count)
 
 
-class TaskTestCase(test.TestCase):
+class TaskConfigTestCase(test.TestCase):
     @mock.patch("jsonschema.validate")
     def test_validate_json(self, mock_validate):
         config = {}
@@ -996,19 +995,75 @@ class TaskTestCase(test.TestCase):
         config = collections.OrderedDict()
         config["a.task"] = [{"s": 1, "context": {"foo": "bar"}}, {"s": 2}]
         config["b.task"] = [{"s": 3, "sla": {"key": "value"}}]
+        config["c.task"] = [{"s": 5,
+                             "hooks": [{"name": "foo",
+                                        "args": "bar",
+                                        "description": "DESCR!!!",
+                                        "trigger": {
+                                            "name": "mega-trigger",
+                                            "args": {"some": "thing"}
+                                        }}]
+                             }]
         self.assertEqual(
             {"title": "Task (adopted from task format v1)",
-             "subtasks": [{"title": "a.task",
-                           "scenario": {"a.task": {}},
-                           "s": 1,
-                           "contexts": {"foo": "bar"}},
-                          {"title": "a.task",
-                           "s": 2,
-                           "scenario": {"a.task": {}},
-                           "contexts": {}},
-                          {"title": "b.task",
-                           "s": 3,
-                           "scenario": {"b.task": {}},
-                           "sla": {"key": "value"},
-                           "contexts": {}}]},
+             "subtasks": [
+                 {
+                     "title": "a.task",
+                     "scenario": {"a.task": {}},
+                     "s": 1,
+                     "contexts": {"foo": "bar"}
+                 },
+                 {
+                     "title": "a.task",
+                     "s": 2,
+                     "scenario": {"a.task": {}},
+                     "contexts": {}
+                 },
+                 {
+                     "title": "b.task",
+                     "s": 3,
+                     "scenario": {"b.task": {}},
+                     "sla": {"key": "value"},
+                     "contexts": {}
+                 },
+                 {
+                     "title": "c.task",
+                     "s": 5,
+                     "scenario": {"c.task": {}},
+                     "contexts": {},
+                     "hooks": [
+                         {"description": "DESCR!!!",
+                          "action": {"foo": "bar"},
+                          "trigger": {"mega-trigger": {"some": "thing"}}}
+                     ]
+                 }]},
             TaskConfig._adopt_task_format_v1(config))
+
+    def test_hook_config_compatibility(self):
+        cfg = {
+            "title": "foo",
+            "version": 2,
+            "subtasks": [
+                {
+                    "title": "foo",
+                    "scenario": {"xxx": {}},
+                    "runner": {"yyy": {}},
+                    "hooks": [
+                        {"description": "descr",
+                         "name": "hook_action",
+                         "args": {"k1": "v1"},
+                         "trigger": {
+                             "name": "hook_trigger",
+                             "args": {"k2": "v2"}
+                         }}
+                    ]
+                }
+            ]
+        }
+        task = engine.TaskConfig(cfg)
+        workload = task.subtasks[0]["workloads"][0]
+        self.assertEqual(
+            {"description": "descr",
+             "action": {"hook_action": {"k1": "v1"}},
+             "trigger": {"hook_trigger": {"k2": "v2"}}},
+            workload["hooks"][0]["config"])

@@ -16,8 +16,8 @@
 import ddt
 import mock
 
-from rally.plugins.common.trigger import periodic
-from rally.task import trigger
+from rally.plugins.common.hook.triggers import periodic
+from rally.task import hook
 from tests.unit import test
 
 
@@ -28,8 +28,8 @@ class PeriodicTriggerTestCase(test.TestCase):
         super(PeriodicTriggerTestCase, self).setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = periodic.PeriodicTrigger(
-            {"trigger": {"name": "periodic",
-                         "args": {"unit": "iteration", "step": 2}}},
+            {"trigger": {"periodic": {"unit": "iteration", "step": 2}},
+             "action": {"foo": {}}},
             mock.MagicMock(), self.hook_cls)
 
     @ddt.data((dict(unit="time", step=1), True),
@@ -52,7 +52,7 @@ class PeriodicTriggerTestCase(test.TestCase):
               (dict(step=1), False))
     @ddt.unpack
     def test_validate(self, config, valid):
-        results = trigger.Trigger.validate("periodic", None, None, config)
+        results = hook.HookTrigger.validate("periodic", None, None, config)
         if valid:
             self.assertEqual([], results)
         else:
@@ -74,9 +74,9 @@ class PeriodicTriggerTestCase(test.TestCase):
     @ddt.unpack
     def test_on_event_start_end(self, value, should_call):
         trigger = periodic.PeriodicTrigger(
-            {"trigger": {"name": "periodic",
-                         "args": {"unit": "time",
-                                  "step": 3, "start": 2, "end": 9}}},
+            {"trigger": {"periodic": {"unit": "time",
+                                      "step": 3, "start": 2, "end": 9}},
+             "action": {"foo": {}}},
             mock.MagicMock(), self.hook_cls)
         trigger.on_event("time", value)
         self.assertEqual(should_call, self.hook_cls.called)

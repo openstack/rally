@@ -14,11 +14,11 @@
 #    under the License.
 
 from rally import consts
-from rally.task import trigger
+from rally.task import hook
 
 
-@trigger.configure(name="periodic")
-class PeriodicTrigger(trigger.Trigger):
+@hook.configure(name="periodic")
+class PeriodicTrigger(hook.HookTrigger):
     """Periodically triggers hook with specified range and step."""
 
     CONFIG_SCHEMA = {

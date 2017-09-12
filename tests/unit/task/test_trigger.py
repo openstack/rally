@@ -15,68 +15,50 @@
 
 """Tests for Trigger base class."""
 
-import ddt
 import mock
 
 from rally.task import trigger
 from tests.unit import test
 
 
-@trigger.configure(name="dummy_trigger")
-class DummyTrigger(trigger.Trigger):
-    CONFIG_SCHEMA = {"type": "array",
-                     "minItems": 1,
-                     "uniqueItems": True,
-                     "items": {
-                         "type": "integer",
-                         "minimum": 0,
-                     }}
-
-    def get_listening_event(self):
-        return "dummy"
-
-    def on_event(self, event_type, value=None):
-        if value not in self.config:
-            return
-        super(DummyTrigger, self).on_event(event_type, value)
-
-
-@ddt.ddt
 class TriggerTestCase(test.TestCase):
 
-    @ddt.data(([5], True), ("str", False))
-    @ddt.unpack
-    def test_validate(self, config, valid):
-        results = trigger.Trigger.validate(
-            "dummy_trigger", None, None, config)
-        if valid:
-            self.assertEqual([], results)
-        else:
-            self.assertEqual(1, len(results))
+    def setUp(self):
+        super(TriggerTestCase, self).setUp()
 
-    def test_on_event_and_get_results(self):
-        # get_results requires launched hooks, so if we want to test it, we
-        # need to duplicate all calls on_event. It is redundant, so let's merge
-        # test_on_event and test_get_results in one test.
-        right_values = [5, 7, 12, 13]
+        @trigger.hook.configure(self.id())
+        class DummyTrigger(trigger.Trigger):
+            def get_listening_event(self):
+                return "dummy"
 
-        cfg = {"trigger": {"args": right_values}}
-        task = mock.MagicMock()
-        hook_cls = mock.MagicMock(__name__="fake")
-        dummy_trigger = DummyTrigger(cfg, task, hook_cls)
-        for i in range(0, 20):
-            dummy_trigger.on_event("fake", i)
+        self.addCleanup(DummyTrigger.unregister)
+        self.DummyTrigger = DummyTrigger
+
+    @mock.patch("rally.task.trigger.LOG.warning")
+    def test_warning(self, mock_log_warning):
+        self.DummyTrigger({"trigger": {self.id(): {}}}, None, None)
+
+        mock_log_warning.assert_called_once_with(
+            "Please contact Rally plugin maintainer. The plugin '%s'"
+            " inherits the deprecated base class(Trigger), "
+            "`rally.task.hook.HookTrigger` should be used instead." %
+            self.id())
+
+    def test_context(self):
+        action_name = "mega_action"
+        action_cfg = {"action_arg": "action_value"}
+        trigger_name = self.id()
+        trigger_cfg = {"trigger_arg": "trigger_value"}
+        descr = "descr"
+
+        trigger_obj = self.DummyTrigger({
+            "trigger": {trigger_name: trigger_cfg},
+            "action": {action_name: action_cfg},
+            "description": descr}, None, None)
 
         self.assertEqual(
-            [mock.call(task, {}, {"event_type": "fake", "value": i})
-             for i in right_values],
-            hook_cls.call_args_list)
-        self.assertEqual(len(right_values),
-                         hook_cls.return_value.run_async.call_count)
-        hook_status = hook_cls.return_value.result.return_value["status"]
-        self.assertEqual(
-            {"config": cfg,
-             "results": [hook_cls.return_value.result.return_value] *
-                len(right_values),
-             "summary": {hook_status: len(right_values)}},
-            dummy_trigger.get_results())
+            {"name": action_name,
+             "args": action_cfg,
+             "trigger": {"name": trigger_name,
+                         "args": trigger_cfg},
+             "description": descr}, trigger_obj.context)

@@ -16,8 +16,8 @@
 import ddt
 import mock
 
-from rally.plugins.common.trigger import event
-from rally.task import trigger
+from rally.plugins.common.hook.triggers import event
+from rally.task import hook
 from tests.unit import test
 
 
@@ -28,8 +28,8 @@ class EventTriggerTestCase(test.TestCase):
         super(EventTriggerTestCase, self).setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = event.EventTrigger(
-            {"trigger": {"name": "event",
-                         "args": {"unit": "iteration", "at": [1, 4, 5]}}},
+            {"trigger": {"event": {"unit": "iteration", "at": [1, 4, 5]}},
+             "action": {"foo": {}}},
             mock.MagicMock(), self.hook_cls)
 
     @ddt.data((dict(unit="time", at=[0, 3, 5]), True),
@@ -51,7 +51,7 @@ class EventTriggerTestCase(test.TestCase):
               (dict(at=[1, 2, 3]), False))
     @ddt.unpack
     def test_validate(self, config, valid):
-        results = trigger.Trigger.validate("event", None, None, config)
+        results = hook.HookTrigger.validate("event", None, None, config)
         if valid:
             self.assertEqual([], results)
         else:

@@ -14,11 +14,11 @@
 #    under the License.
 
 from rally import consts
-from rally.task import trigger
+from rally.task import hook
 
 
-@trigger.configure(name="event")
-class EventTrigger(trigger.Trigger):
+@hook.configure(name="event")
+class EventTrigger(hook.HookTrigger):
     """Triggers hook on specified event and list of values."""
 
     CONFIG_SCHEMA = {

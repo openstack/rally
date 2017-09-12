@@ -31,7 +31,7 @@ class SysCallHookTestCase(test.TestCase):
     @ddt.data(("ls", True), (50, False))
     @ddt.unpack
     def test_validate(self, config, valid):
-        results = hook.Hook.validate(
+        results = hook.HookAction.validate(
             "sys_call", None, None, config)
         if valid:
             self.assertEqual([], results)
