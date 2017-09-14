@@ -270,7 +270,7 @@ class RequiredContextsValidator(validation.Validator):
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
         missing_contexts = []
-        input_context = config.get("context", {})
+        input_context = config.get("contexts", {})
 
         for name in self.contexts:
             if isinstance(name, tuple):
@@ -304,7 +304,7 @@ class RequiredParamOrContextValidator(validation.Validator):
         msg = ("You should specify either scenario argument %s or"
                " use context %s." % (self.param_name, self.ctx_name))
 
-        if self.ctx_name in config.get("context", {}):
+        if self.ctx_name in config.get("contexts", {}):
             return
         if self.param_name in config.get("args", {}):
             return

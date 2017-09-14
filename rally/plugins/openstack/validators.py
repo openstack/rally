@@ -55,7 +55,7 @@ class ImageExistsValidator(validation.Validator):
         if not image_args and self.nullable:
             return
 
-        image_context = config.get("context", {}).get("images", {})
+        image_context = config.get("contexts", {}).get("images", {})
         image_ctx_name = image_context.get("image_name")
 
         if not image_args:
@@ -162,11 +162,11 @@ class FlavorExistsValidator(validation.Validator):
         self.param_name = param_name
 
     def _get_flavor_from_context(self, config, flavor_value):
-        if "flavors" not in config.get("context", {}):
+        if "flavors" not in config.get("contexts", {}):
             self.fail("No flavors context")
 
         flavors = [flavors_ctx.FlavorConfig(**f)
-                   for f in config["context"]["flavors"]]
+                   for f in config["contexts"]["flavors"]]
         resource = types.obj_from_name(resource_config=flavor_value,
                                        resources=flavors, typename="flavor")
         flavor = flavors_ctx.FlavorConfig(**resource)
@@ -223,7 +223,7 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
         self.validate_disk = validate_disk
 
     def _get_validated_image(self, config, clients, param_name):
-        image_context = config.get("context", {}).get("images", {})
+        image_context = config.get("contexts", {}).get("images", {})
         image_args = config.get("args", {}).get(param_name)
         image_ctx_name = image_context.get("image_name")
 
@@ -387,7 +387,7 @@ class RequiredServicesValidator(validation.Validator):
         for service in self.services:
             # NOTE(andreykurilin): validator should ignore services configured
             # via context(a proper validation should be in context)
-            service_config = config.get("context", {}).get(
+            service_config = config.get("contexts", {}).get(
                 "api_versions@openstack", {}).get(service, {})
 
             if (service not in available_services and
@@ -507,7 +507,7 @@ class RequiredAPIVersionsValidator(validation.Validator):
                                      "version": versions_str,
                                      "found_version": "3"})
             else:
-                av_ctx = config.get("context", {}).get(
+                av_ctx = config.get("contexts", {}).get(
                     "api_versions@openstack", {})
                 default_version = getattr(clients,
                                           self.component).choose_version()
@@ -540,10 +540,10 @@ class VolumeTypeExistsValidator(validation.Validator):
     def validate(self, context, config, plugin_cls, plugin_cfg):
         volume_type = config.get("args", {}).get(self.param, False)
 
-        if not volume_type and self.nullable:
-            return
-
         if not volume_type:
+            if self.nullable:
+                return
+
             self.fail("The parameter '%s' is required and should not be empty."
                       % self.param)
 
@@ -551,7 +551,7 @@ class VolumeTypeExistsValidator(validation.Validator):
             clients = user["credential"].clients()
             vt_names = [vt.name for vt in
                         clients.cinder().volume_types.list()]
-            ctx = config.get("context", {}).get("volume_types", [])
+            ctx = config.get("contexts", {}).get("volume_types", [])
             vt_names += ctx
             if volume_type not in vt_names:
                 self.fail("Specified volume type %s not found for user %s."

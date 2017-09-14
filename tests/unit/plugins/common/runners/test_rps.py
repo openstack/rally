@@ -36,7 +36,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @ddt.data(
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 1,
                     "end": 3,
@@ -47,7 +46,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 1,
                     "end": 10,
@@ -58,7 +56,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 1,
                     "end": 2,
@@ -69,7 +66,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 2,
                     "end": 1,
@@ -81,7 +77,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 2,
                     "end": 1,
@@ -93,7 +88,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "times": 1,
                 "rps": 100,
                 "max_concurrency": 50,
@@ -103,14 +97,12 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": 0.000001
             },
             "valid": False
         },
         {
             "config": {
-                "type": "rps",
                 "rps": {
                     "start": 1,
                     "end": 10,
@@ -121,7 +113,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": 0,
                 "times": 55
             },
@@ -129,7 +120,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         },
         {
             "config": {
-                "type": "rps",
                 "rps": 2,
                 "times": 55,
                 "foo": "bar"

@@ -1965,3 +1965,135 @@ class MigrationWalkTestCase(rtest.DBTestCase,
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid))
+
+    def _pre_upgrade_046a38742e89(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        self._046a38742e89_deployment_uuid = str(uuid.uuid4())
+        self._046a38742e89_task_uuid = str(uuid.uuid4())
+        subtask_uuid = str(uuid.uuid4())
+        workloads = [
+            {
+                "runner": {"type": "constant",
+                           "times": 1000}},
+            {
+                "runner": {"type": "rps",
+                           "rps": 300},
+                "hooks": [
+                    {
+                        "config": {"args": {"arg1": "v1"},
+                                   "description": "descr",
+                                   "name": "foo",
+                                   "trigger": {"name": "bar",
+                                               "args": {"arg2": "v2"}}}}
+                ]
+            }
+        ]
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": self._046a38742e89_deployment_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": "{}",
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": self._046a38742e89_task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "validation_result": six.b(json.dumps({})),
+                    "deployment_uuid": self._046a38742e89_deployment_uuid
+                }]
+            )
+
+            conn.execute(
+                subtask_table.insert(),
+                [{
+                    "uuid": subtask_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "task_uuid": self._046a38742e89_task_uuid,
+                    "context": six.b(json.dumps([])),
+                    "sla": six.b(json.dumps([])),
+                    "run_in_parallel": False
+                }]
+            )
+
+            for workload in workloads:
+                conn.execute(
+                    workload_table.insert(),
+                    [{
+                        "uuid": str(uuid.uuid4()),
+                        "name": "foo",
+                        "task_uuid": self._046a38742e89_task_uuid,
+                        "subtask_uuid": subtask_uuid,
+                        "created_at": timeutils.utcnow(),
+                        "updated_at": timeutils.utcnow(),
+                        "position": 0,
+                        "runner": json.dumps(workload["runner"]),
+                        "runner_type": "",
+                        "context": "",
+                        "context_execution": "",
+                        "statistics": "",
+                        "hooks": json.dumps(workload.get("hooks", "")),
+                        "sla": "",
+                        "sla_results": "",
+                        "args": "",
+                        "load_duration": 0,
+                        "pass_sla": True,
+                        "min_duration": 0,
+                        "max_duration": 1
+                    }]
+                )
+
+    def _check_046a38742e89(self, engine, data):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        subtask_uuid = None
+
+        with engine.connect() as conn:
+            task_uuid = self._046a38742e89_task_uuid
+            for workload in conn.execute(workload_table.select().where(
+                    workload_table.c.task_uuid == task_uuid)).fetchall():
+                if subtask_uuid is None:
+                    subtask_uuid = workload.subtask_uuid
+
+                runner = json.loads(workload.runner)
+                self.assertNotIn("type", runner)
+
+                hooks = json.loads(workload.hooks)
+                if hooks:
+                    for hook in hooks:
+                        hook_cfg = hook["config"]
+                        self.assertEqual(2, len(hook_cfg["action"]))
+                        self.assertEqual(2, len(hook_cfg["trigger"]))
+
+                conn.execute(
+                    workload_table.delete().where(
+                        workload_table.c.uuid == workload.uuid))
+            conn.execute(
+                subtask_table.delete().where(
+                    subtask_table.c.uuid == subtask_uuid))
+
+            conn.execute(
+                task_table.delete().where(task_table.c.uuid == task_uuid))
+
+            deployment_uuid = self._046a38742e89_deployment_uuid
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == deployment_uuid))

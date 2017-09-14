@@ -14,7 +14,6 @@
 #    under the License.
 
 import collections
-import copy
 import datetime as dt
 import hashlib
 import itertools
@@ -33,7 +32,7 @@ def _process_hooks(hooks):
     """Prepare hooks data for report."""
     hooks_ctx = []
     for hook in hooks:
-        hook_ctx = {"name": list(hook["config"]["action"].keys())[0],
+        hook_ctx = {"name": hook["config"]["action"][0],
                     "desc": hook["config"].get("description", ""),
                     "additive": [], "complete": []}
 
@@ -138,7 +137,7 @@ def _process_workload(workload, workload_cfg, pos):
         "met": method,
         "pos": str(pos),
         "name": method + (pos and " [%d]" % (pos + 1) or ""),
-        "runner": workload["runner"]["type"],
+        "runner": workload["runner_type"],
         "config": json.dumps(workload_cfg, indent=2),
         "hooks": _process_hooks(workload["hooks"]),
         "description": workload.get("description", ""),
@@ -212,8 +211,8 @@ def _make_source(tasks):
                 workload_cfg["scenario"] = {workload["name"]: workload["args"]}
                 workload_cfg["description"] = workload["description"]
                 workload_cfg["contexts"] = workload["context"]
-                runner = copy.copy(workload["runner"])
-                workload_cfg["runner"] = {runner.pop("type"): runner}
+                workload_cfg["runner"] = {
+                    workload["runner_type"]: workload["runner"]}
                 workload_cfg["hooks"] = [h["config"]
                                          for h in workload["hooks"]]
                 workload_cfg["sla"] = workload["sla"]

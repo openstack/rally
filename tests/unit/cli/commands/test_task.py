@@ -553,7 +553,8 @@ class TaskCommandsTestCase(test.TestCase):
                 "name": "Foo.bar", "description": "descr",
                 "position": 2,
                 "args": {"key1": "value1"},
-                "runner": {"type": "rruunneerr"},
+                "runner_type": "rruunneerr",
+                "runner": {"arg1": "args2"},
                 "hooks": [],
                 "sla": {"failure_rate": {"max": 0}},
                 "sla_results": {"sla": [{"success": True}]},
@@ -565,10 +566,16 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
 
         task_obj = self._make_task(data=[{"atomic_actions": {"foo": 1.1}}])
+
+        def fix_r(workload):
+            cfg = workload["runner"]
+            cfg["type"] = workload["runner_type"]
+            return cfg
+
         result = map(lambda x: {"key": {"kw": {"sla": x["sla"],
                                                "args": x["args"],
                                                "context": x["context"],
-                                               "runner": x["runner"],
+                                               "runner": fix_r(x),
                                                "hooks": x["hooks"]},
                                         "pos": x["position"],
                                         "name": x["name"],
@@ -1089,7 +1096,8 @@ class TaskCommandsTestCase(test.TestCase):
             "subtasks": [{"workloads": [{
                 "name": "fake_name",
                 "position": "fake_pos",
-                "args": {}, "runner": {}, "context": {}, "sla": {},
+                "args": {}, "runner_type": "foo",
+                "runner": {}, "context": {}, "sla": {},
                 "hooks": {},
                 "load_duration": 3.2,
                 "full_duration": 3.5,
@@ -1181,8 +1189,12 @@ class TaskCommandsTestCase(test.TestCase):
             "name": "Foo.bar", "description": "descr",
             "position": 2,
             "args": {"key1": "value1"},
-            "runner": {"type": "rruunneerr"},
-            "hooks": [{"config": {"type": "hookk"}}],
+            "runner_type": "constant",
+            "runner": {"time": 3},
+            "hooks": [{"config": {
+                "description": "descr",
+                "action": ("foo", {"arg1": "v1"}),
+                "trigger": ("t", {"a2", "v2"})}}],
             "pass_sla": True,
             "sla": {"failure_rate": {"max": 0}},
             "sla_results": {"sla": [{"success": True}]},
@@ -1196,14 +1208,25 @@ class TaskCommandsTestCase(test.TestCase):
         }
 
         results = [
-            {"hooks": workload["hooks"],
+            {"hooks": [{"config": {
+                "name": "foo",
+                "args": {"arg1": "v1"},
+                "description": "descr",
+                "trigger": {"name": "t",
+                            "args": {"a2", "v2"}}}}],
              "key": {"name": workload["name"],
                      "description": workload["description"],
                      "pos": workload["position"],
                      "kw": {
                          "args": workload["args"],
-                         "runner": workload["runner"],
-                         "hooks": [h["config"] for h in workload["hooks"]],
+                         "runner": {"type": "constant", "time": 3},
+                         "hooks": [{"name": "foo",
+                                    "args": {"arg1": "v1"},
+                                    "description": "descr",
+                                    "trigger": {
+                                        "name": "t",
+                                        "args": {"a2", "v2"}
+                                    }}],
                          "sla": workload["sla"],
                          "context": workload["context"]}},
              "sla": workload["sla_results"]["sla"],

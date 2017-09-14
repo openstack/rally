@@ -28,8 +28,8 @@ class EventTriggerTestCase(test.TestCase):
         super(EventTriggerTestCase, self).setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = event.EventTrigger(
-            {"trigger": {"event": {"unit": "iteration", "at": [1, 4, 5]}},
-             "action": {"foo": {}}},
+            {"trigger": ("event", {"unit": "iteration", "at": [1, 4, 5]}),
+             "action": ("foo", {})},
             mock.MagicMock(), self.hook_cls)
 
     @ddt.data((dict(unit="time", at=[0, 3, 5]), True),

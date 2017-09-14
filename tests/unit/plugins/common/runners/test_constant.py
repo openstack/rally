@@ -38,11 +38,13 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.args = {"a": 1}
         self.task = mock.MagicMock()
 
-    @ddt.data(({"times": 4, "concurrency": 2,
-                "timeout": 2, "type": "constant",
+    @ddt.data(({"times": 4,
+                "concurrency": 2,
+                "timeout": 2,
                 "max_cpu_count": 2}, True),
-              ({"times": 4, "concurrency": 5,
-                "timeout": 2, "type": "constant",
+              ({"times": 4,
+                "concurrency": 5,
+                "timeout": 2,
                 "max_cpu_count": 2}, False),
               ({"foo": "bar"}, False))
     @ddt.unpack
@@ -267,8 +269,9 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         self.context["iteration"] = 14
         self.args = {"a": 1}
 
-    @ddt.data(({"duration": 0, "concurrency": 2,
-                "timeout": 2, "type": "constant_for_duration"}, True),
+    @ddt.data(({"duration": 0,
+                "concurrency": 2,
+                "timeout": 2}, True),
               ({"foo": "bar"}, False))
     @ddt.unpack
     def test_validate(self, config, valid):

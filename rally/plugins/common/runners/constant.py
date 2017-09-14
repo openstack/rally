@@ -149,10 +149,6 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
-            "type": {
-                "type": "string",
-                "description": "Type of Runner."
-            },
             "concurrency": {
                 "type": "integer",
                 "minimum": 1,
@@ -174,7 +170,6 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
                                " from."
             }
         },
-        "required": ["type"],
         "additionalProperties": False
     }
 
@@ -263,10 +258,6 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
-            "type": {
-                "type": "string",
-                "description": "Type of Runner."
-            },
             "concurrency": {
                 "type": "integer",
                 "minimum": 1,
@@ -284,7 +275,7 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
                 "description": "Operation's timeout."
             }
         },
-        "required": ["type", "duration"],
+        "required": ["duration"],
         "additionalProperties": False
     }
 

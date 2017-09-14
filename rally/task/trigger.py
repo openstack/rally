@@ -31,8 +31,8 @@ class Trigger(hook.HookTrigger):
 
     @property
     def context(self):
-        action_name, action_cfg = list(self.hook_cfg["action"].items())[0]
-        trigger_name, trigger_cfg = list(self.hook_cfg["trigger"].items())[0]
+        action_name, action_cfg = self.hook_cfg["action"]
+        trigger_name, trigger_cfg = self.hook_cfg["trigger"]
         return {"description": self.hook_cfg["description"],
                 "name": action_name,
                 "args": action_cfg,

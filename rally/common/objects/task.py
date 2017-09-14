@@ -14,7 +14,6 @@
 #    under the License.
 
 import collections
-import copy
 import datetime as dt
 import uuid
 
@@ -285,24 +284,27 @@ class Subtask(object):
     def update_status(self, status):
         self._update({"status": status})
 
-    def add_workload(self, name, description, position, runner, context, hooks,
-                     sla, args):
+    def add_workload(self, name, description, position, runner, runner_type,
+                     context, hooks, sla, args):
+        # store hooks config as it will look after adding results
+        if hooks:
+            hooks = [{"config": hook} for hook in hooks]
         return Workload(task_uuid=self.subtask["task_uuid"],
                         subtask_uuid=self.subtask["uuid"], name=name,
                         description=description, position=position,
-                        runner=runner, hooks=hooks, context=context, sla=sla,
-                        args=args)
+                        runner=runner, runner_type=runner_type, hooks=hooks,
+                        context=context, sla=sla, args=args)
 
 
 class Workload(object):
     """Represents a workload object."""
 
     def __init__(self, task_uuid, subtask_uuid, name, description, position,
-                 runner, hooks, context, sla, args):
+                 runner, runner_type, hooks, context, sla, args):
         self.workload = db.workload_create(
             task_uuid=task_uuid, subtask_uuid=subtask_uuid, name=name,
             description=description, position=position, runner=runner,
-            runner_type=runner["type"], hooks=hooks, context=context, sla=sla,
+            runner_type=runner_type, hooks=hooks, context=context, sla=sla,
             args=args)
 
     def __getitem__(self, key):
@@ -326,6 +328,11 @@ class Workload(object):
 
     @classmethod
     def to_task(cls, workload):
+        """Format a single workload as a full Task to launch.
+
+        :param workload: A workload config as it stores in database or like in
+            input file (the difference in hook format).
+        """
         task = collections.OrderedDict()
         task["version"] = 2
         task["title"] = "A cropped version of a bigger task."
@@ -337,9 +344,22 @@ class Workload(object):
         subtask["title"] = workload["name"]
         subtask["description"] = workload["description"]
         subtask["scenario"] = {workload["name"]: workload["args"]}
-        subtask["contexts"] = workload["context"]
-        runner = copy.copy(workload["runner"])
-        subtask["runner"] = {runner.pop("type"): runner}
-        subtask["hooks"] = [h["config"] for h in workload["hooks"]]
+        # TODO(andreykurilin): fix database model as soon as the work related
+        #   contexts execution stats will start.
+        if "context" in workload:
+            # it is an object from database
+            subtask["contexts"] = workload["context"]
+        else:
+            subtask["contexts"] = workload["contexts"]
+        subtask["runner"] = {workload["runner_type"]: workload["runner"]}
+        subtask["hooks"] = []
+        for hook in workload["hooks"]:
+            if "config" in hook:
+                # it is an object from database
+                hook = hook["config"]
+            subtask["hooks"].append({
+                "description": hook.get("description"),
+                "action": dict([hook["action"]]),
+                "trigger": dict([hook["trigger"]])})
         subtask["sla"] = workload["sla"]
         return task

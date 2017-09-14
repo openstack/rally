@@ -578,8 +578,17 @@ class TaskCommands(object):
                         itr["atomic_actions"]).items()
                 )
 
-        results = [
-            {
+        results = []
+        for w in itertools.chain(*[s["workloads"] for s in task["subtasks"]]):
+            w["runner"]["type"] = w["runner_type"]
+            hooks = [
+                {"name": h["config"]["action"][0],
+                 "args": h["config"]["action"][1],
+                 "description": h["config"].get("description"),
+                 "trigger": {"name": h["config"]["trigger"][0],
+                             "args": h["config"]["trigger"][1]}}
+                for h in w["hooks"]]
+            results.append({
                 "key": {
                     "name": w["name"],
                     "description": w["description"],
@@ -589,7 +598,7 @@ class TaskCommands(object):
                         "runner": w["runner"],
                         "context": w["context"],
                         "sla": w["sla"],
-                        "hooks": [r["config"] for r in w["hooks"]],
+                        "hooks": hooks,
                     }
                 },
                 "result": w["data"],
@@ -597,9 +606,7 @@ class TaskCommands(object):
                 "hooks": w["hooks"],
                 "load_duration": w["load_duration"],
                 "full_duration": w["full_duration"],
-                "created_at": w["created_at"]}
-            for w in itertools.chain(
-                *[s["workloads"] for s in task["subtasks"]])]
+                "created_at": w["created_at"]})
 
         print(json.dumps(results, sort_keys=False, indent=4))
 
@@ -742,6 +749,13 @@ class TaskCommands(object):
                 updated_at += dt.timedelta(seconds=result["full_duration"])
                 updated_at = updated_at.strftime(consts.TimeFormat.ISO8601)
                 pass_sla = all(s.get("success") for s in result["sla"])
+                runner_type = result["key"]["kw"]["runner"].pop("type")
+                for h in result["hooks"]:
+                    trigger = h["config"]["trigger"]
+                    h["config"] = {
+                        "description": h["config"].get("description"),
+                        "action": (h["config"]["name"], h["config"]["args"]),
+                        "trigger": (trigger["name"], trigger["args"])}
                 workload = {"uuid": "n/a",
                             "name": result["key"]["name"],
                             "position": result["key"]["pos"],
@@ -757,6 +771,7 @@ class TaskCommands(object):
                             "created_at": result["created_at"],
                             "updated_at": updated_at,
                             "args": result["key"]["kw"]["args"],
+                            "runner_type": runner_type,
                             "runner": result["key"]["kw"]["runner"],
                             "hooks": result["hooks"],
                             "sla": result["key"]["kw"]["sla"],

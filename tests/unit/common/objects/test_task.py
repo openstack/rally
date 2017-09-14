@@ -311,21 +311,24 @@ class SubtaskTestCase(test.TestCase):
         name = "w"
         description = "descr"
         position = 0
-        runner = {"type": "runner"}
+        runner_type = "runner"
+        runner = {}
         context = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
-        hooks = [{"config": {"foo": "bar"}}]
+        hooks = [{"foo": "bar"}]
 
-        workload = subtask.add_workload(name, description=description,
-                                        position=position, runner=runner,
-                                        context=context, sla=sla, args=args,
-                                        hooks=hooks)
+        workload = subtask.add_workload(
+            name, description=description, position=position,
+            runner_type=runner_type, runner=runner, context=context, sla=sla,
+            args=args, hooks=hooks)
         mock_workload.assert_called_once_with(
             task_uuid=self.subtask["task_uuid"],
             subtask_uuid=self.subtask["uuid"], name=name,
-            description=description, position=position, runner=runner,
-            context=context, sla=sla, args=args, hooks=hooks)
+            description=description, position=position,
+            runner_type=runner_type, runner=runner,
+            context=context, sla=sla, args=args,
+            hooks=[{"config": h} for h in hooks])
         self.assertIs(workload, mock_workload.return_value)
 
 
@@ -345,14 +348,16 @@ class WorkloadTestCase(test.TestCase):
         name = "w"
         description = "descr"
         position = 0
-        runner = {"type": "constant"}
+        runner_type = "constant"
+        runner = {"times": 3}
         context = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
         hooks = [{"config": {"foo": "bar"}}]
         workload = objects.Workload("uuid1", "uuid2", name=name,
                                     description=description, position=position,
-                                    runner=runner, context=context, sla=sla,
+                                    runner=runner, runner_type=runner_type,
+                                    context=context, sla=sla,
                                     args=args, hooks=hooks)
         mock_workload_create.assert_called_once_with(
             task_uuid="uuid1", subtask_uuid="uuid2", name=name, hooks=hooks,
@@ -367,7 +372,7 @@ class WorkloadTestCase(test.TestCase):
         mock_workload_create.return_value = self.workload
         workload = objects.Workload("uuid1", "uuid2", name="w",
                                     description="descr", position=0,
-                                    runner={"type": "foo"}, context=None,
+                                    runner_type="foo", runner={}, context=None,
                                     sla=None, args=None, hooks=[])
 
         workload.add_workload_data(0, {"data": "foo"})
@@ -383,7 +388,8 @@ class WorkloadTestCase(test.TestCase):
         name = "w"
         description = "descr"
         position = 0
-        runner = {"type": "constant"}
+        runner_type = "constant"
+        runner = {"times": 3}
         context = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
@@ -394,8 +400,9 @@ class WorkloadTestCase(test.TestCase):
         hooks = []
         workload = objects.Workload("uuid1", "uuid2", name=name,
                                     description=description, position=position,
-                                    runner=runner, context=context, sla=sla,
-                                    args=args, hooks=hooks)
+                                    runner=runner, runner_type=runner_type,
+                                    context=context, sla=sla, args=args,
+                                    hooks=hooks)
 
         workload.set_results(load_duration=load_duration,
                              full_duration=full_duration,
@@ -417,11 +424,15 @@ class WorkloadTestCase(test.TestCase):
             "name": "Foo.bar",
             "description": "Make something useful (or not).",
             "position": 3,
-            "runner": {"type": "constant", "times": 3},
-            "context": {"users": {}},
+            "runner_type": "constant",
+            "runner": {"times": 3},
+            "contexts": {"users": {}},
             "sla": {"failure_rate": {"max": 0}},
             "args": {"key1": "value1"},
-            "hooks": [{"config": {"hook1": "xxx"}}],
+            "hooks": [{"config": {
+                "action": ["foo", {"arg1": "v1"}],
+                "trigger": ["bar", {"arg2": "v2"}]
+            }}],
             "sla_results": {"sla": []},
             "context_execution": {},
             "start_time": "2997.23.12",
@@ -444,8 +455,10 @@ class WorkloadTestCase(test.TestCase):
                  ("title", workload["name"]),
                  ("description", workload["description"]),
                  ("scenario", {workload["name"]: workload["args"]}),
-                 ("contexts", workload["context"]),
+                 ("contexts", workload["contexts"]),
                  ("runner", {"constant": {"times": 3}}),
-                 ("hooks", [h["config"] for h in workload["hooks"]]),
+                 ("hooks", [{"action": {"foo": {"arg1": "v1"}},
+                             "trigger": {"bar": {"arg2": "v2"}},
+                             "description": None}]),
                  ("sla", workload["sla"])])])])
         self.assertEqual(expected_task, objects.Workload.to_task(workload))

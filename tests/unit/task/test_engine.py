@@ -37,15 +37,16 @@ class MyException(exceptions.RallyException):
 class TaskEngineTestCase(test.TestCase):
 
     @staticmethod
-    def _make_workload(name, args=None, description=None, context=None,
+    def _make_workload(name, args=None, description=None, contexts=None,
                        sla=None, runner=None, hooks=None, position=0):
         return {"uuid": "foo",
                 "name": name,
                 "position": position,
                 "description": description,
                 "args": args,
-                "context": context or {},
-                "runner": runner or {"type": "serial"},
+                "contexts": contexts or {},
+                "runner_type": runner[0] if runner else "serial",
+                "runner": runner[1] if runner else {},
                 "sla": sla or {},
                 "hooks": hooks or []}
 
@@ -153,12 +154,13 @@ class TaskEngineTestCase(test.TestCase):
 
         scenario_name = "Foo.bar"
         runner_type = "MegaRunner"
-        hook_conf = {"action": {"c": "c_args"},
-                     "trigger": {"d": "d_args"}}
+        hook_conf = {"action": ("c", "c_args"),
+                     "trigger": ("d", "d_args")}
         workload = {"name": scenario_name,
-                    "runner": {"type": runner_type},
-                    "context": {"a": "a_conf"},
-                    "hooks": [{"config": hook_conf}],
+                    "runner_type": runner_type,
+                    "runner": {},
+                    "contexts": {"a": "a_conf"},
+                    "hooks": [hook_conf],
                     "sla": {"foo_sla": "sla_conf"},
                     "position": 2}
 
@@ -169,7 +171,7 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_scenario_runner_validate.assert_called_once_with(
             name=runner_type, context=None, config=None,
-            plugin_cfg={"type": runner_type}, vtype=None)
+            plugin_cfg={}, vtype=None)
         self.assertEqual([mock.call(name="a",
                                     context=None,
                                     config=None,
@@ -204,7 +206,7 @@ class TaskEngineTestCase(test.TestCase):
             "There is no such runner"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
-        workload = self._make_workload(name="sca", runner={"type": "b"})
+        workload = self._make_workload(name="sca", runner=("b", {}))
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
 
@@ -230,7 +232,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_task_instance.subtasks = [{"workloads": [
             self._make_workload(name="sca"),
             self._make_workload(name="sca", position=1,
-                                context={"a": "a_conf"})
+                                contexts={"a": "a_conf"})
         ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
@@ -282,12 +284,12 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        hook_conf = {"action": {"c": "c_args"},
-                     "trigger": {"d": "d_args"}}
+        hook_conf = {"action": ("c", "c_args"),
+                     "trigger": ("d", "d_args")}
         mock_task_instance.subtasks = [{"workloads": [
             self._make_workload(name="sca"),
             self._make_workload(name="sca", position=1,
-                                hooks=[{"config": hook_conf}])
+                                hooks=[hook_conf])
         ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
@@ -315,12 +317,12 @@ class TaskEngineTestCase(test.TestCase):
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
-        hook_conf = {"action": {"c": "c_args"},
-                     "trigger": {"d": "d_args"}}
+        hook_conf = {"action": ("c", "c_args"),
+                     "trigger": ("d", "d_args")}
         mock_task_instance.subtasks = [{"workloads": [
             self._make_workload(name="sca"),
             self._make_workload(name="sca", position=1,
-                                hooks=[{"config": hook_conf}])
+                                hooks=[hook_conf])
         ]}]
         eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
                                 mock.Mock())
@@ -353,7 +355,7 @@ class TaskEngineTestCase(test.TestCase):
 
         mock_task_instance = mock.MagicMock()
         wconf1 = self._make_workload(name="SomeScen.scenario",
-                                     context={"users": {}})
+                                     contexts={"users": {}})
         wconf2 = self._make_workload(name="SomeScen.scenario",
                                      position=1)
         subtask1 = {"workloads": [wconf1, wconf2]}
@@ -452,9 +454,9 @@ class TaskEngineTestCase(test.TestCase):
             "context": {},
             "workloads": [
                 self._make_workload(name="a.task", description="foo",
-                                    context={"context_a": {"a": 1}}),
+                                    contexts={"context_a": {"a": 1}}),
                 self._make_workload(name="a.task", description="foo",
-                                    context={"context_a": {"b": 2}},
+                                    contexts={"context_a": {"b": 2}},
                                     position=2)]}]
 
         mock_task_config.return_value = mock_task_instance
@@ -1064,6 +1066,6 @@ class TaskConfigTestCase(test.TestCase):
         workload = task.subtasks[0]["workloads"][0]
         self.assertEqual(
             {"description": "descr",
-             "action": {"hook_action": {"k1": "v1"}},
-             "trigger": {"hook_trigger": {"k2": "v2"}}},
-            workload["hooks"][0]["config"])
+             "action": ("hook_action", {"k1": "v1"}),
+             "trigger": ("hook_trigger", {"k2": "v2"})},
+            workload["hooks"][0])

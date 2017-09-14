@@ -523,6 +523,7 @@ class _Task(APIGroup):
                 workload_obj = subtask_obj.add_workload(
                     name=workload["name"], description=workload["description"],
                     position=workload["position"], runner=workload["runner"],
+                    runner_type=workload["runner_type"],
                     context=workload["context"], hooks=workload["hooks"],
                     sla=workload["sla"], args=workload["args"])
                 chunk_size = CONF.raw_result_chunk_size

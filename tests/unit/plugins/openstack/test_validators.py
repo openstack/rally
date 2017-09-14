@@ -85,20 +85,19 @@ class ImageExistsValidatorTestCase(test.TestCase):
             self.assertIsNone(result)
 
     def test_validator_image_from_context(self):
-        config = {"args": {
-            "image": {"regex": r"^foo$"}}, "context": {
-            "images": {
-                "image_name": "foo"}}}
+        config = {
+            "args": {"image": {"regex": r"^foo$"}},
+            "contexts": {"images": {"image_name": "foo"}}}
 
         self.validator.validate(self.context, config, None, None)
 
     @mock.patch("%s.openstack_types.GlanceImage.transform" % PATH,
                 return_value="image_id")
     def test_validator_image_not_in_context(self, mock_glance_image_transform):
-        config = {"args": {
-            "image": "fake_image"}, "context": {
-            "images": {
-                "fake_image_name": "foo"}}}
+        config = {
+            "args": {"image": "fake_image"},
+            "contexts": {
+                "images": {"fake_image_name": "foo"}}}
 
         clients = self.context[
             "users"][0]["credential"].clients.return_value
@@ -266,7 +265,7 @@ class FlavorExistsValidatorTestCase(test.TestCase):
     def test__get_flavor_from_context(self, mock_flavor_config,
                                       mock_obj_from_name):
         config = {
-            "context": {"images": {"fake_parameter_name": "foo_image"}}}
+            "contexts": {"images": {"fake_parameter_name": "foo_image"}}}
 
         e = self.assertRaises(
             validators.validation.ValidationError,
@@ -274,8 +273,8 @@ class FlavorExistsValidatorTestCase(test.TestCase):
             config, "foo_flavor")
         self.assertEqual("No flavors context", e.message)
 
-        config = {"context": {"images": {"fake_parameter_name": "foo_image"},
-                              "flavors": [{"flavor1": "fake_flavor1"}]}}
+        config = {"contexts": {"images": {"fake_parameter_name": "foo_image"},
+                               "flavors": [{"flavor1": "fake_flavor1"}]}}
         result = self.validator._get_flavor_from_context(config, "foo_flavor")
         self.assertEqual("<context flavor: %s>" % result.name, result.id)
 
@@ -457,11 +456,12 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
             "min_disk": 0
         }
         # Get image name from context
-        result = self.validator._get_validated_image({"args": {
-            "image": {"regex": r"^foo$"}}, "context": {
-            "images": {
-                "image_name": "foo"}
-        }}, mock.Mock(), "image")
+        result = self.validator._get_validated_image({
+            "args": {
+                "image": {"regex": r"^foo$"}},
+            "contexts": {
+                "images": {"image_name": "foo"}}},
+            mock.Mock(), "image")
         self.assertEqual(image, result)
 
         clients = mock.Mock()
@@ -819,7 +819,7 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         clients = self.context["users"][0]["credential"].clients()
 
         clients.nova.choose_version.return_value = nova
-        config = {"context": {"api_versions@openstack": {}}}
+        config = {"contexts": {"api_versions@openstack": {}}}
 
         if err_msg:
             e = self.assertRaises(
@@ -839,7 +839,7 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
                                                             [version])
 
         config = {
-            "context": {"api_versions@openstack": {"nova": {"version": 2}}}}
+            "contexts": {"api_versions@openstack": {"nova": {"version": 2}}}}
 
         if err_msg:
             e = self.assertRaises(
@@ -890,7 +890,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
         clients = self.context["users"][0]["credential"].clients()
         clients.cinder().volume_types.list.return_value = []
         ctx = {"args": {"volume_type": "fake_type"},
-               "context": {"volume_types": ["fake_type"]}}
+               "contexts": {"volume_types": ["fake_type"]}}
         result = self.validator.validate(self.context, ctx, None, None)
 
         self.assertIsNone(result)
@@ -899,7 +899,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
         clients = self.context["users"][0]["credential"].clients()
         clients.cinder().volume_types.list.return_value = []
         config = {"args": {"volume_type": "fake_type"},
-                  "context": {"volume_types": ["fake_type_2"]}}
+                  "contexts": {"volume_types": ["fake_type_2"]}}
         e = self.assertRaises(
             validators.validation.ValidationError,
             self.validator.validate, self.context, config, None, None)

@@ -150,9 +150,6 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
-            "type": {
-                "type": "string"
-            },
             "times": {
                 "type": "integer",
                 "minimum": 1
@@ -205,7 +202,7 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                 "minimum": 1
             }
         },
-        "required": ["type", "times", "rps"],
+        "required": ["times", "rps"],
         "additionalProperties": False
     }
 

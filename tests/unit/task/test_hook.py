@@ -55,18 +55,18 @@ class HookExecutorTestCase(test.TestCase):
         super(HookExecutorTestCase, self).setUp()
         self.conf = {
             "hooks": [
-                {"config": {
+                {
                     "description": "dummy_action",
-                    "action": {
-                        "dummy_hook": {"status": consts.HookStatus.SUCCESS}
-                    },
-                    "trigger": {
-                        "event": {
+                    "action": (
+                        "dummy_hook", {"status": consts.HookStatus.SUCCESS}
+                    ),
+                    "trigger": (
+                        "event", {
                             "unit": "iteration",
                             "at": [1],
                         }
-                    }
-                }}
+                    )
+                }
             ]
         }
         self.task = mock.MagicMock()
@@ -78,7 +78,7 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0]["config"],
+            [{"config": self.conf["hooks"][0],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -90,15 +90,16 @@ class HookExecutorTestCase(test.TestCase):
     @mock.patch("rally.task.hook.HookExecutor._timer_method")
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_result_optional(self, mock_timer, mock__timer_method):
-        hook_args = list(self.conf["hooks"][0]["config"]["action"].values())[0]
+        hook_args = self.conf["hooks"][0]["action"][1]
         hook_args["error"] = ["Exception", "Description", "Traceback"]
+
         hook_args["output"] = {"additive": None, "complete": None}
 
         hook_executor = hook.HookExecutor(self.conf, self.task)
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0]["config"],
+            [{"config": self.conf["hooks"][0],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -112,7 +113,7 @@ class HookExecutorTestCase(test.TestCase):
 
     def test_empty_result(self):
         hook_executor = hook.HookExecutor(self.conf, self.task)
-        self.assertEqual([{"config": self.conf["hooks"][0]["config"],
+        self.assertEqual([{"config": self.conf["hooks"][0],
                            "results": [],
                            "summary": {}}],
                          hook_executor.results())
@@ -127,7 +128,7 @@ class HookExecutorTestCase(test.TestCase):
         hook_executor.on_event(event_type="iteration", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0]["config"],
+            [{"config": self.conf["hooks"][0],
               "results": [{
                   "triggered_by": {"event_type": "iteration", "value": 1},
                   "error": {"etype": "Exception",
@@ -140,15 +141,14 @@ class HookExecutorTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_time_event(self, mock_timer):
-        trigger_args = list(
-            self.conf["hooks"][0]["config"]["trigger"].values())[0]
+        trigger_args = self.conf["hooks"][0]["trigger"][1]
         trigger_args["unit"] = "time"
 
         hook_executor = hook.HookExecutor(self.conf, self.task)
         hook_executor.on_event(event_type="time", value=1)
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0]["config"],
+            [{"config": self.conf["hooks"][0],
               "results": [{
                   "triggered_by": {"event_type": "time", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -159,8 +159,8 @@ class HookExecutorTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_time_periodic(self, mock_timer):
-        self.conf["hooks"][0]["config"]["trigger"] = {
-            "periodic": {"unit": "time", "step": 2}}
+        self.conf["hooks"][0]["trigger"] = ("periodic",
+                                            {"unit": "time", "step": 2})
         hook_executor = hook.HookExecutor(self.conf, self.task)
 
         for i in range(1, 7):
@@ -168,7 +168,7 @@ class HookExecutorTestCase(test.TestCase):
 
         self.assertEqual(
             [{
-                "config": self.conf["hooks"][0]["config"],
+                "config": self.conf["hooks"][0],
                 "results":[
                     {
                         "triggered_by": {"event_type": "time", "value": 2},
@@ -196,8 +196,7 @@ class HookExecutorTestCase(test.TestCase):
     @mock.patch("rally.common.utils.Stopwatch", autospec=True)
     @mock.patch("rally.common.utils.Timer", side_effect=fakes.FakeTimer)
     def test_timer_thread(self, mock_timer, mock_stopwatch):
-        trigger_args = list(
-            self.conf["hooks"][0]["config"]["trigger"].values())[0]
+        trigger_args = self.conf["hooks"][0]["trigger"][1]
         trigger_args["unit"] = "time"
         hook_executor = hook.HookExecutor(self.conf, self.task)
 
@@ -212,7 +211,7 @@ class HookExecutorTestCase(test.TestCase):
         self.assertTrue(hook_executor._timer_stop_event.wait(1))
 
         self.assertEqual(
-            [{"config": self.conf["hooks"][0]["config"],
+            [{"config": self.conf["hooks"][0],
               "results": [{
                   "triggered_by": {"event_type": "time", "value": 1},
                   "started_at": fakes.FakeTimer().timestamp(),
@@ -316,8 +315,8 @@ class TriggerTestCase(test.TestCase):
         # test_on_event and test_get_results in one test.
         right_values = [5, 7, 12, 13]
 
-        cfg = {"trigger": {self.DummyTrigger.get_name(): right_values},
-               "action": {"fake": {}}}
+        cfg = {"trigger": (self.DummyTrigger.get_name(), right_values),
+               "action": ("fake", {})}
         task = mock.MagicMock()
         hook_cls = mock.MagicMock(__name__="fake")
         dummy_trigger = self.DummyTrigger(cfg, task, hook_cls)

@@ -477,6 +477,7 @@ class TaskAPITestCase(test.TestCase):
                     "start_time": 23.77,
                     "position": 77,
                     "runner": "runner-config",
+                    "runner_type": "runner-type",
                     "context": "ctx-config",
                     "hooks": "hooks-config",
                     "sla": "sla-config",
@@ -507,6 +508,7 @@ class TaskAPITestCase(test.TestCase):
         sub_task.add_workload.assert_called_once_with(
             name=workload["name"], description=workload["description"],
             position=workload["position"], runner=workload["runner"],
+            runner_type=workload["runner_type"],
             context=workload["context"], sla=workload["sla"],
             hooks=workload["hooks"], args=workload["args"]
         )
@@ -538,6 +540,7 @@ class TaskAPITestCase(test.TestCase):
                     "start_time": 23.77,
                     "position": 77,
                     "runner": "runner-config",
+                    "runner_type": "runner-type",
                     "context": "ctx-config",
                     "hooks": "hooks-config",
                     "sla": "sla-config",
@@ -569,6 +572,7 @@ class TaskAPITestCase(test.TestCase):
         sub_task.add_workload.assert_called_once_with(
             name=workload["name"], description=workload["description"],
             position=workload["position"], runner=workload["runner"],
+            runner_type=workload["runner_type"],
             context=workload["context"], sla=workload["sla"],
             hooks=workload["hooks"], args=workload["args"]
         )

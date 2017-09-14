@@ -28,8 +28,8 @@ class PeriodicTriggerTestCase(test.TestCase):
         super(PeriodicTriggerTestCase, self).setUp()
         self.hook_cls = mock.MagicMock(__name__="name")
         self.trigger = periodic.PeriodicTrigger(
-            {"trigger": {"periodic": {"unit": "iteration", "step": 2}},
-             "action": {"foo": {}}},
+            {"trigger": ("periodic", {"unit": "iteration", "step": 2}),
+             "action": ("foo", {})},
             mock.MagicMock(), self.hook_cls)
 
     @ddt.data((dict(unit="time", step=1), True),
@@ -74,9 +74,9 @@ class PeriodicTriggerTestCase(test.TestCase):
     @ddt.unpack
     def test_on_event_start_end(self, value, should_call):
         trigger = periodic.PeriodicTrigger(
-            {"trigger": {"periodic": {"unit": "time",
-                                      "step": 3, "start": 2, "end": 9}},
-             "action": {"foo": {}}},
+            {"trigger": ("periodic", {"unit": "time",
+                                      "step": 3, "start": 2, "end": 9}),
+             "action": ("foo", {})},
             mock.MagicMock(), self.hook_cls)
         trigger.on_event("time", value)
         self.assertEqual(should_call, self.hook_cls.called)

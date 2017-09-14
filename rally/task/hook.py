@@ -43,10 +43,9 @@ class HookExecutor(object):
         self.task = task
 
         self.triggers = collections.defaultdict(list)
-        for hook in config.get("hooks", []):
-            hook_cfg = hook["config"]
-            action_name = list(hook_cfg["action"].keys())[0]
-            trigger_name = list(hook_cfg["trigger"].keys())[0]
+        for hook_cfg in config.get("hooks", []):
+            action_name = hook_cfg["action"][0]
+            trigger_name = hook_cfg["trigger"][0]
             action_cls = HookAction.get(action_name)
             trigger_obj = HookTrigger.get(
                 trigger_name)(hook_cfg, self.task, action_cls)
@@ -216,7 +215,7 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
 
     def __init__(self, hook_cfg, task, hook_cls):
         self.hook_cfg = hook_cfg
-        self.config = self.hook_cfg["trigger"][self.get_name()]
+        self.config = self.hook_cfg["trigger"][1]
         self.task = task
         self.hook_cls = hook_cls
         self._runs = []
@@ -230,7 +229,7 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
         LOG.info("Hook action %s is triggered for Task %s by %s=%s"
                  % (self.hook_cls.get_name(), self.task["uuid"],
                     event_type, value))
-        action_cfg = list(self.hook_cfg["action"].values())[0]
+        action_cfg = self.hook_cfg["action"][1]
         action = self.hook_cls(self.task, action_cfg,
                                {"event_type": event_type, "value": value})
         action.run_async()

@@ -51,7 +51,8 @@ class PlotTestCase(test.TestCase):
             "sla_results": {"sla": {}}, "pass_sla": True,
             "position": 0,
             "name": "Foo.bar", "description": "Description!!",
-            "runner": {"type": "constant"},
+            "runner_type": "constant",
+            "runner": {},
             "statistics": {"atomics": {
                 "foo_action": {"max_duration": 19, "min_duration": 10}}},
             "full_duration": 40, "load_duration": 32,
@@ -90,8 +91,8 @@ class PlotTestCase(test.TestCase):
             {
                 "config": {
                     "description": "Foo",
-                    "action": {"sys_call": "foo cmd"},
-                    "trigger": {"event": {"at": [2, 5], "unit": "iteration"}}},
+                    "action": ("sys_call", "foo cmd"),
+                    "trigger": ("event", {"at": [2, 5], "unit": "iteration"})},
                 "results": [
                     {
                         "status": "success",
@@ -120,8 +121,8 @@ class PlotTestCase(test.TestCase):
                 "summary": {"success": 2}},
             {
                 "config": {
-                    "action": {"sys_call": "bar cmd"},
-                    "trigger": {"event": {"at": [1, 2, 4], "unit": "time"}}},
+                    "action": ("sys_call", "bar cmd"),
+                    "trigger": ("event", {"at": [1, 2, 4], "unit": "time"})},
                 "results": [
                     {
                         "status": "success",
@@ -186,11 +187,14 @@ class PlotTestCase(test.TestCase):
                       "name": "Foo.bar_%s" % i,
                       "description": "Make something useful (or not).",
                       "position": i,
-                      "runner": {"type": "constant", "times": 3},
-                      "context": {"users": {}},
+                      "runner_type": "constant",
+                      "runner": {"times": 3},
+                      "contexts": {"users": {}},
                       "sla": {"failure_rate": {"max": 0}},
                       "args": {"key1": "value1"},
-                      "hooks": [{"config": {"hook1": "xxx"}}],
+                      "hooks": [{"config": {
+                          "action": ("foo", {}),
+                          "trigger": ("xxx", {})}}],
                       "sla_results": {"sla": []},
                       "start_time": "2997.23.12",
                       "load_duration": 42,
@@ -225,7 +229,8 @@ class PlotTestCase(test.TestCase):
                             "args": {},
                             "context": {"key": "context"},
                             "sla": {"key": "sla"},
-                            "runner": {"type": "crunner"},
+                            "runner_type": "crunner",
+                            "runner": {},
                             "hooks": []}
                        ]}
                   ]}]
@@ -262,7 +267,8 @@ class PlotTestCase(test.TestCase):
                                 "args": {},
                                 "context": {"key": "context"},
                                 "sla": {"key": "sla"},
-                                "runner": {"type": "crunner"},
+                                "runner_type": "crunner",
+                                "runner": {},
                                 "hooks": []}
                            ]},
                           {"title": "subtask title3",
@@ -274,7 +280,8 @@ class PlotTestCase(test.TestCase):
                                 "args": {},
                                 "context": {"key": "context"},
                                 "sla": {"key": "sla"},
-                                "runner": {"type": "crunner"},
+                                "runner_type": "crunner",
+                                "runner": {},
                                 "hooks": []}
                            ]}
                       ]})

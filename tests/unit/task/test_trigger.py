@@ -36,7 +36,7 @@ class TriggerTestCase(test.TestCase):
 
     @mock.patch("rally.task.trigger.LOG.warning")
     def test_warning(self, mock_log_warning):
-        self.DummyTrigger({"trigger": {self.id(): {}}}, None, None)
+        self.DummyTrigger({"trigger": (self.id(), {})}, None, None)
 
         mock_log_warning.assert_called_once_with(
             "Please contact Rally plugin maintainer. The plugin '%s'"
@@ -52,8 +52,8 @@ class TriggerTestCase(test.TestCase):
         descr = "descr"
 
         trigger_obj = self.DummyTrigger({
-            "trigger": {trigger_name: trigger_cfg},
-            "action": {action_name: action_cfg},
+            "trigger": (trigger_name, trigger_cfg),
+            "action": (action_name, action_cfg),
             "description": descr}, None, None)
 
         self.assertEqual(

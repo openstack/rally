@@ -247,8 +247,8 @@ class RequiredContextsValidatorTestCase(test.TestCase):
                                            "users": [mock.MagicMock()], })
 
     @ddt.data(
-        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3}}},
-        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}}}
+        {"config": {"contexts": {"c1": 1, "c2": 2, "c3": 3}}},
+        {"config": {"contexts": {"c1": 1, "c2": 2, "c3": 3, "a": 1}}}
     )
     @ddt.unpack
     def test_validate(self, config):
@@ -261,16 +261,19 @@ class RequiredContextsValidatorTestCase(test.TestCase):
             contexts=("c1", "c2", "c3"))
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, self.credentials, {"context": {"a": 1}},
+            validator.validate, self.credentials, {"contexts": {"a": 1}},
             None, None)
         self.assertEqual(
             "The following context(s) are required but missing from "
             "the input task file: c1, c2, c3", e.message)
 
     @ddt.data(
-        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "b1": 1, "a1": 1}}},
-        {"config": {"context": {"c1": 1, "c2": 2, "c3": 3,
-                                "b1": 1, "b2": 2, "a1": 1}}},
+        {"config": {
+            "contexts": {"c1": 1, "c2": 2, "c3": 3,
+                         "b1": 1, "a1": 1}}},
+        {"config": {
+            "contexts": {"c1": 1, "c2": 2, "c3": 3,
+                         "b1": 1, "b2": 2, "a1": 1}}},
     )
     @ddt.unpack
     def test_validate_with_or(self, config):
@@ -284,7 +287,7 @@ class RequiredContextsValidatorTestCase(test.TestCase):
         e = self.assertRaises(
             validation.ValidationError,
             validator.validate, self.credentials,
-            {"context": {"c1": 1, "c2": 2}}, None, None)
+            {"contexts": {"c1": 1, "c2": 2}}, None, None)
         self.assertEqual(
             "The following context(s) are required but missing "
             "from the input task file: 'a1 or a2', 'b1 or b2'", e.message)
@@ -302,20 +305,20 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
 
     @ddt.data(
         {"config": {"args": {"image": {"name": ""}},
-                    "context": {"custom_image": {"name": "fake_image"}}}},
-        {"config": {"context": {"custom_image": {"name": "fake_image"}}}},
+                    "contexts": {"custom_image": {"name": "fake_image"}}}},
+        {"config": {"contexts": {"custom_image": {"name": "fake_image"}}}},
         {"config": {"args": {"image": {"name": "fake_image"}},
-                    "context": {"custom_image": ""}}},
+                    "contexts": {"custom_image": ""}}},
         {"config": {"args": {"image": {"name": "fake_image"}}}},
         {"config": {"args": {"image": {"name": ""}},
-                    "context": {"custom_image": {"name": ""}}}}
+                    "contexts": {"custom_image": {"name": ""}}}}
     )
     @ddt.unpack
     def test_validate(self, config):
         self.validator.validate(self.credentials, config, None, None)
 
     @ddt.data(
-        {"config": {"args": {}, "context": {}},
+        {"config": {"args": {}, "contexts": {}},
          "err_msg": "You should specify either scenario argument image or "
                     "use context custom_image."},
         {"config": {},

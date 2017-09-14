@@ -276,15 +276,15 @@ class TaskEngine(object):
             plugin_cfg=None,
             vtype=vtype))
 
-        if workload["runner"]:
+        if workload["runner_type"]:
             results.extend(runner.ScenarioRunner.validate(
-                name=workload["runner"]["type"],
+                name=workload["runner_type"],
                 context=vcontext,
                 config=None,
                 plugin_cfg=workload["runner"],
                 vtype=vtype))
 
-        for context_name, context_conf in workload["context"].items():
+        for context_name, context_conf in workload["contexts"].items():
             results.extend(context.Context.validate(
                 name=context_name,
                 context=vcontext,
@@ -310,8 +310,7 @@ class TaskEngine(object):
                 vtype=vtype))
 
         for hook_conf in workload["hooks"]:
-            action_name, action_cfg = list(
-                hook_conf["config"]["action"].items())[0]
+            action_name, action_cfg = hook_conf["action"]
             results.extend(hook.HookAction.validate(
                 name=action_name,
                 context=vcontext,
@@ -319,8 +318,7 @@ class TaskEngine(object):
                 plugin_cfg=action_cfg,
                 vtype=vtype))
 
-            trigger_name, trigger_cfg = list(
-                hook_conf["config"]["trigger"].items())[0]
+            trigger_name, trigger_cfg = hook_conf["trigger"]
             results.extend(hook.HookTrigger.validate(
                 name=trigger_name,
                 context=vcontext,
@@ -461,8 +459,9 @@ class TaskEngine(object):
             description=workload["description"],
             position=workload["position"],
             runner=workload["runner"],
+            runner_type=workload["runner_type"],
             hooks=workload["hooks"],
-            context=workload["context"],
+            context=workload["contexts"],
             sla=workload["sla"],
             args=workload["args"])
         workload["uuid"] = workload_obj["uuid"]
@@ -474,10 +473,10 @@ class TaskEngine(object):
                  % {"position": workload["position"],
                     "cfg": json.dumps(workload_cfg, indent=3)})
 
-        runner_cls = runner.ScenarioRunner.get(workload["runner"]["type"])
+        runner_cls = runner.ScenarioRunner.get(workload["runner_type"])
         runner_obj = runner_cls(self.task, workload["runner"])
         context_obj = self._prepare_context(
-            workload["context"], workload["name"], workload_obj["uuid"])
+            workload["contexts"], workload["name"], workload_obj["uuid"])
         try:
             with ResultConsumer(workload, self.task, subtask_obj, workload_obj,
                                 runner_obj, self.abort_on_sla_failure):
@@ -746,14 +745,15 @@ class TaskConfig(object):
                         # validation step
                         pass
 
-                wconf["context"] = wconf.pop("contexts", {})
+                wconf.setdefault("contexts", {})
 
                 if "runner" in wconf:
-                    runner_type, runner_cfg = list(wconf["runner"].items())[0]
-                    runner_cfg["type"] = runner_type
-                    wconf["runner"] = runner_cfg
+                    runner = list(wconf["runner"].items())[0]
+                    wconf["runner_type"], wconf["runner"] = runner
                 else:
-                    wconf["runner"] = {"serial": {}}
+                    wconf["runner_type"] = "serial"
+                    wconf["runner"] = {}
+
                 wconf.setdefault("sla", {"failure_rate": {"max": 0}})
 
                 hooks = wconf.get("hooks", [])
@@ -764,14 +764,17 @@ class TaskConfig(object):
                                     "Check task format documentation for more "
                                     "details.")
                         trigger_cfg = hook_cfg["trigger"]
-                        wconf["hooks"].append({"config": {
+                        wconf["hooks"].append({
                             "description": hook_cfg["description"],
-                            "action": {hook_cfg["name"]: hook_cfg["args"]},
-                            "trigger": {
-                                trigger_cfg["name"]: trigger_cfg["args"]}}
-                        })
+                            "action": (hook_cfg["name"], hook_cfg["args"]),
+                            "trigger": (
+                                trigger_cfg["name"], trigger_cfg["args"])})
                     else:
-                        wconf["hooks"].append({"config": hook_cfg})
+                        hook_cfg["action"] = list(
+                            hook_cfg["action"].items())[0]
+                        hook_cfg["trigger"] = list(
+                            hook_cfg["trigger"].items())[0]
+                        wconf["hooks"].append(hook_cfg)
 
                 workloads.append(wconf)
             sconf["workloads"] = workloads
@@ -815,7 +818,7 @@ class TaskConfig(object):
                     for hook_cfg in hooks:
                         trigger_cfg = hook_cfg["trigger"]
                         subtask["hooks"].append(
-                            {"description": hook_cfg["description"],
+                            {"description": hook_cfg.get("description"),
                              "action": {
                                  hook_cfg["name"]: hook_cfg["args"]},
                              "trigger": {
