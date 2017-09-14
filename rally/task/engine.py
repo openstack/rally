@@ -237,23 +237,14 @@ class TaskEngine(object):
                  abort_on_sla_failure=False):
         """TaskEngine constructor.
 
-        :param config: Dict with configuration of specified benchmark scenarios
+        :param config: An instance of a TaskConfig
         :param task: Instance of Task,
                      the current task which is being performed
         :param deployment: Instance of Deployment,
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
         """
-        try:
-            self.config = TaskConfig(config)
-        except Exception as e:
-            task.set_failed(type(e).__name__,
-                            str(e),
-                            json.dumps(traceback.format_exc()))
-            if logging.is_debug():
-                LOG.exception("Invalid Task")
-            raise exceptions.InvalidTaskException(str(e))
-
+        self.config = config
         self.task = task
         self.deployment = deployment
         self.abort_on_sla_failure = abort_on_sla_failure

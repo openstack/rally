@@ -67,10 +67,12 @@ class TaskAPITestCase(test.TestCase):
         mock_api.endpoint_url = None
         self.task_inst = api._Task(mock_api)
 
+    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
-    def test_validate(self, mock_task_engine, mock_deployment_get, mock_task):
+    def test_validate(self, mock_task_engine, mock_deployment_get, mock_task,
+                      mock_task_config):
         fake_deployment = fakes.FakeDeployment(
             uuid="deployment_uuid_1", admin="fake_admin", users=["fake_user"])
         mock_deployment_get.return_value = fake_deployment
@@ -82,7 +84,8 @@ class TaskAPITestCase(test.TestCase):
                                 config="config")
 
         mock_task_engine.assert_called_once_with(
-            "config", mock_task.return_value, fake_deployment),
+            mock_task_config.return_value, mock_task.return_value,
+            fake_deployment),
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         mock_task.assert_called_once_with(
@@ -106,8 +109,8 @@ class TaskAPITestCase(test.TestCase):
                                 config="config",
                                 task=task_uuid)
 
-        mock_task_engine.assert_called_once_with("config", fake_task,
-                                                 fake_deployment)
+        mock_task_engine.assert_called_once_with(
+            mock_task_config.return_value, fake_task, fake_deployment)
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         self.assertFalse(mock_task.called)
@@ -130,8 +133,8 @@ class TaskAPITestCase(test.TestCase):
                                 config="config",
                                 task_instance=task_instance)
 
-        mock_task_engine.assert_called_once_with("config", fake_task,
-                                                 fake_deployment)
+        mock_task_engine.assert_called_once_with(
+            mock_task_config.return_value, fake_task, fake_deployment)
         mock_task_engine.return_value.validate.assert_called_once_with()
 
         self.assertFalse(mock_task.called)
@@ -140,6 +143,18 @@ class TaskAPITestCase(test.TestCase):
             fake_task["deployment_uuid"])
 
         mock_task.get.assert_called_once_with(task_instance["uuid"])
+
+        #######################################################################
+        # The case #4 -- TaskConfig returns error
+        #######################################################################
+        mock_task_config.side_effect = Exception("Who is a good boy?! Woof.")
+
+        e = self.assertRaises(exceptions.InvalidTaskException,
+                              self.task_inst.validate,
+                              deployment=fake_deployment["uuid"],
+                              config="config",
+                              task_instance=task_instance)
+        self.assertIn("Who is a good boy?! Woof.", "%s" % e)
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment",
@@ -246,17 +261,19 @@ class TaskAPITestCase(test.TestCase):
                           self.task_inst.create, deployment=deployment_id,
                           tags=["a"])
 
+    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
     def test_start(self, mock_task_engine, mock_deployment_get,
-                   mock_task):
+                   mock_task, mock_task_config):
         fake_task = fakes.FakeTask(uuid="some_uuid")
         fake_task.get_status = mock.Mock()
         mock_task.return_value = fake_task
         mock_deployment_get.return_value = fakes.FakeDeployment(
             uuid="deployment_uuid", admin="fake_admin", users=["fake_user"],
             status=consts.DeployStatus.DEPLOY_FINISHED)
+        task_config_instance = mock_task_config.return_value
 
         self.assertEqual(
             (fake_task["uuid"], fake_task.get_status.return_value),
@@ -265,16 +282,20 @@ class TaskAPITestCase(test.TestCase):
                 config="config")
         )
 
-        mock_task_engine.assert_has_calls([
-            mock.call("config", mock_task.return_value,
-                      mock_deployment_get.return_value,
-                      abort_on_sla_failure=False),
-            mock.call().validate(),
-            mock.call().run()
-        ])
+        mock_task_engine.assert_called_once_with(
+            task_config_instance,
+            mock_task.return_value,
+            mock_deployment_get.return_value,
+            abort_on_sla_failure=False
+        )
+        task_engine = mock_task_engine.return_value
+        task_engine.validate.assert_called_once_with()
+        task_engine.run.assert_called_once_with()
 
         mock_task.assert_called_once_with(
-            deployment_uuid=mock_deployment_get.return_value["uuid"])
+            deployment_uuid=mock_deployment_get.return_value["uuid"],
+            title=task_config_instance.title,
+            description=task_config_instance.description)
 
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
@@ -315,12 +336,13 @@ class TaskAPITestCase(test.TestCase):
                           config="config",
                           task=fake_task["uuid"])
 
+    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.TaskEngine")
     @mock.patch("rally.api.CONF", spec=cfg.CONF)
     def test_start_exception(self, mock_conf, mock_task_engine,
-                             mock_deployment_get, mock_task):
+                             mock_deployment_get, mock_task, mock_task_config):
         fake_deployment = fakes.FakeDeployment(
             status=consts.DeployStatus.DEPLOY_FINISHED,
             name="foo", uuid="deployment_uuid")
@@ -331,6 +353,18 @@ class TaskAPITestCase(test.TestCase):
                           deployment="deployment_uuid", config="config")
         fake_deployment.update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
+
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.engine.TaskEngine")
+    @mock.patch("rally.api.CONF", spec=cfg.CONF)
+    def test_start_with_wrong_config(self, mock_conf, mock_task_engine,
+                                     mock_deployment_get, mock_task):
+        mock_deployment_get.return_value = {
+            "status": consts.DeployStatus.DEPLOY_FINISHED}
+        self.assertRaises(exceptions.InvalidTaskException,
+                          self.task_inst.start,
+                          deployment="deployment_uuid", config="config")
 
     @ddt.data(True, False)
     @mock.patch("rally.api.time")

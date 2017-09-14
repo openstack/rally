@@ -78,7 +78,7 @@ class RallyJobsTestCase(test.TestCase):
                     task_inst = api._Task(api.API(skip_db_check=True))
                     task = task_inst.render_template(
                         task_template=task_file.read(), **args)
-                    task = yaml.safe_load(task)
+                    task = engine.TaskConfig(yaml.safe_load(task))
                     task_obj = fakes.FakeTask({"uuid": full_path})
 
                     eng = engine.TaskEngine(task, task_obj, mock.Mock())

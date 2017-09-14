@@ -50,30 +50,17 @@ class TaskEngineTestCase(test.TestCase):
                 "sla": sla or {},
                 "hooks": hooks or []}
 
-    @mock.patch("rally.task.engine.TaskConfig")
-    def test_init(self, mock_task_config):
+    def test_init(self):
         config = mock.MagicMock()
         task = mock.MagicMock()
-        mock_task_config.return_value = fake_task_instance = mock.MagicMock()
         eng = engine.TaskEngine(config, task, mock.Mock())
-        mock_task_config.assert_has_calls([mock.call(config)])
-        self.assertEqual(eng.config, fake_task_instance)
+        self.assertEqual(eng.config, config)
         self.assertEqual(eng.task, task)
 
-    def test_init_empty_config(self):
-        config = None
-        task = mock.Mock()
-        exception = self.assertRaises(exceptions.InvalidTaskException,
-                                      engine.TaskEngine, config, task,
-                                      mock.Mock())
-        self.assertIn("Input task is empty", str(exception))
-        self.assertTrue(task.set_failed.called)
-
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("jsonschema.validate")
-    def test_validate(self, mock_validate, mock_task_config):
-        mock_task_config.return_value = config = mock.MagicMock()
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
+    def test_validate(self, mock_validate):
+        config = mock.MagicMock()
+        eng = engine.TaskEngine(config, mock.MagicMock(),
                                 mock.Mock())
         mock_validate = mock.MagicMock()
 
@@ -86,15 +73,6 @@ class TaskEngineTestCase(test.TestCase):
         mock_validate.syntax.assert_called_once_with(config)
         mock_validate.platforms.assert_called_once_with(config)
         mock_validate.semantic.assert_called_once_with(config)
-
-    def test_validate__wrong_schema(self):
-        config = {
-            "wrong": True
-        }
-        task = mock.MagicMock()
-        self.assertRaises(exceptions.InvalidTaskException,
-                          engine.TaskEngine, config, task, mock.Mock())
-        self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.task.engine.TaskConfig")
     def test_validate__wrong_syntax(self, mock_task_config):
@@ -424,7 +402,6 @@ class TaskEngineTestCase(test.TestCase):
         ])
 
     @mock.patch("rally.task.engine.objects.task.Task.get_status")
-    @mock.patch("rally.task.engine.TaskConfig")
     @mock.patch("rally.task.engine.LOG")
     @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.context.Context")
@@ -435,8 +412,7 @@ class TaskEngineTestCase(test.TestCase):
     def test_run_exception_is_logged(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_context,
-            mock_result_consumer, mock_log, mock_task_config,
-            mock_task_get_status):
+            mock_result_consumer, mock_log, mock_task_get_status):
         scenario_cls = mock_scenario.get.return_value
         scenario_cls.get_default_context.return_value = {}
 
@@ -459,9 +435,10 @@ class TaskEngineTestCase(test.TestCase):
                                     contexts={"context_a": {"b": 2}},
                                     position=2)]}]
 
-        mock_task_config.return_value = mock_task_instance
-        eng = engine.TaskEngine(mock.MagicMock(), mock.MagicMock(),
-                                mock.MagicMock())
+        deployment = fakes.FakeDeployment(
+            uuid="deployment_uuid", admin={"foo": "admin"})
+        eng = engine.TaskEngine(mock_task_instance, mock.MagicMock(),
+                                deployment)
         eng.run()
 
         self.assertEqual(2, mock_log.exception.call_count)
@@ -482,14 +459,14 @@ class TaskEngineTestCase(test.TestCase):
         mock_result_consumer.is_task_in_aborting_status.side_effect = [False,
                                                                        False,
                                                                        True]
-        config = {
+        config = engine.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1},
                         "description": "foo"}],
             "b.task": [{"runner": {"type": "a", "b": 1},
                         "description": "bar"}],
             "c.task": [{"runner": {"type": "a", "b": 1},
                         "description": "xxx"}]
-        }
+        })
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
@@ -521,11 +498,11 @@ class TaskEngineTestCase(test.TestCase):
             mock_context_manager_setup, mock_context_manager_cleanup,
             mock_result_consumer, mock_task_get_status):
         task = mock.MagicMock(spec=objects.Task)
-        config = {
+        config = engine.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1}}],
             "b.task": [{"runner": {"type": "a", "b": 1}}],
             "c.task": [{"runner": {"type": "a", "b": 1}}]
-        }
+        })
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
@@ -553,11 +530,11 @@ class TaskEngineTestCase(test.TestCase):
         subtask_obj = task.add_subtask.return_value
         subtask_obj.add_workload.side_effect = MyException()
         mock_result_consumer.is_task_in_aborting_status.return_value = False
-        config = {
+        config = engine.TaskConfig({
             "a.task": [{"runner": {"type": "a", "b": 1}}],
             "b.task": [{"runner": {"type": "a", "b": 1}}],
             "c.task": [{"runner": {"type": "a", "b": 1}}]
-        }
+        })
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
         fake_runner_cls.return_value = fake_runner
@@ -956,6 +933,13 @@ class ResultConsumerTestCase(test.TestCase):
 
 
 class TaskConfigTestCase(test.TestCase):
+
+    def test_init_empty_config(self):
+        config = None
+        exception = self.assertRaises(Exception,  # noqa
+                                      engine.TaskConfig, config)
+        self.assertIn("Input task is empty", str(exception))
+
     @mock.patch("jsonschema.validate")
     def test_validate_json(self, mock_validate):
         config = {}
