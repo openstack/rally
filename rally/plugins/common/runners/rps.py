@@ -98,8 +98,8 @@ def _worker_process(queue, iteration_gen, timeout, times, max_concurrent,
         real_rps = i / time_gap if time_gap else "Infinity"
 
         LOG.debug("Worker: %s rps: %s (requested rps: %s)",
-                  (i, real_rps, runs_per_second(
-                      rps_cfg, start, processes_to_start)))
+                  i, real_rps, runs_per_second(rps_cfg, start,
+                                               processes_to_start))
 
         # try to join latest thread(s) until it finished, or until time to
         # start new thread (if we have concurrent slots available)
