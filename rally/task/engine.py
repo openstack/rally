@@ -322,7 +322,7 @@ class TaskEngine(object):
                 vtype=vtype))
 
         if results:
-            msg = "\n ".join([str(r) for r in results])
+            msg = "\n ".join(results)
             kw = {"name": workload["name"],
                   "pos": workload["position"],
                   "config": json.dumps(

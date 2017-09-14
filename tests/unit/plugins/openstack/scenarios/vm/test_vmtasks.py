@@ -297,6 +297,17 @@ class ValidCommandValidatorTestCase(test.TestCase):
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()], })
 
+    @ddt.data({"command": {"script_inline": "foobar",
+                           "interpreter": ["ENV=bar", "/bin/foo"],
+                           "local_path": "bar",
+                           "remote_path": "/bin/foo"}},
+              {"command": {"script_inline": "foobar", "interpreter": "foo"}})
+    @ddt.unpack
+    def test_check_command_dict(self, command=None):
+        validator = vmtasks.ValidCommandValidator(param_name="p",
+                                                  required=True)
+        self.assertIsNone(validator.check_command_dict(command))
+
     @ddt.data({"raises_message": "Command must be a dictionary"},
               {"command": "foo",
                "raises_message": "Command must be a dictionary"},
@@ -312,23 +323,18 @@ class ValidCommandValidatorTestCase(test.TestCase):
               {"command": {"interpreter": "/bin/bash",
                            "script_path": "foo"},
                "raises_message": ("Unexpected command parameters: "
-                                  "script_path")},
-              {"command": {"script_inline": "foobar",
-                           "interpreter": ["ENV=bar", "/bin/foo"],
-                           "local_path": "bar",
-                           "remote_path": "/bin/foo"}},
-              {"command": {"script_inline": "foobar", "interpreter": "foo"}})
+                                  "script_path")})
     @ddt.unpack
-    def test_check_command_dict(self, command=None, raises_message=None):
+    def test_check_command_dict_failed(
+            self, command=None, raises_message=None):
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=True)
-        if raises_message:
-            self.assertRaises(
-                ValueError, validator.check_command_dict, command)
-        else:
-            self.assertIsNone(validator.check_command_dict(command))
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.check_command_dict, command)
+        self.assertIn(raises_message, e.message)
 
-    @mock.patch("rally.plugins.common.validators.ValidatorUtils"
+    @mock.patch("rally.plugins.common.validators.FileExistsValidator"
                 "._file_access_ok")
     def test_validate(self, mock__file_access_ok):
         validator = vmtasks.ValidCommandValidator(param_name="p",
@@ -353,22 +359,26 @@ class ValidCommandValidatorTestCase(test.TestCase):
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=True)
 
-        result = validator.validate({"args": {"p": None}},
-                                    self.credentials, None, None)
-        self.assertEqual("Command must be a dictionary", result.msg)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"args": {"p": None}},
+            self.credentials, None, None)
+        self.assertEqual("Command must be a dictionary", e.message)
 
-    @mock.patch("rally.plugins.common.validators.ValidatorUtils"
+    @mock.patch("rally.plugins.common.validators.FileExistsValidator"
                 "._file_access_ok")
     def test_valid_command_unreadable_script_file(self, mock__file_access_ok):
-        mock__file_access_ok.return_value = validation.ValidationResult(False)
+        mock__file_access_ok.side_effect = validation.ValidationError("O_o")
 
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=True)
 
         command = {"script_file": "foobar", "interpreter": "foo"}
-        result = validator.validate({"args": {"p": command}},
-                                    self.credentials, None, None)
-        self.assertFalse(result.is_valid, result.msg)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"args": {"p": command}},
+            self.credentials, None, None)
+        self.assertEqual("O_o", e.message)
 
     @mock.patch("%s.ValidCommandValidator.check_command_dict" % BASE)
     def test_valid_command_fail_check_command_dict(self,
@@ -376,12 +386,13 @@ class ValidCommandValidatorTestCase(test.TestCase):
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=True)
 
-        mock_check_command_dict.side_effect = ValueError("foobar")
-        command = {"foo": "bar"}
-        result = validator.validate({"args": {"p": command}},
-                                    self.credentials, None, None)
-        self.assertFalse(result.is_valid, result.msg)
-        self.assertEqual("foobar", result.msg)
+        mock_check_command_dict.side_effect = validation.ValidationError(
+            "foobar")
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"args": {"p": {"foo": "bar"}}},
+            self.credentials, None, None)
+        self.assertEqual("foobar", e.message)
 
     def test_valid_command_script_inline(self):
         validator = vmtasks.ValidCommandValidator(param_name="p",
@@ -392,18 +403,19 @@ class ValidCommandValidatorTestCase(test.TestCase):
                                     None, None)
         self.assertIsNone(result)
 
-    @mock.patch("rally.plugins.common.validators.ValidatorUtils"
+    @mock.patch("rally.plugins.common.validators.FileExistsValidator"
                 "._file_access_ok")
     def test_valid_command_local_path(self, mock__file_access_ok):
-        mock__file_access_ok.return_value = validation.ValidationResult(False)
+        mock__file_access_ok.side_effect = validation.ValidationError("")
 
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=True)
 
         command = {"remote_path": "bar", "local_path": "foobar"}
-        result = validator.validate({"args": {"p": command}}, self.credentials,
-                                    None, None)
-        self.assertFalse(result.is_valid, result.msg)
+        self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"args": {"p": command}}, self.credentials,
+            None, None)
         mock__file_access_ok.assert_called_once_with(
             filename="foobar", mode=os.R_OK, param_name="p",
             required=True)
