@@ -111,12 +111,6 @@ class EC2FlavorTestCase(test.TestCase):
                           types.EC2Flavor.transform, self.clients,
                           resource_config)
 
-    def test_transform_by_id_multiple_match(self):
-        resource_config = {"id": "3"}
-        self.assertRaises(exceptions.MultipleMatchesFound,
-                          types.EC2Flavor.transform, self.clients,
-                          resource_config)
-
 
 class GlanceImageTestCase(test.TestCase):
 
@@ -236,12 +230,6 @@ class EC2ImageTestCase(test.TestCase):
     def test_transform_by_id_no_match(self):
         resource_config = {"id": "101"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
-                          types.EC2Image.transform, self.clients,
-                          resource_config)
-
-    def test_transform_by_id_match_multiple(self):
-        resource_config = {"id": "102"}
-        self.assertRaises(exceptions.MultipleMatchesFound,
                           types.EC2Image.transform, self.clients,
                           resource_config)
 

@@ -198,11 +198,6 @@ def obj_from_id(resource_config, resources, typename):
                     if resource.id == resource_config["id"]]
         if len(matching) == 1:
             return matching[0]
-        elif len(matching) > 1:
-            raise exceptions.MultipleMatchesFound(
-                needle="{typename} with id '{id}'".format(
-                    typename=typename.title(), id=resource_config["id"]),
-                haystack=matching)
         else:
             raise exceptions.InvalidScenarioArgument(
                 "{typename} with id '{id}' not found".format(
