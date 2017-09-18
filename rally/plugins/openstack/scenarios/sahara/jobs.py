@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 @validation.add("required_contexts", contexts=["users", "sahara_image",
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
-@scenario.configure(context={"cleanup": ["sahara"]},
+@scenario.configure(context={"cleanup@openstack": ["sahara"]},
                     name="SaharaJob.create_launch_job",
                     platform="openstack")
 class CreateLaunchJob(utils.SaharaScenario):
@@ -75,7 +75,7 @@ class CreateLaunchJob(utils.SaharaScenario):
 @validation.add("required_contexts", contexts=["users", "sahara_image",
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
-@scenario.configure(context={"cleanup": ["sahara"]},
+@scenario.configure(context={"cleanup@openstack": ["sahara"]},
                     name="SaharaJob.create_launch_job_sequence",
                     platform="openstack")
 class CreateLaunchJobSequence(utils.SaharaScenario):
@@ -100,7 +100,7 @@ class CreateLaunchJobSequence(utils.SaharaScenario):
 @validation.add("required_contexts", contexts=["users", "sahara_image",
                                                "sahara_job_binaries",
                                                "sahara_cluster"])
-@scenario.configure(context={"cleanup": ["sahara"]},
+@scenario.configure(context={"cleanup@openstack": ["sahara"]},
                     name="SaharaJob.create_launch_job_sequence_with_scaling",
                     platform="openstack")
 class CreateLaunchJobSequenceWithScaling(utils.SaharaScenario,):

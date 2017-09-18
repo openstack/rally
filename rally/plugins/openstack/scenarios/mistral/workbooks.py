@@ -44,7 +44,7 @@ class ListWorkbooks(utils.MistralScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_services",
                 services=[consts.Service.MISTRAL])
-@scenario.configure(context={"cleanup": ["mistral"]},
+@scenario.configure(context={"cleanup@openstack": ["mistral"]},
                     name="MistralWorkbooks.create_workbook",
                     platform="openstack")
 class CreateWorkbook(utils.MistralScenario):

@@ -30,7 +30,7 @@ from rally.task import validation
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["murano.packages"]},
+@scenario.configure(context={"cleanup@openstack": ["murano.packages"]},
                     name="MuranoPackages.import_and_list_packages",
                     platform="openstack")
 class ImportAndListPackages(utils.MuranoScenario):
@@ -62,7 +62,7 @@ class ImportAndListPackages(utils.MuranoScenario):
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["murano.packages"]},
+@scenario.configure(context={"cleanup@openstack": ["murano.packages"]},
                     name="MuranoPackages.import_and_delete_package",
                     platform="openstack")
 class ImportAndDeletePackage(utils.MuranoScenario):
@@ -91,7 +91,7 @@ class ImportAndDeletePackage(utils.MuranoScenario):
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["murano.packages"]},
+@scenario.configure(context={"cleanup@openstack": ["murano.packages"]},
                     name="MuranoPackages.package_lifecycle",
                     platform="openstack")
 class PackageLifecycle(utils.MuranoScenario):
@@ -129,7 +129,7 @@ class PackageLifecycle(utils.MuranoScenario):
 @validation.add("file_exists", param_name="package", mode=os.F_OK)
 @validation.add("required_services", services=[consts.Service.MURANO])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["murano.packages"]},
+@scenario.configure(context={"cleanup@openstack": ["murano.packages"]},
                     name="MuranoPackages.import_and_filter_applications",
                     platform="openstack")
 class ImportAndFilterApplications(utils.MuranoScenario):

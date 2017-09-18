@@ -24,7 +24,7 @@ from rally.task import validation
 @validation.add("required_platform", platform="openstack", admin=True)
 @validation.add("required_services",
                 services=[consts.Service.NEUTRON])
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_and_delete_bgpvpns",
                     platform="openstack")
 class CreateAndDeleteBgpvpns(utils.NeutronScenario):
@@ -58,7 +58,7 @@ class CreateAndDeleteBgpvpns(utils.NeutronScenario):
 @validation.add("required_neutron_extensions", extensions=["bgpvpn"])
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_and_list_bgpvpns",
                     platform="openstack")
 class CreateAndListBgpvpns(utils.NeutronScenario):
@@ -92,7 +92,7 @@ class CreateAndListBgpvpns(utils.NeutronScenario):
 @validation.add("required_neutron_extensions", extensions=["bgpvpn"])
 @validation.add("required_services", services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_and_update_bgpvpns",
                     platform="openstack")
 class CreateAndUpdateBgpvpns(utils.NeutronScenario):
@@ -149,8 +149,8 @@ class CreateAndUpdateBgpvpns(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("network"))
-@scenario.configure(context={"admin_cleanup": ["neutron"],
-                             "cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"],
+                             "cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_networks",
                     platform="openstack")
 class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
@@ -191,8 +191,8 @@ class CreateAndAssociateDissassociateNetworks(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("router"))
-@scenario.configure(context={"admin_cleanup": ["neutron"],
-                             "cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"],
+                             "cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_bgpvpn_assoc_disassoc_routers",
                     platform="openstack")
 class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
@@ -234,7 +234,7 @@ class CreateAndAssociateDissassociateRouters(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("network"))
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_and_list_networks_associations",
                     platform="openstack")
 class CreateAndListNetworksAssocs(utils.NeutronScenario):
@@ -284,7 +284,7 @@ class CreateAndListNetworksAssocs(utils.NeutronScenario):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @validation.add("required_contexts", contexts=("router"))
-@scenario.configure(context={"admin_cleanup": ["neutron"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron"]},
                     name="NeutronBGPVPN.create_and_list_routers_associations",
                     platform="openstack")
 class CreateAndListRoutersAssocs(utils.NeutronScenario):

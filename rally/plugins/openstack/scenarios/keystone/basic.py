@@ -35,7 +35,7 @@ class KeystoneBasic(scenario.OpenStackScenario):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_user",
                     platform="openstack")
 class CreateUser(KeystoneBasic):
@@ -53,7 +53,7 @@ class CreateUser(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_delete_user",
                     platform="openstack")
 class CreateDeleteUser(KeystoneBasic):
@@ -72,7 +72,7 @@ class CreateDeleteUser(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_user_set_enabled_and_delete",
                     platform="openstack")
 class CreateUserSetEnabledAndDelete(KeystoneBasic):
@@ -91,7 +91,7 @@ class CreateUserSetEnabledAndDelete(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_tenant",
                     platform="openstack")
 class CreateTenant(KeystoneBasic):
@@ -108,7 +108,7 @@ class CreateTenant(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.authenticate_user_and_validate_token",
                     platform="openstack")
 class AuthenticateUserAndValidateToken(KeystoneBasic):
@@ -121,7 +121,7 @@ class AuthenticateUserAndValidateToken(KeystoneBasic):
 
 @validation.add("number", param_name="users_per_tenant", minval=1)
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_tenant_with_users",
                     platform="openstack")
 class CreateTenantWithUsers(KeystoneBasic):
@@ -142,7 +142,7 @@ class CreateTenantWithUsers(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_list_users",
                     platform="openstack")
 class CreateAndListUsers(KeystoneBasic):
@@ -163,7 +163,7 @@ class CreateAndListUsers(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_list_tenants",
                     platform="openstack")
 class CreateAndListTenants(KeystoneBasic):
@@ -182,7 +182,7 @@ class CreateAndListTenants(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.add_and_remove_user_role",
                     platform="openstack")
 class AddAndRemoveUserRole(KeystoneBasic):
@@ -199,7 +199,7 @@ class AddAndRemoveUserRole(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_delete_role",
                     platform="openstack")
 class CreateAndDeleteRole(KeystoneBasic):
@@ -212,7 +212,7 @@ class CreateAndDeleteRole(KeystoneBasic):
 
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_add_and_list_user_roles",
                     platform="openstack")
 class CreateAddAndListUserRoles(KeystoneBasic):
@@ -228,7 +228,7 @@ class CreateAddAndListUserRoles(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.get_entities",
                     platform="openstack")
 class GetEntities(KeystoneBasic):
@@ -261,7 +261,7 @@ class GetEntities(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_delete_service",
                     platform="openstack")
 class CreateAndDeleteService(KeystoneBasic):
@@ -281,7 +281,7 @@ class CreateAndDeleteService(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_update_and_delete_tenant",
                     platform="openstack")
 class CreateUpdateAndDeleteTenant(KeystoneBasic):
@@ -303,7 +303,7 @@ class CreateUpdateAndDeleteTenant(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_user_update_password",
                     platform="openstack")
 class CreateUserUpdatePassword(KeystoneBasic):
@@ -320,7 +320,7 @@ class CreateUserUpdatePassword(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_list_services",
                     platform="openstack")
 class CreateAndListServices(KeystoneBasic):
@@ -340,7 +340,7 @@ class CreateAndListServices(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["keystone"]},
+@scenario.configure(context={"cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_list_ec2credentials",
                     platform="openstack")
 class CreateAndListEc2Credentials(KeystoneBasic):
@@ -354,7 +354,7 @@ class CreateAndListEc2Credentials(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["keystone"]},
+@scenario.configure(context={"cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_delete_ec2credential",
                     platform="openstack")
 class CreateAndDeleteEc2Credential(KeystoneBasic):
@@ -369,7 +369,7 @@ class CreateAndDeleteEc2Credential(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_get_role",
                     platform="openstack")
 class CreateAndGetRole(KeystoneBasic):
@@ -384,7 +384,7 @@ class CreateAndGetRole(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_list_roles",
                     platform="openstack")
 class CreateAddListRoles(KeystoneBasic):
@@ -409,7 +409,7 @@ class CreateAddListRoles(KeystoneBasic):
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"]},
                     name="KeystoneBasic.create_and_update_user",
                     platform="openstack")
 class CreateAndUpdateUser(KeystoneBasic):

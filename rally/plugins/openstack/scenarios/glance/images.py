@@ -49,7 +49,7 @@ class GlanceBasic(scenario.OpenStackScenario):
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_list_image",
                     platform="openstack")
 class CreateAndListImage(GlanceBasic):
@@ -99,7 +99,7 @@ class CreateAndListImage(GlanceBasic):
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_get_image",
                     platform="openstack")
 class CreateAndGetImage(GlanceBasic):
@@ -160,7 +160,7 @@ class ListImages(GlanceBasic):
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_delete_image",
                     platform="openstack")
 class CreateAndDeleteImage(GlanceBasic):
@@ -204,7 +204,7 @@ class CreateAndDeleteImage(GlanceBasic):
 @validation.add("required_services", services=[consts.Service.GLANCE,
                                                consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance", "nova"]},
+@scenario.configure(context={"cleanup@openstack": ["glance", "nova"]},
                     name="GlanceImages.create_image_and_boot_instances",
                     platform="openstack")
 class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
@@ -258,7 +258,7 @@ class CreateImageAndBootInstances(GlanceBasic, nova_utils.NovaScenario):
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_update_image",
                     platform="openstack")
 class CreateAndUpdateImage(GlanceBasic):
@@ -305,7 +305,7 @@ class CreateAndUpdateImage(GlanceBasic):
 @validation.add("required_services", services=(consts.Service.GLANCE, ))
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_api_versions", component="glance", versions=["2"])
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_deactivate_image",
                     platform="openstack")
 class CreateAndDeactivateImage(GlanceBasic):

@@ -28,7 +28,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.IRONIC])
 @validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["ironic"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["ironic"]},
                     name="IronicNodes.create_and_list_node",
                     platform="openstack")
 class CreateAndListNode(utils.IronicScenario):
@@ -69,7 +69,7 @@ class CreateAndListNode(utils.IronicScenario):
 @validation.add("required_services", services=[consts.Service.IRONIC])
 @validation.add("restricted_parameters", param_names="name")
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["ironic"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["ironic"]},
                     name="IronicNodes.create_and_delete_node",
                     platform="openstack")
 class CreateAndDeleteNode(utils.IronicScenario):

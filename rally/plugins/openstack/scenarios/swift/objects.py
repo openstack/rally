@@ -27,7 +27,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["swift"]},
+    context={"cleanup@openstack": ["swift"]},
     name="SwiftObjects.create_container_and_object_then_list_objects",
     platform="openstack")
 class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
@@ -53,7 +53,7 @@ class CreateContainerAndObjectThenListObjects(utils.SwiftScenario):
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["swift"]},
+    context={"cleanup@openstack": ["swift"]},
     name="SwiftObjects.create_container_and_object_then_delete_all",
     platform="openstack")
 class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
@@ -85,7 +85,7 @@ class CreateContainerAndObjectThenDeleteAll(utils.SwiftScenario):
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["swift"]},
+    context={"cleanup@openstack": ["swift"]},
     name="SwiftObjects.create_container_and_object_then_download_object",
     platform="openstack")
 class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
@@ -116,7 +116,7 @@ class CreateContainerAndObjectThenDownloadObject(utils.SwiftScenario):
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"swift_objects": {}},
+    context={"swift_objects@openstack": {}},
     name="SwiftObjects.list_objects_in_containers",
     platform="openstack")
 class ListObjectsInContainers(utils.SwiftScenario):
@@ -133,7 +133,7 @@ class ListObjectsInContainers(utils.SwiftScenario):
 @validation.add("required_services", services=[consts.Service.SWIFT])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"swift_objects": {}},
+    context={"swift_objects@openstack": {}},
     name="SwiftObjects.list_and_download_objects_in_containers",
     platform="openstack")
 class ListAndDownloadObjectsInContainers(utils.SwiftScenario):

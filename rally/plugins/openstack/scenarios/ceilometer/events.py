@@ -30,8 +30,8 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.CEILOMETER,
                                                consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"],
-                             "cleanup": ["ceilometer"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"],
+                             "cleanup@openstack": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_events",
                     platform="openstack")
 class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
@@ -53,8 +53,8 @@ class CeilometerEventsCreateUserAndListEvents(cutils.CeilometerScenario,
 @validation.add("required_services", services=[consts.Service.CEILOMETER,
                                                consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"],
-                             "cleanup": ["ceilometer"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"],
+                             "cleanup@openstack": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_list_event_types",
                     platform="openstack")
 class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
@@ -76,8 +76,8 @@ class CeilometerEventsCreateUserAndListEventTypes(cutils.CeilometerScenario,
 @validation.add("required_services", services=[consts.Service.CEILOMETER,
                                                consts.Service.KEYSTONE])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["keystone"],
-                             "cleanup": ["ceilometer"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["keystone"],
+                             "cleanup@openstack": ["ceilometer"]},
                     name="CeilometerEvents.create_user_and_get_event",
                     platform="openstack")
 class CeilometerEventsCreateUserAndGetEvent(cutils.CeilometerScenario,

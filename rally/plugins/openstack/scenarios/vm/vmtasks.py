@@ -130,8 +130,9 @@ class ValidCommandValidator(validation.Validator):
 @validation.add("required_param_or_context",
                 param_name="image", ctx_name="image_command_customizer")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"],
-                             "keypair": {}, "allow_ssh": None},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"],
+                             "keypair@openstack": {},
+                             "allow_ssh@openstack": None},
                     name="VMTasks.boot_runcommand_delete",
                     platform="openstack")
 class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
@@ -288,8 +289,8 @@ class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
                                       "data": text_area_output})
 
 
-@scenario.configure(context={"cleanup": ["nova", "heat"],
-                             "keypair": {}, "network": {}},
+@scenario.configure(context={"cleanup@openstack": ["nova", "heat"],
+                             "keypair@openstack": {}, "network@openstack": {}},
                     name="VMTasks.runcommand_heat")
 class RuncommandHeat(vm_utils.VMScenario):
 
@@ -487,8 +488,9 @@ EOF
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"],
-                             "keypair": {}, "allow_ssh": None},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"],
+                             "keypair@openstack": {},
+                             "allow_ssh@openstack": None},
                     name="VMTasks.dd_load_test",
                     platform="openstack")
 class DDLoadTest(BootRuncommandDelete):

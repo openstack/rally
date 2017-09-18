@@ -46,6 +46,7 @@ def configure(name, platform="default", namespace=None, context=None):
                     If there are custom user specified contexts this one
                     will be updated by provided contexts.
     """
+    context = context or {}
     if namespace:
         platform = namespace
 
@@ -55,9 +56,19 @@ def configure(name, platform="default", namespace=None, context=None):
             msg = (_("Scenario name must include a dot: '%s'") % name)
             raise exceptions.RallyException(msg)
 
+        for c in context:
+            if "@" not in c:
+                msg = ("Old fashion plugin configuration detected in "
+                       " `%(scenario)s' scenario. Use full name for "
+                       " `%(context)s' context (%(full_context)s)")
+                LOG.warning(msg % {"scenario": "%s@%s" % (name, platform),
+                                   "context": c.get_name(),
+                                   "full_context": c.get_fullname()})
+
         cls = plugin.configure(name=name, platform=platform)(cls)
         cls._meta_setdefault("default_context", {})
-        cls._meta_get("default_context").update(context or {})
+
+        cls._meta_get("default_context").update(context)
         return cls
 
     return wrapper

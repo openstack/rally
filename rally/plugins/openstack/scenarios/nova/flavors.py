@@ -58,7 +58,7 @@ class ListFlavors(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_and_list_flavor_access",
                     platform="openstack")
 class CreateAndListFlavorAccess(utils.NovaScenario):
@@ -95,7 +95,7 @@ class CreateAndListFlavorAccess(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_flavor_and_add_tenant_access",
                     platform="openstack")
 class CreateFlavorAndAddTenantAccess(utils.NovaScenario):
@@ -125,7 +125,7 @@ class CreateFlavorAndAddTenantAccess(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_flavor", platform="openstack")
 class CreateFlavor(utils.NovaScenario):
 
@@ -152,7 +152,7 @@ class CreateFlavor(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_and_get_flavor",
                     platform="openstack")
 class CreateAndGetFlavor(utils.NovaScenario):
@@ -182,7 +182,7 @@ class CreateAndGetFlavor(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_and_delete_flavor",
                     platform="openstack")
 class CreateAndDeleteFlavor(utils.NovaScenario):
@@ -210,7 +210,7 @@ class CreateAndDeleteFlavor(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["nova"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova"]},
                     name="NovaFlavors.create_flavor_and_set_keys",
                     platform="openstack")
 class CreateFlavorAndSetKeys(utils.NovaScenario):

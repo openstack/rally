@@ -25,7 +25,7 @@ from rally.task import validation
                goal={"type": "watcher_goal"})
 @validation.add("required_services", services=[consts.Service.WATCHER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["watcher"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["watcher"]},
                     name="Watcher.create_audit_template_and_delete",
                     platform="openstack")
 class CreateAuditTemplateAndDelete(utils.WatcherScenario):
@@ -81,7 +81,7 @@ class ListAuditTemplates(utils.WatcherScenario):
 
 @validation.add("required_services", services=[consts.Service.WATCHER])
 @validation.add("required_contexts", contexts="audit_templates")
-@scenario.configure(context={"admin_cleanup": ["watcher"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["watcher"]},
                     name="Watcher.create_audit_and_delete",
                     platform="openstack")
 class CreateAuditAndDelete(utils.WatcherScenario):

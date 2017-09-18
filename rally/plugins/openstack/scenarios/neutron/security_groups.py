@@ -23,7 +23,7 @@ from rally.task import validation
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_list_security_groups",
     platform="openstack")
 class CreateAndListSecurityGroups(utils.NeutronScenario):
@@ -46,7 +46,7 @@ class CreateAndListSecurityGroups(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_show_security_group",
     platform="openstack")
 class CreateAndShowSecurityGroup(utils.NeutronScenario):
@@ -73,7 +73,7 @@ class CreateAndShowSecurityGroup(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_delete_security_groups",
     platform="openstack")
 class CreateAndDeleteSecurityGroups(utils.NeutronScenario):
@@ -97,7 +97,7 @@ class CreateAndDeleteSecurityGroups(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_update_security_groups",
     platform="openstack")
 class CreateAndUpdateSecurityGroups(utils.NeutronScenario):
@@ -126,7 +126,7 @@ class CreateAndUpdateSecurityGroups(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_list_security_group_rules",
     platform="openstack")
 class CreateAndListSecurityGroupRules(utils.NeutronScenario):
@@ -165,7 +165,7 @@ class CreateAndListSecurityGroupRules(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_show_security_group_rule",
     platform="openstack")
 class CreateAndShowSecurityGroupRule(utils.NeutronScenario):
@@ -202,7 +202,7 @@ class CreateAndShowSecurityGroupRule(utils.NeutronScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["neutron"]},
+    context={"cleanup@openstack": ["neutron"]},
     name="NeutronSecurityGroup.create_and_delete_security_group_rule",
     platform="openstack")
 class CreateAndDeleteSecurityGroupRule(utils.NeutronScenario):

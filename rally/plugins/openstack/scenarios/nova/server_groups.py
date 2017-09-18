@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServerGroups.create_and_list_server_groups",
                     platform="openstack")
 class CreateAndListServerGroups(utils.NovaScenario):
@@ -67,7 +67,7 @@ class CreateAndListServerGroups(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServerGroups.create_and_get_server_group",
                     platform="openstack")
 class CreateAndGetServerGroup(utils.NovaScenario):
@@ -100,7 +100,7 @@ class CreateAndGetServerGroup(utils.NovaScenario):
 
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServerGroups.create_and_delete_server_group",
                     platform="openstack")
 class CreateAndDeleteServerGroup(utils.NovaScenario):

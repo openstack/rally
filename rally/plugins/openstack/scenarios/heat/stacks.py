@@ -28,7 +28,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_and_list_stack",
                     platform="openstack")
 class CreateAndListStack(utils.HeatScenario):
@@ -70,7 +70,7 @@ class ListStacksAndResources(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_and_delete_stack",
                     platform="openstack")
 class CreateAndDeleteStack(utils.HeatScenario):
@@ -97,7 +97,7 @@ class CreateAndDeleteStack(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_check_delete_stack",
                     platform="openstack")
 class CreateCheckDeleteStack(utils.HeatScenario):
@@ -130,7 +130,7 @@ class CreateCheckDeleteStack(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_update_delete_stack",
                     platform="openstack")
 class CreateUpdateDeleteStack(utils.HeatScenario):
@@ -170,7 +170,7 @@ class CreateUpdateDeleteStack(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_stack_and_scale",
                     platform="openstack")
 class CreateStackAndScale(utils.HeatScenario):
@@ -213,7 +213,7 @@ class CreateStackAndScale(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_suspend_resume_delete_stack",
                     platform="openstack")
 class CreateSuspendResumeDeleteStack(utils.HeatScenario):
@@ -258,7 +258,7 @@ class ListStacksAndEvents(utils.HeatScenario):
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("validate_heat_template", params="template_path")
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_snapshot_restore_delete_stack",
                     platform="openstack")
 class CreateSnapshotRestoreDeleteStack(utils.HeatScenario):
@@ -289,7 +289,7 @@ class CreateSnapshotRestoreDeleteStack(utils.HeatScenario):
 @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_stack_and_show_output_via_API",
                     platform="openstack")
 class CreateStackAndShowOutputViaAPI(utils.HeatScenario):
@@ -317,7 +317,7 @@ class CreateStackAndShowOutputViaAPI(utils.HeatScenario):
 @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_stack_and_show_output",
                     platform="openstack")
 class CreateStackAndShowOutput(utils.HeatScenario):
@@ -345,7 +345,7 @@ class CreateStackAndShowOutput(utils.HeatScenario):
 @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_stack_and_list_output_via_API",
                     platform="openstack")
 class CreateStackAndListOutputViaAPI(utils.HeatScenario):
@@ -371,7 +371,7 @@ class CreateStackAndListOutputViaAPI(utils.HeatScenario):
 @types.convert(template_path={"type": "file"}, files={"type": "file_dict"})
 @validation.add("required_services", services=[consts.Service.HEAT])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["heat"]},
+@scenario.configure(context={"cleanup@openstack": ["heat"]},
                     name="HeatStacks.create_stack_and_list_output",
                     platform="openstack")
 class CreateStackAndListOutput(utils.HeatScenario):

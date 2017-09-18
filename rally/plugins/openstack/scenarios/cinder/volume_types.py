@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_volume_type",
                     platform="openstack")
 class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
@@ -47,7 +47,7 @@ class CreateAndDeleteVolumeType(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_get_volume_type",
                     platform="openstack")
 class CreateAndGetVolumeType(cinder_utils.CinderBasic):
@@ -67,7 +67,7 @@ class CreateAndGetVolumeType(cinder_utils.CinderBasic):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_api_versions", component="cinder", versions=["2"])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_update_volume_type",
                     platform="openstack")
 class CreateAndUpdateVolumeType(scenario.OpenStackScenario):
@@ -100,7 +100,7 @@ class CreateAndUpdateVolumeType(scenario.OpenStackScenario):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_list_volume_types",
                     platform="openstack")
 class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
@@ -127,7 +127,7 @@ class CreateAndListVolumeTypes(cinder_utils.CinderBasic):
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_volume_type"
                          "_and_encryption_type",
                     platform="openstack")
@@ -175,7 +175,7 @@ class CreateVolumeTypeAndEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_list_"
                          "encryption_type",
                     platform="openstack")
@@ -221,7 +221,7 @@ class CreateAndListEncryptionType(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_set_volume_type_keys",
                     platform="openstack")
 class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
@@ -243,7 +243,7 @@ class CreateAndSetVolumeTypeKeys(cinder_utils.CinderBasic):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_contexts", contexts="volume_types")
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_get_and_delete_"
                          "encryption_type",
                     platform="openstack")
@@ -284,7 +284,7 @@ class CreateGetAndDeleteEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_contexts", contexts="volume_types")
 @validation.add("required_params", params=[("create_specs", "provider")])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_delete_"
                          "encryption_type",
                     platform="openstack")
@@ -328,7 +328,7 @@ class CreateAndDeleteEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_services", services=consts.Service.CINDER)
 @validation.add("required_contexts", contexts="volume_types")
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_and_update_encryption_type",
                     platform="openstack")
 class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
@@ -381,7 +381,7 @@ class CreateAndUpdateEncryptionType(cinder_utils.CinderBasic):
 @validation.add("required_platform", platform="openstack", admin=True)
 @validation.add("required_api_versions", component="cinder", versions=["2"])
 @validation.add("required_services", services=consts.Service.CINDER)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderVolumeTypes.create_volume_type_"
                          "add_and_list_type_access",
                     platform="openstack")

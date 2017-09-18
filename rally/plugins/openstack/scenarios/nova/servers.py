@@ -39,7 +39,7 @@ LOG = logging.getLogger(__name__)
                 image_param="image")
 @validation.add("required_services", services=(consts.Service.NOVA))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_list_server",
                     platform="openstack")
 class BootAndListServer(utils.NovaScenario):
@@ -95,7 +95,7 @@ class ListServers(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_delete_server",
                     platform="openstack")
 class BootAndDeleteServer(utils.NovaScenario):
@@ -127,7 +127,7 @@ class BootAndDeleteServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_delete_multiple_servers",
                     platform="openstack")
 class BootAndDeleteMultipleServers(utils.NovaScenario):
@@ -160,7 +160,7 @@ class BootAndDeleteMultipleServers(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_and_delete",
                     platform="openstack")
 class BootServerFromVolumeAndDelete(utils.NovaScenario,
@@ -201,7 +201,7 @@ class BootServerFromVolumeAndDelete(utils.NovaScenario,
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_bounce_server",
                     platform="openstack")
 class BootAndBounceServer(utils.NovaScenario):
@@ -243,7 +243,7 @@ class BootAndBounceServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_lock_unlock_and_delete",
                     platform="openstack")
 class BootLockUnlockAndDelete(utils.NovaScenario):
@@ -279,7 +279,7 @@ class BootLockUnlockAndDelete(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "glance"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "glance"]},
                     name="NovaServers.snapshot_server",
                     platform="openstack")
 class SnapshotServer(utils.NovaScenario):
@@ -308,7 +308,7 @@ class SnapshotServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_server",
                     platform="openstack")
 class BootServer(utils.NovaScenario):
@@ -334,7 +334,7 @@ class BootServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume",
                     platform="openstack")
 class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderBasic):
@@ -369,7 +369,7 @@ class BootServerFromVolume(utils.NovaScenario, cinder_utils.CinderBasic):
                 image_param="image")
 @validation.add("required_services", services=(consts.Service.NOVA))
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.resize_server", platform="openstack")
 class ResizeServer(utils.NovaScenario):
 
@@ -403,7 +403,7 @@ class ResizeServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.resize_shutoff_server",
                     platform="openstack")
 class ResizeShutoffServer(utils.NovaScenario):
@@ -442,7 +442,7 @@ class ResizeShutoffServer(utils.NovaScenario):
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["cinder", "nova"]},
+    context={"cleanup@openstack": ["cinder", "nova"]},
     name="NovaServers.boot_server_attach_created_volume_and_resize",
     platform="openstack")
 class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
@@ -504,7 +504,7 @@ class BootServerAttachCreatedVolumeAndResize(utils.NovaScenario,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["cinder", "nova"]},
+    context={"cleanup@openstack": ["cinder", "nova"]},
     name="NovaServers.boot_server_attach_volume_and_list_attachments",
     platform="openstack")
 class BootServerAttachVolumeAndListAttachments(utils.NovaScenario,
@@ -550,7 +550,7 @@ class BootServerAttachVolumeAndListAttachments(utils.NovaScenario,
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_and_resize",
                     platform="openstack")
 class BootServerFromVolumeAndResize(utils.NovaScenario,
@@ -612,7 +612,7 @@ class BootServerFromVolumeAndResize(utils.NovaScenario,
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.suspend_and_resume_server",
                     platform="openstack")
 class SuspendAndResumeServer(utils.NovaScenario):
@@ -637,7 +637,7 @@ class SuspendAndResumeServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.pause_and_unpause_server",
                     platform="openstack")
 class PauseAndUnpauseServer(utils.NovaScenario):
@@ -662,7 +662,7 @@ class PauseAndUnpauseServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.shelve_and_unshelve_server",
                     platform="openstack")
 class ShelveAndUnshelveServer(utils.NovaScenario):
@@ -688,7 +688,7 @@ class ShelveAndUnshelveServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_live_migrate_server",
                     platform="openstack")
 class BootAndLiveMigrateServer(utils.NovaScenario):
@@ -733,7 +733,7 @@ class BootAndLiveMigrateServer(utils.NovaScenario):
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(
-    context={"cleanup": ["nova", "cinder"]},
+    context={"cleanup@openstack": ["nova", "cinder"]},
     name="NovaServers.boot_server_from_volume_and_live_migrate",
     platform="openstack")
 class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
@@ -790,7 +790,7 @@ class BootServerFromVolumeAndLiveMigrate(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
 @scenario.configure(
-    context={"cleanup": ["cinder", "nova"]},
+    context={"cleanup@openstack": ["cinder", "nova"]},
     name="NovaServers.boot_server_attach_created_volume_and_live_migrate",
     platform="openstack")
 class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
@@ -849,7 +849,7 @@ class BootServerAttachCreatedVolumeAndLiveMigrate(utils.NovaScenario,
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_migrate_server",
                     platform="openstack")
 class BootAndMigrateServer(utils.NovaScenario):
@@ -887,7 +887,7 @@ class BootAndMigrateServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_rebuild_server",
                     platform="openstack")
 class BootAndRebuildServer(utils.NovaScenario):
@@ -915,9 +915,10 @@ class BootAndRebuildServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
-@scenario.configure(context={"cleanup": ["nova", "neutron.floatingip"]},
-                    name="NovaServers.boot_and_associate_floating_ip",
-                    platform="openstack")
+@scenario.configure(
+    context={"cleanup@openstack": ["nova", "neutron.floatingip"]},
+    name="NovaServers.boot_and_associate_floating_ip",
+    platform="openstack")
 class BootAndAssociateFloatingIp(utils.NovaScenario):
 
     def run(self, image, flavor, **kwargs):
@@ -940,7 +941,7 @@ class BootAndAssociateFloatingIp(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "neutron"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "neutron"]},
                     name="NovaServers.boot_server_and_attach_interface",
                     platform="openstack")
 class BootServerAndAttachInterface(utils.NovaScenario,
@@ -974,7 +975,7 @@ class BootServerAndAttachInterface(utils.NovaScenario,
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_show_server",
                     platform="openstack")
 class BootAndShowServer(utils.NovaScenario):
@@ -1000,7 +1001,7 @@ class BootAndShowServer(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_get_console_output",
                     platform="openstack")
 class BootAndGetConsoleOutput(utils.NovaScenario):
@@ -1028,7 +1029,7 @@ class BootAndGetConsoleOutput(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_update_server",
                     platform="openstack")
 class BootAndUpdateServer(utils.NovaScenario):
@@ -1055,7 +1056,7 @@ class BootAndUpdateServer(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova", "cinder"]},
+@scenario.configure(context={"cleanup@openstack": ["nova", "cinder"]},
                     name="NovaServers.boot_server_from_volume_snapshot",
                     platform="openstack")
 class BootServerFromVolumeSnapshot(utils.NovaScenario,
@@ -1095,7 +1096,7 @@ class BootServerFromVolumeSnapshot(utils.NovaScenario,
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
 @scenario.configure(
-    context={"cleanup": ["nova", "neutron.floatingip"]},
+    context={"cleanup@openstack": ["nova", "neutron.floatingip"]},
     name="NovaServers.boot_server_associate_and_dissociate_floating_ip",
     platform="openstack")
 class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
@@ -1125,7 +1126,7 @@ class BootServerAssociateAndDissociateFloatingIP(utils.NovaScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_server_and_list_interfaces",
                     platform="openstack")
 class BootServerAndListInterfaces(utils.NovaScenario):
@@ -1152,7 +1153,7 @@ class BootServerAndListInterfaces(utils.NovaScenario):
                 image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["nova"]},
+@scenario.configure(context={"cleanup@openstack": ["nova"]},
                     name="NovaServers.boot_and_get_console_url",
                     platform="openstack")
 class BootAndGetConsoleUrl(utils.NovaScenario):

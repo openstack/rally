@@ -61,7 +61,7 @@ class ListExecutions(utils.MistralScenario):
 @validation.add("workbook_contains_workflow", param_name="definition",
                 workflow_name="workflow_name")
 @scenario.configure(name="MistralExecutions.create_execution_from_workbook",
-                    context={"cleanup": ["mistral"]},
+                    context={"cleanup@openstack": ["mistral"]},
                     platform="openstack")
 class CreateExecutionFromWorkbook(utils.MistralScenario):
 

@@ -29,7 +29,7 @@ from rally.task import validation
                 case_insensitive=True, missed=False)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_and_delete_share",
                     platform="openstack")
 class CreateAndDeleteShare(utils.ManilaScenario):
@@ -77,7 +77,7 @@ class ListShares(utils.ManilaScenario):
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_and_extend_share",
                     platform="openstack")
 class CreateAndExtendShare(utils.ManilaScenario):
@@ -121,7 +121,7 @@ class CreateAndExtendShare(utils.ManilaScenario):
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_and_shrink_share",
                     platform="openstack")
 class CreateAndShrinkShare(utils.ManilaScenario):
@@ -162,7 +162,7 @@ class CreateAndShrinkShare(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_share_network_and_delete",
                     platform="openstack")
 class CreateShareNetworkAndDelete(utils.ManilaScenario):
@@ -190,7 +190,7 @@ class CreateShareNetworkAndDelete(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_share_network_and_list",
                     platform="openstack")
 class CreateShareNetworkAndList(utils.ManilaScenario):
@@ -247,7 +247,7 @@ class ListShareServers(utils.ManilaScenario):
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["manila"]},
+    context={"cleanup@openstack": ["manila"]},
     name="ManilaShares.create_share_then_allow_and_deny_access")
 class CreateShareThenAllowAndDenyAccess(utils.ManilaScenario):
     def run(self, share_proto, access_type, access, access_level="rw", size=1,
@@ -292,7 +292,7 @@ class CreateShareThenAllowAndDenyAccess(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_security_service_and_delete",
                     platform="openstack")
 class CreateSecurityServiceAndDelete(utils.ManilaScenario):
@@ -328,10 +328,10 @@ class CreateSecurityServiceAndDelete(utils.ManilaScenario):
 
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
-                    name="ManilaShares."
-                         "attach_security_service_to_share_network",
-                    platform="openstack")
+@scenario.configure(
+    context={"cleanup@openstack": ["manila"]},
+    name="ManilaShares.attach_security_service_to_share_network",
+    platform="openstack")
 class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
 
     def run(self, security_service_type="ldap"):
@@ -352,7 +352,7 @@ class AttachSecurityServiceToShareNetwork(utils.ManilaScenario):
                 case_insensitive=True)
 @validation.add("required_services", services=[consts.Service.MANILA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.create_and_list_share",
                     platform="openstack")
 class CreateAndListShare(utils.ManilaScenario):
@@ -392,7 +392,7 @@ class CreateAndListShare(utils.ManilaScenario):
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts",
                 contexts=manila_consts.SHARES_CONTEXT_NAME)
-@scenario.configure(context={"cleanup": ["manila"]},
+@scenario.configure(context={"cleanup@openstack": ["manila"]},
                     name="ManilaShares.set_and_delete_metadata",
                     platform="openstack")
 class SetAndDeleteMetadata(utils.ManilaScenario):

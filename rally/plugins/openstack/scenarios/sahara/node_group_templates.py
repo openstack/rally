@@ -27,7 +27,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["sahara"]},
+    context={"cleanup@openstack": ["sahara"]},
     name="SaharaNodeGroupTemplates.create_and_list_node_group_templates",
     platform="openstack")
 class CreateAndListNodeGroupTemplates(utils.SaharaScenario):
@@ -73,7 +73,7 @@ class CreateAndListNodeGroupTemplates(utils.SaharaScenario):
 @validation.add("required_services", services=[consts.Service.SAHARA])
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(
-    context={"cleanup": ["sahara"]},
+    context={"cleanup@openstack": ["sahara"]},
     name="SaharaNodeGroupTemplates.create_delete_node_group_templates",
     platform="openstack")
 class CreateDeleteNodeGroupTemplates(utils.SaharaScenario):

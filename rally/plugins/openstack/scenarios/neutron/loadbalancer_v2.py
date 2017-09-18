@@ -24,7 +24,7 @@ from rally.task import validation
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack", users=True)
 @validation.add("required_contexts", contexts=("network"))
-@scenario.configure(context={"cleanup": ["neutron"]},
+@scenario.configure(context={"cleanup@openstack": ["neutron"]},
                     name="NeutronLoadbalancerV2.create_and_list_loadbalancers",
                     platform="openstack")
 class CreateAndListLoadbalancers(utils.NeutronScenario):

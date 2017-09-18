@@ -23,7 +23,7 @@ from rally.task import validation
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderQos.create_and_list_qos", platform="openstack")
 class CreateAndListQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec):
@@ -50,7 +50,7 @@ class CreateAndListQos(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderQos.create_and_get_qos", platform="openstack")
 class CreateAndGetQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec):
@@ -72,7 +72,7 @@ class CreateAndGetQos(cinder_utils.CinderBasic):
 
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack", admin=True)
-@scenario.configure(context={"admin_cleanup": ["cinder"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder"]},
                     name="CinderQos.create_and_set_qos", platform="openstack")
 class CreateAndSetQos(cinder_utils.CinderBasic):
     def run(self, consumer, write_iops_sec, read_iops_sec,
@@ -105,7 +105,7 @@ class CreateAndSetQos(cinder_utils.CinderBasic):
 @validation.add("required_platform", platform="openstack", admin=True)
 @validation.add("required_contexts", contexts=("volume_types"))
 @scenario.configure(
-    context={"admin_cleanup": ["cinder"]},
+    context={"admin_cleanup@openstack": ["cinder"]},
     name="CinderQos.create_qos_associate_and_disassociate_type",
     platform="openstack")
 class CreateQosAssociateAndDisassociateType(cinder_utils.CinderBasic):

@@ -24,7 +24,7 @@ from rally.task import validation
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova.quotas"]},
                     name="Quotas.nova_update",
                     platform="openstack")
 class NovaUpdate(utils.QuotasScenario):
@@ -42,7 +42,7 @@ class NovaUpdate(utils.QuotasScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova.quotas"]},
                     name="Quotas.nova_update_and_delete", platform="openstack")
 class NovaUpdateAndDelete(utils.QuotasScenario):
 
@@ -60,7 +60,7 @@ class NovaUpdateAndDelete(utils.QuotasScenario):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder.quotas"]},
                     name="Quotas.cinder_update", platform="openstack")
 class CinderUpdate(utils.QuotasScenario):
 
@@ -77,7 +77,7 @@ class CinderUpdate(utils.QuotasScenario):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder.quotas"]},
                     name="Quotas.cinder_get", platform="openstack")
 class CinderGet(utils.QuotasScenario):
 
@@ -93,7 +93,7 @@ class CinderGet(utils.QuotasScenario):
 @validation.add("required_services", services=[consts.Service.CINDER])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["cinder.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["cinder.quotas"]},
                     name="Quotas.cinder_update_and_delete",
                     platform="openstack")
 class CinderUpdateAndDelete(utils.QuotasScenario):
@@ -113,7 +113,7 @@ class CinderUpdateAndDelete(utils.QuotasScenario):
                 services=[consts.Service.NEUTRON])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["neutron.quota"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["neutron.quota"]},
                     name="Quotas.neutron_update", platform="openstack")
 class NeutronUpdate(utils.QuotasScenario):
 
@@ -131,7 +131,7 @@ class NeutronUpdate(utils.QuotasScenario):
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack",
                 admin=True, users=True)
-@scenario.configure(context={"admin_cleanup": ["nova.quotas"]},
+@scenario.configure(context={"admin_cleanup@openstack": ["nova.quotas"]},
                     name="Quotas.nova_get", platform="openstack")
 class NovaGet(utils.QuotasScenario):
 
