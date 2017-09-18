@@ -107,7 +107,7 @@ OLD_TASK_RESULT_SCHEMA = {
                 "required": ["atomic_actions", "duration", "error",
                              "idle_duration"]
             },
-            "minItems": 1
+            "minItems": 0
         },
         "load_duration": {
             "type": "number",
