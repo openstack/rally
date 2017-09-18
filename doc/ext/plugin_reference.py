@@ -131,7 +131,7 @@ def process_jsonschema(schema):
                                              "additionalProperties"})):
                 # it is ok, schema accepts any object. nothing to add more
                 pass
-            elif "oneOf" in schema:
+            elif "oneOf" in schema or "anyOf" in schema:
                 # Example:
                 #   SCHEMA = {"type": "object", "$schema": consts.JSON_SCHEMA,
                 #       "oneOf": [{"properties": {"foo": {"type": "string"}}
@@ -141,15 +141,20 @@ def process_jsonschema(schema):
                 #                  "required": ["bar"],
                 #                  "additionalProperties": False},
                 #
-                oneOf = copy.deepcopy(schema["oneOf"])
-                for item in oneOf:
+                schema_key = "oneOf" if "oneOf" in schema else "anyOf"
+                schema_value = copy.deepcopy(schema.get(schema_key))
+
+                for item in schema_value:
                     for k, v in schema.items():
-                        if k not in ("oneOf", "description"):
+                        if k not in (schema_key, "description"):
                             item[k] = v
 
-                return {"doc": schema.get("description", ""),
-                        "type": "dict",
-                        "oneOf": [process_jsonschema(item) for item in oneOf]}
+                return {
+                    "doc": schema.get("description", ""),
+                    "type": "dict",
+                    schema_key: [
+                        process_jsonschema(item) for item in schema_value]
+                }
             else:
                 raise Exception("Failed to parse jsonschema: %s" % schema)
 

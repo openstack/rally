@@ -54,7 +54,7 @@ class UserGenerator(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
-        "oneOf": [
+        "anyOf": [
             {"description": "Create new temporary users and tenants.",
              "properties": {
                 "tenants": {
