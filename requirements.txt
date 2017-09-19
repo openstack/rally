@@ -2,6 +2,9 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
+# Remove after os-faults is fixed
+ansible<2.4.0.0
+
 # Rally core dependencies
 alembic>=0.8.10,<=0.9.5                                # MIT
 decorator>=3.4.0,<=4.1.2                               # new BSD License
