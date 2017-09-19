@@ -14,7 +14,7 @@ RUN echo '[ ! -z "$TERM" -a -r /etc/motd ] && cat /etc/motd' \
             >> /etc/bash.bashrc; echo '\
 ╔═════════════════════════════════════════════════════════════════════════════╗\n\
 ║ Welcome to Rally Docker container!                                          ║\n\
-║  Rally certification tasks, samples and docs are located at ~/source/       ║\n\
+║  Rally pre created tasks, samples and docs are located at ~/source/         ║\n\
 ║  Rally configuration and DB are in ~/.rally/                                ║\n\
 ║  Rally at readthedocs - http://rally.readthedocs.org                        ║\n\
 ║  How to contribute - http://rally.readthedocs.org/en/latest/contribute.html ║\n\

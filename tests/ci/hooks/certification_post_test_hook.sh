@@ -5,7 +5,7 @@ source $SCRIPT_DIR/../rally_gate_functions.sh
 
 setUp
 
-TASK=$RALLY_DIR/certification/openstack/task.yaml
+TASK=$RALLY_DIR/tasks/openstack/task.yaml
 TASK_ARGS=$RALLY_DIR/rally-jobs/certifcation_task_args.yaml
 
 TASK_ARGS="--task-args-file $TASK_ARGS"
