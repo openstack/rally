@@ -12,17 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.services.storage import block
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @context.configure(name="volumes", platform="openstack", order=420)
@@ -58,7 +53,6 @@ class VolumeGenerator(context.Context):
         "volumes_per_tenant": 1
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):
         size = self.config["size"]
         volume_type = self.config.get("type", None)
@@ -78,7 +72,6 @@ class VolumeGenerator(context.Context):
                 self.context["tenants"][tenant_id]["volumes"].append(
                     vol._as_dict())
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["cinder.volumes"],

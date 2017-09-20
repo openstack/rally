@@ -17,9 +17,6 @@ import os
 import zipfile
 
 from rally.common import fileutils
-from rally.common.i18n import _
-from rally.common.i18n import _LE
-from rally.common import logging
 from rally.common import utils
 from rally.common import validation
 from rally import consts
@@ -27,9 +24,6 @@ from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -49,7 +43,6 @@ class PackageGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Murano packages`"))
     def setup(self):
         is_config_app_dir = False
         pckg_path = os.path.expanduser(self.config["app_package"])
@@ -59,9 +52,8 @@ class PackageGenerator(context.Context):
             is_config_app_dir = True
             zip_name = fileutils.pack_dir(pckg_path)
         else:
-            msg = (_LE("There is no zip archive or directory by this path:"
-                       " %s") % pckg_path)
-            raise exceptions.ContextSetupFailure(msg=msg,
+            msg = "There is no zip archive or directory by this path: %s"
+            raise exceptions.ContextSetupFailure(msg=msg % pckg_path,
                                                  ctx_name=self.get_name())
 
         for user, tenant_id in utils.iterate_per_tenants(
@@ -77,7 +69,6 @@ class PackageGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["packages"].append(package)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Murano packages`"))
     def cleanup(self):
         resource_manager.cleanup(names=["murano.packages"],
                                  users=self.context.get("users", []),

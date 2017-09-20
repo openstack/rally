@@ -14,16 +14,11 @@
 
 from six import moves
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.monasca import utils as monasca_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -81,7 +76,6 @@ class MonascaMetricGenerator(context.Context):
         "metrics_per_tenant": 2
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Monasca`"))
     def setup(self):
         new_metric = {}
 
@@ -102,7 +96,6 @@ class MonascaMetricGenerator(context.Context):
             monasca_utils.CONF.benchmark.monasca_metric_create_prepoll_delay,
             atomic_delay=1)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Monasca`"))
     def cleanup(self):
         # We don't have API for removal of metrics
         pass

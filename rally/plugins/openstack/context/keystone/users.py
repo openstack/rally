@@ -304,7 +304,6 @@ class UserGenerator(context.Context):
                 "tenant_id": tenant_id
             })
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
     def setup(self):
         self.context["users"] = []
         self.context["tenants"] = {}
@@ -315,7 +314,6 @@ class UserGenerator(context.Context):
         else:
             self.create_users()
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):
         """Delete tenants and users, using the broker pattern."""
         if self.existing_users:

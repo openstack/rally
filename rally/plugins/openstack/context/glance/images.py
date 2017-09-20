@@ -121,7 +121,6 @@ class ImageGenerator(context.Context):
 
     DEFAULT_CONFIG = {"images_per_tenant": 1}
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
         image_url = self.config.get("image_url")
         disk_format = self.config.get("disk_format")
@@ -190,7 +189,6 @@ class ImageGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["images"] = current_images
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
         if self.context.get("admin", {}):
             # NOTE(andreykurilin): Glance does not require the admin for

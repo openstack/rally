@@ -75,7 +75,6 @@ class RoleGenerator(context.Context):
                                                 project_id=project_id)
         return consume
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):
         """Add all roles to users."""
         threads = self.workers
@@ -97,7 +96,6 @@ class RoleGenerator(context.Context):
         broker.run(publish, self._get_consumer("add_role"), threads)
         self.context["roles"] = roles_dict
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `roles`"))
     def cleanup(self):
         """Remove all roles from users."""
         threads = self.workers

@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import validation
 from rally import consts
@@ -65,7 +64,6 @@ class Quotas(context.Context):
     def _service_has_quotas(self, service):
         return len(self.config.get(service, {})) > 0
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
         for tenant_id in self.context["tenants"]:
             for service in self.manager:
@@ -103,7 +101,6 @@ class Quotas(context.Context):
                                     % {"tenant_id": tenant_id,
                                        "service": service, "exc": e})
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
         if self.original_quotas:
             # existing users

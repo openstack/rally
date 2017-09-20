@@ -13,8 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -23,9 +21,6 @@ from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -49,8 +44,6 @@ class SaharaOutputDataSources(context.Context):
         "required": ["output_type", "output_url_prefix"]
     }
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Enter context: `Sahara Output Data Sources`"))
     def setup(self):
         utils.init_sahara_context(self)
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -99,8 +92,6 @@ class SaharaOutputDataSources(context.Context):
             output_ds_swift.id
         )
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Exit context: `Sahara Output Data Sources`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["swift.object", "swift.container"],

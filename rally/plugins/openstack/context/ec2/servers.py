@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally import consts
@@ -59,7 +58,6 @@ class EC2ServerGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `EC2 Servers`"))
     def setup(self):
         image = self.config["image"]
         flavor = self.config["flavor"]
@@ -91,7 +89,6 @@ class EC2ServerGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["ec2_servers"] = current_servers
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `EC2 Servers`"))
     def cleanup(self):
         resource_manager.cleanup(names=["ec2.servers"],
                                  users=self.context.get("users", []),

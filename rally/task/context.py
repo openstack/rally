@@ -180,25 +180,45 @@ class ContextManager(object):
         ctx_lst.sort(key=lambda x: x.get_order())
         return [c(self.context_obj) for c in ctx_lst]
 
+    def _log_prefix(self):
+        return "Task %s |" % self.context_obj["task"]["uuid"]
+
     def setup(self):
         """Creates environment by executing provided context plugins."""
         self._visited = []
         for ctx in self._get_sorted_context_lst():
             self._visited.append(ctx)
-            ctx.setup()
+            msg = ("%(log_prefix)s Context %(name)s setup() "
+                   % {"log_prefix": self._log_prefix(),
+                      "name": ctx.get_fullname()})
+
+            with utils.Timer() as timer:
+                LOG.info("%s started" % msg)
+                ctx.setup()
+
+            LOG.info("%(msg)s finished in %(duration)s"
+                     % {"msg": msg, "duration": timer.duration(fmt=True)})
 
         return self.context_obj
 
     def cleanup(self):
         """Cleans up  environment by executing provided context plugins."""
-
         ctxlst = self._visited or self._get_sorted_context_lst()
         for ctx in ctxlst[::-1]:
+            msg = ("%(log_prefix)s Context %(name)s cleanup()"
+                   % {"log_prefix": self._log_prefix(),
+                      "name": ctx.get_fullname()})
+            timer = utils.Timer()
             try:
-                ctx.cleanup()
+                with timer:
+                    LOG.info("%s started" % msg)
+                    ctx.cleanup()
+                LOG.info("%(msg)s finished in %(duration)s"
+                         % {"msg": msg, "duration": timer.duration(fmt=True)})
             except Exception:
-                LOG.exception("Context %s.cleanup() failed."
-                              % ctx.get_fullname())
+                LOG.exception("%(msg)s failed after %(duration)s"
+                              % {"msg": msg,
+                                 "duration": timer.duration(fmt=True)})
 
     def __enter__(self):
         try:

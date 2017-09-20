@@ -16,7 +16,6 @@
 from oslo_config import cfg
 
 from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -28,7 +27,6 @@ from rally.task import utils as bench_utils
 
 
 CONF = cfg.CONF
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -100,7 +98,6 @@ class SaharaCluster(context.Context):
                      "master_flavor_id", "worker_flavor_id"]
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
         utils.init_sahara_context(self)
         self.context["sahara"]["clusters"] = {}
@@ -181,7 +178,6 @@ class SaharaCluster(context.Context):
                 return False
         return True
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Cluster`"))
     def cleanup(self):
         resource_manager.cleanup(names=["sahara.clusters"],
                                  users=self.context.get("users", []),

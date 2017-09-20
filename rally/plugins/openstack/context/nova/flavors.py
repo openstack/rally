@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient import exceptions as nova_exceptions
-
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
@@ -73,9 +70,10 @@ class FlavorsGenerator(context.Context):
         }
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `flavors`"))
     def setup(self):
         """Create list of flavors."""
+        from novaclient import exceptions as nova_exceptions
+
         self.context["flavors"] = {}
 
         clients = osclients.Clients(self.context["admin"]["credential"])
@@ -99,7 +97,6 @@ class FlavorsGenerator(context.Context):
             self.context["flavors"][flavor_config["name"]] = flavor.to_dict()
             LOG.debug("Created flavor with id '%s'", flavor.id)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
     def cleanup(self):
         """Delete created flavors."""
         mather = rutils.make_name_matcher(*[f["name"] for f in self.config])

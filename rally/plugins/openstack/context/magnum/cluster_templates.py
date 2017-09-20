@@ -12,17 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -102,7 +97,6 @@ class ClusterTemplateGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `ClusterTemplate`"))
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -121,7 +115,6 @@ class ClusterTemplateGenerator(context.Context):
             ct_uuid = cluster_template.uuid
             self.context["tenants"][tenant_id]["cluster_template"] = ct_uuid
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `ClusterTemplate`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["magnum.cluster_templates"],

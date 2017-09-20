@@ -185,8 +185,6 @@ class ShareNetworks(context.Context):
             else:
                 _setup_share_network(tenant_id, data)
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `%s`")
-                              % CONTEXT_NAME)
     def setup(self):
         self.context[CONTEXT_NAME] = {}
         if not self.config["use_share_networks"]:
@@ -196,7 +194,6 @@ class ShareNetworks(context.Context):
         else:
             self._setup_for_autocreated_users()
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
         if (not self.context["config"].get("existing_users") or
                 self.config["use_share_networks"]):

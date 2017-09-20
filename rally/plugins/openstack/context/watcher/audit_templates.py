@@ -16,8 +16,6 @@ import random
 
 import six
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import validation
 from rally import consts
 from rally import osclients
@@ -25,9 +23,6 @@ from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.watcher import utils as watcher_utils
 from rally.plugins.openstack import types
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
@@ -77,7 +72,6 @@ class AuditTemplateGenerator(context.Context):
         "fill_strategy": "round_robin"
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Audit Templates`"))
     def setup(self):
         watcher_scenario = watcher_utils.WatcherScenario(
             {"admin": self.context["admin"], "task": self.context["task"],
@@ -108,7 +102,6 @@ class AuditTemplateGenerator(context.Context):
                 goal_id, strategy_id)
             self.context["audit_templates"].append(audit_template.uuid)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Audit Templates`"))
     def cleanup(self):
         resource_manager.cleanup(names=["watcher.action_plan",
                                         "watcher.audit_template"],

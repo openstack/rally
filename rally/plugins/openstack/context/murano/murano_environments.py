@@ -13,17 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.murano import utils as murano_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -44,8 +39,6 @@ class EnvironmentGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Enter context: `Murano environments`"))
     def setup(self):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
@@ -59,8 +52,6 @@ class EnvironmentGenerator(context.Context):
                 env = murano_util._create_environment()
                 self.context["tenants"][tenant_id]["environments"].append(env)
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Exit context: `Murano environments`"))
     def cleanup(self):
         resource_manager.cleanup(names=["murano.environments"],
                                  users=self.context.get("users", []),

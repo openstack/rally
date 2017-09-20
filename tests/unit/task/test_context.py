@@ -126,7 +126,7 @@ class ContextManagerTestCase(test.TestCase):
         bar_context = mock.MagicMock()
         mock__get_sorted_context_lst.return_value = [foo_context, bar_context]
 
-        ctx_object = {"config": {"a": [], "b": []}}
+        ctx_object = {"config": {"a": [], "b": []}, "task": {"uuid": "uuid"}}
 
         manager = context.ContextManager(ctx_object)
         result = manager.setup()
@@ -202,7 +202,10 @@ class ContextManagerTestCase(test.TestCase):
             def cleanup(self):
                 mock_obj("b@foo")
 
-        ctx_object = {"config": {"a@foo": [], "b@foo": []}}
+        ctx_object = {
+            "config": {"a@foo": [], "b@foo": []},
+            "task": {"uuid": "uuid"}
+        }
         context.ContextManager(ctx_object).cleanup()
         mock_obj.assert_has_calls([mock.call("b@foo"), mock.call("a@foo")])
 
@@ -221,11 +224,10 @@ class ContextManagerTestCase(test.TestCase):
                 raise Exception("So Sad")
 
         self.addCleanup(A.unregister)
-        ctx_object = {"config": {"a@foo": []}}
+        ctx_object = {"config": {"a@foo": []}, "task": {"uuid": "uuid"}}
         context.ContextManager(ctx_object).cleanup()
         mock_obj.assert_called_once_with("a@foo")
-        mock_log_exception.assert_called_once_with(
-            "Context a@foo.cleanup() failed.")
+        mock_log_exception.assert_called_once_with(mock.ANY)
 
     @mock.patch("rally.task.context.ContextManager.cleanup")
     @mock.patch("rally.task.context.ContextManager.setup")

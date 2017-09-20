@@ -101,8 +101,15 @@ class Timer(object):
         if type:
             self.error = (type, value, tb)
 
-    def duration(self):
-        return self.finish - self.start
+    def duration(self, fmt=False):
+        duration = self.finish - self.start
+        if not fmt:
+            return duration
+        if duration > 60:
+            return "%.2f min" % (duration / 60)
+        if duration > 0.1:
+            return "%.2f sec" % duration
+        return "%.2f msec" % (duration * 1000)
 
 
 class Struct(object):

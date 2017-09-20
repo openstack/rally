@@ -15,8 +15,6 @@
 
 import pkgutil
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -25,8 +23,6 @@ from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 from rally.task import context
-
-LOG = logging.getLogger(__name__)
 
 
 def get_data(filename_or_resource):
@@ -113,7 +109,6 @@ class HeatDataplane(context.Context):
         networks = nc.list_networks(**{"router:external": True})["networks"]
         return networks[0]["id"]
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `HeatDataplane`"))
     def setup(self):
         template = get_data(self.config["template"])
         files = {}
@@ -146,7 +141,6 @@ class HeatDataplane(context.Context):
                     tenant_data["stack_dataplane"].append([stack.id, template,
                                                            files, parameters])
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `HeatDataplane`"))
     def cleanup(self):
         resource_manager.cleanup(names=["heat.stacks"],
                                  users=self.context.get("users", []),

@@ -59,7 +59,6 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
         "resource_management_workers": 30
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `swift_objects`"))
     def setup(self):
         """Create containers and objects, using the broker pattern."""
         threads = self.config["resource_management_workers"]
@@ -93,7 +92,6 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
                       "expected %(expected)s but got %(actual)s.")
                 % {"expected": objects_num, "actual": objects_count})
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `swift_objects`"))
     def cleanup(self):
         """Delete containers and objects, using the broker pattern."""
         threads = self.config["resource_management_workers"]

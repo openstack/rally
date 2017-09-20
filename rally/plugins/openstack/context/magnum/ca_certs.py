@@ -21,16 +21,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography import x509
 from cryptography.x509 import oid
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -70,7 +65,6 @@ class CaCertGenerator(context.Context):
 
         return result
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Ca Cert`"))
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -110,7 +104,6 @@ class CaCertGenerator(context.Context):
                 with open(fname, "w") as cert_file:
                     cert_file.write(cert.pem)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Ca Cert`"))
     def cleanup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):

@@ -13,7 +13,6 @@
 # under the License.
 
 from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -23,9 +22,6 @@ from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.services.image import image as image_services
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -79,7 +75,6 @@ class SaharaImage(context.Context):
             image_id=image.id, new_tags=[plugin_name, hadoop_version])
         return image.id
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))
     def setup(self):
         utils.init_sahara_context(self)
         self.context["sahara"]["images"] = {}
@@ -129,7 +124,6 @@ class SaharaImage(context.Context):
                 self.context["tenants"][tenant_id]["sahara"]["image"] = (
                     image_id)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):
         if self.context["sahara"]["need_image_cleanup"]:
             resource_manager.cleanup(names=["glance.images"],

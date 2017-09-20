@@ -13,15 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import validation
 from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -52,12 +47,10 @@ class Keypair(context.Context):
                 "name": keypair_name,
                 "id": keypair.id}
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
     def setup(self):
         for user in self.context["users"]:
             user["keypair"] = self._generate_keypair(user["credential"])
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):
         resource_manager.cleanup(names=["nova.keypairs"],
                                  users=self.context.get("users", []),

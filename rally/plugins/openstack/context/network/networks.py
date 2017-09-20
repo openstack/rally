@@ -73,7 +73,6 @@ class Network(context.Context):
         "dns_nameservers": None
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `network`"))
     def setup(self):
         # NOTE(rkiran): Some clients are not thread-safe. Thus during
         #               multithreading/multiprocessing, it is likely the
@@ -100,7 +99,6 @@ class Network(context.Context):
                     **kwargs)
                 self.context["tenants"][tenant_id]["networks"].append(network)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `network`"))
     def cleanup(self):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["credential"]),
