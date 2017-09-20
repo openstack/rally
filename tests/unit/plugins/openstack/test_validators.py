@@ -954,7 +954,7 @@ class WorkbookContainsWorkflowValidatorTestCase(test.TestCase):
             }
         }
         validator = validators.WorkbookContainsWorkflowValidator(
-            param_name="definition", workflow_name="workflow_name")
+            workbook_param="definition", workflow_param="workflow_name")
 
         context = {
             "args": {

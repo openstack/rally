@@ -210,5 +210,5 @@ _workbook_contains_workflow = deprecated_validator(
 
 
 def workbook_contains_workflow(workbook, workflow_name):
-    return _workbook_contains_workflow(param_name=workbook,
-                                       workflow_name=workflow_name)
+    return _workbook_contains_workflow(workbook_param=workbook,
+                                       workflow_param=workflow_name)
