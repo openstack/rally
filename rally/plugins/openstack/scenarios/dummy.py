@@ -14,9 +14,9 @@
 #    under the License.
 
 from rally.plugins.common.scenarios.dummy import dummy
-from rally.task import scenario
+from rally.plugins.openstack import scenario
 
 
-@scenario.configure(name="Dummy.openstack", platform="openstack")
-class DummyOpenStack(dummy.Dummy):
+@scenario.configure(name="Dummy.openstack")
+class DummyOpenStack(dummy.Dummy, scenario.OpenStackScenario):
     """Clone of Dummy.dummy for OpenStack"""
