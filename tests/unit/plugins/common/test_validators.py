@@ -208,34 +208,34 @@ class RestrictedParametersValidatorTestCase(test.TestCase):
                                            "users": [mock.MagicMock()]})
 
     @ddt.data(
-        {"context": {"args": {}}},
-        {"context": {"args": {"subdict": {}}}, "subdict": "subdict"}
+        {"config": {"args": {}}},
+        {"config": {"args": {"subdict": {}}}, "subdict": "subdict"}
     )
     @ddt.unpack
-    def test_validate(self, context, subdict=None):
+    def test_validate(self, config, subdict=None):
         validator = validators.RestrictedParametersValidator(
             ["param_name"], subdict)
-        validator.validate(context, self.credentials, None, None)
+        validator.validate(self.credentials, config, None, None)
 
     @ddt.data(
-        {"context": {"args": {"param_name": "value"}},
+        {"config": {"args": {"param_name": "value"}},
          "err_msg": "You can't specify parameters 'param_name' in 'args'"},
-        {"context": {"args": {"subdict": {"param_name": "value"}}},
+        {"config": {"args": {"subdict": {"param_name": "value"}}},
          "subdict": "subdict",
          "err_msg": "You can't specify parameters 'param_name' in 'subdict'"}
     )
     @ddt.unpack
-    def test_validate_failed(self, context, subdict=None, err_msg=None):
+    def test_validate_failed(self, config, subdict=None, err_msg=None):
         validator = validators.RestrictedParametersValidator(
             ["param_name"], subdict)
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, context, self.credentials, None, None)
+            validator.validate, self.credentials, config, None, None)
         self.assertEqual(err_msg, e.message)
 
     def test_restricted_parameters_string_param_names(self):
         validator = validators.RestrictedParametersValidator("param_name")
-        validator.validate({"args": {}}, self.credentials, None, None)
+        validator.validate(self.credentials, {"args": {}}, None, None)
 
 
 @ddt.ddt
@@ -254,14 +254,14 @@ class RequiredContextsValidatorTestCase(test.TestCase):
     def test_validate(self, config):
         validator = validators.RequiredContextsValidator(
             contexts=("c1", "c2", "c3"))
-        validator.validate(config, self.credentials, None, None)
+        validator.validate(self.credentials, config, None, None)
 
     def test_validate_failed(self):
         validator = validators.RequiredContextsValidator(
             contexts=("c1", "c2", "c3"))
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, {"context": {"a": 1}}, self.credentials,
+            validator.validate, self.credentials, {"context": {"a": 1}},
             None, None)
         self.assertEqual(
             "The following context(s) are required but missing from "
@@ -276,15 +276,15 @@ class RequiredContextsValidatorTestCase(test.TestCase):
     def test_validate_with_or(self, config):
         validator = validators.RequiredContextsValidator(
             contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
-        validator.validate(config, self.credentials, None, None)
+        validator.validate(self.credentials, config, None, None)
 
     def test_validate_with_or_failed(self):
         validator = validators.RequiredContextsValidator(
             contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, {"context": {"c1": 1, "c2": 2}},
-            self.credentials, None, None)
+            validator.validate, self.credentials,
+            {"context": {"c1": 1, "c2": 2}}, None, None)
         self.assertEqual(
             "The following context(s) are required but missing "
             "from the input task file: 'a1 or a2', 'b1 or b2'", e.message)
@@ -312,7 +312,7 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_validate(self, config):
-        self.validator.validate(config, self.credentials, None, None)
+        self.validator.validate(self.credentials, config, None, None)
 
     @ddt.data(
         {"config": {"args": {}, "context": {}},
@@ -326,7 +326,7 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
     def test_validate_failed(self, config, err_msg):
         e = self.assertRaises(
             validation.ValidationError,
-            self.validator.validate, config, self.credentials, None, None)
+            self.validator.validate, self.credentials, config, None, None)
         self.assertEqual(err_msg, e.message)
 
 
@@ -357,7 +357,7 @@ class FileExistsValidatorTestCase(test.TestCase):
     @mock.patch("rally.plugins.common.validators."
                 "FileExistsValidator._file_access_ok")
     def test_file_exists(self, mock__file_access_ok):
-        self.validator.validate({"args": {"p": "test_file"}},
-                                self.credentials, None, None)
+        self.validator.validate(self.credentials, {"args": {"p": "test_file"}},
+                                None, None)
         mock__file_access_ok.assert_called_once_with(
             "test_file", os.R_OK, "p", False)
