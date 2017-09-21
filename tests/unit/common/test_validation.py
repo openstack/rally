@@ -51,7 +51,7 @@ class DummyValidator(validation.Validator):
         super(DummyValidator, self).__init__()
         self.foo = foo
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         if self.foo not in config:
             raise Exception("foo")
 
@@ -70,14 +70,15 @@ class ValidatorTestCase(test.TestCase):
         class DummyPlugin(DummyPluginBase):
             pass
 
-        creds = {"foo": {"admin": "fake_admin", "users": ["fake_user"]}}
+        ctx = {"platforms": {
+            "foo": {"admin": "fake_admin", "users": ["fake_user"]}}}
         result = DummyPluginBase.validate(
-            name="dummy_plugin", credentials=creds,
+            name="dummy_plugin", context=ctx,
             config={"bar": 1}, plugin_cfg={})
-        self.assertEqual(0, len(result))
+        self.assertEqual(0, len(result), result)
 
         result = DummyPluginBase.validate(
-            name="dummy_plugin", credentials=creds, config={}, plugin_cfg={})
+            name="dummy_plugin", context=ctx, config={}, plugin_cfg={})
         self.assertEqual(1, len(result))
         self.assertIn("raise Exception(\"foo\")", result[0])
 
@@ -100,36 +101,36 @@ class RequiredPlatformValidatorTestCase(test.TestCase):
 
     @ddt.data(
         {"kwargs": {"platform": "foo", "admin": True},
-         "credentials": {"foo": {"admin": "fake_admin"}}},
+         "context": {"platforms": {"foo": {"admin": "fake_admin"}}}},
         {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "credentials": {"foo": {"admin": "fake_admin"}}},
+         "context": {"platforms": {"foo": {"admin": "fake_admin"}}}},
         {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "credentials": {"foo": {"admin": "fake_admin",
-                                 "users": ["fake_user"]}}}
+         "context": {"platforms": {"foo": {"admin": "fake_admin",
+                                           "users": ["fake_user"]}}}}
     )
     @ddt.unpack
-    def test_validator(self, kwargs, credentials):
+    def test_validator(self, kwargs, context):
         validator = validation.RequiredPlatformValidator(**kwargs)
-        validator.validate(credentials, None, None, None)
+        validator.validate(context, None, None, None)
 
     @ddt.data(
         {"kwargs": {"platform": "foo"},
-         "credentials": {},
+         "context": {},
          "error_msg": "You should specify admin=True or users=True or both."},
         {"kwargs": {"platform": "foo", "admin": True},
-         "credentials": None,
+         "context": {"platforms": {}},
          "error_msg": "No admin credential for foo"},
         {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "credentials": {"foo": {"users": ["fake_user"]}},
+         "context": {"platforms": {"foo": {"users": ["fake_user"]}}},
          "error_msg": "No admin credential for foo"},
         {"kwargs": {"platform": "foo", "users": True},
-         "credentials": {"foo": {}},
+         "context": {"platforms": {"foo": {}}},
          "error_msg": "No user credentials for foo"}
     )
     @ddt.unpack
-    def test_validator_failed(self, kwargs, credentials, error_msg=False):
+    def test_validator_failed(self, kwargs, context, error_msg=False):
         validator = validation.RequiredPlatformValidator(**kwargs)
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, credentials, None, None, None)
+            validator.validate, context, None, None, None)
         self.assertEqual(error_msg, e.message)

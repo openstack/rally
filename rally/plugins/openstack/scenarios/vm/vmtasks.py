@@ -99,7 +99,7 @@ class ValidCommandValidator(validators.FileExistsValidator):
                 "Unexpected command parameters: %s" % ", ".join(
                     unexpected_keys))
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         command = config.get("args", {}).get(self.param_name)
         if command is None and not self.required:
             return

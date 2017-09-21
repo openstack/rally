@@ -260,14 +260,20 @@ class TaskEngine(object):
         self.deployment = deployment
         self.abort_on_sla_failure = abort_on_sla_failure
 
-    def _validate_workload(self, workload, credentials=None, vtype=None):
+    def _validate_workload(self, workload, vcontext=None, vtype=None):
+        """Validate a workload.
+
+        :param workload: a workload configuration
+        :param vcontext: a validation context
+        :param vtype: a type of validation (platform, syntax or semantic)
+        """
         scenario_cls = scenario.Scenario.get(workload["name"])
         scenario_context = copy.deepcopy(scenario_cls.get_default_context())
         results = []
 
         results.extend(scenario.Scenario.validate(
             name=workload["name"],
-            credentials=credentials,
+            context=vcontext,
             config=workload,
             plugin_cfg=None,
             vtype=vtype))
@@ -275,7 +281,7 @@ class TaskEngine(object):
         if workload["runner"]:
             results.extend(runner.ScenarioRunner.validate(
                 name=workload["runner"]["type"],
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=workload["runner"],
                 vtype=vtype))
@@ -283,7 +289,7 @@ class TaskEngine(object):
         for context_name, context_conf in workload["context"].items():
             results.extend(context.Context.validate(
                 name=context_name,
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=context_conf,
                 vtype=vtype))
@@ -291,7 +297,7 @@ class TaskEngine(object):
         for context_name, context_conf in scenario_context.items():
             results.extend(context.Context.validate(
                 name=context_name,
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=context_conf,
                 allow_hidden=True,
@@ -300,7 +306,7 @@ class TaskEngine(object):
         for sla_name, sla_conf in workload["sla"].items():
             results.extend(sla.SLA.validate(
                 name=sla_name,
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=sla_conf,
                 vtype=vtype))
@@ -308,7 +314,7 @@ class TaskEngine(object):
         for hook_conf in workload["hooks"]:
             results.extend(hook.Hook.validate(
                 name=hook_conf["config"]["name"],
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=hook_conf["config"]["args"],
                 vtype=vtype))
@@ -316,7 +322,7 @@ class TaskEngine(object):
             trigger_conf = hook_conf["config"]["trigger"]
             results.extend(trigger.Trigger.validate(
                 name=trigger_conf["name"],
-                credentials=credentials,
+                context=vcontext,
                 config=None,
                 plugin_cfg=trigger_conf["args"],
                 vtype=vtype))
@@ -340,12 +346,15 @@ class TaskEngine(object):
     @logging.log_task_wrapper(LOG.info, _("Task validation of required "
                                           "platforms."))
     def _validate_config_platforms(self, config):
+        # FIXME(andreykurilin): prepare the similar context object to others
         credentials = self.deployment.get_all_credentials()
-        credentials = dict((p, creds[0]) for p, creds in credentials.items())
+        ctx = {"task": self.task,
+               "platforms": dict((p, creds[0])
+                                 for p, creds in credentials.items())}
         for subtask in config.subtasks:
             for workload in subtask["workloads"]:
                 self._validate_workload(
-                    workload, credentials=credentials, vtype="platform")
+                    workload, vcontext=ctx, vtype="platform")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
@@ -353,24 +362,10 @@ class TaskEngine(object):
         validation_ctx = self.deployment.get_validation_context()
         ctx_obj = {"task": self.task, "config": validation_ctx}
         with context.ContextManager(ctx_obj):
-            # TODO(boris-42): Temporary adapter for current validators
-            #                 validators are going to accept completely
-            #                 context object instead of credentials,
-            #                 which unifies it to how scenarios works.
-            if "users@openstack" in validation_ctx:
-                credentials = {
-                    "openstack": {
-                        "admin": ctx_obj.get("admin", {}).get("credential"),
-                        "users": ctx_obj["users"]
-                    }
-                }
-            else:
-                credentials = {}
-
             for subtask in config.subtasks:
                 for workload in subtask["workloads"]:
                     self._validate_workload(
-                        workload, credentials, vtype="semantic")
+                        workload, vcontext=ctx_obj, vtype="semantic")
 
     @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self, only_syntax=False):

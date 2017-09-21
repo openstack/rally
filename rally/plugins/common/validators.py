@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 class JsonSchemaValidator(validation.Validator):
     """JSON schema validator"""
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         try:
             jsonschema.validate(plugin_cfg, plugin_cls.CONFIG_SCHEMA)
         except jsonschema.ValidationError as err:
@@ -39,7 +39,7 @@ class JsonSchemaValidator(validation.Validator):
 class ArgsValidator(validation.Validator):
     """Scenario arguments validator"""
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         scenario = plugin_cls
         name = scenario.get_name()
         namespace = scenario.get_platform()
@@ -87,7 +87,7 @@ class RequiredParameterValidator(validation.Validator):
         self.subdict = subdict
         self.params = params
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         missing = []
         args = config.get("args", {})
         if self.subdict:
@@ -133,7 +133,7 @@ class NumberValidator(validation.Validator):
         self.nullable = nullable
         self.integer_only = integer_only
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
 
         value = config.get("args", {}).get(self.param_name)
 
@@ -195,7 +195,7 @@ class EnumValidator(validation.Validator):
         else:
             self.values = values
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         value = config.get("args", {}).get(self.param_name)
         if value:
             if self.case_insensitive:
@@ -230,7 +230,7 @@ class RestrictedParametersValidator(validation.Validator):
             self.params = [param_names]
         self.subdict = subdict
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         restricted_params = []
         for param_name in self.params:
             args = config.get("args", {})
@@ -268,18 +268,18 @@ class RequiredContextsValidator(validation.Validator):
             self.contexts = [contexts]
             self.contexts.extend(args)
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         missing_contexts = []
-        context = config.get("context", {})
+        input_context = config.get("context", {})
 
         for name in self.contexts:
             if isinstance(name, tuple):
-                if not set(name) & set(context):
+                if not set(name) & set(input_context):
                     # formatted string like: 'foo or bar or baz'
                     formatted_names = "'{}'".format(" or ".join(name))
                     missing_contexts.append(formatted_names)
             else:
-                if name not in context:
+                if name not in input_context:
                     missing_contexts.append(name)
 
         if missing_contexts:
@@ -300,7 +300,7 @@ class RequiredParamOrContextValidator(validation.Validator):
         self.param_name = param_name
         self.ctx_name = ctx_name
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         msg = ("You should specify either scenario argument {} or"
                " use context {}.").format(self.param_name,
                                           self.ctx_name)
@@ -349,7 +349,7 @@ class FileExistsValidator(validation.Validator):
                                                     "mode": mode,
                                                     "param_name": param_name})
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
 
         self._file_access_ok(config.get("args", {}).get(self.param_name),
                              self.mode, self.param_name, self.required)

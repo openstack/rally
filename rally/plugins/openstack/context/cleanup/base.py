@@ -29,7 +29,7 @@ class CheckCleanupResourcesValidator(validation.Validator):
         super(CheckCleanupResourcesValidator, self).__init__()
         self.admin_required = admin_required
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         missing = set(plugin_cfg)
         missing -= manager.list_resource_names(
             admin_required=self.admin_required)

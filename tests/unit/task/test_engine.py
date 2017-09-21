@@ -169,28 +169,28 @@ class TaskEngineTestCase(test.TestCase):
         eng._validate_workload(workload)
 
         mock_scenario_runner_validate.assert_called_once_with(
-            name=runner_type, credentials=None, config=None,
+            name=runner_type, context=None, config=None,
             plugin_cfg={"type": runner_type}, vtype=None)
         self.assertEqual([mock.call(name="a",
-                                    credentials=None,
+                                    context=None,
                                     config=None,
                                     plugin_cfg="a_conf",
                                     vtype=None),
                           mock.call(name="foo",
-                                    credentials=None,
+                                    context=None,
                                     config=None,
                                     plugin_cfg="foo_conf",
                                     allow_hidden=True,
                                     vtype=None)],
                          mock_context_validate.call_args_list)
         mock_sla_validate.assert_called_once_with(
-            config=None, credentials=None,
+            config=None, context=None,
             name="foo_sla", plugin_cfg="sla_conf", vtype=None)
         mock_hook_validate.assert_called_once_with(
-            config=None, credentials=None, name="c", plugin_cfg="c_args",
+            config=None, context=None, name="c", plugin_cfg="c_args",
             vtype=None)
         mock_trigger_validate.assert_called_once_with(
-            config=None, credentials=None, name="d", plugin_cfg="d_args",
+            config=None, context=None, name="d", plugin_cfg="d_args",
             vtype=None)
 
     @mock.patch("rally.task.engine.json.dumps")
@@ -394,7 +394,9 @@ class TaskEngineTestCase(test.TestCase):
         eng._validate_config_platforms(config)
 
         self.assertEqual(
-            [mock.call(w, vtype="platform", credentials={"foo": foo_cred1})
+            [mock.call(w, vtype="platform",
+                       vcontext={"platforms": {"foo": foo_cred1},
+                                 "task": eng.task})
              for w in (workload1, workload2)],
             mock__validate_workload.call_args_list)
         deployment.get_all_credentials.assert_called_once_with()

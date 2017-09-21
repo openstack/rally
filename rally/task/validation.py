@@ -46,7 +46,12 @@ class ValidationResult(object):
 class OldValidator(validation.Validator):
 
     class Deployment(object):
-        pass
+        def __init__(self, ctx):
+            self.ctx = ctx
+
+        def get_credentials_for(self, platform):
+            return {"admin": self.ctx["admin"]["credential"],
+                    "users": [u["credential"] for u in self.ctx["users"]]}
 
     def __init__(self, fn, *args, **kwargs):
         """Legacy validator for OpenStack scenarios
@@ -57,12 +62,10 @@ class OldValidator(validation.Validator):
         self.args = args
         self.kwargs = kwargs
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
-        creds = credentials.get("openstack", {})
-        users = creds.get("users", [])
+    def validate(self, context, config, plugin_cls, plugin_cfg):
+        users = context["users"]
 
-        deployment = self.Deployment()
-        deployment.get_credentials_for = credentials.get
+        deployment = self.Deployment(context)
 
         if users:
             users = [user["credential"].clients() for user in users]

@@ -120,7 +120,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times,
 class CheckConstantValidator(validation.Validator):
     """Additional schema validation for constant runner"""
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         if plugin_cfg.get("concurrency", 1) > plugin_cfg.get("times", 1):
             return self.fail(
                 "Parameter 'concurrency' means a number of parallel executions"

@@ -49,8 +49,8 @@ class ValidationUtilsTestCase(test.TestCase):
         validator_cls = common_validation.Validator.get(vname)
         validator_inst = validator_cls(*args, **kwargs)
         fake_admin = fakes.fake_credential()
-        credentials = {"openstack": {"admin": fake_admin, "users": []}}
-        result = validator_inst.validate(credentials, {}, None, None)
+        ctx = {"admin": {"credential": fake_admin}, "users": []}
+        result = validator_inst.validate(ctx, {}, None, None)
         self.assertIsNone(result)
 
         validator_func.assert_called_once_with(
@@ -77,8 +77,8 @@ class ValidationUtilsTestCase(test.TestCase):
         fake_users1 = fakes.fake_credential()
         fake_users2 = fakes.fake_credential()
         users = [{"credential": fake_users1}, {"credential": fake_users2}]
-        credentials = {"openstack": {"admin": fake_admin, "users": users}}
-        result = validator_inst.validate(credentials, {}, None, None)
+        ctx = {"admin": {"credential": fake_admin}, "users": users}
+        result = validator_inst.validate(ctx, {}, None, None)
         self.assertIsNone(result)
 
         fake_users1.clients.assert_called_once_with()
@@ -91,7 +91,8 @@ class ValidationUtilsTestCase(test.TestCase):
         ))
         for args in validator_func.call_args:
             deployment = validator_func.call_args[0][2]
-            self.assertEqual({"admin": fake_admin, "users": users},
+            self.assertEqual({"admin": fake_admin,
+                              "users": [fake_users1, fake_users2]},
                              deployment.get_credentials_for("openstack"))
 
     def test_old_validator_users_error(self):
@@ -112,10 +113,10 @@ class ValidationUtilsTestCase(test.TestCase):
         fake_users1 = fakes.fake_credential()
         fake_users2 = fakes.fake_credential()
         users = [{"credential": fake_users1}, {"credential": fake_users2}]
-        credentials = {"openstack": {"admin": fake_admin, "users": users}}
+        ctx = {"admin": {"credential": fake_admin}, "users": users}
         self.assertRaises(
             common_validation.ValidationError,
-            validator_inst.validate, credentials, {}, None, None)
+            validator_inst.validate, ctx, {}, None, None)
 
         fake_users1.clients.assert_called_once_with()
         fake_users2.clients.assert_called_once_with()
@@ -123,7 +124,8 @@ class ValidationUtilsTestCase(test.TestCase):
             {}, fake_users1.clients.return_value, mock.ANY,
             "a", "b", "c", d=1)
         deployment = validator_func.call_args[0][2]
-        self.assertEqual({"admin": fake_admin, "users": users},
+        self.assertEqual({"admin": fake_admin,
+                          "users": [fake_users1, fake_users2]},
                          deployment.get_credentials_for("openstack"))
 
     @mock.patch("rally.task.validation.LOG.warning")
