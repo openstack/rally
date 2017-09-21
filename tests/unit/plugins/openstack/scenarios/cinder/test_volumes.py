@@ -268,10 +268,10 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_snapshot_and_attach_volume(self):
         mock_service = self.mock_cinder.return_value
         scenario = volumes.CreateSnapshotAndAttachVolume(self._get_context())
-        scenario.get_random_server = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock()
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
-        scenario.run()
+        scenario.run("img", "flavor")
 
         self.assertTrue(mock_service.create_volume.called)
         volume = mock_service.create_volume.return_value
@@ -280,9 +280,9 @@ class CinderServersTestCase(test.ScenarioTestCase):
                                                              force=False)
         mock_service.delete_snapshot.assert_called_once_with(snapshot)
         scenario._attach_volume.assert_called_once_with(
-            scenario.get_random_server.return_value, volume)
+            scenario._boot_server.return_value, volume)
         scenario._detach_volume.assert_called_once_with(
-            scenario.get_random_server.return_value, volume)
+            scenario._boot_server.return_value, volume)
         mock_service.delete_volume.assert_called_once_with(volume)
 
     @mock.patch("random.choice")
@@ -291,13 +291,13 @@ class CinderServersTestCase(test.ScenarioTestCase):
         mock_service = self.mock_cinder.return_value
 
         scenario = volumes.CreateSnapshotAndAttachVolume(self._get_context())
-        scenario.get_random_server = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock()
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
-        scenario.run(volume_type="type")
+        scenario.run("img", "flavor", volume_type="type")
 
         fake_volume = mock_service.create_volume.return_value
-        fake_server = scenario.get_random_server.return_value
+        fake_server = scenario._boot_server.return_value
         fake_snapshot = mock_service.create_snapshot.return_value
 
         mock_service.create_volume.assert_called_once_with(
@@ -320,10 +320,10 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
         scenario = volumes.CreateNestedSnapshotsAndAttachVolume(
             context=self._get_context())
-        scenario.get_random_server = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock()
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
-        scenario.run(create_volume_kwargs=volume_kwargs,
+        scenario.run("img", "flavor", create_volume_kwargs=volume_kwargs,
                      create_snapshot_kwargs=snapshot_kwargs)
 
         mock_service.create_volume.assert_called_once_with(
@@ -331,14 +331,14 @@ class CinderServersTestCase(test.ScenarioTestCase):
         mock_service.create_snapshot.assert_called_once_with(
             mock_service.create_volume.return_value.id, force=False,
             **snapshot_kwargs)
-        scenario._attach_volume(scenario.get_random_server.return_value,
+        scenario._attach_volume(scenario._boot_server.return_value,
                                 mock_service.create_volume.return_value)
         mock_service.delete_volume.assert_called_once_with(
             mock_service.create_volume.return_value)
         mock_service.delete_snapshot.assert_called_once_with(
             mock_service.create_snapshot.return_value)
         scenario._detach_volume.assert_called_once_with(
-            scenario.get_random_server.return_value,
+            scenario._boot_server.return_value,
             mock_service.create_volume.return_value)
 
     @mock.patch("random.randint")
@@ -351,21 +351,19 @@ class CinderServersTestCase(test.ScenarioTestCase):
                         for i in range(nested_level)]
         fake_snapshots = [mock.Mock()
                           for i in range(nested_level)]
-        fake_attachs = [mock.Mock(size=volume_size)
-                        for i in range(nested_level)]
         mock_service.create_volume.side_effect = fake_volumes
         mock_service.create_snapshot.side_effect = fake_snapshots
 
         scenario = volumes.CreateNestedSnapshotsAndAttachVolume(
             context=self._get_context())
-        scenario.get_random_server = mock.MagicMock()
-        scenario._attach_volume = mock.MagicMock(side_effect=fake_attachs)
+        scenario._boot_server = mock.MagicMock()
+        scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
-        scenario.run(nested_level=nested_level)
+        scenario.run("img", "flavor", nested_level=nested_level)
 
         expected_volumes = [mock.call(volume_size)]
         expected_snapshots = [mock.call(fake_volumes[0].id, force=False)]
-        expected_attachs = [mock.call(scenario.get_random_server.return_value,
+        expected_attachs = [mock.call(scenario._boot_server.return_value,
                                       fake_volumes[0])]
         for i in range(nested_level - 1):
             expected_volumes.append(
@@ -373,7 +371,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
             expected_snapshots.append(
                 mock.call(fake_volumes[i + 1].id, force=False))
             expected_attachs.append(
-                mock.call(scenario.get_random_server.return_value,
+                mock.call(scenario._boot_server.return_value,
                           fake_volumes[i + 1]))
 
         mock_service.create_volume.assert_has_calls(expected_volumes)
@@ -381,13 +379,12 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._attach_volume.assert_has_calls(expected_attachs)
         fake_volumes.reverse()
         fake_snapshots.reverse()
-        fake_attachs.reverse()
         mock_service.delete_volume.assert_has_calls(
             [mock.call(volume) for volume in fake_volumes])
         mock_service.delete_snapshot.assert_has_calls(
             [mock.call(snapshot) for snapshot in fake_snapshots])
         scenario._detach_volume.assert_has_calls(
-            [mock.call(scenario.get_random_server.return_value,
+            [mock.call(scenario._boot_server.return_value,
                        fake_volumes[i])
              for i in range(len(fake_volumes))])
 

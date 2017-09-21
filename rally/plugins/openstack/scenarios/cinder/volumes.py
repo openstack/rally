@@ -449,6 +449,12 @@ class CreateAndAttachVolume(cinder_utils.CinderBasic,
         self._delete_server(server)
 
 
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
+@validation.add("restricted_parameters", param_names=["name", "display_name"],
+                subdict="create_vm_params")
 @validation.add("restricted_parameters", param_names=["name", "display_name"])
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
@@ -460,14 +466,18 @@ class CreateAndAttachVolume(cinder_utils.CinderBasic,
 class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
                                     nova_utils.NovaScenario):
 
-    def run(self, volume_type=None, size=None, **kwargs):
-        """Create volume, snapshot and attach/detach volume.
+    def run(self, image, flavor, volume_type=None, size=None,
+            create_vm_params=None, **kwargs):
+        """Create vm, volume, snapshot and attach/detach volume.
 
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
         :param volume_type: Name of volume type to use
         :param size: Volume size - dictionary, contains two values:
                         min - minimum size volumes will be created as;
                         max - maximum size volumes will be created as.
                      default values: {"min": 1, "max": 5}
+        :param create_vm_params: optional arguments for VM creation
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
@@ -477,22 +487,30 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
         volume = self.cinder.create_volume(size, volume_type=volume_type)
         snapshot = self.cinder.create_snapshot(volume.id, force=False,
                                                **kwargs)
+        create_vm_params = create_vm_params or {}
 
-        server = self.get_random_server()
+        server = self._boot_server(image, flavor, **create_vm_params)
 
         self._attach_volume(server, volume)
         self._detach_volume(server, volume)
 
         self.cinder.delete_snapshot(snapshot)
         self.cinder.delete_volume(volume)
+        self._delete_server(server)
 
 
+@types.convert(image={"type": "glance_image"},
+               flavor={"type": "nova_flavor"})
+@validation.add("image_valid_on_flavor", flavor_param="flavor",
+                image_param="image")
 @validation.add("required_services", services=[consts.Service.NOVA,
                                                consts.Service.CINDER])
 @validation.add("restricted_parameters", param_names=["name", "display_name"],
                 subdict="create_volume_kwargs")
 @validation.add("restricted_parameters", param_names=["name", "display_name"],
                 subdict="create_snapshot_kwargs")
+@validation.add("restricted_parameters", param_names=["name", "display_name"],
+                subdict="create_vm_params")
 @validation.add("required_platform", platform="openstack", users=True)
 @scenario.configure(context={"cleanup": ["cinder", "nova"]},
                     name="CinderVolumes.create_nested_snapshots"
@@ -501,18 +519,18 @@ class CreateSnapshotAndAttachVolume(cinder_utils.CinderBasic,
 class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
                                            nova_utils.NovaScenario):
 
-    @logging.log_deprecated_args(
-        "Use 'create_snapshot_kwargs' for additional snapshot kwargs.",
-        "0.4.1", ["kwargs"], once=True)
-    def run(self, size=None, nested_level=1, create_volume_kwargs=None,
-            create_snapshot_kwargs=None, **kwargs):
+    def run(self, image, flavor, size=None, nested_level=1,
+            create_volume_kwargs=None, create_snapshot_kwargs=None,
+            create_vm_params=None):
         """Create a volume from snapshot and attach/detach the volume
 
-        This scenario create volume, create it's snapshot, attach volume,
+        This scenario create vm, volume, create it's snapshot, attach volume,
         then create new volume from existing snapshot and so on,
         with defined nested level, after all detach and delete them.
         volume->snapshot->volume->snapshot->volume ...
 
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
         :param size: Volume size - dictionary, contains two values:
                         min - minimum size volumes will be created as;
                         max - maximum size volumes will be created as.
@@ -520,8 +538,7 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
         :param nested_level: amount of nested levels
         :param create_volume_kwargs: optional args to create a volume
         :param create_snapshot_kwargs: optional args to create a snapshot
-        :param kwargs: Optional parameters used during volume
-                       snapshot creation.
+        :param create_vm_params: optional arguments for VM creation
         """
         if size is None:
             size = {"min": 1, "max": 5}
@@ -533,29 +550,31 @@ class CreateNestedSnapshotsAndAttachVolume(cinder_utils.CinderBasic,
         size = random.randint(size["min"], size["max"])
 
         create_volume_kwargs = create_volume_kwargs or {}
-        create_snapshot_kwargs = create_snapshot_kwargs or kwargs or {}
-        server = self.get_random_server()
+        create_snapshot_kwargs = create_snapshot_kwargs or {}
+        create_vm_params = create_vm_params or {}
+
+        server = self._boot_server(image, flavor, **create_vm_params)
 
         source_vol = self.cinder.create_volume(size, **create_volume_kwargs)
         snapshot = self.cinder.create_snapshot(source_vol.id, force=False,
                                                **create_snapshot_kwargs)
-        attachment = self._attach_volume(server, source_vol)
+        self._attach_volume(server, source_vol)
 
-        nes_objs = [(server, source_vol, snapshot, attachment)]
+        nes_objs = [(server, source_vol, snapshot)]
         for i in range(nested_level - 1):
             volume = self.cinder.create_volume(size, snapshot_id=snapshot.id)
             snapshot = self.cinder.create_snapshot(volume.id, force=False,
                                                    **create_snapshot_kwargs)
-            server = self.get_random_server()
-            attachment = self._attach_volume(server, volume)
+            self._attach_volume(server, volume)
 
-            nes_objs.append((server, volume, snapshot, attachment))
+            nes_objs.append((server, volume, snapshot))
 
         nes_objs.reverse()
-        for server, volume, snapshot, attachment in nes_objs:
+        for server, volume, snapshot in nes_objs:
             self._detach_volume(server, volume)
             self.cinder.delete_snapshot(snapshot)
             self.cinder.delete_volume(volume)
+        self._delete_server(server)
 
 
 @validation.add("required_services", services=[consts.Service.CINDER])

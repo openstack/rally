@@ -7,6 +7,10 @@
               min: 1
               max: 5
           nested_level: 5
+          image:
+            name: "^cirros.*-disk$"
+          flavor:
+            name: "{{flavor_name}}"
       runner:
         type: "constant"
         times: 1
@@ -15,12 +19,6 @@
         users:
           tenants: 2
           users_per_tenant: 1
-        servers:
-          image:
-            name: "^cirros.*-disk$"
-          flavor:
-            name: "{{flavor_name}}"
-          servers_per_tenant: 2
       sla:
         failure_rate:
           max: 0

@@ -471,6 +471,10 @@
             CinderVolumes.create_snapshot_and_attach_volume:
               volume_type: "lvmdriver-1"
               size: 1
+              image:
+                name: {{image_name}}
+              flavor:
+                name: {{flavor_name}}
           runner:
             constant:
               times: 2
@@ -479,18 +483,16 @@
             users:
               tenants: 2
               users_per_tenant: 2
-            servers:
-              image:
-                name: {{image_name}}
-              flavor:
-                name: {{flavor_name}}
-              servers_per_tenant: 1
         -
           description: "Create a volume using volume type created in context."
           scenario:
             CinderVolumes.create_snapshot_and_attach_volume:
               volume_type: "test"
               size: 1
+              image:
+                name: {{image_name}}
+              flavor:
+                name: {{flavor_name}}
           runner:
             constant:
               times: 2
@@ -499,12 +501,6 @@
             users:
               tenants: 2
               users_per_tenant: 2
-            servers:
-              image:
-                name: {{image_name}}
-              flavor:
-                name: {{flavor_name}}
-              servers_per_tenant: 1
             volume_types:
               - "test"
     -
@@ -691,6 +687,10 @@
               min: 1
               max: 1
           nested_level: 2
+          image:
+            name: {{image_name}}
+          flavor:
+            name: {{flavor_name}}
       runner:
         constant:
           times: 2
@@ -699,12 +699,6 @@
         users:
           tenants: 2
           users_per_tenant: 1
-        servers:
-          image:
-            name: {{image_name}}
-          flavor:
-            name: {{flavor_name}}
-          servers_per_tenant: 2
 
     -
       title: CinderVolumes.create_volume_and_clone tests
