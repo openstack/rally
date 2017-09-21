@@ -709,7 +709,7 @@ class TaskConfig(object):
                         wconf["description"] = scenario.Scenario.get(
                             wconf["name"]).get_info()["title"]
                     except (exceptions.PluginNotFound,
-                            exceptions.MultipleMatchesFound):
+                            exceptions.MultiplePluginsFound):
                         # let's fail an issue with loading plugin at a
                         # validation step
                         pass
