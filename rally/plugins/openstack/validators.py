@@ -562,15 +562,15 @@ class VolumeTypeExistsValidator(validation.Validator):
 @validation.configure(name="workbook_contains_workflow", platform="openstack")
 class WorkbookContainsWorkflowValidator(validators.FileExistsValidator):
 
-    def __init__(self, param_name, workflow_name):
+    def __init__(self, workbook_param, workflow_param):
         """Validate that workflow exist in workbook when workflow is passed
 
-        :param param_name: parameter containing the workbook definition
-        :param workflow_name: parameter containing the workflow name
+        :param workbook_param: parameter containing the workbook definition
+        :param workflow_param: parameter containing the workflow name
         """
-        super(WorkbookContainsWorkflowValidator, self).__init__(workflow_name)
-        self.workbook = param_name
-        self.workflow = workflow_name
+        super(WorkbookContainsWorkflowValidator, self).__init__(workflow_param)
+        self.workbook = workbook_param
+        self.workflow = workflow_param
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
         wf_name = config.get("args", {}).get(self.workflow)
