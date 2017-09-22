@@ -60,10 +60,11 @@ def configure(name, platform="default", namespace=None, context=None):
             if "@" not in c:
                 msg = ("Old fashion plugin configuration detected in "
                        " `%(scenario)s' scenario. Use full name for "
-                       " `%(context)s' context (%(full_context)s)")
+                       " `%(context)s' context like %(context)s@platform "
+                       "where 'platform' is a name of context platform ("
+                       "openstack, k8s, etc).")
                 LOG.warning(msg % {"scenario": "%s@%s" % (name, platform),
-                                   "context": c.get_name(),
-                                   "full_context": c.get_fullname()})
+                                   "context": c})
 
         cls = plugin.configure(name=name, platform=platform)(cls)
         cls._meta_setdefault("default_context", {})
