@@ -43,9 +43,7 @@ class JsonSchemaValidatorTestCase(test.TestCase):
 
         result = DummyPluginBase.validate("dummy_plugin", None, {}, 10)
         self.assertEqual(1, len(result))
-        self.assertFalse(result[0].is_valid)
-        self.assertIsNone(result[0].etype)
-        self.assertIn("10 is not of type 'string'", result[0].msg)
+        self.assertIn("10 is not of type 'string'", result[0])
 
         DummyPlugin.unregister()
 
@@ -79,8 +77,7 @@ class ArgsValidatorTestCase(test.TestCase):
             self.assertEqual(0, len(result))
         else:
             self.assertEqual(1, len(result))
-            self.assertFalse(result[0].is_valid)
-            self.assertIn(err_msg, result[0].msg)
+            self.assertIn(err_msg, result[0])
 
         DummyPlugin.unregister()
 
@@ -88,24 +85,27 @@ class ArgsValidatorTestCase(test.TestCase):
 @ddt.ddt
 class RequiredParameterValidatorTestCase(test.TestCase):
 
-    @ddt.data(({"args": {"a": 10, "b": 20}}, "a", None, None),
-              ({"args": {"a": 10, "b": 20}}, "c", None,
+    @ddt.data(({"args": {"a": 10, "b": 20}}, "a"),
+              ({"args": {"a": 10, "b": {"c": 20}}}, [("b", "c")]),
+              ({"args": {"a": 10, "c": 20}}, [("b", "c")]))
+    @ddt.unpack
+    def test_validate(self, config, params):
+        validator = validators.RequiredParameterValidator(params)
+
+        self.assertIsNone(validator.validate(None, config, None, None))
+
+    @ddt.data(({"args": {"a": 10, "b": 20}}, "c",
                "'c' parameter(s) are not defined in the input task file"),
-              ({"args": {"a": 10, "b": {"c": 20}}}, [("b", "c")],
-               None, None),
-              ({"args": {"a": 10, "c": 20}}, [("b", "c")],
-               None, None),
-              ({"args": {"a": 10}}, [("b", "c")], None,
+              ({"args": {"a": 10}}, [("b", "c")],
                "'b'/'c' (at least one parameter should be specified) "
                "parameter(s) are not defined in the input task file"))
     @ddt.unpack
-    def test_validate(self, config, params, subdict, err_msg):
-        validator = validators.RequiredParameterValidator(params, subdict)
-        result = validator.validate(None, config, None, None)
-        if err_msg:
-            self.assertEqual(err_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+    def test_validate_failed(self, config, params, err_msg):
+        validator = validators.RequiredParameterValidator(params)
+
+        e = self.assertRaises(validation.ValidationError,
+                              validator.validate, None, config, None, None)
+        self.assertEqual(err_msg, e.message)
 
 
 class NumberValidatorTestCase(test.TestCase):
@@ -118,11 +118,10 @@ class NumberValidatorTestCase(test.TestCase):
                              nullable=nullable, integer_only=integer_only)
 
     def test_number_not_nullable(self):
-        result = self.get_validator().validate({}, {}, None, None)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
-        self.assertEqual("foo is None which is not a valid float",
-                         "%s" % result)
+        e = self.assertRaises(
+            validation.ValidationError,
+            self.get_validator().validate, {}, {}, None, None)
+        self.assertEqual("foo is None which is not a valid float", e.message)
 
     def test_number_nullable(self):
         self.assertIsNone(self.get_validator(nullable=True).validate(
@@ -131,37 +130,31 @@ class NumberValidatorTestCase(test.TestCase):
     def test_number_min_max_value(self):
         validator = self.get_validator(minval=4, maxval=10)
 
-        result = validator.validate({}, {"args": {validator.param_name: 3.9}},
-                                    None, None)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
+        e = self.assertRaises(
+            validation.ValidationError, validator.validate,
+            {}, {"args": {validator.param_name: 3.9}}, None, None)
         self.assertEqual("foo is 3.9 which is less than the minimum (4)",
-                         "%s" % result)
+                         e.message)
 
-        result = validator.validate({}, {"args": {validator.param_name: 4.1}},
-                                    None, None)
-        self.assertIsNone(result)
-
-        result = validator.validate({}, {"args": {validator.param_name: 11}},
-                                    None, None)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
+        validator.validate({}, {"args": {validator.param_name: 4.1}},
+                           None, None)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {}, {"args": {validator.param_name: 11}},
+            None, None)
         self.assertEqual("foo is 11.0 which is greater than the maximum (10)",
-                         "%s" % result)
+                         e.message)
 
     def test_number_integer_only(self):
         validator = self.get_validator(integer_only=True)
 
-        result = validator.validate({}, {"args": {validator.param_name: 3.9}},
-                                    None, None)
-        self.assertFalse(result.is_valid, result.msg)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
-        self.assertEqual("foo is 3.9 which hasn't int type", "%s" % result)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {}, {"args": {validator.param_name: 3.9}},
+            None, None)
+        self.assertEqual("foo is 3.9 which hasn't int type", e.message)
 
-        result = validator.validate({}, {"args": {validator.param_name: 3}},
-                                    None, None)
-        self.assertIsNone(result)
+        validator.validate({}, {"args": {validator.param_name: 3}}, None, None)
 
 
 class EnumValidatorTestCase(test.TestCase):
@@ -174,38 +167,36 @@ class EnumValidatorTestCase(test.TestCase):
 
     def test_param_defined(self):
         validator = self.get_validator(values=["a", "b"])
-        result = validator.validate({}, {"args": {}}, None, None)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
+
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {}, {"args": {}}, None, None)
         self.assertEqual("foo parameter is not defined in the task "
-                         "config file", "%s" % result)
+                         "config file", e.message)
 
     def test_right_value(self):
         validator = self.get_validator(values=["a", "b"])
-        result = validator.validate({}, {"args": {validator.param_name: "c"}},
-                                    None, None)
-        self.assertIsNotNone(result)
-        self.assertFalse(result.is_valid)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {}, {"args": {validator.param_name: "c"}},
+            None, None)
         self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
-                         "%s" % result)
+                         e.message)
 
     def test_case_insensitive(self):
         validator = self.get_validator(values=["A", "B"],
                                        case_insensitive=True)
 
-        good_result = validator.validate(
-            {}, {"args": {validator.param_name: "a"}}, None, None
-        )
-        bad_result = validator.validate(
-            {}, {"args": {validator.param_name: "C"}}, None, None
-        )
+        validator.validate(
+            {}, {"args": {validator.param_name: "a"}}, None, None)
 
-        self.assertIsNone(good_result)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate,
+            {}, {"args": {validator.param_name: "C"}}, None, None)
 
-        self.assertIsNotNone(bad_result)
-        self.assertFalse(bad_result.is_valid)
         self.assertEqual("foo is c which is not a valid value from ['a', 'b']",
-                         "%s" % bad_result)
+                         e.message)
 
 
 @ddt.ddt
@@ -216,31 +207,35 @@ class RestrictedParametersValidatorTestCase(test.TestCase):
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()]})
 
-    @ddt.unpack
     @ddt.data(
         {"context": {"args": {}}},
+        {"context": {"args": {"subdict": {}}}, "subdict": "subdict"}
+    )
+    @ddt.unpack
+    def test_validate(self, context, subdict=None):
+        validator = validators.RestrictedParametersValidator(
+            ["param_name"], subdict)
+        validator.validate(context, self.credentials, None, None)
+
+    @ddt.data(
         {"context": {"args": {"param_name": "value"}},
          "err_msg": "You can't specify parameters 'param_name' in 'args'"},
-        {"context": {"args": {"subdict": {}}}, "subdict": "subdict"},
         {"context": {"args": {"subdict": {"param_name": "value"}}},
          "subdict": "subdict",
          "err_msg": "You can't specify parameters 'param_name' in 'subdict'"}
     )
-    def test_validate(self, context, subdict=None, err_msg=None):
+    @ddt.unpack
+    def test_validate_failed(self, context, subdict=None, err_msg=None):
         validator = validators.RestrictedParametersValidator(
             ["param_name"], subdict)
-        result = validator.validate(context, self.credentials, None, None)
-
-        if err_msg:
-            self.assertIsNotNone(result)
-            self.assertEqual(err_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, context, self.credentials, None, None)
+        self.assertEqual(err_msg, e.message)
 
     def test_restricted_parameters_string_param_names(self):
         validator = validators.RestrictedParametersValidator("param_name")
-        result = validator.validate({"args": {}}, self.credentials, None, None)
-        self.assertIsNone(result)
+        validator.validate({"args": {}}, self.credentials, None, None)
 
 
 @ddt.ddt
@@ -251,43 +246,48 @@ class RequiredContextsValidatorTestCase(test.TestCase):
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()], })
 
-    @ddt.unpack
     @ddt.data(
-        {"config": {"context": {"a": 1}},
-         "err_msg": "The following context(s) are required but missing from "
-                    "the input task file: c1, c2, c3"},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3}}},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}}}
     )
-    def test_validate(self, config, err_msg=False):
+    @ddt.unpack
+    def test_validate(self, config):
         validator = validators.RequiredContextsValidator(
             contexts=("c1", "c2", "c3"))
-        result = validator.validate(config, self.credentials, None, None)
-        if err_msg:
-            self.assertIsNotNone(result)
-            self.assertEqual(err_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+        validator.validate(config, self.credentials, None, None)
 
-    @ddt.unpack
+    def test_validate_failed(self):
+        validator = validators.RequiredContextsValidator(
+            contexts=("c1", "c2", "c3"))
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"context": {"a": 1}}, self.credentials,
+            None, None)
+        self.assertEqual(
+            "The following context(s) are required but missing from "
+            "the input task file: c1, c2, c3", e.message)
+
     @ddt.data(
-        {"config": {"context": {"c1": 1, "c2": 2}},
-         "err_msg": "The following context(s) are required but missing "
-                    "from the input task file: 'a1 or a2', 'b1 or b2'"},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3, "b1": 1, "a1": 1}}},
         {"config": {"context": {"c1": 1, "c2": 2, "c3": 3,
                                 "b1": 1, "b2": 2, "a1": 1}}},
     )
-    def test_validate_with_or(self, config, err_msg=None):
+    @ddt.unpack
+    def test_validate_with_or(self, config):
         validator = validators.RequiredContextsValidator(
             contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
-        result = validator.validate(config, self.credentials, None, None)
+        validator.validate(config, self.credentials, None, None)
 
-        if err_msg:
-            self.assertIsNotNone(result)
-            self.assertEqual(err_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+    def test_validate_with_or_failed(self):
+        validator = validators.RequiredContextsValidator(
+            contexts=[("a1", "a2"), "c1", ("b1", "b2"), "c2"])
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, {"context": {"c1": 1, "c2": 2}},
+            self.credentials, None, None)
+        self.assertEqual(
+            "The following context(s) are required but missing "
+            "from the input task file: 'a1 or a2', 'b1 or b2'", e.message)
 
 
 @ddt.ddt
@@ -300,7 +300,6 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
         self.credentials = dict(openstack={"admin": mock.MagicMock(),
                                            "users": [mock.MagicMock()], })
 
-    @ddt.unpack
     @ddt.data(
         {"config": {"args": {"image": {"name": ""}},
                     "context": {"custom_image": {"name": "fake_image"}}}},
@@ -309,7 +308,13 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
                     "context": {"custom_image": ""}}},
         {"config": {"args": {"image": {"name": "fake_image"}}}},
         {"config": {"args": {"image": {"name": ""}},
-                    "context": {"custom_image": {"name": ""}}}},
+                    "context": {"custom_image": {"name": ""}}}}
+    )
+    @ddt.unpack
+    def test_validate(self, config):
+        self.validator.validate(config, self.credentials, None, None)
+
+    @ddt.data(
         {"config": {"args": {}, "context": {}},
          "err_msg": "You should specify either scenario argument image or "
                     "use context custom_image."},
@@ -317,14 +322,12 @@ class RequiredParamOrContextValidatorTestCase(test.TestCase):
          "err_msg": "You should specify either scenario argument image or "
                     "use context custom_image."}
     )
-    def test_validate(self, config, err_msg=False):
-        result = self.validator.validate(config, self.credentials, None, None)
-
-        if err_msg:
-            self.assertIsNotNone(result)
-            self.assertEqual(err_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+    @ddt.unpack
+    def test_validate_failed(self, config, err_msg):
+        e = self.assertRaises(
+            validation.ValidationError,
+            self.validator.validate, config, self.credentials, None, None)
+        self.assertEqual(err_msg, e.message)
 
 
 class FileExistsValidatorTestCase(test.TestCase):
@@ -352,11 +355,9 @@ class FileExistsValidatorTestCase(test.TestCase):
         self.addCleanup(return_home)
 
     @mock.patch("rally.plugins.common.validators."
-                "ValidatorUtils._file_access_ok")
+                "FileExistsValidator._file_access_ok")
     def test_file_exists(self, mock__file_access_ok):
-        mock__file_access_ok.return_value = "foobar"
-        result = self.validator.validate({"args": {"p": "test_file"}},
-                                         self.credentials, None, None)
-        self.assertEqual("foobar", result)
+        self.validator.validate({"args": {"p": "test_file"}},
+                                self.credentials, None, None)
         mock__file_access_ok.assert_called_once_with(
             "test_file", os.R_OK, "p", False)

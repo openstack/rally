@@ -24,23 +24,6 @@ from rally.common import validation
 LOG = logging.getLogger(__name__)
 
 
-class ValidatorUtils(object):
-
-    @staticmethod
-    def _file_access_ok(filename, mode, param_name, required=True):
-        if not filename:
-            return validation.ValidationResult(
-                not required,
-                "Parameter %s required" % param_name)
-        if not os.access(os.path.expanduser(filename), mode):
-            return validation.ValidationResult(
-                False, "Could not open %(filename)s with mode %(mode)s "
-                       "for parameter %(param_name)s"
-                       % {"filename": filename, "mode": mode,
-                          "param_name": param_name})
-        return validation.ValidationResult(True)
-
-
 @validation.configure(name="jsonschema")
 class JsonSchemaValidator(validation.Validator):
     """JSON schema validator"""
@@ -49,7 +32,7 @@ class JsonSchemaValidator(validation.Validator):
         try:
             jsonschema.validate(plugin_cfg, plugin_cls.CONFIG_SCHEMA)
         except jsonschema.ValidationError as err:
-            return self.fail(str(err))
+            self.fail(str(err))
 
 
 @validation.configure(name="args-spec")
@@ -77,7 +60,7 @@ class ArgsValidator(validation.Validator):
             msg = ("Argument(s) '%(args)s' should be specified in task config."
                    "%(hint)s" % {"args": "', '".join(missed_args),
                                  "hint": hint_msg})
-            return self.fail(msg)
+            self.fail(msg)
 
         if varkwargs is None and "args" in config:
             redundant_args = set(config["args"]) - set(args[1:])
@@ -85,7 +68,7 @@ class ArgsValidator(validation.Validator):
                 msg = ("Unexpected argument(s) found ['%(args)s'].%(hint)s" %
                        {"args": "', '".join(redundant_args),
                         "hint": hint_msg})
-                return self.fail(msg)
+                self.fail(msg)
 
 
 @validation.configure(name="required_params")
@@ -125,7 +108,7 @@ class RequiredParameterValidator(validation.Validator):
         if missing:
             msg = ("%s parameter(s) are not defined in "
                    "the input task file") % ", ".join(missing)
-            return self.fail(msg)
+            self.fail(msg)
 
 
 @validation.configure(name="number")
@@ -170,22 +153,19 @@ class NumberValidator(validation.Validator):
         try:
             number = num_func(value)
             if self.minval is not None and number < self.minval:
-                return self.fail(
-                    "%(name)s is %(val)s which is less than the minimum "
-                    "(%(min)s)" % {"name": self.param_name,
-                                   "val": number,
-                                   "min": self.minval})
+                self.fail("%(name)s is %(val)s which is less than the minimum "
+                          "(%(min)s)" % {"name": self.param_name,
+                                         "val": number,
+                                         "min": self.minval})
             if self.maxval is not None and number > self.maxval:
-                return self.fail(
-                    "%(name)s is %(val)s which is greater than the maximum "
-                    "(%(max)s)" % {"name": self.param_name,
-                                   "val": number,
-                                   "max": self.maxval})
+                self.fail("%(name)s is %(val)s which is greater than the "
+                          "maximum (%(max)s)" % {"name": self.param_name,
+                                                 "val": number,
+                                                 "max": self.maxval})
         except (ValueError, TypeError):
-            return self.fail("%(name)s is %(val)s which is not a valid "
-                             "%(type)s" % {"name": self.param_name,
-                                           "val": value,
-                                           "type": num_func.__name__})
+            self.fail("%(name)s is %(val)s which is not a valid %(type)s" %
+                      {"name": self.param_name, "val": value,
+                       "type": num_func.__name__})
 
 
 @validation.configure(name="enum")
@@ -223,15 +203,14 @@ class EnumValidator(validation.Validator):
                     value = value.lower()
 
             if value not in self.values:
-                return self.fail("%(name)s is %(val)s which is not a "
-                                 "valid value from %(list)s"
-                                 % {"name": self.param_name,
-                                    "val": value,
-                                    "list": self.values})
+                self.fail("%(name)s is %(val)s which is not a valid value "
+                          "from %(list)s" % {"name": self.param_name,
+                                             "val": value,
+                                             "list": self.values})
         else:
             if not self.missed:
-                return self.fail("%s parameter is not defined in the "
-                                 "task config file" % self.param_name)
+                self.fail("%s parameter is not defined in the task config file"
+                          % self.param_name)
 
 
 @validation.configure(name="restricted_parameters")
@@ -260,8 +239,7 @@ class RestrictedParametersValidator(validation.Validator):
             if param_name in a_dict.get(a_key, {}):
                 restricted_params.append(param_name)
         if restricted_params:
-            msg = ("You can't specify parameters '{}' in '{}'")
-            return self.fail(msg.format(
+            self.fail("You can't specify parameters '%s' in '%s'" % (
                 ", ".join(restricted_params),
                 self.subdict if self.subdict else "args"))
 
@@ -305,10 +283,8 @@ class RequiredContextsValidator(validation.Validator):
                     missing_contexts.append(name)
 
         if missing_contexts:
-            msg = ("The following context(s) are required but missing from "
-                   "the input task file: {}").format(
-                ", ".join(missing_contexts))
-            return self.fail(msg)
+            self.fail("The following context(s) are required but missing from "
+                      "the input task file: %s" % ", ".join(missing_contexts))
 
 
 @validation.configure(name="required_param_or_context")
@@ -333,7 +309,7 @@ class RequiredParamOrContextValidator(validation.Validator):
             return
         if self.param_name in config.get("args", {}):
             return
-        return self.fail(msg)
+        self.fail(msg)
 
 
 @validation.configure(name="file_exists")
@@ -362,8 +338,18 @@ class FileExistsValidator(validation.Validator):
         self.mode = mode
         self.required = required
 
+    def _file_access_ok(self, filename, mode, param_name, required=True):
+        if not filename:
+            if not required:
+                return
+            self.fail("Parameter %s required" % param_name)
+        if not os.access(os.path.expanduser(filename), mode):
+            self.fail("Could not open %(filename)s with mode %(mode)s for "
+                      "parameter %(param_name)s" % {"filename": filename,
+                                                    "mode": mode,
+                                                    "param_name": param_name})
+
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
 
-        return ValidatorUtils._file_access_ok(
-            config.get("args", {}).get(self.param_name),
-            self.mode, self.param_name, self.required)
+        self._file_access_ok(config.get("args", {}).get(self.param_name),
+                             self.mode, self.param_name, self.required)

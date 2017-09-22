@@ -21,8 +21,24 @@ from rally.common import validation
 LOG = logging.getLogger(__name__)
 
 # TODO(astudenov): remove after deprecating all old validators
-ValidationResult = validation.ValidationResult
 add = validation.add
+
+
+class ValidationResult(object):
+
+    def __init__(self, is_valid, msg="", etype=None, etraceback=None):
+        self.is_valid = is_valid
+        self.msg = msg
+        self.etype = etype
+        self.etraceback = etraceback
+
+    def __str__(self):
+        if self.is_valid:
+            return "validation success"
+        if self.etype:
+            return ("---------- Exception in validator ----------\n" +
+                    self.etraceback)
+        return self.msg
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -52,15 +68,16 @@ class OldValidator(validation.Validator):
             users = [user["credential"].clients() for user in users]
             for clients in users:
                 result = self._run_fn(config, deployment, clients)
-                if not result.is_valid:
-                    return result
-            return ValidationResult(True)
+                if result and not result.is_valid:
+                    self.fail(str(result))
+            return
         else:
-            return self._run_fn(config, deployment)
+            result = self._run_fn(config, deployment)
+            if result and not result.is_valid:
+                self.fail(str(result))
 
     def _run_fn(self, config, deployment, clients=None):
-        return (self.fn(config, clients, deployment,
-                        *self.args, **self.kwargs) or ValidationResult(True))
+        return self.fn(config, clients, deployment, *self.args, **self.kwargs)
 
 
 def validator(fn):

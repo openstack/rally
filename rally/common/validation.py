@@ -40,6 +40,7 @@ def configure(name, platform="default", namespace=None):
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
 class Validator(plugin.Plugin):
+    """A base class for all validators."""
 
     def __init__(self):
         pass
@@ -52,11 +53,13 @@ class Validator(plugin.Plugin):
         :param config: dict, configuration of workload
         :param plugin_cls: plugin class
         :param plugin_cfg: dict, with exact configuration of the plugin
-        :returns: ValidationResult instances
+        :returns: None if succeeded
+        :raises ValidationError: if the config doesn't pass the validator
         """
 
-    def fail(self, msg):
-        return ValidationResult(False, msg=msg)
+    @staticmethod
+    def fail(msg):
+        raise ValidationError(msg)
 
     @classmethod
     def _get_doc(cls):
@@ -93,18 +96,17 @@ class RequiredPlatformValidator(Validator):
 
     def validate(self, credentials, config, plugin_cls, plugin_cfg):
         if not (self.admin or self.users):
-            return self.fail(
-                "You should specify admin=True or users=True or both.")
+            self.fail("You should specify admin=True or users=True or both.")
 
         if credentials is None:
             credentials = {}
         credentials = credentials.get(self.platform, {})
 
         if self.admin and credentials.get("admin") is None:
-            return self.fail("No admin credential for %s" % self.platform)
+            self.fail("No admin credential for %s" % self.platform)
         if self.users and len(credentials.get("users", ())) == 0:
             if credentials.get("admin") is None:
-                return self.fail("No user credentials for %s" % self.platform)
+                self.fail("No user credentials for %s" % self.platform)
             else:
                 # NOTE(andreykurilin): It is a case when the plugin requires
                 #   'users' for launching, but there are no specified users in
@@ -157,21 +159,12 @@ def add_default(name, **kwargs):
     return wrapper
 
 
-class ValidationResult(object):
-
-    def __init__(self, is_valid, msg="", etype=None, etraceback=None):
-        self.is_valid = is_valid
-        self.msg = msg
-        self.etype = etype
-        self.etraceback = etraceback
-
-    def __str__(self):
-        if self.is_valid:
-            return "validation success"
-        if self.etype:
-            return ("---------- Exception in validator ----------\n" +
-                    self.etraceback)
-        return self.msg
+# this class doesn't inherit from rally.exceptions.RallyException, since
+#   ValidationError should be used only for inner purpose.
+class ValidationError(Exception):
+    def __init__(self, message):
+        super(ValidationError, self).__init__(message)
+        self.message = message
 
 
 class ValidatablePluginMixin(object):
@@ -204,9 +197,8 @@ class ValidatablePluginMixin(object):
         try:
             plugin = cls.get(name, allow_hidden=allow_hidden)
         except exceptions.PluginNotFound:
-            msg = "There is no %s plugin with name: '%s'" % (
-                cls.__name__, name)
-            return [ValidationResult(is_valid=False, msg=msg)]
+            return ["There is no %s plugin with name: '%s'" %
+                    (cls.__name__, name)]
 
         if vtype is None:
             semantic = True
@@ -248,22 +240,19 @@ class ValidatablePluginMixin(object):
         for validators in (syntax_validators, platform_validators,
                            regular_validators):
             for validator_cls, args, kwargs in validators:
+                validator = validator_cls(*args, **kwargs)
+                result = None
                 try:
-                    validator = validator_cls(*args, **kwargs)
-
-                    # NOTE(amaretskiy): validator is successful by default
-                    result = (validator.validate(credentials=credentials,
-                                                 config=config,
-                                                 plugin_cls=plugin,
-                                                 plugin_cfg=plugin_cfg)
-                              or ValidationResult(True))
-                except Exception as exc:
-                    result = ValidationResult(
-                        is_valid=False,
-                        msg=str(exc),
-                        etype=type(exc).__name__,
-                        etraceback=traceback.format_exc())
-                if not result.is_valid:
+                    validator.validate(credentials=credentials,
+                                       config=config,
+                                       plugin_cls=plugin,
+                                       plugin_cfg=plugin_cfg)
+                except ValidationError as e:
+                    result = e.message
+                except Exception:
+                    # Unexpected error is returned. save traceback as well
+                    result = traceback.format_exc()
+                if result:
                     LOG.debug("Result of validator '%s' is not successful for "
                               "plugin %s.", validator_cls.get_name(), name)
                     results.append(result)

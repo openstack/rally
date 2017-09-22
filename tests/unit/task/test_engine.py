@@ -21,7 +21,6 @@ import threading
 import mock
 
 from rally.common import objects
-from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.task import context
@@ -202,8 +201,8 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_scenario_runner_validate, mock_task_config,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        result = validation.ValidationResult(False, "There is no such runner")
-        mock_scenario_runner_validate.return_value = [result]
+        mock_scenario_runner_validate.return_value = [
+            "There is no such runner"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         workload = self._make_workload(name="sca", runner={"type": "b"})
@@ -225,8 +224,7 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_context_validate, mock_task_config, mock_scenario_get,
             mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        result = validation.ValidationResult(False, "context_error")
-        mock_context_validate.return_value = [result]
+        mock_context_validate.return_value = ["context_error"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
@@ -252,8 +250,7 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_task_config, mock_sla_validate, mock_scenario_get,
             mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        result = validation.ValidationResult(False, "sla_error")
-        mock_sla_validate.return_value = [result]
+        mock_sla_validate.return_value = ["sla_error"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
@@ -281,8 +278,7 @@ class TaskEngineTestCase(test.TestCase):
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
         mock_trigger_validate.return_value = []
-        result = validation.ValidationResult(False, "hook_error")
-        mock_hook_validate.return_value = [result]
+        mock_hook_validate.return_value = ["hook_error"]
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}
         mock_task_instance = mock.MagicMock()
@@ -314,8 +310,7 @@ class TaskEngineTestCase(test.TestCase):
             self, mock_task_config, mock_hook_validate, mock_trigger_validate,
             mock_scenario_get, mock_dumps):
         mock_dumps.return_value = "<JSON>"
-        result = validation.ValidationResult(False, "trigger_error")
-        mock_trigger_validate.return_value = [result]
+        mock_trigger_validate.return_value = ["trigger_error"]
         mock_hook_validate.return_value = []
         scenario_cls = mock_scenario_get.return_value
         scenario_cls.get_default_context.return_value = {}

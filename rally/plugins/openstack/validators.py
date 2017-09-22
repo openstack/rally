@@ -31,7 +31,6 @@ from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.plugins.openstack import types as openstack_types
 
 LOG = logging.getLogger(__name__)
-ValidationResult = validation.ValidationResult
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -60,8 +59,7 @@ class ImageExistsValidator(validation.Validator):
         image_ctx_name = image_context.get("image_name")
 
         if not image_args:
-            message = ("Parameter %s is not specified.") % self.param_name
-            return self.fail(message)
+            self.fail("Parameter %s is not specified." % self.param_name)
 
         if "image_name" in image_context:
             # NOTE(rvasilets) check string is "exactly equal to" a regex
@@ -78,8 +76,7 @@ class ImageExistsValidator(validation.Validator):
                     clients=clients, resource_config=image_args)
                 clients.glance().images.get(image_id)
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
-            message = ("Image '%s' not found") % image_args
-            return self.fail(message)
+            self.fail("Image '%s' not found" % image_args)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -116,7 +113,7 @@ class ExternalNetworkExistsValidator(validation.Validator):
                                                              networks)
                 result.append(message)
         if result:
-            return self.fail(result)
+            self.fail("\n".join(result))
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -148,9 +145,7 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
         aliases = [x["alias"] for x in extensions]
         for extension in self.req_ext:
             if extension not in aliases:
-                msg = ("Neutron extension %s "
-                       "is not configured") % extension
-                return self.fail(msg)
+                self.fail("Neutron extension %s is not configured" % extension)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -169,7 +164,7 @@ class FlavorExistsValidator(validation.Validator):
 
     def _get_flavor_from_context(self, config, flavor_value):
         if "flavors" not in config.get("context", {}):
-            raise exceptions.InvalidScenarioArgument("No flavors context")
+            self.fail("No flavors context")
 
         flavors = [flavors_ctx.FlavorConfig(**f)
                    for f in config["context"]["flavors"]]
@@ -182,28 +177,25 @@ class FlavorExistsValidator(validation.Validator):
     def _get_validated_flavor(self, config, clients, param_name):
         flavor_value = config.get("args", {}).get(param_name)
         if not flavor_value:
-            msg = "Parameter %s is not specified." % param_name
-            return ValidationResult(False, msg), None
+            self.fail("Parameter %s is not specified." % param_name)
         try:
             flavor_id = openstack_types.Flavor.transform(
                 clients=clients, resource_config=flavor_value)
             flavor = clients.nova().flavors.get(flavor=flavor_id)
-            return ValidationResult(True), flavor
+            return flavor
         except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
             try:
-                return ValidationResult(True), self._get_flavor_from_context(
-                    config, flavor_value)
-            except exceptions.InvalidScenarioArgument:
+                return self._get_flavor_from_context(config, flavor_value)
+            except validation.ValidationError:
                 pass
-            message = "Flavor '%s' not found" % flavor_value
-            return ValidationResult(False, message), None
+            self.fail("Flavor '%s' not found" % flavor_value)
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
         # flavors do not depend on user or tenant, so checking for one user
         # should be enough
         user = credentials["openstack"]["users"][0]
         clients = user["credential"].clients()
-        return self._get_validated_flavor(config, clients, self.param_name)[0]
+        self._get_validated_flavor(config, clients, self.param_name)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -236,8 +228,7 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
         image_ctx_name = image_context.get("image_name")
 
         if not image_args:
-            msg = ("Parameter %s is not specified.") % param_name
-            return (ValidationResult(False, msg), None)
+            self.fail("Parameter %s is not specified." % param_name)
 
         if "image_name" in image_context:
             # NOTE(rvasilets) check string is "exactly equal to" a regex
@@ -252,7 +243,7 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
                     "min_ram": image_context.get("min_ram", 0),
                     "min_disk": image_context.get("min_disk", 0)
                 }
-                return (ValidationResult(True), image)
+                return image
         try:
             image_id = openstack_types.GlanceImage.transform(
                 clients=clients, resource_config=image_args)
@@ -268,10 +259,9 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
                 image["min_ram"] = 0
             if not image.get("min_disk"):
                 image["min_disk"] = 0
-            return (ValidationResult(True), image)
+            return image
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
-            message = ("Image '%s' not found") % image_args
-            return (ValidationResult(False, message), None)
+            self.fail("Image '%s' not found" % image_args)
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
 
@@ -280,38 +270,32 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
             clients = user["credential"].clients()
 
             if not flavor:
-                valid_result, flavor = self._get_validated_flavor(
+                flavor = self._get_validated_flavor(
                     config, clients, self.param_name)
-                if not valid_result.is_valid:
-                    return valid_result
 
-            valid_result, image = self._get_validated_image(
-                config, clients, self.image_name)
-
-            if not image and not self.fail_on_404_image:
-                return
-
-            if not valid_result.is_valid:
-                return valid_result
+            try:
+                image = self._get_validated_image(config, clients,
+                                                  self.image_name)
+            except validation.ValidationError:
+                if not self.fail_on_404_image:
+                    return
+                raise
 
             if flavor.ram < image["min_ram"]:
-                message = ("The memory size for flavor '%s' is too small "
-                           "for requested image '%s'") % (flavor.id,
-                                                          image["id"])
-                return self.fail(message)
+                self.fail("The memory size for flavor '%s' is too small "
+                          "for requested image '%s'." %
+                          (flavor.id, image["id"]))
 
             if flavor.disk and self.validate_disk:
-                if image["size"] > flavor.disk * (1024 ** 3):
-                    message = ("The disk size for flavor '%s' is too small "
-                               "for requested image '%s'") % (flavor.id,
-                                                              image["id"])
-                    return self.fail(message)
+                if flavor.disk * (1024 ** 3) < image["size"]:
+                    self.fail("The disk size for flavor '%s' is too small "
+                              "for requested image '%s'." %
+                              (flavor.id, image["id"]))
 
-                if image["min_disk"] > flavor.disk:
-                    message = ("The minimal disk size for flavor '%s' is "
-                               "too small for requested "
-                               "image '%s'") % (flavor.id, image["id"])
-                    return self.fail(message)
+                if flavor.disk < image["min_disk"]:
+                    self.fail("The minimal disk size for flavor '%s' is "
+                              "too small for requested image '%s'." %
+                              (flavor.id, image["id"]))
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -345,10 +329,9 @@ class RequiredClientsValidator(validation.Validator):
             try:
                 getattr(clients, client_component)()
             except ImportError:
-                msg = ("Client for {0} is not installed. To install it run "
-                       "`pip install python-{0}client`").format(
-                    client_component)
-                return validation.ValidationResult(False, msg)
+                self.fail(
+                    "Client for {0} is not installed. To install it run "
+                    "`pip install python-{0}client`".format(client_component))
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
         LOG.warning("The validator 'required_clients' is deprecated since "
@@ -359,13 +342,12 @@ class RequiredClientsValidator(validation.Validator):
                     "more details).")
         if self.options.get("admin", False):
             clients = credentials["openstack"]["admin"].clients()
-            result = self._check_component(clients)
+            self._check_component(clients)
         else:
             for user in credentials["openstack"]["users"]:
                 clients = user["credential"].clients()
-                result = self._check_component(clients)
-        if result:
-            return self.fail(result.msg)
+                self._check_component(clients)
+                break
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -411,7 +393,7 @@ class RequiredServicesValidator(validation.Validator):
             if (service not in available_services and
                     not ("service_type" in service_config or
                          "service_name" in service_config)):
-                return self.fail(
+                self.fail(
                     ("'{0}' service is not available. Hint: If '{0}' "
                      "service has non-default service_type, try to"
                      " setup it via 'api_versions'"
@@ -453,19 +435,16 @@ class ValidateHeatTemplateValidator(validation.Validator):
                 return self.fail(msg.format(param_name))
             template_path = os.path.expanduser(template_path)
             if not os.path.exists(template_path):
-                msg = "No file found by the given path {}"
-                return self.fail(msg.format(template_path))
+                self.fail("No file found by the given path %s" % template_path)
             with open(template_path, "r") as f:
                 try:
                     for user in credentials["openstack"]["users"]:
                         clients = user["credential"].clients()
                         clients.heat().stacks.validate(template=f.read())
                 except Exception as e:
-                    dct = {"path": template_path,
-                           "msg": str(e)}
-                    msg = ("Heat template validation failed on %(path)s. "
-                           "Original error message: %(msg)s.") % dct
-                    return self.fail(msg)
+                    self.fail("Heat template validation failed on %(path)s. "
+                              "Original error message: %(msg)s." %
+                              {"path": template_path, "msg": str(e)})
 
 
 @validation.add("required_platform", platform="openstack", admin=True)
@@ -491,8 +470,7 @@ class RequiredCinderServicesValidator(validation.Validator):
                     and service.state == six.text_type("up")):
                 return
 
-        msg = ("%s service is not available") % self.services
-        return self.fail(msg)
+        self.fail("%s service is not available" % self.services)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -520,27 +498,27 @@ class RequiredAPIVersionsValidator(validation.Validator):
             if self.component == "keystone":
                 if "2.0" not in versions and hasattr(
                         clients.keystone(), "tenants"):
-                    return self.fail(msg % {"component": self.component,
-                                            "version": versions_str,
-                                            "found_version": "2.0"})
+                    self.fail(msg % {"component": self.component,
+                                     "version": versions_str,
+                                     "found_version": "2.0"})
                 if "3" not in versions and hasattr(
                         clients.keystone(), "projects"):
-                    return self.fail(msg % {"component": self.component,
-                                            "version": versions_str,
-                                            "found_version": "3"})
+                    self.fail(msg % {"component": self.component,
+                                     "version": versions_str,
+                                     "found_version": "3"})
             else:
-                used_version = config.get(
-                    "context", {}).get(
-                    "api_versions@openstack", {}).get(
-                    self.component, {}).get(
-                    "version", getattr(
-                        clients, self.component).choose_version())
+                av_ctx = config.get("context", {}).get(
+                    "api_versions@openstack", {})
+                default_version = getattr(clients,
+                                          self.component).choose_version()
+                used_version = av_ctx.get(self.component, {}).get(
+                    "version", default_version)
                 if not used_version:
-                    return self.fail("Unable to determine the API version.")
+                    self.fail("Unable to determine the API version.")
                 if str(used_version) not in versions:
-                    return self.fail(msg % {"component": self.component,
-                                            "version": versions_str,
-                                            "found_version": used_version})
+                    self.fail(msg % {"component": self.component,
+                                     "version": versions_str,
+                                     "found_version": used_version})
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -570,19 +548,19 @@ class VolumeTypeExistsValidator(validation.Validator):
                 clients = user["credential"].clients()
                 vt_names = [vt.name for vt in
                             clients.cinder().volume_types.list()]
-                volume_types_ctx = config.get(
-                    "context", {}).get("volume_types", [])
-                if volume_type not in vt_names + volume_types_ctx:
-                    msg = ("Specified volume type {} not found for user {}. "
-                           "List of available types: {}")
-                    return self.fail(msg.format(volume_type, user, vt_names))
+                ctx = config.get("context", {}).get("volume_types", [])
+                vt_names += ctx
+                if volume_type not in vt_names:
+                    self.fail("Specified volume type %s not found for user %s."
+                              " List of available types: %s" %
+                              (volume_type, user, vt_names))
         else:
-            msg = ("The parameter '{}' is required and should not be empty.")
-            return self.fail(msg.format(self.param))
+            self.fail("The parameter '%s' is required and should not be empty."
+                      % self.param)
 
 
 @validation.configure(name="workbook_contains_workflow", platform="openstack")
-class WorkbookContainsWorkflowValidator(validation.Validator):
+class WorkbookContainsWorkflowValidator(validators.FileExistsValidator):
 
     def __init__(self, param_name, workflow_name):
         """Validate that workflow exist in workbook when workflow is passed
@@ -590,24 +568,20 @@ class WorkbookContainsWorkflowValidator(validation.Validator):
         :param param_name: parameter containing the workbook definition
         :param workflow_name: parameter containing the workflow name
         """
-        super(WorkbookContainsWorkflowValidator, self).__init__()
-        self.param_name = param_name
-        self.workflow_name = workflow_name
+        super(WorkbookContainsWorkflowValidator, self).__init__(workflow_name)
+        self.workbook = param_name
+        self.workflow = workflow_name
 
     def validate(self, config, credentials, plugin_cls, plugin_cfg):
-        wf_name = config.get("args", {}).get(self.param_name)
+        wf_name = config.get("args", {}).get(self.workflow)
         if wf_name:
-            wb_path = config.get("args", {}).get(self.param_name)
+            wb_path = config.get("args", {}).get(self.workbook)
             wb_path = os.path.expanduser(wb_path)
-            file_result = validators.ValidatorUtils._file_access_ok(
-                config.get("args", {}).get(self.param_name),
-                os.R_OK, self.param_name)
-            if not file_result.is_valid:
-                return file_result
+            self._file_access_ok(wb_path, mode=os.R_OK,
+                                 param_name=self.workbook)
 
             with open(wb_path, "r") as wb_def:
                 wb_def = yaml.safe_load(wb_def)
                 if wf_name not in wb_def["workflows"]:
-                    self.fail("workflow '{}' not found "
-                              "in the definition '{}'".format(wf_name,
-                                                              wb_def))
+                    self.fail("workflow '%s' not found in the definition '%s'"
+                              % (wf_name, wb_def))

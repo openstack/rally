@@ -51,8 +51,7 @@ class ValidationUtilsTestCase(test.TestCase):
         fake_admin = fakes.fake_credential()
         credentials = {"openstack": {"admin": fake_admin, "users": []}}
         result = validator_inst.validate(credentials, {}, None, None)
-        self.assertIsInstance(result, common_validation.ValidationResult)
-        self.assertTrue(result.is_valid)
+        self.assertIsNone(result)
 
         validator_func.assert_called_once_with(
             {}, None, mock.ANY, "a", "b", "c", d=1)
@@ -80,8 +79,7 @@ class ValidationUtilsTestCase(test.TestCase):
         users = [{"credential": fake_users1}, {"credential": fake_users2}]
         credentials = {"openstack": {"admin": fake_admin, "users": users}}
         result = validator_inst.validate(credentials, {}, None, None)
-        self.assertIsInstance(result, common_validation.ValidationResult)
-        self.assertTrue(result.is_valid)
+        self.assertIsNone(result)
 
         fake_users1.clients.assert_called_once_with()
         fake_users2.clients.assert_called_once_with()
@@ -99,7 +97,7 @@ class ValidationUtilsTestCase(test.TestCase):
     def test_old_validator_users_error(self):
 
         validator_func = mock.Mock()
-        validator_func.return_value = common_validation.ValidationResult(False)
+        validator_func.return_value = validation.ValidationResult(False)
 
         validator = validation.validator(validator_func)
 
@@ -115,9 +113,9 @@ class ValidationUtilsTestCase(test.TestCase):
         fake_users2 = fakes.fake_credential()
         users = [{"credential": fake_users1}, {"credential": fake_users2}]
         credentials = {"openstack": {"admin": fake_admin, "users": users}}
-        result = validator_inst.validate(credentials, {}, None, None)
-        self.assertIsInstance(result, common_validation.ValidationResult)
-        self.assertFalse(result.is_valid)
+        self.assertRaises(
+            common_validation.ValidationError,
+            validator_inst.validate, credentials, {}, None, None)
 
         fake_users1.clients.assert_called_once_with()
         fake_users2.clients.assert_called_once_with()
@@ -160,8 +158,7 @@ class ValidationUtilsTestCase(test.TestCase):
         validator(*args, **kwargs)(TempPlugin)
 
         def wrap_validator(config):
-            return (Foo.validate(name, {}, config, {}) or
-                    [common_validation.ValidationResult(True)])
+            return (Foo.validate(name, {}, config, {}) or [])
 
         return wrap_validator
 
@@ -169,12 +166,13 @@ class ValidationUtilsTestCase(test.TestCase):
         validator = self._unwrap_validator(
             validation.validate_share_proto)
         res = validator({"args": {"share_proto": "GLUSTERFS"}})
-        self.assertEqual(1, len(res))
-        self.assertTrue(res[0].is_valid, res[0].msg)
+        self.assertEqual(0, len(res))
 
         res = validator({"args": {"share_proto": "fake"}})
         self.assertEqual(1, len(res))
-        self.assertFalse(res[0].is_valid)
+        self.assertEqual("share_proto is fake which is not a valid value from "
+                         "['nfs', 'cifs', 'glusterfs', 'hdfs', 'cephfs']",
+                         res[0])
 
     @mock.patch("rally.common.yamlutils.safe_load")
     @mock.patch("rally.plugins.openstack.validators.os.access")
@@ -206,9 +204,17 @@ class ValidationUtilsTestCase(test.TestCase):
             }
         }
 
-        result = validator(context)
-        self.assertEqual(1, len(result))
-        self.assertTrue(result[0].is_valid, result[0].msg)
+        validator(context)
         self.assertEqual(1, mock_open.called)
         self.assertEqual(1, mock_access.called)
         self.assertEqual(1, mock_safe_load.called)
+
+    def test_validation_result(self):
+        self.assertEqual("validation success",
+                         str(validation.ValidationResult(True)))
+        self.assertEqual("my msg",
+                         str(validation.ValidationResult(False, "my msg")))
+        self.assertEqual("---------- Exception in validator ----------\ntb\n",
+                         str(validation.ValidationResult(False, "my msg",
+                                                         etype=Exception,
+                                                         etraceback="tb\n")))

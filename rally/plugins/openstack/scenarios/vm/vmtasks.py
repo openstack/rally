@@ -39,7 +39,7 @@ LOG = logging.getLogger(__name__)
 
 # TODO(andreykurilin): replace by advanced jsonschema(lollipop?!) someday
 @validation.configure(name="valid_command", platform="openstack")
-class ValidCommandValidator(validation.Validator):
+class ValidCommandValidator(validators.FileExistsValidator):
 
     def __init__(self, param_name, required=True):
         """Checks that parameter is a proper command-specifying dictionary.
@@ -52,9 +52,8 @@ class ValidCommandValidator(validation.Validator):
         :param required: Boolean indicating that the command dictionary is
             required
         """
-        super(ValidCommandValidator, self).__init__()
+        super(ValidCommandValidator, self).__init__(param_name=param_name)
 
-        self.param_name = param_name
         self.required = required
 
     def check_command_dict(self, command):
@@ -64,7 +63,7 @@ class ValidCommandValidator(validation.Validator):
         """
 
         if not isinstance(command, dict):
-            raise ValueError("Command must be a dictionary")
+            self.fail("Command must be a dictionary")
 
         # NOTE(pboldin): Here we check for the values not for presence of the
         # keys due to template-driven configuration generation that can leave
@@ -73,7 +72,7 @@ class ValidCommandValidator(validation.Validator):
             script_file = command.get("script_file")
             if script_file:
                 if "script_inline" in command:
-                    raise ValueError(
+                    self.fail(
                         "Exactly one of script_inline or script_file with "
                         "interpreter is expected: %r" % command)
             # User tries to upload a shell? Make sure it is same as interpreter
@@ -83,12 +82,12 @@ class ValidCommandValidator(validation.Validator):
                            else interpreter)
             if (command.get("local_path") and
                     command.get("remote_path") != interpreter):
-                raise ValueError(
+                self.fail(
                     "When uploading an interpreter its path should be as well"
                     " specified as the `remote_path' string: %r" % command)
         elif not command.get("remote_path"):
             # No interpreter and no remote command to execute is given
-            raise ValueError(
+            self.fail(
                 "Supplied dict specifies no command to execute, either "
                 "interpreter or remote_path is required: %r" % command)
 
@@ -96,7 +95,7 @@ class ValidCommandValidator(validation.Validator):
                                           "interpreter", "remote_path",
                                           "local_path", "command_args"}
         if unexpected_keys:
-            raise ValueError(
+            self.fail(
                 "Unexpected command parameters: %s" % ", ".join(
                     unexpected_keys))
 
@@ -112,7 +111,7 @@ class ValidCommandValidator(validation.Validator):
 
         for key in "script_file", "local_path":
             if command.get(key):
-                return validators.ValidatorUtils._file_access_ok(
+                self._file_access_ok(
                     filename=command[key], mode=os.R_OK,
                     param_name=self.param_name, required=self.required)
 

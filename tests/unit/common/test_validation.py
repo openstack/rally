@@ -38,16 +38,6 @@ class ValidationHelpersTestCase(test.TestCase):
         self.assertEqual("Cannot add a validator to RequiredPlatformValidator",
                          str(exc))
 
-    def test_validation_result(self):
-        self.assertEqual("validation success",
-                         str(validation.ValidationResult(True)))
-        self.assertEqual("my msg",
-                         str(validation.ValidationResult(False, "my msg")))
-        self.assertEqual("---------- Exception in validator ----------\ntb\n",
-                         str(validation.ValidationResult(False, "my msg",
-                                                         etype=Exception,
-                                                         etraceback="tb\n")))
-
 
 @validation.add(name="required_platform", platform="foo", admin=True)
 @plugin.configure(name="dummy_validator")
@@ -89,9 +79,7 @@ class ValidatorTestCase(test.TestCase):
         result = DummyPluginBase.validate(
             name="dummy_plugin", credentials=creds, config={}, plugin_cfg={})
         self.assertEqual(1, len(result))
-        self.assertFalse(result[0].is_valid)
-        self.assertIn("foo", result[0].msg)
-        self.assertEqual("Exception", result[0].etype)
+        self.assertIn("raise Exception(\"foo\")", result[0])
 
         DummyPlugin.unregister()
 
@@ -103,15 +91,27 @@ class ValidatorTestCase(test.TestCase):
 
         result = DummyPluginBase.validate("dummy_plugin", None, None, None)
         self.assertEqual(1, len(result))
-        self.assertFalse(result[0].is_valid)
         self.assertIn("There is no DummyPluginBase plugin "
-                      "with name: 'dummy_plugin'", result[0].msg)
+                      "with name: 'dummy_plugin'", result[0])
 
 
 @ddt.ddt
 class RequiredPlatformValidatorTestCase(test.TestCase):
 
+    @ddt.data(
+        {"kwargs": {"platform": "foo", "admin": True},
+         "credentials": {"foo": {"admin": "fake_admin"}}},
+        {"kwargs": {"platform": "foo", "admin": True, "users": True},
+         "credentials": {"foo": {"admin": "fake_admin"}}},
+        {"kwargs": {"platform": "foo", "admin": True, "users": True},
+         "credentials": {"foo": {"admin": "fake_admin",
+                                 "users": ["fake_user"]}}}
+    )
     @ddt.unpack
+    def test_validator(self, kwargs, credentials):
+        validator = validation.RequiredPlatformValidator(**kwargs)
+        validator.validate(credentials, None, None, None)
+
     @ddt.data(
         {"kwargs": {"platform": "foo"},
          "credentials": {},
@@ -119,24 +119,17 @@ class RequiredPlatformValidatorTestCase(test.TestCase):
         {"kwargs": {"platform": "foo", "admin": True},
          "credentials": None,
          "error_msg": "No admin credential for foo"},
-        {"kwargs": {"platform": "foo", "admin": True},
-         "credentials": {"foo": {"admin": "fake_admin"}}},
-        {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "credentials": {"foo": {"admin": "fake_admin"}}},
         {"kwargs": {"platform": "foo", "admin": True, "users": True},
          "credentials": {"foo": {"users": ["fake_user"]}},
          "error_msg": "No admin credential for foo"},
         {"kwargs": {"platform": "foo", "users": True},
          "credentials": {"foo": {}},
-         "error_msg": "No user credentials for foo"},
-        {"kwargs": {"platform": "foo", "admin": True, "users": True},
-         "credentials": {"foo": {"admin": "fake_admin",
-                                 "users": ["fake_user"]}}}
+         "error_msg": "No user credentials for foo"}
     )
-    def test_validator(self, kwargs, credentials, error_msg=False):
+    @ddt.unpack
+    def test_validator_failed(self, kwargs, credentials, error_msg=False):
         validator = validation.RequiredPlatformValidator(**kwargs)
-        result = validator.validate(credentials, None, None, None)
-        if error_msg:
-            self.assertEqual(error_msg, result.msg)
-        else:
-            self.assertIsNone(result)
+        e = self.assertRaises(
+            validation.ValidationError,
+            validator.validate, credentials, None, None, None)
+        self.assertEqual(error_msg, e.message)
