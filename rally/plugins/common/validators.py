@@ -230,7 +230,7 @@ class RestrictedParametersValidator(validation.Validator):
             self.params = [param_names]
         self.subdict = subdict
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         restricted_params = []
         for param_name in self.params:
             args = config.get("args", {})
@@ -268,7 +268,7 @@ class RequiredContextsValidator(validation.Validator):
             self.contexts = [contexts]
             self.contexts.extend(args)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         missing_contexts = []
         context = config.get("context", {})
 
@@ -300,7 +300,7 @@ class RequiredParamOrContextValidator(validation.Validator):
         self.param_name = param_name
         self.ctx_name = ctx_name
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         msg = ("You should specify either scenario argument {} or"
                " use context {}.").format(self.param_name,
                                           self.ctx_name)
@@ -349,7 +349,7 @@ class FileExistsValidator(validation.Validator):
                                                     "mode": mode,
                                                     "param_name": param_name})
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         self._file_access_ok(config.get("args", {}).get(self.param_name),
                              self.mode, self.param_name, self.required)

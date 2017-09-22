@@ -80,7 +80,7 @@ class ImageExistsValidatorTestCase(test.TestCase):
         if err_msg:
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                validator.validate, self.config, self.credentials, None, None)
+                validator.validate, self.credentials, self.config, None, None)
             self.assertEqual(err_msg, e.message)
         else:
             result = validator.validate(self.config, self.credentials, None,
@@ -93,7 +93,7 @@ class ImageExistsValidatorTestCase(test.TestCase):
             "images": {
                 "image_name": "foo"}}}
 
-        self.validator.validate(config, self.credentials, None, None)
+        self.validator.validate(self.credentials, config, None, None)
 
     @mock.patch("%s.openstack_types.GlanceImage.transform" % PATH,
                 return_value="image_id")
@@ -107,7 +107,7 @@ class ImageExistsValidatorTestCase(test.TestCase):
             "openstack"]["users"][0].get.return_value.clients.return_value
         clients.glance().images.get = mock.Mock()
 
-        result = self.validator.validate(config, self.credentials, None, None)
+        result = self.validator.validate(self.credentials, config, None, None)
         self.assertIsNone(result)
 
         mock_glance_image_transform.assert_called_once_with(
@@ -121,7 +121,7 @@ class ImageExistsValidatorTestCase(test.TestCase):
 
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                self.validator.validate, config, self.credentials, None, None)
+                self.validator.validate, self.credentials, config, None, None)
 
             self.assertEqual("Image 'fake_image' not found", e.message)
 
@@ -163,13 +163,13 @@ class ExternalNetworkExistsValidatorTestCase(test.TestCase):
         if err_msg:
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                self.validator.validate, foo_conf, self.credentials,
+                self.validator.validate, self.credentials, foo_conf,
                 None, None)
             self.assertEqual(
                 err_msg.format(user["credential"].username, net1, net2),
                 e.message)
         else:
-            result = self.validator.validate(foo_conf, self.credentials,
+            result = self.validator.validate(self.credentials, foo_conf,
                                              None, None)
             self.assertIsNone(result, "Unexpected result '%s'" % result)
 
@@ -191,7 +191,7 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
         clients.neutron().list_extensions.return_value = {
             "extensions": [{"alias": "existing_extension"}]}
 
-        validator.validate({}, self.credentials, None, None)
+        validator.validate(self.credentials, {}, None, None)
 
     def test_validator_failed(self):
         err_msg = "Neutron extension absent_extension is not configured"
@@ -205,7 +205,7 @@ class RequiredNeutronExtensionsValidatorTestCase(test.TestCase):
 
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None)
+            validator.validate, self.credentials, {}, None, None)
         self.assertEqual(err_msg, e.message)
 
 
@@ -293,11 +293,12 @@ class FlavorExistsValidatorTestCase(test.TestCase):
         creds = mock.MagicMock()
         actual_e = self.assertRaises(
             validators.validation.ValidationError,
-            self.validator.validate, config, creds, None, None)
+            self.validator.validate, creds, config, None, None)
         self.assertEqual(expected_e, actual_e)
         self.validator._get_validated_flavor.assert_called_once_with(
-            config, creds["openstack"]["users"][0]["credential"].clients(),
-            self.validator.param_name)
+            config=config,
+            clients=creds["openstack"]["users"][0]["credential"].clients(),
+            param_name=self.validator.param_name)
 
 
 @ddt.ddt
@@ -338,12 +339,12 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         # case 1: no image, but it is ok, since fail_on_404_image is False
         validator._get_validated_image = mock.Mock(
             side_effect=validators.validation.ValidationError("!!!"))
-        validator.validate({}, self.credentials, None, None)
+        validator.validate(self.credentials, {}, None, None)
 
         # case 2: there is an image
         validator._get_validated_image = mock.Mock(
             return_value=fake_image)
-        validator.validate({}, self.credentials, None, None)
+        validator.validate(self.credentials, {}, None, None)
 
         # case 3: check caching of the flavor
         user = self.credentials["openstack"]["users"][0]
@@ -351,7 +352,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         validator._get_validated_image.reset_mock()
         validator._get_validated_flavor.reset_mock()
 
-        validator.validate({}, self.credentials, None, None)
+        validator.validate(self.credentials, {}, None, None)
 
         self.assertEqual(1, validator._get_validated_flavor.call_count)
         self.assertEqual(2, validator._get_validated_image.call_count)
@@ -377,7 +378,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
             side_effect=expected_e)
         actual_e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
         self.assertEqual(expected_e, actual_e)
 
@@ -386,7 +387,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
         validator._get_validated_flavor.side_effect = expected_e
         actual_e = self.assertRaises(
             KeyError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
         self.assertEqual(expected_e, actual_e)
 
@@ -399,7 +400,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
             return_value=fake_image)
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
         self.assertEqual(
             "The memory size for flavor 'flavor_id' is too small for "
@@ -413,7 +414,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
             return_value=fake_image)
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
         self.assertEqual(
             "The disk size for flavor 'flavor_id' is too small for "
@@ -428,7 +429,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
             return_value=fake_image)
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
         self.assertEqual(
             "The minimal disk size for flavor 'flavor_id' is too small for "
@@ -448,7 +449,7 @@ class ImageValidOnFlavorValidatorTestCase(test.TestCase):
 
         actual_e = self.assertRaises(
             KeyError,
-            validator.validate, {}, self.credentials, None, None
+            validator.validate, self.credentials, {}, None, None
         )
 
         self.assertEqual(expected_e, actual_e)
@@ -553,13 +554,13 @@ class RequiredClientsValidatorTestCase(test.TestCase):
         clients = self.credentials[
             "openstack"]["users"][0]["credential"].clients.return_value
 
-        result = validator.validate(self.config, self.credentials, None, None)
+        result = validator.validate(self.credentials, self.config, None, None)
         self.assertIsNone(result)
 
         clients.nova.side_effect = ImportError
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual("Client for nova is not installed. To install it "
                          "run `pip install python-novaclient`", e.message)
 
@@ -569,13 +570,13 @@ class RequiredClientsValidatorTestCase(test.TestCase):
                                                         admin=True)
         clients = self.credentials[
             "openstack"]["admin"].clients.return_value
-        result = validator.validate(self.config, self.credentials, None, None)
+        result = validator.validate(self.credentials, self.config, None, None)
         self.assertIsNone(result)
 
         clients.keystone.side_effect = ImportError
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual("Client for keystone is not installed. To install it "
                          "run `pip install python-keystoneclient`", e.message)
 
@@ -603,19 +604,19 @@ class RequiredServicesValidatorTestCase(test.TestCase):
             consts.Service.NOVA_NET]
         fake_service = mock.Mock(binary="nova-network", status="enabled")
         clients.nova.services.list.return_value = [fake_service]
-        result = self.validator.validate(self.config, self.credentials,
+        result = self.validator.validate(self.credentials, self.config,
                                          None, None)
         self.assertIsNone(result)
 
         fake_service = mock.Mock(binary="keystone", status="enabled")
         clients.nova.services.list.return_value = [fake_service]
-        result = self.validator.validate(self.config, self.credentials,
+        result = self.validator.validate(self.credentials, self.config,
                                          None, None)
         self.assertIsNone(result)
 
         fake_service = mock.Mock(binary="nova-network", status="disabled")
         clients.nova.services.list.return_value = [fake_service]
-        result = self.validator.validate(self.config, self.credentials,
+        result = self.validator.validate(self.credentials, self.config,
                                          None, None)
         self.assertIsNone(result)
 
@@ -635,7 +636,7 @@ class RequiredServicesValidatorTestCase(test.TestCase):
 
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, {}, self.credentials, None, None)
+            validator.validate, self.credentials, {}, None, None)
         expected_msg = ("'{0}' service is not available. Hint: If '{0}'"
                         " service has non-default service_type, try to setup"
                         " it via 'api_versions' context.").format("lol")
@@ -674,7 +675,7 @@ class ValidateHeatTemplateValidatorTestCase(test.TestCase):
         context = {"args": {"template_path1": "fake_path1",
                             "template_path2": "fake_path2"}}
         if not exception_msg:
-            result = self.validator.validate(context, self.credentials, None,
+            result = self.validator.validate(self.credentials, context, None,
                                              None)
 
             heat_validator.assert_has_calls([
@@ -689,7 +690,7 @@ class ValidateHeatTemplateValidatorTestCase(test.TestCase):
         else:
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                self.validator.validate, context, self.credentials, None, None)
+                self.validator.validate, self.credentials, context, None, None)
             heat_validator.assert_called_once_with(
                 template="fake_template1")
             self.assertEqual(
@@ -702,7 +703,7 @@ class ValidateHeatTemplateValidatorTestCase(test.TestCase):
 
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
 
         expected_msg = ("Path to heat template is not specified. Its needed "
                         "for heat template validation. Please check the "
@@ -716,7 +717,7 @@ class ValidateHeatTemplateValidatorTestCase(test.TestCase):
                             "template_path2": "fake_path2"}}
         e = self.assertRaises(
             validators.validation.ValidationError,
-            self.validator.validate, context, self.credentials, None, None)
+            self.validator.validate, self.credentials, context, None, None)
         expected_msg = "No file found by the given path fake_path1"
         self.assertEqual(expected_msg, e.message)
 
@@ -735,13 +736,13 @@ class RequiredCinderServicesValidatorTestCase(test.TestCase):
         fake_service = mock.Mock(binary="cinder_service", state="up")
         clients = self.credentials["openstack"]["admin"].clients()
         clients.cinder().services.list.return_value = [fake_service]
-        result = validator.validate(self.config, self.credentials, None, None)
+        result = validator.validate(self.credentials, self.config, None, None)
         self.assertIsNone(result)
 
         fake_service.state = "down"
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual("cinder_service service is not available",
                          e.message)
 
@@ -774,10 +775,10 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
             "credential"].clients()
 
         clients.keystone.return_value = self._get_keystone_v3_mock_client()
-        validator.validate(self.config, self.credentials, None, None)
+        validator.validate(self.credentials, self.config, None, None)
 
         clients.keystone.return_value = self._get_keystone_v2_mock_client()
-        validator.validate(self.config, self.credentials, None, None)
+        validator.validate(self.credentials, self.config, None, None)
 
     def test_validate_with_keystone_v2(self):
         validator = validators.RequiredAPIVersionsValidator("keystone",
@@ -786,12 +787,12 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         clients = self.credentials["openstack"]["users"][0][
             "credential"].clients()
         clients.keystone.return_value = self._get_keystone_v2_mock_client()
-        validator.validate(self.config, self.credentials, None, None)
+        validator.validate(self.credentials, self.config, None, None)
 
         clients.keystone.return_value = self._get_keystone_v3_mock_client()
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual("Task was designed to be used with keystone V2.0, "
                          "but V3 is selected.", e.message)
 
@@ -802,12 +803,12 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         clients = self.credentials["openstack"]["users"][0][
             "credential"].clients()
         clients.keystone.return_value = self._get_keystone_v3_mock_client()
-        validator.validate(self.config, self.credentials, None, None)
+        validator.validate(self.credentials, self.config, None, None)
 
         clients.keystone.return_value = self._get_keystone_v2_mock_client()
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual("Task was designed to be used with keystone V3, "
                          "but V2.0 is selected.", e.message)
 
@@ -837,10 +838,10 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         if err_msg:
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                validator.validate, config, self.credentials, None, None)
+                validator.validate, self.credentials, config, None, None)
             self.assertEqual(err_msg, e.message)
         else:
-            result = validator.validate(config, self.credentials, None, None)
+            result = validator.validate(self.credentials, config, None, None)
             self.assertIsNone(result)
 
     @ddt.unpack
@@ -857,10 +858,10 @@ class RequiredAPIVersionsValidatorTestCase(test.TestCase):
         if err_msg:
             e = self.assertRaises(
                 validators.validation.ValidationError,
-                validator.validate, config, self.credentials, None, None)
+                validator.validate, self.credentials, config, None, None)
             self.assertEqual(err_msg, e.message)
         else:
-            result = validator.validate(config, self.credentials, None, None)
+            result = validator.validate(self.credentials, config, None, None)
             self.assertIsNone(result)
 
 
@@ -882,7 +883,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
 
         clients.cinder().volume_types.list.return_value = [mock.MagicMock()]
 
-        result = validator.validate(self.config, self.credentials, None, None)
+        result = validator.validate(self.credentials, self.config, None, None)
         self.assertIsNone(result, "Unexpected result")
 
     def test_validator_without_ctx_failed(self):
@@ -896,7 +897,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
 
         e = self.assertRaises(
             validators.validation.ValidationError,
-            validator.validate, self.config, self.credentials, None, None)
+            validator.validate, self.credentials, self.config, None, None)
         self.assertEqual(
             "The parameter 'fake_param' is required and should not be empty.",
             e.message)
@@ -907,7 +908,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
         clients.cinder().volume_types.list.return_value = []
         ctx = {"args": {"volume_type": "fake_type"},
                "context": {"volume_types": ["fake_type"]}}
-        result = self.validator.validate(ctx, self.credentials, None, None)
+        result = self.validator.validate(self.credentials, ctx, None, None)
 
         self.assertIsNone(result)
 
@@ -919,7 +920,7 @@ class VolumeTypeExistsValidatorTestCase(test.TestCase):
                "context": {"volume_types": ["fake_type_2"]}}
         e = self.assertRaises(
             validators.validation.ValidationError,
-            self.validator.validate, ctx, self.credentials, None, None)
+            self.validator.validate, self.credentials, ctx, None, None)
 
         err_msg = ("Specified volume type fake_type not found for user {}. "
                    "List of available types: ['fake_type_2']")
@@ -963,7 +964,7 @@ class WorkbookContainsWorkflowValidatorTestCase(test.TestCase):
             }
         }
 
-        result = validator.validate(context, None, None, None)
+        result = validator.validate(None, context, None, None)
         self.assertIsNone(result)
 
         self.assertEqual(1, mock_open.called)

@@ -48,7 +48,7 @@ class ImageExistsValidator(validation.Validator):
         self.param_name = param_name
         self.nullable = nullable
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         image_args = config.get("args", {}).get(self.param_name)
 
@@ -91,7 +91,7 @@ class ExternalNetworkExistsValidator(validation.Validator):
         super(ExternalNetworkExistsValidator, self).__init__()
         self.param_name = param_name
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         ext_network = config.get("args", {}).get(self.param_name)
         if not ext_network:
@@ -139,7 +139,7 @@ class RequiredNeutronExtensionsValidator(validation.Validator):
             self.req_ext = [extensions]
             self.req_ext.extend(args)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         clients = credentials["openstack"]["users"][0]["credential"].clients()
         extensions = clients.neutron().list_extensions()["extensions"]
         aliases = [x["alias"] for x in extensions]
@@ -190,12 +190,14 @@ class FlavorExistsValidator(validation.Validator):
                 pass
             self.fail("Flavor '%s' not found" % flavor_value)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         # flavors do not depend on user or tenant, so checking for one user
         # should be enough
         user = credentials["openstack"]["users"][0]
         clients = user["credential"].clients()
-        self._get_validated_flavor(config, clients, self.param_name)
+        self._get_validated_flavor(config=config,
+                                   clients=clients,
+                                   param_name=self.param_name)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -263,7 +265,7 @@ class ImageValidOnFlavorValidator(FlavorExistsValidator):
         except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
             self.fail("Image '%s' not found" % image_args)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         flavor = None
         for user in credentials["openstack"]["users"]:
@@ -333,7 +335,7 @@ class RequiredClientsValidator(validation.Validator):
                     "Client for {0} is not installed. To install it run "
                     "`pip install python-{0}client`".format(client_component))
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         LOG.warning("The validator 'required_clients' is deprecated since "
                     "Rally 0.10.0. If you are interested in it, please "
                     "contact Rally team via E-mail, IRC or Gitter (see "
@@ -374,7 +376,7 @@ class RequiredServicesValidator(validation.Validator):
             self.services = [services]
             self.services.extend(args)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         creds = (credentials["openstack"].get("admin")
                  or credentials["openstack"]["users"][0]["credential"])
 
@@ -423,7 +425,7 @@ class ValidateHeatTemplateValidator(validation.Validator):
             self.params = [params]
             self.params.extend(args)
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         for param_name in self.params:
             template_path = config.get("args", {}).get(param_name)
@@ -462,7 +464,7 @@ class RequiredCinderServicesValidator(validation.Validator):
         super(RequiredCinderServicesValidator, self).__init__()
         self.services = services
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
 
         clients = credentials["openstack"]["admin"].clients().cinder()
         for service in clients.services.list():
@@ -487,7 +489,7 @@ class RequiredAPIVersionsValidator(validation.Validator):
         self.component = component
         self.versions = versions
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         versions = [str(v) for v in self.versions]
         versions_str = ", ".join(versions)
         msg = ("Task was designed to be used with %(component)s "
@@ -537,7 +539,7 @@ class VolumeTypeExistsValidator(validation.Validator):
         self.param = param_name
         self.nullable = nullable
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         volume_type = config.get("args", {}).get(self.param, False)
 
         if not volume_type and self.nullable:
@@ -572,7 +574,7 @@ class WorkbookContainsWorkflowValidator(validators.FileExistsValidator):
         self.workbook = workbook_param
         self.workflow = workflow_param
 
-    def validate(self, config, credentials, plugin_cls, plugin_cfg):
+    def validate(self, credentials, config, plugin_cls, plugin_cfg):
         wf_name = config.get("args", {}).get(self.workflow)
         if wf_name:
             wb_path = config.get("args", {}).get(self.workbook)
