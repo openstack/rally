@@ -46,18 +46,18 @@ class VerifierSetupFailure(exceptions.RallyException):
     msg_fmt = "Failed to set up verifier '%(verifier)s': %(message)s"
 
 
-def configure(name, namespace="default", default_repo=None,
+def configure(name, platform="default", default_repo=None,
               default_version=None, context=None):
     """Decorator to configure plugin's attributes.
 
     :param name: Plugin name that is used for searching purpose
-    :param namespace: Plugin namespace
+    :param platform: Plugin platform
     :param default_repo: Default repository to clone
     :param default_version: Default version to checkout
     :param context: List of contexts that should be executed for verification
     """
     def decorator(plugin_inst):
-        plugin_inst = plugin.configure(name, platform=namespace)(plugin_inst)
+        plugin_inst = plugin.configure(name, platform=platform)(plugin_inst)
         plugin_inst._meta_set("default_repo", default_repo)
         plugin_inst._meta_set("default_version", default_version)
         plugin_inst._meta_set("context", context or {})

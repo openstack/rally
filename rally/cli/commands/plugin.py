@@ -28,43 +28,45 @@ class PluginCommands(object):
     def _print_plugins_list(plugin_list):
         formatters = {
             "Name": lambda p: p.get_name(),
-            "Namespace": lambda p: p.get_platform(),
+            "Platform": lambda p: p.get_platform(),
             "Title": lambda p: p.get_info()["title"],
             "Plugin base": lambda p: p._get_base().__name__
         }
 
         cliutils.print_list(plugin_list, formatters=formatters,
                             normalize_field_names=True,
-                            fields=["Plugin base", "Name", "Namespace",
+                            fields=["Plugin base", "Name", "Platform",
                                     "Title"])
 
     @cliutils.args("--name", dest="name", type=str,
                    help="Plugin name.")
-    @cliutils.args("--namespace", dest="namespace", type=str,
-                   help="Plugin namespace.")
+    @cliutils.args("--platform", dest="platform", type=str,
+                   help="Plugin platform.")
+    @cliutils.deprecated_args("--namespace", dest="platform",
+                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
-    def show(self, api, name, namespace=None):
+    def show(self, api, name, platform=None):
         """Show detailed information about a Rally plugin."""
         name_lw = name.lower()
-        all_plugins = plugin.Plugin.get_all(platform=namespace)
+        all_plugins = plugin.Plugin.get_all(platform=platform)
         found = [p for p in all_plugins if name_lw in p.get_name().lower()]
         exact_match = [p for p in found if name_lw == p.get_name().lower()]
 
         if not found:
-            if namespace:
+            if platform:
                 print(
-                    "There is no plugin: %(name)s in %(namespace)s namespace"
-                    % {"name": name, "namespace": namespace}
+                    "Plugin %(name)s@%(platform)s not found"
+                    % {"name": name, "platform": platform}
                 )
             else:
-                print("There is no plugin: %s" % name)
+                print("Plugin %s not found at any platform" % name)
 
         elif len(found) == 1 or exact_match:
             plugin_ = found[0] if len(found) == 1 else exact_match[0]
             plugin_info = plugin_.get_info()
             print(cliutils.make_header(plugin_info["title"]))
             print("NAME\n\t%s" % plugin_info["name"])
-            print("NAMESPACE\n\t%s" % plugin_info["namespace"])
+            print("PLATFORM\n\t%s" % plugin_info["platform"])
             print("MODULE\n\t%s" % plugin_info["module"])
             if plugin_info["description"]:
                 print("DESCRIPTION\n\t", end="")
@@ -84,15 +86,17 @@ class PluginCommands(object):
         "--name", dest="name", type=str,
         help="List only plugins that match the given name.")
     @cliutils.args(
-        "--namespace", dest="namespace", type=str,
-        help="List only plugins that are in the specified namespace.")
+        "--platform", dest="platform", type=str,
+        help="List only plugins that are in the specified platform.")
+    @cliutils.deprecated_args("--namespace", dest="platform",
+                              release="0.10.0", alternative="--platform")
     @cliutils.args(
         "--plugin-base", dest="base_cls", type=str,
         help="Plugin base class.")
     @plugins.ensure_plugins_are_loaded
-    def list(self, api, name=None, namespace=None, base_cls=None):
-        """List all Rally plugins that match name and namespace."""
-        all_plugins = plugin.Plugin.get_all(platform=namespace)
+    def list(self, api, name=None, platform=None, base_cls=None):
+        """List all Rally plugins that match name and platform."""
+        all_plugins = plugin.Plugin.get_all(platform=platform)
         matched = all_plugins
         if name:
             name_lw = name.lower()
@@ -104,8 +108,8 @@ class PluginCommands(object):
                        if p._get_base().__name__ == base_cls]
 
         if not all_plugins:
-            print("There is no plugin namespace: %s" % namespace)
+            print("Platform %s not found" % platform)
         elif not matched:
-            print("There is no plugin: %s" % name)
+            print("Plugin %s not found" % name)
         else:
             self._print_plugins_list(matched)

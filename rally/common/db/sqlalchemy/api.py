@@ -651,10 +651,10 @@ class Connection(object):
             raise exceptions.ResourceNotFound(id=id)
 
     @serialize
-    def verifier_create(self, name, vtype, namespace, source, version,
+    def verifier_create(self, name, vtype, platform, source, version,
                         system_wide, extra_settings=None):
         verifier = models.Verifier()
-        properties = {"name": name, "type": vtype, "namespace": namespace,
+        properties = {"name": name, "type": vtype, "platform": platform,
                       "source": source, "extra_settings": extra_settings,
                       "version": version, "system_wide": system_wide}
         verifier.update(properties)

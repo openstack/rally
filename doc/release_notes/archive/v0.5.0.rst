@@ -126,7 +126,7 @@ Statements of plugin bases:
  - Each plugin base is unique entity;
  - Names of plugin bases can't conflict with each other;
  - Names of two or more plugins in one plugin base can't conflict with each
-   other(in case of same namespace).
+   other(in case of same platform).
  - Names of two or more plugins in different plugin base can conflict
 
 Current list of plugin bases:

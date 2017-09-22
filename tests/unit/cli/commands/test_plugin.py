@@ -78,12 +78,12 @@ class PluginCommandsTestCase(test.TestCase):
                 [self.Plugin1, self.Plugin2])
 
         self.assertEqual(
-            "+-------------+------+-----------+-------+\n"
-            "| Plugin base | Name | Namespace | Title |\n"
-            "+-------------+------+-----------+-------+\n"
-            "| Plugin      | p1   | p1_ns     | T1.   |\n"
-            "| Plugin      | p2   | p2_ns     | T2.   |\n"
-            "+-------------+------+-----------+-------+\n", out.getvalue())
+            "+-------------+------+----------+-------+\n"
+            "| Plugin base | Name | Platform | Title |\n"
+            "+-------------+------+----------+-------+\n"
+            "| Plugin      | p1   | p1_ns    | T1.   |\n"
+            "| Plugin      | p2   | p2_ns    | T2.   |\n"
+            "+-------------+------+----------+-------+\n", out.getvalue())
 
     def test_show(self):
         with utils.StdOutCapture() as out:
@@ -91,7 +91,7 @@ class PluginCommandsTestCase(test.TestCase):
             output = out.getvalue()
 
             self.assertIn("NAME\n\tp1", output)
-            self.assertIn("NAMESPACE\n\tp1_ns", output)
+            self.assertIn("PLATFORM\n\tp1_ns", output)
             self.assertIn("cli.commands.test_plugin", output)
             self.assertIn("DESCRIPTION\n\tDescription of T1", output)
             self.assertIn("PARAMETERS", output)
@@ -99,20 +99,20 @@ class PluginCommandsTestCase(test.TestCase):
     @ddt.data(
         {
             "name": "nonex",
-            "namespace": None,
-            "text": "There is no plugin: nonex\n"
+            "platform": None,
+            "text": "Plugin nonex not found at any platform\n"
         },
         {
             "name": "nonexplugin",
-            "namespace": "nonex",
-            "text": "There is no plugin: nonexplugin in nonex namespace\n"
+            "platform": "nonex",
+            "text": "Plugin nonexplugin@nonex not found\n"
         }
     )
     @ddt.unpack
-    def test_show_not_found(self, name, namespace, text):
+    def test_show_not_found(self, name, platform, text):
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().show(None, name, namespace)
-            self.assertEqual(text, out.getvalue())
+            plugin_cmd.PluginCommands().show(None, name, platform)
+            self.assertEqual(out.getvalue(), text)
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")
     def test_show_many(self, mock_plugin_commands__print_plugins_list):
@@ -130,20 +130,20 @@ class PluginCommandsTestCase(test.TestCase):
     @ddt.data(
         {
             "name": None,
-            "namespace": "nonex",
-            "text": "There is no plugin namespace: nonex\n"
+            "platform": "nonex",
+            "text": "Platform nonex not found\n"
         },
         {
             "name": "p2",
-            "namespace": "p1_ns",
-            "text": "There is no plugin: p2\n"
+            "platform": "p1_ns",
+            "text": "Plugin p2 not found\n"
         }
     )
     @ddt.unpack
-    def test_list_not_found(self, name, namespace, text):
+    def test_list_not_found(self, name, platform, text):
 
         with utils.StdOutCapture() as out:
-            plugin_cmd.PluginCommands().list(None, name, namespace)
+            plugin_cmd.PluginCommands().list(None, name, platform)
             self.assertEqual(text, out.getvalue())
 
     @mock.patch("rally.cli.commands.plugin.PluginCommands._print_plugins_list")

@@ -96,11 +96,11 @@ class TestTaskSamples(unittest.TestCase):
         original_get_credentials_for = deployment.get_credentials_for
         creds_cache = {}
 
-        def get_credentials_for(namespace):
-            if namespace not in creds_cache:
-                creds_cache[namespace] = original_get_credentials_for(
-                    namespace)
-            return creds_cache[namespace]
+        def get_credentials_for(platform):
+            if platform not in creds_cache:
+                creds_cache[platform] = original_get_credentials_for(
+                    platform)
+            return creds_cache[platform]
 
         deployment.get_credentials_for = get_credentials_for
 

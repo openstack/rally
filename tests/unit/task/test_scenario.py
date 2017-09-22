@@ -25,7 +25,7 @@ class ScenarioConfigureTestCase(test.TestCase):
 
     def test_configure(self):
 
-        @scenario.configure(name="fooscenario.name", namespace="testing")
+        @scenario.configure(name="fooscenario.name", platform="testing")
         class SomeScenario(scenario.Scenario):
             def run(self):
                 pass

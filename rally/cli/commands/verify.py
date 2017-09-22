@@ -87,17 +87,18 @@ class VerifyCommands(object):
     def _get_location(self, uuid, loc):
         return os.path.join(self._base_dir(uuid), loc)
 
-    @cliutils.args("--namespace", dest="namespace", type=str, metavar="<name>",
-                   required=False,
-                   help="Namespace name (for example, openstack).")
+    @cliutils.args("--platform", dest="platform", type=str,
+                   help="Requried patform (e.g. openstack).")
+    @cliutils.deprecated_args("--namespace", dest="platform",
+                              release="0.10.0", alternative="--platform")
     @plugins.ensure_plugins_are_loaded
-    def list_plugins(self, api, namespace=None):
+    def list_plugins(self, api, platform=None):
         """List all plugins for verifiers management."""
-        if namespace:
-            namespace = namespace.lower()
-        verifier_plugins = api.verifier.list_plugins(namespace=namespace)
+        if platform:
+            platform = platform.lower()
+        verifier_plugins = api.verifier.list_plugins(platform=platform)
 
-        fields = ["Plugin name", "Namespace", "Description"]
+        fields = ["Plugin name", "Platform", "Description"]
         if logging.is_debug():
             fields.append("Location")
 
@@ -112,11 +113,12 @@ class VerifyCommands(object):
                    help="Verifier plugin name. HINT: You can list all "
                         "verifier plugins, executing command `rally verify "
                         "list-plugins`.")
-    @cliutils.args("--namespace", dest="namespace", type=str, metavar="<name>",
-                   required=False,
-                   help="Verifier plugin namespace. Should be specified in "
+    @cliutils.args("--platform", dest="platform", type=str,
+                   help="Verifier plugin platform. Should be specified in "
                         "case of two verifier plugins with equal names but "
-                        "in different namespaces.")
+                        "in different platforms.")
+    @cliutils.deprecated_args("--namespace", dest="platform",
+                              release="0.10.0", alternative="--platform")
     @cliutils.args("--source", dest="source", type=str, required=False,
                    help="Path or URL to the repo to clone verifier from.")
     @cliutils.args("--version", dest="version", type=str, required=False,
@@ -133,12 +135,12 @@ class VerifyCommands(object):
                    help="Not to set the created verifier as the default "
                         "verifier for future operations.")
     @plugins.ensure_plugins_are_loaded
-    def create_verifier(self, api, name, vtype, namespace="", source=None,
+    def create_verifier(self, api, name, vtype, platform="", source=None,
                         version=None, system_wide=False, extra=None,
                         do_use=True):
         """Create a verifier."""
         verifier_uuid = api.verifier.create(
-            name=name, vtype=vtype, namespace=namespace, source=source,
+            name=name, vtype=vtype, platform=platform, source=source,
             version=version, system_wide=system_wide, extra_settings=extra)
 
         if do_use:
@@ -163,7 +165,7 @@ class VerifyCommands(object):
         """List all verifiers."""
         verifiers = api.verifier.list(status=status)
         if verifiers:
-            fields = ["UUID", "Name", "Type", "Namespace", "Created at",
+            fields = ["UUID", "Name", "Type", "Platform", "Created at",
                       "Updated at", "Status", "Version", "System-wide",
                       "Active"]
             cv = envutils.get_global(envutils.ENV_VERIFIER)
@@ -189,7 +191,7 @@ class VerifyCommands(object):
         """Show detailed information about a verifier."""
         verifier = api.verifier.get(verifier_id=verifier_id)
         fields = ["UUID", "Status", "Created at", "Updated at", "Active",
-                  "Name", "Description", "Type", "Namespace", "Source",
+                  "Name", "Description", "Type", "Platform", "Source",
                   "Version", "System-wide", "Extra settings", "Location",
                   "Venv location"]
         used_verifier = envutils.get_global(envutils.ENV_VERIFIER)
@@ -624,8 +626,8 @@ class VerifyCommands(object):
             "Verifier name": lambda v: "%s (UUID: %s)" % (verifier["name"],
                                                           verifier["uuid"]),
             "Verifier type": (
-                lambda v: "%s (namespace: %s)" % (verifier["type"],
-                                                  verifier["namespace"])),
+                lambda v: "%s (platform: %s)" % (verifier["type"],
+                                                 verifier["platform"])),
             "Deployment name": (
                 lambda v: "%s (UUID: %s)" % (deployment["name"],
                                              deployment["uuid"])),

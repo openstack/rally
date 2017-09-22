@@ -20,14 +20,11 @@ from tests.functional import utils
 
 class PluginTestCase(unittest.TestCase):
 
-    def setUp(self):
-        super(PluginTestCase, self).setUp()
-
     def test_show_one(self):
         rally = utils.Rally()
         result = rally("plugin show Dummy.dummy")
         self.assertIn("NAME", result)
-        self.assertIn("NAMESPACE", result)
+        self.assertIn("PLATFORM", result)
         self.assertIn("Dummy.dummy", result)
         self.assertIn("MODULE", result)
 
@@ -43,18 +40,18 @@ class PluginTestCase(unittest.TestCase):
         rally = utils.Rally()
         name = "Dummy666666"
         result = rally("plugin show %s" % name)
-        self.assertIn("There is no plugin: %s" % name, result)
+        self.assertIn("Plugin %s not found" % name, result)
 
-    def test_show_not_found_in_specific_namespace(self):
+    def test_show_not_found_in_specific_platform(self):
         rally = utils.Rally()
         name = "Dummy"
-        namespace = "non_existing"
+        platform = "non_existing"
         result = rally(
-            "plugin show --name %(name)s --namespace %(namespace)s"
-            % {"name": name, "namespace": namespace})
+            "plugin show --name %(name)s --platform %(platform)s"
+            % {"name": name, "platform": platform})
         self.assertIn(
-            "There is no plugin: %(name)s in %(namespace)s namespace"
-            % {"name": name, "namespace": namespace},
+            "Plugin %(name)s@%(platform)s not found"
+            % {"name": name, "platform": platform},
             result)
 
     def test_list(self):
@@ -64,12 +61,12 @@ class PluginTestCase(unittest.TestCase):
         self.assertIn("Dummy.dummy_exception", result)
         self.assertIn("Dummy.dummy_random_fail_in_atomic", result)
 
-    def test_list_not_found_namespace(self):
+    def test_list_not_found_platform(self):
         rally = utils.Rally()
-        result = rally("plugin list --namespace some")
-        self.assertIn("There is no plugin namespace: some", result)
+        result = rally("plugin list --platform some")
+        self.assertIn("Platform some not found", result)
 
     def test_list_not_found_name(self):
         rally = utils.Rally()
         result = rally("plugin list Dummy2222")
-        self.assertIn("There is no plugin: Dummy2222", result)
+        self.assertIn("Plugin Dummy2222 not found", result)

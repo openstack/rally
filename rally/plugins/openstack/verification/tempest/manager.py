@@ -31,7 +31,7 @@ AVAILABLE_SETS = (list(consts.TempestTestSets) +
                   list(consts.TempestScenarioTestSets))
 
 
-@manager.configure(name="tempest", namespace="openstack",
+@manager.configure(name="tempest", platform="openstack",
                    default_repo="https://git.openstack.org/openstack/tempest",
                    context={"tempest": {}, "testr": {}})
 class TempestManager(testr.TestrLauncher):

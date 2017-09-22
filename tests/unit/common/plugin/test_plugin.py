@@ -65,8 +65,8 @@ class PluginModuleTestCase(test.TestCase):
         except exceptions.PluginWithSuchNameExists:
             self.assertEqual([MyPlugin], FooBase.get_all())
         else:
-            self.fail("Registration two plugins with same names in one "
-                      "namespace should raise an exception.")
+            self.fail("Registration two plugins with the same names in one "
+                      "platform should raise an exception.")
 
     def test_configure_different_bases(self):
         name = "test_configure_different_bases"

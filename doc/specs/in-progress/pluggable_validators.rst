@@ -65,8 +65,8 @@ Here is an example of base class for all pluggable validators.
     from rally.task import validation
 
 
-    def configure(name, namespace="default"):
-        return plugin.configure(name=name, namespace=namespace)
+    def configure(name, platform="default"):
+        return plugin.configure(name=name, platform=platform)
 
     @six.add_metaclass(abc.ABCMeta)
     @configure(name="base_validator")

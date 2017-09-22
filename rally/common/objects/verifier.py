@@ -45,7 +45,7 @@ class Verifier(object):
     def to_dict(self, item=None):
         data = {}
         formatters = ["created_at", "updated_at"]
-        fields = ["status", "system_wide", "uuid", "type", "namespace",
+        fields = ["status", "system_wide", "uuid", "type", "platform",
                   "name", "source", "version", "extra_settings",
                   "id", "description"]
         for field in fields:
@@ -56,10 +56,10 @@ class Verifier(object):
         return data
 
     @classmethod
-    def create(cls, name, vtype, namespace, source, version, system_wide,
+    def create(cls, name, vtype, platform, source, version, system_wide,
                extra_settings=None):
         db_entry = db.verifier_create(name=name, vtype=vtype,
-                                      namespace=namespace, source=source,
+                                      platform=platform, source=source,
                                       version=version, system_wide=system_wide,
                                       extra_settings=extra_settings)
         return cls(db_entry)
@@ -99,6 +99,6 @@ class Verifier(object):
         # lazy load manager to be able to use non-plugin related stuff without
         # loading plugins
         if not self._manager:
-            self._manager = manager.VerifierManager.get(self.type,
-                                                        self.namespace)(self)
+            self._manager = manager.VerifierManager.get(
+                self.type, self.platform)(self)
         return self._manager

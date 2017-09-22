@@ -44,23 +44,25 @@ information about them:
 
     $ rally plugin show create_meter_and_get_stats
 
+    --------------------------------------------------------------------------------
+    Create a meter and fetch its statistics.
+    --------------------------------------------------------------------------------
+
     NAME
         CeilometerStats.create_meter_and_get_stats
-    NAMESPACE
-        default
+    PLATFORM
+        openstack
     MODULE
         rally.plugins.openstack.scenarios.ceilometer.stats
     DESCRIPTION
         Meter is first created and then statistics is fetched for the same
         using GET /v2/meters/(meter_name)/statistics.
     PARAMETERS
-    +--------+------------------------------------------------+
-    | name   | description                                    |
-    +--------+------------------------------------------------+
+    +--------+-----------------------------------------------+
+    | name   | description                                   |
+    +--------+-----------------------------------------------+
     | kwargs | contains optional arguments to create a meter |
-    |        |                                                |
-    +--------+------------------------------------------------+
-
+    +--------+-----------------------------------------------+
 
 In case if multiple plugins were found, all matched elements are listed:
 
@@ -69,14 +71,14 @@ In case if multiple plugins were found, all matched elements are listed:
     $ rally plugin show NovaKeypair
 
     Multiple plugins found:
-    +-------------------------------------------------+-----------+-------------------------------------------------------+
-    | name                                            | namespace | title                                                 |
-    +-------------------------------------------------+-----------+-------------------------------------------------------+
-    | NovaKeypair.boot_and_delete_server_with_keypair | default   | Boot and delete server with keypair.                  |
-    | NovaKeypair.create_and_delete_keypair           | default   | Create a keypair with random name and delete keypair. |
-    | NovaKeypair.create_and_list_keypairs            | default   | Create a keypair with random name and list keypairs.  |
-    +-------------------------------------------------+-----------+-------------------------------------------------------+
-
+    +-------------+-------------------------------------------------+-----------+-------------------------------------------------------+
+    | Plugin base | Name                                            | Platform  | Title                                                 |
+    +-------------+-------------------------------------------------+-----------+-------------------------------------------------------+
+    | Scenario    | NovaKeypair.boot_and_delete_server_with_keypair | openstack | Boot and delete server with keypair.                  |
+    | Scenario    | NovaKeypair.create_and_delete_keypair           | openstack | Create a keypair with random name and delete keypair. |
+    | Scenario    | NovaKeypair.create_and_get_keypair              | openstack | Create a keypair and get the keypair details.         |
+    | Scenario    | NovaKeypair.create_and_list_keypairs            | openstack | Create a keypair with random name and list keypairs.  |
+    +-------------+-------------------------------------------------+-----------+-------------------------------------------------------+
 
 CLI: rally plugin list
 ----------------------
@@ -87,29 +89,33 @@ This command can be used to list filtered by name list of plugins.
 
     $ rally plugin list --name Keystone
 
-    +--------------------------------------------------+-----------+-----------------------------------------------------------------+
-    | name                                             | namespace | title                                                           |
-    +--------------------------------------------------+-----------+-----------------------------------------------------------------+
-    | Authenticate.keystone                            | default   | Check Keystone Client.                                          |
-    | KeystoneBasic.add_and_remove_user_role           | default   | Create a user role add to a user and disassociate.              |
-    | KeystoneBasic.create_add_and_list_user_roles     | default   | Create user role, add it and list user roles for given user.    |
-    | KeystoneBasic.create_and_delete_ec2credential    | default   | Create and delete keystone ec2-credential.                      |
-    | KeystoneBasic.create_and_delete_role             | default   | Create a user role and delete it.                               |
-    | KeystoneBasic.create_and_delete_service          | default   | Create and delete service.                                      |
-    | KeystoneBasic.create_and_list_ec2credentials     | default   | Create and List all keystone ec2-credentials.                   |
-    | KeystoneBasic.create_and_list_services           | default   | Create and list services.                                       |
-    | KeystoneBasic.create_and_list_tenants            | default   | Create a keystone tenant with random name and list all tenants. |
-    | KeystoneBasic.create_and_list_users              | default   | Create a keystone user with random name and list all users.     |
-    | KeystoneBasic.create_delete_user                 | default   | Create a keystone user with random name and then delete it.     |
-    | KeystoneBasic.create_tenant                      | default   | Create a keystone tenant with random name.                      |
-    | KeystoneBasic.create_tenant_with_users           | default   | Create a keystone tenant and several users belonging to it.     |
-    | KeystoneBasic.create_update_and_delete_tenant    | default   | Create, update and delete tenant.                               |
-    | KeystoneBasic.create_user                        | default   | Create a keystone user with random name.                        |
-    | KeystoneBasic.create_user_set_enabled_and_delete | default   | Create a keystone user, enable or disable it, and delete it.    |
-    | KeystoneBasic.create_user_update_password        | default   | Create user and update password for that user.                  |
-    | KeystoneBasic.get_entities                       | default   | Get instance of a tenant, user, role and service by id's.       |
-    +--------------------------------------------------+-----------+-----------------------------------------------------------------+
-
+    +-------------+----------------------------------------------------+-----------+-----------------------------------------------------------------+
+    | Plugin base | Name                                               | Platform  | Title                                                           |
+    +-------------+----------------------------------------------------+-----------+-----------------------------------------------------------------+
+    | OSClient    | keystone                                           | openstack | Wrapper for KeystoneClient which hides OpenStack auth details.  |
+    | Scenario    | Authenticate.keystone                              | openstack | Check Keystone Client.                                          |
+    | Scenario    | KeystoneBasic.add_and_remove_user_role             | openstack | Create a user role add to a user and disassociate.              |
+    | Scenario    | KeystoneBasic.authenticate_user_and_validate_token | openstack | Authenticate and validate a keystone token.                     |
+    | Scenario    | KeystoneBasic.create_add_and_list_user_roles       | openstack | Create user role, add it and list user roles for given user.    |
+    | Scenario    | KeystoneBasic.create_and_delete_ec2credential      | openstack | Create and delete keystone ec2-credential.                      |
+    | Scenario    | KeystoneBasic.create_and_delete_role               | openstack | Create a user role and delete it.                               |
+    | Scenario    | KeystoneBasic.create_and_delete_service            | openstack | Create and delete service.                                      |
+    | Scenario    | KeystoneBasic.create_and_get_role                  | openstack | Create a user role and get it detailed information.             |
+    | Scenario    | KeystoneBasic.create_and_list_ec2credentials       | openstack | Create and List all keystone ec2-credentials.                   |
+    | Scenario    | KeystoneBasic.create_and_list_roles                | openstack | Create a role, then list all roles.                             |
+    | Scenario    | KeystoneBasic.create_and_list_services             | openstack | Create and list services.                                       |
+    | Scenario    | KeystoneBasic.create_and_list_tenants              | openstack | Create a keystone tenant with random name and list all tenants. |
+    | Scenario    | KeystoneBasic.create_and_list_users                | openstack | Create a keystone user with random name and list all users.     |
+    | Scenario    | KeystoneBasic.create_and_update_user               | openstack | Create user and update the user.                                |
+    | Scenario    | KeystoneBasic.create_delete_user                   | openstack | Create a keystone user with random name and then delete it.     |
+    | Scenario    | KeystoneBasic.create_tenant                        | openstack | Create a keystone tenant with random name.                      |
+    | Scenario    | KeystoneBasic.create_tenant_with_users             | openstack | Create a keystone tenant and several users belonging to it.     |
+    | Scenario    | KeystoneBasic.create_update_and_delete_tenant      | openstack | Create, update and delete tenant.                               |
+    | Scenario    | KeystoneBasic.create_user                          | openstack | Create a keystone user with random name.                        |
+    | Scenario    | KeystoneBasic.create_user_set_enabled_and_delete   | openstack | Create a keystone user, enable or disable it, and delete it.    |
+    | Scenario    | KeystoneBasic.create_user_update_password          | openstack | Create user and update password for that user.                  |
+    | Scenario    | KeystoneBasic.get_entities                         | openstack | Get instance of a tenant, user, role and service by id's.       |
+    +-------------+----------------------------------------------------+-----------+-----------------------------------------------------------------+
 .. references:
 
 .. _source code: https://github.com/openstack/rally/tree/master/rally/plugins/
