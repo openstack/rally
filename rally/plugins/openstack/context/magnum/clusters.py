@@ -12,8 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -21,9 +19,6 @@ from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.magnum import utils as magnum_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -48,7 +43,6 @@ class ClusterGenerator(context.Context):
 
     DEFAULT_CONFIG = {"node_count": 1}
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Cluster`"))
     def setup(self):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -79,7 +73,6 @@ class ClusterGenerator(context.Context):
                 node_count=self.config.get("node_count"), keypair=keypair)
             self.context["tenants"][tenant_id]["cluster"] = cluster.uuid
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Cluster`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["magnum.clusters", "nova.keypairs"],

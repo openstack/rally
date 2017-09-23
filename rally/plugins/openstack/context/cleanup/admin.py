@@ -15,16 +15,11 @@
 
 import sys
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import validation
 from rally.plugins.openstack.cleanup import manager
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack import scenario
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add(name="check_cleanup_resources", admin_required=True)
@@ -34,7 +29,6 @@ LOG = logging.getLogger(__name__)
 class AdminCleanup(base.CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
 
-    @logging.log_task_wrapper(LOG.info, _("admin resources cleanup"))
     def cleanup(self):
         manager.cleanup(
             names=self.config,

@@ -101,7 +101,6 @@ class BaseCustomImageGenerator(context.Context):
         "workers": 1
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `custom_image`"))
     def setup(self):
         """Creates custom image(s) with preinstalled applications.
 
@@ -178,7 +177,6 @@ class BaseCustomImageGenerator(context.Context):
 
         return custom_image
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `custom_image`"))
     def cleanup(self):
         """Delete created custom image(s)."""
 

@@ -47,3 +47,6 @@ class ContextManager(context.ContextManager):
         return sorted([
             VerifierContext.get(name, allow_hidden=True)(self.context_obj)
             for name in self.context_obj["config"].keys()])
+
+    def _log_prefix(self):
+        return "Verification %s |" % self.context_obj["verifier"]["uuid"]

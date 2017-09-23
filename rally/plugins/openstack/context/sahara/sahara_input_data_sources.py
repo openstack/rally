@@ -16,8 +16,6 @@
 import requests
 from six.moves.urllib import parse
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -26,9 +24,6 @@ from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.scenarios.swift import utils as swift_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -68,8 +63,6 @@ class SaharaInputDataSources(context.Context):
         "required": ["input_type", "input_url"]
     }
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Enter context: `Sahara Input Data Sources`"))
     def setup(self):
         utils.init_sahara_context(self)
         self.context["sahara"]["swift_objects"] = []
@@ -121,8 +114,6 @@ class SaharaInputDataSources(context.Context):
             self.context["tenants"][tenant_id]["sahara"]["input"] = (
                 input_ds_swift.id)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Input Data"
-                                          "Sources`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["swift.object", "swift.container"],

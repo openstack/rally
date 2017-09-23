@@ -13,17 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.neutron import utils as neutron_utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", admin=True,
@@ -90,7 +85,6 @@ class Router(context.Context):
         "routers_per_tenant": 1,
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `router`"))
     def setup(self):
         kwargs = {}
         parameters = ("admin_state_up", "external_gateway_info", "network_id",
@@ -110,7 +104,6 @@ class Router(context.Context):
                 router = scenario._create_router(kwargs)
                 self.context["tenants"][tenant_id]["routers"].append(router)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `router`"))
     def cleanup(self):
         resource_manager.cleanup(
             names=["neutron.router"],

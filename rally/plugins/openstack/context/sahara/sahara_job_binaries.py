@@ -15,8 +15,6 @@
 
 import requests
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -25,9 +23,6 @@ from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -79,8 +74,6 @@ class SaharaJobBinaries(context.Context):
     # downloads for each tenant
     lib_cache = {}
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Enter context: `Sahara Job Binaries`"))
     def setup(self):
         utils.init_sahara_context(self)
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -142,8 +135,6 @@ class SaharaJobBinaries(context.Context):
         self.context["tenants"][tenant_id]["sahara"][lib_type].append(
             job_binary.id)
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Exit context: `Sahara Job Binaries`"))
     def cleanup(self):
         resources = ["job_binary_internals", "job_binaries"]
 

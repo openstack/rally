@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
@@ -37,7 +36,6 @@ class VolumeTypeGenerator(context.Context):
         "items": {"type": "string"}
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `volume_types`"))
     def setup(self):
         admin_clients = osclients.Clients(
             self.context.get("admin", {}).get("credential"),
@@ -51,7 +49,6 @@ class VolumeTypeGenerator(context.Context):
             self.context["volume_types"].append({"id": vtype.id,
                                                  "name": vtype_name})
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `volume_types`"))
     def cleanup(self):
         mather = utils.make_name_matcher(*self.config)
         resource_manager.cleanup(

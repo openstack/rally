@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
@@ -78,7 +77,6 @@ class ServerGenerator(context.Context):
         "auto_assign_nic": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
     def setup(self):
         image = self.config["image"]
         flavor = self.config["flavor"]
@@ -130,7 +128,6 @@ class ServerGenerator(context.Context):
             self.context["tenants"][tenant_id][
                 "servers"] = current_servers
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Servers`"))
     def cleanup(self):
         resource_manager.cleanup(names=["nova.servers"],
                                  users=self.context.get("users", []),

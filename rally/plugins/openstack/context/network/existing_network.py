@@ -12,18 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils
 from rally.common import validation
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task import context
-
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -40,7 +34,6 @@ class ExistingNetwork(context.Context):
         "additionalProperties": False
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `existing_network`"))
     def setup(self):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context.get("users", [])):
@@ -50,6 +43,5 @@ class ExistingNetwork(context.Context):
             self.context["tenants"][tenant_id]["networks"] = (
                 net_wrapper.list_networks())
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `existing_network`"))
     def cleanup(self):
         """Networks were not created by Rally, so nothing to do."""

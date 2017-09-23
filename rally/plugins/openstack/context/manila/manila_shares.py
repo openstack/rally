@@ -15,8 +15,6 @@
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils
 from rally.common import validation
 from rally import consts as rally_consts
@@ -26,8 +24,6 @@ from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.task import context
 
 CONF = cfg.CONF
-LOG = logging.getLogger(__name__)
-
 CONTEXT_NAME = consts.SHARES_CONTEXT_NAME
 
 
@@ -81,8 +77,6 @@ class Shares(context.Context):
             share = manila_scenario._create_share(**kwargs)
             tenant_ctxt["shares"].append(share.to_dict())
 
-    @logging.log_task_wrapper(
-        LOG.info, _("Enter context: `%s`") % CONTEXT_NAME)
     def setup(self):
         for user, tenant_id in (
                 utils.iterate_per_tenants(self.context.get("users", []))):
@@ -102,7 +96,6 @@ class Shares(context.Context):
                 self.config["share_type"],
             )
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
         resource_manager.cleanup(
             names=["manila.shares"],

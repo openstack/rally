@@ -10,15 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
-from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.senlin import utils as senlin_utils
 from rally.task import context
-
-LOG = logging.getLogger(__name__)
 
 
 @validation.add("required_platform", platform="openstack", users=True)
@@ -44,7 +40,6 @@ class ProfilesGenerator(context.Context):
         "required": ["type", "version", "properties"]
     }
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Senlin profiles`"))
     def setup(self):
         """Create test profiles."""
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -61,7 +56,6 @@ class ProfilesGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["profile"] = profile.id
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Senlin profiles`"))
     def cleanup(self):
         """Delete created test profiles."""
         for user, tenant_id in rutils.iterate_per_tenants(

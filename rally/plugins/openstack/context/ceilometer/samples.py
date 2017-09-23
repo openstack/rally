@@ -120,7 +120,6 @@ class CeilometerSampleGenerator(context.Context):
 
         return samples
 
-    @logging.log_task_wrapper(LOG.info, _("Enter context: `Ceilometer`"))
     def setup(self):
         new_sample = {
             "counter_name": self.config["counter_name"],
@@ -175,7 +174,6 @@ class CeilometerSampleGenerator(context.Context):
                     ctx_name=self.get_name(),
                     msg="Ceilometer Resource %s is not found" % resource_id)
 
-    @logging.log_task_wrapper(LOG.info, _("Exit context: `Ceilometer`"))
     def cleanup(self):
         # We don't have API for removal of samples and resources
         pass
