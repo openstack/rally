@@ -95,7 +95,7 @@ class CreateAndDeleteCluster(utils.SaharaScenario):
 
         image_id = self.context["tenant"]["sahara"]["image"]
 
-        LOG.debug("Using Image: %s", image_id)
+        LOG.debug("Using Image: %s" % image_id)
 
         cluster = self._launch_cluster(
             flavor_id=flavor,
@@ -194,7 +194,7 @@ class CreateScaleDeleteCluster(utils.SaharaScenario):
 
         image_id = self.context["tenant"]["sahara"]["image"]
 
-        LOG.debug("Using Image: %s", image_id)
+        LOG.debug("Using Image: %s" % image_id)
 
         cluster = self._launch_cluster(
             flavor_id=flavor,

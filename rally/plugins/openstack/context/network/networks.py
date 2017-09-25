@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
@@ -107,6 +106,5 @@ class Network(context.Context):
             for network in tenant_ctx.get("networks", []):
                 with logging.ExceptionLogger(
                         LOG,
-                        _("Failed to delete network for tenant %s")
-                        % tenant_id):
+                        "Failed to delete network for tenant %s" % tenant_id):
                     net_wrapper.delete_network(network)

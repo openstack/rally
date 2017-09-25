@@ -17,7 +17,6 @@ import random
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -56,8 +55,8 @@ class NeutronScenario(scenario.OpenStackScenario):
         for net in networks:
             if (net["name"] == network) or (net["id"] == network):
                 return net["id"]
-        msg = (_("Network %s not found.") % network)
-        raise exceptions.NotFoundException(message=msg)
+        raise exceptions.NotFoundException(
+            message="Network %s not found." % network)
 
     @property
     def _ext_gw_mode_enabled(self):
@@ -302,9 +301,9 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_port(port["port"]["id"])
 
-    @logging.log_deprecated_args(_("network_create_args is deprecated; "
-                                   "use the network context instead"),
-                                 "0.1.0", "network_create_args")
+    @logging.log_deprecated_args(
+        "network_create_args is deprecated; use the network context instead",
+        "0.1.0", "network_create_args")
     def _get_or_create_network(self, network_create_args=None):
         """Get a network from context, or create a new one.
 
@@ -323,8 +322,8 @@ class NeutronScenario(scenario.OpenStackScenario):
             return {"network":
                     random.choice(self.context["tenant"]["networks"])}
         else:
-            LOG.warning(_("Running this scenario without either the 'network' "
-                          "or 'existing_network' context is deprecated"))
+            LOG.warning("Running this scenario without either the 'network' "
+                        "or 'existing_network' context is deprecated")
             return self._create_network(network_create_args or {})
 
     def _create_subnets(self, network,

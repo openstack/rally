@@ -169,15 +169,16 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             min_disk=d_min_disk,
             min_ram=d_min_ram
         )
-        self.assertEqual(
-            [mock.call("The 'image_type' argument is deprecated since "
-                       "Rally 0.10.0, use disk_format arguments instead."),
-             mock.call("The 'image_container' argument is deprecated since "
-                       "Rally 0.10.0; use container_format arguments instead"),
-             mock.call("The 'image_args' argument is deprecated since "
-                       "Rally 0.10.0; specify exact arguments in a root "
-                       "section of context instead.")],
-            mock_log.warning.call_args_list)
+        expected_warns = [
+            mock.call("The 'image_type' argument is deprecated since "
+                      "Rally 0.10.0, use disk_format argument instead"),
+            mock.call("The 'image_container' argument is deprecated since "
+                      "Rally 0.10.0; use container_format argument instead"),
+            mock.call("The 'image_args' argument is deprecated since "
+                      "Rally 0.10.0; specify arguments in a root "
+                      "section of context instead")]
+
+        self.assertEqual(expected_warns, mock_log.warning.call_args_list)
 
         mock_image.return_value.create_image.reset_mock()
         mock_log.warning.reset_mock()
@@ -211,15 +212,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         )
         # No matter will be deprecated arguments used or not, if they are
         # specified, warning message should be printed.
-        self.assertEqual(
-            [mock.call("The 'image_type' argument is deprecated since "
-                       "Rally 0.10.0, use disk_format arguments instead."),
-             mock.call("The 'image_container' argument is deprecated since "
-                       "Rally 0.10.0; use container_format arguments instead"),
-             mock.call("The 'image_args' argument is deprecated since "
-                       "Rally 0.10.0; specify exact arguments in a root "
-                       "section of context instead.")],
-            mock_log.warning.call_args_list)
+        self.assertEqual(expected_warns, mock_log.warning.call_args_list)
 
     @ddt.data(
         {"admin": True},

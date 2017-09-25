@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
@@ -86,8 +85,8 @@ class Lbaas(context.Context):
                 for pool in network.get("lb_pools", []):
                     with logging.ExceptionLogger(
                             LOG,
-                            _("Failed to delete pool %(pool)s for tenant "
-                                "%(tenant)s") % {"pool": pool["pool"]["id"],
-                                                 "tenant": tenant_id}):
+                            "Failed to delete pool %(pool)s for tenant "
+                            "%(tenant)s" % {"pool": pool["pool"]["id"],
+                                            "tenant": tenant_id}):
                         if self.config["lbaas_version"] == 1:
                             net_wrapper.delete_v1_pool(pool["pool"]["id"])

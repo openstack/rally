@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
@@ -97,7 +96,7 @@ class AllowSSH(context.Context):
             self, config=self.config)
         use_sg, msg = net_wrapper.supports_extension("security-group")
         if not use_sg:
-            LOG.info(_("Security group context is disabled: %s") % msg)
+            LOG.info("Security group context is disabled: %s" % msg)
             return
 
         secgroup_name = self.generate_random_name()
@@ -109,7 +108,8 @@ class AllowSSH(context.Context):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
             with logging.ExceptionLogger(
-                    LOG, _("Unable to delete secgroup: %s.") %
-                    user["secgroup"]["name"]):
+                    LOG,
+                    "Unable to delete security group: %s."
+                    % user["secgroup"]["name"]):
                 clients = osclients.Clients(user["credential"])
                 clients.neutron().delete_security_group(user["secgroup"]["id"])

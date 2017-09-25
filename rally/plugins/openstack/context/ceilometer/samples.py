@@ -16,7 +16,6 @@ import time
 
 from six import moves
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
@@ -111,12 +110,12 @@ class CeilometerSampleGenerator(context.Context):
                 samples = scenario._create_samples(batch)
             except Exception:
                 unsuccess += 1
-                LOG.warning(_("Failed to store batch %d of Ceilometer samples"
-                              " during context creation") % i)
+                LOG.warning("Failed to store batch %d of Ceilometer samples"
+                            " during context creation" % i)
         if unsuccess > batches_allow_lose:
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
-                msg=_("Context failed to store too many batches of samples"))
+                msg="Context failed to store too many batches of samples")
 
         return samples
 

@@ -15,7 +15,6 @@
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import glance as glance_wrapper
@@ -32,11 +31,11 @@ class GlanceScenario(scenario.OpenStackScenario):
 
     def __init__(self, context=None, admin_clients=None, clients=None):
         super(GlanceScenario, self).__init__(context, admin_clients, clients)
-        LOG.warning(_(
+        LOG.warning(
             "Class %s is deprecated since Rally 0.10.0 and will be removed "
             "soon. Use "
             "rally.plugins.openstack.services.image.image.Image "
-            "instead.") % self.__class__)
+            "instead." % self.__class__)
 
     @atomic.action_timer("glance.list_images")
     def _list_images(self):

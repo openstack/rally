@@ -14,7 +14,6 @@
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
@@ -132,23 +131,21 @@ class ImageGenerator(context.Context):
         image_args = self.config.get("image_args", {})
 
         if "image_type" in self.config:
-            LOG.warning(_("The 'image_type' argument is deprecated "
-                          "since Rally 0.10.0, use disk_format "
-                          "arguments instead."))
+            LOG.warning("The 'image_type' argument is deprecated since "
+                        "Rally 0.10.0, use disk_format argument instead")
             if not disk_format:
                 disk_format = self.config["image_type"]
 
         if "image_container" in self.config:
-            LOG.warning(_("The 'image_container' argument is deprecated "
-                          "since Rally 0.10.0; use container_format "
-                          "arguments instead"))
+            LOG.warning("The 'image_container' argument is deprecated since "
+                        "Rally 0.10.0; use container_format argument instead")
             if not container_format:
                 container_format = self.config["image_container"]
 
         if image_args:
-            LOG.warning(_("The 'image_args' argument is deprecated since "
-                          "Rally 0.10.0; specify exact arguments in a root "
-                          "section of context instead."))
+            LOG.warning(
+                "The 'image_args' argument is deprecated since Rally 0.10.0; "
+                "specify arguments in a root section of context instead")
 
             if "is_public" in image_args:
                 if "visibility" not in self.config:

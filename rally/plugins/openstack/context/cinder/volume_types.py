@@ -44,7 +44,7 @@ class VolumeTypeGenerator(context.Context):
             admin_clients, name_generator=self.generate_random_name)
         self.context["volume_types"] = []
         for vtype_name in self.config:
-            LOG.debug("Creating Cinder volume type %s", vtype_name)
+            LOG.debug("Creating Cinder volume type %s" % vtype_name)
             vtype = cinder_service.create_volume_type(vtype_name)
             self.context["volume_types"].append({"id": vtype.id,
                                                  "name": vtype_name})

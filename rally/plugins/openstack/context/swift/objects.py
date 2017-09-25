@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import validation
 from rally import consts
@@ -65,22 +64,22 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
 
         containers_per_tenant = self.config["containers_per_tenant"]
         containers_num = len(self.context["tenants"]) * containers_per_tenant
-        LOG.debug("Creating %d containers using %d threads.", (containers_num,
-                                                               threads))
+        LOG.debug("Creating %d containers using %d threads."
+                  % (containers_num, threads))
         containers_count = len(self._create_containers(self.context,
                                                        containers_per_tenant,
                                                        threads))
         if containers_count != containers_num:
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
-                msg=_("Failed to create the requested number of containers, "
-                      "expected %(expected)s but got %(actual)s.")
-                % {"expected": containers_num, "actual": containers_count})
+                msg="Failed to create the requested number of containers, "
+                    "expected %(expected)s but got %(actual)s."
+                    % {"expected": containers_num, "actual": containers_count})
 
         objects_per_container = self.config["objects_per_container"]
         objects_num = containers_num * objects_per_container
-        LOG.debug("Creating %d objects using %d threads.", (objects_num,
-                                                            threads))
+        LOG.debug("Creating %d objects using %d threads."
+                  % (objects_num, threads))
         objects_count = len(self._create_objects(self.context,
                                                  objects_per_container,
                                                  self.config["object_size"],
@@ -88,9 +87,9 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
         if objects_count != objects_num:
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
-                msg=_("Failed to create the requested number of objects, "
-                      "expected %(expected)s but got %(actual)s.")
-                % {"expected": objects_num, "actual": objects_count})
+                msg="Failed to create the requested number of objects, "
+                    "expected %(expected)s but got %(actual)s."
+                    % {"expected": objects_num, "actual": objects_count})
 
     def cleanup(self):
         """Delete containers and objects, using the broker pattern."""

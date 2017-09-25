@@ -92,7 +92,7 @@ class SeekAndDestroyTestCase(test.TestCase):
         mock_resource.delete.assert_called_once_with()
         self.assertEqual(4, mock_resource.is_deleted.call_count)
 
-        self.assertEqual(5, mock_log.warning.call_count)
+        self.assertEqual(1, mock_log.warning.call_count)
         self.assertEqual(4, mock_log.exception.call_count)
 
     def _manager(self, list_side_effect, **kw):

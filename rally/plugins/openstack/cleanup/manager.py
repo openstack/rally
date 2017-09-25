@@ -16,7 +16,6 @@
 import time
 
 from rally.common import broker
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common.plugin import discover
 from rally.common.plugin import plugin
@@ -79,19 +78,19 @@ class SeekAndDestroy(object):
         }
 
         LOG.debug(
-            "Deleting %(service)s %(resource)s object %(name)s (%(uuid)s)",
-            msg_kw)
+            "Deleting %(service)s.%(resource)s object %(name)s (%(uuid)s)"
+            % msg_kw)
 
         try:
             rutils.retry(resource._max_attempts, resource.delete)
         except Exception as e:
-            msg_kw["reason"] = e
-            LOG.warning(
-                _("Resource deletion failed, max retries exceeded for "
-                  "%(service)s.%(resource)s: %(uuid)s. Reason: %(reason)s")
-                % msg_kw)
+            msg = ("Resource deletion failed, max retries exceeded for "
+                   "%(service)s.%(resource)s: %(uuid)s.") % msg_kw
+
             if logging.is_debug():
-                LOG.exception(e)
+                LOG.exception(msg)
+            else:
+                LOG.warning("%(msg)s Reason: %(e)s" % {"msg": msg, "e": e})
         else:
             started = time.time()
             failures_count = 0
@@ -100,11 +99,10 @@ class SeekAndDestroy(object):
                     if resource.is_deleted():
                         return
                 except Exception as e:
-                    LOG.warning(
-                        _("Seems like %s.%s.is_deleted(self) method is broken "
-                          "It shouldn't raise any exceptions.")
+                    LOG.exception(
+                        "Seems like %s.%s.is_deleted(self) method is broken "
+                        "It shouldn't raise any exceptions."
                         % (resource.__module__, type(resource).__name__))
-                    LOG.exception(e)
 
                     # NOTE(boris-42): Avoid LOG spamming in case of bad
                     #                 is_deleted() method
@@ -115,9 +113,8 @@ class SeekAndDestroy(object):
                 finally:
                     rutils.interruptable_sleep(resource._interval)
 
-            LOG.warning(_("Resource deletion failed, timeout occurred for "
-                          "%(service)s.%(resource)s: %(uuid)s.")
-                        % msg_kw)
+            LOG.warning("Resource deletion failed, timeout occurred for "
+                        "%(service)s.%(resource)s: %(uuid)s." % msg_kw)
 
     def _publisher(self, queue):
         """Publisher for deletion jobs.
@@ -135,12 +132,11 @@ class SeekAndDestroy(object):
             try:
                 for raw_resource in rutils.retry(3, manager.list):
                     queue.append((admin, user, raw_resource))
-            except Exception as e:
-                LOG.warning(
-                    _("Seems like %s.%s.list(self) method is broken. "
-                      "It shouldn't raise any exceptions.")
+            except Exception:
+                LOG.exception(
+                    "Seems like %s.%s.list(self) method is broken. "
+                    "It shouldn't raise any exceptions."
                     % (manager.__module__, type(manager).__name__))
-                LOG.exception(e)
 
         if self.admin and (not self.users
                            or self.manager_cls._perform_for_admin_only):
@@ -280,9 +276,9 @@ def cleanup(names=None, admin_required=None, admin=None, users=None,
                                            rutils.RandomNameGeneratorMixin):
         resource_classes.append(superclass)
     for manager in find_resource_managers(names, admin_required):
-        LOG.debug("Cleaning up %(service)s %(resource)s objects",
-                  {"service": manager._service,
-                   "resource": manager._resource})
+        LOG.debug("Cleaning up %(service)s %(resource)s objects"
+                  % {"service": manager._service,
+                     "resource": manager._resource})
         SeekAndDestroy(manager, admin, users,
                        api_versions=api_versions,
                        resource_classes=resource_classes,

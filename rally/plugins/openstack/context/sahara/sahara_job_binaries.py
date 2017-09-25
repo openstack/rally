@@ -104,7 +104,7 @@ class SaharaJobBinaries(context.Context):
     def setup_inputs(self, sahara, tenant_id, input_type, input_url):
         if input_type == "swift":
             raise exceptions.RallyException(
-                _("Swift Data Sources are not implemented yet"))
+                "Swift Data Sources are not implemented yet")
         # Todo(nkonovalov): Add swift credentials parameters and data upload
         input_ds = sahara.data_sources.create(
             name=self.generate_random_name(),

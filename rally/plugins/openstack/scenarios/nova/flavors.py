@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _LW
 from rally.common import logging
 from rally import consts
 from rally.plugins.openstack import scenario
@@ -81,8 +80,8 @@ class CreateAndListFlavorAccess(utils.NovaScenario):
         # NOTE(pirsriva): access rules can be listed
         # only for non-public flavors
         if is_public:
-            LOG.warning(_LW("is_public cannot be set to True for listing "
-                            "flavor access rules. Setting is_public to False"))
+            LOG.warning("is_public cannot be set to True for listing "
+                        "flavor access rules. Setting is_public to False")
         is_public = False
         flavor = self._create_flavor(ram, vcpus, disk, flavorid=flavorid,
                                      ephemeral=ephemeral, swap=swap,

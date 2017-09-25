@@ -445,8 +445,7 @@ class NeutronPort(NeutronMixin):
             except neutron_exceptions.PortNotFoundClient:
                 # Port can be already auto-deleted, skip silently
                 LOG.debug("Port %s was not deleted. Skip silently because "
-                          "port can be already auto-deleted.",
-                          self.id())
+                          "port can be already auto-deleted." % self.id())
 
 
 @base.resource("neutron", "subnet", order=next(_neutron_order),

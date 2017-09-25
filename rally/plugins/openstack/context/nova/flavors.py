@@ -84,18 +84,19 @@ class FlavorsGenerator(context.Context):
             flavor_config = FlavorConfig(**flavor_config)
             try:
                 flavor = clients.nova().flavors.create(**flavor_config)
-            except nova_exceptions.Conflict as e:
-                LOG.warning("Using already existing flavor %s" %
-                            flavor_config["name"])
+            except nova_exceptions.Conflict:
+                msg = "Using existing flavor %s" % flavor_config["name"]
                 if logging.is_debug():
-                    LOG.exception(e)
+                    LOG.exception(msg)
+                else:
+                    LOG.warning(msg)
                 continue
 
             if extra_specs:
                 flavor.set_keys(extra_specs)
 
             self.context["flavors"][flavor_config["name"]] = flavor.to_dict()
-            LOG.debug("Created flavor with id '%s'", flavor.id)
+            LOG.debug("Created flavor with id '%s'" % flavor.id)
 
     def cleanup(self):
         """Delete created flavors."""

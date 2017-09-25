@@ -21,7 +21,6 @@ import netaddr
 from oslo_config import cfg
 import six
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import sshutils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
@@ -63,8 +62,8 @@ class Host(object):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         proc.wait()
-        LOG.debug("Host %s is ICMP %s",
-                  (server.ip.format(), proc.returncode and "down" or "up"))
+        LOG.debug("Host %s is ICMP %s"
+                  % (server.ip.format(), proc.returncode and "down" or "up"))
         if proc.returncode == 0:
             server.status = cls.ICMP_UP_STATUS
         else:
@@ -177,7 +176,7 @@ class VMScenario(nova_utils.NovaScenario):
     @atomic.action_timer("vm.delete_floating_ip")
     def _delete_floating_ip(self, server, fip):
         with logging.ExceptionLogger(
-                LOG, _("Unable to delete IP: %s") % fip["ip"]):
+                LOG, "Unable to delete IP: %s" % fip["ip"]):
             if self.check_ip_address(fip["ip"])(server):
                 self._dissociate_floating_ip(server, fip["ip"])
                 network_wrapper.wrap(self.clients, self).delete_floating_ip(

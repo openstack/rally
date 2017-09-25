@@ -14,7 +14,6 @@
 
 import random
 
-from rally.common.i18n import _
 from rally import exceptions
 from rally.plugins.openstack.services.image import image
 from rally.plugins.openstack.services.storage import block
@@ -454,7 +453,7 @@ class CinderMixin(object):
                 volume_type)
             if (resp[0].status_code != 202):
                 raise exceptions.RallyException(
-                    _("EncryptionType Deletion Failed"))
+                    "EncryptionType Deletion Failed")
 
     def update_encryption_type(self, volume_type, specs):
         """Update the encryption type information for the specified volume type.

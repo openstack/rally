@@ -15,7 +15,6 @@
 
 from oslo_config import cfg
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
@@ -89,9 +88,9 @@ class ShareNetworks(context.Context):
     def _setup_for_existing_users(self):
         if (self.config["use_share_networks"] and
                 not self.config["share_networks"]):
-            msg = _("Usage of share networks was enabled but for deployment "
-                    "with existing users share networks also should be "
-                    "specified via arg 'share_networks'")
+            msg = ("Usage of share networks was enabled but for deployment "
+                   "with existing users share networks also should be "
+                   "specified via arg 'share_networks'")
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(), msg=msg)
 
@@ -108,8 +107,8 @@ class ShareNetworks(context.Context):
                             break
                     break
             else:
-                msg = _("Provided tenant Name or ID '%s' was not found in "
-                        "existing tenants.") % tenant_name_or_id
+                msg = ("Provided tenant Name or ID '%s' was not found in "
+                       "existing tenants.") % tenant_name_or_id
                 raise exceptions.ContextSetupFailure(
                     ctx_name=self.get_name(), msg=msg)
             self.context["tenants"][tenant_id][CONTEXT_NAME] = {}
@@ -131,9 +130,9 @@ class ShareNetworks(context.Context):
                     if sn_name_or_id in (sn.id, sn.name):
                         break
                 else:
-                    msg = _("Specified share network '%(sn)s' does not "
-                            "exist for tenant '%(tenant_id)s'") % {
-                                "sn": sn_name_or_id, "tenant_id": tenant_id}
+                    msg = ("Specified share network '%(sn)s' does not "
+                           "exist for tenant '%(tenant_id)s'"
+                           % {"sn": sn_name_or_id, "tenant_id": tenant_id})
                     raise exceptions.ContextSetupFailure(
                         ctx_name=self.get_name(), msg=msg)
 
@@ -178,9 +177,8 @@ class ShareNetworks(context.Context):
                         data["neutron_net_id"] = network["id"]
                         data["neutron_subnet_id"] = network["subnets"][0]
                     else:
-                        LOG.warning(_(
-                            "Can not determine network service provider. "
-                            "Share network will have no data."))
+                        LOG.warning("Can't determine network service provider."
+                                    " Share network will have no data.")
                     _setup_share_network(tenant_id, data)
             else:
                 _setup_share_network(tenant_id, data)
