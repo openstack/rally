@@ -52,7 +52,7 @@ class OpenStackServicesTestCase(test.TestCase):
 
     def test_setup_with_wrong_service_name(self):
         context_obj = {
-            "config": {api_versions.OpenStackAPIVersions.get_name(): {
+            "config": {api_versions.OpenStackAPIVersions.get_fullname(): {
                 "nova": {"service_name": "service_name"}}},
             "admin": {"credential": mock.MagicMock()},
             "users": [{"credential": mock.MagicMock()}]}
@@ -63,7 +63,7 @@ class OpenStackServicesTestCase(test.TestCase):
 
     def test_setup_with_wrong_service_name_and_without_admin(self):
         context_obj = {
-            "config": {api_versions.OpenStackAPIVersions.get_name(): {
+            "config": {api_versions.OpenStackAPIVersions.get_fullname(): {
                 "nova": {"service_name": "service_name"}}},
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context_obj)
@@ -73,7 +73,7 @@ class OpenStackServicesTestCase(test.TestCase):
 
     def test_setup_with_wrong_service_type(self):
         context_obj = {
-            "config": {api_versions.OpenStackAPIVersions.get_name(): {
+            "config": {api_versions.OpenStackAPIVersions.get_fullname(): {
                 "nova": {"service_type": "service_type"}}},
             "users": [{"credential": mock.MagicMock()}]}
         ctx = api_versions.OpenStackAPIVersions(context_obj)
@@ -83,7 +83,7 @@ class OpenStackServicesTestCase(test.TestCase):
     def test_setup_with_service_name(self):
         self.mock_kc.services.list.return_value = [
             utils.Struct(type="computev21", name="NovaV21")]
-        name = api_versions.OpenStackAPIVersions.get_name()
+        name = api_versions.OpenStackAPIVersions.get_fullname()
         context = {
             "config": {name: {"nova": {"service_name": "NovaV21"}}},
             "admin": {"credential": mock.MagicMock()},
