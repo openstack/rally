@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common.i18n import _
 from rally.common.plugin import plugin
 from rally.task import sla
 
@@ -48,5 +47,5 @@ class MaxDurationRange(sla.SLA):
         return self.success
 
     def details(self):
-        return (_("%s - Maximum allowed duration range: %.2f%% <= %.2f%%") %
+        return ("%s - Maximum allowed duration range: %.2f%% <= %.2f%%" %
                 (self.status(), self._max - self._min, self.criterion_value))

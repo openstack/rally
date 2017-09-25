@@ -32,7 +32,6 @@ import six
 import sqlalchemy.exc
 
 from rally import api
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common.plugin import info
 from rally import exceptions
@@ -50,7 +49,7 @@ class MissingArgs(Exception):
     """Supplied arguments are not sufficient for calling a function."""
     def __init__(self, missing):
         self.missing = missing
-        msg = _("Missing arguments: %s") % ", ".join(missing)
+        msg = "Missing arguments: %s" % ", ".join(missing)
         super(MissingArgs, self).__init__(msg)
 
 
@@ -112,9 +111,9 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     mixed_case_fields = mixed_case_fields or []
     field_labels = field_labels or fields
     if len(field_labels) != len(fields):
-        raise ValueError(_("Field labels list %(labels)s has different number "
-                           "of elements than fields list %(fields)s"),
-                         {"labels": field_labels, "fields": fields})
+        raise ValueError("Field labels list %(labels)s has different number of"
+                         " elements than fields list %(fields)s"
+                         % {"labels": field_labels, "fields": fields})
 
     if sortby_index is None:
         kwargs = {}
@@ -276,8 +275,8 @@ def make_table_header(table_label, table_width,
     """
 
     if len(table_label) >= (table_width - 2):
-        raise ValueError(_("Table header %s is longer than total"
-                           "width of the table."))
+        raise ValueError(
+            "Table header %s is longer than total width of the table.")
 
     label_and_space_width = table_width - len(table_label) - 2
     padding = 0 if label_and_space_width % 2 == 0 else 1
@@ -324,13 +323,13 @@ def process_keystone_exc(f, *args, **kwargs):
     try:
         return f(*args, **kwargs)
     except keystone_exc.Unauthorized as e:
-        print(_("User credentials are wrong! \n%s") % e)
+        print("User credentials are wrong! \n%s" % e)
         return 1
     except keystone_exc.AuthorizationFailure as e:
-        print(_("Failed to authorize! \n%s") % e)
+        print("Failed to authorize! \n%s" % e)
         return 1
     except keystone_exc.ConnectionRefused as e:
-        print(_("Rally can't reach the Keystone service! \n%s") % e)
+        print("Rally can't reach the Keystone service! \n%s" % e)
         return 1
 
 
@@ -375,7 +374,7 @@ class CategoryParser(argparse.ArgumentParser):
             # error message it WILL NOT LIST ALL the missing arguments
             # at once INSTEAD only 1 missing argument at a time
             missing_arg = message.split()[1]
-            print(_("Missing argument:\n%s") % missing_arg)
+            print("Missing argument:\n%s" % missing_arg)
         sys.exit(2)
 
 
@@ -663,20 +662,20 @@ def run(argv, categories):
     except (IOError, TypeError, ValueError,
             exceptions.RallyException, jsonschema.ValidationError) as e:
         if logging.is_debug():
-            LOG.exception(e)
+            LOG.exception("Unexpected exception in CLI")
         else:
             print(e)
         return 1
     except sqlalchemy.exc.OperationalError as e:
         if logging.is_debug():
-            LOG.exception(e)
+            LOG.exception("Something went wrong with database")
         print(e)
         print("Looks like Rally can't connect to its DB.")
         print("Make sure that connection string in rally.conf is proper:")
         print(CONF.database.connection)
         return 1
     except Exception:
-        print(_("Command failed, please check log for more info"))
+        print("Command failed, please check log for more info")
         raise
 
 

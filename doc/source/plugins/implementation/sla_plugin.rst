@@ -32,7 +32,6 @@ Inherit a class for your plugin from the base *SLA* class and implement its API
 .. code-block:: python
 
     from rally.task import sla
-    from rally.common.i18n import _
 
     @sla.configure(name="max_duration_range")
     class MaxDurationRange(sla.SLA):
@@ -62,8 +61,8 @@ Inherit a class for your plugin from the base *SLA* class and implement its API
             return self.success
 
         def details(self):
-            return (_("%s - Maximum allowed duration range: %.2f%% <= %.2f%%") %
-                    (self.status(), self._max - self._min, self.criterion_value))
+            return ("%s - Maximum allowed duration range: %.2f%% <= %.2f%%"
+                     % (self.status(), self._max - self._min, self.criterion_value))
 
 
 Usage

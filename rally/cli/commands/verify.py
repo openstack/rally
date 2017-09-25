@@ -27,7 +27,6 @@ from six.moves import configparser
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import yamlutils as yaml
 from rally import exceptions
@@ -77,8 +76,8 @@ class VerifyCommands(object):
                 len(failures), "tests" if len(failures) > 1 else "test")
             self._print_failures(h_text, failures, "=")
         else:
-            print(_("\nCongratulations! Verification doesn't have failed "
-                    "tests! :)"))
+            print("\nCongratulations! "
+                  "Verification doesn't have failed tests ;)")
 
     @staticmethod
     def _base_dir(uuid):
@@ -152,9 +151,9 @@ class VerifyCommands(object):
         """Choose a verifier to use for the future operations."""
         verifier = api.verifier.get(verifier_id=verifier_id)
         fileutils.update_globals_file(envutils.ENV_VERIFIER, verifier["uuid"])
-        print(_("Using verifier '%s' (UUID=%s) as the default verifier "
-                "for the future operations.") % (verifier["name"],
-                                                 verifier["uuid"]))
+        print("Using verifier '%s' (UUID=%s) as the default verifier "
+              "for the future CLI operations."
+              % (verifier["name"], verifier["uuid"]))
 
     @cliutils.help_group("verifier")
     @cliutils.args("--status", dest="status", type=str, required=False,
@@ -176,10 +175,10 @@ class VerifyCommands(object):
             cliutils.print_list(verifiers, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
         elif status:
-            print(_("There are no verifiers with status '%s'.") % status)
+            print("There are no verifiers with status '%s'." % status)
         else:
-            print(_("There are no verifiers. You can create verifier, using "
-                    "command `rally verify create-verifier`."))
+            print("There are no verifiers. You can create verifier, using "
+                  "command `rally verify create-verifier`.")
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -210,8 +209,8 @@ class VerifyCommands(object):
         cliutils.print_dict(verifier, fields=fields, formatters=formatters,
                             normalize_field_names=True, print_header=False,
                             table_label="Verifier")
-        print(_("Attention! All you do in the verifier repository or "
-                "verifier virtual environment, you do it at your own risk!"))
+        print("Attention! All you do in the verifier repository or verifier "
+              "virtual environment, you do it at your own risk!")
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str, required=True,
@@ -259,13 +258,13 @@ class VerifyCommands(object):
                         update_venv=None):
         """Update a verifier."""
         if not (version or system_wide or no_system_wide or update_venv):
-            print(_("At least one of the following arguments should be "
-                    "provided: '--update-venv', '--version', '--system-wide', "
-                    "'--no-system-wide'."))
+            print("At least one of the following arguments should be "
+                  "provided: '--update-venv', '--version', '--system-wide', "
+                  "'--no-system-wide'.")
             return 1
 
-        msg = _("Arguments '--%s' and '--%s' cannot be used simultaneously. "
-                "You can use only one of the mentioned arguments.")
+        msg = ("Arguments '--%s' and '--%s' cannot be used simultaneously. "
+               "You can use only one of the mentioned arguments.")
         if update_venv and system_wide:
             print(msg % ("update-venv", "system-wide"))
             return 1
@@ -279,9 +278,9 @@ class VerifyCommands(object):
                             version=version,
                             update_venv=update_venv)
 
-        print(_("HINT: In some cases the verifier config file should be "
-                "updated as well. Use `rally verify configure-verifier` "
-                "command to update the config file."))
+        print("HINT: In some cases the verifier config file should be "
+              "updated as well. Use `rally verify configure-verifier` "
+              "command to update the config file.")
 
     @cliutils.help_group("verifier")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -313,15 +312,14 @@ class VerifyCommands(object):
 
         # TODO(ylobankov): Add an ability to read extra options from
         #                  a json or yaml file.
-
         if new_configuration and (extra_options or reconfigure):
-            print(_("Argument '--override' cannot be used with arguments "
-                    "'--reconfigure' and '--extend'."))
+            print("Argument '--override' cannot be used with arguments "
+                  "'--reconfigure' and '--extend'.")
             return 1
 
         if new_configuration:
             if not os.path.exists(new_configuration):
-                print(_("File '%s' not found.") % new_configuration)
+                print("File '%s' not found." % new_configuration)
                 return 1
 
             with open(new_configuration) as f:
@@ -370,7 +368,7 @@ class VerifyCommands(object):
             for test in tests:
                 print(test)
         else:
-            print(_("No tests found."))
+            print("No tests found.")
 
     @cliutils.help_group("verifier-ext")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -407,9 +405,8 @@ class VerifyCommands(object):
             cliutils.print_list(verifier_exts, fields,
                                 normalize_field_names=True)
         else:
-            print(_("There are no verifier extensions. You can add "
-                    "verifier extension, using command `rally verify "
-                    "add-verifier-ext`."))
+            print("There are no verifier extensions. You can add verifier "
+                  "extension, using command `rally verify add-verifier-ext`.")
 
     @cliutils.help_group("verifier-ext")
     @cliutils.args("--id", dest="verifier_id", type=str,
@@ -468,9 +465,8 @@ class VerifyCommands(object):
               xfail_list=None, detailed=False, do_use=True):
         """Start a verification (run verifier tests)."""
         if pattern and load_list:
-            print(_("Arguments '--pattern' and '--load-list' cannot be used "
-                    "simultaneously. You can use only one of the mentioned "
-                    "arguments."))
+            print("Arguments '--pattern' and '--load-list' cannot be used "
+                  "together, use only one of them.")
             return 1
 
         def parse(filename):
@@ -479,20 +475,20 @@ class VerifyCommands(object):
 
         if load_list:
             if not os.path.exists(load_list):
-                print(_("File '%s' not found.") % load_list)
+                print("File '%s' not found." % load_list)
                 return 1
             with open(load_list, "r") as f:
                 load_list = [test for test in f.read().split("\n") if test]
 
         if skip_list:
             if not os.path.exists(skip_list):
-                print(_("File '%s' not found.") % skip_list)
+                print("File '%s' not found." % skip_list)
                 return 1
             skip_list = parse(skip_list)
 
         if xfail_list:
             if not os.path.exists(xfail_list):
-                print(_("File '%s' not found.") % xfail_list)
+                print("File '%s' not found." % xfail_list)
                 return 1
             xfail_list = parse(xfail_list)
 
@@ -507,8 +503,8 @@ class VerifyCommands(object):
                 tags=tags, **run_args)
             verification_uuid = results["verification"]["uuid"]
         except exceptions.DeploymentNotFinishedStatus as e:
-            print(_("Cannot start a verefication on "
-                    "unfinished deployment: %s") % e)
+            print("Cannot start a verefication against unfinished deployment: "
+                  " %s" % e)
             return 1
 
         if detailed:
@@ -519,7 +515,7 @@ class VerifyCommands(object):
         if do_use:
             self.use(api, verification_uuid)
         else:
-            print(_("Verification UUID: %s.") % verification_uuid)
+            print("Verification UUID: %s." % verification_uuid)
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str, required=True,
@@ -530,8 +526,8 @@ class VerifyCommands(object):
             verification_uuid=verification_uuid)
         fileutils.update_globals_file(
             envutils.ENV_VERIFICATION, verification["uuid"])
-        print(_("Using verification (UUID=%s) as the default verification "
-                "for the future operations.") % verification["uuid"])
+        print("Using verification (UUID=%s) as the default verification "
+              "for the future operations." % verification["uuid"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
@@ -574,8 +570,7 @@ class VerifyCommands(object):
         if do_use:
             self.use(api, results["verification"]["uuid"])
         else:
-            print(_("Verification UUID: %s.")
-                  % results["verification"]["uuid"])
+            print("Verification UUID: %s." % results["verification"]["uuid"])
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
@@ -641,7 +636,7 @@ class VerifyCommands(object):
                             table_label="Verification")
 
         if detailed:
-            h = _("Run arguments")
+            h = "Run arguments"
             print("\n%s" % cliutils.make_header(h, len(h)).strip())
             print("\n%s\n" % json.dumps(verification["run_args"], indent=4))
 
@@ -660,8 +655,7 @@ class VerifyCommands(object):
             if failures:
                 self._print_failures("Failures", failures)
             else:
-                print(_("\nCongratulations! Verification doesn't have failed "
-                        "tests! :)"))
+                print("\nCongratulations! Verification passed all tests ;)")
 
     @cliutils.help_group("verification")
     @cliutils.args("--id", dest="verifier_id", type=str, required=False,
@@ -698,11 +692,10 @@ class VerifyCommands(object):
             cliutils.print_list(verifications, fields, formatters=formatters,
                                 normalize_field_names=True, sortby_index=4)
         elif verifier_id or deployment or status or tags:
-            print(_("There are no verifications that meet specified filter "
-                    "arguments."))
+            print("There are no verifications that meet specified criteria.")
         else:
-            print(_("There are no verifications. You can start verification, "
-                    "using command `rally verify start`."))
+            print("There are no verifications. You can start verification, "
+                  "using command `rally verify start`.")
 
     @cliutils.help_group("verification")
     @cliutils.args("--uuid", nargs="+", dest="verification_uuid", type=str,
@@ -743,7 +736,7 @@ class VerifyCommands(object):
                                          output_type=output_type,
                                          output_dest=output_dest)
         if "files" in result:
-            print(_("Saving the report to '%s' file. It may take some time.")
+            print("Saving the report to '%s' file. It may take some time."
                   % output_dest)
             for path in result["files"]:
                 full_path = os.path.abspath(os.path.expanduser(path))
@@ -751,12 +744,12 @@ class VerifyCommands(object):
                     os.makedirs(os.path.dirname(full_path))
                 with open(full_path, "w") as f:
                     f.write(result["files"][path])
-            print(_("The report has been successfully saved."))
+            print("The report has been successfully saved.")
 
             if open_it:
                 if "open" not in result:
-                    print(_("Cannot open '%s' report in the browser because "
-                            "report type doesn't support it.") % output_type)
+                    print("Cannot open '%s' report in the browser because "
+                          "report type doesn't support it." % output_type)
                     return 1
                 webbrowser.open_new_tab(
                     "file://" + os.path.abspath(result["open"]))
@@ -764,7 +757,7 @@ class VerifyCommands(object):
         if "print" in result:
             # NOTE(andreykurilin): we need a separation between logs and
             #   printed information to be able to parse output
-            h = _("Verification Report")
+            h = "Verification Report"
             print("\n%s\n%s" % (cliutils.make_header(h, len(h)),
                                 result["print"]))
 
@@ -791,7 +784,7 @@ class VerifyCommands(object):
                        file_to_parse=None, run_args=None, do_use=True):
         """Import results of a test run into the Rally database."""
         if not os.path.exists(file_to_parse):
-            print(_("File '%s' not found.") % file_to_parse)
+            print("File '%s' not found." % file_to_parse)
             return 1
         with open(file_to_parse, "r") as f:
             data = f.read()
@@ -806,4 +799,4 @@ class VerifyCommands(object):
         if do_use:
             self.use(api, verification_uuid)
         else:
-            print(_("Verification UUID: %s.") % verification_uuid)
+            print("Verification UUID: %s." % verification_uuid)

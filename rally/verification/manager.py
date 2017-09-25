@@ -21,7 +21,6 @@ import sys
 
 import six
 
-from rally.common.i18n import _LE, _LI
 from rally.common.io import subunit_v2
 from rally.common import logging
 from rally.common.plugin import plugin
@@ -196,10 +195,10 @@ class VerifierManager(plugin.Plugin):
                                             % source)
 
         if logging.is_debug():
-            LOG.debug("Cloning verifier repo from %s into %s.", source,
-                      self.repo_dir)
+            LOG.debug("Cloning verifier repo from %s into %s."
+                      % (source, self.repo_dir))
         else:
-            LOG.info("Cloning verifier repo from %s.", source)
+            LOG.info("Cloning verifier repo from %s." % source)
 
         cmd = ["git", "clone", source, self.repo_dir]
 
@@ -259,8 +258,8 @@ class VerifierManager(plugin.Plugin):
 
         LOG.info("Creating virtual environment. It may take a few minutes.")
 
-        LOG.debug("Initializing virtual environment in %s directory.",
-                  self.venv_dir)
+        LOG.debug("Initializing virtual environment in %s directory."
+                  % self.venv_dir)
         utils.check_output(["virtualenv", "-p", sys.executable, self.venv_dir],
                            cwd=self.repo_dir,
                            msg_on_err="Failed to initialize virtual env "
@@ -293,7 +292,7 @@ class VerifierManager(plugin.Plugin):
 
     def checkout(self, version):
         """Switch a verifier repo."""
-        LOG.info("Switching verifier repo to the '%s' version.", version)
+        LOG.info("Switching verifier repo to the '%s' version." % version)
         utils.check_output(["git", "checkout", "master"], cwd=self.repo_dir)
         utils.check_output(["git", "remote", "update"], cwd=self.repo_dir)
         utils.check_output(["git", "pull"], cwd=self.repo_dir)
@@ -309,7 +308,7 @@ class VerifierManager(plugin.Plugin):
             configuration
         """
         raise NotImplementedError(
-            _LI("'%s' verifiers don't support configuration at all.")
+            "'%s' verifiers don't support configuration at all."
             % self.get_name())
 
     def is_configured(self):
@@ -330,7 +329,7 @@ class VerifierManager(plugin.Plugin):
             configuration
         """
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support configuration at all.")
+            "'%s' verifiers don't support configuration at all."
             % self.get_name())
 
     def extend_configuration(self, extra_options):
@@ -342,7 +341,7 @@ class VerifierManager(plugin.Plugin):
             configuration
         """
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support configuration at all.")
+            "'%s' verifiers don't support configuration at all."
             % self.get_name())
 
     def install_extension(self, source, version=None, extra_settings=None):
@@ -358,7 +357,7 @@ class VerifierManager(plugin.Plugin):
             extensions
         """
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support extensions.") % self.get_name())
+            "'%s' verifiers don't support extensions." % self.get_name())
 
     def list_extensions(self):
         """List all verifier extensions."""
@@ -373,7 +372,7 @@ class VerifierManager(plugin.Plugin):
             extensions
         """
         raise NotImplementedError(
-            _LE("'%s' verifiers don't support extensions.") % self.get_name())
+            "'%s' verifiers don't support extensions." % self.get_name())
 
     @abc.abstractmethod
     def list_tests(self, pattern=""):

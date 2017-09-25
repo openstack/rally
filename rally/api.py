@@ -28,10 +28,9 @@ from oslo_config import cfg
 import requests
 from requests.packages import urllib3
 
-from rally.common import opts
-from rally.common.i18n import _, _LI, _LE
 from rally.common import logging
 from rally.common import objects
+from rally.common import opts
 from rally.common.plugin import discover
 from rally.common import utils
 from rally.common import version as rally_version
@@ -80,9 +79,9 @@ class _Deployment(APIGroup):
 
         try:
             deployment = objects.Deployment(name=name, config=config)
-        except exceptions.DeploymentNameExists as e:
+        except exceptions.DeploymentNameExists:
             if logging.is_debug():
-                LOG.exception(e)
+                LOG.exception("Deployment with such name exists")
             raise
 
         deployer = deploy_engine.Engine.get_engine(
@@ -90,7 +89,7 @@ class _Deployment(APIGroup):
         try:
             deployer.validate()
         except jsonschema.ValidationError:
-            LOG.error(_LE("Deployment %s: Schema validation error.") %
+            LOG.error("Deployment %s: Schema validation error." %
                       deployment["uuid"])
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise
@@ -102,8 +101,8 @@ class _Deployment(APIGroup):
                 for name, cred in deployer._get_creds(config).items())
             LOG.warning(
                 "The used config schema is deprecated since Rally 0.10.0. "
-                "The new one is much simpler, try it now:\n%s",
-                json.dumps(new_conf, indent=4)
+                "The new one is much simpler, try it now:\n%s"
+                % json.dumps(new_conf, indent=4)
             )
 
         with deployer:
@@ -130,7 +129,7 @@ class _Deployment(APIGroup):
             with deployer:
                 deployer.make_cleanup()
         except exceptions.PluginNotFound:
-            LOG.info(_("Deployment %s will be deleted despite exception")
+            LOG.info("Deployment %s will be deleted despite exception"
                      % deployment["uuid"])
 
         for verifier in self.api.verifier.list():
@@ -158,7 +157,7 @@ class _Deployment(APIGroup):
             try:
                 deployer.validate(config)
             except jsonschema.ValidationError:
-                LOG.error(_LE("Config schema validation error."))
+                LOG.error("Config schema validation error.")
                 raise
 
         with deployer:
@@ -320,8 +319,8 @@ class _Task(APIGroup):
         real_missing = [mis for mis in missing
                         if is_really_missing(mis, task_template)]
         if real_missing:
-            multi_msg = _("Please specify next template task arguments: %s")
-            single_msg = _("Please specify template task argument: %s")
+            multi_msg = "Please specify next template task arguments: %s"
+            single_msg = "Please specify template task argument: %s"
 
             raise TypeError((len(real_missing) > 1 and multi_msg or single_msg)
                             % ", ".join(real_missing))
@@ -414,8 +413,8 @@ class _Task(APIGroup):
                         "deprecated since Rally 0.10. To use pre-created "
                         "task, transmit task UUID instead.")
             if task.is_temporary:
-                raise ValueError(_(
-                    "Unable to run a temporary task. Please check your code."))
+                raise ValueError(
+                    "Unable to run a temporary task. Please check your code.")
             task = objects.Task.get(task["uuid"])
         elif task is not None:
             task = objects.Task.get(task)
@@ -467,8 +466,9 @@ class _Task(APIGroup):
         if not async:
             current_status = objects.Task.get_status(task_uuid)
             if current_status in objects.Task.NOT_IMPLEMENTED_STAGES_FOR_ABORT:
-                LOG.info(_LI("Task status is '%s'. Should wait until it became"
-                             " 'running'") % current_status)
+                LOG.info(
+                    "Task status is '%s' waiting until it became 'running'"
+                    % current_status)
                 while (current_status in
                        objects.Task.NOT_IMPLEMENTED_STAGES_FOR_ABORT):
                     time.sleep(1)
@@ -477,7 +477,7 @@ class _Task(APIGroup):
         objects.Task.get(task_uuid).abort(soft=soft)
 
         if not async:
-            LOG.info(_LI("Waiting until the task stops."))
+            LOG.info("Waiting until the task stops.")
             finished_stages = [consts.TaskStatus.ABORTED,
                                consts.TaskStatus.FINISHED,
                                consts.TaskStatus.CRASHED]
@@ -564,8 +564,8 @@ class _Task(APIGroup):
         reporter_cls = texporter.TaskExporter.get(output_type)
         reporter_cls.validate(output_dest)
 
-        LOG.info("Building '%s' report for the following task(s): "
-                 "'%s'.", output_type, "', '".join(tasks_uuids))
+        LOG.info("Building '%s' report for the following task(s): '%s'."
+                 % (output_type, "', '".join(tasks_uuids)))
         result = texporter.TaskExporter.make(reporter_cls,
                                              tasks_results,
                                              output_dest,
@@ -606,7 +606,7 @@ class _Verifier(APIGroup):
         # check that the specified verifier type exists
         vmanager.VerifierManager.get(vtype, platform=namespace)
 
-        LOG.info("Creating verifier '%s'.", name)
+        LOG.info("Creating verifier '%s'." % name)
 
         try:
             verifier = self._get(name)
@@ -641,7 +641,7 @@ class _Verifier(APIGroup):
             raise
         verifier.update_status(consts.VerifierStatus.INSTALLED)
 
-        LOG.info("Verifier %s has been successfully created!", verifier)
+        LOG.info("Verifier %s has been successfully created!" % verifier)
 
         return verifier.uuid
 
@@ -684,8 +684,8 @@ class _Verifier(APIGroup):
             d_msg = ((" for deployment '%s'" % deployment_id)
                      if deployment_id else "")
             if force:
-                LOG.info("Deleting all verifications created by verifier "
-                         "%s%s.", verifier, d_msg)
+                LOG.info("Deleting all verifications created by verifier %s%s."
+                         % (verifier, d_msg))
                 for verification in verifications:
                     self.api.verification.delete(
                         verification_uuid=verification["uuid"])
@@ -698,13 +698,13 @@ class _Verifier(APIGroup):
                     .format(verifier, d_msg))
 
         if deployment_id:
-            LOG.info("Deleting deployment-specific data for verifier %s.",
-                     verifier)
+            LOG.info("Deleting deployment-specific data for verifier %s."
+                     % verifier)
             verifier.set_deployment(deployment_id)
             verifier.manager.uninstall()
             LOG.info("Deployment-specific data has been successfully deleted!")
         else:
-            LOG.info("Deleting verifier %s.", verifier)
+            LOG.info("Deleting verifier %s." % verifier)
             verifier.manager.uninstall(full=True)
             objects.Verifier.delete(verifier_id)
             LOG.info("Verifier has been successfully deleted!")
@@ -725,7 +725,7 @@ class _Verifier(APIGroup):
                 "specified: 'system_wide', 'version', 'update_venv'.")
 
         verifier = self._get(verifier_id)
-        LOG.info("Updating verifier %s.", verifier)
+        LOG.info("Updating verifier %s." % verifier)
 
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
@@ -769,7 +769,8 @@ class _Verifier(APIGroup):
             if system_wide == verifier.system_wide:
                 LOG.info(
                     "Verifier %s is already switched to system_wide=%s. "
-                    "Nothing will be changed.", verifier, verifier.system_wide)
+                    "Nothing will be changed."
+                    % (verifier, verifier.system_wide))
             else:
                 properties["system_wide"] = system_wide
                 if not system_wide:
@@ -793,7 +794,7 @@ class _Verifier(APIGroup):
         properties["status"] = original_status  # change verifier status back
         verifier.update_properties(**properties)
 
-        LOG.info("Verifier %s has been successfully updated!", verifier)
+        LOG.info("Verifier %s has been successfully updated!" % verifier)
 
         return verifier.uuid
 
@@ -809,9 +810,10 @@ class _Verifier(APIGroup):
         if not isinstance(verifier, objects.Verifier):
             verifier = self._get(verifier)
         verifier.set_deployment(deployment_id)
-        LOG.info(
-            "Configuring verifier %s for deployment '%s' (UUID=%s).",
-            verifier, verifier.deployment["name"], verifier.deployment["uuid"])
+        LOG.info("Configuring verifier %s for deployment '%s' (UUID=%s)."
+                 % (verifier,
+                    verifier.deployment["name"],
+                    verifier.deployment["uuid"]))
 
         if verifier.status != consts.VerifierStatus.INSTALLED:
             raise exceptions.RallyException(
@@ -834,7 +836,7 @@ class _Verifier(APIGroup):
                     # Just add extra options to the config file.
                     if logging.is_debug():
                         LOG.debug("Adding the following extra options: %s "
-                                  "to verifier configuration.", extra_options)
+                                  "to verifier configuration." % extra_options)
                     else:
                         LOG.info(
                             "Adding extra options to verifier configuration.")
@@ -870,12 +872,14 @@ class _Verifier(APIGroup):
 
         verifier.set_deployment(deployment_id)
         LOG.info("Overriding configuration of verifier %s for deployment '%s' "
-                 "(UUID=%s).", verifier, verifier.deployment["name"],
-                 verifier.deployment["uuid"])
+                 "(UUID=%s)."
+                 % (verifier,
+                    verifier.deployment["name"], verifier.deployment["uuid"]))
         verifier.manager.override_configuration(new_configuration)
         LOG.info("Configuration of verifier %s has been successfully "
-                 "overridden for deployment '%s' (UUID=%s)!", verifier,
-                 verifier.deployment["name"], verifier.deployment["uuid"])
+                 "overridden for deployment '%s' (UUID=%s)!"
+                 % (verifier,
+                    verifier.deployment["name"], verifier.deployment["uuid"]))
 
     def list_tests(self, verifier_id, pattern=""):
         """List all verifier tests.
@@ -915,7 +919,7 @@ class _Verifier(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        LOG.info("Adding extension for verifier %s.", verifier)
+        LOG.info("Adding extension for verifier %s." % verifier)
 
         # store original status to rollback it after failure
         original_status = verifier.status
@@ -926,8 +930,8 @@ class _Verifier(APIGroup):
         finally:
             verifier.update_status(original_status)
 
-        LOG.info("Extension for verifier %s has been successfully added!",
-                 verifier)
+        LOG.info("Extension for verifier %s has been successfully added!"
+                 % verifier)
 
     def list_extensions(self, verifier_id):
         """List all verifier extensions.
@@ -958,10 +962,10 @@ class _Verifier(APIGroup):
                     verifier, verifier.status, consts.VerifierStatus.INSTALLED)
             )
 
-        LOG.info("Deleting extension for verifier %s.", verifier)
+        LOG.info("Deleting extension for verifier %s." % verifier)
         verifier.manager.uninstall_extension(name)
-        LOG.info("Extension for verifier %s has been successfully deleted!",
-                 verifier)
+        LOG.info("Extension for verifier %s has been successfully deleted!"
+                 % verifier)
 
 
 class _Verification(APIGroup):
@@ -1007,9 +1011,11 @@ class _Verification(APIGroup):
             verifier_id=verifier_id, deployment_id=deployment_id, tags=tags,
             run_args=run_args)
         LOG.info("Starting verification (UUID=%s) for deployment '%s' "
-                 "(UUID=%s) by verifier %s.", verification.uuid,
-                 verifier.deployment["name"], verifier.deployment["uuid"],
-                 verifier)
+                 "(UUID=%s) by verifier %s."
+                 % (verification.uuid,
+                    verifier.deployment["name"],
+                    verifier.deployment["uuid"],
+                    verifier))
         verification.update_status(consts.VerificationStatus.RUNNING)
 
         context = {"config": verifier.manager._meta_get("context"),
@@ -1029,8 +1035,9 @@ class _Verification(APIGroup):
         verification.finish(results.totals, results.tests)
 
         LOG.info("Verification (UUID=%s) has been successfully finished for "
-                 "deployment '%s' (UUID=%s)!", verification.uuid,
-                 verifier.deployment["name"], verifier.deployment["uuid"])
+                 "deployment '%s' (UUID=%s)!"
+                 % (verification.uuid,
+                    verifier.deployment["name"], verifier.deployment["uuid"]))
 
         return {"verification": verification.to_dict(),
                 "totals": results.totals,
@@ -1069,8 +1076,10 @@ class _Verification(APIGroup):
                       else verification.deployment_uuid)
         deployment = self.api.deployment.get(deployment=deployment)
         LOG.info("Re-running %stests from verification (UUID=%s) for "
-                 "deployment '%s' (UUID=%s).", "failed " if failed else "",
-                 verification.uuid, deployment["name"], deployment["uuid"])
+                 "deployment '%s' (UUID=%s)."
+                 % ("failed " if failed else "",
+                    verification.uuid,
+                    deployment["name"], deployment["uuid"]))
         return self.start(verifier_id=verification.verifier_uuid,
                           deployment_id=deployment["uuid"],
                           load_list=tests, tags=tags, **run_args)
@@ -1104,7 +1113,7 @@ class _Verification(APIGroup):
         :param verification_uuid: Verification UUID
         """
         verification = self._get(verification_uuid)
-        LOG.info("Deleting verification (UUID=%s).", verification.uuid)
+        LOG.info("Deleting verification (UUID=%s)." % verification.uuid)
         verification.delete()
         LOG.info("Verification has been successfully deleted!")
 
@@ -1120,12 +1129,12 @@ class _Verification(APIGroup):
         reporter_cls = vreporter.VerificationReporter.get(output_type)
         reporter_cls.validate(output_dest)
 
-        LOG.info("Building '%s' report for the following verification(s): "
-                 "'%s'.", output_type, "', '".join(uuids))
+        LOG.info("Building '%s' report for the following verification(s): '%s'"
+                 % (output_type, "', '".join(uuids)))
         result = vreporter.VerificationReporter.make(reporter_cls,
                                                      verifications,
                                                      output_dest)
-        LOG.info(_LI("The report has been successfully built."))
+        LOG.info("The report has been successfully built.")
         return result
 
     def import_results(self, verifier_id, deployment_id, data, **run_args):
@@ -1143,9 +1152,10 @@ class _Verification(APIGroup):
         verifier = self.api.verifier._get(verifier_id)
         verifier.set_deployment(deployment_id)
         LOG.info("Importing test results into a new verification for "
-                 "deployment '%s' (UUID=%s), using verifier %s.",
-                 verifier.deployment["name"], verifier.deployment["uuid"],
-                 verifier)
+                 "deployment '%s' (UUID=%s), using verifier %s."
+                 % (verifier.deployment["name"],
+                    verifier.deployment["uuid"],
+                    verifier))
 
         verifier.manager.validate_args(run_args)
 
@@ -1233,8 +1243,8 @@ class API(object):
 
         except cfg.ConfigFilesNotFoundError as e:
             cfg_files = e.config_files
-            raise exceptions.RallyException(_(
-                "Failed to read configuration file(s): %s") % cfg_files)
+            raise exceptions.RallyException(
+                "Failed to read configuration file(s): %s" % cfg_files)
 
         # Check that db is upgraded to the latest revision
         if not skip_db_check:
@@ -1266,13 +1276,13 @@ class API(object):
 
         # Check that db exists
         if rev["revision"] is None:
-            raise exceptions.RallyException(_(
+            raise exceptions.RallyException(
                 "Database is missing. Create database by command "
-                "`rally db create'"))
+                "`rally db create'")
 
         # Check that db is updated
         if rev["revision"] != rev["current_head"]:
-            raise exceptions.RallyException(_(
+            raise exceptions.RallyException((
                 "Database seems to be outdated. Run upgrade from "
                 "revision %(revision)s to %(current_head)s by command "
                 "`rally db upgrade'") % rev)

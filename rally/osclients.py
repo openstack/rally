@@ -20,7 +20,6 @@ from oslo_config import cfg
 from six.moves.urllib import parse
 
 from rally.cli import envutils
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import consts
@@ -114,18 +113,17 @@ class OSClient(plugin.Plugin):
         supported_versions = cls.get_supported_versions()
         if supported_versions:
             if str(version) not in supported_versions:
-                raise exceptions.ValidationError(_(
+                raise exceptions.ValidationError(
                     "'%(vers)s' is not supported. Should be one of "
-                    "'%(supported)s'") % {"vers": version,
-                                          "supported": supported_versions})
+                    "'%(supported)s'"
+                    % {"vers": version, "supported": supported_versions})
         else:
-            raise exceptions.RallyException(
-                _("Setting version is not supported."))
+            raise exceptions.RallyException("Setting version is not supported")
         try:
             float(version)
         except ValueError:
-            raise exceptions.ValidationError(_(
-                "'%s' is invalid. Should be numeric value.") % version)
+            raise exceptions.ValidationError(
+                "'%s' is invalid. Should be numeric value." % version)
 
     def choose_service_type(self, service_type=None):
         """Return service_type string.
@@ -141,8 +139,8 @@ class OSClient(plugin.Plugin):
     def is_service_type_configurable(cls):
         """Just checks that client supports setting service type."""
         if cls._meta_get("default_service_type") is None:
-            raise exceptions.RallyException(_(
-                "Setting service type is not supported."))
+            raise exceptions.RallyException(
+                "Setting service type is not supported.")
 
     @property
     def keystone(self):
@@ -223,8 +221,8 @@ class Keystone(OSClient):
 
     @property
     def keystone(self):
-        raise exceptions.RallyException(_("Method 'keystone' is restricted "
-                                          "for keystoneclient. :)"))
+        raise exceptions.RallyException(
+            "Method 'keystone' is restricted for keystoneclient. :)")
 
     @property
     def service_catalog(self):
@@ -702,7 +700,7 @@ class EC2(OSClient):
 
         if kc.version != "v2.0":
             raise exceptions.RallyException(
-                _("Rally EC2 scenario supports only Keystone version 2"))
+                "Rally EC2 scenario supports only Keystone version 2")
         ec2_credential = kc.ec2.create(user_id=kc.auth_user_id,
                                        tenant_id=kc.auth_tenant_id)
         client = boto.connect_ec2_endpoint(
