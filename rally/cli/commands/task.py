@@ -538,19 +538,18 @@ class TaskCommands(object):
                                             formatters=formatters)
                         print()
 
-            print(_("Load duration: %s") % rutils.format_float_to_str(
-                workload["load_duration"]))
-            print(_("Full duration: %s") % rutils.format_float_to_str(
-                workload["full_duration"]))
-
-            print("\nHINTS:")
-            print(_("* To plot HTML graphics with this data, run:"))
-            print("\trally task report %s --out output.html\n" % task["uuid"])
-            print(_("* To generate a JUnit report, run:"))
-            print("\trally task export %s --type junit --to output.xml\n" %
-                  task["uuid"])
-            print(_("* To get raw JSON output of task results, run:"))
-            print("\trally task results %s\n" % task["uuid"])
+            print("Load duration: %s"
+                  % rutils.format_float_to_str(workload["load_duration"]))
+            print("Full duration: %s"
+                  % rutils.format_float_to_str(workload["full_duration"]))
+        print("\nHINTS:")
+        print("* To plot HTML graphics with this data, run:")
+        print("\trally task report %s --out output.html\n" % task["uuid"])
+        print("* To generate a JUnit report, run:")
+        print("\trally task export %s --type junit --to output.xml\n" %
+              task["uuid"])
+        print("* To get raw JSON output of task results, run:")
+        print("\trally task results %s\n" % task["uuid"])
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task.")
     @envutils.with_default_task_id
