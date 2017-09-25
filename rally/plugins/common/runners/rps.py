@@ -125,7 +125,7 @@ def _worker_process(queue, iteration_gen, timeout, times, max_concurrent,
 class CheckPRSValidator(validation.Validator):
     """Additional schema validation for rps runner"""
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         if isinstance(plugin_cfg["rps"], dict):
             if plugin_cfg["rps"]["end"] < plugin_cfg["rps"]["start"]:
                 msg = "rps end value must not be less than rps start value."

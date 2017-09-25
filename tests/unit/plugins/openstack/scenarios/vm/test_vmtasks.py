@@ -294,8 +294,8 @@ class ValidCommandValidatorTestCase(test.TestCase):
 
     def setUp(self):
         super(ValidCommandValidatorTestCase, self).setUp()
-        self.credentials = dict(openstack={"admin": mock.MagicMock(),
-                                           "users": [mock.MagicMock()], })
+        self.context = {"admin": {"credential": mock.MagicMock()},
+                        "users": [{"credential": mock.MagicMock()}]}
 
     @ddt.data({"command": {"script_inline": "foobar",
                            "interpreter": ["ENV=bar", "/bin/foo"],
@@ -341,8 +341,8 @@ class ValidCommandValidatorTestCase(test.TestCase):
                                                   required=True)
         mock__file_access_ok.return_value = None
         command = {"script_file": "foobar", "interpreter": "foo"}
-        result = validator.validate({"args": {"p": command}},
-                                    self.credentials, None, None)
+        result = validator.validate(self.context, {"args": {"p": command}},
+                                    None, None)
         self.assertIsNone(result)
         mock__file_access_ok.assert_called_once_with(
             filename="foobar", mode=os.R_OK, param_name="p",
@@ -351,8 +351,8 @@ class ValidCommandValidatorTestCase(test.TestCase):
     def test_valid_command_not_required(self):
         validator = vmtasks.ValidCommandValidator(param_name="p",
                                                   required=False)
-        result = validator.validate({"args": {"p": None}},
-                                    self.credentials, None, None)
+        result = validator.validate(self.context, {"args": {"p": None}},
+                                    None, None)
         self.assertIsNone(result)
 
     def test_valid_command_required(self):
@@ -362,7 +362,7 @@ class ValidCommandValidatorTestCase(test.TestCase):
         e = self.assertRaises(
             validation.ValidationError,
             validator.validate, {"args": {"p": None}},
-            self.credentials, None, None)
+            self.context, None, None)
         self.assertEqual("Command must be a dictionary", e.message)
 
     @mock.patch("rally.plugins.common.validators.FileExistsValidator"
@@ -376,8 +376,8 @@ class ValidCommandValidatorTestCase(test.TestCase):
         command = {"script_file": "foobar", "interpreter": "foo"}
         e = self.assertRaises(
             validation.ValidationError,
-            validator.validate, {"args": {"p": command}},
-            self.credentials, None, None)
+            validator.validate, self.context, {"args": {"p": command}},
+            None, None)
         self.assertEqual("O_o", e.message)
 
     @mock.patch("%s.ValidCommandValidator.check_command_dict" % BASE)
@@ -391,7 +391,7 @@ class ValidCommandValidatorTestCase(test.TestCase):
         e = self.assertRaises(
             validation.ValidationError,
             validator.validate, {"args": {"p": {"foo": "bar"}}},
-            self.credentials, None, None)
+            self.context, None, None)
         self.assertEqual("foobar", e.message)
 
     def test_valid_command_script_inline(self):
@@ -399,7 +399,7 @@ class ValidCommandValidatorTestCase(test.TestCase):
                                                   required=True)
 
         command = {"script_inline": "bar", "interpreter": "/bin/sh"}
-        result = validator.validate({"args": {"p": command}}, self.credentials,
+        result = validator.validate(self.context, {"args": {"p": command}},
                                     None, None)
         self.assertIsNone(result)
 
@@ -414,7 +414,7 @@ class ValidCommandValidatorTestCase(test.TestCase):
         command = {"remote_path": "bar", "local_path": "foobar"}
         self.assertRaises(
             validation.ValidationError,
-            validator.validate, {"args": {"p": command}}, self.credentials,
+            validator.validate, self.context, {"args": {"p": command}},
             None, None)
         mock__file_access_ok.assert_called_once_with(
             filename="foobar", mode=os.R_OK, param_name="p",

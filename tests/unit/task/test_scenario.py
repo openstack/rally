@@ -89,7 +89,7 @@ class ScenarioTestCase(test.TestCase):
             for context_name, context_conf in s.get_default_context().items():
                 results.extend(context.Context.validate(
                     name=context_name,
-                    credentials=None,
+                    context=None,
                     config=None,
                     plugin_cfg=context_conf,
                     allow_hidden=True,

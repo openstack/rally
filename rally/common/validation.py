@@ -46,10 +46,10 @@ class Validator(plugin.Plugin):
         pass
 
     @abc.abstractmethod
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         """Method that validates something.
 
-        :param credentials: credentials dict for all platforms
+        :param context: a validation context
         :param config: dict, configuration of workload
         :param plugin_cls: plugin class
         :param plugin_cfg: dict, with exact configuration of the plugin
@@ -73,6 +73,8 @@ class Validator(plugin.Plugin):
         return doc
 
 
+# TODO(andreykurilin): Get rid of hardcode to "admin"/"users" properties as
+#   soon as we finish "Platforms" work.
 @configure(name="required_platform")
 class RequiredPlatformValidator(Validator):
 
@@ -94,18 +96,18 @@ class RequiredPlatformValidator(Validator):
         self.admin = admin
         self.users = users
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         if not (self.admin or self.users):
             self.fail("You should specify admin=True or users=True or both.")
 
-        if credentials is None:
-            credentials = {}
-        credentials = credentials.get(self.platform, {})
+        if context is None:
+            context = {"platforms": {}}
+        context = context["platforms"].get(self.platform, {})
 
-        if self.admin and credentials.get("admin") is None:
+        if self.admin and context.get("admin") is None:
             self.fail("No admin credential for %s" % self.platform)
-        if self.users and len(credentials.get("users", ())) == 0:
-            if credentials.get("admin") is None:
+        if self.users and len(context.get("users", ())) == 0:
+            if context.get("admin") is None:
                 self.fail("No user credentials for %s" % self.platform)
             else:
                 # NOTE(andreykurilin): It is a case when the plugin requires
@@ -176,7 +178,7 @@ class ValidatablePluginMixin(object):
                 for name, args, kwargs in validators]
 
     @classmethod
-    def validate(cls, name, credentials, config, plugin_cfg,
+    def validate(cls, name, context, config, plugin_cfg,
                  allow_hidden=False, vtype=None):
         """Execute all validators stored in meta of plugin.
 
@@ -185,7 +187,7 @@ class ValidatablePluginMixin(object):
         to the list.
 
         :param name: full name of the plugin to validate
-        :param credentials: credentials dict for all platforms
+        :param context: a validation context
         :param config: dict with configuration of specified workload
         :param plugin_cfg: dict, with exact configuration of the plugin
         :param allow_hidden: do not ignore hidden plugins
@@ -243,7 +245,7 @@ class ValidatablePluginMixin(object):
                 validator = validator_cls(*args, **kwargs)
                 result = None
                 try:
-                    validator.validate(credentials=credentials,
+                    validator.validate(context=context,
                                        config=config,
                                        plugin_cls=plugin,
                                        plugin_cfg=plugin_cfg)

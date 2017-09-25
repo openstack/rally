@@ -24,7 +24,7 @@ from rally.task import context
 class CheckOpenStackAPIVersionsValidator(validation.Validator):
     """Additional validation for api_versions context"""
 
-    def validate(self, credentials, config, plugin_cls, plugin_cfg):
+    def validate(self, context, config, plugin_cls, plugin_cfg):
         for client in plugin_cfg:
             client_cls = osclients.OSClient.get(client)
             try:
