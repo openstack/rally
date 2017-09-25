@@ -37,18 +37,18 @@ class SysCallHook(hook.Hook):
     }
 
     def run(self):
-        LOG.debug("sys_call hook: Running command %s", self.config)
+        LOG.debug("sys_call hook: Running command %s" % self.config)
         proc = subprocess.Popen(shlex.split(self.config),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 universal_newlines=True)
         out, err = proc.communicate()
-        LOG.debug("sys_call hook: Command %s returned %s",
-                  self.config, proc.returncode)
+        LOG.debug("sys_call hook: Command %s returned %s"
+                  % (self.config, proc.returncode))
         if proc.returncode:
             self.set_error(
                 exception_name="n/a",  # no exception class
-                description="Subprocess returned {}".format(proc.returncode),
+                description="Subprocess returned %s" % proc.returncode,
                 details=(err or "stdout: %s" % out))
 
         # NOTE(amaretskiy): Try to load JSON for charts,

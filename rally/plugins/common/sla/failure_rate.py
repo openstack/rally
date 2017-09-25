@@ -19,7 +19,6 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.common.i18n import _
 from rally import consts
 from rally.task import sla
 
@@ -63,6 +62,6 @@ class FailureRate(sla.SLA):
         return self.success
 
     def details(self):
-        return (_("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s") %
-                (self.min_percent, self.error_rate, self.max_percent,
-                 self.status()))
+        return ("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s" %
+                (self.min_percent, self.error_rate,
+                 self.max_percent, self.status()))

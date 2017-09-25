@@ -19,7 +19,6 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.common.i18n import _
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
@@ -108,5 +107,5 @@ class Outliers(sla.SLA):
         return self.success
 
     def details(self):
-        return (_("Maximum number of outliers %i <= %i - %s") %
+        return ("Maximum number of outliers %i <= %i - %s" %
                 (self.outliers, self.max_outliers, self.status()))

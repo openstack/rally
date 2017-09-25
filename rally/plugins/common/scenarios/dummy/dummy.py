@@ -12,7 +12,6 @@
 
 import random
 
-from rally.common.i18n import _
 from rally.common import utils
 from rally.common import validation
 from rally import exceptions
@@ -25,7 +24,7 @@ from rally.task import scenario
 
 class DummyScenarioException(exceptions.RallyException):
     error_code = 530
-    msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
+    msg_fmt = "Dummy scenario expected exception: '%(message)s'"
 
 
 @scenario.configure(name="Dummy.failure")
@@ -46,7 +45,7 @@ class DummyFailure(scenario.Scenario):
         utils.interruptable_sleep(sleep)
         if from_iteration <= self.context["iteration"] <= to_iteration:
             if each and not self.context["iteration"] % each:
-                raise DummyScenarioException(_("Expected failure"))
+                raise DummyScenarioException("Expected failure")
 
 
 @scenario.configure(name="Dummy.dummy")

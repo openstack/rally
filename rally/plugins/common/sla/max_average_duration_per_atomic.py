@@ -21,7 +21,6 @@ with contracted values such as maximum error rate or minimum response time.
 
 import collections
 
-from rally.common.i18n import _
 from rally.common import streaming_algorithms
 from rally import consts
 from rally.task import sla
@@ -66,9 +65,9 @@ class MaxAverageDurationPerAtomic(sla.SLA):
         return self.success
 
     def details(self):
-        strs = [_("Action: '%s'. %.2fs <= %.2fs") %
+        strs = ["Action: '%s'. %.2fs <= %.2fs" %
                 (atom, self.avg_by_action[atom], val)
                 for atom, val in self.criterion_items]
-        head = _("Average duration of one iteration for atomic actions:")
-        end = _("Status: %s") % self.status()
+        head = "Average duration of one iteration for atomic actions:"
+        end = "Status: %s" % self.status()
         return "\n".join([head] + strs + [end])
