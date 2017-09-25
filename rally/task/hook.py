@@ -19,7 +19,6 @@ import threading
 
 import six
 
-from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
@@ -95,7 +94,7 @@ class HookExecutor(object):
         for trigger_obj in self.triggers[event_type]:
             started = trigger_obj.on_event(event_type, value)
             if started:
-                LOG.info(_("Hook %s is trigged for Task %s by %s=%s")
+                LOG.info("Hook %s is trigged for Task %s by %s=%s"
                          % (trigger_obj.hook_cls.__name__, self.task["uuid"],
                             event_type, value))
 
@@ -177,8 +176,7 @@ class HookAction(plugin.Plugin, validation.ValidatablePluginMixin):
             with rutils.Timer() as timer:
                 self.run()
         except Exception as exc:
-            LOG.error(_LE("Hook %s failed during run."), self.get_name())
-            LOG.exception(exc)
+            LOG.exception("Hook %s failed during run." % self.get_name())
             self.set_error(*utils.format_exc(exc))
 
         self._started_at = timer.timestamp()
@@ -229,7 +227,7 @@ class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
 
     def on_event(self, event_type, value=None):
         """Launch hook on specified event."""
-        LOG.info(_("Hook action %s is triggered for Task %s by %s=%s")
+        LOG.info("Hook action %s is triggered for Task %s by %s=%s"
                  % (self.hook_cls.get_name(), self.task["uuid"],
                     event_type, value))
         action_cfg = list(self.hook_cfg["action"].values())[0]

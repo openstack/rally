@@ -216,9 +216,9 @@ class ContextManager(object):
                 LOG.info("%(msg)s finished in %(duration)s"
                          % {"msg": msg, "duration": timer.duration(fmt=True)})
             except Exception:
-                LOG.exception("%(msg)s failed after %(duration)s"
-                              % {"msg": msg,
-                                 "duration": timer.duration(fmt=True)})
+                LOG.exception(
+                    "%(msg)s failed after %(duration)s"
+                    % {"msg": msg, "duration": timer.duration(fmt=True)})
 
     def __enter__(self):
         try:

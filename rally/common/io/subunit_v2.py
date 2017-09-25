@@ -104,7 +104,7 @@ class SubunitV2StreamResult(object):
                     self._tests[t_id]["reason"] = self._skipped_tests[t_id]
                     status += ": %s" % self._tests[t_id]["reason"]
                 if self._live:
-                    self._logger.info("{-} %s ... %s", name, status)
+                    self._logger.info("{-} %s ... %s" % (name, status))
 
             self._skipped_tests.pop(t_id)
 
@@ -222,8 +222,8 @@ class SubunitV2StreamResult(object):
                     status += ": %s" % reason
 
             w = "{%s} " % worker.pop().split("-")[1] if worker else "-"
-            self._logger.info(
-                "%s ... %s", w + self._get_test_name(test_id), status)
+            self._logger.info("%s ... %s"
+                              % (w + self._get_test_name(test_id), status))
 
     def filter_tests(self, status):
         """Filter tests by given status."""

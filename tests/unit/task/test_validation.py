@@ -136,12 +136,7 @@ class ValidationUtilsTestCase(test.TestCase):
         self.Plugin = my_deprecated_validator("foo", bar="baz")(self.Plugin)
         self.assertEqual([("new_validator", ("foo",), {"bar": "baz"})],
                          self.Plugin._meta_get("validators"))
-        mock_log_warning.assert_called_once_with(
-            "Plugin '%s' uses validator 'rally.task.validation.%s' which is "
-            "deprecated in favor of '%s' (it should be used via new decorator "
-            "'rally.common.validation.add') in Rally v%s.",
-            self.Plugin.get_name(), "deprecated_validator", "new_validator",
-            "0.10.0")
+        mock_log_warning.assert_called_once_with(mock.ANY)
 
     def _unwrap_validator(self, validator, *args, **kwargs):
         name = self.id()

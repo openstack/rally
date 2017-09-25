@@ -24,7 +24,6 @@ from oslo_utils import importutils
 import six
 
 import rally
-from rally.common.i18n import _
 from rally.common import logging
 
 LOG = logging.getLogger(__name__)
@@ -97,7 +96,7 @@ def import_modules_by_entry_point():
 def load_plugins(dir_or_file):
     if os.path.isdir(dir_or_file):
         directory = dir_or_file
-        LOG.info(_("Loading plugins from directories %s/*") %
+        LOG.info("Loading plugins from directories %s/*" %
                  directory.rstrip("/"))
 
         to_load = []
@@ -113,25 +112,25 @@ def load_plugins(dir_or_file):
                 fp, pathname, descr = imp.find_module(plugin, [directory])
                 imp.load_module(plugin, fp, pathname, descr)
                 fp.close()
-                LOG.info(_("\t Loaded module with plugins: %s.py") % fullpath)
+                LOG.info("\t Loaded module with plugins: %s.py" % fullpath)
             except Exception as e:
-                LOG.warning(
-                    "\t Failed to load module with plugins %(path)s.py: %(e)s"
-                    % {"path": fullpath, "e": e})
+                msg = "\t Failed to load module with plugins %s.py" % fullpath
                 if logging.is_debug():
-                    LOG.exception(e)
+                    LOG.exception(msg)
+                else:
+                    LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})
     elif os.path.isfile(dir_or_file):
         plugin_file = dir_or_file
-        LOG.info(_("Loading plugins from file %s") % plugin_file)
+        LOG.info("Loading plugins from file %s" % plugin_file)
         if plugin_file not in sys.path:
             sys.path.append(plugin_file)
         try:
             plugin_name = os.path.splitext(plugin_file.split("/")[-1])[0]
             imp.load_source(plugin_name, plugin_file)
-            LOG.info(_("\t Loaded module with plugins: %s.py") % plugin_name)
+            LOG.info("\t Loaded module with plugins: %s.py" % plugin_name)
         except Exception as e:
-            LOG.warning(_(
-                "\t Failed to load module with plugins %(path)s: %(e)s")
-                % {"path": plugin_file, "e": e})
+            msg = "\t Failed to load module with plugins %s" % plugin_file
             if logging.is_debug():
-                LOG.exception(e)
+                LOG.exception(msg)
+            else:
+                LOG.warning("%(msg)s: %(e)s" % {"msg": msg, "e": e})

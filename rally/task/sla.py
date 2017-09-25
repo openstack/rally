@@ -23,7 +23,6 @@ import abc
 
 import six
 
-from rally.common.i18n import _
 from rally.common.plugin import plugin
 from rally.common import validation
 
@@ -78,28 +77,27 @@ class SLAChecker(object):
         self_config = self.config.get("sla", {})
         other_config = other.config.get("sla", {})
         if self_config != other_config:
-            message = _(
+            raise TypeError(
                 "Error merging SLACheckers with configs %s, %s. "
                 "Only SLACheckers with the same config could be merged."
-            ) % (self_config, other_config)
-            raise TypeError(message)
+                % (self_config, other_config))
 
     def results(self):
         results = [sla.result() for sla in self.sla_criteria]
         if self.aborted_on_sla:
             results.append(_format_result(
                 "aborted_on_sla", False,
-                _("Task was aborted due to SLA failure(s).")))
+                "Task was aborted due to SLA failure(s)."))
 
         if self.aborted_manually:
             results.append(_format_result(
                 "aborted_manually", False,
-                _("Task was aborted due to abort signal.")))
+                "Task was aborted due to abort signal."))
 
         if self.unexpected_failure:
             results.append(_format_result(
                 "something_went_wrong", False,
-                _("Unexpected error: %s") % self.unexpected_failure))
+                "Unexpected error: %s" % self.unexpected_failure))
 
         return results
 
@@ -183,8 +181,6 @@ class SLA(plugin.Plugin, validation.ValidatablePluginMixin):
 
     def validate_type(self, other):
         if type(self) != type(other):
-            message = _(
-                "Error merging SLAs of types %s, %s. "
-                "Only SLAs of the same type could be merged."
-            ) % (type(self), type(other))
-            raise TypeError(message)
+            raise TypeError(
+                "Error merging SLAs of types %s, %s. Only SLAs of the same "
+                "type could be merged." % (type(self), type(other)))

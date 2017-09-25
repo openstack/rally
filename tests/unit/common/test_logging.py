@@ -17,7 +17,6 @@ import logging   # noqa
 
 import mock
 
-from rally.common.i18n import _
 from rally.common import logging as rally_logging
 from tests.unit import test
 
@@ -228,8 +227,8 @@ class LogTestCase(test.TestCase):
         self.assertEqual(4, t.some_method(2, 2))
         params = {"msg": msg % {"a": 10, "b": 20}, "uuid": t.task["uuid"]}
         expected = [
-            mock.call(_("Task %(uuid)s | Starting:  %(msg)s") % params),
-            mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
+            mock.call("Task %(uuid)s | Starting:  %(msg)s" % params),
+            mock.call("Task %(uuid)s | Completed: %(msg)s" % params)
         ]
         self.assertEqual(expected, mock_log.mock_calls)
 

@@ -18,6 +18,8 @@ import functools
 
 from rally.common import logging
 from rally.common import validation
+
+
 LOG = logging.getLogger(__name__)
 
 # TODO(astudenov): remove after deprecating all old validators
@@ -127,8 +129,8 @@ def deprecated_validator(name, old_validator_name, rally_version):
                 "Plugin '%s' uses validator 'rally.task.validation.%s' which "
                 "is deprecated in favor of '%s' (it should be used "
                 "via new decorator 'rally.common.validation.add') in "
-                "Rally v%s.",
-                plugin_name, old_validator_name, name, rally_version)
+                "Rally v%s."
+                % (plugin_name, old_validator_name, name, rally_version))
             plugin._meta_setdefault("validators", [])
             plugin._meta_get("validators").append((name, args, kwargs,))
             return plugin

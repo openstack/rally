@@ -19,7 +19,6 @@ import datetime as dt
 import uuid
 
 from rally.common import db
-from rally.common.i18n import _LE
 from rally.common import logging
 from rally import consts
 from rally import exceptions
@@ -251,17 +250,16 @@ class Task(object):
 
         if current_status in self.NOT_IMPLEMENTED_STAGES_FOR_ABORT:
             raise exceptions.RallyException(
-                _LE("Failed to abort task '%(uuid)s'. It doesn't implemented "
-                    "for '%(stages)s' stages. Current task status is "
-                    "'%(status)s'.") %
-                {"uuid": self.task["uuid"], "status": current_status,
-                 "stages": ", ".join(self.NOT_IMPLEMENTED_STAGES_FOR_ABORT)})
+                "Failed to abort task '%(uuid)s'. It doesn't implemented "
+                "for '%(stages)s' stages. Current task status is '%(status)s'."
+                % {"uuid": self.task["uuid"], "status": current_status,
+                   "stages": ", ".join(self.NOT_IMPLEMENTED_STAGES_FOR_ABORT)})
         elif current_status in [consts.TaskStatus.FINISHED,
                                 consts.TaskStatus.CRASHED,
                                 consts.TaskStatus.ABORTED]:
             raise exceptions.RallyException(
-                _LE("Failed to abort task '%s', since it already "
-                    "finished.") % self.task["uuid"])
+                "Failed to abort task '%s', since it already finished."
+                % self.task["uuid"])
 
         new_status = (consts.TaskStatus.SOFT_ABORTING
                       if soft else consts.TaskStatus.ABORTING)

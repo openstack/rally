@@ -15,7 +15,6 @@
 
 import sys
 
-from rally.common.i18n import _
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import meta
@@ -40,16 +39,15 @@ def base():
     """
     def wrapper(cls):
         if not issubclass(cls, Plugin):
-            raise exceptions.RallyException(_(
-                "Plugin's Base can be only a subclass of Plugin class."))
+            raise exceptions.RallyException(
+                "Plugin's Base can be only a subclass of Plugin class.")
 
         parent = cls._get_base()
         if parent != Plugin:
-            raise exceptions.RallyException(_(
+            raise exceptions.RallyException(
                 "'%(plugin_cls)s' can not be marked as plugin base, since it "
-                "inherits from '%(parent)s' which is also plugin base.") % {
-                "plugin_cls": cls.__name__,
-                "parent": parent.__name__})
+                "inherits from '%(parent)s' which is also plugin base."
+                % {"plugin_cls": cls.__name__, "parent": parent.__name__})
 
         cls.base_ref = cls
         cls._default_meta_init(True)

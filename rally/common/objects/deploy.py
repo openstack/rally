@@ -17,7 +17,6 @@ import datetime as dt
 
 import jsonschema
 
-from rally.common.i18n import _, _LW
 from rally.common import db
 from rally.common import logging
 from rally import consts
@@ -62,9 +61,9 @@ class Deployment(object):
     def __getitem__(self, key):
         # TODO(astudenov): remove this in future releases
         if key == "admin" or key == "users":
-            LOG.warning(_LW("deployment.%s is deprecated in Rally 0.9.0. "
-                            "Use deployment.get_credentials_for('openstack')"
-                            "['%s'] to get credentials.") % (key, key))
+            LOG.warning("deployment.%s is deprecated in Rally 0.9.0. "
+                        "Use deployment.get_credentials_for('openstack')"
+                        "['%s'] to get credentials." % (key, key))
             return self.get_credentials_for("openstack")[key]
         return self.deployment[key]
 
@@ -148,10 +147,9 @@ class Deployment(object):
             return {"admin": None, "users": []}
         try:
             creds = self.deployment["credentials"][namespace][0]
-        except (KeyError, IndexError) as e:
-            LOG.exception(e)
-            raise exceptions.RallyException(_(
-                "No credentials found for %s") % namespace)
+        except (KeyError, IndexError):
+            raise exceptions.RallyException(
+                "No credentials found for %s" % namespace)
 
         admin = creds["admin"]
         credential_cls = credential.get(namespace)

@@ -18,6 +18,12 @@ See https://docs.openstack.org/oslo.i18n/latest/user/usage.html .
 
 import oslo_i18n
 
+from rally.common import logging
+
+LOG = logging.getLogger(__name__)
+LOG.warning("rally.common.i18n module is deprecated and is going to be "
+            "removed. Please do not import it.")
+
 
 _translators = oslo_i18n.TranslatorFactory(domain="rally")
 

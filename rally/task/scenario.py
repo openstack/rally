@@ -16,7 +16,6 @@
 import copy
 import random
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
@@ -53,8 +52,8 @@ def configure(name, platform="default", namespace=None, context=None):
     def wrapper(cls):
         # TODO(boris-42): Drop this check as soon as we refactor rally report
         if "." not in name.strip("."):
-            msg = (_("Scenario name must include a dot: '%s'") % name)
-            raise exceptions.RallyException(msg)
+            raise exceptions.RallyException(
+                "Scenario name must include a dot: '%s'" % name)
 
         for c in context:
             if "@" not in c:

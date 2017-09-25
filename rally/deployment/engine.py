@@ -18,7 +18,6 @@ import abc
 import jsonschema
 import six
 
-from rally.common.i18n import _, _LE
 from rally.common import logging
 from rally.common.plugin import plugin
 from rally import consts
@@ -85,9 +84,9 @@ class Engine(plugin.Plugin):
             engine_cls = Engine.get(name)
             return engine_cls(deployment)
         except exceptions.PluginNotFound:
-            LOG.error(_LE("Deployment %(uuid)s: Deploy engine for %(name)s "
-                      "does not exist.") %
-                      {"uuid": deployment["uuid"], "name": name})
+            LOG.error(
+                "Deployment %(uuid)s: Plugin %(name)s doesn't exist."
+                % {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise
 
@@ -99,15 +98,15 @@ class Engine(plugin.Plugin):
     def cleanup(self):
         """Cleanup OpenStack deployment."""
 
-    @logging.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
+    @logging.log_deploy_wrapper(LOG.info, "OpenStack cloud deployment.")
     def make_deploy(self):
         self.deployment.set_started()
         credentials = self.deploy()
         self.deployment.set_completed()
         return credentials
 
-    @logging.log_deploy_wrapper(LOG.info, _("Destroy cloud and free "
-                                "allocated resources."))
+    @logging.log_deploy_wrapper(LOG.info,
+                                "Destroy cloud and free allocated resources.")
     def make_cleanup(self):
         self.deployment.update_status(consts.DeployStatus.CLEANUP_STARTED)
         self.cleanup()
@@ -121,9 +120,8 @@ class Engine(plugin.Plugin):
             exc_info = None
             if not issubclass(exc_type, exceptions.InvalidArgumentsException):
                 exc_info = (exc_type, exc_value, exc_traceback)
-            LOG.error(_LE("Deployment %(uuid)s: Error has occurred into "
-                      "context of the deployment"),
-                      {"uuid": self.deployment["uuid"]},
+            LOG.error("Deployment %s: Error has occurred in context "
+                      "of the deployment" % self.deployment["uuid"],
                       exc_info=exc_info)
             status = self.deployment["status"]
             if status in (consts.DeployStatus.DEPLOY_INIT,

@@ -35,7 +35,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import load_only as sa_loadonly
 
 from rally.common.db.sqlalchemy import models
-from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
 from rally.task.processing import charts
@@ -77,7 +76,7 @@ def serialize_data(data):
                 result[key] = serialize_data(getattr(data, key))
         return result
 
-    raise ValueError(_("Can not serialize %s") % data)
+    raise ValueError("Can not serialize %s" % data)
 
 
 def serialize(fn):
@@ -216,7 +215,7 @@ class Connection(object):
             return isinstance(obj, type) and issubclass(obj, models.RallyBase)
 
         if not issubclassof_rally_base(model):
-            raise Exception(_("The model should be a subclass of RallyBase"))
+            raise Exception("The model should be a subclass of RallyBase")
 
         return query
 
@@ -325,9 +324,9 @@ class Connection(object):
         )
         if not result:
             status = " or ".join(statuses)
-            msg = _("Task with uuid='%(uuid)s' and in statuses:'"
-                    "%(statuses)s' not found.'") % {"uuid": uuid,
-                                                    "statuses": status}
+            msg = ("Task with uuid='%(uuid)s' and in statuses:'"
+                   "%(statuses)s' not found.'") % {"uuid": uuid,
+                                                   "statuses": status}
             raise exceptions.RallyException(msg)
         return result
 

@@ -22,7 +22,6 @@ import jsonschema
 from novaclient import exceptions as nova_exc
 import six
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally import consts
 from rally import exceptions
@@ -227,9 +226,9 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
             delta = current_time - latest_status_update
             LOG.debug(
                 "Waiting for resource %(resource)s. Status changed: "
-                "%(latest)s => %(current)s in %(delta)s",
-                {"resource": resource_repr, "latest": latest_status,
-                 "current": status, "delta": delta})
+                "%(latest)s => %(current)s in %(delta)s"
+                % {"resource": resource_repr, "latest": latest_status,
+                   "current": status, "delta": delta})
 
             latest_status = status
             latest_status_update = current_time
@@ -300,8 +299,8 @@ def check_service_status(client, service_name):
                 if service.status == "enabled" and service.state == "up":
                     return True
     except nova_exc.NotFound:
-        LOG.warning(_("Unable to retrieve a list of available services from "
-                      "nova. Pre-Grizzly OpenStack deployment?"))
+        LOG.warning("Unable to retrieve a list of available services from "
+                    "nova. Pre-Grizzly OpenStack deployment?")
         return False
     return False
 

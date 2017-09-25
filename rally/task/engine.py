@@ -22,7 +22,6 @@ import traceback
 import jsonschema
 from oslo_config import cfg
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import objects
 from rally.common import utils
@@ -252,7 +251,7 @@ class TaskEngine(object):
                             str(e),
                             json.dumps(traceback.format_exc()))
             if logging.is_debug():
-                LOG.exception(e)
+                LOG.exception("Invalid Task")
             raise exceptions.InvalidTaskException(str(e))
 
         self.task = task
@@ -339,14 +338,14 @@ class TaskEngine(object):
 
             raise exceptions.InvalidTaskConfig(**kw)
 
-    @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
+    @logging.log_task_wrapper(LOG.info, "Task validation of syntax.")
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
             for workload in subtask["workloads"]:
                 self._validate_workload(workload, vtype="syntax")
 
-    @logging.log_task_wrapper(LOG.info, _("Task validation of required "
-                                          "platforms."))
+    @logging.log_task_wrapper(LOG.info,
+                              "Task validation of required platforms.")
     def _validate_config_platforms(self, config):
         # FIXME(andreykurilin): prepare the similar context object to others
         credentials = self.deployment.get_all_credentials()
@@ -358,7 +357,7 @@ class TaskEngine(object):
                 self._validate_workload(
                     workload, vcontext=ctx, vtype="platform")
 
-    @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
+    @logging.log_task_wrapper(LOG.info, "Task validation of semantic.")
     def _validate_config_semantic(self, config):
         self.deployment.verify_connections()
         validation_ctx = self.deployment.get_validation_context()
@@ -369,7 +368,7 @@ class TaskEngine(object):
                     self._validate_workload(
                         workload, vcontext=ctx_obj, vtype="semantic")
 
-    @logging.log_task_wrapper(LOG.info, _("Task validation."))
+    @logging.log_task_wrapper(LOG.info, "Task validation.")
     def validate(self, only_syntax=False):
         """Perform full task configuration validation.
 
@@ -388,7 +387,7 @@ class TaskEngine(object):
             self.task.set_failed(type(e).__name__, str(e), exception_info)
             if (logging.is_debug() and
                     not isinstance(e, exceptions.InvalidTaskConfig)):
-                LOG.exception(e)
+                LOG.exception("Invalid Task")
             raise exceptions.InvalidTaskException(str(e))
 
     def _prepare_context(self, ctx, scenario_name, owner_id):
@@ -409,7 +408,7 @@ class TaskEngine(object):
         }
         return context_obj
 
-    @logging.log_task_wrapper(LOG.info, _("Running task."))
+    @logging.log_task_wrapper(LOG.info, "Running task.")
     def run(self):
         """Run the benchmark according to the test configuration.
 
@@ -443,11 +442,10 @@ class TaskEngine(object):
         except TaskAborted:
             subtask_obj.update_status(consts.SubtaskStatus.ABORTED)
             raise
-        except Exception as e:
+        except Exception:
             subtask_obj.update_status(consts.SubtaskStatus.CRASHED)
             # TODO(astudenov): save error to DB
-            LOG.debug(traceback.format_exc())
-            LOG.exception(e)
+            LOG.exception("Unexpected exception during the subtask execution")
 
             # NOTE(astudenov): crash task after exception in subtask
             self.task.update_status(consts.TaskStatus.CRASHED)
@@ -472,9 +470,9 @@ class TaskEngine(object):
         workload_cfg = objects.Workload.to_task(workload)
         LOG.info("Running workload: \n"
                  "  position = %(position)s\n"
-                 "  config = %(cfg)s", {"position": workload["position"],
-                                        "cfg": json.dumps(workload_cfg,
-                                                          indent=3)})
+                 "  config = %(cfg)s"
+                 % {"position": workload["position"],
+                    "cfg": json.dumps(workload_cfg, indent=3)})
 
         runner_cls = runner.ScenarioRunner.get(workload["runner"]["type"])
         runner_obj = runner_cls(self.task, workload["runner"])
@@ -486,9 +484,8 @@ class TaskEngine(object):
                 with context.ContextManager(context_obj):
                     runner_obj.run(workload["name"], context_obj,
                                    workload["args"])
-        except Exception as e:
-            LOG.debug(traceback.format_exc())
-            LOG.exception(e)
+        except Exception:
+            LOG.exception("Unexpected exception during the workload execution")
             # TODO(astudenov): save error to DB
 
 
@@ -696,7 +693,7 @@ class TaskConfig(object):
             then "Task config is invalid: " gets prepended to the message twice
         """
         if config is None:
-            raise Exception(_("Input task is empty"))
+            raise Exception("Input task is empty")
 
         self.version = self._get_version(config)
         self._validate_version()
@@ -790,8 +787,8 @@ class TaskConfig(object):
     def _validate_version(self):
         if self.version not in self.CONFIG_SCHEMAS:
             allowed = ", ".join([str(k) for k in self.CONFIG_SCHEMAS])
-            msg = (_("Task configuration version {0} is not supported. "
-                     "Supported versions: {1}")).format(self.version, allowed)
+            msg = ("Task configuration version %s is not supported. "
+                   "Supported versions: %s") % (self.version, allowed)
             raise exceptions.InvalidTaskException(msg)
 
     def _validate_json(self, config):

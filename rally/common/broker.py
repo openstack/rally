@@ -16,7 +16,6 @@
 import collections
 import threading
 
-from rally.common.i18n import _LW
 from rally.common import logging
 
 
@@ -42,9 +41,11 @@ def _consumer(consume, queue):
         try:
             consume(cache, args)
         except Exception as e:
-            LOG.warning(_LW("Failed to consume a task from the queue: %s") % e)
+            msg = "Failed to consume a task from the queue"
             if logging.is_debug():
-                LOG.exception(e)
+                LOG.exception(msg)
+            else:
+                LOG.warning("%s: %s" % (msg, e))
 
 
 def _publisher(publish, queue):
@@ -56,9 +57,11 @@ def _publisher(publish, queue):
     try:
         publish(queue)
     except Exception as e:
-        LOG.warning(_LW("Failed to publish a task to the queue: %s") % e)
+        msg = "Failed to publish a task to the queue"
         if logging.is_debug():
-            LOG.exception(e)
+            LOG.exception(msg)
+        else:
+            LOG.warning("%s: %s" % (msg, e))
 
 
 def run(publish, consume, consumers_count=1):

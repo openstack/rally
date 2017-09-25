@@ -181,14 +181,14 @@ class SSH(object):
 
             if session.recv_ready():
                 data = session.recv(4096)
-                LOG.debug("stdout: %r", data)
+                LOG.debug("stdout: %r" % data)
                 if stdout is not None:
                     stdout.write(data.decode("utf8"))
                 continue
 
             if session.recv_stderr_ready():
                 stderr_data = session.recv_stderr(4096)
-                LOG.debug("stderr: %r", stderr_data)
+                LOG.debug("stderr: %r" % stderr_data)
                 if stderr is not None:
                     stderr.write(stderr_data.decode("utf8"))
                 continue
@@ -203,7 +203,7 @@ class SSH(object):
                             writes = []
                             continue
                     sent_bytes = session.send(data_to_send)
-                    LOG.debug("sent: %s", data_to_send[:sent_bytes])
+                    LOG.debug("sent: %s" % data_to_send[:sent_bytes])
                     data_to_send = data_to_send[sent_bytes:]
 
             if session.exit_status_ready():
@@ -252,7 +252,7 @@ class SSH(object):
             try:
                 return self.execute("uname")
             except (socket.error, exceptions.SSHError) as e:
-                LOG.debug("Ssh is still unavailable: %r", e)
+                LOG.debug("Ssh is still unavailable: %r" % e)
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
                 raise exceptions.SSHTimeout("Timeout waiting for '%s'" %

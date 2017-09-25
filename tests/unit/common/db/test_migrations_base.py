@@ -31,7 +31,6 @@ from alembic import script as alembic_script
 from oslo_config import cfg
 
 import rally.common.db.sqlalchemy.api as s_api
-from rally.common.i18n import _LE
 from rally.common import logging
 
 LOG = logging.getLogger(__name__)
@@ -151,6 +150,6 @@ class BaseWalkMigrationMixin(object):
                 if check:
                     check(engine, data)
         except Exception:
-            LOG.error(_LE("Failed to migrate to version {ver} on engine {eng}")
-                      .format(ver=version, eng=engine))
+            LOG.error("Failed to migrate to version %(ver)s on engine %(eng)s"
+                      % {"ver": version, "eng": engine})
             raise

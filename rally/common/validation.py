@@ -256,7 +256,7 @@ class ValidatablePluginMixin(object):
                     result = traceback.format_exc()
                 if result:
                     LOG.debug("Result of validator '%s' is not successful for "
-                              "plugin %s.", validator_cls.get_name(), name)
+                              "plugin %s." % (validator_cls.get_name(), name))
                     results.append(result)
 
             if results:

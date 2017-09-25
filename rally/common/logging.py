@@ -20,7 +20,6 @@ from oslo_config import cfg
 from oslo_log import handlers
 from oslo_log import log as oslogging
 
-from rally.common.i18n import _
 
 log = __import__("logging")
 
@@ -61,8 +60,27 @@ def setup(product_name, version="unknown"):
 
 class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
 
+    _msg = "Do not use *args for string formatting for log message: %s"
+
+    def _check_args(self, msg, *args):
+        if args:
+            self.log(log.WARNING, self._msg % msg)
+
     def debug(self, msg, *args, **kwargs):
+        self._check_args(msg, *args)
         self.log(log.RDEBUG, msg, *args, **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        self._check_args(msg, *args)
+        self.log(log.INFO, msg, *args, **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
+        self._check_args(msg, *args)
+        self.log(log.WARNING, msg, *args, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        self._check_args(msg, *args)
+        self.log(log.ERROR, msg, *args, **kwargs)
 
 
 def getLogger(name="unknown", version="unknown"):
@@ -193,11 +211,11 @@ def _log_wrapper(obj, log_function, msg, **kw):
         def wrapper(self, *args, **kwargs):
             params = {"msg": msg % kw, "obj_name": obj.title(),
                       "uuid": getattr(self, obj)["uuid"]}
-            log_function(_("%(obj_name)s %(uuid)s | Starting:  %(msg)s") %
-                         params)
+            log_function("%(obj_name)s %(uuid)s | Starting:  %(msg)s"
+                         % params)
             result = f(self, *args, **kwargs)
-            log_function(_("%(obj_name)s %(uuid)s | Completed: %(msg)s") %
-                         params)
+            log_function("%(obj_name)s %(uuid)s | Completed: %(msg)s"
+                         % params)
             return result
         return wrapper
     return decorator
