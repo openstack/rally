@@ -117,9 +117,9 @@ class GlanceV2ServiceTestCase(test.TestCase):
         status = "active"
         kwargs = {"status": status}
         filters = {"filters": kwargs}
+        self.gc.images.list.return_value = iter([1, 2, 3])
 
-        self.assertEqual(self.gc.images.list.return_value,
-                         self.service.list_images())
+        self.assertEqual([1, 2, 3], self.service.list_images())
         self.gc.images.list.assert_called_once_with(**filters)
 
     def test_set_visibility(self):
