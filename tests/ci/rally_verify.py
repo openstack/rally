@@ -325,7 +325,7 @@ class RunVerification(Step):
 
     def run(self):
         super(RunVerification, self).run()
-        if False and "Success: 0" in self.result["output"]:
+        if "Success: 0" in self.result["output"]:
             self.result["status"] = Status.FAILURE
 
 

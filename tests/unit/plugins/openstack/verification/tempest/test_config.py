@@ -105,18 +105,20 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         # case #5: only one version is discoverable;
         {"auth_url": "http://example.com",
          "data": [{"version": (2, 0), "url": "foo2.com"}],
-         "ex_uri": "http://example.com", "ex_auth_version": "v2",
+         "ex_uri": "foo2.com", "ex_auth_version": "v2",
          "ex_uri_v3": "http://example.com/v3"},
         # case #6: the same case, but keystone v3 is discoverable
         {"auth_url": "http://example.com",
          "data": [{"version": (3, 0), "url": "foo3.com"}],
          "ex_uri": "http://example.com/v2.0", "ex_auth_version": "v3",
-         "ex_uri_v3": "http://example.com"}
+         "ex_uri_v3": "foo3.com",
+         "ex_v2_off": True}
     )
     @ddt.unpack
     def test__configure_identity(self, auth_url, data, ex_uri,
-                                 ex_uri_v3, ex_auth_version):
+                                 ex_uri_v3, ex_auth_version, ex_v2_off=False):
         self.tempest.conf.add_section("identity")
+        self.tempest.conf.add_section("identity-feature-enabled")
         self.tempest.credential.auth_url = auth_url
         process_url = osclients.Keystone(
             self.tempest.credential, 0, 0)._remove_url_version
@@ -141,6 +143,10 @@ class TempestConfigfileManagerTestCase(test.TestCase):
                         CRED["https_insecure"]),
                     "ca_certificates_file": CRED["https_cacert"]}
         self.assertEqual(expected, dict(self.tempest.conf.items("identity")))
+        if ex_v2_off:
+            self.assertEqual(
+                "False",
+                self.tempest.conf.get("identity-feature-enabled", "api_v2"))
 
     def test__configure_network_if_neutron(self):
         self.tempest.available_services = ["neutron"]
