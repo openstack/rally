@@ -765,6 +765,9 @@
           users_per_tenant: 2
         volumes:
           size: 1
+      sla:
+        failure_rate:
+          max: 51
     -
       title: CinderVolumeTypes.create_and_get_volume_type tests
       scenario:
