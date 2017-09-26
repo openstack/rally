@@ -42,7 +42,8 @@ def _process_hooks(hooks):
             finished_at = dt.datetime.utcfromtimestamp(res["finished_at"])
             triggered_by = "%(event_type)s: %(value)s" % res["triggered_by"]
 
-            for i, data in enumerate(res.get("output", {}).get("additive")):
+            for i, data in enumerate(
+                    res.get("output", {}).get("additive", [])):
                 try:
                     hook_ctx["additive"][i]
                 except IndexError:
@@ -51,7 +52,7 @@ def _process_hooks(hooks):
                 hook_ctx["additive"][i].append(data)
 
             complete_charts = []
-            for data in res.get("output", {}).get("complete"):
+            for data in res.get("output", {}).get("complete", []):
                 chart_cls = plugin.Plugin.get(data.pop("chart_plugin"))
                 data["widget"] = chart_cls.widget
                 complete_charts.append(data)
