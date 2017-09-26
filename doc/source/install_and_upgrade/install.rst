@@ -135,7 +135,7 @@ be done via the following steps:
    likely to work if your home directory has excessively open
    permissions (e.g., ``0755``), which is not recommended.
 
-You can find all task samples, docs and certification tasks at /opt/rally/.
+You can find all task samples, docs and pre created tasks at /opt/rally/.
 Also you may want to save the last command as an alias:
 
 .. code-block:: bash
