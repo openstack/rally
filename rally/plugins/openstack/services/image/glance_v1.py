@@ -106,10 +106,11 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
         :param is_public: Filter in images for the specified public status
         :param owner: Filter in images for tenant ID
         """
-        images = self._clients.glance("1").images.list(status=status,
-                                                       owner=owner,
-                                                       is_public=is_public)
-        return images
+        # NOTE(boris-42): image.list() is lazy method which doesn't query API
+        #                 until it's used, do not remove list().
+        return list(self._clients.glance("1").images.list(status=status,
+                                                          owner=owner,
+                                                          is_public=is_public))
 
     @atomic.action_timer("glance_v1.set_visibility")
     def set_visibility(self, image_id, is_public=True):

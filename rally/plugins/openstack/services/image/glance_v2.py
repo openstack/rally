@@ -127,8 +127,9 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
             filters["visibility"] = visibility
         if owner:
             filters["owner"] = owner
-        images = self._clients.glance("2").images.list(filters=filters)
-        return images
+        # NOTE(boris-42): image.list() is lazy method which doesn't query API
+        #                 until it's used, do not remove list().
+        return list(self._clients.glance("2").images.list(filters=filters))
 
     @atomic.action_timer("glance_v2.set_visibility")
     def set_visibility(self, image_id, visibility="shared"):
