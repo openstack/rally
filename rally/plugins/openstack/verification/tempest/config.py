@@ -19,7 +19,6 @@ import os
 from oslo_config import cfg
 import six
 from six.moves import configparser
-from six.moves.urllib import parse
 
 from rally.common import logging
 from rally import exceptions
@@ -95,17 +94,19 @@ class TempestConfigfileManager(object):
                 uri_v3 = versions[3]
                 target_version = 3
             elif set(versions.keys()) == {2} or set(versions.keys()) == {3}:
-                # only one version is available while discovering, let's just
-                # guess the second auth_url (it should not be used)
+                # only one version is available while discovering
 
                 # get the most recent version
                 target_version = sorted(versions.keys())[-1]
                 if target_version == 2:
-                    uri = self.credential.auth_url
-                    uri_v3 = parse.urljoin(uri, "/v3")
+                    uri = versions[2]
+                    uri_v3 = os.path.join(cropped_auth_url, "v3")
                 else:
-                    uri_v3 = self.credential.auth_url
-                    uri = parse.urljoin(uri_v3, "/v2.0")
+                    # keystone v2 is disabled. let's do it explicitly
+                    self.conf.set("identity-feature-enabled", "api_v2",
+                                  "False")
+                    uri_v3 = versions[3]
+                    uri = os.path.join(cropped_auth_url, "v2.0")
             else:
                 # Does Keystone released new version of API ?!
                 LOG.debug("Discovered keystone versions: %s", versions)
