@@ -257,8 +257,13 @@ class OpenStackAPIVersions(context.Context):
                         _("There is no '%s' service in your environment") %
                         conf["service_name"])
 
-                self.context["config"]["api_versions"][client_name][
+                # TODO(boris-42): Use separate key ["openstack"]["versions"]
+                self.context["config"]["api_versions@openstack"][client_name][
                     "service_type"] = services_from_admin[conf["service_name"]]
+
+        # NOTE(boris-42): Required to be backward compatible
+        self.context["config"]["api_versions"] = (
+            self.context["config"]["api_versions@openstack"])
 
     def cleanup(self):
         # nothing to do here
