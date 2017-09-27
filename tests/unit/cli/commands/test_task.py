@@ -1196,7 +1196,8 @@ class TaskCommandsTestCase(test.TestCase):
         }
 
         results = [
-            {"key": {"name": workload["name"],
+            {"hooks": workload["hooks"],
+             "key": {"name": workload["name"],
                      "description": workload["description"],
                      "pos": workload["position"],
                      "kw": {
