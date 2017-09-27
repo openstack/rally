@@ -112,13 +112,6 @@ class HackingTestCase(test.TestCase):
             checkres = checks.check_import_of_logging(good, good, "fakefile")
             self.assertEqual([], list(checkres))
 
-    def test_no_translate_debug_logs(self):
-
-        bad_samples = ["LOG.debug(_('foo'))"]
-        self._assert_bad_samples(checks.no_translate_debug_logs, bad_samples)
-        good_samples = ["LOG.debug('foo')", "LOG.info(_('foo'))"]
-        self._assert_good_samples(checks.no_translate_debug_logs, good_samples)
-
     def test_no_use_conf_debug_check(self):
         bad_samples = [
             "if CONF.debug:",

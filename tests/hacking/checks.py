@@ -178,24 +178,6 @@ def check_import_of_logging(logical_line, physical_line, filename):
 
 
 @skip_ignored_lines
-def no_translate_debug_logs(logical_line, physical_line, filename):
-    """Check for "LOG.debug(_("
-
-    As per our translation policy,
-    https://wiki.openstack.org/wiki/LoggingStandards#Log_Translation
-    we shouldn't translate debug level logs.
-
-    * This check assumes that 'LOG' is a logger.
-    * Use filename so we can start enforcing this in specific folders instead
-      of needing to do so all at once.
-
-    N311
-    """
-    if logical_line.startswith("LOG.debug(_("):
-        yield(0, "N311 Don't translate debug level logs")
-
-
-@skip_ignored_lines
 def no_use_conf_debug_check(logical_line, physical_line, filename):
     """Check for "cfg.CONF.debug"
 
@@ -606,7 +588,6 @@ def check_opts_import_path(logical_line, physical_line, filename):
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
-    register(no_translate_debug_logs)
     register(no_use_conf_debug_check)
     register(assert_true_instance)
     register(assert_equal_type)

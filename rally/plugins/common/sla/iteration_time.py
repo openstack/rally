@@ -19,7 +19,6 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.common.i18n import _
 from rally.task import sla
 
 
@@ -46,5 +45,5 @@ class IterationTime(sla.SLA):
         return self.success
 
     def details(self):
-        return (_("Maximum seconds per iteration %.2fs <= %.2fs - %s") %
+        return ("Maximum seconds per iteration %.2fs <= %.2fs - %s" %
                 (self.max_iteration_time, self.criterion_value, self.status()))

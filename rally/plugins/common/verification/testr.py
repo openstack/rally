@@ -17,7 +17,6 @@ import re
 import shutil
 import subprocess
 
-from rally.common.i18n import _LE
 from rally.common.io import subunit_v2
 from rally.common import logging
 from rally.common import utils as common_utils
@@ -98,8 +97,7 @@ class TestrLauncher(manager.VerifierManager):
             except (subprocess.CalledProcessError, OSError):
                 if os.path.exists(test_repository_dir):
                     shutil.rmtree(test_repository_dir)
-                raise exceptions.RallyException(
-                    _LE("Failed to initialize testr."))
+                raise exceptions.RallyException("Failed to initialize testr.")
 
     def install(self):
         super(TestrLauncher, self).install()
@@ -116,7 +114,8 @@ class TestrLauncher(manager.VerifierManager):
         """Run tests."""
         testr_cmd = context["testr_cmd"]
         run_args = context.get("run_args", {})
-        LOG.debug("Test(s) started by the command: '%s'.", " ".join(testr_cmd))
+        LOG.debug("Test(s) started by the command: '%s'."
+                  % " ".join(testr_cmd))
         stream = subprocess.Popen(testr_cmd, env=self.run_environ,
                                   cwd=self.repo_dir,
                                   stdout=subprocess.PIPE,

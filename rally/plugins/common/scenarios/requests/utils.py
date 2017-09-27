@@ -12,7 +12,6 @@
 
 import requests
 
-from rally.common.i18n import _
 from rally.task import atomic
 from rally.task import scenario
 
@@ -34,6 +33,6 @@ class RequestScenario(scenario.Scenario):
 
         resp = requests.request(method, url, **kwargs)
         if status_code != resp.status_code:
-            error_msg = _("Expected HTTP request code is `%s` actual `%s`")
+            error_msg = "Expected HTTP request code is `%s` actual `%s`"
             raise ValueError(
                 error_msg % (status_code, resp.status_code))

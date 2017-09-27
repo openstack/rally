@@ -276,7 +276,7 @@ class RequiredContextsValidator(validation.Validator):
             if isinstance(name, tuple):
                 if not set(name) & set(input_context):
                     # formatted string like: 'foo or bar or baz'
-                    formatted_names = "'{}'".format(" or ".join(name))
+                    formatted_names = "'%s'" % " or ".join(name)
                     missing_contexts.append(formatted_names)
             else:
                 if name not in input_context:
@@ -301,9 +301,8 @@ class RequiredParamOrContextValidator(validation.Validator):
         self.ctx_name = ctx_name
 
     def validate(self, context, config, plugin_cls, plugin_cfg):
-        msg = ("You should specify either scenario argument {} or"
-               " use context {}.").format(self.param_name,
-                                          self.ctx_name)
+        msg = ("You should specify either scenario argument %s or"
+               " use context %s." % (self.param_name, self.ctx_name))
 
         if self.ctx_name in config.get("context", {}):
             return
