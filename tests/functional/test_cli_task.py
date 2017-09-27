@@ -1342,3 +1342,51 @@ class HookTestCase(unittest.TestCase):
             sorted(hook_results,
                    key=lambda i: i["config"]["trigger"]["args"]["unit"]))
         self._assert_results_time(hook_results)
+
+    def test_import_hook_result(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config(
+            cmd="/bin/true",
+            description="event_hook",
+            runner={"type": "constant", "times": 10, "concurrency": 3})
+        cfg["Dummy.dummy"][0]["hooks"].extend(
+            [
+                {
+                    "name": "sys_call",
+                    "description": "Show time",
+                    "args": "date +%Y-%m-%dT%H:%M:%S",
+                    "trigger": {
+                        "name": "event",
+                        "args": {
+                            "unit": "time",
+                            "at": [1, 2],
+                        }
+                    }
+                },
+                {
+                    "name": "sys_call",
+                    "description": "Show system name",
+                    "args": "uname -a",
+                    "trigger": {
+                        "name": "event",
+                        "args": {
+                            "unit": "iteration",
+                            "at": [3, 6, 9],
+                        }
+                    }
+                }
+            ]
+        )
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        json_report = rally.gen_report_path(extension="json")
+        with open(json_report, "w+") as f:
+            f.write(rally("task results"))
+        import_print = rally("task import --file %s" % json_report)
+        self.assertIn("successfully", import_print)
+        task_uuid = re.search("UUID:\s([a-z0-9\-]+)", import_print).group(1)
+        results = rally("task results --uuid %s" % task_uuid)
+        self.assertIn("Dummy.dummy", results)
+        self.assertIn("event_hook", results)
+        self.assertIn("Show time", results)
+        self.assertIn("Show system name", results)

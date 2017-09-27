@@ -760,8 +760,7 @@ class TaskCommands(object):
                             "updated_at": updated_at,
                             "args": result["key"]["kw"]["args"],
                             "runner": result["key"]["kw"]["runner"],
-                            "hooks": [{"config": h}
-                                      for h in result["key"]["kw"]["hooks"]],
+                            "hooks": result["hooks"],
                             "sla": result["key"]["kw"]["sla"],
                             "sla_results": {"sla": result["sla"]},
                             "pass_sla": pass_sla,
