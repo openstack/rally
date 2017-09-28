@@ -166,9 +166,10 @@ class VMScenario(nova_utils.NovaScenario):
         internal_network = list(server.networks)[0]
         fixed_ip = server.addresses[internal_network][0]["addr"]
 
-        fip = network_wrapper.wrap(self.clients, self).create_floating_ip(
-            ext_network=floating_network,
-            tenant_id=server.tenant_id, fixed_ip=fixed_ip)
+        with atomic.ActionTimer(self, "neutron.create_floating_ip"):
+            fip = network_wrapper.wrap(self.clients, self).create_floating_ip(
+                ext_network=floating_network,
+                tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
         self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip)
 
@@ -180,8 +181,10 @@ class VMScenario(nova_utils.NovaScenario):
                 LOG, _("Unable to delete IP: %s") % fip["ip"]):
             if self.check_ip_address(fip["ip"])(server):
                 self._dissociate_floating_ip(server, fip["ip"])
-                network_wrapper.wrap(self.clients, self).delete_floating_ip(
-                    fip["id"], wait=True)
+                with atomic.ActionTimer(self, "neutron.delete_floating_ip"):
+                    network_wrapper.wrap(self.clients,
+                                         self).delete_floating_ip(
+                        fip["id"], wait=True)
 
     def _delete_server_with_fip(self, server, fip, force_delete=False):
         if fip["is_floating"]:
