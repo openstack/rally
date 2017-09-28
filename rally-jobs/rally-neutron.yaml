@@ -743,6 +743,11 @@
     -
       args:
         command:
+          # The `image_command_customizer` context prepares an image and
+          # executes `rally-jobs/extra/install_benchmark.sh` script. The script
+          # itself creates a new file inside the image "dd_test.sh" which is
+          # called in the scenario. It doesn't have anything related to
+          # VMTask.dd_load_test scenario
           remote_path: "./dd_test.sh"
         flavor:
           name: "m1.tiny"
