@@ -776,8 +776,6 @@
             name: {{image_name}}
         floating_network: "public"
         force_delete: false
-        command:
-            interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
