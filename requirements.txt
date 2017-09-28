@@ -2,9 +2,6 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 
-# Remove after os-faults is fixed
-ansible<2.4.0.0
-
 # Rally core dependencies
 alembic>=0.8.10,<=0.9.5                                # MIT
 decorator>=3.4.0,<=4.1.2                               # new BSD License
@@ -31,7 +28,7 @@ virtualenv>=13.1.0,<=15.1.0                            # MIT
 boto>=2.32.1,<=2.48.0                                  # MIT
 gnocchiclient>=2.7.0,<=4.0.0                           # Apache Software License
 keystoneauth1==3.2.0                                   # Apache Software License
-os-faults>=0.1.5,<=0.1.14                              # Apache Software License
+os-faults>=0.1.15,<0.2.0                               # Apache Software License
 osprofiler>=1.4.0,<=1.12.0                             # Apache Software License
 python-ceilometerclient>=2.5.0,<=2.9.0                 # Apache Software License
 python-cinderclient==3.2.0                             # Apache Software License
