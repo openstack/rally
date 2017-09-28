@@ -894,7 +894,7 @@ class TaskCommands(object):
 
         if out_format.startswith("html"):
             result = plot.plot(results,
-                               include_libs=(out_format == "html_static"))
+                               include_libs=(out_format == "html-static"))
         elif out_format == "junit-xml":
             test_suite = junit.JUnit("Rally test suite")
             for task in results:

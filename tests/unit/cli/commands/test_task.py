@@ -733,7 +733,7 @@ class TaskCommandsTestCase(test.TestCase):
         # HTML with embedded JS/CSS
         reset_mocks()
         self.task._old_report(self.fake_api, task_id, open_it=False,
-                              out="output.html", out_format="html_static")
+                              out="output.html", out_format="html-static")
         self.assertFalse(mock_webbrowser.open_new_tab.called)
         mock_plot.plot.assert_called_once_with([task_obj], include_libs=True)
 
