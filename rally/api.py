@@ -182,7 +182,7 @@ class _Deployment(APIGroup):
         deployment = self._get(deployment).to_dict()
         if deployment["config"].get("type", "") == "ExistingCloud":
             deployment_creds = {}
-            for platform, creds in deployment["config"]["creds"].items():
+            for platform, creds in deployment["config"].items():
                 if isinstance(creds, dict):
                     deployment_creds[platform] = creds
                 else:
