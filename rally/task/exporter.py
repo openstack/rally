@@ -26,6 +26,7 @@ import six
 
 from rally.common import logging
 from rally.common.plugin import plugin
+from rally.common import validation
 from rally import consts
 
 
@@ -77,7 +78,7 @@ class Exporter(plugin.Plugin):
 
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class TaskExporter(plugin.Plugin):
+class TaskExporter(plugin.Plugin, validation.ValidatablePluginMixin):
     """Base class for all exporters for Tasks."""
 
     def __init__(self, tasks_results, output_destination, api=None):
@@ -91,14 +92,6 @@ class TaskExporter(plugin.Plugin):
         self.tasks_results = tasks_results
         self.output_destination = output_destination
         self.api = api
-
-    @classmethod
-    @abc.abstractmethod
-    def validate(cls, output_destination):
-        """Validate destination of report.
-
-        :param output_destination: Destination of report
-        """
 
     @abc.abstractmethod
     def generate(self):

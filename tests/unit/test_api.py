@@ -462,6 +462,7 @@ class TaskAPITestCase(test.TestCase):
         output_dest = mock.Mock()
 
         reporter = mock_task_exporter.get.return_value
+        mock_task_exporter.validate.return_value = None
 
         self.assertEqual(mock_task_exporter.make.return_value,
                          self.task_inst.export(
@@ -470,7 +471,10 @@ class TaskAPITestCase(test.TestCase):
                              output_dest=output_dest))
         mock_task_exporter.get.assert_called_once_with(output_type)
 
-        reporter.validate.assert_called_once_with(output_dest)
+        mock_task_exporter.validate.assert_called_once_with(
+            output_type, context={}, config={},
+            plugin_cfg={"destination": output_dest},
+            vtype="syntax")
 
         mock_task_exporter.make.assert_called_once_with(
             reporter, [t.to_dict.return_value for t in tasks],
