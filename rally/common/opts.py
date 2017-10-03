@@ -12,12 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
-
 from oslo_config import cfg
 
 from rally.common import logging
-from rally import osclients
 from rally.plugins.openstack.cfg import opts as openstack_opts
 from rally.task import engine
 
@@ -30,9 +27,10 @@ def list_opts():
     for category, options in openstack_opts.list_opts().items():
         merged_opts.setdefault(category, [])
         merged_opts[category].extend(options)
-    merged_opts["DEFAULT"] = itertools.chain(logging.DEBUG_OPTS,
-                                             osclients.OSCLIENTS_OPTS,
-                                             engine.TASK_ENGINE_OPTS)
+
+    merged_opts["DEFAULT"].extend(logging.DEBUG_OPTS)
+    merged_opts["DEFAULT"].extend(engine.TASK_ENGINE_OPTS)
+
     return merged_opts.items()
 
 
@@ -41,4 +39,6 @@ def register():
         group = cfg.OptGroup(name=category, title="%s options" % category)
         if category != "DEFAULT":
             CONF.register_group(group)
-        CONF.register_opts(options, group=group)
+            CONF.register_opts(options, group=group)
+        else:
+            CONF.register_opts(options)

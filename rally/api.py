@@ -49,6 +49,9 @@ LOG = logging.getLogger(__name__)
 API_REQUEST_PREFIX = "/api"
 
 
+opts.register()
+
+
 class APIGroup(object):
     def __init__(self, api):
         """Initialize API group.
@@ -1206,8 +1209,6 @@ class API(object):
                  project="rally",
                  version=rally_version.version_string(),
                  default_config_files=config_files)
-
-            opts.register()
 
             logging.setup("rally")
             if not CONF.get("log_config_append"):

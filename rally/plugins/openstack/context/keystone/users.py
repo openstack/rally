@@ -31,9 +31,6 @@ from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
 
-from rally.common import opts
-opts.register()
-
 
 LOG = logging.getLogger(__name__)
 
