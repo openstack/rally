@@ -218,7 +218,7 @@ class TaskTestCase(test.TestCase):
         task = objects.Task(task=self.task)
         subtask = task.add_subtask(title="foo")
         mock_subtask.assert_called_once_with(
-            self.task["uuid"], title="foo", context=None, description=None)
+            self.task["uuid"], title="foo", contexts=None, description=None)
         self.assertIs(subtask, mock_subtask.return_value)
 
     @ddt.data(
@@ -406,7 +406,7 @@ class SubtaskTestCase(test.TestCase):
         mock_subtask_create.return_value = self.subtask
         subtask = objects.Subtask("bar", title="foo")
         mock_subtask_create.assert_called_once_with(
-            "bar", title="foo", context=None, description=None)
+            "bar", title="foo", contexts=None, description=None)
         self.assertEqual(subtask["uuid"], self.subtask["uuid"])
 
     @mock.patch("rally.common.objects.task.db.subtask_update")
@@ -429,21 +429,21 @@ class SubtaskTestCase(test.TestCase):
         position = 0
         runner_type = "runner"
         runner = {}
-        context = {"users": {}}
+        contexts = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
         hooks = [{"foo": "bar"}]
 
         workload = subtask.add_workload(
             name, description=description, position=position,
-            runner_type=runner_type, runner=runner, context=context, sla=sla,
+            runner_type=runner_type, runner=runner, contexts=contexts, sla=sla,
             args=args, hooks=hooks)
         mock_workload.assert_called_once_with(
             task_uuid=self.subtask["task_uuid"],
             subtask_uuid=self.subtask["uuid"], name=name,
             description=description, position=position,
             runner_type=runner_type, runner=runner,
-            context=context, sla=sla, args=args,
+            contexts=contexts, sla=sla, args=args,
             hooks=[{"config": h} for h in hooks])
         self.assertIs(workload, mock_workload.return_value)
 
@@ -466,19 +466,19 @@ class WorkloadTestCase(test.TestCase):
         position = 0
         runner_type = "constant"
         runner = {"times": 3}
-        context = {"users": {}}
+        contexts = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
         hooks = [{"config": {"foo": "bar"}}]
         workload = objects.Workload("uuid1", "uuid2", name=name,
                                     description=description, position=position,
                                     runner=runner, runner_type=runner_type,
-                                    context=context, sla=sla,
+                                    contexts=contexts, sla=sla,
                                     args=args, hooks=hooks)
         mock_workload_create.assert_called_once_with(
             task_uuid="uuid1", subtask_uuid="uuid2", name=name, hooks=hooks,
             description=description, position=position, runner=runner,
-            runner_type="constant", context=context, sla=sla, args=args)
+            runner_type="constant", contexts=contexts, sla=sla, args=args)
         self.assertEqual(workload["uuid"], self.workload["uuid"])
 
     @mock.patch("rally.common.objects.task.db.workload_data_create")
@@ -488,7 +488,8 @@ class WorkloadTestCase(test.TestCase):
         mock_workload_create.return_value = self.workload
         workload = objects.Workload("uuid1", "uuid2", name="w",
                                     description="descr", position=0,
-                                    runner_type="foo", runner={}, context=None,
+                                    runner_type="foo", runner={},
+                                    contexts=None,
                                     sla=None, args=None, hooks=[])
 
         workload.add_workload_data(0, {"data": "foo"})
@@ -506,7 +507,7 @@ class WorkloadTestCase(test.TestCase):
         position = 0
         runner_type = "constant"
         runner = {"times": 3}
-        context = {"users": {}}
+        contexts = {"users": {}}
         sla = {"failure_rate": {"max": 0}}
         args = {"arg": "xxx"}
         load_duration = 88
@@ -514,21 +515,25 @@ class WorkloadTestCase(test.TestCase):
         start_time = 1231231277.22
         sla_results = []
         hooks = []
+        contexts_results = [{"name": "setup:something"}]
         workload = objects.Workload("uuid1", "uuid2", name=name,
                                     description=description, position=position,
                                     runner=runner, runner_type=runner_type,
-                                    context=context, sla=sla, args=args,
+                                    contexts=contexts, sla=sla, args=args,
                                     hooks=hooks)
 
         workload.set_results(load_duration=load_duration,
                              full_duration=full_duration,
-                             start_time=start_time, sla_results=sla_results)
+                             start_time=start_time,
+                             sla_results=sla_results,
+                             contexts_results=contexts_results)
         mock_workload_set_results.assert_called_once_with(
             workload_uuid=self.workload["uuid"],
             subtask_uuid=self.workload["subtask_uuid"],
             task_uuid=self.workload["task_uuid"],
             load_duration=load_duration, full_duration=full_duration,
             start_time=start_time, sla_results=sla_results,
+            contexts_results=contexts_results,
             hooks_results=None)
 
     def test_to_task(self):

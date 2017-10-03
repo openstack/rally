@@ -578,7 +578,7 @@ class _Task(APIGroup):
                     name=workload["name"], description=workload["description"],
                     position=workload["position"], runner=workload["runner"],
                     runner_type=workload["runner_type"],
-                    context=workload["context"], hooks=workload["hooks"],
+                    contexts=workload["contexts"], hooks=workload["hooks"],
                     sla=workload["sla"], args=workload["args"])
 
                 chunk_size = CONF.raw_result_chunk_size
@@ -598,7 +598,8 @@ class _Task(APIGroup):
                     hooks_results=workload["hooks"],
                     start_time=workload["start_time"],
                     full_duration=workload["full_duration"],
-                    load_duration=workload["load_duration"])
+                    load_duration=workload["load_duration"],
+                    contexts_results=workload["contexts_results"])
             subtask_obj.update_status(consts.SubtaskStatus.FINISHED)
         task_inst.update_status(consts.SubtaskStatus.FINISHED)
 

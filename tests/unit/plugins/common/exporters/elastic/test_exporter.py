@@ -85,7 +85,7 @@ def get_tasks_results():
                 "runner": {"type": "constant",
                            "times": 3},
                 "sla": {},
-                "context": {"users@openstack": {"tenants": 2}},
+                "contexts": {"users@openstack": {"tenants": 2}},
                 "created_at": "2017-07-28T23:35:46",
                 "updated_at": "2017-07-28T23:37:55",
                 "start_time": 1501284950.371992,

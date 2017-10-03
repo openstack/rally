@@ -52,7 +52,7 @@ class ResultConsumer(object):
     """
 
     def __init__(self, workload_cfg, task, subtask, workload, runner,
-                 abort_on_sla_failure):
+                 abort_on_sla_failure, ctx_manager):
         """ResultConsumer constructor.
 
         :param workload_cfg: A configuration of the Workload
@@ -63,6 +63,7 @@ class ResultConsumer(object):
                        consumed
         :param abort_on_sla_failure: True if the execution should be stopped
                                      when some SLA check fails
+        :param ctx_manager: ContextManager instance
         """
 
         self.task = task
@@ -84,6 +85,7 @@ class ResultConsumer(object):
         self.aborting_checker = threading.Thread(target=self.wait_and_abort)
         if self.workload_cfg["hooks"]:
             self.event_thread = threading.Thread(target=self._consume_events)
+        self._cm = ctx_manager
 
     def __enter__(self):
         self.thread.start()
@@ -176,7 +178,9 @@ class ResultConsumer(object):
         self.workload.set_results(load_duration=load_duration,
                                   full_duration=(self.finish - self.start),
                                   sla_results=self.sla_checker.results(),
-                                  start_time=start_time, **results)
+                                  start_time=start_time,
+                                  contexts_results=self._cm.contexts_results(),
+                                  **results)
 
     @staticmethod
     def is_task_in_aborting_status(task_uuid, check_soft=True):
@@ -421,7 +425,7 @@ class TaskEngine(object):
     def _run_subtask(self, subtask):
         subtask_obj = self.task.add_subtask(title=subtask["title"],
                                             description=subtask["description"],
-                                            context=subtask["context"])
+                                            contexts=subtask["contexts"])
 
         try:
             # TODO(astudenov): add subtask context here
@@ -451,7 +455,7 @@ class TaskEngine(object):
             runner=workload["runner"],
             runner_type=workload["runner_type"],
             hooks=workload["hooks"],
-            context=workload["contexts"],
+            contexts=workload["contexts"],
             sla=workload["sla"],
             args=workload["args"])
         workload["uuid"] = workload_obj["uuid"]
@@ -468,9 +472,12 @@ class TaskEngine(object):
         context_obj = self._prepare_context(
             workload["contexts"], workload["name"], workload_obj["uuid"])
         try:
-            with ResultConsumer(workload, self.task, subtask_obj, workload_obj,
-                                runner_obj, self.abort_on_sla_failure):
-                with context.ContextManager(context_obj):
+            ctx_manager = context.ContextManager(context_obj)
+            with ResultConsumer(workload, task=self.task, subtask=subtask_obj,
+                                workload=workload_obj, runner=runner_obj,
+                                abort_on_sla_failure=self.abort_on_sla_failure,
+                                ctx_manager=ctx_manager):
+                with ctx_manager:
                     runner_obj.run(workload["name"], context_obj,
                                    workload["args"])
         except Exception:
@@ -713,7 +720,7 @@ class TaskConfig(object):
 
             # it is not supported feature yet, but the code expects this
             # variable
-            sconf.setdefault("context", {})
+            sconf.setdefault("contexts", {})
 
             workloads = []
             for position, wconf in enumerate(sconf["workloads"]):

@@ -427,7 +427,7 @@ class TaskEngineTestCase(test.TestCase):
         mock_task_instance.subtasks = [{
             "title": "foo",
             "description": "Do not launch it!!",
-            "context": {},
+            "contexts": {},
             "workloads": [
                 self._make_workload(name="a.task", description="foo",
                                     contexts={"context_a": {"a": 1}}),
@@ -610,8 +610,12 @@ class ResultConsumerTestCase(test.TestCase):
 
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
-        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                   runner, False) as consumer_obj:
+        ctx_manager = mock.MagicMock()
+
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   abort_on_sla_failure=False,
+                                   ctx_manager=ctx_manager) as consumer_obj:
             pass
 
         mock_sla_instance.add_iteration.assert_has_calls([
@@ -646,14 +650,19 @@ class ResultConsumerTestCase(test.TestCase):
         results = []
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
-        with engine.ResultConsumer(
-                workload_cfg, task, subtask, workload, runner, False):
+        ctx_manager = mock.MagicMock()
+
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   abort_on_sla_failure=False,
+                                   ctx_manager=ctx_manager):
             pass
 
         self.assertFalse(workload.add_workload_data.called)
         workload.set_results.assert_called_once_with(
             full_duration=1, sla_results=mock_sla_results, load_duration=0,
-            start_time=None)
+            start_time=None,
+            contexts_results=ctx_manager.contexts_results())
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
@@ -674,9 +683,12 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 1},
               {"duration": 2, "timestamp": 2}]] * 4)
+        ctx_manager = mock.MagicMock()
 
-        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                   runner, True):
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   abort_on_sla_failure=True,
+                                   ctx_manager=ctx_manager):
             pass
 
         self.assertTrue(runner.abort.called)
@@ -705,9 +717,12 @@ class ResultConsumerTestCase(test.TestCase):
         workload_cfg = {"fake": 2, "hooks": []}
 
         mock_hook_executor_instance = mock_hook_executor.return_value
+        ctx_manager = mock.MagicMock()
 
-        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                   runner, True):
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   abort_on_sla_failure=True,
+                                   ctx_manager=ctx_manager):
             pass
 
         mock_sla_checker.assert_called_once_with(workload_cfg)
@@ -733,9 +748,12 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque(
             [[{"duration": 1, "timestamp": 4}]] * 4)
         runner.event_queue = collections.deque()
+        ctx_manager = mock.MagicMock()
 
-        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                   runner, False):
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   ctx_manager=ctx_manager,
+                                   abort_on_sla_failure=False):
             pass
 
         self.assertEqual(0, runner.abort.call_count)
@@ -756,13 +774,18 @@ class ResultConsumerTestCase(test.TestCase):
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1])
         runner.event_queue = collections.deque()
+        ctx_manager = mock.MagicMock()
         exc = MyException()
         try:
-            with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                       runner, False):
+            with engine.ResultConsumer(workload_cfg, task=task,
+                                       subtask=subtask, workload=workload,
+                                       runner=runner, ctx_manager=ctx_manager,
+                                       abort_on_sla_failure=False):
                 raise exc
         except MyException:
             pass
+        else:
+            self.fail("ResultConsumer should re-raise the exception.")
 
         mock_sla_instance.set_unexpected_failure.assert_has_calls(
             [mock.call(exc)])
@@ -796,8 +819,12 @@ class ResultConsumerTestCase(test.TestCase):
 
         runner.result_queue = collections.deque(results)
         runner.event_queue = collections.deque()
-        with engine.ResultConsumer(workload_cfg, task, subtask, workload,
-                                   runner, False) as consumer_obj:
+        ctx_manager = mock.MagicMock()
+
+        with engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                   workload=workload, runner=runner,
+                                   abort_on_sla_failure=False,
+                                   ctx_manager=ctx_manager) as consumer_obj:
             pass
 
         mock_sla_instance.add_iteration.assert_has_calls([
@@ -850,8 +877,10 @@ class ResultConsumerTestCase(test.TestCase):
         runner.result_queue = collections.deque()
         runner.event_queue = collections.deque(events)
 
-        consumer_obj = engine.ResultConsumer(workload_cfg, task, subtask,
-                                             workload, runner, False)
+        ctx_manager = mock.MagicMock()
+        consumer_obj = engine.ResultConsumer(
+            workload_cfg, task=task, subtask=subtask, workload=workload,
+            runner=runner, abort_on_sla_failure=False, ctx_manager=ctx_manager)
         stop_event = threading.Event()
 
         def set_stop_event(event_type, value):
@@ -875,7 +904,8 @@ class ResultConsumerTestCase(test.TestCase):
             load_duration=0,
             sla_results=mock_sla_results,
             hooks_results=mock_hook_results,
-            start_time=None)
+            start_time=None,
+            contexts_results=ctx_manager.contexts_results())
 
     @mock.patch("rally.task.engine.threading.Thread")
     @mock.patch("rally.task.engine.threading.Event")
@@ -886,7 +916,7 @@ class ResultConsumerTestCase(test.TestCase):
             self, mock_sleep, mock_task_engine__prepare_context,
             mock_task_get_status, mock_event, mock_thread):
         runner = mock.MagicMock()
-        key = mock.MagicMock()
+        workload_cfg = mock.MagicMock()
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
@@ -896,8 +926,12 @@ class ResultConsumerTestCase(test.TestCase):
         mock_is_done = mock.MagicMock()
         mock_event.return_value = mock_is_done
         mock_is_done.isSet.return_value = False
+        ctx_manager = mock.MagicMock()
 
-        res = engine.ResultConsumer(key, task, subtask, workload, runner, True)
+        res = engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                    workload=workload, runner=runner,
+                                    abort_on_sla_failure=True,
+                                    ctx_manager=ctx_manager)
         res.wait_and_abort()
 
         runner.abort.assert_called_with()
@@ -913,17 +947,21 @@ class ResultConsumerTestCase(test.TestCase):
             self, mock_sleep, mock_task_engine__prepare_context,
             mock_task_get_status, mock_event, mock_thread):
         runner = mock.MagicMock()
-        key = mock.MagicMock()
+        workload_cfg = mock.MagicMock()
         task = mock.MagicMock()
         subtask = mock.Mock(spec=objects.Subtask)
         workload = mock.Mock(spec=objects.Workload)
         mock_task_get_status.return_value = consts.TaskStatus.RUNNING
         mock_is_done = mock.MagicMock()
         mock_event.return_value = mock_is_done
+        ctx_manager = mock.MagicMock()
 
         mock_is_done.isSet.side_effect = [False, False, False, False, True]
 
-        res = engine.ResultConsumer(key, task, subtask, workload, runner, True)
+        res = engine.ResultConsumer(workload_cfg, task=task, subtask=subtask,
+                                    workload=workload, runner=runner,
+                                    abort_on_sla_failure=True,
+                                    ctx_manager=ctx_manager)
         res.wait_and_abort()
 
         # check method don't abort runner if task is not aborted

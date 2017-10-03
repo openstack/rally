@@ -204,10 +204,13 @@ class Subtask(BASE, RallyBase):
     title = sa.Column(sa.String(128), default="")
     description = sa.Column(sa.Text, default="")
 
-    # we do not support subtask contexts feature, see
+    # we do not support subtask contexts feature yet, see
     # https://review.openstack.org/#/c/404168/
-    context = deferred(sa.Column(
+    contexts = deferred(sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False))
+
+    contexts_results = deferred(sa.Column(
+        sa_types.MutableJSONEncodedList, default=[], nullable=False))
 
     sla = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
@@ -258,24 +261,23 @@ class Workload(BASE, RallyBase):
 
     runner_type = sa.Column(sa.String(64), nullable=False)
 
-    context = sa.Column(
+    contexts = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    contexts_results = sa.Column(
+        sa_types.MutableJSONEncodedList, default=[], nullable=False)
 
     sla = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
+
+    sla_results = sa.Column(
+        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
 
     args = sa.Column(
         sa_types.JSONEncodedDict, default={}, nullable=False)
 
     hooks = sa.Column(
         sa_types.JSONEncodedList, default=[], nullable=False)
-
-    sla_results = sa.Column(
-        sa_types.MutableJSONEncodedDict, default={}, nullable=False)
-
-    # we do not support atomics for contexts yet
-    context_execution = deferred(sa.Column(
-        sa_types.MutableJSONEncodedDict, default={}, nullable=False))
 
     start_time = sa.Column(sa_types.TimeStamp)
 

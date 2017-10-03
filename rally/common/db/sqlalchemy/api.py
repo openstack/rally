@@ -408,12 +408,13 @@ class Connection(object):
         return subtasks
 
     @serialize
-    def subtask_create(self, task_uuid, title, description=None, context=None):
+    def subtask_create(self, task_uuid, title, description=None,
+                       contexts=None):
         subtask = models.Subtask(task_uuid=task_uuid)
         subtask.update({
             "title": title,
             "description": description or "",
-            "context": context or {},
+            "contexts": contexts or {},
         })
         subtask.save()
         return subtask
@@ -433,8 +434,8 @@ class Connection(object):
 
     @serialize
     def workload_create(self, task_uuid, subtask_uuid, name, description,
-                        position, runner, runner_type, hooks, context, sla,
-                        args, context_execution, statistics):
+                        position, runner, runner_type, hooks, contexts, sla,
+                        args):
         workload = models.Workload(task_uuid=task_uuid,
                                    subtask_uuid=subtask_uuid,
                                    name=name,
@@ -443,11 +444,9 @@ class Connection(object):
                                    runner=runner,
                                    runner_type=runner_type,
                                    hooks=hooks,
-                                   context=context,
+                                   contexts=contexts or {},
                                    sla=sla,
-                                   args=args,
-                                   context_execution=context_execution,
-                                   statistics=statistics)
+                                   args=args)
         workload.save()
         return workload
 
@@ -503,7 +502,7 @@ class Connection(object):
     @serialize
     def workload_set_results(self, workload_uuid, subtask_uuid, task_uuid,
                              load_duration, full_duration, start_time,
-                             sla_results, hooks_results):
+                             sla_results, hooks_results, contexts_results):
         session = get_session()
         with session.begin():
             workload_results = self._task_workload_data_get_all(workload_uuid)
@@ -542,7 +541,7 @@ class Connection(object):
                 uuid=workload_uuid).update(
                 {
                     "sla_results": {"sla": sla},
-                    "context_execution": {},
+                    "contexts_results": contexts_results,
                     "hooks": hooks_results or [],
                     "load_duration": load_duration,
                     "full_duration": full_duration,

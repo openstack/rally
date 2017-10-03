@@ -393,7 +393,7 @@ class TaskCommands(object):
             print(json.dumps(
                 {"args": workload["args"],
                  "runner": workload["runner"],
-                 "context": workload["context"],
+                 "contexts": workload["contexts"],
                  "sla": workload["sla"],
                  "hooks": [r["config"] for r in workload["hooks"]]},
                 indent=2))
@@ -578,7 +578,7 @@ class TaskCommands(object):
                     "kw": {
                         "args": w["args"],
                         "runner": w["runner"],
-                        "context": w["context"],
+                        "context": w["contexts"],
                         "sla": w["sla"],
                         "hooks": [h["config"] for h in w["hooks"]],
                     }
@@ -756,7 +756,8 @@ class TaskCommands(object):
                             "sla": result["key"]["kw"]["sla"],
                             "sla_results": {"sla": result["sla"]},
                             "pass_sla": pass_sla,
-                            "context": result["key"]["kw"]["context"],
+                            "contexts": result["key"]["kw"]["context"],
+                            "contexts_results": [],
                             "data": sorted(result["result"],
                                            key=lambda x: x["timestamp"]),
                             "statistics": {
@@ -778,7 +779,7 @@ class TaskCommands(object):
                         "ERROR: Invalid task result format\n\n\t%s" % msg)
                 for subtask in task_result["subtasks"]:
                     for workload in subtask["workloads"]:
-                        workload["context"] = workload.pop("contexts")
+                        workload.setdefault("contexts_results", [])
                         workload["runner_type"], workload["runner"] = list(
                             workload["runner"].items())[0]
                         workload["name"], workload["args"] = list(

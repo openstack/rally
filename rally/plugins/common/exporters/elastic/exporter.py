@@ -370,7 +370,7 @@ class ElasticSearchExporter(exporter.TaskExporter):
                     "description": workload["description"],
                     "runner_name": workload["runner_type"],
                     "runner_cfg": self._pack(workload["runner"]),
-                    "contexts": self._pack(workload["context"]),
+                    "contexts": self._pack(workload["contexts"]),
                     "started_at": started_at,
                     "load_duration": workload["load_duration"],
                     "full_duration": workload["full_duration"],

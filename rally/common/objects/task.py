@@ -112,6 +112,7 @@ TASK_SCHEMA = {
                 "created_at": {"type": "string"},
                 "updated_at": {"type": "string"},
                 "contexts": {"type": "object"},
+                "contexts_results": {"type": "array"},
                 "position": {"type": "integer"},
                 "pass_sla": {"type": "boolean"},
                 "sla_results": {
@@ -366,9 +367,9 @@ class Task(object):
                       "validation_result": {
                           "etype": etype, "msg": msg, "trace": etraceback}})
 
-    def add_subtask(self, title, description=None, context=None):
+    def add_subtask(self, title, description=None, contexts=None):
         return Subtask(self.task["uuid"], title=title, description=description,
-                       context=context)
+                       contexts=contexts)
 
     def delete(self, status=None):
         db.task_delete(self.task["uuid"], status=status)
@@ -478,11 +479,11 @@ class Task(object):
 class Subtask(object):
     """Represents a subtask object."""
 
-    def __init__(self, task_uuid, title, description=None, context=None):
+    def __init__(self, task_uuid, title, description=None, contexts=None):
         self.subtask = db.subtask_create(task_uuid,
                                          title=title,
                                          description=description,
-                                         context=context)
+                                         contexts=contexts)
 
     def __getitem__(self, key):
         return self.subtask[key]
@@ -494,7 +495,7 @@ class Subtask(object):
         self._update({"status": status})
 
     def add_workload(self, name, description, position, runner, runner_type,
-                     context, hooks, sla, args):
+                     contexts, hooks, sla, args):
         # store hooks config as it will look after adding results
         if hooks:
             hooks = [{"config": hook} for hook in hooks]
@@ -502,18 +503,18 @@ class Subtask(object):
                         subtask_uuid=self.subtask["uuid"], name=name,
                         description=description, position=position,
                         runner=runner, runner_type=runner_type, hooks=hooks,
-                        context=context, sla=sla, args=args)
+                        contexts=contexts, sla=sla, args=args)
 
 
 class Workload(object):
     """Represents a workload object."""
 
     def __init__(self, task_uuid, subtask_uuid, name, description, position,
-                 runner, runner_type, hooks, context, sla, args):
+                 runner, runner_type, hooks, contexts, sla, args):
         self.workload = db.workload_create(
             task_uuid=task_uuid, subtask_uuid=subtask_uuid, name=name,
             description=description, position=position, runner=runner,
-            runner_type=runner_type, hooks=hooks, context=context, sla=sla,
+            runner_type=runner_type, hooks=hooks, contexts=contexts, sla=sla,
             args=args)
 
     def __getitem__(self, key):
@@ -525,7 +526,7 @@ class Workload(object):
                                 workload_data)
 
     def set_results(self, load_duration, full_duration, start_time,
-                    sla_results, hooks_results=None):
+                    sla_results, contexts_results, hooks_results=None):
         db.workload_set_results(workload_uuid=self.workload["uuid"],
                                 subtask_uuid=self.workload["subtask_uuid"],
                                 task_uuid=self.workload["task_uuid"],
@@ -533,7 +534,8 @@ class Workload(object):
                                 full_duration=full_duration,
                                 start_time=start_time,
                                 sla_results=sla_results,
-                                hooks_results=hooks_results)
+                                hooks_results=hooks_results,
+                                contexts_results=contexts_results)
 
     @classmethod
     def to_task(cls, workload):
@@ -553,13 +555,7 @@ class Workload(object):
         subtask["title"] = workload["name"]
         subtask["description"] = workload["description"]
         subtask["scenario"] = {workload["name"]: workload["args"]}
-        # TODO(andreykurilin): fix database model as soon as the work related
-        #   contexts execution stats will start.
-        if "context" in workload:
-            # it is an object from database
-            subtask["contexts"] = workload["context"]
-        else:
-            subtask["contexts"] = workload["contexts"]
+        subtask["contexts"] = workload["contexts"]
         subtask["runner"] = {workload["runner_type"]: workload["runner"]}
         subtask["hooks"] = []
         for hook in workload["hooks"]:

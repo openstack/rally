@@ -16,6 +16,8 @@
 """Tests for DB migration."""
 
 import copy
+import datetime as dt
+import iso8601
 import json
 import pickle
 import pprint
@@ -2097,6 +2099,189 @@ class MigrationWalkTestCase(rtest.DBTestCase,
                 task_table.delete().where(task_table.c.uuid == task_uuid))
 
             deployment_uuid = self._4394bdc32cfd_deployment_uuid
+            conn.execute(
+                deployment_table.delete().where(
+                    deployment_table.c.uuid == deployment_uuid))
+
+    def _pre_upgrade_dc46687661df(self, engine):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        self._dc46687661df_deployment_uuid = str(uuid.uuid4())
+        self._dc46687661df_task_uuid = str(uuid.uuid4())
+        subtask_uuid = str(uuid.uuid4())
+        start_time = 1483221602
+        created_at = dt.datetime.fromtimestamp(start_time - 2)
+        created_at = created_at.replace(tzinfo=iso8601.iso8601.UTC)
+
+        start_time = float(start_time) * 1000000.0
+        self._dc46687661df_workloads = {
+            str(uuid.uuid4()): {
+                "start_time": None,
+                "created_at": timeutils.utcnow(),
+                "context": {"users": {"tenants": 3}},
+                "full_duration": 5,
+                "load_duration": 3
+            },
+            str(uuid.uuid4()): {
+                "start_time": start_time,
+                "created_at": created_at,
+                "context": {"users": {"tenants": 3},
+                            "volumes": {"foo": "bar"}},
+                "full_duration": 10,
+                "load_duration": 3
+            },
+            str(uuid.uuid4()): {
+                "start_time": start_time,
+                "created_at": created_at,
+                "context": {"foobar": {"foo": "bar"}},
+                "with_fake_context": True,
+                "full_duration": 10,
+                "load_duration": 3
+            }
+        }
+
+        with engine.connect() as conn:
+            conn.execute(
+                deployment_table.insert(),
+                [{
+                    "uuid": self._046a38742e89_deployment_uuid,
+                    "name": str(uuid.uuid4()),
+                    "config": "{}",
+                    "enum_deployments_status": consts.DeployStatus.DEPLOY_INIT,
+                    "credentials": six.b(json.dumps([])),
+                    "users": six.b(json.dumps([]))
+                }]
+            )
+
+            conn.execute(
+                task_table.insert(),
+                [{
+                    "uuid": self._dc46687661df_task_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "status": consts.TaskStatus.FINISHED,
+                    "validation_result": six.b(json.dumps({})),
+                    "deployment_uuid": self._046a38742e89_deployment_uuid
+                }]
+            )
+
+            conn.execute(
+                subtask_table.insert(),
+                [{
+                    "uuid": subtask_uuid,
+                    "created_at": timeutils.utcnow(),
+                    "updated_at": timeutils.utcnow(),
+                    "task_uuid": self._dc46687661df_task_uuid,
+                    "context": six.b(json.dumps([])),
+                    "sla": six.b(json.dumps([])),
+                    "run_in_parallel": False
+                }]
+            )
+            conn.execute(
+                workload_table.insert(),
+                [{
+                    "uuid": w_uuid,
+                    "name": "foo",
+                    "task_uuid": self._dc46687661df_task_uuid,
+                    "subtask_uuid": subtask_uuid,
+                    "created_at": w["created_at"],
+                    "updated_at": timeutils.utcnow(),
+                    "position": 0,
+                    "runner": six.b(json.dumps([])),
+                    "runner_type": "",
+                    "context": json.dumps(w["context"]),
+                    "context_execution": "foo",
+                    "statistics": "",
+                    "hooks": six.b(json.dumps([])),
+                    "sla": "",
+                    "sla_results": "",
+                    "args": "",
+                    "load_duration": w["load_duration"],
+                    "full_duration": w["full_duration"],
+                    "start_time": w["start_time"],
+                    "pass_sla": True,
+                    "min_duration": 0,
+                    "max_duration": 1
+                } for w_uuid, w in self._dc46687661df_workloads.items()]
+            )
+
+    def _check_dc46687661df(self, engine, data):
+        deployment_table = db_utils.get_table(engine, "deployments")
+        task_table = db_utils.get_table(engine, "tasks")
+        subtask_table = db_utils.get_table(engine, "subtasks")
+        workload_table = db_utils.get_table(engine, "workloads")
+
+        with engine.connect() as conn:
+            task_uuid = self._dc46687661df_task_uuid
+            for w_uuid, w in self._dc46687661df_workloads.items():
+                workload = conn.execute(workload_table.select().where(
+                    workload_table.c.uuid == w_uuid)).first()
+
+                self.assertNotIn("context", workload)
+                self.assertNotIn("context_execution", workload)
+
+                self.assertEqual(w["context"],
+                                 json.loads(workload["contexts"]))
+                if w["start_time"] is None:
+                    self.assertEqual("[]", workload["contexts_results"])
+                elif w.get("with_fake_context", False):
+                    self.assertEqual([{
+                        "plugin_cfg": {"description": mock.ANY},
+                        "plugin_name": "AllExecutedContexts",
+                        "setup": {"started_at": 1483221600.0,
+                                  "finished_at": 1483221601.99,
+                                  "atomic_actions": [],
+                                  "error": None},
+                        "cleanup": {"started_at": 1483221605.01,
+                                    "finished_at": 1483221609.9,
+                                    "atomic_actions": [],
+                                    "error": None}}],
+                        json.loads(workload["contexts_results"]))
+                else:
+                    self.assertEqual([{
+                        "plugin_name": "AllExecutedContexts",
+                        "plugin_cfg": {
+                            "description": mock.ANY,
+                            "order_of_execution": {
+                                "note": mock.ANY,
+                                "order": ["users@openstack.setup",
+                                          "volumes@openstack.setup",
+                                          "volumes@openstack.cleanup",
+                                          "users@openstack.cleanup"]}},
+                        "setup": {"started_at": 1483221600.0,
+                                  "finished_at": 1483221601.99,
+                                  "atomic_actions": [],
+                                  "error": None},
+                        "cleanup": {"started_at": 1483221605.01,
+                                    "finished_at": 1483221609.9,
+                                    "atomic_actions": [],
+                                    "error": None}}],
+                        json.loads(workload["contexts_results"]))
+
+                conn.execute(
+                    workload_table.delete().where(
+                        workload_table.c.uuid == workload.uuid))
+
+            subtask = conn.execute(subtask_table.select().where(
+                subtask_table.c.task_uuid == task_uuid)).first()
+
+            self.assertNotIn("context", subtask)
+            self.assertNotIn("context_execution", subtask)
+
+            self.assertEqual("{}", subtask["contexts"])
+            self.assertEqual("[]", subtask["contexts_results"])
+
+            conn.execute(
+                subtask_table.delete().where(
+                    subtask_table.c.uuid == subtask["uuid"]))
+
+            conn.execute(
+                task_table.delete().where(task_table.c.uuid == task_uuid))
+
+            deployment_uuid = self._046a38742e89_deployment_uuid
             conn.execute(
                 deployment_table.delete().where(
                     deployment_table.c.uuid == deployment_uuid))

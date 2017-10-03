@@ -38,7 +38,8 @@ def get_tasks_results():
                 "runner": {},
                 "runner_type": "runner_type",
                 "args": {},
-                "context": {},
+                "contexts": {},
+                "contexts_results": [],
                 "min_duration": 0.0,
                 "max_duration": 1.0,
                 "start_time": 0,
@@ -68,7 +69,6 @@ def get_tasks_results():
              "created_at": "2017-06-04T05:14:44",
              "updated_at": "2017-06-04T05:15:14",
              "sla": {},
-             "context": {},
              "duration": 29.969523191452026,
              "task_uuid": task_id,
              "workloads": [workload]}

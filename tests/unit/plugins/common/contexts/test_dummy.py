@@ -14,7 +14,7 @@
 
 
 from rally import exceptions
-from rally.plugins.common.context import dummy
+from rally.plugins.common.contexts import dummy
 from tests.unit import test
 
 
