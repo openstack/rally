@@ -45,7 +45,7 @@ class ExistingNetworkTestCase(test.TestCase):
             },
         })
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_setup(self, mock_network_wrap, mock_clients):
         networks = [mock.Mock(), mock.Mock(), mock.Mock()]

@@ -19,7 +19,7 @@ import random
 from oslo_config import cfg
 from osprofiler import profiler
 from rally.common.plugin import plugin
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.task import context
 from rally.task import scenario
 

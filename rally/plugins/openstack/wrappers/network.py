@@ -67,7 +67,7 @@ class NetworkWrapper(object):
     def __init__(self, clients, owner, config=None):
         """Returns available network wrapper instance.
 
-        :param clients: rally.osclients.Clients instance
+        :param clients: rally.plugins.openstack.osclients.Clients instance
         :param owner: The object that owns resources created by this
                       wrapper instance. It will be used to generate
                       random names, so must implement
@@ -378,7 +378,7 @@ class NeutronWrapper(NetworkWrapper):
 def wrap(clients, owner, config=None):
     """Returns available network wrapper instance.
 
-    :param clients: rally.osclients.Clients instance
+    :param clients: rally.plugins.openstack.osclients.Clients instance
     :param owner: The object that owns resources created by this
                   wrapper instance. It will be used to generate random
                   names, so must implement

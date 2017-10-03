@@ -15,7 +15,7 @@
 
 from rally.common import logging
 from rally import consts
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.task import context
 
 LOG = logging.getLogger(__name__)

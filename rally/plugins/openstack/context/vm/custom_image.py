@@ -21,7 +21,7 @@ from rally.common import broker
 from rally.common import logging
 from rally.common import utils
 from rally import consts
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from rally.plugins.openstack.services.image import image
 from rally.plugins.openstack import types

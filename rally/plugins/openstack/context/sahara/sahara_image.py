@@ -16,8 +16,8 @@ from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally import exceptions
-from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.plugins.openstack.services.image import image as image_services
 from rally.task import context

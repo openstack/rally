@@ -16,7 +16,7 @@
 from rally.common import logging
 from rally.common import utils
 from rally.common import validation
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.wrappers import network
 from rally.task import context
 

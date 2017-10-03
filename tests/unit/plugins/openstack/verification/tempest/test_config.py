@@ -17,7 +17,7 @@ import ddt
 import mock
 from oslo_config import cfg
 
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.verification.tempest import config
 from tests.unit import fakes
 from tests.unit import test

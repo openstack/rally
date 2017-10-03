@@ -37,7 +37,7 @@ class NetworkTestCase(test.TestCase):
     def test_START_CIDR_DFLT(self):
         netaddr.IPNetwork(network_context.Network.DEFAULT_CONFIG["start_cidr"])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__default(self, mock_wrap, mock_clients):
         context = network_context.Network(self.get_context())
@@ -46,7 +46,7 @@ class NetworkTestCase(test.TestCase):
                          context.config["start_cidr"])
         self.assertIsNone(context.config["dns_nameservers"])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__explicit(self, mock_wrap, mock_clients):
         context = network_context.Network(
@@ -66,7 +66,7 @@ class NetworkTestCase(test.TestCase):
     @ddt.unpack
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.network.networks.utils")
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup(self, mock_clients, mock_utils, mock_wrap, **dns_kwargs):
         mock_utils.iterate_per_tenants.return_value = [
             ("foo_user", "foo_tenant"),
@@ -102,7 +102,7 @@ class NetworkTestCase(test.TestCase):
         self.assertSequenceEqual(sorted(expected_networks),
                                  sorted(actual_networks))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap")
     def test_cleanup(self, mock_wrap, mock_clients):
         net_context = network_context.Network(self.get_context())

@@ -22,7 +22,7 @@ import six
 
 from rally.common.plugin import plugin
 from rally import exceptions
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.task import scenario
 
 

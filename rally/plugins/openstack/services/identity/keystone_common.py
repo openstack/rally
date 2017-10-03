@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.services.identity import identity
 from rally.task import atomic
 

@@ -887,7 +887,7 @@ VerifierContext
 
 .. code-block:: python
 
-  from rally import osclients
+  from rally.plugins.openstack import osclients
   from rally.task import context
 
 

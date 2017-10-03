@@ -16,12 +16,12 @@
 from rally.common import logging
 from rally.common import validation
 from rally import consts
-from rally import osclients
 from rally.plugins.openstack.context.quotas import cinder_quotas
 from rally.plugins.openstack.context.quotas import designate_quotas
 from rally.plugins.openstack.context.quotas import manila_quotas
 from rally.plugins.openstack.context.quotas import neutron_quotas
 from rally.plugins.openstack.context.quotas import nova_quotas
+from rally.plugins.openstack import osclients
 from rally.task import context
 
 
