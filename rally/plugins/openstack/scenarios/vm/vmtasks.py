@@ -492,17 +492,43 @@ class DDLoadTest(BootRuncommandDelete):
     @logging.log_deprecated_args(
         "Use 'interpreter' to specify the interpreter to execute script from.",
         "0.10.0", ["command"], once=True)
-    def run(self, interpreter="/bin/sh", command=None, **kwargs):
-        """Boot a server from a custom image, run a command that outputs JSON.
+    def run(self, flavor, username, password=None,
+            image=None, command=None, interpreter="/bin/sh",
+            volume_args=None, floating_network=None, port=22,
+            use_floating_ip=True, force_delete=False, wait_for_ping=True,
+            max_log_length=None, **kwargs):
+        """Boot a server from a custom image and performs dd load test.
 
-        Example Script in rally-jobs/extra/install_benchmark.sh
+        NOTE: dd load test is prepared script by Rally team. It checks
+            writing and reading metrics from the VM.
 
+        :param image: glance image name to use for the vm. Optional
+            in case of specified "image_command_customizer" context
+        :param flavor: VM flavor name
+        :param username: ssh username on server, str
+        :param password: Password on SSH authentication
         :param interpreter: the interpreter to execute script with dd load test
             (defaults to /bin/sh)
-        :param command: deprecated
+        :param command: DEPRECATED. use interpreter instead.
+        :param volume_args: volume args for booting server from volume
+        :param floating_network: external network name, for floating ip
+        :param port: ssh port for SSH connection
+        :param use_floating_ip: bool, floating or fixed IP for SSH connection
+        :param force_delete: whether to use force_delete for servers
+        :param wait_for_ping: whether to check connectivity on server creation
+        :param max_log_length: The number of tail nova console-log lines user
+                               would like to retrieve
+        :param kwargs: extra arguments for booting the server
         """
         cmd = {"interpreter": interpreter,
                "script_inline": BASH_DD_LOAD_TEST}
         if command and "interpreter" in command:
             cmd["interpreter"] = command["interpreter"]
-        return super(DDLoadTest, self).run(command=cmd, **kwargs)
+        return super(DDLoadTest, self).run(
+            flavor=flavor, username=username, password=password,
+            image=image, command=cmd,
+            volume_args=volume_args, floating_network=floating_network,
+            port=port, use_floating_ip=use_floating_ip,
+            force_delete=force_delete,
+            wait_for_ping=wait_for_ping, max_log_length=max_log_length,
+            **kwargs)
