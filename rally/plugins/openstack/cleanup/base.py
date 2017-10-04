@@ -41,8 +41,8 @@ class NoName(object):
 
 def resource(service, resource, order=0, admin_required=False,
              perform_for_admin_only=False, tenant_resource=False,
-             max_attempts=3, timeout=CONF.cleanup.resource_deletion_timeout,
-             interval=1, threads=CONF.cleanup.cleanup_threads):
+             max_attempts=3, timeout=CONF.openstack.resource_deletion_timeout,
+             interval=1, threads=CONF.openstack.cleanup_threads):
     """Decorator that overrides resource specification.
 
     Just put it on top of your resource class and specify arguments that you

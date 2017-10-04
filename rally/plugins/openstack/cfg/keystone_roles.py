@@ -15,9 +15,11 @@
 
 from oslo_config import cfg
 
-OPTS = {"roles_context": [
-    cfg.IntOpt("resource_management_workers",
+OPTS = {"openstack": [
+    cfg.IntOpt("roles_context_resource_management_workers",
                default=30,
+               deprecated_name="resource_management_workers",
+               deprecated_group="roles_context",
                help="How many concurrent threads to use for serving roles "
                     "context"),
 ]}

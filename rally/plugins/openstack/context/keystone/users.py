@@ -99,7 +99,7 @@ class UserGenerator(context.Context):
         "tenants": 1,
         "users_per_tenant": 1,
         "resource_management_workers":
-            cfg.CONF.users_context.resource_management_workers,
+            cfg.CONF.openstack.users_context_resource_management_workers,
     }
 
     def __init__(self, context):
@@ -116,9 +116,9 @@ class UserGenerator(context.Context):
             self.existing_users = []
             self.credential = context["admin"]["credential"]
             project_domain = (self.credential.project_domain_name or
-                              cfg.CONF.users_context.project_domain)
+                              cfg.CONF.openstack.project_domain)
             user_domain = (self.credential.user_domain_name or
-                           cfg.CONF.users_context.user_domain)
+                           cfg.CONF.openstack.user_domain)
             self.DEFAULT_FOR_NEW_USERS["project_domain"] = project_domain
             self.DEFAULT_FOR_NEW_USERS["user_domain"] = user_domain
             with self.config.unlocked():
@@ -181,7 +181,7 @@ class UserGenerator(context.Context):
         # NOTE(msdubov): This should be called after _create_tenants().
         threads = self.config["resource_management_workers"]
         users_per_tenant = self.config["users_per_tenant"]
-        default_role = cfg.CONF.users_context.keystone_default_role
+        default_role = cfg.CONF.openstack.keystone_default_role
 
         users = collections.deque()
 

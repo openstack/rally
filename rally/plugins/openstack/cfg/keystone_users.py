@@ -15,23 +15,25 @@
 
 from oslo_config import cfg
 
-RESOURCE_MANAGEMENT_WORKERS_DESCR = ("The number of concurrent threads to use "
-                                     "for serving users context.")
-PROJECT_DOMAIN_DESCR = "ID of domain in which projects will be created."
-USER_DOMAIN_DESCR = "ID of domain in which users will be created."
 
-OPTS = {"users_context": [
-    cfg.IntOpt("resource_management_workers",
+OPTS = {"openstack": [
+    cfg.IntOpt("users_context_resource_management_workers",
                default=20,
-               help=RESOURCE_MANAGEMENT_WORKERS_DESCR),
+               deprecated_name="resource_management_workers",
+               deprecated_group="users_context",
+               help="The number of concurrent threads to use for serving "
+                    "users context."),
     cfg.StrOpt("project_domain",
                default="default",
-               help=PROJECT_DOMAIN_DESCR),
+               deprecated_group="users_context",
+               help="ID of domain in which projects will be created."),
     cfg.StrOpt("user_domain",
                default="default",
-               help=USER_DOMAIN_DESCR),
+               deprecated_group="users_context",
+               help="ID of domain in which users will be created."),
     cfg.StrOpt("keystone_default_role",
                default="member",
+               deprecated_group="users_context",
                help="The default role name of the keystone to assign to "
-                    "users."),
+                    "users.")
 ]}

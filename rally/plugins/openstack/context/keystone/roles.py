@@ -47,7 +47,8 @@ class RoleGenerator(context.Context):
     def __init__(self, ctx):
         super(RoleGenerator, self).__init__(ctx)
         self.credential = self.context["admin"]["credential"]
-        self.workers = cfg.CONF.roles_context.resource_management_workers
+        self.workers = (
+            cfg.CONF.openstack.roles_context_resource_management_workers)
 
     def _get_role_object(self, context_role):
         """Check if role exists.
