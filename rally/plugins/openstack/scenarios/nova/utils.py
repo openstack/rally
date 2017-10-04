@@ -79,25 +79,25 @@ class NovaScenario(scenario.OpenStackScenario):
         server = self.clients("nova").servers.create(
             server_name, image, flavor, **kwargs)
 
-        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_boot_prepoll_delay)
         server = utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_boot_timeout,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval
+            timeout=CONF.openstack.nova_server_boot_timeout,
+            check_interval=CONF.openstack.nova_server_boot_poll_interval
         )
         return server
 
     def _do_server_reboot(self, server, reboottype):
         server.reboot(reboot_type=reboottype)
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_pause_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_reboot_timeout,
-            check_interval=CONF.benchmark.nova_server_reboot_poll_interval
+            timeout=CONF.openstack.nova_server_reboot_timeout,
+            check_interval=CONF.openstack.nova_server_reboot_poll_interval
         )
 
     @atomic.action_timer("nova.soft_reboot_server")
@@ -168,13 +168,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param kwargs: Optional additional arguments to pass to the rebuild
         """
         server.rebuild(image, **kwargs)
-        self.sleep_between(CONF.benchmark.nova_server_rebuild_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_rebuild_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_rebuild_timeout,
-            check_interval=CONF.benchmark.nova_server_rebuild_poll_interval
+            timeout=CONF.openstack.nova_server_rebuild_timeout,
+            check_interval=CONF.openstack.nova_server_rebuild_poll_interval
         )
 
     @atomic.action_timer("nova.start_server")
@@ -191,8 +191,8 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_start_timeout,
-            check_interval=CONF.benchmark.nova_server_start_poll_interval
+            timeout=CONF.openstack.nova_server_start_timeout,
+            check_interval=CONF.openstack.nova_server_start_poll_interval
         )
 
     @atomic.action_timer("nova.stop_server")
@@ -209,8 +209,8 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=["SHUTOFF"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_stop_timeout,
-            check_interval=CONF.benchmark.nova_server_stop_poll_interval
+            timeout=CONF.openstack.nova_server_stop_timeout,
+            check_interval=CONF.openstack.nova_server_stop_poll_interval
         )
 
     @atomic.action_timer("nova.rescue_server")
@@ -223,13 +223,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.rescue()
-        self.sleep_between(CONF.benchmark.nova_server_rescue_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_rescue_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["RESCUE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_rescue_timeout,
-            check_interval=CONF.benchmark.nova_server_rescue_poll_interval
+            timeout=CONF.openstack.nova_server_rescue_timeout,
+            check_interval=CONF.openstack.nova_server_rescue_poll_interval
         )
 
     @atomic.action_timer("nova.unrescue_server")
@@ -241,13 +241,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.unrescue()
-        self.sleep_between(CONF.benchmark.nova_server_unrescue_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_unrescue_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_unrescue_timeout,
-            check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
+            timeout=CONF.openstack.nova_server_unrescue_timeout,
+            check_interval=CONF.openstack.nova_server_unrescue_poll_interval
         )
 
     @atomic.action_timer("nova.suspend_server")
@@ -260,13 +260,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.suspend()
-        self.sleep_between(CONF.benchmark.nova_server_suspend_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_suspend_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["SUSPENDED"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_suspend_timeout,
-            check_interval=CONF.benchmark.nova_server_suspend_poll_interval
+            timeout=CONF.openstack.nova_server_suspend_timeout,
+            check_interval=CONF.openstack.nova_server_suspend_poll_interval
         )
 
     @atomic.action_timer("nova.resume_server")
@@ -279,13 +279,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.resume()
-        self.sleep_between(CONF.benchmark.nova_server_resume_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_resume_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_resume_timeout,
-            check_interval=CONF.benchmark.nova_server_resume_poll_interval
+            timeout=CONF.openstack.nova_server_resume_timeout,
+            check_interval=CONF.openstack.nova_server_resume_poll_interval
         )
 
     @atomic.action_timer("nova.pause_server")
@@ -298,13 +298,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.pause()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_pause_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["PAUSED"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_pause_timeout,
-            check_interval=CONF.benchmark.nova_server_pause_poll_interval
+            timeout=CONF.openstack.nova_server_pause_timeout,
+            check_interval=CONF.openstack.nova_server_pause_poll_interval
         )
 
     @atomic.action_timer("nova.unpause_server")
@@ -317,13 +317,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.unpause()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_pause_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_unpause_timeout,
-            check_interval=CONF.benchmark.nova_server_unpause_poll_interval
+            timeout=CONF.openstack.nova_server_unpause_timeout,
+            check_interval=CONF.openstack.nova_server_unpause_poll_interval
         )
 
     @atomic.action_timer("nova.shelve_server")
@@ -336,13 +336,13 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server object
         """
         server.shelve()
-        self.sleep_between(CONF.benchmark.nova_server_pause_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_pause_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["SHELVED_OFFLOADED"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_shelve_timeout,
-            check_interval=CONF.benchmark.nova_server_shelve_poll_interval
+            timeout=CONF.openstack.nova_server_shelve_timeout,
+            check_interval=CONF.openstack.nova_server_shelve_poll_interval
         )
 
     @atomic.action_timer("nova.unshelve_server")
@@ -355,13 +355,13 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.unshelve()
 
-        self.sleep_between(CONF.benchmark. nova_server_unshelve_prepoll_delay)
+        self.sleep_between(CONF.openstack. nova_server_unshelve_prepoll_delay)
         utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_unshelve_timeout,
-            check_interval=CONF.benchmark.nova_server_unshelve_poll_interval
+            timeout=CONF.openstack.nova_server_unshelve_timeout,
+            check_interval=CONF.openstack.nova_server_unshelve_poll_interval
         )
 
     def _delete_server(self, server, force=False):
@@ -384,8 +384,8 @@ class NovaScenario(scenario.OpenStackScenario):
                 ready_statuses=["deleted"],
                 check_deletion=True,
                 update_resource=utils.get_from_manager(),
-                timeout=CONF.benchmark.nova_server_delete_timeout,
-                check_interval=CONF.benchmark.nova_server_delete_poll_interval
+                timeout=CONF.openstack.nova_server_delete_timeout,
+                check_interval=CONF.openstack.nova_server_delete_poll_interval
             )
 
     def _delete_servers(self, servers, force=False):
@@ -408,9 +408,9 @@ class NovaScenario(scenario.OpenStackScenario):
                     ready_statuses=["deleted"],
                     check_deletion=True,
                     update_resource=utils.get_from_manager(),
-                    timeout=CONF.benchmark.nova_server_delete_timeout,
-                    check_interval=CONF.
-                    benchmark.nova_server_delete_poll_interval
+                    timeout=CONF.openstack.nova_server_delete_timeout,
+                    check_interval=(
+                        CONF.openstack.nova_server_delete_poll_interval)
                 )
 
     @atomic.action_timer("nova.create_server_group")
@@ -472,14 +472,14 @@ class NovaScenario(scenario.OpenStackScenario):
         glance = image_service.Image(self._clients,
                                      atomic_inst=self.atomic_actions())
         glance.delete_image(image.id)
-        check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
+        check_interval = CONF.openstack.nova_server_image_delete_poll_interval
         with atomic.ActionTimer(self, "glance.wait_for_delete"):
             utils.wait_for_status(
                 image,
                 ready_statuses=["deleted", "pending_delete"],
                 check_deletion=True,
                 update_resource=glance.get_image,
-                timeout=CONF.benchmark.nova_server_image_delete_timeout,
+                timeout=CONF.openstack.nova_server_image_delete_timeout,
                 check_interval=check_interval
             )
 
@@ -499,13 +499,13 @@ class NovaScenario(scenario.OpenStackScenario):
         glance = image_service.Image(self._clients,
                                      atomic_inst=self.atomic_actions())
         image = glance.get_image(image_uuid)
-        check_interval = CONF.benchmark.nova_server_image_create_poll_interval
+        check_interval = CONF.openstack.nova_server_image_create_poll_interval
         with atomic.ActionTimer(self, "glance.wait_for_image"):
             image = utils.wait_for_status(
                 image,
                 ready_statuses=["ACTIVE"],
                 update_resource=glance.get_image,
-                timeout=CONF.benchmark.nova_server_image_create_timeout,
+                timeout=CONF.openstack.nova_server_image_create_timeout,
                 check_interval=check_interval
             )
         return image
@@ -592,14 +592,14 @@ class NovaScenario(scenario.OpenStackScenario):
         #                created servers manually.
         servers = [s for s in self.clients("nova").servers.list()
                    if s.name.startswith(name_prefix)]
-        self.sleep_between(CONF.benchmark.nova_server_boot_prepoll_delay)
+        self.sleep_between(CONF.openstack.nova_server_boot_prepoll_delay)
         servers = [utils.wait_for_status(
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.
             get_from_manager(),
-            timeout=CONF.benchmark.nova_server_boot_timeout,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval
+            timeout=CONF.openstack.nova_server_boot_timeout,
+            check_interval=CONF.openstack.nova_server_boot_poll_interval
         ) for server in servers]
         return servers
 
@@ -654,8 +654,8 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_resize_timeout,
-            check_interval=CONF.benchmark.nova_server_resize_poll_interval
+            timeout=CONF.openstack.nova_server_resize_timeout,
+            check_interval=CONF.openstack.nova_server_resize_poll_interval
         )
 
     @atomic.action_timer("nova.resize_confirm")
@@ -665,9 +665,9 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=[status],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_resize_confirm_timeout,
+            timeout=CONF.openstack.nova_server_resize_confirm_timeout,
             check_interval=(
-                CONF.benchmark.nova_server_resize_confirm_poll_interval)
+                CONF.openstack.nova_server_resize_confirm_poll_interval)
         )
 
     @atomic.action_timer("nova.resize_revert")
@@ -677,9 +677,9 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=[status],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
+            timeout=CONF.openstack.nova_server_resize_revert_timeout,
             check_interval=(
-                CONF.benchmark.nova_server_resize_revert_poll_interval)
+                CONF.openstack.nova_server_resize_revert_poll_interval)
         )
 
     def _update_volume_resource(self, resource):
@@ -696,9 +696,9 @@ class NovaScenario(scenario.OpenStackScenario):
             volume,
             ready_statuses=["in-use"],
             update_resource=self._update_volume_resource,
-            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
+            timeout=CONF.openstack.nova_server_resize_revert_timeout,
             check_interval=(
-                CONF.benchmark.nova_server_resize_revert_poll_interval)
+                CONF.openstack.nova_server_resize_revert_poll_interval)
         )
         return attachment
 
@@ -732,8 +732,8 @@ class NovaScenario(scenario.OpenStackScenario):
             volume,
             ready_statuses=["available"],
             update_resource=self._update_volume_resource,
-            timeout=CONF.benchmark.nova_detach_volume_timeout,
-            check_interval=CONF.benchmark.nova_detach_volume_poll_interval
+            timeout=CONF.openstack.nova_detach_volume_timeout,
+            check_interval=CONF.openstack.nova_detach_volume_poll_interval
         )
 
     @atomic.action_timer("nova.live_migrate")
@@ -758,9 +758,9 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=["ACTIVE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_live_migrate_timeout,
+            timeout=CONF.openstack.nova_server_live_migrate_timeout,
             check_interval=(
-                CONF.benchmark.nova_server_live_migrate_poll_interval)
+                CONF.openstack.nova_server_live_migrate_poll_interval)
         )
         server_admin = self.admin_clients("nova").servers.get(server.id)
         if (host_pre_migrate == getattr(server_admin, "OS-EXT-SRV-ATTR:host")
@@ -808,9 +808,9 @@ class NovaScenario(scenario.OpenStackScenario):
             server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_migrate_timeout,
+            timeout=CONF.openstack.nova_server_migrate_timeout,
             check_interval=(
-                CONF.benchmark.nova_server_migrate_poll_interval)
+                CONF.openstack.nova_server_migrate_poll_interval)
         )
         if not skip_host_check:
             server_admin = self.admin_clients("nova").servers.get(server.id)

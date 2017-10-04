@@ -65,15 +65,15 @@ class HeatScenario(scenario.OpenStackScenario):
         stack_id = self.clients("heat").stacks.create(**kw)["stack"]["id"]
         stack = self.clients("heat").stacks.get(stack_id)
 
-        self.sleep_between(CONF.benchmark.heat_stack_create_prepoll_delay)
+        self.sleep_between(CONF.openstack.heat_stack_create_prepoll_delay)
 
         stack = utils.wait_for(
             stack,
             ready_statuses=["CREATE_COMPLETE"],
             failure_statuses=["CREATE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_create_timeout,
-            check_interval=CONF.benchmark.heat_stack_create_poll_interval)
+            timeout=CONF.openstack.heat_stack_create_timeout,
+            check_interval=CONF.openstack.heat_stack_create_poll_interval)
 
         return stack
 
@@ -101,15 +101,15 @@ class HeatScenario(scenario.OpenStackScenario):
         }
         self.clients("heat").stacks.update(stack.id, **kw)
 
-        self.sleep_between(CONF.benchmark.heat_stack_update_prepoll_delay)
+        self.sleep_between(CONF.openstack.heat_stack_update_prepoll_delay)
 
         stack = utils.wait_for(
             stack,
             ready_statuses=["UPDATE_COMPLETE"],
             failure_statuses=["UPDATE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_update_timeout,
-            check_interval=CONF.benchmark.heat_stack_update_poll_interval)
+            timeout=CONF.openstack.heat_stack_update_timeout,
+            check_interval=CONF.openstack.heat_stack_update_poll_interval)
         return stack
 
     @atomic.action_timer("heat.check_stack")
@@ -126,8 +126,8 @@ class HeatScenario(scenario.OpenStackScenario):
             ready_statuses=["CHECK_COMPLETE"],
             failure_statuses=["CHECK_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(["CHECK_FAILED"]),
-            timeout=CONF.benchmark.heat_stack_check_timeout,
-            check_interval=CONF.benchmark.heat_stack_check_poll_interval)
+            timeout=CONF.openstack.heat_stack_check_timeout,
+            check_interval=CONF.openstack.heat_stack_check_poll_interval)
 
     @atomic.action_timer("heat.delete_stack")
     def _delete_stack(self, stack):
@@ -144,8 +144,8 @@ class HeatScenario(scenario.OpenStackScenario):
             failure_statuses=["DELETE_FAILED", "ERROR"],
             check_deletion=True,
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_delete_timeout,
-            check_interval=CONF.benchmark.heat_stack_delete_poll_interval)
+            timeout=CONF.openstack.heat_stack_delete_timeout,
+            check_interval=CONF.openstack.heat_stack_delete_poll_interval)
 
     @atomic.action_timer("heat.suspend_stack")
     def _suspend_stack(self, stack):
@@ -160,8 +160,8 @@ class HeatScenario(scenario.OpenStackScenario):
             ready_statuses=["SUSPEND_COMPLETE"],
             failure_statuses=["SUSPEND_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_suspend_timeout,
-            check_interval=CONF.benchmark.heat_stack_suspend_poll_interval)
+            timeout=CONF.openstack.heat_stack_suspend_timeout,
+            check_interval=CONF.openstack.heat_stack_suspend_poll_interval)
 
     @atomic.action_timer("heat.resume_stack")
     def _resume_stack(self, stack):
@@ -176,8 +176,8 @@ class HeatScenario(scenario.OpenStackScenario):
             ready_statuses=["RESUME_COMPLETE"],
             failure_statuses=["RESUME_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_resume_timeout,
-            check_interval=CONF.benchmark.heat_stack_resume_poll_interval)
+            timeout=CONF.openstack.heat_stack_resume_timeout,
+            check_interval=CONF.openstack.heat_stack_resume_poll_interval)
 
     @atomic.action_timer("heat.snapshot_stack")
     def _snapshot_stack(self, stack):
@@ -193,8 +193,8 @@ class HeatScenario(scenario.OpenStackScenario):
             ready_statuses=["SNAPSHOT_COMPLETE"],
             failure_statuses=["SNAPSHOT_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_snapshot_timeout,
-            check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval)
+            timeout=CONF.openstack.heat_stack_snapshot_timeout,
+            check_interval=CONF.openstack.heat_stack_snapshot_poll_interval)
         return snapshot
 
     @atomic.action_timer("heat.restore_stack")
@@ -210,8 +210,8 @@ class HeatScenario(scenario.OpenStackScenario):
             ready_statuses=["RESTORE_COMPLETE"],
             failure_statuses=["RESTORE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.heat_stack_restore_timeout,
-            check_interval=CONF.benchmark.heat_stack_restore_poll_interval
+            timeout=CONF.openstack.heat_stack_restore_timeout,
+            check_interval=CONF.openstack.heat_stack_restore_poll_interval
         )
 
     @atomic.action_timer("heat.show_output")
@@ -302,8 +302,8 @@ class HeatScenario(scenario.OpenStackScenario):
                     self._count_instances(s) == expected_instances),
                 failure_statuses=["UPDATE_FAILED", "ERROR"],
                 update_resource=utils.get_from_manager(),
-                timeout=CONF.benchmark.heat_stack_scale_timeout,
-                check_interval=CONF.benchmark.heat_stack_scale_poll_interval)
+                timeout=CONF.openstack.heat_stack_scale_timeout,
+                check_interval=CONF.openstack.heat_stack_scale_poll_interval)
 
     def _stack_webhook(self, stack, output_key):
         """POST to the URL given in the output value identified by output_key.

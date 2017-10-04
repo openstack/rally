@@ -76,5 +76,5 @@ class GlanceScenario(scenario.OpenStackScenario):
             image, ["deleted", "pending_delete"],
             check_deletion=True,
             update_resource=wrapper.get_image,
-            timeout=CONF.benchmark.glance_image_delete_timeout,
-            check_interval=CONF.benchmark.glance_image_delete_poll_interval)
+            timeout=CONF.openstack.glance_image_delete_timeout,
+            check_interval=CONF.openstack.glance_image_delete_poll_interval)

@@ -63,8 +63,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["CREATE_COMPLETE"],
             failure_statuses=["CREATE_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_create_poll_interval,
-            timeout=CONF.benchmark.heat_stack_create_timeout)
+            check_interval=CONF.openstack.heat_stack_create_poll_interval,
+            timeout=CONF.openstack.heat_stack_create_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for.mock.return_value, return_stack)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -87,8 +87,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["UPDATE_COMPLETE"],
             failure_statuses=["UPDATE_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_update_poll_interval,
-            timeout=CONF.benchmark.heat_stack_update_timeout)
+            check_interval=CONF.openstack.heat_stack_update_poll_interval,
+            timeout=CONF.openstack.heat_stack_update_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.update_stack")
@@ -103,8 +103,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["CHECK_COMPLETE"],
             failure_statuses=["CHECK_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_check_poll_interval,
-            timeout=CONF.benchmark.heat_stack_check_timeout)
+            check_interval=CONF.openstack.heat_stack_check_poll_interval,
+            timeout=CONF.openstack.heat_stack_check_timeout)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.check_stack")
 
@@ -118,8 +118,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             failure_statuses=["DELETE_FAILED", "ERROR"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.heat_stack_delete_poll_interval,
-            timeout=CONF.benchmark.heat_stack_delete_timeout)
+            check_interval=CONF.openstack.heat_stack_delete_poll_interval,
+            timeout=CONF.openstack.heat_stack_delete_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.delete_stack")
@@ -134,8 +134,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["SUSPEND_COMPLETE"],
             failure_statuses=["SUSPEND_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_suspend_poll_interval,
-            timeout=CONF.benchmark.heat_stack_suspend_timeout)
+            check_interval=CONF.openstack.heat_stack_suspend_poll_interval,
+            timeout=CONF.openstack.heat_stack_suspend_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.suspend_stack")
@@ -150,8 +150,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["RESUME_COMPLETE"],
             failure_statuses=["RESUME_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_resume_poll_interval,
-            timeout=CONF.benchmark.heat_stack_resume_timeout)
+            check_interval=CONF.openstack.heat_stack_resume_poll_interval,
+            timeout=CONF.openstack.heat_stack_resume_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.resume_stack")
@@ -166,8 +166,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["SNAPSHOT_COMPLETE"],
             failure_statuses=["SNAPSHOT_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval,
-            timeout=CONF.benchmark.heat_stack_snapshot_timeout)
+            check_interval=CONF.openstack.heat_stack_snapshot_poll_interval,
+            timeout=CONF.openstack.heat_stack_snapshot_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.snapshot_stack")
@@ -182,8 +182,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["RESTORE_COMPLETE"],
             failure_statuses=["RESTORE_FAILED", "ERROR"],
-            check_interval=CONF.benchmark.heat_stack_restore_poll_interval,
-            timeout=CONF.benchmark.heat_stack_restore_timeout)
+            check_interval=CONF.openstack.heat_stack_restore_poll_interval,
+            timeout=CONF.openstack.heat_stack_restore_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.restore_stack")
@@ -213,8 +213,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             is_ready=mock.ANY,
             failure_statuses=["UPDATE_FAILED", "ERROR"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.heat_stack_scale_timeout,
-            check_interval=CONF.benchmark.heat_stack_scale_poll_interval)
+            timeout=CONF.openstack.heat_stack_scale_timeout,
+            check_interval=CONF.openstack.heat_stack_scale_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
 
         self._test_atomic_action_timer(scenario.atomic_actions(),

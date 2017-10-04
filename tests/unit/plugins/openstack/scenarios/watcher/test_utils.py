@@ -65,8 +65,8 @@ class WatcherScenarioTestCase(test.ScenarioTestCase):
             failure_statuses=["FAILED"],
             status_attr="state",
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.watcher_audit_launch_poll_interval,
-            timeout=CONF.benchmark.watcher_audit_launch_timeout,
+            check_interval=CONF.openstack.watcher_audit_launch_poll_interval,
+            timeout=CONF.openstack.watcher_audit_launch_timeout,
             id_attr="uuid")
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.admin_clients("watcher").audit.create.assert_called_once_with(

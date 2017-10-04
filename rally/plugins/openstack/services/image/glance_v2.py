@@ -60,15 +60,15 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
             **properties)
 
         image_location = os.path.expanduser(image_location)
-        rutils.interruptable_sleep(CONF.benchmark.
+        rutils.interruptable_sleep(CONF.openstack.
                                    glance_image_create_prepoll_delay)
 
         start = time.time()
         image_obj = utils.wait_for_status(
             image_obj.id, ["queued"],
             update_resource=self.get_image,
-            timeout=CONF.benchmark.glance_image_create_timeout,
-            check_interval=CONF.benchmark.glance_image_create_poll_interval)
+            timeout=CONF.openstack.glance_image_create_timeout,
+            check_interval=CONF.openstack.glance_image_create_poll_interval)
         timeout = time.time() - start
 
         image_data = None
@@ -90,7 +90,7 @@ class GlanceV2Service(service.Service, glance_common.GlanceMixin):
             image_obj, ["active"],
             update_resource=self.get_image,
             timeout=timeout,
-            check_interval=CONF.benchmark.glance_image_create_poll_interval)
+            check_interval=CONF.openstack.glance_image_create_poll_interval)
         return image_obj
 
     @atomic.action_timer("glance_v2.update_image")

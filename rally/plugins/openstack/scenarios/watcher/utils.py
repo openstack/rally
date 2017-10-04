@@ -63,8 +63,8 @@ class WatcherScenario(scenario.OpenStackScenario):
             failure_statuses=["FAILED"],
             status_attr="state",
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.watcher_audit_launch_timeout,
-            check_interval=CONF.benchmark.watcher_audit_launch_poll_interval,
+            timeout=CONF.openstack.watcher_audit_launch_timeout,
+            check_interval=CONF.openstack.watcher_audit_launch_poll_interval,
             id_attr="uuid"
         )
         return audit

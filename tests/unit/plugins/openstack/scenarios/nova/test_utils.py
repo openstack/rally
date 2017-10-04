@@ -112,8 +112,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout)
+            check_interval=CONF.openstack.nova_server_boot_poll_interval,
+            timeout=CONF.openstack.nova_server_boot_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for_status.mock.return_value,
                          return_server)
@@ -155,8 +155,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["SUSPENDED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_suspend_poll_interval,
-            timeout=CONF.benchmark.nova_server_suspend_timeout)
+            check_interval=CONF.openstack.nova_server_suspend_poll_interval,
+            timeout=CONF.openstack.nova_server_suspend_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.suspend_server")
@@ -169,8 +169,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_resume_poll_interval,
-            timeout=CONF.benchmark.nova_server_resume_timeout)
+            check_interval=CONF.openstack.nova_server_resume_poll_interval,
+            timeout=CONF.openstack.nova_server_resume_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resume_server")
@@ -183,8 +183,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["PAUSED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_pause_poll_interval,
-            timeout=CONF.benchmark.nova_server_pause_timeout)
+            check_interval=CONF.openstack.nova_server_pause_poll_interval,
+            timeout=CONF.openstack.nova_server_pause_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.pause_server")
@@ -197,8 +197,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_unpause_poll_interval,
-            timeout=CONF.benchmark.nova_server_unpause_timeout)
+            check_interval=CONF.openstack.nova_server_unpause_poll_interval,
+            timeout=CONF.openstack.nova_server_unpause_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unpause_server")
@@ -211,8 +211,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["SHELVED_OFFLOADED"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_shelve_poll_interval,
-            timeout=CONF.benchmark.nova_server_shelve_timeout)
+            check_interval=CONF.openstack.nova_server_shelve_poll_interval,
+            timeout=CONF.openstack.nova_server_shelve_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.shelve_server")
@@ -225,8 +225,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_unshelve_poll_interval,
-            timeout=CONF.benchmark.nova_server_unshelve_timeout)
+            check_interval=CONF.openstack.nova_server_unshelve_poll_interval,
+            timeout=CONF.openstack.nova_server_unshelve_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unshelve_server")
@@ -241,9 +241,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.image,
             ready_statuses=["ACTIVE"],
             update_resource=glance.get_image,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             nova_server_image_create_poll_interval,
-            timeout=CONF.benchmark.nova_server_image_create_timeout)
+            timeout=CONF.openstack.nova_server_image_create_timeout)
         self.assertEqual(self.mock_wait_for_status.mock.return_value,
                          return_image)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -258,8 +258,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_delete_poll_interval,
-            timeout=CONF.benchmark.nova_server_delete_timeout)
+            check_interval=CONF.openstack.nova_server_delete_poll_interval,
+            timeout=CONF.openstack.nova_server_delete_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_server")
@@ -273,8 +273,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_delete_poll_interval,
-            timeout=CONF.benchmark.nova_server_delete_timeout)
+            check_interval=CONF.openstack.nova_server_delete_poll_interval,
+            timeout=CONF.openstack.nova_server_delete_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.force_delete_server")
@@ -287,8 +287,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_reboot_poll_interval,
-            timeout=CONF.benchmark.nova_server_reboot_timeout)
+            check_interval=CONF.openstack.nova_server_reboot_poll_interval,
+            timeout=CONF.openstack.nova_server_reboot_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.reboot_server")
@@ -301,8 +301,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_reboot_poll_interval,
-            timeout=CONF.benchmark.nova_server_reboot_timeout)
+            check_interval=CONF.openstack.nova_server_reboot_poll_interval,
+            timeout=CONF.openstack.nova_server_reboot_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.soft_reboot_server")
@@ -315,8 +315,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_rebuild_poll_interval,
-            timeout=CONF.benchmark.nova_server_rebuild_timeout)
+            check_interval=CONF.openstack.nova_server_rebuild_poll_interval,
+            timeout=CONF.openstack.nova_server_rebuild_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.rebuild_server")
@@ -329,8 +329,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_start_poll_interval,
-            timeout=CONF.benchmark.nova_server_start_timeout)
+            check_interval=CONF.openstack.nova_server_start_poll_interval,
+            timeout=CONF.openstack.nova_server_start_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.start_server")
@@ -343,8 +343,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["SHUTOFF"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_stop_poll_interval,
-            timeout=CONF.benchmark.nova_server_stop_timeout)
+            check_interval=CONF.openstack.nova_server_stop_poll_interval,
+            timeout=CONF.openstack.nova_server_stop_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.stop_server")
@@ -357,8 +357,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["RESCUE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_rescue_poll_interval,
-            timeout=CONF.benchmark.nova_server_rescue_timeout)
+            check_interval=CONF.openstack.nova_server_rescue_poll_interval,
+            timeout=CONF.openstack.nova_server_rescue_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.rescue_server")
@@ -371,8 +371,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_unrescue_poll_interval,
-            timeout=CONF.benchmark.nova_server_unrescue_timeout)
+            check_interval=CONF.openstack.nova_server_unrescue_poll_interval,
+            timeout=CONF.openstack.nova_server_unrescue_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unrescue_server")
@@ -381,7 +381,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         servers = [self.server, self.server1]
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_servers(servers, force=force)
-        check_interval = CONF.benchmark.nova_server_delete_poll_interval
+        check_interval = CONF.openstack.nova_server_delete_poll_interval
         expected = []
         for server in servers:
             expected.append(mock.call(
@@ -390,7 +390,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                 check_deletion=True,
                 update_resource=self.mock_get_from_manager.mock.return_value,
                 check_interval=check_interval,
-                timeout=CONF.benchmark.nova_server_delete_timeout))
+                timeout=CONF.openstack.nova_server_delete_timeout))
             if force:
                 server.force_delete.assert_called_once_with()
                 self.assertFalse(server.delete.called)
@@ -421,9 +421,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted", "pending_delete"],
             check_deletion=True,
             update_resource=glance.get_image,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             nova_server_image_delete_poll_interval,
-            timeout=CONF.benchmark.nova_server_image_delete_timeout)
+            timeout=CONF.openstack.nova_server_image_delete_timeout)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_image")
 
@@ -467,8 +467,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                 servers[i],
                 ready_statuses=["ACTIVE"],
                 update_resource=self.mock_get_from_manager.mock.return_value,
-                check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-                timeout=CONF.benchmark.nova_server_boot_timeout)
+                check_interval=CONF.openstack.nova_server_boot_poll_interval,
+                timeout=CONF.openstack.nova_server_boot_timeout)
             for i in range(instances_amount)]
         self.mock_wait_for_status.mock.assert_has_calls(wait_for_status_calls)
 
@@ -589,9 +589,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=[status],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             nova_server_resize_revert_poll_interval,
-            timeout=CONF.benchmark.nova_server_resize_revert_timeout)
+            timeout=CONF.openstack.nova_server_resize_revert_timeout)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_revert")
 
@@ -662,9 +662,9 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.server,
             ready_statuses=["ACTIVE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             nova_server_live_migrate_poll_interval,
-            timeout=CONF.benchmark.nova_server_live_migrate_timeout)
+            timeout=CONF.openstack.nova_server_live_migrate_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.live_migrate")
@@ -705,8 +705,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             fake_server,
             ready_statuses=["VERIFY_RESIZE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_migrate_poll_interval,
-            timeout=CONF.benchmark.nova_server_migrate_timeout)
+            check_interval=CONF.openstack.nova_server_migrate_poll_interval,
+            timeout=CONF.openstack.nova_server_migrate_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.migrate")

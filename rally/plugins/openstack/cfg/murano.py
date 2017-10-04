@@ -15,11 +15,15 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
-    cfg.IntOpt("murano_deploy_environment_timeout", default=1200,
+OPTS = {"openstack": [
+    cfg.IntOpt("murano_deploy_environment_timeout",
+               default=1200,
                deprecated_name="deploy_environment_timeout",
+               deprecated_group="benchmark",
                help="A timeout in seconds for an environment deploy"),
-    cfg.IntOpt("murano_deploy_environment_check_interval", default=5,
+    cfg.IntOpt("murano_deploy_environment_check_interval",
+               default=5,
                deprecated_name="deploy_environment_check_interval",
+               deprecated_group="benchmark",
                help="Deploy environment check interval in seconds"),
 ]}

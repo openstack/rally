@@ -87,7 +87,7 @@ class MistralScenario(scenario.OpenStackScenario):
         execution = utils.wait_for_status(
             execution, ready_statuses=["SUCCESS"], failure_statuses=["ERROR"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.mistral_execution_timeout)
+            timeout=CONF.openstack.mistral_execution_timeout)
 
         return execution
 

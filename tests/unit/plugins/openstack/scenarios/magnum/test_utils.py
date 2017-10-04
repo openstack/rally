@@ -97,9 +97,9 @@ class MagnumScenarioTestCase(test.ScenarioTestCase):
             self.cluster,
             ready_statuses=["CREATE_COMPLETE"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             magnum_cluster_create_poll_interval,
-            timeout=CONF.benchmark.magnum_cluster_create_timeout,
+            timeout=CONF.openstack.magnum_cluster_create_timeout,
             id_attr="uuid")
         _, kwargs = self.clients("magnum").clusters.create.call_args
         self.assertEqual("generated_name", kwargs["name"])

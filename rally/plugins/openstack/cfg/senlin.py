@@ -15,8 +15,9 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("senlin_action_timeout",
                  default=3600,
+                 deprecated_group="benchmark",
                  help="Time in seconds to wait for senlin action to finish.")
 ]}

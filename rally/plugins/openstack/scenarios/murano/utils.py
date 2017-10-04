@@ -101,7 +101,7 @@ class MuranoScenario(scenario.OpenStackScenario):
         self.clients("murano").sessions.deploy(environment.id,
                                                session.id)
 
-        config = CONF.benchmark
+        config = CONF.openstack
         utils.wait_for(
             environment,
             ready_statuses=["READY"],

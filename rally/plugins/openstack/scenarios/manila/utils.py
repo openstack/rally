@@ -60,13 +60,13 @@ class ManilaScenario(scenario.OpenStackScenario):
         share = self.clients("manila").shares.create(
             share_proto, size, **kwargs)
 
-        self.sleep_between(CONF.benchmark.manila_share_create_prepoll_delay)
+        self.sleep_between(CONF.openstack.manila_share_create_prepoll_delay)
         share = utils.wait_for(
             share,
             ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.manila_share_create_timeout,
-            check_interval=CONF.benchmark.manila_share_create_poll_interval,
+            timeout=CONF.openstack.manila_share_create_timeout,
+            check_interval=CONF.openstack.manila_share_create_poll_interval,
         )
         return share
 
@@ -83,8 +83,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=utils.get_from_manager(error_statuses),
-            timeout=CONF.benchmark.manila_share_delete_timeout,
-            check_interval=CONF.benchmark.manila_share_delete_poll_interval)
+            timeout=CONF.openstack.manila_share_delete_timeout,
+            check_interval=CONF.openstack.manila_share_delete_poll_interval)
 
     def _get_access_from_share(self, share, access_id):
         """Get access from share
@@ -135,8 +135,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             access,
             ready_statuses=["active"],
             update_resource=fn,
-            check_interval=CONF.benchmark.manila_access_create_poll_interval,
-            timeout=CONF.benchmark.manila_access_create_timeout)
+            check_interval=CONF.openstack.manila_access_create_poll_interval,
+            timeout=CONF.openstack.manila_access_create_timeout)
 
         return access_result
 
@@ -173,8 +173,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             update_resource=fn,
             check_deletion=True,
-            check_interval=CONF.benchmark.manila_access_delete_poll_interval,
-            timeout=CONF.benchmark.manila_access_delete_timeout)
+            check_interval=CONF.openstack.manila_access_delete_poll_interval,
+            timeout=CONF.openstack.manila_access_delete_timeout)
 
     @atomic.action_timer("manila.list_shares")
     def _list_shares(self, detailed=True, search_opts=None):
@@ -200,8 +200,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             share,
             ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.manila_share_create_timeout,
-            check_interval=CONF.benchmark.manila_share_create_poll_interval)
+            timeout=CONF.openstack.manila_share_create_timeout,
+            check_interval=CONF.openstack.manila_share_create_poll_interval)
 
     @atomic.action_timer("manila.shrink_share")
     def _shrink_share(self, share, new_size):
@@ -215,8 +215,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             share,
             ready_statuses=["available"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.manila_share_create_timeout,
-            check_interval=CONF.benchmark.manila_share_create_poll_interval)
+            timeout=CONF.openstack.manila_share_create_timeout,
+            check_interval=CONF.openstack.manila_share_create_poll_interval)
 
     @atomic.action_timer("manila.create_share_network")
     def _create_share_network(self, neutron_net_id=None,
@@ -250,8 +250,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.manila_share_delete_timeout,
-            check_interval=CONF.benchmark.manila_share_delete_poll_interval)
+            timeout=CONF.openstack.manila_share_delete_timeout,
+            check_interval=CONF.openstack.manila_share_delete_poll_interval)
 
     @atomic.action_timer("manila.list_share_networks")
     def _list_share_networks(self, detailed=True, search_opts=None):
@@ -322,8 +322,8 @@ class ManilaScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.manila_share_delete_timeout,
-            check_interval=CONF.benchmark.manila_share_delete_poll_interval)
+            timeout=CONF.openstack.manila_share_delete_timeout,
+            check_interval=CONF.openstack.manila_share_delete_poll_interval)
 
     @atomic.action_timer("manila.add_security_service_to_share_network")
     def _add_security_service_to_share_network(self, share_network,

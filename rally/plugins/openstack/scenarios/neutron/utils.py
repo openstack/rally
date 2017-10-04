@@ -689,9 +689,9 @@ class NeutronScenario(scenario.OpenStackScenario):
             ready_statuses=["ACTIVE"],
             status_attr="provisioning_status",
             update_resource=self.update_loadbalancer_resource,
-            timeout=CONF.benchmark.neutron_create_loadbalancer_timeout,
+            timeout=CONF.openstack.neutron_create_loadbalancer_timeout,
             check_interval=(
-                CONF.benchmark.neutron_create_loadbalancer_poll_interval)
+                CONF.openstack.neutron_create_loadbalancer_poll_interval)
         )
         return lb
 

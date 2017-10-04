@@ -15,11 +15,13 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("neutron_create_loadbalancer_timeout",
                  default=float(500),
+                 deprecated_group="benchmark",
                  help="Neutron create loadbalancer timeout"),
     cfg.FloatOpt("neutron_create_loadbalancer_poll_interval",
                  default=float(2),
+                 deprecated_group="benchmark",
                  help="Neutron create loadbalancer poll interval")
 ]}

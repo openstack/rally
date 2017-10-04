@@ -161,14 +161,14 @@ class CinderScenario(scenario.OpenStackScenario):
 
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
-        self.sleep_between(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        self.sleep_between(CONF.openstack.cinder_volume_create_prepoll_delay)
 
         volume = bench_utils.wait_for(
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         return volume
 
@@ -212,8 +212,8 @@ class CinderScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_delete_timeout,
-            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+            timeout=CONF.openstack.cinder_volume_delete_timeout,
+            check_interval=CONF.openstack.cinder_volume_delete_poll_interval
         )
 
     @atomic.action_timer("cinder.extend_volume")
@@ -238,8 +238,8 @@ class CinderScenario(scenario.OpenStackScenario):
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
 
     @atomic.action_timer("cinder.upload_volume_to_image")
@@ -266,8 +266,8 @@ class CinderScenario(scenario.OpenStackScenario):
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         image_id = img["os-volume_upload_image"]["image_id"]
         image = self.clients("glance").images.get(image_id)
@@ -276,8 +276,8 @@ class CinderScenario(scenario.OpenStackScenario):
             image,
             ready_statuses=["active"],
             update_resource=wrapper.get_image,
-            timeout=CONF.benchmark.glance_image_create_timeout,
-            check_interval=CONF.benchmark.glance_image_create_poll_interval
+            timeout=CONF.openstack.glance_image_create_timeout,
+            check_interval=CONF.openstack.glance_image_create_poll_interval
         )
 
         return image
@@ -300,13 +300,13 @@ class CinderScenario(scenario.OpenStackScenario):
         client = cinder_wrapper.wrap(self._clients.cinder, self)
         snapshot = client.create_snapshot(volume_id, **kwargs)
 
-        self.sleep_between(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        self.sleep_between(CONF.openstack.cinder_volume_create_prepoll_delay)
         snapshot = bench_utils.wait_for(
             snapshot,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         return snapshot
 
@@ -324,8 +324,8 @@ class CinderScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_delete_timeout,
-            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+            timeout=CONF.openstack.cinder_volume_delete_timeout,
+            check_interval=CONF.openstack.cinder_volume_delete_poll_interval
         )
 
     @atomic.action_timer("cinder.create_backup")
@@ -340,8 +340,8 @@ class CinderScenario(scenario.OpenStackScenario):
             backup,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
 
     @atomic.action_timer("cinder.delete_backup")
@@ -358,8 +358,8 @@ class CinderScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_delete_timeout,
-            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+            timeout=CONF.openstack.cinder_volume_delete_timeout,
+            check_interval=CONF.openstack.cinder_volume_delete_poll_interval
         )
 
     @atomic.action_timer("cinder.restore_backup")
@@ -376,15 +376,15 @@ class CinderScenario(scenario.OpenStackScenario):
             backup_for_restore,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_backup_restore_timeout,
-            check_interval=CONF.benchmark.cinder_backup_restore_poll_interval
+            timeout=CONF.openstack.cinder_backup_restore_timeout,
+            check_interval=CONF.openstack.cinder_backup_restore_poll_interval
         )
         return bench_utils.wait_for(
             restored_volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
 
     @atomic.action_timer("cinder.list_backups")

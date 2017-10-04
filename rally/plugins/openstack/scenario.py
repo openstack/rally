@@ -116,7 +116,7 @@ class OpenStackScenario(scenario.Scenario):
 
     def _init_profiler(self, context):
         """Inits the profiler."""
-        if not CONF.benchmark.enable_profiler:
+        if not CONF.openstack.enable_profiler:
             return
         if context is not None:
             cred = None

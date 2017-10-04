@@ -15,31 +15,38 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("glance_image_delete_timeout",
                  default=120.0,
+                 deprecated_group="benchmark",
                  help="Time to wait for glance image to be deleted."),
     cfg.FloatOpt("glance_image_delete_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for image "
                       "deletion."),
     cfg.FloatOpt("glance_image_create_prepoll_delay",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Time to sleep after creating a resource before "
                       "polling for it status"),
     cfg.FloatOpt("glance_image_create_timeout",
                  default=120.0,
+                 deprecated_group="benchmark",
                  help="Time to wait for glance image to be created."),
     cfg.FloatOpt("glance_image_create_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for image "
                       "creation."),
     cfg.FloatOpt("glance_image_create_prepoll_delay",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Time to sleep after creating a resource before "
                       "polling for it status"),
     cfg.FloatOpt("glance_image_create_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for image "
                       "creation.")
 ]}

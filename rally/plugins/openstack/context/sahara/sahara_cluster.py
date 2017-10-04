@@ -151,8 +151,8 @@ class SaharaCluster(context.Context):
             resource=wait_dict,
             update_resource=self.update_clusters_dict,
             is_ready=self.all_clusters_active,
-            timeout=CONF.benchmark.sahara_cluster_create_timeout,
-            check_interval=CONF.benchmark.sahara_cluster_check_interval)
+            timeout=CONF.openstack.sahara_cluster_create_timeout,
+            check_interval=CONF.openstack.sahara_cluster_check_interval)
 
     def update_clusters_dict(self, dct):
         new_dct = {}

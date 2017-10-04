@@ -596,8 +596,8 @@ class GlanceImage(base.ResourceManager):
             self.raw_resource, ["deleted"],
             check_deletion=True,
             update_resource=self._client().get_image,
-            timeout=CONF.benchmark.glance_image_delete_timeout,
-            check_interval=CONF.benchmark.glance_image_delete_poll_interval)
+            timeout=CONF.openstack.glance_image_delete_timeout,
+            check_interval=CONF.openstack.glance_image_delete_poll_interval)
 
 
 # SAHARA

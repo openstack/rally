@@ -66,7 +66,7 @@ class SenlinScenarioTestCase(test.ScenarioTestCase):
             fake_cluster, ready_statuses=["ACTIVE"],
             failure_statuses=["ERROR"],
             update_resource=scenario._get_cluster,
-            timeout=CONF.benchmark.senlin_action_timeout)
+            timeout=CONF.openstack.senlin_action_timeout)
         mock_generate_random_name.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "senlin.create_cluster")
@@ -116,7 +116,7 @@ class SenlinScenarioTestCase(test.ScenarioTestCase):
             fake_cluster, ready_statuses=["DELETED"],
             failure_statuses=["ERROR"], check_deletion=True,
             update_resource=scenario._get_cluster,
-            timeout=CONF.benchmark.senlin_action_timeout)
+            timeout=CONF.openstack.senlin_action_timeout)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "senlin.delete_cluster")
 

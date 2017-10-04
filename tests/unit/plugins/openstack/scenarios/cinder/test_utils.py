@@ -152,8 +152,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             self.mock_wrap.return_value.create_volume.return_value,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for.mock.return_value, return_volume)
@@ -175,8 +175,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             self.mock_wrap.return_value.create_volume.return_value,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for.mock.return_value, return_volume)
@@ -214,8 +214,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -234,8 +234,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             volume,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -249,8 +249,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             volume,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -275,15 +275,15 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
                 volume,
                 ready_statuses=["available"],
                 update_resource=self.mock_get_from_manager.mock.return_value,
-                timeout=CONF.benchmark.cinder_volume_create_timeout,
-                check_interval=CONF.benchmark.
+                timeout=CONF.openstack.cinder_volume_create_timeout,
+                check_interval=CONF.openstack.
                 cinder_volume_create_poll_interval),
             mock.call(
                 self.clients("glance").images.get.return_value,
                 ready_statuses=["active"],
                 update_resource=mock_wrap.return_value.get_image,
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=CONF.benchmark.
+                timeout=CONF.openstack.glance_image_create_timeout,
+                check_interval=CONF.openstack.
                 glance_image_create_poll_interval)
         ])
         self.mock_get_from_manager.mock.assert_called_once_with()
@@ -296,8 +296,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             self.mock_wrap.return_value.create_snapshot.return_value,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for.mock.return_value, return_snapshot)
@@ -313,8 +313,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -327,8 +327,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             self.clients("cinder").backups.create.return_value,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self.assertEqual(self.mock_wait_for.mock.return_value, return_backup)
@@ -344,8 +344,8 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
@@ -353,7 +353,7 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
 
     def test__restore_backup(self):
         # NOTE(mdovgal): added for pep8 visual indent test passing
-        bench_cfg = cfg.CONF.benchmark
+        bench_cfg = cfg.CONF.openstack
 
         backup = mock.Mock()
         restore = mock.Mock()

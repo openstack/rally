@@ -110,8 +110,8 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             utils.Host("1.2.3.4"),
             ready_statuses=[utils.Host.ICMP_UP_STATUS],
             update_resource=utils.Host.update_status,
-            timeout=CONF.benchmark.vm_ping_timeout,
-            check_interval=CONF.benchmark.vm_ping_poll_interval)
+            timeout=CONF.openstack.vm_ping_timeout,
+            check_interval=CONF.openstack.vm_ping_poll_interval)
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario._run_command_over_ssh")
     @mock.patch("rally.common.sshutils.SSH")

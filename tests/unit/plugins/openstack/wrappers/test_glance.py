@@ -110,8 +110,8 @@ class GlanceV1WrapperTestCase(test.ScenarioTestCase):
         self.mock_wait_for_status.mock.assert_called_once_with(
             self.client().images.create.return_value, ["active"],
             update_resource=self.wrapped_client.get_image,
-            check_interval=CONF.benchmark.glance_image_create_poll_interval,
-            timeout=CONF.benchmark.glance_image_create_timeout)
+            check_interval=CONF.openstack.glance_image_create_poll_interval,
+            timeout=CONF.openstack.glance_image_create_timeout)
         self.assertEqual(self.mock_wait_for_status.mock.return_value,
                          return_image)
 
@@ -237,13 +237,13 @@ class GlanceV2WrapperTestCase(test.ScenarioTestCase):
             mock.call(
                 self.client().images.create.return_value, ["queued"],
                 update_resource=self.wrapped_client.get_image,
-                check_interval=CONF.benchmark.
+                check_interval=CONF.openstack.
                 glance_image_create_poll_interval,
-                timeout=CONF.benchmark.glance_image_create_timeout),
+                timeout=CONF.openstack.glance_image_create_timeout),
             mock.call(
                 created_image, ["active"],
                 update_resource=self.wrapped_client.get_image,
-                check_interval=CONF.benchmark.
+                check_interval=CONF.openstack.
                 glance_image_create_poll_interval,
                 timeout=mock.ANY)])
         self.assertEqual(uploaded_image, return_image)

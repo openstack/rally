@@ -92,7 +92,7 @@ class TempestContextTestCase(test.TestCase):
         mock_get.return_value.iter_content.return_value = "data"
 
         self.context._download_image_from_source(img_path)
-        mock_get.assert_called_once_with(CONF.tempest.img_url, stream=True)
+        mock_get.assert_called_once_with(CONF.openstack.img_url, stream=True)
         mock_open.assert_called_once_with(img_path, "wb")
         mock_open().write.assert_has_calls([mock.call("d"),
                                             mock.call("a"),
@@ -141,10 +141,10 @@ class TempestContextTestCase(test.TestCase):
         self.assertEqual(0, mock_neutron_wrapper_create_network.call_count)
 
     def test__create_tempest_roles(self):
-        role1 = CONF.tempest.swift_operator_role
-        role2 = CONF.tempest.swift_reseller_admin_role
-        role3 = CONF.tempest.heat_stack_owner_role
-        role4 = CONF.tempest.heat_stack_user_role
+        role1 = CONF.openstack.swift_operator_role
+        role2 = CONF.openstack.swift_reseller_admin_role
+        role3 = CONF.openstack.heat_stack_owner_role
+        role4 = CONF.openstack.heat_stack_user_role
 
         client = self.context.clients.verified_keystone()
         client.roles.list.return_value = [fakes.FakeRole(name=role1),
@@ -224,9 +224,9 @@ class TempestContextTestCase(test.TestCase):
         self.assertEqual(image, mock_image().create_image.return_value)
         self.assertEqual(self.context._created_images[0],
                          client.create_image.return_value)
-        params = {"container_format": CONF.tempest.img_container_format,
+        params = {"container_format": CONF.openstack.img_container_format,
                   "image_location": mock.ANY,
-                  "disk_format": CONF.tempest.img_disk_format,
+                  "disk_format": CONF.openstack.img_disk_format,
                   "image_name": mock.ANY,
                   "visibility": "public"}
         client.create_image.assert_called_once_with(**params)
@@ -363,10 +363,10 @@ class TempestContextTestCase(test.TestCase):
                        helper_method=ctx._discover_or_create_image),
              mock.call("compute", "flavor_ref",
                        helper_method=ctx._discover_or_create_flavor,
-                       flv_ram=config.CONF.tempest.flavor_ref_ram),
+                       flv_ram=config.CONF.openstack.flavor_ref_ram),
              mock.call("compute", "flavor_ref_alt",
                        helper_method=ctx._discover_or_create_flavor,
-                       flv_ram=config.CONF.tempest.flavor_ref_alt_ram)],
+                       flv_ram=config.CONF.openstack.flavor_ref_alt_ram)],
             mock__configure_option.call_args_list)
 
         mock_create_dir.reset_mock()
@@ -401,13 +401,13 @@ class TempestContextTestCase(test.TestCase):
                        helper_method=ctx._discover_or_create_image),
              mock.call("compute", "flavor_ref",
                        helper_method=ctx._discover_or_create_flavor,
-                       flv_ram=config.CONF.tempest.flavor_ref_ram),
+                       flv_ram=config.CONF.openstack.flavor_ref_ram),
              mock.call("compute", "flavor_ref_alt",
                        helper_method=ctx._discover_or_create_flavor,
-                       flv_ram=config.CONF.tempest.flavor_ref_alt_ram),
+                       flv_ram=config.CONF.openstack.flavor_ref_alt_ram),
              mock.call("compute", "fixed_network_name",
                        helper_method=ctx._create_network_resources),
              mock.call("orchestration", "instance_type",
                        helper_method=ctx._discover_or_create_flavor,
-                       flv_ram=config.CONF.tempest.heat_instance_type_ram)],
+                       flv_ram=config.CONF.openstack.heat_instance_type_ram)],
             mock__configure_option.call_args_list)

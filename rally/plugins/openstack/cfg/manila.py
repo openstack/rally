@@ -15,46 +15,55 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt(
         "manila_share_create_prepoll_delay",
         default=2.0,
+        deprecated_group="benchmark",
         help="Delay between creating Manila share and polling for its "
              "status."),
     cfg.FloatOpt(
         "manila_share_create_timeout",
         default=300.0,
+        deprecated_group="benchmark",
         help="Timeout for Manila share creation."),
     cfg.FloatOpt(
         "manila_share_create_poll_interval",
         default=3.0,
+        deprecated_group="benchmark",
         help="Interval between checks when waiting for Manila share "
              "creation."),
     cfg.FloatOpt(
         "manila_share_delete_timeout",
         default=180.0,
+        deprecated_group="benchmark",
         help="Timeout for Manila share deletion."),
     cfg.FloatOpt(
         "manila_share_delete_poll_interval",
         default=2.0,
+        deprecated_group="benchmark",
         help="Interval between checks when waiting for Manila share "
              "deletion."),
     cfg.FloatOpt(
         "manila_access_create_timeout",
         default=300.0,
+        deprecated_group="benchmark",
         help="Timeout for Manila access creation."),
     cfg.FloatOpt(
         "manila_access_create_poll_interval",
         default=3.0,
+        deprecated_group="benchmark",
         help="Interval between checks when waiting for Manila access "
              "creation."),
     cfg.FloatOpt(
         "manila_access_delete_timeout",
         default=180.0,
+        deprecated_group="benchmark",
         help="Timeout for Manila access deletion."),
     cfg.FloatOpt(
         "manila_access_delete_poll_interval",
         default=2.0,
+        deprecated_group="benchmark",
         help="Interval between checks when waiting for Manila access "
              "deletion."),
 ]}

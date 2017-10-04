@@ -15,18 +15,22 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("ironic_node_create_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Interval(in sec) between checks when waiting for node "
                       "creation."),
     cfg.FloatOpt("ironic_node_create_timeout",
                  default=300,
+                 deprecated_group="benchmark",
                  help="Ironic node create timeout"),
     cfg.FloatOpt("ironic_node_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Ironic node poll interval"),
     cfg.FloatOpt("ironic_node_delete_timeout",
                  default=300,
+                 deprecated_group="benchmark",
                  help="Ironic node create timeout")
 ]}
