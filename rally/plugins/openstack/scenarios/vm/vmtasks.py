@@ -222,12 +222,9 @@ class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
         :param use_floating_ip: bool, floating or fixed IP for SSH connection
         :param force_delete: whether to use force_delete for servers
         :param wait_for_ping: whether to check connectivity on server creation
-        :param **kwargs: extra arguments for booting the server
         :param max_log_length: The number of tail nova console-log lines user
                                would like to retrieve
-        :returns: dictionary with keys `data' and `errors':
-                  data: dict, JSON output from the script
-                  errors: str, raw data from the script's stderr stream
+        :param kwargs: extra arguments for booting the server
         """
         if volume_args:
             volume = self.cinder.create_volume(volume_args["size"],
@@ -480,7 +477,6 @@ EOF
                flavor={"type": "nova_flavor"})
 @validation.add("image_valid_on_flavor", flavor_param="flavor",
                 image_param="image")
-@validation.add("valid_command", param_name="command")
 @validation.add("number", param_name="port", minval=1, maxval=65535,
                 nullable=True, integer_only=True)
 @validation.add("external_network_exists", param_name="floating_network")
@@ -493,12 +489,20 @@ EOF
                     name="VMTasks.dd_load_test",
                     platform="openstack")
 class DDLoadTest(BootRuncommandDelete):
-
-    def run(self, command, **kwargs):
+    @logging.log_deprecated_args(
+        "Use 'interpreter' to specify the interpreter to execute script from.",
+        "0.10.0", ["command"], once=True)
+    def run(self, interpreter="/bin/sh", command=None, **kwargs):
         """Boot a server from a custom image, run a command that outputs JSON.
 
         Example Script in rally-jobs/extra/install_benchmark.sh
-        :param command: default parameter from scenario
+
+        :param interpreter: the interpreter to execute script with dd load test
+            (defaults to /bin/sh)
+        :param command: deprecated
         """
-        command["script_inline"] = BASH_DD_LOAD_TEST
-        return super(DDLoadTest, self).run(command=command, **kwargs)
+        cmd = {"interpreter": interpreter,
+               "script_inline": BASH_DD_LOAD_TEST}
+        if command and "interpreter" in command:
+            cmd["interpreter"] = command["interpreter"]
+        return super(DDLoadTest, self).run(command=cmd, **kwargs)

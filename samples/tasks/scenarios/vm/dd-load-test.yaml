@@ -9,8 +9,7 @@
             name: "^cirros.*-disk$"
         floating_network: "public"
         force_delete: false
-        command:
-            interpreter: "/bin/sh"
+        interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
