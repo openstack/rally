@@ -154,7 +154,8 @@ _nova_order = get_order(200)
 class NovaServer(base.ResourceManager):
     def list(self):
         """List all servers."""
-        return self._manager().list(limit=-1)
+        # FIX(boris-42): Use limit=-1 when it's fixed
+        return self._manager().list()
 
     def delete(self):
         if getattr(self.raw_resource, "OS-EXT-STS:locked", False):
