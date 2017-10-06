@@ -70,7 +70,7 @@ class HeatScenario(scenario.OpenStackScenario):
         stack = utils.wait_for(
             stack,
             ready_statuses=["CREATE_COMPLETE"],
-            failure_statuses=["CREATE_FAILED"],
+            failure_statuses=["CREATE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)
@@ -106,7 +106,7 @@ class HeatScenario(scenario.OpenStackScenario):
         stack = utils.wait_for(
             stack,
             ready_statuses=["UPDATE_COMPLETE"],
-            failure_statuses=["UPDATE_FAILED"],
+            failure_statuses=["UPDATE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_update_timeout,
             check_interval=CONF.benchmark.heat_stack_update_poll_interval)
@@ -124,7 +124,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for(
             stack,
             ready_statuses=["CHECK_COMPLETE"],
-            failure_statuses=["CHECK_FAILED"],
+            failure_statuses=["CHECK_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(["CHECK_FAILED"]),
             timeout=CONF.benchmark.heat_stack_check_timeout,
             check_interval=CONF.benchmark.heat_stack_check_poll_interval)
@@ -141,7 +141,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for_status(
             stack,
             ready_statuses=["DELETE_COMPLETE"],
-            failure_statuses=["DELETE_FAILED"],
+            failure_statuses=["DELETE_FAILED", "ERROR"],
             check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_delete_timeout,
@@ -158,7 +158,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for(
             stack,
             ready_statuses=["SUSPEND_COMPLETE"],
-            failure_statuses=["SUSPEND_FAILED"],
+            failure_statuses=["SUSPEND_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_suspend_timeout,
             check_interval=CONF.benchmark.heat_stack_suspend_poll_interval)
@@ -174,7 +174,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for(
             stack,
             ready_statuses=["RESUME_COMPLETE"],
-            failure_statuses=["RESUME_FAILED"],
+            failure_statuses=["RESUME_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_resume_timeout,
             check_interval=CONF.benchmark.heat_stack_resume_poll_interval)
@@ -191,7 +191,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for(
             stack,
             ready_statuses=["SNAPSHOT_COMPLETE"],
-            failure_statuses=["SNAPSHOT_FAILED"],
+            failure_statuses=["SNAPSHOT_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_snapshot_timeout,
             check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval)
@@ -208,7 +208,7 @@ class HeatScenario(scenario.OpenStackScenario):
         utils.wait_for(
             stack,
             ready_statuses=["RESTORE_COMPLETE"],
-            failure_statuses=["RESTORE_FAILED"],
+            failure_statuses=["RESTORE_FAILED", "ERROR"],
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_restore_timeout,
             check_interval=CONF.benchmark.heat_stack_restore_poll_interval
@@ -300,7 +300,7 @@ class HeatScenario(scenario.OpenStackScenario):
                 stack,
                 is_ready=lambda s: (
                     self._count_instances(s) == expected_instances),
-                failure_statuses=["UPDATE_FAILED"],
+                failure_statuses=["UPDATE_FAILED", "ERROR"],
                 update_resource=utils.get_from_manager(),
                 timeout=CONF.benchmark.heat_stack_scale_timeout,
                 check_interval=CONF.benchmark.heat_stack_scale_poll_interval)
