@@ -266,7 +266,7 @@ class BootRuncommandDelete(vm_utils.VMScenario, cinder_utils.CinderBasic):
                 exceptions.SSHTimeout):
             console_logs = self._get_server_console_output(server,
                                                            max_log_length)
-            LOG.debug("VM console logs:\n%s", console_logs)
+            LOG.debug("VM console logs:\n%s" % console_logs)
             raise
 
         finally:

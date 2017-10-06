@@ -17,7 +17,6 @@ import random
 
 from oslo_config import cfg
 
-from rally.common.i18n import _, _LW
 from rally.common import logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -53,11 +52,11 @@ class CinderScenario(scenario.OpenStackScenario):
 
     def __init__(self, context=None, admin_clients=None, clients=None):
         super(CinderScenario, self).__init__(context, admin_clients, clients)
-        LOG.warning(_LW(
+        LOG.warning(
             "Class %s is deprecated since Rally 0.10.0 and will be removed "
             "soon. Use "
             "rally.plugins.openstack.services.storage.block.BlockStorage "
-            "instead.") % self.__class__)
+            "instead." % self.__class__)
 
     @atomic.action_timer("cinder.list_volumes")
     def _list_volumes(self, detailed=True):
@@ -504,5 +503,4 @@ class CinderScenario(scenario.OpenStackScenario):
         resp = self.admin_clients("cinder").volume_encryption_types.delete(
             volume_type)
         if (resp[0].status_code != 202):
-            raise exceptions.RallyException(
-                _("EncryptionType Deletion Failed"))
+            raise exceptions.RallyException("EncryptionType Deletion Failed")

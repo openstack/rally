@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.common.i18n import _
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
@@ -101,8 +100,7 @@ class SaharaImage(context.Context):
             if visibility != "public":
                 raise exceptions.ContextSetupFailure(
                     ctx_name=self.get_name(),
-                    msg=_("Image provided in the Sahara context"
-                          " should be public.")
+                    msg="Use only public image for sahara_image context"
                 )
             image_id = image_uuid
 

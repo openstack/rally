@@ -19,7 +19,6 @@ import uuid
 from oslo_config import cfg
 
 from rally.common import broker
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import objects
 from rally.common import utils as rutils
@@ -139,13 +138,13 @@ class UserGenerator(context.Context):
         use_sg, msg = network.wrap(clients, self).supports_extension(
             "security-group")
         if not use_sg:
-            LOG.debug("Security group context is disabled: %s", msg)
+            LOG.debug("Security group context is disabled: %s" % msg)
             return
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             with logging.ExceptionLogger(
-                    LOG, _("Unable to delete default security group")):
+                    LOG, "Unable to delete default security group"):
                 uclients = osclients.Clients(user["credential"])
                 security_groups = uclients.neutron().list_security_groups()
                 default = [sg for sg in security_groups["security_groups"]
@@ -264,18 +263,18 @@ class UserGenerator(context.Context):
         """Create tenants and users, using the broker pattern."""
         threads = self.config["resource_management_workers"]
 
-        LOG.debug("Creating %(tenants)d tenants using %(threads)s threads",
-                  {"tenants": self.config["tenants"], "threads": threads})
+        LOG.debug("Creating %(tenants)d tenants using %(threads)s threads"
+                  % {"tenants": self.config["tenants"], "threads": threads})
         self.context["tenants"] = self._create_tenants()
 
         if len(self.context["tenants"]) < self.config["tenants"]:
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
-                msg=_("Failed to create the requested number of tenants."))
+                msg="Failed to create the requested number of tenants.")
 
         users_num = self.config["users_per_tenant"] * self.config["tenants"]
-        LOG.debug("Creating %(users)d users using %(threads)s threads",
-                  {"users": users_num, "threads": threads})
+        LOG.debug("Creating %(users)d users using %(threads)s threads"
+                  % {"users": users_num, "threads": threads})
         self.context["users"] = self._create_users()
         for user in self.context["users"]:
             self.context["tenants"][user["tenant_id"]]["users"].append(user)
@@ -283,7 +282,7 @@ class UserGenerator(context.Context):
         if len(self.context["users"]) < users_num:
             raise exceptions.ContextSetupFailure(
                 ctx_name=self.get_name(),
-                msg=_("Failed to create the requested number of users."))
+                msg="Failed to create the requested number of users.")
 
     def use_existing_users(self):
         LOG.debug("Using existing users")

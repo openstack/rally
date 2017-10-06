@@ -17,7 +17,6 @@ import re
 import shutil
 import subprocess
 
-from rally.common.i18n import _LE
 from rally.common import yamlutils as yaml
 from rally import exceptions
 from rally.plugins.common.verification import testr
@@ -128,8 +127,8 @@ class TempestManager(testr.TestrLauncher):
         """Install a Tempest plugin."""
         if extra_settings:
             raise NotImplementedError(
-                _LE("'%s' verifiers don't support extra installation settings "
-                    "for extensions.") % self.get_name())
+                "'%s' verifiers don't support extra installation settings "
+                "for extensions." % self.get_name())
         version = version or "master"
         egg = re.sub("\.git$", "", os.path.basename(source.strip("/")))
         full_source = "git+{0}@{1}#egg={2}".format(source, version, egg)

@@ -68,8 +68,7 @@ class EC2ServerGenerator(context.Context):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            LOG.debug("Booting servers for tenant %s ",
-                      (user["tenant_id"]))
+            LOG.debug("Booting servers for tenant %s " % user["tenant_id"])
             ec2_scenario = ec2_utils.EC2Scenario({
                 "user": user,
                 "task": self.context["task"],
@@ -77,10 +76,11 @@ class EC2ServerGenerator(context.Context):
 
             LOG.debug(
                 "Calling _boot_servers with "
-                "image_id={image_id} flavor_name={flavor_name} "
-                "servers_per_tenant={servers_per_tenant}".format(
-                    image_id=image_id, flavor_name=flavor["name"],
-                    servers_per_tenant=self.config["servers_per_tenant"]))
+                "image_id=%(image_id)s flavor_name=%(flavor_name)s "
+                "servers_per_tenant=%(servers_per_tenant)s"
+                % {"image_id": image_id,
+                   "flavor_name": flavor["name"],
+                   "servers_per_tenant": self.config["servers_per_tenant"]})
 
             servers = ec2_scenario._boot_servers(
                 image_id, flavor["name"], self.config["servers_per_tenant"])

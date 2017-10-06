@@ -18,7 +18,6 @@ import abc
 import six
 
 from rally.common import broker
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally import consts
@@ -164,13 +163,13 @@ class BaseCustomImageGenerator(context.Context):
             **kwargs)
 
         try:
-            LOG.debug("Installing tools on %r %s", server, fip["ip"])
+            LOG.debug("Installing tools on %r %s" % (server, fip["ip"]))
             self.customize_image(server, fip, user)
 
-            LOG.debug("Stopping server %r", server)
+            LOG.debug("Stopping server %r" % server)
             vm_scenario._stop_server(server)
 
-            LOG.debug("Creating snapshot for %r", server)
+            LOG.debug("Creating snapshot for %r" % server)
             custom_image = vm_scenario._create_image(server)
         finally:
             vm_scenario._delete_server_with_fip(server, fip)
@@ -205,13 +204,12 @@ class BaseCustomImageGenerator(context.Context):
         """Delete the image created for the user and tenant."""
 
         with logging.ExceptionLogger(
-                LOG, _("Unable to delete image %s") % custom_image.id):
+                LOG, "Unable to delete image %s" % custom_image.id):
 
             glance_service = image.Image(user["credential"].clients())
             glance_service.delete_image(custom_image.id)
 
-    @logging.log_task_wrapper(LOG.info,
-                              _("Custom image context: customizing"))
+    @logging.log_task_wrapper(LOG.info, "Custom image context: customizing")
     def customize_image(self, server, ip, user):
         return self._customize_image(server, ip, user)
 

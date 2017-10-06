@@ -18,7 +18,6 @@ import abc
 import netaddr
 import six
 
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally import consts
@@ -44,13 +43,13 @@ def generate_cidr(start_cidr="10.2.0.0/24"):
     :returns: next available CIDR str
     """
     cidr = str(netaddr.IPNetwork(start_cidr).next(next(cidr_incr)))
-    LOG.debug("CIDR generated: %s", cidr)
+    LOG.debug("CIDR generated: %s" % cidr)
     return cidr
 
 
 class NetworkWrapperException(exceptions.RallyException):
     error_code = 532
-    msg_fmt = _("%(message)s")
+    msg_fmt = "%(message)s"
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -373,7 +372,7 @@ class NeutronWrapper(NetworkWrapper):
         if any(ext.get("alias") == extension for ext in extensions):
             return True, ""
 
-        return False, _("Neutron driver does not support %s") % (extension)
+        return False, "Neutron driver does not support %s" % extension
 
 
 def wrap(clients, owner, config=None):
@@ -396,4 +395,4 @@ def wrap(clients, owner, config=None):
 
     if consts.Service.NEUTRON in services.values():
         return NeutronWrapper(clients, owner, config=config)
-    LOG.warning(_("NovaNetworkWrapper is deprecated since 0.9.0"))
+    LOG.warning("NovaNetworkWrapper is deprecated since 0.9.0")

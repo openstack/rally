@@ -75,5 +75,5 @@ class FaultInjectionHook(hook.Hook):
         if self.config.get("verify"):
             injector.verify()
 
-        LOG.debug("Injecting fault: %s", self.config["action"])
+        LOG.debug("Injecting fault: %s" % self.config["action"])
         os_faults.human_api(injector, self.config["action"])

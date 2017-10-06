@@ -16,7 +16,6 @@
 from oslo_config import cfg
 
 from rally.common import broker
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import validation
 from rally import consts
@@ -61,8 +60,8 @@ class RoleGenerator(context.Context):
             if str(def_role.name) == context_role:
                 return def_role
         else:
-            raise exceptions.NotFoundException(_(
-                "There is no role with name `%s`") % context_role)
+            raise exceptions.NotFoundException(
+                "There is no role with name `%s`" % context_role)
 
     def _get_consumer(self, func_name):
         def consume(cache, args):
@@ -85,10 +84,10 @@ class RoleGenerator(context.Context):
                 role = self._get_role_object(context_role)
                 roles_dict[role.id] = role.name
                 LOG.debug("Adding role %(role_name)s having ID %(role_id)s "
-                          "to all users using %(threads)s threads",
-                          {"role_name": role.name,
-                           "role_id": role.id,
-                           "threads": threads})
+                          "to all users using %(threads)s threads"
+                          % {"role_name": role.name,
+                             "role_id": role.id,
+                             "threads": threads})
                 for user in self.context["users"]:
                     args = (role.id, user["id"], user["tenant_id"])
                     queue.append(args)
@@ -102,7 +101,7 @@ class RoleGenerator(context.Context):
 
         def publish(queue):
             for role_id in self.context["roles"]:
-                LOG.debug("Removing role %s from all users", role_id)
+                LOG.debug("Removing role %s from all users" % role_id)
                 for user in self.context["users"]:
                     args = (role_id, user["id"], user["tenant_id"])
                     queue.append(args)

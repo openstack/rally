@@ -109,7 +109,7 @@ class TempestConfigfileManager(object):
                     uri = os.path.join(cropped_auth_url, "v2.0")
             else:
                 # Does Keystone released new version of API ?!
-                LOG.debug("Discovered keystone versions: %s", versions)
+                LOG.debug("Discovered keystone versions: %s" % versions)
                 raise exceptions.RallyException("Failed to discover keystone "
                                                 "auth urls.")
 

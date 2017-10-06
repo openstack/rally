@@ -12,7 +12,6 @@
 
 import random
 
-from rally.common.i18n import _
 from rally.common import validation
 from rally import consts
 from rally import exceptions
@@ -239,23 +238,22 @@ class OpenStackAPIVersions(context.Context):
         services_from_admin = None
         for client_name, conf in self.config.items():
             if "service_type" in conf and conf["service_type"] not in services:
-                raise exceptions.ValidationError(_(
-                    "There is no service with '%s' type in your environment.")
+                raise exceptions.ValidationError(
+                    "There is no service with '%s' type in your environment."
                     % conf["service_type"])
             elif "service_name" in conf:
                 if not self.context.get("admin", {}).get("credential"):
                     raise exceptions.ContextSetupFailure(
                         ctx_name=self.get_name(),
-                        msg=_("Setting 'service_name' is allowed"
-                              " only for 'admin' user."))
+                        msg="Setting 'service_name' is admin only operation.")
                 if not services_from_admin:
                     services_from_admin = dict(
                         [(s.name, s.type)
                          for s in admin_clients.keystone().services.list()])
                 if conf["service_name"] not in services_from_admin:
                     raise exceptions.ValidationError(
-                        _("There is no '%s' service in your environment") %
-                        conf["service_name"])
+                        "There is no '%s' service in your environment"
+                        % conf["service_name"])
 
                 # TODO(boris-42): Use separate key ["openstack"]["versions"]
                 self.context["config"]["api_versions@openstack"][client_name][

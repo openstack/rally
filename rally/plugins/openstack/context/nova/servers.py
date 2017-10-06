@@ -99,8 +99,7 @@ class ServerGenerator(context.Context):
 
         for iter_, (user, tenant_id) in enumerate(rutils.iterate_per_tenants(
                 self.context["users"])):
-            LOG.debug("Booting servers for user tenant %s ",
-                      (user["tenant_id"]))
+            LOG.debug("Booting servers for user tenant %s" % user["tenant_id"])
             tmp_context = {"user": user,
                            "tenant": self.context["tenants"][tenant_id],
                            "task": self.context["task"],
@@ -110,10 +109,10 @@ class ServerGenerator(context.Context):
 
             LOG.debug("Calling _boot_servers with image_id=%(image_id)s "
                       "flavor_id=%(flavor_id)s "
-                      "servers_per_tenant=%(servers_per_tenant)s",
-                      {"image_id": image_id,
-                       "flavor_id": flavor_id,
-                       "servers_per_tenant": servers_per_tenant})
+                      "servers_per_tenant=%(servers_per_tenant)s"
+                      % {"image_id": image_id,
+                         "flavor_id": flavor_id,
+                         "servers_per_tenant": servers_per_tenant})
 
             servers = nova_scenario._boot_servers(image_id, flavor_id,
                                                   requests=servers_per_tenant,
@@ -122,8 +121,7 @@ class ServerGenerator(context.Context):
 
             current_servers = [server.id for server in servers]
 
-            LOG.debug("Adding booted servers %s to context",
-                      current_servers)
+            LOG.debug("Adding booted servers %s to context" % current_servers)
 
             self.context["tenants"][tenant_id][
                 "servers"] = current_servers

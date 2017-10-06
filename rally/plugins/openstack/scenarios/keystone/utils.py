@@ -15,7 +15,6 @@
 
 import uuid
 
-from rally.common.i18n import _LW
 from rally.common import logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
@@ -30,11 +29,11 @@ class KeystoneScenario(scenario.OpenStackScenario):
 
     def __init__(self, context=None, admin_clients=None, clients=None):
         super(KeystoneScenario, self).__init__(context, admin_clients, clients)
-        LOG.warning(_LW(
+        LOG.warning(
             "Class %s is deprecated since Rally 0.8.0 and will be removed "
             "soon. Use "
             "rally.plugins.openstack.services.identity.identity.Identity "
-            "instead.") % self.__class__)
+            "instead." % self.__class__)
 
     @atomic.action_timer("keystone.create_user")
     def _user_create(self, email=None, **kwargs):

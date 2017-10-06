@@ -95,11 +95,10 @@ class Quotas(context.Context):
                     try:
                         self.manager[service].delete(tenant_id)
                     except Exception as e:
-                        LOG.warning("Failed to remove quotas for tenant "
-                                    "%(tenant_id)s in service %(service)s "
-                                    "\n reason: %(exc)s"
-                                    % {"tenant_id": tenant_id,
-                                       "service": service, "exc": e})
+                        LOG.warning(
+                            "Failed to remove quotas for tenant %(tenant)s "
+                            "in service %(service)s reason: %(e)s" %
+                            {"tenant": tenant_id, "service": service, "e": e})
 
     def cleanup(self):
         if self.original_quotas:
