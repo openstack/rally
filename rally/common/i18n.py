@@ -16,8 +16,6 @@ See https://docs.openstack.org/oslo.i18n/latest/user/usage.html .
 
 """
 
-import oslo_i18n
-
 from rally.common import logging
 
 LOG = logging.getLogger(__name__)
@@ -25,17 +23,19 @@ LOG.warning("rally.common.i18n module is deprecated and is going to be "
             "removed. Please do not import it.")
 
 
-_translators = oslo_i18n.TranslatorFactory(domain="rally")
+def _do_nothing(msg):
+    return msg
+
 
 # The primary translation function using the well-known name "_"
-_ = _translators.primary
+_ = _do_nothing
 
 # Translators for log levels.
 #
 # The abbreviated names are meant to reflect the usual use of a short
 # name like '_'. The "L" is for "log" and the other letter comes from
 # the level.
-_LI = _translators.log_info
-_LW = _translators.log_warning
-_LE = _translators.log_error
-_LC = _translators.log_critical
+_LI = _do_nothing
+_LW = _do_nothing
+_LE = _do_nothing
+_LC = _do_nothing
