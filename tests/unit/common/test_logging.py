@@ -64,7 +64,7 @@ class SetUpLogTestCase(test.TestCase):
         self.assertEqual(mock_oslogging._loggers[name], returned_logger)
 
 
-class LogRallyContaxtAdapterTestCase(test.TestCase):
+class RallyContaxtAdapterTestCase(test.TestCase):
 
     @mock.patch("rally.common.logging.log")
     @mock.patch("rally.common.logging.oslogging.KeywordArgumentAdapter")
@@ -79,6 +79,64 @@ class LogRallyContaxtAdapterTestCase(test.TestCase):
 
         radapter.log.assert_called_once_with(mock_log.RDEBUG,
                                              fake_msg)
+
+    def test__find_caller(self):
+        radapter = rally_logging.RallyContextAdapter(mock.MagicMock(), "fakep")
+
+        self.caller = None
+
+        def logging_method():
+            self.caller = radapter._find_the_caller()
+
+        def foo():
+            logging_method()
+
+        foo()
+        # the number of the line which calls logging_method
+        lineno = 92
+        self.assertEqual((__file__, lineno, "logging_method()"), self.caller)
+
+    @mock.patch("rally.common.logging.getLogger")
+    def test__check_args(self, mock_get_logger):
+        radapter = rally_logging.RallyContextAdapter(mock.MagicMock(), "fakep")
+
+        def foo(*args):
+            radapter._check_args("", *args)
+
+        foo()
+
+        self.assertFalse(mock_get_logger.called)
+
+        foo(1)
+
+        # the number of the line which calls foo
+        lineno = 110
+        mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
+        logger = mock_get_logger.return_value
+        self.assertEqual(1, logger.warning.call_count)
+        args = logger.warning.call_args_list[0]
+        self.assertTrue(args[0][0].startswith("[foo(1)] Do not use"))
+
+    @mock.patch("rally.common.logging.getLogger")
+    def test_exception(self, mock_get_logger):
+        radapter = rally_logging.RallyContextAdapter(mock.MagicMock(), {})
+        radapter.log = mock.MagicMock()
+
+        radapter.exception("foo")
+
+        self.assertFalse(mock_get_logger.called)
+
+        radapter.exception(Exception("!2!"))
+
+        # the number of the line which calls foo
+        lineno = 129
+        mock_get_logger.assert_called_once_with("%s:%s" % (__file__, lineno))
+
+        logger = mock_get_logger.return_value
+        self.assertEqual(1, logger.warning.call_count)
+        args = logger.warning.call_args_list[0]
+        self.assertTrue(args[0][0].startswith("[radapter.exception(Exception("
+                                              "\"!2!\"))] Do not transmit"))
 
 
 class ExceptionLoggerTestCase(test.TestCase):

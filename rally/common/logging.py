@@ -19,6 +19,7 @@ import traceback
 from oslo_config import cfg
 from oslo_log import handlers
 from oslo_log import log as oslogging
+import six
 
 
 log = __import__("logging")
@@ -60,11 +61,33 @@ def setup(product_name, version="unknown"):
 
 class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
 
-    _msg = "Do not use *args for string formatting for log message: %s"
+    _posargs_msg = "Do not use *args for string formatting for log message: %s"
+    _exc_msg = ("Do not transmit an exception objects to logging. It will "
+                "be included automagically. Transmit a user-friendly "
+                "explanation instead.")
+
+    @staticmethod
+    def _find_the_caller(i=0):
+        """Finds the caller of logging method
+
+        :param i: number of upper elements relatively to the place of calling
+            `_find_the_caller` method
+        :return: a tuple where the first element is a filename, the second is
+            a line number and the third is a line of code
+        """
+        import inspect
+
+        # the first 2 elements in the stack are the current line and the line
+        #   of caller of `_find_the_caller`
+        i = i + 2
+        caller = inspect.stack()[i]
+        return caller[1], caller[2], caller[4][0].rstrip("\n").strip()
 
     def _check_args(self, msg, *args):
         if args:
-            self.log(log.WARNING, self._msg % msg)
+            caller = self._find_the_caller(1)
+            logger = getLogger("%s:%s" % (caller[0], caller[1]))
+            logger.warning("[%s] %s" % (caller[2], self._posargs_msg % msg))
 
     def debug(self, msg, *args, **kwargs):
         self._check_args(msg, *args)
@@ -81,6 +104,14 @@ class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
     def error(self, msg, *args, **kwargs):
         self._check_args(msg, *args)
         self.log(log.ERROR, msg, *args, **kwargs)
+
+    def exception(self, msg, exc_info=True, *args, **kwargs):
+        if not isinstance(msg, (six.text_type, six.string_types)):
+            caller = self._find_the_caller()
+            logger = getLogger("%s:%s" % (caller[0], caller[1]))
+            logger.warning("[%s] %s" % (caller[2], self._exc_msg))
+        super(RallyContextAdapter, self).exception(msg, exc_info=exc_info,
+                                                   *args, **kwargs)
 
 
 def getLogger(name="unknown", version="unknown"):
