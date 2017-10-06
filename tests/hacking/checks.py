@@ -574,6 +574,8 @@ def check_opts_import_path(logical_line, physical_line, filename):
      """
     excluded_files = ["./rally/osclients.py",
                       "./rally/task/engine.py",
+                      "./rally/task/context.py",
+                      "./rally/task/scenario.py",
                       "./rally/common/opts.py"]
     forbidden_methods = [".register_opts("]
 

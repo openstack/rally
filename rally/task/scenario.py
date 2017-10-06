@@ -16,6 +16,8 @@
 import copy
 import random
 
+from oslo_config import cfg
+
 from rally.common import logging
 from rally.common.objects import task  # noqa
 from rally.common.plugin import plugin
@@ -28,6 +30,14 @@ from rally.task.processing import charts
 
 
 LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
+CONF_OPTS = [
+    cfg.StrOpt(
+        "scenario_resource_name_format",
+        help="Template is used to generate random names of resources. X is"
+             "replaced with random latter, amount of X can be adjusted")
+]
+CONF.register_opts(CONF_OPTS)
 
 
 @logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
@@ -86,6 +96,11 @@ class Scenario(plugin.Plugin,
         All Scenario Plugins should be subclass of this class.
     """
     RESOURCE_NAME_FORMAT = "s_rally_XXXXXXXX_XXXXXXXX"
+
+    @classmethod
+    def _get_resource_name_format(cls):
+        return (CONF.scenario_resource_name_format
+                or super(Scenario, cls)._get_resource_name_format())
 
     def __init__(self, context=None):
         super(Scenario, self).__init__()

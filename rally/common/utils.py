@@ -271,6 +271,14 @@ class RandomNameGeneratorMixin(object):
     RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_letters + string.digits
 
     @classmethod
+    def _get_resource_name_format(cls):
+        return cls.RESOURCE_NAME_FORMAT
+
+    @classmethod
+    def _get_resource_name_allowed_characters(cls):
+        return cls.RESOURCE_NAME_ALLOWED_CHARACTERS
+
+    @classmethod
     def _generate_random_part(cls, length):
         """Generate a random string.
 
@@ -279,8 +287,9 @@ class RandomNameGeneratorMixin(object):
                   containing only characters from
                   cls.RESOURCE_NAME_ALLOWED_CHARACTERS
         """
-        return "".join(random.choice(cls.RESOURCE_NAME_ALLOWED_CHARACTERS)
-                       for i in range(length))
+        return "".join(
+            random.choice(cls._get_resource_name_allowed_characters())
+            for i in range(length))
 
     @classmethod
     def _generate_task_id_part(cls, task_id, length):
@@ -292,14 +301,14 @@ class RandomNameGeneratorMixin(object):
             LOG.debug("Task ID %(task_id)s cannot be included in a random "
                       "name because it is too short. Format: %(format)s"
                       % {"task_id": task_id,
-                         "format": cls.RESOURCE_NAME_FORMAT})
-        elif any(char not in cls.RESOURCE_NAME_ALLOWED_CHARACTERS
+                         "format": cls._get_resource_name_format()})
+        elif any(char not in cls._get_resource_name_allowed_characters()
                  for char in task_id_part):
             LOG.debug("Task ID %(task_id)s cannot be included in a random "
                       "name because it includes disallowed characters. "
                       "Allowed characters are: %(chars)s"
                       % {"task_id": task_id,
-                         "chars": cls.RESOURCE_NAME_ALLOWED_CHARACTERS})
+                         "chars": cls._get_resource_name_allowed_characters()})
         else:
             return task_id_part
 
@@ -338,10 +347,10 @@ class RandomNameGeneratorMixin(object):
         task_id = self.get_owner_id()
 
         match = self._resource_name_placeholder_re.match(
-            self.RESOURCE_NAME_FORMAT)
+            self._get_resource_name_format())
         if match is None:
             raise ValueError("%s is not a valid resource name format" %
-                             self.RESOURCE_NAME_FORMAT)
+                             self._get_resource_name_format())
         parts = match.groupdict()
         return "".join([
             parts["prefix"],
@@ -366,13 +375,13 @@ class RandomNameGeneratorMixin(object):
         :returns: bool
         """
         match = cls._resource_name_placeholder_re.match(
-            cls.RESOURCE_NAME_FORMAT)
+            cls._get_resource_name_format())
         parts = match.groupdict()
         subst = {
             "prefix": re.escape(parts["prefix"]),
             "sep": re.escape(parts["sep"]),
             "suffix": re.escape(parts["suffix"]),
-            "chars": re.escape(cls.RESOURCE_NAME_ALLOWED_CHARACTERS),
+            "chars": re.escape(cls._get_resource_name_allowed_characters()),
             "rand_length": len(parts["rand"])}
         if task_id:
             subst["task_id"] = cls._generate_task_id_part(task_id,
@@ -408,7 +417,8 @@ def name_matches_object(name, *objects, **kwargs):
     """
     unique_rng_options = {}
     for obj in objects:
-        key = (obj.RESOURCE_NAME_FORMAT, obj.RESOURCE_NAME_ALLOWED_CHARACTERS)
+        key = (obj._get_resource_name_format(),
+               obj._get_resource_name_allowed_characters())
         if key not in unique_rng_options:
             unique_rng_options[key] = obj
     return any(obj.name_matches_object(name, **kwargs)

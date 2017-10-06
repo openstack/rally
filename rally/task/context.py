@@ -15,6 +15,7 @@
 
 import abc
 
+from oslo_config import cfg
 import six
 
 from rally.common import logging
@@ -23,7 +24,16 @@ from rally.common import utils
 from rally.common import validation
 from rally.task import functional
 
+
 LOG = logging.getLogger(__name__)
+CONF = cfg.CONF
+CONF_OPTS = [
+    cfg.StrOpt(
+        "context_resource_name_format",
+        help="Template is used to generate random names of resources. X is"
+             "replaced with random latter, amount of X can be adjusted")
+]
+CONF.register_opts(CONF_OPTS)
 
 
 @logging.log_deprecated_args("Use 'platform' arg instead", "0.10.0",
@@ -160,6 +170,11 @@ class Context(BaseContext, validation.ValidatablePluginMixin):
     def __init__(self, ctx):
         super(Context, self).__init__(ctx)
         self.task = self.context.get("task", {})
+
+    @classmethod
+    def _get_resource_name_format(cls):
+        return (CONF.context_resource_name_format
+                or super(Context, cls)._get_resource_name_format())
 
     def get_owner_id(self):
         if "owner_id" in self.context:
