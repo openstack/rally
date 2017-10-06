@@ -31,7 +31,6 @@ import six
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
-from rally.common.i18n import _
 from rally.common.io import junit
 from rally.common import logging
 from rally.common import utils as rutils
@@ -126,12 +125,12 @@ OLD_TASK_RESULT_SCHEMA = {
 
 class FailedToLoadTask(exceptions.RallyException):
     error_code = 472
-    msg_fmt = _("Invalid %(source)s passed:\n\n\t %(msg)s")
+    msg_fmt = "Invalid %(source)s passed:\n\n\t %(msg)s"
 
 
 class FailedToLoadResults(exceptions.RallyException):
     error_code = 529
-    msg_fmt = _("ERROR: Invalid task result format in %(source)s\n\n\t%(msg)s")
+    msg_fmt = "ERROR: Invalid task result format in %(source)s\n\n\t%(msg)s"
 
 
 class TaskCommands(object):
@@ -205,7 +204,7 @@ class TaskCommands(object):
                 source="--task",
                 msg="Failed to render task template.\n\n%s" % e)
 
-        print(_("Task is:\n%s\n") % rendered_task.strip())
+        print("Task is:\n%s\n" % rendered_task.strip())
         try:
             parsed_task = yaml.safe_load(rendered_task)
         except Exception as e:
@@ -214,7 +213,7 @@ class TaskCommands(object):
                 msg="Wrong format of rendered input task. It should be YAML or"
                     " JSON. Details:\n\n%s" % e)
 
-        print(_("Task syntax is correct :)"))
+        print("Task syntax is correct :)")
         return parsed_task
 
     @cliutils.args("--deployment", dest="deployment", type=str,
@@ -259,7 +258,7 @@ class TaskCommands(object):
 
         api.task.validate(deployment=deployment, config=task)
 
-        print(_("Task config is valid :)"))
+        print("Input Task is valid :)")
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -318,7 +317,7 @@ class TaskCommands(object):
             tags = "[tags: '%s']" % "', '".join(tags) if tags else ""
 
             print(cliutils.make_header(
-                _("Task %(tags)s %(uuid)s: started")
+                "Task %(tags)s %(uuid)s: started"
                 % {"uuid": task_instance["uuid"], "tags": tags}))
             print("Running Task... This can take a while...\n")
             print("To track task status use:\n")
@@ -332,7 +331,7 @@ class TaskCommands(object):
                            abort_on_sla_failure=abort_on_sla_failure)
 
         except exceptions.DeploymentNotFinishedStatus as e:
-            print(_("Cannot start a task on unfinished deployment: %s") % e)
+            print("Cannot start a task on unfinished deployment: %s" % e)
             return 1
 
         self.detailed(api, task_id=task_instance["uuid"])
@@ -369,7 +368,7 @@ class TaskCommands(object):
         """
 
         task = api.task.get(task_id=task_id)
-        print(_("Task %(task_id)s: %(status)s")
+        print("Task %(task_id)s: %(status)s"
               % {"task_id": task_id, "status": task["status"]})
 
     @cliutils.args("--uuid", type=str, dest="task_id",
@@ -393,7 +392,7 @@ class TaskCommands(object):
 
         print()
         print("-" * 80)
-        print(_("Task %(task_id)s: %(status)s")
+        print("Task %(task_id)s: %(status)s"
               % {"task_id": task_id, "status": task["status"]})
 
         if task["status"] == consts.TaskStatus.CRASHED or task["status"] == (
@@ -405,15 +404,15 @@ class TaskCommands(object):
             else:
                 print(validation["etype"])
                 print(validation["msg"])
-                print(_("\nFor more details run:\nrally -d task detailed %s")
+                print("\nFor more details run:\nrally -d task detailed %s"
                       % task["uuid"])
             return 0
         elif task["status"] not in [consts.TaskStatus.FINISHED,
                                     consts.TaskStatus.ABORTED]:
             print("-" * 80)
-            print(_("\nThe task %s marked as '%s'. Results "
-                    "available when it is '%s'.") % (
-                task_id, task["status"], consts.TaskStatus.FINISHED))
+            print("\nThe task %s marked as '%s'. Results "
+                  "available when it is '%s'."
+                  % (task_id, task["status"], consts.TaskStatus.FINISHED))
             return 0
 
         for workload in itertools.chain(
@@ -542,6 +541,7 @@ class TaskCommands(object):
                   % rutils.format_float_to_str(workload["load_duration"]))
             print("Full duration: %s"
                   % rutils.format_float_to_str(workload["full_duration"]))
+
         print("\nHINTS:")
         print("* To plot HTML graphics with this data, run:")
         print("\trally task report %s --out output.html\n" % task["uuid"])
@@ -565,8 +565,8 @@ class TaskCommands(object):
         finished_statuses = (consts.TaskStatus.FINISHED,
                              consts.TaskStatus.ABORTED)
         if task["status"] not in finished_statuses:
-            print(_("Task status is %s. Results available when it is one "
-                    "of %s.") % (task["status"], ", ".join(finished_statuses)))
+            print("Task status is %s. Results available when it is one of %s."
+                  % (task["status"], ", ".join(finished_statuses)))
             return 1
 
         # TODO(chenhb): Ensure `rally task results` puts out old format.
@@ -639,9 +639,8 @@ class TaskCommands(object):
         if status in consts.TaskStatus:
             filters["status"] = status
         elif status:
-            print(_("Error: Invalid task status '%s'.\n"
-                    "Available statuses: %s") % (
-                  status, ", ".join(consts.TaskStatus)),
+            print("Error: Invalid task status '%s'.\nAvailable statuses: %s"
+                  % (status, ", ".join(consts.TaskStatus)),
                   file=sys.stderr)
             return(1)
 
@@ -675,12 +674,12 @@ class TaskCommands(object):
                 formatters=formatters)
         else:
             if status:
-                print(_("There are no tasks in '%s' status. "
-                        "To run a new task, use:\n"
-                        "\trally task start") % status)
+                print("There are no tasks in '%s' status. "
+                      "To run a new task, use:\n\trally task start"
+                      % status)
             else:
-                print(_("There are no tasks. To run a new task, use:\n"
-                        "\trally task start"))
+                print("There are no tasks. To run a new task, use:\n"
+                      "\trally task start")
 
     def _load_task_results_file(self, api, task_id):
         """Load the json file which is created by `rally task results` """
@@ -791,7 +790,7 @@ class TaskCommands(object):
         tasks = kwargs.get("tasks", []) or list(args)
 
         if not tasks:
-            print(_("ERROR: At least one task must be specified"),
+            print("ERROR: At least one task must be specified",
                   file=sys.stderr)
             return 1
 
@@ -802,8 +801,8 @@ class TaskCommands(object):
             elif uuidutils.is_uuid_like(task_id):
                 task_results = api.task.get(task_id=task_id, detailed=True)
             else:
-                print(_("ERROR: Invalid UUID or file name passed: %s")
-                      % task_id, file=sys.stderr)
+                print("ERROR: Invalid UUID or file name passed: %s" % task_id,
+                      file=sys.stderr)
                 return 1
 
             results.append(task_results)
@@ -878,8 +877,8 @@ class TaskCommands(object):
             elif uuidutils.is_uuid_like(task_file_or_uuid):
                 task = api.task.get(task_id=task_file_or_uuid, detailed=True)
             else:
-                print(_("ERROR: Invalid UUID or file name passed: %s"
-                        ) % task_file_or_uuid,
+                print("ERROR: Invalid UUID or file name passed: %s"
+                      % task_file_or_uuid,
                       file=sys.stderr)
                 return 1
 
@@ -913,7 +912,7 @@ class TaskCommands(object):
                                         message)
             result = test_suite.to_xml()
         else:
-            print(_("Invalid output format: %s") % out_format, file=sys.stderr)
+            print("Invalid output format: %s" % out_format, file=sys.stderr)
             return 1
 
         if out:
@@ -1060,9 +1059,9 @@ class TaskCommands(object):
 
     @staticmethod
     def _format_task_error(data):
-        error_type = _("Unknown type")
-        error_message = _("Rally hasn't caught anything yet")
-        error_traceback = _("No traceback available.")
+        error_type = "Unknown type"
+        error_message = "Rally hasn't caught anything yet"
+        error_traceback = "No traceback available."
         try:
             error_type = data["error"][0]
             error_message = data["error"][1]
@@ -1096,8 +1095,8 @@ class TaskCommands(object):
             task = api.task.import_results(deployment=deployment,
                                            task_results=tasks_results,
                                            tags=tags)
-            print(_("Task UUID: %s.") % task["uuid"])
+            print("Task UUID: %s." % task["uuid"])
         else:
-            print(_("ERROR: Invalid file name passed: %s") % task_file,
+            print("ERROR: Invalid file name passed: %s" % task_file,
                   file=sys.stderr)
             return 1

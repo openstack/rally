@@ -19,7 +19,6 @@ import decorator
 from oslo_utils import strutils
 
 from rally.common import fileutils
-from rally.common.i18n import _
 from rally import exceptions
 
 ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
@@ -28,7 +27,7 @@ ENV_VERIFIER = "RALLY_VERIFIER"
 ENV_VERIFICATION = "RALLY_VERIFICATION"
 ENVVARS = [ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFIER, ENV_VERIFICATION]
 
-MSG_MISSING_ARG = _("Missing argument: --%(arg_name)s")
+MSG_MISSING_ARG = "Missing argument: --%(arg_name)s"
 
 
 def clear_global(global_key):
@@ -70,14 +69,13 @@ def default_from_global(arg_name, env_name,
 
 
 def with_default_deployment(cli_arg_name="uuid"):
-    return default_from_global("deployment", ENV_DEPLOYMENT, cli_arg_name,
-                               message=_("There is no default deployment.\n"
-                                         "\tPlease use command:\n"
-                                         "\trally deployment use "
-                                         "<deployment_uuid>|<deployment_name>"
-                                         "\nor pass uuid of deployment to "
-                                         "the --%(arg_name)s argument of "
-                                         "this command"))
+    return default_from_global(
+        "deployment", ENV_DEPLOYMENT, cli_arg_name,
+        message="There is no default deployment.\n"
+                "\tPlease use command:\n"
+                "\trally deployment use <deployment_uuid>|<deployment_name>\n"
+                "or pass uuid of deployment to the --%(arg_name)s "
+                "argument of this command")
 
 
 def with_default_verifier_id(cli_arg_name="id"):

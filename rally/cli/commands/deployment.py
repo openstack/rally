@@ -26,7 +26,6 @@ import jsonschema
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
-from rally.common.i18n import _
 from rally.common import logging
 from rally.common import utils
 from rally.common import yamlutils as yaml
@@ -101,10 +100,10 @@ class DeploymentCommands(object):
         try:
             deployment = api.deployment.create(config=config, name=name)
         except jsonschema.ValidationError:
-            print(_("Config schema validation error: %s.") % sys.exc_info()[1])
+            print("Config schema validation error: %s." % sys.exc_info()[1])
             return 1
         except exceptions.DeploymentNameExists:
-            print(_("Error: %s") % sys.exc_info()[1])
+            print("Error: %s" % sys.exc_info()[1])
             return 1
 
         self.list(api, deployment_list=[deployment])
@@ -166,9 +165,8 @@ class DeploymentCommands(object):
             cliutils.print_list(table_rows, headers,
                                 sortby_index=headers.index("created_at"))
         else:
-            print(_("There are no deployments. "
-                    "To create a new deployment, use:"
-                    "\nrally deployment create"))
+            print("There are no deployments. To create a new deployment, use:"
+                  "\nrally deployment create")
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    metavar="<uuid>", required=False,
@@ -230,7 +228,7 @@ class DeploymentCommands(object):
             return bool([item for item in lst if field in item])
 
         def print_error(user_type, error):
-            print(_("Error while checking %s credentials:") % user_type)
+            print("Error while checking %s credentials:" % user_type)
             if logging.is_debug():
                 print(error["trace"])
             else:

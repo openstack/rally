@@ -15,7 +15,6 @@
 
 import six
 
-from rally.common.i18n import _
 from rally.common.plugin import discover
 
 
@@ -30,7 +29,7 @@ class RallyException(Exception):
     with the keyword arguments provided to the constructor.
 
     """
-    msg_fmt = _("%(message)s")
+    msg_fmt = "%(message)s"
     error_code = 500
 
     def __init__(self, message=None, **kwargs):
@@ -68,161 +67,157 @@ def make_exception(exc):
 
 class InvalidArgumentsException(RallyException):
     error_code = 455
-    msg_fmt = _("Invalid arguments: '%(message)s'")
+    msg_fmt = "Invalid arguments: '%(message)s'"
 
 
 class InvalidConfigException(RallyException):
     error_code = 456
-    msg_fmt = _("This config has invalid schema: `%(message)s`")
+    msg_fmt = "This config has invalid schema: `%(message)s`"
 
 
 class InvalidTaskException(InvalidConfigException):
     error_code = 457
-    msg_fmt = _("Task config is invalid: `%(message)s`")
+    msg_fmt = "Task config is invalid: `%(message)s`"
 
 
 class InvalidTaskConfig(InvalidTaskException):
     error_code = 458
-    msg_fmt = _("Input task is invalid!\n\n"
-                "Subtask %(name)s[%(pos)s] has wrong configuration"
-                "\nSubtask configuration:\n%(config)s\n"
-                "\nReason(s):\n %(reason)s")
+    msg_fmt = ("Input task is invalid!\n\n"
+               "Subtask %(name)s[%(pos)s] has wrong configuration"
+               "\nSubtask configuration:\n%(config)s\n"
+               "\nReason(s):\n %(reason)s")
 
 
 class NotFoundException(RallyException):
     error_code = 404
-    msg_fmt = _("The resource can not be found: %(message)s")
+    msg_fmt = "The resource can not be found: %(message)s"
 
 
 class ThreadTimeoutException(RallyException):
     error_code = 515
-    msg_fmt = _("Iteration interrupted due to timeout.")
+    msg_fmt = "Iteration interrupted due to timeout."
 
 
 class PluginNotFound(NotFoundException):
     error_code = 459
-    msg_fmt = _("There is no plugin with name: `%(name)s` in "
-                "%(platform)s platform.")
+    msg_fmt = "There is no plugin `%(name)s` in %(platform)s platform."
 
 
 class PluginWithSuchNameExists(RallyException):
     error_code = 516
-    msg_fmt = _("Plugin with such name: %(name)s already exists in "
-                "%(platform)s platform. It's module allocates at "
-                "%(existing_path)s. You are trying to add plugin whose module "
-                "allocates at %(new_path)s.")
+    msg_fmt = (
+        "Plugin with such name: %(name)s already exists in %(platform)s "
+        "platform. It's module allocates at %(existing_path)s. You are trying "
+        "to add plugin whose module allocates at %(new_path)s.")
 
 
 class TaskNotFound(NotFoundException):
     error_code = 460
-    msg_fmt = _("Task with uuid=%(uuid)s not found.")
+    msg_fmt = "Task with uuid=%(uuid)s not found."
 
 
 class DeploymentNotFound(NotFoundException):
     error_code = 461
-    msg_fmt = _("Deployment %(deployment)s not found.")
+    msg_fmt = "Deployment %(deployment)s not found."
 
 
 class DeploymentNameExists(RallyException):
     error_code = 462
-    msg_fmt = _("Deployment name '%(deployment)s' already registered.")
+    msg_fmt = "Deployment name '%(deployment)s' already registered."
 
 
 class DeploymentNotFinishedStatus(RallyException):
     error_code = 463
-    msg_fmt = _("Deployment '%(name)s' (UUID=%(uuid)s) is in"
-                " '%(status)s' status.")
+    msg_fmt = "Deployment '%(name)s' (UUID=%(uuid)s) is '%(status)s'."
 
 
 class DeploymentIsBusy(RallyException):
     error_code = 464
-    msg_fmt = _("There are allocated resources for the deployment with "
-                "uuid=%(uuid)s.")
+    msg_fmt = "There are allocated resources for the deployment %(uuid)s."
 
 
 class RallyAssertionError(RallyException):
-    msg_fmt = _("Assertion error: %(message)s")
+    msg_fmt = "Assertion error: %(message)s"
 
 
 class ResourceNotFound(NotFoundException):
     error_code = 465
-    msg_fmt = _("Resource with id=%(id)s not found.")
+    msg_fmt = "Resource with id=%(id)s not found."
 
 
 class TimeoutException(RallyException):
     error_code = 517
-    msg_fmt = _("Rally tired waiting for %(resource_type)s %(resource_name)s:"
-                "%(resource_id)s to become %(desired_status)s current "
-                "status %(resource_status)s")
+    msg_fmt = ("Rally tired waiting for %(resource_type)s %(resource_name)s:"
+               "%(resource_id)s to become %(desired_status)s current "
+               "status %(resource_status)s")
 
 
 class GetResourceFailure(RallyException):
     error_code = 518
-    msg_fmt = _("Failed to get the resource %(resource)s: %(err)s")
+    msg_fmt = "Failed to get the resource %(resource)s: %(err)s"
 
 
 class GetResourceNotFound(GetResourceFailure):
     error_code = 519
-    msg_fmt = _("Resource %(resource)s is not found.")
+    msg_fmt = "Resource %(resource)s is not found."
 
 
 class GetResourceErrorStatus(GetResourceFailure):
     error_code = 520
-    msg_fmt = _("Resource %(resource)s has %(status)s status.\n"
-                "Fault: %(fault)s")
+    msg_fmt = "Resource %(resource)s has %(status)s status.\n Fault: %(fault)s"
 
 
 class ScriptError(RallyException):
-    msg_fmt = _("Script execution failed: %(message)s")
+    msg_fmt = "Script execution failed: %(message)s"
 
 
 class TaskInvalidStatus(RallyException):
     error_code = 466
-    msg_fmt = _("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
-                "required.")
+    msg_fmt = ("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
+               "required.")
 
 
 class InvalidAdminException(InvalidArgumentsException):
     error_code = 521
-    msg_fmt = _("user '%(username)s' doesn't have 'admin' role")
+    msg_fmt = "user '%(username)s' doesn't have 'admin' role"
 
 
 class AuthenticationFailed(InvalidArgumentsException):
     error_code = 401
-    msg_fmt = _("Failed to authenticate to %(url)s for user '%(username)s'"
-                " in project '%(project)s': %(etype)s: %(error)s")
+    msg_fmt = ("Failed to authenticate to %(url)s for user '%(username)s'"
+               " in project '%(project)s': %(etype)s: %(error)s")
 
 
 class InvalidScenarioArgument(RallyException):
     error_code = 467
-    msg_fmt = _("Invalid scenario argument: '%(message)s'")
+    msg_fmt = "Invalid scenario argument: '%(message)s'"
 
 
 class ContextSetupFailure(RallyException):
     error_code = 524
-    msg_fmt = _("Unable to setup context '%(ctx_name)s': '%(msg)s'")
+    msg_fmt = "Unable to setup context '%(ctx_name)s': '%(msg)s'"
 
 
 class ValidationError(RallyException):
     error_code = 468
-    msg_fmt = _("Validation error: %(message)s")
+    msg_fmt = "Validation error: %(message)s"
 
 
 class WorkerNotFound(NotFoundException):
     error_code = 469
-    msg_fmt = _("Worker %(worker)s could not be found")
+    msg_fmt = "Worker %(worker)s could not be found"
 
 
 class WorkerAlreadyRegistered(RallyException):
     error_code = 525
-    msg_fmt = _("Worker %(worker)s already registered")
+    msg_fmt = "Worker %(worker)s already registered"
 
 
 class MultiplePluginsFound(RallyException):
     error_code = 470
 
-    msg_fmt = _("Multiple plugins found: %(plugins)s for name %(name)s. "
-                "Use full name in input task.")
+    msg_fmt = ("Multiple plugins found: %(plugins)s for name %(name)s. "
+               "Use full name with platform to fix issue.")
 
 
 class SSHTimeout(RallyException):
@@ -237,10 +232,9 @@ class SSHError(RallyException):
 
 class InvalidConnectionString(RallyException):
     error_code = 471
-    msg_fmt = _("The connection string is not valid: %(message)s. Please "
-                "check your connection string.")
+    msg_fmt = "Invalid connection string: %(message)s."
 
 
 class DowngradeNotSupported(RallyException):
     error_code = 528
-    msg_fmt = _("Database schema downgrade is not supported.")
+    msg_fmt = "Database schema downgrade is not supported."
