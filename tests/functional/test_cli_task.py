@@ -339,6 +339,23 @@ class TaskTestCase(unittest.TestCase):
                           rally, "task report --report %s" % FAKE_TASK_UUID)
         self._assert_html_report_libs_are_embedded(html_report, False)
 
+    def test_report_one_file_with_static_libs(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        task_result_file = "/tmp/report_42.json"
+        if os.path.exists(task_result_file):
+            os.remove(task_result_file)
+        rally("task results", report_path=task_result_file,
+              raw=True)
+
+        html_report = rally.gen_report_path(extension="html")
+        rally("task report --html-static %s --out %s"
+              % (task_result_file, html_report))
+        self.assertTrue(os.path.exists(html_report))
+        self._assert_html_report_libs_are_embedded(html_report)
+
     def test_report_one_uuid_with_static_libs(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
