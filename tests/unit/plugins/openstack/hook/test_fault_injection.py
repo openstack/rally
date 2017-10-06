@@ -40,7 +40,8 @@ class FaultInjectionHookTestCase(test.TestCase):
               (dict(), False))
     @ddt.unpack
     def test_config_schema(self, config, valid):
-        results = hook.Hook.validate("fault_injection", None, None, config)
+        results = hook.HookAction.validate("fault_injection", None, None,
+                                           config)
         if valid:
             self.assertEqual([], results)
         else:

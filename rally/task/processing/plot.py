@@ -33,7 +33,7 @@ def _process_hooks(hooks):
     """Prepare hooks data for report."""
     hooks_ctx = []
     for hook in hooks:
-        hook_ctx = {"name": hook["config"]["name"],
+        hook_ctx = {"name": list(hook["config"]["action"].keys())[0],
                     "desc": hook["config"].get("description", ""),
                     "additive": [], "complete": []}
 

@@ -13,56 +13,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import abc
-
-import six
-
-from rally.common.i18n import _
 from rally.common import logging
-from rally.common.plugin import plugin
-from rally.common import validation
-
-configure = plugin.configure
+from rally.task import hook
 
 LOG = logging.getLogger(__name__)
 
 
-@validation.add_default("jsonschema")
-@plugin.base()
-@six.add_metaclass(abc.ABCMeta)
-class Trigger(plugin.Plugin, validation.ValidatablePluginMixin):
-    """Factory for trigger classes."""
+class Trigger(hook.HookTrigger):
+    """DEPRECATED!!! USE `rally.task.hook.HookTrigger` instead."""
 
-    CONFIG_SCHEMA = {"type": "null"}
+    def __init__(self, *args, **kwargs):
+        super(Trigger, self).__init__(*args, **kwargs)
+        LOG.warning("Please contact Rally plugin maintainer. The plugin '%s' "
+                    "inherits the deprecated base class(Trigger), "
+                    "`rally.task.hook.HookTrigger` should be used instead."
+                    % self.get_name())
 
-    def __init__(self, context, task, hook_cls):
-        self.context = context
-        self.config = self.context["trigger"]["args"]
-        self.task = task
-        self.hook_cls = hook_cls
-        self._runs = []
-
-    @abc.abstractmethod
-    def get_listening_event(self):
-        """Returns event type to listen."""
-
-    def on_event(self, event_type, value=None):
-        """Launch hook on specified event."""
-        LOG.info(_("Hook %s is triggered for Task %s by %s=%s")
-                 % (self.hook_cls.__name__, self.task["uuid"],
-                    event_type, value))
-        hook = self.hook_cls(self.task, self.context.get("args", {}),
-                             {"event_type": event_type, "value": value})
-        hook.run_async()
-        self._runs.append(hook)
-
-    def get_results(self):
-        results = {"config": self.context,
-                   "results": [],
-                   "summary": {}}
-        for hook in self._runs:
-            hook_result = hook.result()
-            results["results"].append(hook_result)
-            results["summary"].setdefault(hook_result["status"], 0)
-            results["summary"][hook_result["status"]] += 1
-        return results
+    @property
+    def context(self):
+        action_name, action_cfg = list(self.hook_cfg["action"].items())[0]
+        trigger_name, trigger_cfg = list(self.hook_cfg["trigger"].items())[0]
+        return {"description": self.hook_cfg["description"],
+                "name": action_name,
+                "args": action_cfg,
+                "trigger": {"name": trigger_name,
+                            "args": trigger_cfg}}

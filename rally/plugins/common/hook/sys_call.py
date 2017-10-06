@@ -27,7 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 @hook.configure(name="sys_call")
-class SysCallHook(hook.Hook):
+class SysCallHook(hook.HookAction):
     """Performs system call."""
 
     CONFIG_SCHEMA = {

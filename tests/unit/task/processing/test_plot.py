@@ -87,48 +87,65 @@ class PlotTestCase(test.TestCase):
     @ddt.data(
         {"hooks": [], "expected": []},
         {"hooks": [
-            {"config": {
-                "trigger": {"args": {"at": [2, 5], "unit": "iteration"},
-                            "name": "event"},
-                "args": "foo cmd", "description": "Foo", "name": "sys_call"},
-             "results": [
-                 {"status": "success", "finished_at": 1475589987.525735,
-                  "triggered_by": {"event_type": "iteration", "value": 2},
-                  "started_at": 1475589987.433399,
-                  "output": {
-                      "additive": [
-                          {"chart_plugin": "StatsTable", "title": "Foo table",
-                           "data": [["A", 158], ["B", 177]]}],
-                      "complete": []}},
-                 {"status": "success", "finished_at": 1475589993.457818,
-                  "triggered_by": {"event_type": "iteration", "value": 5},
-                  "started_at": 1475589993.432734,
-                  "output": {
-                      "additive": [
-                          {"chart_plugin": "StatsTable", "title": "Foo table",
-                           "data": [["A", 243], ["B", 179]]}],
-                      "complete": []}}],
-             "summary": {"success": 2}},
-            {"config": {"trigger": {"args": {"at": [1, 2, 4], "unit": "time"},
-                                    "name": "event"},
-                        "args": "bar cmd", "name": "sys_call"},
-             "results": [
-                 {"status": "success", "finished_at": 1475589988.437791,
-                  "triggered_by": {"event_type": "time", "value": 1},
-                  "started_at": 1475589988.434244,
-                  "output": {"additive": [],
-                             "complete": [
-                                 {"chart_plugin": "Pie", "title": "Bar Pie",
-                                  "data": [["F", 4], ["G", 2]]}]}},
-                 {"status": "success",
-                  "finished_at": 1475589989.437589,
-                  "triggered_by": {"event_type": "time", "value": 2},
-                  "started_at": 1475589989.433964,
-                  "output": {"additive": [],
-                             "complete": [
-                                 {"chart_plugin": "Pie", "title": "Bar Pie",
-                                  "data": [["F", 42], ["G", 24]]}]}}],
-             "summary": {"success": 2}}],
+            {
+                "config": {
+                    "description": "Foo",
+                    "action": {"sys_call": "foo cmd"},
+                    "trigger": {"event": {"at": [2, 5], "unit": "iteration"}}},
+                "results": [
+                    {
+                        "status": "success",
+                        "started_at": 1475589987.433399,
+                        "finished_at": 1475589987.525735,
+                        "triggered_by": {"event_type": "iteration",
+                                         "value": 2},
+                        "output": {
+                            "additive": [
+                                {"chart_plugin": "StatsTable",
+                                 "title": "Foo table",
+                                 "data": [["A", 158], ["B", 177]]}],
+                            "complete": []}},
+                    {
+                        "status": "success",
+                        "started_at": 1475589993.432734,
+                        "finished_at": 1475589993.457818,
+                        "triggered_by": {"event_type": "iteration",
+                                         "value": 5},
+                        "output": {
+                            "additive": [
+                                {"chart_plugin": "StatsTable",
+                                 "title": "Foo table",
+                                 "data": [["A", 243], ["B", 179]]}],
+                            "complete": []}}],
+                "summary": {"success": 2}},
+            {
+                "config": {
+                    "action": {"sys_call": "bar cmd"},
+                    "trigger": {"event": {"at": [1, 2, 4], "unit": "time"}}},
+                "results": [
+                    {
+                        "status": "success",
+                        "started_at": 1475589988.434244,
+                        "finished_at": 1475589988.437791,
+                        "triggered_by": {"event_type": "time", "value": 1},
+                        "output": {
+                            "additive": [],
+                            "complete": [
+                                {"chart_plugin": "Pie",
+                                 "title": "Bar Pie",
+                                 "data": [["F", 4], ["G", 2]]}]}},
+                    {
+                        "status": "success",
+                        "started_at": 1475589989.433964,
+                        "finished_at": 1475589989.437589,
+                        "triggered_by": {"event_type": "time", "value": 2},
+                        "output": {
+                            "additive": [],
+                            "complete": [
+                                {"chart_plugin": "Pie",
+                                 "title": "Bar Pie",
+                                 "data": [["F", 42], ["G", 24]]}]}}],
+                "summary": {"success": 2}}],
          "expected": [
              {"additive": [
                  {"data": {"cols": ["Action", "Min (sec)", "Median (sec)",

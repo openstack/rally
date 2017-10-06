@@ -33,7 +33,6 @@ from rally.task import hook
 from rally.task import runner
 from rally.task import scenario
 from rally.task import sla
-from rally.task import trigger
 
 
 LOG = logging.getLogger(__name__)
@@ -312,19 +311,22 @@ class TaskEngine(object):
                 vtype=vtype))
 
         for hook_conf in workload["hooks"]:
-            results.extend(hook.Hook.validate(
-                name=hook_conf["config"]["name"],
+            action_name, action_cfg = list(
+                hook_conf["config"]["action"].items())[0]
+            results.extend(hook.HookAction.validate(
+                name=action_name,
                 context=vcontext,
                 config=None,
-                plugin_cfg=hook_conf["config"]["args"],
+                plugin_cfg=action_cfg,
                 vtype=vtype))
 
-            trigger_conf = hook_conf["config"]["trigger"]
-            results.extend(trigger.Trigger.validate(
-                name=trigger_conf["name"],
+            trigger_name, trigger_cfg = list(
+                hook_conf["config"]["trigger"].items())[0]
+            results.extend(hook.HookTrigger.validate(
+                name=trigger_name,
                 context=vcontext,
                 config=None,
-                plugin_cfg=trigger_conf["args"],
+                plugin_cfg=trigger_cfg,
                 vtype=vtype))
 
         if results:
@@ -495,26 +497,6 @@ class TaskConfig(object):
 
     """
 
-    HOOK_CONFIG = {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "description": {"type": "string"},
-            "args": {},
-            "trigger": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string"},
-                    "args": {},
-                },
-                "required": ["name", "args"],
-                "additionalProperties": False,
-            }
-        },
-        "required": ["name", "args", "trigger"],
-        "additionalProperties": False,
-    }
-
     CONFIG_SCHEMA_V1 = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
@@ -537,11 +519,32 @@ class TaskConfig(object):
                         "sla": {"type": "object"},
                         "hooks": {
                             "type": "array",
-                            "items": HOOK_CONFIG,
+                            "items": {"$ref": "#/definitions/hook"},
                         }
                     },
                     "additionalProperties": False
                 }
+            }
+        },
+        "definitions": {
+            "hook": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "args": {},
+                    "trigger": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "args": {},
+                        },
+                        "required": ["name", "args"],
+                        "additionalProperties": False,
+                    }
+                },
+                "required": ["name", "args", "trigger"],
+                "additionalProperties": False,
             }
         }
     }
@@ -595,7 +598,7 @@ class TaskConfig(object):
                     "sla": {"type": "object"},
                     "hooks": {
                         "type": "array",
-                        "items": HOOK_CONFIG,
+                        "items": {"$ref": "#/definitions/hook"},
                     },
                     "contexts": {"type": "object"}
                 },
@@ -627,7 +630,7 @@ class TaskConfig(object):
                                 "sla": {"type": "object"},
                                 "hooks": {
                                     "type": "array",
-                                    "items": HOOK_CONFIG,
+                                    "items": {"$ref": "#/definitions/hook"},
                                 },
                                 "contexts": {"type": "object"}
                             },
@@ -638,6 +641,43 @@ class TaskConfig(object):
                 },
                 "additionalProperties": False,
                 "required": ["title", "workloads"]
+            },
+            "hook": {
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "name": {"type": "string"},
+                            "description": {"type": "string"},
+                            "args": {},
+                            "trigger": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "args": {},
+                                },
+                                "required": ["name", "args"],
+                                "additionalProperties": False,
+                            }
+                        },
+                        "required": ["name", "args", "trigger"],
+                        "additionalProperties": False
+                    },
+                    {
+                        "properties": {
+                            "action": {
+                                "type": "object",
+                                "minProperties": 1,
+                                "maxProperties": 1,
+                                "patternProperties": {".*": {}}
+                            },
+                            "trigger": {"$ref": "#/definitions/singleEntity"},
+                            "description": {"type": "string"},
+                        },
+                        "required": ["action", "trigger"],
+                        "additionalProperties": False
+                    },
+                ]
             }
         }
     }
@@ -718,8 +758,23 @@ class TaskConfig(object):
                 else:
                     wconf["runner"] = {"serial": {}}
                 wconf.setdefault("sla", {"failure_rate": {"max": 0}})
-                wconf.setdefault("hooks", [])
-                wconf["hooks"] = [{"config": h} for h in wconf["hooks"]]
+
+                hooks = wconf.get("hooks", [])
+                wconf["hooks"] = []
+                for hook_cfg in hooks:
+                    if "name" in hook_cfg:
+                        LOG.warning("The deprecated format of hook is found. "
+                                    "Check task format documentation for more "
+                                    "details.")
+                        trigger_cfg = hook_cfg["trigger"]
+                        wconf["hooks"].append({"config": {
+                            "description": hook_cfg["description"],
+                            "action": {hook_cfg["name"]: hook_cfg["args"]},
+                            "trigger": {
+                                trigger_cfg["name"]: trigger_cfg["args"]}}
+                        })
+                    else:
+                        wconf["hooks"].append({"config": hook_cfg})
 
                 workloads.append(wconf)
             sconf["workloads"] = workloads
@@ -757,6 +812,18 @@ class TaskConfig(object):
                 if "runner" in subtask:
                     runner_type = subtask["runner"].pop("type")
                     subtask["runner"] = {runner_type: subtask["runner"]}
+                if "hooks" in subtask:
+                    hooks = subtask["hooks"]
+                    subtask["hooks"] = []
+                    for hook_cfg in hooks:
+                        trigger_cfg = hook_cfg["trigger"]
+                        subtask["hooks"].append(
+                            {"description": hook_cfg["description"],
+                             "action": {
+                                 hook_cfg["name"]: hook_cfg["args"]},
+                             "trigger": {
+                                 trigger_cfg["name"]: trigger_cfg["args"]}}
+                        )
                 subtasks.append(subtask)
         return {"title": "Task (adopted from task format v1)",
                 "subtasks": subtasks}

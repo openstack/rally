@@ -27,7 +27,6 @@ from rally.common import validation
 from rally import consts
 from rally import exceptions
 from rally.task.processing import charts
-from rally.task import trigger
 from rally.task import utils
 
 
@@ -47,9 +46,11 @@ class HookExecutor(object):
         self.triggers = collections.defaultdict(list)
         for hook in config.get("hooks", []):
             hook_cfg = hook["config"]
-            hook_cls = Hook.get(hook_cfg["name"])
-            trigger_obj = trigger.Trigger.get(
-                hook_cfg["trigger"]["name"])(hook_cfg, self.task, hook_cls)
+            action_name = list(hook_cfg["action"].keys())[0]
+            trigger_name = list(hook_cfg["trigger"].keys())[0]
+            action_cls = HookAction.get(action_name)
+            trigger_obj = HookTrigger.get(
+                trigger_name)(hook_cfg, self.task, action_cls)
             event_type = trigger_obj.get_listening_event()
             self.triggers[event_type].append(trigger_obj)
 
@@ -112,7 +113,7 @@ class HookExecutor(object):
 @validation.add_default("jsonschema")
 @plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-class Hook(plugin.Plugin, validation.ValidatablePluginMixin):
+class HookAction(plugin.Plugin, validation.ValidatablePluginMixin):
     """Factory for hook classes."""
 
     CONFIG_SCHEMA = {"type": "null"}
@@ -205,3 +206,56 @@ class Hook(plugin.Plugin, validation.ValidatablePluginMixin):
             # hook is still running, wait for result
             self._thread.join()
         return self._result
+
+
+@validation.add_default("jsonschema")
+@plugin.base()
+@six.add_metaclass(abc.ABCMeta)
+class HookTrigger(plugin.Plugin, validation.ValidatablePluginMixin):
+    """Factory for hook trigger classes."""
+
+    CONFIG_SCHEMA = {"type": "null"}
+
+    def __init__(self, hook_cfg, task, hook_cls):
+        self.hook_cfg = hook_cfg
+        self.config = self.hook_cfg["trigger"][self.get_name()]
+        self.task = task
+        self.hook_cls = hook_cls
+        self._runs = []
+
+    @abc.abstractmethod
+    def get_listening_event(self):
+        """Returns event type to listen."""
+
+    def on_event(self, event_type, value=None):
+        """Launch hook on specified event."""
+        LOG.info(_("Hook action %s is triggered for Task %s by %s=%s")
+                 % (self.hook_cls.get_name(), self.task["uuid"],
+                    event_type, value))
+        action_cfg = list(self.hook_cfg["action"].values())[0]
+        action = self.hook_cls(self.task, action_cfg,
+                               {"event_type": event_type, "value": value})
+        action.run_async()
+        self._runs.append(action)
+
+    def get_results(self):
+        results = {"config": self.hook_cfg,
+                   "results": [],
+                   "summary": {}}
+        for action in self._runs:
+            action_result = action.result()
+            results["results"].append(action_result)
+            results["summary"].setdefault(action_result["status"], 0)
+            results["summary"][action_result["status"]] += 1
+        return results
+
+
+class Hook(HookAction):
+    """DEPRECATED! USE `rally.task.hook.HookAction` instead."""
+
+    def __init__(self, *args, **kwargs):
+        super(Hook, self).__init__(*args, **kwargs)
+        LOG.warning("Please contact Rally plugin maintainer. The plugin '%s' "
+                    "inherits the deprecated base class(Hook), "
+                    "`rally.task.hook.HookAction` should be used instead."
+                    % self.get_name())
