@@ -265,7 +265,7 @@ class KeystoneMixinTestCase(test.TestCase):
         self.kc.ec2.delete.assert_called_once_with(user_id=user_id,
                                                    access=access)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_fetch_token(self, mock_clients):
         expected_token = mock_clients.return_value.keystone.auth_ref.auth_token
         self.assertEqual(expected_token, self.service.fetch_token())

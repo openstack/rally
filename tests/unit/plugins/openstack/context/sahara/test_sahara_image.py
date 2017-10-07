@@ -87,7 +87,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
     @mock.patch("rally.plugins.openstack.services."
                 "image.image.Image")
     @mock.patch("%s.resource_manager.cleanup" % CTX)
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_and_cleanup_url_image(self, mock_clients,
                                          mock_cleanup, mock_image):
 

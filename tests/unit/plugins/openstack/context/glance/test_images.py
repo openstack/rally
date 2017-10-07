@@ -65,7 +65,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         {"tenants": 3, "users_per_tenant": 2, "images_per_tenant": 5},
         {"api_versions": {"glance": {"version": 2, "service_type": "image"}}})
     @ddt.unpack
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup(self, mock_clients,
                    container_format="bare", disk_format="qcow2",
                    image_url="http://example.com/fake/url",

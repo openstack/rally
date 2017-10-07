@@ -21,7 +21,7 @@ from tests.unit import test
 
 class SwiftObjectMixinTestCase(test.TestCase):
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test__create_containers(self, mock_clients):
         tenants = 2
         containers_per_tenant = 2
@@ -56,7 +56,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                                  container["user"]["credential"])
                 self.assertEqual(0, len(container["objects"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test__create_objects(self, mock_clients):
         tenants = 2
         containers_per_tenant = 1
@@ -105,7 +105,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                 self.assertEqual(objects_per_container,
                                  len(container["objects"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test__delete_containers(self, mock_clients):
         context = test.get_test_context()
         context.update({
@@ -145,7 +145,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
             self.assertEqual(0,
                              len(context["tenants"][tenant_id]["containers"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test__delete_objects(self, mock_clients):
         context = test.get_test_context()
         context.update({

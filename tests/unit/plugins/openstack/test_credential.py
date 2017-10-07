@@ -48,14 +48,14 @@ class OpenStackCredentialTestCase(test.TestCase):
                           "profiler_hmac_key": None},
                          self.credential.to_dict())
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_verify_connection_admin(self, mock_clients):
         self.credential.verify_connection()
         mock_clients.assert_called_once_with(
             self.credential, api_info=None, cache={})
         mock_clients.return_value.verified_keystone.assert_called_once_with()
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_verify_connection_user(self, mock_clients):
         self.credential.permission = consts.EndpointPermission.USER
         self.credential.verify_connection()
@@ -63,7 +63,7 @@ class OpenStackCredentialTestCase(test.TestCase):
             self.credential, api_info=None, cache={})
         mock_clients.return_value.keystone.assert_called_once_with()
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_list_services(self, mock_clients):
         mock_clients.return_value.services.return_value = {"compute": "nova",
                                                            "volume": "cinder"}
@@ -74,7 +74,7 @@ class OpenStackCredentialTestCase(test.TestCase):
         self.assertEqual([{"name": "cinder", "type": "volume"},
                           {"name": "nova", "type": "compute"}], result)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_clients(self, mock_clients):
         clients = self.credential.clients(api_info="fake_info")
         mock_clients.assert_called_once_with(

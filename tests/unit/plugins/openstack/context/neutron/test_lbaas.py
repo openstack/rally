@@ -34,7 +34,7 @@ class LbaasTestCase(test.TestCase):
                 "tenants": {"foo_tenant": foo_tenant,
                             "bar_tenant": bar_tenant}}
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__default(self, mock_wrap, mock_clients):
         context = lbaas_context.Lbaas(self.get_context())
@@ -48,7 +48,7 @@ class LbaasTestCase(test.TestCase):
             context.config["lbaas_version"],
             lbaas_context.Lbaas.DEFAULT_CONFIG["lbaas_version"])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__explicit(self, mock_wrap, mock_clients):
         context = lbaas_context.Lbaas(
@@ -58,7 +58,7 @@ class LbaasTestCase(test.TestCase):
 
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.neutron.lbaas.utils")
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_with_lbaas(self, mock_clients, mock_utils, mock_wrap):
         mock_utils.iterate_per_tenants.return_value = [
             ("foo_user", "foo_tenant"),
@@ -96,7 +96,7 @@ class LbaasTestCase(test.TestCase):
 
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.neutron.lbaas.utils")
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_with_no_lbaas(self, mock_clients, mock_utils, mock_wrap):
         mock_utils.iterate_per_tenants.return_value = [
             ("bar_user", "bar_tenant")]
@@ -113,7 +113,7 @@ class LbaasTestCase(test.TestCase):
 
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.neutron.lbaas.utils")
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_with_lbaas_version_not_one(self, mock_clients,
                                               mock_utils, mock_wrap):
         mock_utils.iterate_per_tenants.return_value = [
@@ -126,7 +126,7 @@ class LbaasTestCase(test.TestCase):
         net_wrapper.supports_extension.return_value = (True, None)
         self.assertRaises(NotImplementedError, lb_context.setup)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap")
     def test_cleanup(self, mock_wrap, mock_clients):
         net_wrapper = mock_wrap(mock_clients.return_value)
@@ -143,7 +143,7 @@ class LbaasTestCase(test.TestCase):
         net_wrapper.delete_v1_pool.assert_has_calls(
             [mock.call(pool["pool"]["id"]) for pool in expected_pools])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(NET + "wrap")
     def test_cleanup_lbaas_version_not_one(self, mock_wrap, mock_clients):
         fakeargs = {"lbaas_version": 2}

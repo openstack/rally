@@ -25,8 +25,8 @@ from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
 from rally import exceptions
-from rally import osclients
 from rally.plugins.openstack import credential
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.services.identity import identity
 from rally.plugins.openstack.wrappers import network
 from rally.task import context

@@ -22,7 +22,7 @@ from tests.unit import test
 
 class SwiftObjectGeneratorTestCase(test.TestCase):
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup(self, mock_clients):
         containers_per_tenant = 2
         objects_per_container = 7
@@ -64,7 +64,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 self.assertEqual(objects_per_container,
                                  len(container["objects"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context.swift.utils."
                 "swift_utils.SwiftScenario")
     def test_cleanup(self, mock_swift_scenario, mock_clients):
@@ -114,7 +114,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
             self.assertEqual(0,
                              len(context["tenants"][tenant_id]["containers"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_failure_clients_put_container(self, mock_clients):
         context = test.get_test_context()
         context.update({
@@ -150,7 +150,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                                "containers, expected 4 but got 1",
                                objects_ctx.setup)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_setup_failure_clients_put_object(self, mock_clients):
         context = test.get_test_context()
         context.update({
@@ -178,7 +178,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                                "objects, expected 2 but got 1",
                                objects_ctx.setup)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_cleanup_failure_clients_delete_container(self, mock_clients):
         context = test.get_test_context()
         context.update({
@@ -199,7 +199,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
         objects_ctx.cleanup()
         self.assertEqual(1, len(context["tenants"]["t1"]["containers"]))
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_cleanup_failure_clients_delete_object(self, mock_clients):
         context = test.get_test_context()
         context.update({

@@ -17,8 +17,8 @@ from rally.common import logging
 from rally.common import utils as rutils
 from rally.common import validation
 from rally import consts
-from rally import osclients
 from rally.plugins.openstack.cleanup import manager as resource_manager
+from rally.plugins.openstack import osclients
 from rally.task import context
 
 LOG = logging.getLogger(__name__)

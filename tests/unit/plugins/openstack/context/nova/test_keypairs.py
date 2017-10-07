@@ -78,7 +78,7 @@ class KeyPairContextTestCase(test.TestCase):
             superclass=keypairs.Keypair,
             task_id=self.ctx_with_keys["task"]["uuid"])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     def test_keypair_generate(self, mock_clients):
         mock_keypairs = mock_clients.return_value.nova.return_value.keypairs
         mock_keypair = mock_keypairs.create.return_value

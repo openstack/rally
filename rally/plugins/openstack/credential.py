@@ -16,7 +16,7 @@
 from rally.common import logging
 from rally import consts
 from rally.deployment import credential
-from rally import osclients
+from rally.plugins.openstack import osclients
 
 LOG = logging.getLogger(__file__)
 

@@ -25,7 +25,8 @@ class OpenStackServicesTestCase(test.TestCase):
 
     def setUp(self):
         super(OpenStackServicesTestCase, self).setUp()
-        self.mock_clients = mock.patch("rally.osclients.Clients").start()
+        self.mock_clients = mock.patch(
+            "rally.plugins.openstack.osclients.Clients").start()
         osclient_kc = self.mock_clients.return_value.keystone
         self.mock_kc = osclient_kc.return_value
         self.service_catalog = osclient_kc.service_catalog

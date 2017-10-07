@@ -17,7 +17,7 @@ import mock
 from oslo_config import cfg
 
 from rally import exceptions
-from rally import osclients
+from rally.plugins.openstack import osclients
 from rally.plugins.openstack.scenarios.cinder import utils
 from tests.unit import fakes
 from tests.unit import test

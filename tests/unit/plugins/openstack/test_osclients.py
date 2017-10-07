@@ -19,8 +19,8 @@ from oslo_config import cfg
 
 from rally import consts
 from rally import exceptions
-from rally import osclients
 from rally.plugins.openstack import credential as oscredential
+from rally.plugins.openstack import osclients
 from tests.unit import fakes
 from tests.unit import test
 

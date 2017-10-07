@@ -24,8 +24,8 @@ from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.context.manila import manila_share_networks
 from tests.unit import test
 
-MANILA_UTILS_PATH = ("rally.plugins.openstack.scenarios.manila.utils."
-                     "ManilaScenario.")
+MANILA_UTILS_PATH = (
+    "rally.plugins.openstack.scenarios.manila.utils.ManilaScenario.")
 
 MOCK_USER_CREDENTIAL = mock.MagicMock()
 
@@ -167,7 +167,7 @@ class ShareNetworksTestCase(test.TestCase):
 
         self.assertEqual(expected_ctxt, inst.context)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_list_share_networks")
     def test_setup_use_existing_share_networks(
             self, mock_manila_scenario__list_share_networks, mock_clients):
@@ -215,7 +215,7 @@ class ShareNetworksTestCase(test.TestCase):
 
         self.assertRaises(exceptions.ContextSetupFailure, inst.setup)
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_list_share_networks")
     def test_setup_use_existing_share_networks_sn_not_found(
             self, mock_manila_scenario__list_share_networks, mock_clients):
@@ -237,7 +237,7 @@ class ShareNetworksTestCase(test.TestCase):
         self.assertRaises(exceptions.ContextSetupFailure, inst.setup)
 
     @ddt.data(True, False)
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
     def test_setup_autocreate_share_networks_with_security_services(
@@ -295,7 +295,7 @@ class ShareNetworksTestCase(test.TestCase):
                                       for i in range(self.TENANTS_AMOUNT)])
 
     @ddt.data(True, False)
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
     def test_setup_autocreate_share_networks_wo_security_services(
@@ -332,7 +332,7 @@ class ShareNetworksTestCase(test.TestCase):
         mock_clients.assert_has_calls([mock.call(MOCK_USER_CREDENTIAL, {})
                                       for i in range(self.TENANTS_AMOUNT)])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_create_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_add_security_service_to_share_network")
     def test_setup_autocreate_share_networks_wo_networks(
@@ -357,7 +357,7 @@ class ShareNetworksTestCase(test.TestCase):
         mock_clients.assert_has_calls([mock.call(MOCK_USER_CREDENTIAL, {})
                                       for i in range(self.TENANTS_AMOUNT)])
 
-    @mock.patch("rally.osclients.Clients")
+    @mock.patch("rally.plugins.openstack.osclients.Clients")
     @mock.patch(MANILA_UTILS_PATH + "_delete_share_network")
     @mock.patch(MANILA_UTILS_PATH + "_list_share_servers")
     @mock.patch(MANILA_UTILS_PATH + "_list_share_networks")

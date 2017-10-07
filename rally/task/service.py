@@ -185,7 +185,7 @@ class Service(meta.MetaMixin):
     def __init__(self, clients, name_generator=None, atomic_inst=None):
         """Initialize service class
 
-        :param clients: an instance of rally.osclients.Clients
+        :param clients: instance of rally.plugins.openstack.osclients.Clients
         :param name_generator: a method for generating random names. Usually
             it is generate_random_name method of RandomNameGeneratorMixin
             instance.
@@ -263,7 +263,7 @@ class UnifiedService(Service):
     def __init__(self, clients, name_generator=None, atomic_inst=None):
         """Initialize service class
 
-        :param clients: an instance of rally.osclients.Clients
+        :param clients: instance of rally.plugins.openstack.osclients.Clients
         :param name_generator: a method for generating random names. Usually
             it is generate_random_name method of RandomNameGeneratorMixin
             instance.
