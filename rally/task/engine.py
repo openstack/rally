@@ -42,7 +42,6 @@ TASK_ENGINE_OPTS = [
     cfg.IntOpt("raw_result_chunk_size", default=1000, min=1,
                help="Size of raw result chunk in iterations"),
 ]
-CONF.register_opts(TASK_ENGINE_OPTS)
 
 
 class ResultConsumer(object):

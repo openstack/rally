@@ -18,10 +18,6 @@ from oslo_config import cfg
 
 from rally.task import utils
 
-
-from rally.common import opts
-opts.register()
-
 CONF = cfg.CONF
 
 cleanup_group = cfg.OptGroup(name="cleanup", title="Cleanup Options")
