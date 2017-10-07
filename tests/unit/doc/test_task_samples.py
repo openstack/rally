@@ -85,7 +85,7 @@ class TaskSampleTestCase(test.TestCase):
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid JSON file: %s" % path)
-                    eng = engine.TaskEngine(task_config,
+                    eng = engine.TaskEngine(engine.TaskConfig(task_config),
                                             mock.MagicMock(), mock.Mock())
                     eng.validate(only_syntax=True)
                 except Exception:

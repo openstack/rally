@@ -392,6 +392,13 @@ class _Task(APIGroup):
             task = objects.Task(deployment_uuid=deployment, temporary=True)
         deployment = objects.Deployment.get(deployment)
 
+        try:
+            config = engine.TaskConfig(config)
+        except Exception as e:
+            if logging.is_debug():
+                LOG.exception("Invalid Task")
+            raise exceptions.InvalidTaskException(str(e))
+
         engine.TaskEngine(config, task, deployment).validate()
 
     def start(self, deployment, config, task=None, abort_on_sla_failure=False):
@@ -429,8 +436,17 @@ class _Task(APIGroup):
                 uuid=deployment["uuid"],
                 status=deployment["status"])
 
+        try:
+            config = engine.TaskConfig(config)
+        except Exception as e:
+            if logging.is_debug():
+                LOG.exception("Invalid Task")
+            raise exceptions.InvalidTaskException(str(e))
+
         if task is None:
-            task = objects.Task(deployment_uuid=deployment["uuid"])
+            task = objects.Task(deployment_uuid=deployment["uuid"],
+                                title=config.title,
+                                description=config.description)
 
         task_engine = engine.TaskEngine(
             config, task, deployment,
