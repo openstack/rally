@@ -22,8 +22,7 @@ from rally.plugins.openstack.services.image import glance_v2
 from tests.unit import test
 
 
-PATH = ("rally.plugins.openstack.services.image.glance_common."
-        "UnifiedGlanceMixin._unify_image")
+PATH = "rally.plugins.openstack.services.image"
 
 
 @ddt.ddt
@@ -46,12 +45,29 @@ class GlanceV2ServiceTestCase(test.TestCase):
     @ddt.unpack
     @mock.patch("requests.get")
     @mock.patch("six.moves.builtins.open")
-    def test_create_image(self, mock_open, mock_requests_get, location):
+    def test_upload(self, mock_open, mock_requests_get, location):
+        image_id = "foo"
+
+        self.service.upload_data(image_id, image_location=location)
+
+        if location.startswith("/"):
+            mock_open.assert_called_once_with(location)
+            mock_open.return_value.close.assert_called_once_with()
+            self.gc.images.upload.assert_called_once_with(
+                image_id, mock_open.return_value)
+        else:
+            mock_requests_get.assert_called_once_with(location, stream=True)
+            self.gc.images.upload.assert_called_once_with(
+                image_id, mock_requests_get.return_value.raw)
+
+    @mock.patch("%s.glance_v2.GlanceV2Service.upload_data" % PATH)
+    def test_create_image(self, mock_upload_data):
         image_name = "image_name"
         container_format = "container_format"
         disk_format = "disk_format"
         visibility = "public"
         properties = {"fakeprop": "fake"}
+        location = "location"
 
         image = self.service.create_image(
             image_name=image_name,
@@ -68,14 +84,11 @@ class GlanceV2ServiceTestCase(test.TestCase):
                      "min_disk": 0,
                      "min_ram": 0,
                      "fakeprop": "fake"}
-
-        if location.startswith("/"):
-            mock_open.assert_called_once_with(location)
-            mock_open.return_value.close.assert_called_once_with()
-        else:
-            mock_requests_get.assert_called_once_with(location, stream=True)
         self.gc.images.create.assert_called_once_with(**call_args)
         self.assertEqual(image, self.mock_wait_for_status.mock.return_value)
+        mock_upload_data.assert_called_once_with(
+            self.mock_wait_for_status.mock.return_value.id,
+            image_location=location)
 
     def test_update_image(self):
         image_id = "image_id"
@@ -149,7 +162,7 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
         self.service = glance_v2.UnifiedGlanceV2Service(self.clients)
         self.service._impl = mock.create_autospec(self.service._impl)
 
-    @mock.patch(PATH)
+    @mock.patch("%s.glance_common.UnifiedGlanceMixin._unify_image" % PATH)
     def test_create_image(self, mock_image__unify_image):
         image_name = "image_name"
         container_format = "container_format"
@@ -176,7 +189,7 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
         self.assertEqual(mock_image__unify_image.return_value, image)
         self.service._impl.create_image.assert_called_once_with(**callargs)
 
-    @mock.patch(PATH)
+    @mock.patch("%s.glance_common.UnifiedGlanceMixin._unify_image" % PATH)
     def test_update_image(self, mock_image__unify_image):
         image_id = "image_id"
         image_name = "image_name"
@@ -192,7 +205,7 @@ class UnifiedGlanceV2ServiceTestCase(test.TestCase):
         self.assertEqual(mock_image__unify_image.return_value, image)
         self.service._impl.update_image.assert_called_once_with(**callargs)
 
-    @mock.patch(PATH)
+    @mock.patch("%s.glance_common.UnifiedGlanceMixin._unify_image" % PATH)
     def test_list_images(self, mock_image__unify_image):
         images = [mock.MagicMock()]
         self.service._impl.list_images.return_value = images
