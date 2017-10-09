@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common.plugin import plugin
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
@@ -22,14 +23,16 @@ from rally.task import validation
 """Scenarios for Nova images."""
 
 
+@plugin.deprecated("The image proxy-interface was removed from Nova-API. Use "
+                   "Glance related scenarios instead "
+                   "(i.e GlanceImages.list_images.", rally_version="0.10.0")
 @validation.add("required_services", services=[consts.Service.NOVA])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(name="NovaImages.list_images",
-                    platform="openstack")
+@scenario.configure(name="NovaImages.list_images", platform="openstack")
 class ListImages(utils.NovaScenario):
 
     def run(self, detailed=True, **kwargs):
-        """List all images.
+        """[DEPRECATED] List all images.
 
         Measure the "nova image-list" command performance.
 
