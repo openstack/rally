@@ -84,7 +84,7 @@ class NovaServerTestCase(test.TestCase):
 
         server.list()
 
-        server._manager.return_value.list.assert_called_once_with()
+        server._manager.return_value.list.assert_called_once_with(limit=-1)
 
     def test_delete(self):
         server = resources.NovaServer()
