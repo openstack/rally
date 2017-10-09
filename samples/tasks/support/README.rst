@@ -8,5 +8,4 @@ To run this workload, the VM must have linpack installed prior to running.
 instance_test.sh
 ================
 
-instance_test.sh loads server by spawning processes. Finally, it outputs
-JSON data for HTML report charts, with values of CPU, memory and disk usage.
+The script was absorbed by VMTasks.dd_load_test scenario.
