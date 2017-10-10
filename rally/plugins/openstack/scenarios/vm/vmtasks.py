@@ -438,7 +438,7 @@ EOF
 additive_dd() {
     local c=${1:-50} # Megabytes
     local file=/tmp/dd_test.img
-    local write=$(get_seconds "dd if=/dev/urandom of=${file} bs=1M count=${c}")
+    local write=$(get_seconds "dd if=/dev/zero of=${file} bs=1M count=${c}")
     local read=$(get_seconds "dd if=${file} of=/dev/null bs=1M count=${c}")
     local gzip=$(get_seconds "gzip ${file}")
     rm ${file}.gz
