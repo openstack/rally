@@ -62,6 +62,12 @@ class GlanceMixinTestCase(test.TestCase):
         self.service.delete_image(image)
         self.glance.images.delete.assert_called_once_with(image)
 
+    def test_download_image(self):
+        image_id = "image_id"
+        self.service.download_image(image_id)
+        self.glance.images.data.assert_called_once_with(image_id,
+                                                        do_checksum=True)
+
 
 class FullUnifiedGlance(glance_common.UnifiedGlanceMixin,
                         service.Service):
@@ -113,3 +119,9 @@ class UnifiedGlanceMixinTestCase(test.TestCase):
         self.service.delete_image(image_id)
         self.service._impl.delete_image.assert_called_once_with(
             image_id=image_id)
+
+    def test_download_image(self):
+        image_id = "image_id"
+        self.service.download_image(image_id)
+        self.service._impl.download_image.assert_called_once_with(
+            image_id, do_checksum=True)

@@ -101,6 +101,13 @@ class ImageTestCase(test.TestCase):
         service.delete_image(image_id=image_id)
         service._impl.delete_image.assert_called_once_with(image_id)
 
+    def test_download_image(self):
+        image_id = "image_id"
+        service = self.get_service_with_fake_impl()
+        service.download_image(image=image_id, do_checksum=True)
+        service._impl.download_image.assert_called_once_with(image_id,
+                                                             do_checksum=True)
+
     def test_is_applicable(self):
         clients = mock.Mock()
 

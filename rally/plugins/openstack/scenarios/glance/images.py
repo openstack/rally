@@ -334,3 +334,44 @@ class CreateAndDeactivateImage(GlanceBasic):
             min_disk=min_disk,
             min_ram=min_ram)
         service.deactivate_image(image.id)
+
+
+@validation.add("enum", param_name="container_format",
+                values=["ami", "ari", "aki", "bare", "ovf"])
+@validation.add("enum", param_name="disk_format",
+                values=["ami", "ari", "aki", "vhd", "vmdk", "raw",
+                        "qcow2", "vdi", "iso"])
+@types.convert(image_location={"type": "path_or_url"},
+               kwargs={"type": "glance_image_args"})
+@validation.add("required_services", services=[consts.Service.GLANCE])
+@validation.add("required_platform", platform="openstack", users=True)
+@scenario.configure(context={"cleanup": ["glance"]},
+                    name="GlanceImages.create_and_download_image",
+                    platform="openstack")
+class CreateAndDownloadImage(GlanceBasic):
+
+    def run(self, container_format, image_location, disk_format,
+            visibility="private", min_disk=0, min_ram=0, properties=None):
+        """Create an image, then download data of the image.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param visibility: The access permission for the created image
+        :param min_disk: The min disk of created images
+        :param min_ram: The min ram of created images
+        :param properties: A dict of image metadata properties to set
+                           on the image
+        """
+        image = self.glance.create_image(
+            container_format=container_format,
+            image_location=image_location,
+            disk_format=disk_format,
+            visibility=visibility,
+            min_disk=min_disk,
+            min_ram=min_ram,
+            properties=properties)
+
+        self.glance.download_image(image.id)
