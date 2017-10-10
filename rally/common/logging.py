@@ -37,15 +37,15 @@ oslogging.register_options(CONF)
 log.RDEBUG = log.DEBUG + 1
 log.addLevelName(log.RDEBUG, "RALLYDEBUG")
 
-CRITICAL = log.CRITICAL
-DEBUG = log.DEBUG
-ERROR = log.ERROR
-FATAL = log.FATAL
-INFO = log.INFO
-NOTSET = log.NOTSET
-RDEBUG = log.RDEBUG
-WARN = log.WARN
-WARNING = log.WARNING
+CRITICAL = log.CRITICAL  # 50
+FATAL = log.FATAL        # 50
+ERROR = log.ERROR        # 40
+WARN = log.WARN          # 30
+WARNING = log.WARNING    # 30
+INFO = log.INFO          # 20
+RDEBUG = log.RDEBUG      # 11
+DEBUG = log.DEBUG        # 10
+NOTSET = log.NOTSET      # 0
 
 
 def setup(product_name, version="unknown"):
