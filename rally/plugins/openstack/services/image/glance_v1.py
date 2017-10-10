@@ -65,14 +65,14 @@ class GlanceV1Service(service.Service, glance_common.GlanceMixin):
                 properties=properties,
                 **kwargs)
 
-            rutils.interruptable_sleep(CONF.benchmark.
+            rutils.interruptable_sleep(CONF.openstack.
                                        glance_image_create_prepoll_delay)
 
             image_obj = utils.wait_for_status(
                 image_obj, ["active"],
                 update_resource=self.get_image,
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=CONF.benchmark.glance_image_create_poll_interval
+                timeout=CONF.openstack.glance_image_create_timeout,
+                check_interval=CONF.openstack.glance_image_create_poll_interval
             )
 
         finally:

@@ -15,7 +15,9 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
-    cfg.BoolOpt("enable_profiler", default=True,
+OPTS = {"openstack": [
+    cfg.BoolOpt("enable_profiler",
+        default=True,
+        deprecated_group="benchmark",
         help="Enable or disable osprofiler to trace the scenarios")
 ]}

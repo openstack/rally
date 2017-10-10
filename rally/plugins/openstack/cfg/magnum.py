@@ -15,31 +15,38 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("magnum_cluster_create_prepoll_delay",
                  default=5.0,
+                 deprecated_group="benchmark",
                  help="Time(in sec) to sleep after creating a resource before "
                       "polling for the status."),
     cfg.FloatOpt("magnum_cluster_create_timeout",
                  default=2400.0,
+                 deprecated_group="benchmark",
                  help="Time(in sec) to wait for magnum cluster to be "
                       "created."),
     cfg.FloatOpt("magnum_cluster_create_poll_interval",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Time interval(in sec) between checks when waiting for "
                       "cluster creation."),
     cfg.FloatOpt("k8s_pod_create_timeout",
                  default=1200.0,
+                 deprecated_group="benchmark",
                  help="Time(in sec) to wait for k8s pod to be created."),
     cfg.FloatOpt("k8s_pod_create_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Time interval(in sec) between checks when waiting for "
                       "k8s pod creation."),
     cfg.FloatOpt("k8s_rc_create_timeout",
                  default=1200.0,
+                 deprecated_group="benchmark",
                  help="Time(in sec) to wait for k8s rc to be created."),
     cfg.FloatOpt("k8s_rc_create_poll_interval",
                  default=1.0,
+                 deprecated_group="benchmark",
                  help="Time interval(in sec) between checks when waiting for "
-                      "k8s rc creation."),
+                      "k8s rc creation.")
 ]}

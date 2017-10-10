@@ -52,8 +52,8 @@ class CinderMixin(object):
             volume,
             ready_statuses=["available"],
             update_resource=self._update_resource,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
 
     def list_volumes(self, detailed=True):
@@ -78,8 +78,8 @@ class CinderMixin(object):
                 ready_statuses=["deleted"],
                 check_deletion=True,
                 update_resource=self._update_resource,
-                timeout=CONF.benchmark.cinder_volume_delete_timeout,
-                check_interval=(CONF.benchmark
+                timeout=CONF.openstack.cinder_volume_delete_timeout,
+                check_interval=(CONF.openstack
                                 .cinder_volume_delete_poll_interval)
             )
 
@@ -196,8 +196,8 @@ class CinderMixin(object):
                 image_inst,
                 ready_statuses=["active"],
                 update_resource=glance.get_image,
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=(CONF.benchmark
+                timeout=CONF.openstack.glance_image_create_timeout,
+                check_interval=(CONF.openstack
                                 .glance_image_create_poll_interval)
             )
 
@@ -291,8 +291,8 @@ class CinderMixin(object):
                 ready_statuses=["deleted"],
                 check_deletion=True,
                 update_resource=self._update_resource,
-                timeout=CONF.benchmark.cinder_volume_delete_timeout,
-                check_interval=(CONF.benchmark
+                timeout=CONF.openstack.cinder_volume_delete_timeout,
+                check_interval=(CONF.openstack
                                 .cinder_volume_delete_poll_interval)
             )
 
@@ -311,8 +311,8 @@ class CinderMixin(object):
                 ready_statuses=["deleted"],
                 check_deletion=True,
                 update_resource=self._update_resource,
-                timeout=CONF.benchmark.cinder_volume_delete_timeout,
-                check_interval=(CONF.benchmark
+                timeout=CONF.openstack.cinder_volume_delete_timeout,
+                check_interval=(CONF.openstack
                                 .cinder_volume_delete_poll_interval)
             )
 

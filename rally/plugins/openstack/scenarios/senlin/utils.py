@@ -82,7 +82,7 @@ class SenlinScenario(scenario.OpenStackScenario):
             ready_statuses=["ACTIVE"],
             failure_statuses=["ERROR"],
             update_resource=self._get_cluster,
-            timeout=CONF.benchmark.senlin_action_timeout)
+            timeout=CONF.openstack.senlin_action_timeout)
 
         return cluster
 
@@ -115,7 +115,7 @@ class SenlinScenario(scenario.OpenStackScenario):
             failure_statuses=["ERROR"],
             check_deletion=True,
             update_resource=self._get_cluster,
-            timeout=CONF.benchmark.senlin_action_timeout)
+            timeout=CONF.openstack.senlin_action_timeout)
 
     @atomic.action_timer("senlin.create_profile")
     def _create_profile(self, spec, metadata=None):

@@ -90,7 +90,7 @@ class MonascaMetricGeneratorTestCase(test.TestCase):
                          "Total number of metrics created should be tenant"
                          "counts times metrics per tenant")
         first_call = mock.call(0.001)
-        second_call = mock.call(monasca_utils.CONF.benchmark.
+        second_call = mock.call(monasca_utils.CONF.openstack.
                                 monasca_metric_create_prepoll_delay,
                                 atomic_delay=1)
         self.assertEqual([first_call] * metrics_per_tenant * tenants_count +

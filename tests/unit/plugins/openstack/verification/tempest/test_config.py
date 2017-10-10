@@ -210,8 +210,8 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         self.tempest._configure_object_storage()
 
         expected = (
-            ("operator_role", CONF.tempest.swift_operator_role),
-            ("reseller_admin_role", CONF.tempest.swift_reseller_admin_role))
+            ("operator_role", CONF.openstack.swift_operator_role),
+            ("reseller_admin_role", CONF.openstack.swift_reseller_admin_role))
         result = self.tempest.conf.items("object-storage")
         for item in expected:
             self.assertIn(item, result)
@@ -221,8 +221,8 @@ class TempestConfigfileManagerTestCase(test.TestCase):
         self.tempest._configure_orchestration()
 
         expected = (
-            ("stack_owner_role", CONF.tempest.heat_stack_owner_role),
-            ("stack_user_role", CONF.tempest.heat_stack_user_role))
+            ("stack_owner_role", CONF.openstack.heat_stack_owner_role),
+            ("stack_user_role", CONF.openstack.heat_stack_user_role))
         result = self.tempest.conf.items("orchestration")
         for item in expected:
             self.assertIn(item, result)

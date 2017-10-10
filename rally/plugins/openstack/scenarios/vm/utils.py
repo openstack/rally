@@ -201,8 +201,8 @@ class VMScenario(nova_utils.NovaScenario):
             server,
             ready_statuses=[Host.ICMP_UP_STATUS],
             update_resource=Host.update_status,
-            timeout=CONF.benchmark.vm_ping_timeout,
-            check_interval=CONF.benchmark.vm_ping_poll_interval
+            timeout=CONF.openstack.vm_ping_timeout,
+            check_interval=CONF.openstack.vm_ping_poll_interval
         )
 
     def _run_command(self, server_ip, port, username, password, command,

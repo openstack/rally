@@ -88,7 +88,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
             environment.id, session.id
         )
 
-        config = CONF.benchmark
+        config = CONF.openstack
         self.mock_wait_for.mock.assert_called_once_with(
             environment,
             update_resource=self.mock_get_from_manager.mock.return_value,

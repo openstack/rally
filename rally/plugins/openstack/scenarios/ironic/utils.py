@@ -57,13 +57,13 @@ class IronicScenario(scenario.OpenStackScenario):
                                                         properties=properties,
                                                         **kwargs)
 
-        self.sleep_between(CONF.benchmark.ironic_node_create_poll_interval)
+        self.sleep_between(CONF.openstack.ironic_node_create_poll_interval)
         node = utils.wait_for_status(
             node,
             ready_statuses=["AVAILABLE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.ironic_node_create_timeout,
-            check_interval=CONF.benchmark.ironic_node_poll_interval,
+            timeout=CONF.openstack.ironic_node_create_timeout,
+            check_interval=CONF.openstack.ironic_node_poll_interval,
             id_attr="uuid", status_attr="provision_state"
         )
 
@@ -106,7 +106,7 @@ class IronicScenario(scenario.OpenStackScenario):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.ironic_node_delete_timeout,
-            check_interval=CONF.benchmark.ironic_node_poll_interval,
+            timeout=CONF.openstack.ironic_node_delete_timeout,
+            check_interval=CONF.openstack.ironic_node_poll_interval,
             id_attr="uuid", status_attr="provision_state"
         )

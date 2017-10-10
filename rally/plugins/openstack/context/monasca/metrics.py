@@ -93,7 +93,7 @@ class MonascaMetricGenerator(context.Context):
                 scenario._create_metrics(**new_metric)
                 rutils.interruptable_sleep(0.001)
         rutils.interruptable_sleep(
-            monasca_utils.CONF.benchmark.monasca_metric_create_prepoll_delay,
+            monasca_utils.CONF.openstack.monasca_metric_create_prepoll_delay,
             atomic_delay=1)
 
     def cleanup(self):

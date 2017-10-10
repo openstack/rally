@@ -15,20 +15,23 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt(
         "ec2_server_boot_prepoll_delay",
         default=1.0,
+        deprecated_group="benchmark",
         help="Time to sleep after boot before polling for status"
     ),
     cfg.FloatOpt(
         "ec2_server_boot_timeout",
         default=300.0,
+        deprecated_group="benchmark",
         help="Server boot timeout"
     ),
     cfg.FloatOpt(
         "ec2_server_boot_poll_interval",
         default=1.0,
+        deprecated_group="benchmark",
         help="Server boot poll interval"
     )
 ]}

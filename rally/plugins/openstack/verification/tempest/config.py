@@ -167,9 +167,9 @@ class TempestConfigfileManager(object):
 
     def _configure_object_storage(self, section_name="object-storage"):
         self.conf.set(section_name, "operator_role",
-                      CONF.tempest.swift_operator_role)
+                      CONF.openstack.swift_operator_role)
         self.conf.set(section_name, "reseller_admin_role",
-                      CONF.tempest.swift_reseller_admin_role)
+                      CONF.openstack.swift_reseller_admin_role)
 
     def _configure_service_available(self, section_name="service_available"):
         services = ["cinder", "glance", "heat", "ironic", "neutron", "nova",
@@ -188,9 +188,9 @@ class TempestConfigfileManager(object):
 
     def _configure_orchestration(self, section_name="orchestration"):
         self.conf.set(section_name, "stack_owner_role",
-                      CONF.tempest.heat_stack_owner_role)
+                      CONF.openstack.heat_stack_owner_role)
         self.conf.set(section_name, "stack_user_role",
-                      CONF.tempest.heat_stack_user_role)
+                      CONF.openstack.heat_stack_user_role)
 
     def create(self, conf_path, extra_options=None):
         self.conf.read(os.path.join(os.path.dirname(__file__), "config.ini"))

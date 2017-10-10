@@ -15,22 +15,29 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
-    cfg.IntOpt("sahara_cluster_create_timeout", default=1800,
-               deprecated_name="cluster_create_timeout",
+OPTS = {"openstack": [
+    cfg.IntOpt("sahara_cluster_create_timeout",
+               default=1800,
+               deprecated_group="benchmark",
                help="A timeout in seconds for a cluster create operation"),
-    cfg.IntOpt("sahara_cluster_delete_timeout", default=900,
-               deprecated_name="cluster_delete_timeout",
+    cfg.IntOpt("sahara_cluster_delete_timeout",
+               default=900,
+               deprecated_group="benchmark",
                help="A timeout in seconds for a cluster delete operation"),
-    cfg.IntOpt("sahara_cluster_check_interval", default=5,
-               deprecated_name="cluster_check_interval",
+    cfg.IntOpt("sahara_cluster_check_interval",
+               default=5,
+               deprecated_group="benchmark",
                help="Cluster status polling interval in seconds"),
-    cfg.IntOpt("sahara_job_execution_timeout", default=600,
-               deprecated_name="job_execution_timeout",
+    cfg.IntOpt("sahara_job_execution_timeout",
+               default=600,
+               deprecated_group="benchmark",
                help="A timeout in seconds for a Job Execution to complete"),
-    cfg.IntOpt("sahara_job_check_interval", default=5,
-               deprecated_name="job_check_interval",
+    cfg.IntOpt("sahara_job_check_interval",
+               default=5,
+               deprecated_group="benchmark",
                help="Job Execution status polling interval in seconds"),
-    cfg.IntOpt("sahara_workers_per_proxy", default=20,
+    cfg.IntOpt("sahara_workers_per_proxy",
+               default=20,
+               deprecated_group="benchmark",
                help="Amount of workers one proxy should serve to.")
 ]}

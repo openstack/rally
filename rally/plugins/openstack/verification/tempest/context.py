@@ -76,10 +76,10 @@ class TempestContext(context.VerifierContext):
                                helper_method=self._discover_or_create_image)
         self._configure_option("compute", "flavor_ref",
                                helper_method=self._discover_or_create_flavor,
-                               flv_ram=conf.CONF.tempest.flavor_ref_ram)
+                               flv_ram=conf.CONF.openstack.flavor_ref_ram)
         self._configure_option("compute", "flavor_ref_alt",
                                helper_method=self._discover_or_create_flavor,
-                               flv_ram=conf.CONF.tempest.flavor_ref_alt_ram)
+                               flv_ram=conf.CONF.openstack.flavor_ref_alt_ram)
         if "neutron" in self.available_services:
             neutronclient = self.clients.neutron()
             if neutronclient.list_networks(shared=True)["networks"]:
@@ -99,7 +99,7 @@ class TempestContext(context.VerifierContext):
             self._configure_option(
                 "orchestration", "instance_type",
                 helper_method=self._discover_or_create_flavor,
-                flv_ram=conf.CONF.tempest.heat_instance_type_ram)
+                flv_ram=conf.CONF.openstack.heat_instance_type_ram)
 
         with open(self.conf_path, "w") as configfile:
             self.conf.write(configfile)
@@ -121,10 +121,10 @@ class TempestContext(context.VerifierContext):
 
     def _create_tempest_roles(self):
         keystoneclient = self.clients.verified_keystone()
-        roles = [conf.CONF.tempest.swift_operator_role,
-                 conf.CONF.tempest.swift_reseller_admin_role,
-                 conf.CONF.tempest.heat_stack_owner_role,
-                 conf.CONF.tempest.heat_stack_user_role]
+        roles = [conf.CONF.openstack.swift_operator_role,
+                 conf.CONF.openstack.swift_reseller_admin_role,
+                 conf.CONF.openstack.heat_stack_owner_role,
+                 conf.CONF.openstack.heat_stack_user_role]
         existing_roles = set(role.name for role in keystoneclient.roles.list())
 
         for role in roles:
@@ -154,19 +154,20 @@ class TempestContext(context.VerifierContext):
     def _discover_image(self):
         LOG.debug("Trying to discover a public image with name matching "
                   "regular expression '%s'. Note that case insensitive "
-                  "matching is performed." % conf.CONF.tempest.img_name_regex)
+                  "matching is performed."
+                  % conf.CONF.openstack.img_name_regex)
         image_service = image.Image(self.clients)
         images = image_service.list_images(status="active",
                                            visibility="public")
         for image_obj in images:
-            if image_obj.name and re.match(conf.CONF.tempest.img_name_regex,
+            if image_obj.name and re.match(conf.CONF.openstack.img_name_regex,
                                            image_obj.name, re.IGNORECASE):
                 LOG.debug("The following public image discovered: '%s'."
                           % image_obj.name)
                 return image_obj
 
         LOG.debug("There is no public image with name matching regular "
-                  "expression '%s'." % conf.CONF.tempest.img_name_regex)
+                  "expression '%s'." % conf.CONF.openstack.img_name_regex)
 
     def _download_image_from_source(self, target_path, image=None):
         if image:
@@ -177,9 +178,10 @@ class TempestContext(context.VerifierContext):
                     image_file.write(chunk)
         else:
             LOG.debug("Downloading image from %s to %s."
-                      % (conf.CONF.tempest.img_url, target_path))
+                      % (conf.CONF.openstack.img_url, target_path))
             try:
-                response = requests.get(conf.CONF.tempest.img_url, stream=True)
+                response = requests.get(conf.CONF.openstack.img_url,
+                                        stream=True)
             except requests.ConnectionError as err:
                 msg = ("Failed to download image. Possibly there is no "
                        "connection to Internet. Error: %s."
@@ -208,7 +210,7 @@ class TempestContext(context.VerifierContext):
             LOG.debug("Image is already downloaded to %s." % image_path)
             return
 
-        if conf.CONF.tempest.img_name_regex:
+        if conf.CONF.openstack.img_name_regex:
             image = self._discover_image()
             if image:
                 return self._download_image_from_source(image_path, image)
@@ -216,7 +218,7 @@ class TempestContext(context.VerifierContext):
         self._download_image_from_source(image_path)
 
     def _discover_or_create_image(self):
-        if conf.CONF.tempest.img_name_regex:
+        if conf.CONF.openstack.img_name_regex:
             image_obj = self._discover_image()
             if image_obj:
                 LOG.debug("Using image '%s' (ID = %s) for the tests."
@@ -225,8 +227,8 @@ class TempestContext(context.VerifierContext):
 
         params = {
             "image_name": self.generate_random_name(),
-            "disk_format": conf.CONF.tempest.img_disk_format,
-            "container_format": conf.CONF.tempest.img_container_format,
+            "disk_format": conf.CONF.openstack.img_disk_format,
+            "container_format": conf.CONF.openstack.img_container_format,
             "image_location": os.path.join(self.data_dir, self.image_name),
             "visibility": "public"
         }
@@ -297,8 +299,8 @@ class TempestContext(context.VerifierContext):
                 image_obj, ["deleted", "pending_delete"],
                 check_deletion=True,
                 update_resource=image_service.get_image,
-                timeout=conf.CONF.benchmark.glance_image_delete_timeout,
-                check_interval=conf.CONF.benchmark.
+                timeout=conf.CONF.openstack.glance_image_delete_timeout,
+                check_interval=conf.CONF.openstack.
                 glance_image_delete_poll_interval)
             LOG.debug("Image '%s' has been deleted." % image_obj.name)
             self._remove_opt_value_from_config("compute", image_obj.id)

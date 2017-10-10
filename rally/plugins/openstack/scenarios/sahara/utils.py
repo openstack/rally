@@ -110,8 +110,8 @@ class SaharaScenario(scenario.OpenStackScenario):
         utils.wait_for(
             resource=cluster_object, ready_statuses=["active"],
             failure_statuses=["error"], update_resource=self._update_cluster,
-            timeout=CONF.benchmark.sahara_cluster_create_timeout,
-            check_interval=CONF.benchmark.sahara_cluster_check_interval)
+            timeout=CONF.openstack.sahara_cluster_create_timeout,
+            check_interval=CONF.openstack.sahara_cluster_check_interval)
 
     def _setup_neutron_floating_ip_pool(self, name_or_id):
         if name_or_id:
@@ -299,7 +299,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         if enable_proxy:
             proxies_count = int(
-                workers_count / CONF.benchmark.sahara_workers_per_proxy)
+                workers_count / CONF.openstack.sahara_workers_per_proxy)
         else:
             proxies_count = 0
 
@@ -458,8 +458,8 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         utils.wait_for(
             resource=cluster,
-            timeout=CONF.benchmark.sahara_cluster_delete_timeout,
-            check_interval=CONF.benchmark.sahara_cluster_check_interval,
+            timeout=CONF.openstack.sahara_cluster_delete_timeout,
+            check_interval=CONF.openstack.sahara_cluster_check_interval,
             is_ready=self._is_cluster_deleted)
 
     def _is_cluster_deleted(self, cluster):
@@ -524,8 +524,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             utils.wait_for(
                 resource=job_execution.id,
                 is_ready=self._job_execution_is_finished,
-                timeout=CONF.benchmark.sahara_job_execution_timeout,
-                check_interval=CONF.benchmark.sahara_job_check_interval)
+                timeout=CONF.openstack.sahara_job_execution_timeout,
+                check_interval=CONF.openstack.sahara_job_check_interval)
 
         run(self)
 

@@ -51,8 +51,8 @@ class Stack(common_utils.RandomNameGeneratorMixin):
     def _wait(self, ready_statuses, failure_statuses):
         self.stack = utils.wait_for_status(
             self.stack,
-            check_interval=CONF.benchmark.heat_stack_create_poll_interval,
-            timeout=CONF.benchmark.heat_stack_create_timeout,
+            check_interval=CONF.openstack.heat_stack_create_poll_interval,
+            timeout=CONF.openstack.heat_stack_create_timeout,
             ready_statuses=ready_statuses,
             failure_statuses=failure_statuses,
             update_resource=utils.get_from_manager(),

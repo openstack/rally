@@ -15,30 +15,37 @@
 
 from oslo_config import cfg
 
-OPTS = {"benchmark": [
+OPTS = {"openstack": [
     cfg.FloatOpt("cinder_volume_create_prepoll_delay",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Time to sleep after creating a resource before"
                       " polling for it status"),
     cfg.FloatOpt("cinder_volume_create_timeout",
                  default=600.0,
+                 deprecated_group="benchmark",
                  help="Time to wait for cinder volume to be created."),
     cfg.FloatOpt("cinder_volume_create_poll_interval",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for volume"
                       " creation."),
     cfg.FloatOpt("cinder_volume_delete_timeout",
                  default=600.0,
+                 deprecated_group="benchmark",
                  help="Time to wait for cinder volume to be deleted."),
     cfg.FloatOpt("cinder_volume_delete_poll_interval",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for volume"
                       " deletion."),
     cfg.FloatOpt("cinder_backup_restore_timeout",
                  default=600.0,
+                 deprecated_group="benchmark",
                  help="Time to wait for cinder backup to be restored."),
     cfg.FloatOpt("cinder_backup_restore_poll_interval",
                  default=2.0,
+                 deprecated_group="benchmark",
                  help="Interval between checks when waiting for backup"
                       " restoring."),
 ]}

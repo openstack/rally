@@ -98,14 +98,14 @@ class GlanceV1Wrapper(GlanceWrapper):
 
             image = self.client.images.create(**kw)
 
-            rutils.interruptable_sleep(CONF.benchmark.
+            rutils.interruptable_sleep(CONF.openstack.
                                        glance_image_create_prepoll_delay)
 
             image = utils.wait_for_status(
                 image, ["active"],
                 update_resource=self.get_image,
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=CONF.benchmark.
+                timeout=CONF.openstack.glance_image_create_timeout,
+                check_interval=CONF.openstack.
                 glance_image_create_poll_interval)
         finally:
             if "data" in kw:
@@ -151,15 +151,15 @@ class GlanceV2Wrapper(GlanceWrapper):
 
         image = self.client.images.create(**kw)
 
-        rutils.interruptable_sleep(CONF.benchmark.
+        rutils.interruptable_sleep(CONF.openstack.
                                    glance_image_create_prepoll_delay)
 
         start = time.time()
         image = utils.wait_for_status(
             image, ["queued"],
             update_resource=self.get_image,
-            timeout=CONF.benchmark.glance_image_create_timeout,
-            check_interval=CONF.benchmark.
+            timeout=CONF.openstack.glance_image_create_timeout,
+            check_interval=CONF.openstack.
             glance_image_create_poll_interval)
         timeout = time.time() - start
 
@@ -182,7 +182,7 @@ class GlanceV2Wrapper(GlanceWrapper):
             image, ["active"],
             update_resource=self.get_image,
             timeout=timeout,
-            check_interval=CONF.benchmark.
+            check_interval=CONF.openstack.
             glance_image_create_poll_interval)
 
     def set_visibility(self, image, visibility="public"):

@@ -23,7 +23,7 @@ CONF = cfg.CONF
 
 def list_opts():
 
-    merged_opts = {}
+    merged_opts = {"DEFAULT": []}
     for category, options in openstack_opts.list_opts().items():
         merged_opts.setdefault(category, [])
         merged_opts[category].extend(options)

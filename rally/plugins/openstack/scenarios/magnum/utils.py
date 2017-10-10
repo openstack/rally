@@ -109,13 +109,13 @@ class MagnumScenario(scenario.OpenStackScenario):
             node_count=node_count, **kwargs)
 
         common_utils.interruptable_sleep(
-            CONF.benchmark.magnum_cluster_create_prepoll_delay)
+            CONF.openstack.magnum_cluster_create_prepoll_delay)
         cluster = utils.wait_for_status(
             cluster,
             ready_statuses=["CREATE_COMPLETE"],
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.magnum_cluster_create_timeout,
-            check_interval=CONF.benchmark.magnum_cluster_create_poll_interval,
+            timeout=CONF.openstack.magnum_cluster_create_timeout,
+            check_interval=CONF.openstack.magnum_cluster_create_poll_interval,
             id_attr="uuid"
         )
         return cluster
@@ -210,7 +210,7 @@ class MagnumScenario(scenario.OpenStackScenario):
                        condition.status.lower() == "true":
                         return resp
 
-            if (time.time() - start > CONF.benchmark.k8s_pod_create_timeout):
+            if (time.time() - start > CONF.openstack.k8s_pod_create_timeout):
                 raise exceptions.TimeoutException(
                     desired_status="Ready",
                     resource_name=podname,
@@ -218,7 +218,7 @@ class MagnumScenario(scenario.OpenStackScenario):
                     resource_id=resp.metadata.uid,
                     resource_status=resp.status)
             common_utils.interruptable_sleep(
-                CONF.benchmark.k8s_pod_create_poll_interval)
+                CONF.openstack.k8s_pod_create_poll_interval)
 
     @atomic.action_timer("magnum.k8s_list_v1rcs")
     def _list_v1rcs(self):
@@ -254,7 +254,7 @@ class MagnumScenario(scenario.OpenStackScenario):
             if status == expectd_status:
                 return resp
             else:
-                if time.time() - start > CONF.benchmark.k8s_rc_create_timeout:
+                if time.time() - start > CONF.openstack.k8s_rc_create_timeout:
                     raise exceptions.TimeoutException(
                         desired_status=expectd_status,
                         resource_name=rcname,
@@ -262,4 +262,4 @@ class MagnumScenario(scenario.OpenStackScenario):
                         resource_id=resp.metadata.uid,
                         resource_status=status)
                 common_utils.interruptable_sleep(
-                    CONF.benchmark.k8s_rc_create_poll_interval)
+                    CONF.openstack.k8s_rc_create_poll_interval)

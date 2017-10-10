@@ -107,8 +107,8 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             volume,
             ready_statuses=["available"],
             update_resource=self.service._update_resource,
-            timeout=CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+            timeout=CONF.openstack.cinder_volume_create_timeout,
+            check_interval=CONF.openstack.cinder_volume_create_poll_interval
         )
 
     def test_list_volumes(self):
@@ -132,8 +132,8 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.service._update_resource,
-            timeout=CONF.benchmark.cinder_volume_delete_timeout,
-            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+            timeout=CONF.openstack.cinder_volume_delete_timeout,
+            check_interval=CONF.openstack.cinder_volume_delete_poll_interval
         )
 
     @mock.patch("%s.block.BlockStorage.create_volume" % BASE_PATH)
@@ -214,15 +214,15 @@ class CinderMixinTestCase(test.ScenarioTestCase):
                 volume,
                 ready_statuses=["available"],
                 update_resource=self.service._update_resource,
-                timeout=CONF.benchmark.cinder_volume_create_timeout,
-                check_interval=CONF.benchmark.
+                timeout=CONF.openstack.cinder_volume_create_timeout,
+                check_interval=CONF.openstack.
                 cinder_volume_create_poll_interval),
             mock.call(
                 glance.get_image.return_value,
                 ready_statuses=["active"],
                 update_resource=glance.get_image,
-                timeout=CONF.benchmark.glance_image_create_timeout,
-                check_interval=CONF.benchmark.
+                timeout=CONF.openstack.glance_image_create_timeout,
+                check_interval=CONF.openstack.
                 glance_image_create_poll_interval)
         ])
         glance.get_image.assert_called_once_with(1)
@@ -286,8 +286,8 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.service._update_resource,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
 
     def test_delete_backup(self):
@@ -299,8 +299,8 @@ class CinderMixinTestCase(test.ScenarioTestCase):
             ready_statuses=["deleted"],
             check_deletion=True,
             update_resource=self.service._update_resource,
-            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
-            check_interval=cfg.CONF.benchmark
+            timeout=cfg.CONF.openstack.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.openstack
             .cinder_volume_create_poll_interval)
 
     def test_restore_backup(self):

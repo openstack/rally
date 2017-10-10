@@ -55,15 +55,15 @@ class EC2ScenarioTestCase(test.ScenarioTestCase):
                 self.server1,
                 ready_statuses=["RUNNING"],
                 update_resource=ec2_scenario._update_resource,
-                check_interval=CONF.benchmark.ec2_server_boot_poll_interval,
-                timeout=CONF.benchmark.ec2_server_boot_timeout
+                check_interval=CONF.openstack.ec2_server_boot_poll_interval,
+                timeout=CONF.openstack.ec2_server_boot_timeout
             ),
             mock.call(
                 self.server2,
                 ready_statuses=["RUNNING"],
                 update_resource=ec2_scenario._update_resource,
-                check_interval=CONF.benchmark.ec2_server_boot_poll_interval,
-                timeout=CONF.benchmark.ec2_server_boot_timeout
+                check_interval=CONF.openstack.ec2_server_boot_poll_interval,
+                timeout=CONF.openstack.ec2_server_boot_timeout
             )
         ]
         self.mock_wait_for.mock.assert_has_calls(expected)

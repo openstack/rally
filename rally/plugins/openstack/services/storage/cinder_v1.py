@@ -67,7 +67,7 @@ class CinderV1Service(service.Service, cinder_common.CinderMixin):
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
         rutils.interruptable_sleep(
-            CONF.benchmark.cinder_volume_create_prepoll_delay)
+            CONF.openstack.cinder_volume_create_prepoll_delay)
 
         return self._wait_available_volume(volume)
 
@@ -119,7 +119,7 @@ class CinderV1Service(service.Service, cinder_common.CinderMixin):
         snapshot = self._get_client().volume_snapshots.create(volume_id,
                                                               **kwargs)
         rutils.interruptable_sleep(
-            CONF.benchmark.cinder_volume_create_prepoll_delay)
+            CONF.openstack.cinder_volume_create_prepoll_delay)
         snapshot = self._wait_available_volume(snapshot)
         return snapshot
 
