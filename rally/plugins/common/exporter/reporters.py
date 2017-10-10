@@ -25,15 +25,6 @@ class HTMLExporter(exporter.TaskExporter):
     """Generates task report in HTML format."""
     INCLUDE_LIBS = False
 
-    @classmethod
-    def validate(cls, output_destination):
-        """Validate destination of report.
-
-        :param output_destination: Destination of report
-        """
-        # nothing to check :)
-        pass
-
     def generate(self):
         results = []
         processed_names = {}
@@ -83,15 +74,6 @@ class JUnitXMLExporter(exporter.TaskExporter):
                   time="29.97" />
       </testsuite>
     """
-
-    @classmethod
-    def validate(cls, output_destination):
-        """Validate destination of report.
-
-        :param output_destination: Destination of report
-        """
-        # nothing to check :)
-        pass
 
     def generate(self):
         test_suite = junit.JUnit("Rally test suite")

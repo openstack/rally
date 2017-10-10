@@ -573,7 +573,7 @@ class _Task(APIGroup):
         """Generate a report for a task or a few tasks.
 
         :param tasks_uuids: List of tasks UUIDs
-        :param output_type: Plugin name of task reporter
+        :param output_type: Plugin name of task exporter
         :param output_dest: Destination for task report
         """
 
@@ -581,8 +581,16 @@ class _Task(APIGroup):
         for task_uuid in tasks_uuids:
             tasks_results.append(self.get(task_id=task_uuid, detailed=True))
 
+        errors = texporter.TaskExporter.validate(
+            output_type, context={}, config={},
+            # wrap destination to a dict to allow extending options in future
+            plugin_cfg={"destination": output_dest},
+            vtype="syntax"
+        )
+        if errors:
+            raise exceptions.ValidationError("\n".join(errors))
+
         reporter_cls = texporter.TaskExporter.get(output_type)
-        reporter_cls.validate(output_dest)
 
         LOG.info("Building '%s' report for the following task(s): '%s'."
                  % (output_type, "', '".join(tasks_uuids)))

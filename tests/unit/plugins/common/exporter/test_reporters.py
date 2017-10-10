@@ -45,12 +45,6 @@ def get_tasks_results():
 
 class HTMLExporterTestCase(test.TestCase):
 
-    def test_validate(self):
-        # nothing should fail
-        reporters.HTMLExporter.validate(mock.Mock())
-        reporters.HTMLExporter.validate("")
-        reporters.HTMLExporter.validate(None)
-
     @mock.patch("%s.plot.plot" % PATH, return_value="html")
     def test_generate(self, mock_plot):
         tasks_results = get_tasks_results()
@@ -101,12 +95,6 @@ class HTMLExporterTestCase(test.TestCase):
 
 
 class JUnitXMLExporterTestCase(test.TestCase):
-
-    def test_validate(self):
-        # nothing should fail
-        reporters.HTMLExporter.validate(mock.Mock())
-        reporters.HTMLExporter.validate("")
-        reporters.HTMLExporter.validate(None)
 
     def test_generate(self):
         content = ("<testsuite errors=\"0\""
