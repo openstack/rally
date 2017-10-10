@@ -15,9 +15,13 @@
 
 from oslo_config import cfg
 
-OPTS = {"cleanup": [
-    cfg.IntOpt("resource_deletion_timeout", default=600,
+OPTS = {"openstack": [
+    cfg.IntOpt("resource_deletion_timeout",
+               default=600,
+               deprecated_group="cleanup",
                help="A timeout in seconds for deleting resources"),
-    cfg.IntOpt("cleanup_threads", default=20,
+    cfg.IntOpt("cleanup_threads",
+               default=20,
+               deprecated_group="cleanup",
                help="Number of cleanup threads to run")
 ]}
