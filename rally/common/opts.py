@@ -34,11 +34,23 @@ def list_opts():
     return merged_opts.items()
 
 
-def register():
-    for category, options in list_opts():
+_registered = False
+
+
+def register_opts(opts):
+    for category, options in opts:
         group = cfg.OptGroup(name=category, title="%s options" % category)
         if category != "DEFAULT":
             CONF.register_group(group)
             CONF.register_opts(options, group=group)
         else:
             CONF.register_opts(options)
+
+
+def register():
+    global _registered
+
+    if not _registered:
+        register_opts(list_opts())
+
+        _registered = True
