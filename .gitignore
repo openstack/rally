@@ -33,6 +33,7 @@ cover-master
 .venv
 .cache
 .test_results/
+rally-cli-output-files/
 
 # Docs
 doc/source/_build/
