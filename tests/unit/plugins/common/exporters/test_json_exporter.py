@@ -19,17 +19,17 @@ import mock
 from oslo_utils import timeutils
 
 from rally.common import version as rally_version
-from rally.plugins.common.exporter import json_exporter
-from tests.unit.plugins.common.exporter import test_reporters
+from rally.plugins.common.exporters import json_exporter
+from tests.unit.plugins.common.exporters import test_html
 from tests.unit import test
 
-PATH = "rally.plugins.common.exporter.json_exporter"
+PATH = "rally.plugins.common.exporters.json_exporter"
 
 
 class JSONExporterTestCase(test.TestCase):
 
     def test__generate_tasks(self):
-        tasks_results = test_reporters.get_tasks_results()
+        tasks_results = test_html.get_tasks_results()
         reporter = json_exporter.JSONExporter(tasks_results, None)
 
         self.assertEqual([
@@ -85,7 +85,7 @@ class JSONExporterTestCase(test.TestCase):
     @mock.patch("%s.timeutils.utcnow" % PATH,
                 return_value=timeutils.utcnow())
     def test_generate(self, mock_utcnow, mock_json_dumps):
-        tasks_results = test_reporters.get_tasks_results()
+        tasks_results = test_html.get_tasks_results()
 
         # print
         reporter = json_exporter.JSONExporter(tasks_results, None)
