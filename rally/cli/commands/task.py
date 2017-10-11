@@ -476,7 +476,7 @@ class TaskCommands(object):
 
             cols = charts.MainStatsTable.columns
             formatters = {
-                "Action": lambda x: x["name"],
+                "Action": lambda x: x["display_name"],
                 "Min (sec)": lambda x: x["data"]["min"],
                 "Median (sec)": lambda x: x["data"]["median"],
                 "90%ile (sec)": lambda x: x["data"]["90%ile"],
@@ -491,8 +491,9 @@ class TaskCommands(object):
 
             def make_flat(r, depth=0):
                 if depth > 0:
-                    r["name"] = (" %s> %s" % ("-" * depth,
-                                              r["display_name"]))
+                    r["display_name"] = (" %s> %s" % ("-" * depth,
+                                                      r["display_name"]))
+
                 rows.append(r)
                 for children in r["children"]:
                     make_flat(children, depth + 1)
@@ -500,7 +501,6 @@ class TaskCommands(object):
             for row in itertools.chain(duration_stats["atomics"],
                                        [duration_stats["total"]]):
                 make_flat(row)
-
             cliutils.print_list(rows,
                                 fields=cols,
                                 formatters=formatters,
