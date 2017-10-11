@@ -55,36 +55,31 @@ class TaskTestCase(unittest.TestCase):
                     "group": "Dummy group",
                     "description": "The first subtask in dummy task",
                     "tags": ["dummy", "functional_test"],
-                    "run_in_parallel": False,
-                    "workloads": [{
-                        "name": "Dummy.dummy",
-                        "args": {
-                            "sleep": 0
-                        },
-                        "runner": {
-                            "type": "constant",
-                            "times": 10,
-                            "concurrency": 2
-                        },
-                    }]
+                    "workloads": [
+                        {
+                            "scenario": {
+                                "Dummy.dummy": {"sleep": 0}},
+                            "runner": {
+                                "constant": {
+                                    "times": 10,
+                                    "concurrency": 2
+                                }
+                            }
+                        }
+                    ]
                 },
                 {
                     "title": "second-subtask",
-                    "group": "Dummy group",
                     "description": "The second subtask in dummy task",
                     "tags": ["dummy", "functional_test"],
-                    "run_in_parallel": False,
-                    "workloads": [{
-                        "name": "Dummy.dummy",
-                        "args": {
-                            "sleep": 1
-                        },
-                        "runner": {
-                            "type": "constant",
+                    "scenario": {
+                        "Dummy.dummy": {"sleep": 1}},
+                    "runner": {
+                        "constant": {
                             "times": 10,
                             "concurrency": 2
-                        },
-                    }]
+                        }
+                    }
                 }
             ]
         }
@@ -535,14 +530,12 @@ class TaskTestCase(unittest.TestCase):
                      "--status finished")
         self.assertEqual(res, res2)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_validate_is_valid(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
         output = rally("task validate --task %s" % config.filename)
-        self.assertIn("Task config is valid", output)
+        self.assertIn("Input Task is valid :)", output)
 
     def test_validate_is_invalid(self):
         rally = utils.Rally()
@@ -569,8 +562,6 @@ class TaskTestCase(unittest.TestCase):
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_validate_with_plugin_paths(self):
         rally = utils.Rally()
         plugin_paths = ("tests/functional/extra/fake_dir1/,"
@@ -581,7 +572,7 @@ class TaskTestCase(unittest.TestCase):
                        {"task_file": task_file,
                         "plugin_paths": plugin_paths})
 
-        self.assertIn("Task config is valid", output)
+        self.assertIn("Input Task is valid :)", output)
 
         plugin_paths = ("tests/functional/extra/fake_dir1/"
                         "fake_plugin1.py,"
@@ -593,7 +584,7 @@ class TaskTestCase(unittest.TestCase):
                        {"task_file": task_file,
                         "plugin_paths": plugin_paths})
 
-        self.assertIn("Task config is valid", output)
+        self.assertIn("Input Task is valid :)", output)
 
         plugin_paths = ("tests/functional/extra/fake_dir1/,"
                         "tests/functional/extra/fake_dir2/"
@@ -604,7 +595,7 @@ class TaskTestCase(unittest.TestCase):
                        {"task_file": task_file,
                         "plugin_paths": plugin_paths})
 
-        self.assertIn("Task config is valid", output)
+        self.assertIn("Input Task is valid :)", output)
 
     def _test_start_abort_on_sla_failure_success(self, cfg, times):
         rally = utils.Rally()
@@ -973,8 +964,6 @@ class TaskTestCase(unittest.TestCase):
         current_task = utils.get_global("RALLY_TASK", rally.env)
         self.assertEqual(uuid, current_task)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_start_v2(self):
         rally = utils.Rally()
         deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
@@ -1029,10 +1018,10 @@ class SLATestCase(unittest.TestCase):
     def _get_sample_task_config(self, max_seconds_per_iteration=4,
                                 failure_rate_max=0):
         return {
-            "KeystoneBasic.create_and_list_users": [
+            "Dummy.dummy": [
                 {
                     "args": {
-                        "enabled": True
+                        "sleep": 0.2
                     },
                     "runner": {
                         "type": "constant",
@@ -1047,8 +1036,6 @@ class SLATestCase(unittest.TestCase):
             ]
         }
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_sla_fail(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
@@ -1056,19 +1043,17 @@ class SLATestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         self.assertRaises(utils.RallyCliError, rally, "task sla-check")
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_sla_success(self):
         rally = utils.Rally()
         config = utils.TaskConfig(self._get_sample_task_config())
         rally("task start --task %s" % config.filename)
         rally("task sla-check")
         expected = [
-            {"benchmark": "KeystoneBasic.create_and_list_users",
+            {"benchmark": "Dummy.dummy",
              "criterion": "failure_rate",
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"},
-            {"benchmark": "KeystoneBasic.create_and_list_users",
+            {"benchmark": "Dummy.dummy",
              "criterion": "max_seconds_per_iteration",
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"}
@@ -1130,6 +1115,12 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         expected = [
+            {"status": "PASS",
+             "benchmark": "Dummy.dummy",
+             "criterion": "failure_rate",
+             "detail": "Failure rate criteria 0.00% <= 0.00% <= 0.00% - "
+                       "Passed",
+             "pos": 0},
             {"benchmark": "Dummy.dummy",
              "criterion": "something_went_wrong",
              "detail": mock.ANY,
@@ -1143,15 +1134,11 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
             self.fail("`rally task sla-check` command should return non-zero "
                       "exit code")
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_broken_context_with_constant_runner(self):
         self._test_broken_context({"type": "constant",
                                    "times": 5,
                                    "concurrency": 5})
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_broken_context_with_rps_runner(self):
         self._test_broken_context({"type": "rps",
                                    "times": 5,
