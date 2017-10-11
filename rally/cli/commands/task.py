@@ -581,13 +581,19 @@ class TaskCommands(object):
         results = []
         for w in itertools.chain(*[s["workloads"] for s in task["subtasks"]]):
             w["runner"]["type"] = w["runner_type"]
-            hooks = [
-                {"name": h["config"]["action"][0],
-                 "args": h["config"]["action"][1],
-                 "description": h["config"].get("description"),
-                 "trigger": {"name": h["config"]["trigger"][0],
-                             "args": h["config"]["trigger"][1]}}
-                for h in w["hooks"]]
+
+            def port_hook_cfg(h):
+                h["config"] = {
+                    "name": h["config"]["action"][0],
+                    "args": h["config"]["action"][1],
+                    "description": h["config"].get("description", ""),
+                    "trigger": {"name": h["config"]["trigger"][0],
+                                "args": h["config"]["trigger"][1]}
+                }
+                return h
+
+            hooks = [port_hook_cfg(h) for h in w["hooks"]]
+
             results.append({
                 "key": {
                     "name": w["name"],
@@ -598,12 +604,12 @@ class TaskCommands(object):
                         "runner": w["runner"],
                         "context": w["context"],
                         "sla": w["sla"],
-                        "hooks": hooks,
+                        "hooks": [h["config"] for h in w["hooks"]],
                     }
                 },
                 "result": w["data"],
                 "sla": w["sla_results"].get("sla", []),
-                "hooks": w["hooks"],
+                "hooks": hooks,
                 "load_duration": w["load_duration"],
                 "full_duration": w["full_duration"],
                 "created_at": w["created_at"]})

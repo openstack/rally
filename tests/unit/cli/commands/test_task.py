@@ -566,27 +566,45 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
 
         task_obj = self._make_task(data=[{"atomic_actions": {"foo": 1.1}}])
+        task_obj["subtasks"][0]["workloads"][0]["hooks"] = [{
+            "config": {
+                "action": ("foo", "arg"),
+                "trigger": ("bar", "arg2")
+            },
+            "summary": {"success": 1}}
+        ]
 
         def fix_r(workload):
             cfg = workload["runner"]
             cfg["type"] = workload["runner_type"]
             return cfg
 
-        result = map(lambda x: {"key": {"kw": {"sla": x["sla"],
-                                               "args": x["args"],
-                                               "context": x["context"],
-                                               "runner": fix_r(x),
-                                               "hooks": x["hooks"]},
-                                        "pos": x["position"],
-                                        "name": x["name"],
-                                        "description": x["description"]},
-                                "result": x["data"],
-                                "load_duration": x["load_duration"],
-                                "full_duration": x["full_duration"],
-                                "created_at": x["created_at"],
-                                "hooks": x["hooks"],
-                                "sla": x["sla_results"]["sla"]},
-                     task_obj["subtasks"][0]["workloads"])
+        result = map(
+            lambda x: {
+                "key": {"kw": {"sla": x["sla"],
+                               "args": x["args"],
+                               "context": x["context"],
+                               "runner": fix_r(x),
+                               "hooks": [{"description": "",
+                                          "name": "foo",
+                                          "args": "arg",
+                                          "trigger": {"name": "bar",
+                                                      "args": "arg2"}}]},
+                        "pos": x["position"],
+                        "name": x["name"],
+                        "description": x["description"]},
+                "result": x["data"],
+                "load_duration": x["load_duration"],
+                "full_duration": x["full_duration"],
+                "created_at": x["created_at"],
+                "hooks": [{
+                    "config": {"description": "",
+                               "name": "foo",
+                               "args": "arg",
+                               "trigger": {"name": "bar", "args": "arg2"}},
+                    "summary": {"success": 1}}],
+                "sla": x["sla_results"]["sla"]},
+            task_obj["subtasks"][0]["workloads"])
 
         self.fake_api.task.get.return_value = task_obj
 
