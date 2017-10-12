@@ -345,7 +345,7 @@ class CreateAndDeactivateImage(GlanceBasic):
                kwargs={"type": "glance_image_args"})
 @validation.add("required_services", services=[consts.Service.GLANCE])
 @validation.add("required_platform", platform="openstack", users=True)
-@scenario.configure(context={"cleanup": ["glance"]},
+@scenario.configure(context={"cleanup@openstack": ["glance"]},
                     name="GlanceImages.create_and_download_image",
                     platform="openstack")
 class CreateAndDownloadImage(GlanceBasic):
