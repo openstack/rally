@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 LOCAL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 DB_CONNECTION="$(rally db show)"
@@ -18,6 +16,4 @@ else
 fi
 
 
-python $LOCAL_DIR/pytest_launcher.py "tests/functional" --concurrency $CONCURRENCY
-
-python $LOCAL_DIR/pytest_launcher.py "tests/check_samples"
+python $LOCAL_DIR/pytest_launcher.py "tests/functional" --concurrency $CONCURRENCY --posargs=$1
