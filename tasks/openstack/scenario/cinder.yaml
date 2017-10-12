@@ -162,6 +162,7 @@
   CinderVolumes.create_nested_snapshots_and_attach_volume:
     -
       args:
+        {{ vm_params(image_name,flavor_name,none)}}
         nested_level: 1
         size:
           max: 1
@@ -170,9 +171,6 @@
         {% call user_context(tenants_amount, users_amount, use_existing_users) %}
         quotas:
           {{ unlimited_volumes() }}
-        servers:
-          {{ vm_params(image_name,flavor_name,none)|indent(2,true) }}
-          servers_per_tenant: 1
         {% endcall %}
       runner:
         {{ constant_runner(concurrency=min(50, 2*controllers_amount),times=min(10, 3*controllers_amount), is_smoke=smoke) }}

@@ -24,8 +24,6 @@ from tests.functional import utils
 
 class TestPreCreatedTasks(unittest.TestCase):
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_task_samples_is_valid(self):
         rally = utils.Rally()
         full_path = os.path.join(
