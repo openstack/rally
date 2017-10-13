@@ -1192,35 +1192,39 @@ class HookTestCase(unittest.TestCase):
 
     def _get_sample_task_config(self, cmd, description, runner):
         return {
-            "Dummy.dummy": [
-                {
-                    "args": {
-                        "sleep": 0.1,
-                    },
-                    "runner": runner,
-                    "hooks": [
-                        {
-                            "name": "sys_call",
-                            "description": description,
-                            "args": cmd,
-                            "trigger": {
-                                "name": "event",
-                                "args": {
-                                    "unit": "iteration",
-                                    "at": [5],
-                                }
-                            }
-                        }
-                    ]
-                }
+            "version": 2,
+            "title": "Testing hooks",
+            "subtasks": [
+                {"title": "Simple workload",
+                 "scenario": {
+                     "Dummy.dummy": {"sleep": 0.1}},
+                 "runner": runner,
+                 "hooks": [
+                     {"description": description,
+                      "action": {"sys_call": cmd},
+                      "trigger": {
+                          "event": {"unit": "iteration",
+                                    "at": [5]}
+                      }
+                      }]
+                 }
             ]
         }
 
     def _get_result(self, config, iterations=None, seconds=None, error=False):
-        result = {"config": config, "results": [], "summary": {}}
+        action_name, action_cfg = list(config["action"].items())[0]
+        trigger_name, trigger_cfg = list(config["trigger"].items())[0]
+        result = {
+            "config": {
+                "description": config.get("description", ""),
+                "name": action_name, "args": action_cfg,
+                "trigger": {"name": trigger_name,
+                            "args": trigger_cfg}},
+            "results": [], "summary": {}}
         events = iterations if iterations else seconds
         event_type = "iteration" if iterations else "time"
         status = "failed" if error else "success"
+        action_args = list(config["action"].values())[0]
         for i in range(len(events)):
             itr_result = {
                 "finished_at": mock.ANY,
@@ -1233,7 +1237,7 @@ class HookTestCase(unittest.TestCase):
                                   "data": ["RetCode: %i" % error,
                                            "StdOut: (empty)",
                                            "StdErr: (empty)"],
-                                  "description": "Args: %s" % config["args"],
+                                  "description": "Args: %s" % action_args,
                                   "title": "System call"}]}}
             if error:
                 itr_result["error"] = {"etype": "n/a",
@@ -1243,108 +1247,94 @@ class HookTestCase(unittest.TestCase):
         result["summary"][status] = len(events)
         return result
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_hook_result_with_constant_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "constant", "times": 10, "concurrency": 3})
+            runner={"constant": {"times": 10, "concurrency": 3}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_hook_result_with_constant_for_duration_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "constant_for_duration",
-                    "concurrency": 3, "duration": 10})
+            runner={"constant_for_duration": {
+                "concurrency": 3, "duration": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_hook_result_with_rps_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "rps", "rps": 3, "times": 10})
+            runner={"rps": {"rps": 3, "times": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_hook_result_with_serial_runner(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "serial", "times": 10})
+            runner={"serial": {"times": 10}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5])]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_hook_result_error(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/false",
             description="event_hook",
-            runner={"type": "constant", "times": 20, "concurrency": 3})
+            runner={"constant": {"times": 20, "concurrency": 3}})
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5], error=True)]
         self.assertEqual(expected, hook_results)
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_time_hook(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "constant_for_duration",
-                    "concurrency": 3, "duration": 10})
-        cfg["Dummy.dummy"][0]["hooks"].append({
-            "name": "sys_call",
+            runner={"constant_for_duration":
+                        {"concurrency": 3, "duration": 10}})
+        cfg["subtasks"][0]["hooks"].append({
             "description": "time_hook",
-            "args": "/bin/true",
+            "action": {"sys_call": "/bin/true"},
             "trigger": {
-                "name": "event",
-                "args": {
+                "event": {
                     "unit": "time",
                     "at": [3, 6, 9],
                 }
@@ -1356,44 +1346,39 @@ class HookTestCase(unittest.TestCase):
         results = json.loads(rally("task results"))
         hook_results = results[0]["hooks"]
 
-        hooks_cfg = cfg["Dummy.dummy"][0]["hooks"]
+        hooks_cfg = cfg["subtasks"][0]["hooks"]
         expected = [self._get_result(hooks_cfg[0], iterations=[5]),
                     self._get_result(hooks_cfg[1], seconds=[3, 6, 9])]
         self.assertEqual(
             expected,
             sorted(hook_results,
-                   key=lambda i: i["config"]["trigger"]["args"]["unit"]))
+                   key=lambda i: list(
+                       i["config"]["trigger"].values())[0]["unit"]))
         self._assert_results_time(hook_results)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_import_hook_result(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config(
             cmd="/bin/true",
             description="event_hook",
-            runner={"type": "constant", "times": 10, "concurrency": 3})
-        cfg["Dummy.dummy"][0]["hooks"].extend(
+            runner={"constant": {"times": 10, "concurrency": 3}})
+        cfg["subtasks"][0]["hooks"].extend(
             [
                 {
-                    "name": "sys_call",
                     "description": "Show time",
-                    "args": "date +%Y-%m-%dT%H:%M:%S",
+                    "action": {"sys_call": "date +%Y-%m-%dT%H:%M:%S"},
                     "trigger": {
-                        "name": "event",
-                        "args": {
+                        "event": {
                             "unit": "time",
                             "at": [1, 2],
                         }
                     }
                 },
                 {
-                    "name": "sys_call",
                     "description": "Show system name",
-                    "args": "uname -a",
+                    "action": {"sys_call": "uname -a"},
                     "trigger": {
-                        "name": "event",
-                        "args": {
+                        "event": {
                             "unit": "iteration",
                             "at": [3, 6, 9],
                         }
