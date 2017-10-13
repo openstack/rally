@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
-
 
 class GraphZipper(object):
 
@@ -77,31 +75,3 @@ class GraphZipper(object):
 
     def get_zipped_graph(self):
         return self.zipped_graph
-
-
-class AtomicMerger(object):
-
-    def __init__(self, atomic):
-        self._atomic = atomic
-        self._merge_name = lambda x, y: "%s (x%d)" % (x, y) if y > 1 else x
-
-    def get_merged_names(self):
-        return [self._merge_name(key, value.get("count", 1))
-                for key, value in self._atomic.items()]
-
-    def get_merged_name(self, name):
-        return self._merge_name(name, self._atomic[name].get("count", 1))
-
-    def merge_atomic_actions(self, atomic_actions):
-        new_atomic_actions = collections.OrderedDict()
-        for name in self._atomic.keys():
-            count = 0
-            duration = 0
-            for action in atomic_actions:
-                if action["name"] == name:
-                    duration += action["finished_at"] - action["started_at"]
-                    count += 1
-            if count == self._atomic[name].get("count", 1):
-                new_name = self._merge_name(name, count)
-                new_atomic_actions[new_name] = duration
-        return new_atomic_actions

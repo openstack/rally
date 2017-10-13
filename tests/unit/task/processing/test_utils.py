@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import collections
 import ddt
 
 from rally.task.processing import utils
@@ -48,50 +47,3 @@ class GraphZipperTestCase(test.TestCase):
         self.assertRaises(TypeError, merger.add_point)
         [merger.add_point(1) for value in range(10)]
         self.assertRaises(RuntimeError, merger.add_point, 1)
-
-
-class AtomicMergerTestCase(test.TestCase):
-    def setUp(self):
-        super(AtomicMergerTestCase, self).setUp()
-        self.atomic = collections.OrderedDict([("foo", {"count": 1}),
-                                               ("bar", {"count": 2})])
-
-    def test_get_merged_names(self):
-        atomic_merger = utils.AtomicMerger(self.atomic)
-        self.assertEqual(["foo", "bar (x2)"],
-                         atomic_merger.get_merged_names())
-
-    def test_get_merged_name(self):
-        atomic_merger = utils.AtomicMerger(self.atomic)
-        self.assertEqual("foo", atomic_merger.get_merged_name("foo"))
-        self.assertEqual("bar (x2)", atomic_merger.get_merged_name("bar"))
-
-    def test_merge_atomic_actions(self):
-        atomic_merger = utils.AtomicMerger(self.atomic)
-        atomic_actions = [{"name": "foo",
-                           "started_at": 0,
-                           "finished_at": 1.1}]
-        self.assertEqual(collections.OrderedDict([("foo", 1.1)]),
-                         atomic_merger.merge_atomic_actions(atomic_actions))
-
-        atomic_actions = [{"name": "foo",
-                           "started_at": 0,
-                           "finished_at": 1.1},
-                          {"name": "bar",
-                           "started_at": 1.1,
-                           "finished_at": 2.3}]
-        self.assertEqual(collections.OrderedDict([("foo", 1.1)]),
-                         atomic_merger.merge_atomic_actions(atomic_actions))
-
-        atomic_actions = [{"name": "foo",
-                           "started_at": 0,
-                           "finished_at": 1.1},
-                          {"name": "bar",
-                           "started_at": 1.1,
-                           "finished_at": 2.3},
-                          {"name": "bar",
-                           "started_at": 2.3,
-                           "finished_at": 3.5}]
-        self.assertEqual(collections.OrderedDict([("foo", 1.1),
-                                                  ("bar (x2)", 2.4)]),
-                         atomic_merger.merge_atomic_actions(atomic_actions))
