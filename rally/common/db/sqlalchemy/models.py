@@ -136,6 +136,47 @@ class Resource(BASE, RallyBase):
     )
 
 
+class Env(BASE, RallyBase):
+    """Represent a environment."""
+    __tablename__ = "envs"
+    __table_args__ = (
+        sa.Index("env_uuid", "uuid", unique=True),
+        sa.Index("env_name", "name", unique=True),
+        sa.Index("env_status", "status")
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+    name = sa.Column(sa.String(255), nullable=False)
+    description = sa.Column(sa.Text, default="")
+    status = sa.Column(sa.String(36), nullable=False)
+    extras = sa.Column(sa_types.MutableJSONEncodedDict, default={})
+    spec = sa.Column(sa_types.MutableJSONEncodedDict, default={})
+
+
+class Platform(BASE, RallyBase):
+    """Represent environment's platforms."""
+    __tablename__ = "platforms"
+    __table_args__ = (
+        sa.Index("platform_uuid", "uuid", unique=True),
+        sa.Index("platform_env_uuid", "env_uuid")
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+    env_uuid = sa.Column(sa.String(36), nullable=False)
+
+    status = sa.Column(sa.String(36), nullable=False)
+
+    plugin_name = sa.Column(sa.String(36), nullable=False)
+    plugin_spec = sa.Column(sa_types.MutableJSONEncodedDict, default={},
+                            nullable=False)
+    plugin_data = sa.Column(sa_types.MutableJSONEncodedDict, default={})
+
+    platform_name = sa.Column(sa.String(36))
+    platform_data = sa.Column(sa_types.MutableJSONEncodedDict, default={})
+
+
 class Task(BASE, RallyBase):
     """Represents a task."""
     __tablename__ = "tasks"

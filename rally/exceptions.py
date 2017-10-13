@@ -85,6 +85,27 @@ class DBRecordExists(DBException):
     msg_fmt = "Record with %(field)s = %(value)s already exists in %(table)s"
 
 
+class ManagerException(RallyException):
+    error_code = 500
+    msg_fmt = "Internal error: %(message)s"
+
+
+class ManagerInvalidSpec(ManagerException):
+    error_code = 409
+    msg_fmt = "%(mgr)s manager got invalid spec: \n%(errors)s"
+
+    def __init__(self, **kwargs):
+        kwargs["errors"] = "\n".join(kwargs["errors"])
+        self.spec = kwargs.pop("spec", "")
+        super(ManagerInvalidSpec, self).__init__(**kwargs)
+
+
+class ManagerInvalidState(ManagerException):
+    error_code = 500
+    msg_fmt = ("%(mgr)s manager in invalid state "
+               "expected `%(expected)s' actual `%(actual)s' ")
+
+
 class InvalidArgumentsException(RallyException):
     error_code = 455
     msg_fmt = "Invalid arguments: '%(message)s'"

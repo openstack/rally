@@ -362,6 +362,67 @@ def resource_delete(id):
     return get_impl().resource_delete(id)
 
 
+def env_get(uuid_or_name):
+    """Returns envs with corresponding uuid or name."""
+    return get_impl().env_get(uuid_or_name)
+
+
+def env_get_status(uuid):
+    """Returns status of env with corresponding uuid."""
+    return get_impl().env_get_status(uuid)
+
+
+def env_list(status=None):
+    """Return list of envs, filtered by status, if status provided."""
+    return get_impl().env_list(status=status)
+
+
+def env_create(name, status, description, extras, spec, platforms):
+    """Created db record of env and platforms."""
+    return get_impl().env_create(
+        name, status, description, extras, spec, platforms)
+
+
+def env_rename(uuid, old_name, new_name):
+    """Renames env. Returns op result as bool"""
+    return get_impl().env_rename(uuid, old_name, new_name)
+
+
+def env_update(uuid, description=None, extras=None):
+    """Update description and extra of envs. Returns op result as bool."""
+    return get_impl().env_update(uuid, description=description, extras=extras)
+
+
+def env_set_status(uuid, old_status, new_status):
+    """Set new env status. """
+    return get_impl().env_set_status(uuid, old_status, new_status)
+
+
+def env_delete_cascade(uuid):
+    """Delete envs, platforms and all related to env resources."""
+    return get_impl().env_delete_cascade(uuid)
+
+
+def platforms_list(env_uuid):
+    """List platforms related to some env."""
+    return get_impl().platforms_list(env_uuid)
+
+
+def platform_get(uuid):
+    """Returns platforms with corresponding uuid."""
+    return get_impl().platform_get(uuid)
+
+
+def platform_set_status(uuid, old_status, new_status):
+    """Set's new status to platform"""
+    return get_impl().platform_set_status(uuid, old_status, new_status)
+
+
+def platform_set_data(uuid, platform_data=None, plugin_data=None):
+    """Set's platform data."""
+    return get_impl().platform_set_data(uuid, platform_data, plugin_data)
+
+
 def verifier_create(name, vtype, platform, source, version, system_wide,
                     extra_settings=None):
     """Create a verifier record.

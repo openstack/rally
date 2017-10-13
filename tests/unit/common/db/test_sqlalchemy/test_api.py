@@ -39,8 +39,6 @@ class FakeSerializable(object):
 
 @ddt.ddt
 class SerializeTestCase(test.DBTestCase):
-    def setUp(self):
-        super(SerializeTestCase, self).setUp()
 
     @ddt.data(
         {"data": 1, "serialized": 1},
@@ -80,3 +78,14 @@ class SerializeTestCase(test.DBTestCase):
             return Fake()
 
         self.assertRaises(exceptions.DBException, fake_method)
+
+
+class ModelQueryTestCase(test.DBTestCase):
+
+    def test_model_query_wrong_model(self):
+
+        class Foo(object):
+            pass
+
+        self.assertRaises(exceptions.DBException,
+                          db_api.Connection().model_query, Foo)

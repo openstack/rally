@@ -606,6 +606,220 @@ class WorkloadDataTestCase(test.DBTestCase):
         self.assertEqual(self.workload_uuid, workload_data["workload_uuid"])
 
 
+class EnvTestCase(test.DBTestCase):
+
+    def test_env_get(self):
+        env1 = db.env_create("name", "STATUS42", "descr", {}, {}, [])
+        env2 = db.env_create("name2", "STATUS42", "descr", {}, {}, [])
+
+        self.assertEqual(env1, db.env_get(env1["uuid"]))
+        self.assertEqual(env1, db.env_get(env1["name"]))
+        self.assertEqual(env2, db.env_get(env2["uuid"]))
+        self.assertEqual(env2, db.env_get(env2["name"]))
+
+    def test_env_get_not_found(self):
+        self.assertRaises(exceptions.DBRecordNotFound,
+                          db.env_get, "non-existing-env")
+
+    def test_env_get_status(self):
+        env = db.env_create("name", "STATUS42", "descr", {}, {}, [])
+        self.assertEqual("STATUS42", db.env_get_status(env["uuid"]))
+
+    def test_env_get_status_non_existing(self):
+        self.assertRaises(exceptions.DBRecordNotFound,
+                          db.env_get_status, "non-existing-env")
+
+    def test_env_list(self):
+        for i in range(3):
+            db.env_create("name %s" % i, "STATUS42", "descr", {}, {}, [])
+            self.assertEqual(i + 1, len(db.env_list()))
+
+        all_ = db.env_list()
+        self.assertIsInstance(all_, list)
+        for env in all_:
+            self.assertIsInstance(env, dict)
+
+        self.assertEqual(set("name %s" % i for i in range(3)),
+                         set(e["name"] for e in db.env_list()))
+
+    def test_env_list_filter_by_status(self):
+        db.env_create("name 1", "STATUS42", "descr", {}, {}, [])
+        db.env_create("name 2", "STATUS42", "descr", {}, {}, [])
+        db.env_create("name 3", "STATUS43", "descr", {}, {}, [])
+
+        result = db.env_list("STATUS42")
+        self.assertEqual(2, len(result))
+        self.assertEqual(set(["name 1", "name 2"]),
+                         set(r["name"] for r in result))
+        result = db.env_list("STATUS43")
+        self.assertEqual(1, len(result))
+        self.assertEqual("name 3", result[0]["name"])
+
+    def test_env_create(self):
+        env = db.env_create(
+            "name", "status", "descr", {"extra": "test"}, {"spec": "spec"}, [])
+
+        self.assertIsInstance(env, dict)
+        self.assertIsNotNone(env["uuid"])
+        self.assertEqual(env, db.env_get(env["uuid"]))
+        self.assertEqual("name", env["name"])
+        self.assertEqual("status", env["status"])
+        self.assertEqual("descr", env["description"])
+        self.assertEqual({"extra": "test"}, env["extras"])
+        self.assertEqual({"spec": "spec"}, env["spec"])
+
+    def test_env_create_duplicate_env(self):
+        db.env_create("name", "status", "descr", {}, {}, [])
+        self.assertRaises(exceptions.DBRecordExists,
+                          db.env_create, "name", "status", "descr", {}, {}, [])
+
+    def teet_env_create_with_platforms(self):
+        platforms = [
+            {
+                "status": "ANY",
+                "plugin_name": "plugin_%s@plugin" % i,
+                "plugin_spec": {},
+                "platform_name": "plugin"
+            }
+            for i in range(3)
+        ]
+        env = db.env_create("name", "status", "descr", {}, {}, platforms)
+        db_platforms = db.platforms_list(env["uuid"])
+        self.assertEqual(3, len(db_platforms))
+
+    def test_env_rename(self):
+        env = db.env_create(
+            "name", "status", "descr", {"extra": "test"}, {"spec": "spec"}, [])
+
+        self.assertTrue(db.env_rename(env["uuid"], env["name"], "name2"))
+        self.assertEqual("name2", db.env_get(env["uuid"])["name"])
+
+    def test_env_rename_duplicate(self):
+        env1 = db.env_create("name", "status", "descr", {}, {}, [])
+        env2 = db.env_create("name2", "status", "descr", {}, {}, [])
+        self.assertRaises(
+            exceptions.DBRecordExists,
+            db.env_rename, env1["uuid"], env1["name"], env2["name"])
+
+    def test_env_update(self):
+        env = db.env_create("name", "status", "descr", {}, {}, [])
+        self.assertTrue(db.env_update(env["uuid"]))
+        self.assertTrue(
+            db.env_update(env["uuid"], "another_descr", {"extra": 123}))
+
+        env = db.env_get(env["uuid"])
+        self.assertEqual("another_descr", env["description"])
+        self.assertEqual({"extra": 123}, env["extras"])
+
+    def test_evn_set_status(self):
+        env = db.env_create("name", "status", "descr", {}, {}, [])
+
+        self.assertRaises(
+            exceptions.DBConflict,
+            db.env_set_status, env["uuid"], "wrong_old_status", "new_status")
+        env = db.env_get(env["uuid"])
+        self.assertEqual("status", env["status"])
+
+        self.assertTrue(
+            db.env_set_status(env["uuid"], "status", "new_status"))
+
+        env = db.env_get(env["uuid"])
+        self.assertEqual("new_status", env["status"])
+
+    def test_env_delete_cascade(self):
+        platforms = [
+            {
+                "status": "ANY",
+                "plugin_name": "plugin_%s@plugin" % i,
+                "plugin_spec": {},
+                "platform_name": "plugin"
+            }
+            for i in range(3)
+        ]
+        env = db.env_create("name", "status", "descr", {}, {}, platforms)
+        db.env_delete_cascade(env["uuid"])
+
+        self.assertEqual(0, len(db.env_list()))
+        self.assertEqual(0, len(db.platforms_list(env["uuid"])))
+
+
+class PlatformTestCase(test.DBTestCase):
+
+    def setUp(self):
+        super(PlatformTestCase, self).setUp()
+        platforms = [
+            {
+                "status": "ANY",
+                "plugin_name": "plugin_%s@plugin" % i,
+                "plugin_spec": {},
+                "platform_name": "plugin"
+            }
+            for i in range(5)
+        ]
+        self.env1 = db.env_create("env1", "init", "", {}, {}, platforms[:2])
+        self.env2 = db.env_create("env2", "init", "", {}, {}, platforms[2:])
+
+    def test_platform_get(self):
+        for p in db.platforms_list(self.env1["uuid"]):
+            self.assertEqual(p, db.platform_get(p["uuid"]))
+
+    def test_platform_get_not_found(self):
+        self.assertRaises(exceptions.DBRecordNotFound,
+                          db.platform_get, "non_existing")
+
+    def test_platforms_list(self):
+        self.assertEqual(0, len(db.platforms_list("non_existing")))
+        self.assertEqual(2, len(db.platforms_list(self.env1["uuid"])))
+        self.assertEqual(3, len(db.platforms_list(self.env2["uuid"])))
+
+    def test_platform_set_status(self):
+        platforms = db.platforms_list(self.env1["uuid"])
+
+        self.assertRaises(
+            exceptions.DBConflict,
+            db.platform_set_status,
+            platforms[0]["uuid"], "OTHER", "NEW_STATUS")
+        self.assertEqual("ANY",
+                         db.platform_get(platforms[0]["uuid"])["status"])
+
+        self.assertTrue(db.platform_set_status(
+            platforms[0]["uuid"], "ANY", "NEW_STATUS"))
+        self.assertEqual("NEW_STATUS",
+                         db.platform_get(platforms[0]["uuid"])["status"])
+
+        self.assertEqual("ANY",
+                         db.platform_get(platforms[1]["uuid"])["status"])
+
+    def test_platform_set_data(self):
+        platforms = db.platforms_list(self.env1["uuid"])
+        uuid = platforms[0]["uuid"]
+
+        self.assertTrue(db.platform_set_data(uuid))
+        self.assertTrue(
+            db.platform_set_data(uuid, platform_data={"platform": "data"}))
+        in_db = db.platform_get(uuid)
+        self.assertEqual({"platform": "data"}, in_db["platform_data"])
+        self.assertEqual({}, in_db["plugin_data"])
+
+        self.assertTrue(
+            db.platform_set_data(uuid, plugin_data={"plugin": "data"}))
+        in_db = db.platform_get(uuid)
+        self.assertEqual({"platform": "data"}, in_db["platform_data"])
+        self.assertEqual({"plugin": "data"}, in_db["plugin_data"])
+
+        self.assertTrue(
+            db.platform_set_data(uuid, platform_data={"platform": "data2"}))
+        in_db = db.platform_get(uuid)
+        self.assertEqual({"platform": "data2"}, in_db["platform_data"])
+        self.assertEqual({"plugin": "data"}, in_db["plugin_data"])
+
+        self.assertFalse(db.platform_set_data(
+            "non_existing", platform_data={}))
+        in_db = db.platform_get(uuid)
+        # just check that nothing changed after wrong uuid passed
+        self.assertEqual({"platform": "data2"}, in_db["platform_data"])
+
+
 class DeploymentTestCase(test.DBTestCase):
     def test_deployment_create(self):
         deploy = db.deployment_create({"config": {"opt": "val"}})

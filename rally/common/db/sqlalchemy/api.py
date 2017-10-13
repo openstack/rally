@@ -206,9 +206,6 @@ class Connection(object):
         :raises Exception: when the model is not a sublcass of
                  :class:`rally.common.db.sqlalchemy.models.RallyBase`.
         """
-        session = session or get_session()
-        query = session.query(model)
-
         def issubclassof_rally_base(obj):
             return isinstance(obj, type) and issubclass(obj, models.RallyBase)
 
@@ -216,7 +213,8 @@ class Connection(object):
             raise exceptions.DBException(
                 "The model %s should be a subclass of RallyBase" % model)
 
-        return query
+        session = session or get_session()
+        return session.query(model)
 
     def _tags_get(self, uuid, tag_type, session=None):
         tags = (self.model_query(models.Tag, session=session).
@@ -570,6 +568,143 @@ class Connection(object):
 
             session.query(models.Subtask).filter_by(uuid=subtask_uuid).update(
                 subtask_values)
+
+    @serialize
+    def env_get(self, uuid_or_name):
+        env = (self.model_query(models.Env)
+                   .filter(sa.or_(models.Env.uuid == uuid_or_name,
+                                  models.Env.name == uuid_or_name))
+                   .first())
+        if not env:
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid or name is %s" % uuid_or_name, table="envs")
+        return env
+
+    @serialize
+    def env_get_status(self, uuid):
+        resp = (self.model_query(models.Env)
+                    .filter_by(uuid=uuid)
+                    .options(sa.orm.load_only("status"))
+                    .first())
+        if not resp:
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid: %s" % uuid, table="envs")
+        return resp["status"]
+
+    @serialize
+    def env_list(self, status=None):
+        query = self.model_query(models.Env)
+        if status:
+            query = query.filter_by(status=status)
+        return query.all()
+
+    @serialize
+    def env_create(self, name, status, description, extras, spec, platforms):
+        try:
+            env_uuid = models.UUID()
+            for p in platforms:
+                p["env_uuid"] = env_uuid
+
+            env = models.Env(
+                name=name, uuid=env_uuid,
+                status=status, description=description,
+                extras=extras, spec=spec
+            )
+            # db_session.add(env)
+            get_session().bulk_save_objects([env] + [
+                models.Platform(**p) for p in platforms
+            ])
+        except db_exc.DBDuplicateEntry:
+            raise exceptions.DBRecordExists(
+                field="name", value=name, table="envs")
+
+        return self.env_get(env_uuid)
+
+    def env_rename(self, uuid, old_name, new_name):
+        try:
+            return bool(self.model_query(models.Env)
+                            .filter_by(uuid=uuid, name=old_name)
+                            .update({"name": new_name}))
+        except db_exc.DBDuplicateEntry:
+            raise exceptions.DBRecordExists(
+                field="name", value=new_name, table="envs")
+
+    def env_update(self, uuid, description=None, extras=None):
+        values = {}
+        if description is not None:
+            values["description"] = description
+        if extras is not None:
+            values["extras"] = extras
+
+        if not values:
+            return True
+
+        return bool(self.model_query(models.Env)
+                        .filter_by(uuid=uuid)
+                        .update(values))
+
+    def env_set_status(self, uuid, old_status, new_status):
+        count = (self.model_query(models.Env)
+                     .filter_by(uuid=uuid, status=old_status)
+                     .update({"status": new_status}))
+        if count:
+            return True
+
+        raise exceptions.DBConflict(
+            "Env %s should be in status %s actual %s"
+            % (uuid, old_status, self.env_get_status(uuid)))
+
+    def env_delete_cascade(self, uuid):
+        session = get_session()
+        with session.begin():
+            (self.model_query(models.Platform, session=session)
+                 .filter_by(env_uuid=uuid)
+                 .delete())
+            (self.model_query(models.Env, session=session)
+                 .filter_by(uuid=uuid)
+                 .delete())
+            # NOTE(boris-42): Add queries to delete corresponding
+            #                 task and verify results, when they switch to Env
+
+    @serialize
+    def platforms_list(self, env_uuid):
+        return (self.model_query(models.Platform)
+                    .filter_by(env_uuid=env_uuid)
+                    .all())
+
+    @serialize
+    def platform_get(self, uuid):
+        p = self.model_query(models.Platform).filter_by(uuid=uuid).first()
+        if not p:
+            raise exceptions.DBRecordNotFound(
+                criteria="uuid = %s" % uuid, table="platforms")
+        return p
+
+    def platform_set_status(self, uuid, old_status, new_status):
+        count = (self.model_query(models.Platform)
+                     .filter_by(uuid=uuid, status=old_status)
+                     .update({"status": new_status}))
+        if count:
+            return True
+
+        platform = self.platform_get(uuid)
+        raise exceptions.DBConflict(
+            "Platform %s should be in status %s actual %s"
+            % (uuid, old_status, platform["status"]))
+
+    def platform_set_data(self, uuid, platform_data=None, plugin_data=None):
+        values = {}
+        if platform_data is not None:
+            values["platform_data"] = platform_data
+        if plugin_data is not None:
+            values["plugin_data"] = plugin_data
+
+        if not values:
+            return True
+
+        return bool(self.model_query(models.Platform)
+                        .filter_by(uuid=uuid)
+                        .update(values))
 
     def _deployment_get(self, deployment, session=None):
         stored_deployment = self.model_query(
