@@ -101,8 +101,6 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         self.assertIn("finished", rally("task status"))
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_detailed(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
