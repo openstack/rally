@@ -53,7 +53,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             share_network=self.scenario.context["tenant"][
                 consts.SHARE_NETWORKS_CONTEXT_NAME]["share_networks"][0]["id"])
 
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             fake_share,
             ready_statuses=["available"],
             update_resource=self.mock_get_from_manager.mock.return_value,

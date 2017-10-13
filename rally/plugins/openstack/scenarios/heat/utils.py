@@ -67,7 +67,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         self.sleep_between(CONF.openstack.heat_stack_create_prepoll_delay)
 
-        stack = utils.wait_for(
+        stack = utils.wait_for_status(
             stack,
             ready_statuses=["CREATE_COMPLETE"],
             failure_statuses=["CREATE_FAILED", "ERROR"],
@@ -103,7 +103,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         self.sleep_between(CONF.openstack.heat_stack_update_prepoll_delay)
 
-        stack = utils.wait_for(
+        stack = utils.wait_for_status(
             stack,
             ready_statuses=["UPDATE_COMPLETE"],
             failure_statuses=["UPDATE_FAILED", "ERROR"],
@@ -121,7 +121,7 @@ class HeatScenario(scenario.OpenStackScenario):
         :param stack: stack that needs to be checked
         """
         self.clients("heat").actions.check(stack.id)
-        utils.wait_for(
+        utils.wait_for_status(
             stack,
             ready_statuses=["CHECK_COMPLETE"],
             failure_statuses=["CHECK_FAILED", "ERROR"],
@@ -155,7 +155,7 @@ class HeatScenario(scenario.OpenStackScenario):
         """
 
         self.clients("heat").actions.suspend(stack.id)
-        utils.wait_for(
+        utils.wait_for_status(
             stack,
             ready_statuses=["SUSPEND_COMPLETE"],
             failure_statuses=["SUSPEND_FAILED", "ERROR"],
@@ -171,7 +171,7 @@ class HeatScenario(scenario.OpenStackScenario):
         """
 
         self.clients("heat").actions.resume(stack.id)
-        utils.wait_for(
+        utils.wait_for_status(
             stack,
             ready_statuses=["RESUME_COMPLETE"],
             failure_statuses=["RESUME_FAILED", "ERROR"],
@@ -188,7 +188,7 @@ class HeatScenario(scenario.OpenStackScenario):
         """
         snapshot = self.clients("heat").stacks.snapshot(
             stack.id)
-        utils.wait_for(
+        utils.wait_for_status(
             stack,
             ready_statuses=["SNAPSHOT_COMPLETE"],
             failure_statuses=["SNAPSHOT_FAILED", "ERROR"],
@@ -205,7 +205,7 @@ class HeatScenario(scenario.OpenStackScenario):
         :param snapshot_id: id of given snapshot
         """
         self.clients("heat").stacks.restore(stack.id, snapshot_id)
-        utils.wait_for(
+        utils.wait_for_status(
             stack,
             ready_statuses=["RESTORE_COMPLETE"],
             failure_statuses=["RESTORE_FAILED", "ERROR"],

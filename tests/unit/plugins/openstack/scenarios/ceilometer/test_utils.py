@@ -175,13 +175,14 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         alarm = mock.Mock()
         self.clients("ceilometer").alarms.create.return_value = alarm
         return_alarm = self.scenario._set_alarm_state(alarm, "ok", 100)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             alarm,
             ready_statuses=["ok"],
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=100, check_interval=1)
         self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_alarm)
+        self.assertEqual(self.mock_wait_for_status.mock.return_value,
+                         return_alarm)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.set_alarm_state")
 

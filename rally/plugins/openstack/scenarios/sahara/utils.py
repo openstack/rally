@@ -107,7 +107,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         self.clients("sahara").node_group_templates.delete(node_group.id)
 
     def _wait_active(self, cluster_object):
-        utils.wait_for(
+        utils.wait_for_status(
             resource=cluster_object, ready_statuses=["active"],
             failure_statuses=["error"], update_resource=self._update_cluster,
             timeout=CONF.openstack.sahara_cluster_create_timeout,

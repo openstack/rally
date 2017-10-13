@@ -163,7 +163,7 @@ class CinderScenario(scenario.OpenStackScenario):
         #                check whether the volume is ready => less API calls.
         self.sleep_between(CONF.openstack.cinder_volume_create_prepoll_delay)
 
-        volume = bench_utils.wait_for(
+        volume = bench_utils.wait_for_status(
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
@@ -234,7 +234,7 @@ class CinderScenario(scenario.OpenStackScenario):
             new_size = random.randint(new_size["min"], new_size["max"])
 
         volume.extend(volume, new_size)
-        volume = bench_utils.wait_for(
+        volume = bench_utils.wait_for_status(
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
@@ -262,7 +262,7 @@ class CinderScenario(scenario.OpenStackScenario):
                                            container_format, disk_format)
         # NOTE (e0ne): upload_to_image changes volume status to uploading so
         # we need to wait until it will be available.
-        volume = bench_utils.wait_for(
+        volume = bench_utils.wait_for_status(
             volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
@@ -272,7 +272,7 @@ class CinderScenario(scenario.OpenStackScenario):
         image_id = img["os-volume_upload_image"]["image_id"]
         image = self.clients("glance").images.get(image_id)
         wrapper = glance_wrapper.wrap(self._clients.glance, self)
-        image = bench_utils.wait_for(
+        image = bench_utils.wait_for_status(
             image,
             ready_statuses=["active"],
             update_resource=wrapper.get_image,
@@ -301,7 +301,7 @@ class CinderScenario(scenario.OpenStackScenario):
         snapshot = client.create_snapshot(volume_id, **kwargs)
 
         self.sleep_between(CONF.openstack.cinder_volume_create_prepoll_delay)
-        snapshot = bench_utils.wait_for(
+        snapshot = bench_utils.wait_for_status(
             snapshot,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
@@ -336,7 +336,7 @@ class CinderScenario(scenario.OpenStackScenario):
         :param kwargs: Other optional parameters
         """
         backup = self.clients("cinder").backups.create(volume_id, **kwargs)
-        return bench_utils.wait_for(
+        return bench_utils.wait_for_status(
             backup,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
@@ -372,14 +372,14 @@ class CinderScenario(scenario.OpenStackScenario):
         restore = self.clients("cinder").restores.restore(backup_id, volume_id)
         restored_volume = self.clients("cinder").volumes.get(restore.volume_id)
         backup_for_restore = self.clients("cinder").backups.get(backup_id)
-        bench_utils.wait_for(
+        bench_utils.wait_for_status(
             backup_for_restore,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.openstack.cinder_backup_restore_timeout,
             check_interval=CONF.openstack.cinder_backup_restore_poll_interval
         )
-        return bench_utils.wait_for(
+        return bench_utils.wait_for_status(
             restored_volume,
             ready_statuses=["available"],
             update_resource=bench_utils.get_from_manager(),

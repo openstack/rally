@@ -259,11 +259,11 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :returns: alarm in the set state
         """
         self.clients("ceilometer").alarms.set_state(alarm.alarm_id, state)
-        return bench_utils.wait_for(alarm,
-                                    ready_statuses=[state],
-                                    update_resource=bench_utils
-                                    .get_from_manager(),
-                                    timeout=timeout, check_interval=1)
+        return bench_utils.wait_for_status(alarm,
+                                           ready_statuses=[state],
+                                           update_resource=bench_utils
+                                           .get_from_manager(),
+                                           timeout=timeout, check_interval=1)
 
     @atomic.action_timer("ceilometer.list_events")
     def _list_events(self):

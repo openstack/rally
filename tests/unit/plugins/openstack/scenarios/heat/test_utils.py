@@ -58,7 +58,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         self.assertIn(self.default_template, kwargs.values())
         self.assertIn(self.dummy_files, kwargs.values())
         self.assertIn(self.dummy_environment, kwargs.values())
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["CREATE_COMPLETE"],
@@ -66,7 +66,8 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             check_interval=CONF.openstack.heat_stack_create_poll_interval,
             timeout=CONF.openstack.heat_stack_create_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_stack)
+        self.assertEqual(self.mock_wait_for_status.mock.return_value,
+                         return_stack)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "heat.create_stack")
 
@@ -82,7 +83,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         self.assertIn(self.dummy_files, kwargs.values())
         self.assertIn(self.dummy_environment, kwargs.values())
         self.assertIn(self.stack.id, args)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["UPDATE_COMPLETE"],
@@ -98,7 +99,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario._check_stack(self.stack)
         self.clients("heat").actions.check.assert_called_once_with(
             self.stack.id)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["CHECK_COMPLETE"],
@@ -129,7 +130,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario._suspend_stack(self.stack)
         self.clients("heat").actions.suspend.assert_called_once_with(
             self.stack.id)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["SUSPEND_COMPLETE"],
@@ -145,7 +146,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario._resume_stack(self.stack)
         self.clients("heat").actions.resume.assert_called_once_with(
             self.stack.id)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["RESUME_COMPLETE"],
@@ -161,7 +162,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario._snapshot_stack(self.stack)
         self.clients("heat").stacks.snapshot.assert_called_once_with(
             self.stack.id)
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["SNAPSHOT_COMPLETE"],
@@ -177,7 +178,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario._restore_stack(self.stack, "dummy_id")
         self.clients("heat").stacks.restore.assert_called_once_with(
             self.stack.id, "dummy_id")
-        self.mock_wait_for.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
             update_resource=self.mock_get_from_manager.mock.return_value,
             ready_statuses=["RESTORE_COMPLETE"],
