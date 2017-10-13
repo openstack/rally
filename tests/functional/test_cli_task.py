@@ -257,8 +257,6 @@ class TaskTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_report_bunch_uuids(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
@@ -266,17 +264,13 @@ class TaskTestCase(unittest.TestCase):
         task_uuids = []
         for i in range(3):
             res = rally("task start --task %s" % config.filename)
-            for line in res.splitlines():
-                if "finished" in line:
-                    task_uuids.append(line.split(" ")[1][:-1])
+            task_uuids.append(self._get_task_uuid(res))
         html_report = rally.gen_report_path(extension="html")
         rally("task report --tasks %s --out %s" % (" ".join(task_uuids),
                                                    html_report))
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_new_report_bunch_uuids(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
@@ -284,9 +278,7 @@ class TaskTestCase(unittest.TestCase):
         task_uuids = []
         for i in range(3):
             res = rally("task start --task %s" % config.filename)
-            for line in res.splitlines():
-                if "finished" in line:
-                    task_uuids.append(line.split(" ")[1][:-1])
+            task_uuids.append(self._get_task_uuid(res))
         html_report = rally.gen_report_path(extension="html")
         rally("task report --uuid %s --out %s" % (" ".join(task_uuids),
                                                   html_report))
@@ -311,8 +303,6 @@ class TaskTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(html_report))
         self._assert_html_report_libs_are_embedded(html_report, False)
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_report_one_uuid_one_file(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
@@ -325,13 +315,9 @@ class TaskTestCase(unittest.TestCase):
               raw=True)
 
         task_run_output = rally(
-            "task start --task %s" % config.filename).splitlines()
-        for line in task_run_output:
-            if "finished" in line:
-                task_uuid = line.split(" ")[1][:-1]
-                break
-        else:
-            return 1
+            "task start --task %s" % config.filename)
+        task_uuid = self._get_task_uuid(task_run_output)
+        task_run_output = task_run_output.splitlines()
 
         html_report = rally.gen_report_path(extension="html")
         rally("task report --tasks"
@@ -995,8 +981,6 @@ class TaskTestCase(unittest.TestCase):
         rally("task export --type junit-xml --to %s" % junit_report)
         self.assertTrue(os.path.exists(junit_report))
 
-    @unittest.skip("It started failing due to broken launching script. "
-                   "Requires investigation.")
     def test_export_bunch_uuids(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
@@ -1004,9 +988,7 @@ class TaskTestCase(unittest.TestCase):
         task_uuids = []
         for i in range(3):
             res = rally("task start --task %s" % config.filename)
-            for line in res.splitlines():
-                if "finished" in line:
-                    task_uuids.append(line.split(" ")[1][:-1])
+            task_uuids.append(self._get_task_uuid(res))
         html_report = rally.gen_report_path(extension="html")
         rally("task export --uuid %s --type html --to %s" % (
             " ".join(task_uuids), html_report))
